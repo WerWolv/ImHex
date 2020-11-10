@@ -3,12 +3,14 @@ project(HexEditor)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_library(GLFW REQUIRED glfw3s)
+find_library(GLFW REQUIRED glfw3)
 find_library(OPENGL REQUIRED OpenGL)
 
 include_directories(include ${GLFW_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
 
-add_executable(HexEditor
+SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -mwindows)
+
+add_executable(ImHex WIN32
         source/main.cpp
         source/window.cpp
 
@@ -27,6 +29,6 @@ add_executable(HexEditor
         res.rc
         )
 
-target_link_libraries(HexEditor glfw3)
+target_link_libraries(ImHex glfw3)
 
 
