@@ -47,8 +47,9 @@ namespace hex {
                 ViewHexEditor *_this = (ViewHexEditor*)data;
 
                 for (auto& [offset, size, color] : _this->m_highlights) {
-                    if (next && off == (offset + size))
-                            return false;
+                    if (next && off == (offset + size)) {
+                        return false;
+                    }
 
                     if (off >= offset && off < (offset + size)) {
                         _this->m_memoryEditor.HighlightColor = color;
@@ -56,6 +57,7 @@ namespace hex {
                     }
                 }
 
+                _this->m_memoryEditor.HighlightColor = 0x50C08080;
                 return false;
             };
         }
@@ -81,6 +83,11 @@ namespace hex {
                     }
 
                 }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Window")) {
+                ImGui::MenuItem("Hex View", "", &this->m_memoryEditor.Open);
                 ImGui::EndMenu();
             }
         }

@@ -46,10 +46,18 @@ namespace hex {
                 }
                 ImGui::EndMenu();
             }
+
+            if (ImGui::BeginMenu("Window")) {
+                ImGui::MenuItem("Pattern View", "", &this->m_windowOpen);
+                ImGui::EndMenu();
+            }
         }
 
         void createView() override {
-            ImGui::Begin("Pattern", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+            if (!this->m_windowOpen)
+                return;
+
+            ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None);
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
@@ -72,6 +80,7 @@ namespace hex {
         char *m_buffer;
 
         ViewHexEditor *m_hexEditor;
+        bool m_windowOpen = true;
 
         void parsePattern(char *buffer) {
             static hex::lang::Lexer lexer;
