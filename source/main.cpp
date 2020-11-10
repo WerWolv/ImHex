@@ -4,6 +4,7 @@
 #include "views/view_hexeditor.hpp"
 #include "views/view_pattern.hpp"
 #include "views/view_pattern_data.hpp"
+#include "views/view_hashes.hpp"
 
 #include <tuple>
 #include <vector>
@@ -19,6 +20,7 @@ int main() {
     window.addView<hex::ViewHexEditor>(file, highlights);
     window.addView<hex::ViewPattern>(highlights);
     window.addView<hex::ViewPatternData>(file, highlights);
+    window.addView<hex::ViewHashes>(file);
 
     window.loop();
 

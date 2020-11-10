@@ -7,10 +7,8 @@ find_library(GLFW REQUIRED glfw3)
 find_library(OPENGL REQUIRED OpenGL)
 
 include_directories(include ${GLFW_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
-
-SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -mwindows)
-
-add_executable(ImHex WIN32
+SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -static-libstdc++ -static-libgcc -static")
+add_executable(ImHex
         source/main.cpp
         source/window.cpp
         source/utils.cpp
@@ -21,6 +19,7 @@ add_executable(ImHex WIN32
         source/views/view_hexeditor.cpp
         source/views/view_pattern.cpp
         source/views/view_pattern_data.cpp
+        source/views/view_hashes.cpp
 
         libs/glad/source/glad.c
 
@@ -34,6 +33,6 @@ add_executable(ImHex WIN32
         res.rc
         )
 
-target_link_libraries(ImHex glfw3)
+target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a)
 
 
