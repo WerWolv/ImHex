@@ -13,6 +13,17 @@ namespace hex {
 
     }
 
+    std::string makeDisplayable(u8 *data, size_t size) {
+        std::string result;
+        for (u8* c = data; c < (data + size - 1); c++) {
+            if (iscntrl(*c) || *c > 0x7F)
+                result += " ";
+            else
+                result += *c;
+        }
+
+        return result;
+    }
 
     void ViewPatternData::createView() {
         if (!this->m_windowOpen)
@@ -29,9 +40,9 @@ namespace hex {
                 std::memcpy(&data, buffer.data(), size);
 
                 if (size <= 8)
-                    ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %lu (0x%lx) \"%s\"", offset, offset + size, data, data, buffer.data());
+                    ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %lu (0x%08lx) \"%s\"", offset, offset + size, data, data, makeDisplayable(buffer.data(), buffer.size()).c_str());
                 else
-                    ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   [ ARRAY ]", offset, offset + size);
+                    ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   [ ARRAY ] \"%s\"", offset, offset + size, makeDisplayable(buffer.data(), buffer.size()).c_str());
             }
 
             ImGui::EndChild();
