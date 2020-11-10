@@ -15,11 +15,37 @@ namespace hex {
     class ViewPattern : public View {
     public:
         ViewPattern(ViewHexEditor *hexEditor) : View(), m_hexEditor(hexEditor) {
-            this->m_buffer = new char[0xFFFF];
-            std::memset(this->m_buffer, 0x00, 0xFFFF);
+            this->m_buffer = new char[0xFFFFFF];
+            std::memset(this->m_buffer, 0x00, 0xFFFFFF);
         }
         virtual ~ViewPattern() {
             delete[] this->m_buffer;
+        }
+
+        virtual void createMenu() {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Load pattern...")) {
+                    auto filePath = openFileDialog();
+                    if (filePath.has_value()) {
+                        FILE *file = fopen(filePath->c_str(), "r+b");
+
+                        fseek(file, 0, SEEK_END);
+                        size_t size = ftell(file);
+                        rewind(file);
+
+                        if (size > 0xFF'FFFF)
+                            return;
+
+                        fread(this->m_buffer, size, 1, file);
+
+                        fclose(file);
+
+                        this->parsePattern(this->m_buffer);
+                    }
+
+                }
+                ImGui::EndMenu();
+            }
         }
 
         void createView() override {
@@ -31,48 +57,11 @@ namespace hex {
             size.y -= 50;
             ImGui::InputTextMultiline("Pattern", this->m_buffer, 0xFFFF, size, ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit,
                 [](ImGuiInputTextCallbackData* data) -> int {
-                    static hex::lang::Lexer lexer;
-                    static hex::lang::Parser parser;
-
                     auto _this = static_cast<ViewPattern*>(data->UserData);
-                    _this->m_hexEditor->clearHighlights();
 
-                    auto [lexResult, tokens] = lexer.lex(data->Buf);
+                    _this->parsePattern(data->Buf);
 
-                    if (lexResult.failed()) {
-                        return 0;
-                    }
-
-                    auto [parseResult, ast] = parser.parse(tokens);
-                    if (parseResult.failed()) {
-                        for(auto &node : ast) delete node;
-                        return 0;
-                    }
-
-                    for (auto &varNode : _this->findNodes<lang::ASTNodeVariableDecl>(lang::ASTNode::Type::VariableDecl, ast)) {
-                        if (!varNode->getOffset().has_value())
-                            continue;
-
-                        u64 offset = varNode->getOffset().value();
-                        if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                            _this->m_hexEditor->setHighlight(offset, static_cast<u32>(varNode->getVariableType()) >> 4);
-                        } else {
-                            for (auto &structNode : _this->findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
-                                if (varNode->getCustomVariableTypeName() == structNode->getName())
-                                    if (_this->highlightStruct(ast, structNode, offset) == -1)
-                                        _this->m_hexEditor->clearHighlights();
-
-                            for (auto &usingNode : _this->findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast))
-                                if (varNode->getCustomVariableTypeName() == usingNode->getTypeName())
-                                    if (_this->highlightUsingDecls(ast, usingNode, offset) == -1)
-                                        _this->m_hexEditor->clearHighlights();
-                        }
-
-                    }
-
-                    for(auto &node : ast) delete node;
-
-                    return 1;
+                    return 0;
                 }, this
             );
             ImGui::PopStyleVar(2);
@@ -83,6 +72,48 @@ namespace hex {
         char *m_buffer;
 
         ViewHexEditor *m_hexEditor;
+
+        void parsePattern(char *buffer) {
+            static hex::lang::Lexer lexer;
+            static hex::lang::Parser parser;
+
+            this->m_hexEditor->clearHighlights();
+
+            auto [lexResult, tokens] = lexer.lex(buffer);
+
+            if (lexResult.failed()) {
+                return;
+            }
+
+            auto [parseResult, ast] = parser.parse(tokens);
+            if (parseResult.failed()) {
+                for(auto &node : ast) delete node;
+                return;
+            }
+
+            for (auto &varNode : this->findNodes<lang::ASTNodeVariableDecl>(lang::ASTNode::Type::VariableDecl, ast)) {
+                if (!varNode->getOffset().has_value())
+                    continue;
+
+                u64 offset = varNode->getOffset().value();
+                if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
+                    this->m_hexEditor->setHighlight(offset, static_cast<u32>(varNode->getVariableType()) >> 4);
+                } else {
+                    for (auto &structNode : this->findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
+                        if (varNode->getCustomVariableTypeName() == structNode->getName())
+                            if (this->highlightStruct(ast, structNode, offset) == -1)
+                                this->m_hexEditor->clearHighlights();
+
+                    for (auto &usingNode : this->findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast))
+                        if (varNode->getCustomVariableTypeName() == usingNode->getTypeName())
+                            if (this->highlightUsingDecls(ast, usingNode, offset) == -1)
+                                this->m_hexEditor->clearHighlights();
+                }
+
+            }
+
+            for(auto &node : ast) delete node;
+        }
 
         template<std::derived_from<lang::ASTNode> T>
         std::vector<T*> findNodes(const lang::ASTNode::Type type, const std::vector<lang::ASTNode*> &nodes) const noexcept {
