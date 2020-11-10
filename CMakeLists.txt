@@ -13,9 +13,14 @@ SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -mwindows)
 add_executable(ImHex WIN32
         source/main.cpp
         source/window.cpp
+        source/utils.cpp
 
         source/parser/lexer.cpp
         source/parser/parser.cpp
+
+        source/views/view_hexeditor.cpp
+        source/views/view_pattern.cpp
+        source/views/view_pattern_data.cpp
 
         libs/glad/source/glad.c
 

@@ -18,8 +18,8 @@ namespace hex {
         void loop();
 
         template<std::derived_from<View> T, typename ... Args>
-        T* addView(Args& ... args) {
-            this->m_views.emplace_back(new T(args...));
+        T* addView(Args&& ... args) {
+            this->m_views.emplace_back(new T(std::forward<Args>(args)...));
 
             return static_cast<T*>(this->m_views.back());
         }
