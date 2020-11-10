@@ -49,14 +49,25 @@ namespace hex {
                         return 0;
                     }
 
-
-                    for (auto &structNode : _this->findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast)) {
-                        if (!structNode->getOffset().has_value())
+                    for (auto &varNode : _this->findNodes<lang::ASTNodeVariableDecl>(lang::ASTNode::Type::VariableDecl, ast)) {
+                        if (!varNode->getOffset().has_value())
                             continue;
 
-                        u64 offset = structNode->getOffset().value();
-                        if (_this->highlightStruct(ast, structNode, offset) == -1)
-                            _this->m_hexEditor->clearHighlights();
+                        u64 offset = varNode->getOffset().value();
+                        if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
+                            _this->m_hexEditor->setHighlight(offset, static_cast<u32>(varNode->getVariableType()) >> 4);
+                        } else {
+                            for (auto &structNode : _this->findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
+                                if (varNode->getCustomVariableTypeName() == structNode->getName())
+                                    if (_this->highlightStruct(ast, structNode, offset) == -1)
+                                        _this->m_hexEditor->clearHighlights();
+
+                            for (auto &usingNode : _this->findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast))
+                                if (varNode->getCustomVariableTypeName() == usingNode->getTypeName())
+                                    if (_this->highlightUsingDecls(ast, usingNode, offset) == -1)
+                                        _this->m_hexEditor->clearHighlights();
+                        }
+
                     }
 
                     for(auto &node : ast) delete node;
@@ -145,7 +156,7 @@ namespace hex {
                             if (size == -1)
                                 return -1;
 
-                            offset += size;
+                            offset = size;
                             foundType = true;
                             break;
                         }

@@ -56,9 +56,9 @@ namespace hex::lang {
             if (isdigit(c))
                 integer += (c - '0');
             else if (c >= 'A' && c <= 'F')
-                integer += (c - 'A');
+                integer += 10 + (c - 'A');
             else if (c >= 'a' && c <= 'f')
-                integer += (c - 'a');
+                integer += 10 + (c - 'a');
             else return { };
         }
 
@@ -138,7 +138,7 @@ namespace hex::lang {
                 char *end = nullptr;
                 std::strtoull(&code[offset], &end, 0);
 
-                auto integer = parseInt(std::string_view(&code[offset], end));// matchTillInvalid(&code[offset], [](char c) -> bool { return std::isdigit(c); });
+                auto integer = parseInt(std::string_view(&code[offset], end));
 
                 if (!integer.has_value())
                     return { ResultLexicalError, {}};

@@ -35,10 +35,17 @@ namespace hex::lang {
         return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
     }
 
+    ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer);
+    }
+
+    ASTNode* parseFreeCustomTypeVariableDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer);
+    }
+
     std::optional<ASTNode*> parseStruct(TokenIter &curr) {
         const std::string &structName = curr[-2].identifierToken.identifier;
         std::vector<ASTNode*> nodes;
-        std::optional<u64> offset = { };
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
@@ -48,26 +55,12 @@ namespace hex::lang {
             else break;
         }
 
-        if (tryConsume(curr, {Token::Type::Operator})) {
-            if (curr[-1].operatorToken.op == Token::OperatorToken::Operator::AtDeclaration) {
-                if (tryConsume(curr, {Token::Type::Integer})) {
-                    offset = curr[-1].integerToken.integer;
-                } else {
-                    for(auto &node : nodes) delete node;
-                    return { };
-                }
-            } else {
-                for(auto &node : nodes) delete node;
-                return { };
-            }
-        }
-
         if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
             for(auto &node : nodes) delete node;
             return { };
         }
 
-        return new ASTNodeStruct(structName, nodes, offset);
+        return new ASTNodeStruct(structName, nodes);
     }
 
     ASTNode *parseScope(TokenIter &curr) {
@@ -101,6 +94,7 @@ namespace hex::lang {
     std::optional<std::vector<ASTNode*>> parseStatement(TokenIter &curr) {
         std::vector<ASTNode*> program;
 
+        // Struct
         if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::ScopeOpen })) {
             if (curr[-3].keywordToken.keyword == Token::KeywordToken::Keyword::Struct) {
                 auto structAst = parseStruct(curr);
@@ -114,10 +108,14 @@ namespace hex::lang {
             }
 
             return program;
+
+        // Scope
         } else if (tryConsume(curr, { Token::Type::ScopeOpen })) {
             program.push_back(parseScope(curr));
 
             return program;
+
+        // Using declaration with built-in type
         } else if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression})) {
             auto usingDecl = parseUsingDeclaration(curr);
 
@@ -129,6 +127,8 @@ namespace hex::lang {
             program.push_back(usingDecl.value());
 
             return program;
+
+        // Using declaration with custom type
         } else if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::EndOfExpression})) {
             auto usingDecl = parseUsingDeclaration(curr);
 
@@ -138,6 +138,21 @@ namespace hex::lang {
             }
 
             program.push_back(usingDecl.value());
+
+            return program;
+        // Variable declaration with built-in type
+        } else if (tryConsume(curr, { Token::Type::Type, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+            auto variableDecl = parseFreeBuiltinVariableDecl(curr);
+
+            program.push_back(variableDecl);
+
+            return program;
+
+        // Variable declaration with custom type
+        } else if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+            auto variableDecl = parseFreeCustomTypeVariableDecl(curr);
+
+            program.push_back(variableDecl);
 
             return program;
         }
