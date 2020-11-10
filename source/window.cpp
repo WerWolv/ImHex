@@ -28,8 +28,10 @@ namespace hex {
         while (!glfwWindowShouldClose(this->m_window)) {
             this->frameBegin();
 
-            for (auto &view : this->m_views)
+            for (auto &view : this->m_views) {
+                ImGui::SetNextWindowSize(ImVec2(250, 250));
                 view->createView();
+            }
 
             this->frameEnd();
         }
