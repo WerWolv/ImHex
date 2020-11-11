@@ -23,7 +23,7 @@ namespace hex::lang {
 
     std::optional<u64> parseInt(std::string_view string) {
         u64 integer = 0;
-        u8 base = 10;
+        u8 base;
 
         std::string_view numberData;
 

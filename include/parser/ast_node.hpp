@@ -17,7 +17,7 @@ namespace hex::lang {
         };
 
         explicit ASTNode(Type type) : m_type(type) {}
-        virtual ~ASTNode() {}
+        virtual ~ASTNode() = default;
 
         Type getType() { return this->m_type; }
 

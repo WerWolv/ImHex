@@ -1,5 +1,6 @@
 #include "views/view_hexeditor.hpp"
 
+#include "providers/provider.hpp"
 #include "providers/file_provider.hpp"
 
 namespace hex {

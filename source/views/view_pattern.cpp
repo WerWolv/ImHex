@@ -48,23 +48,24 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None)) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
-        auto size = ImGui::GetWindowSize();
-        size.y -= 50;
-        ImGui::InputTextMultiline("Pattern", this->m_buffer, 0xFFFF, size, ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit,
-            [](ImGuiInputTextCallbackData* data) -> int {
-                auto _this = static_cast<ViewPattern*>(data->UserData);
+            auto size = ImGui::GetWindowSize();
+            size.y -= 50;
+            ImGui::InputTextMultiline("Pattern", this->m_buffer, 0xFFFF, size, ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit,
+                [](ImGuiInputTextCallbackData* data) -> int {
+                    auto _this = static_cast<ViewPattern*>(data->UserData);
 
-                _this->parsePattern(data->Buf);
+                    _this->parsePattern(data->Buf);
 
-                return 0;
-            }, this
-        );
+                    return 0;
+                }, this
+            );
 
-        ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar(2);
+        }
         ImGui::End();
     }
 

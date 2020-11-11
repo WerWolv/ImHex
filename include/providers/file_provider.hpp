@@ -8,16 +8,16 @@ namespace hex::prv {
 
     class FileProvider : public Provider {
     public:
-        FileProvider(std::string_view path);
-        virtual ~FileProvider();
+        explicit FileProvider(std::string_view path);
+        ~FileProvider() override;
 
-        virtual bool isAvailable() override;
-        virtual bool isReadable() override;
-        virtual bool isWritable() override;
+        bool isAvailable() override;
+        bool isReadable() override;
+        bool isWritable() override;
 
-        virtual void read(u64 offset, void *buffer, size_t size) override;
-        virtual void write(u64 offset, void *buffer, size_t size) override;
-        virtual size_t getSize() override;
+        void read(u64 offset, void *buffer, size_t size) override;
+        void write(u64 offset, void *buffer, size_t size) override;
+        size_t getSize() override;
 
     private:
         FILE *m_file;

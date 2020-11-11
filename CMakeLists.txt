@@ -22,6 +22,7 @@ add_executable(ImHex
         source/views/view_pattern.cpp
         source/views/view_pattern_data.cpp
         source/views/view_hashes.cpp
+        source/views/view_entropy.cpp
 
         libs/glad/source/glad.c
 

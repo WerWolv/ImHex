@@ -1,5 +1,7 @@
 #include "views/view_hashes.hpp"
 
+#include "providers/provider.hpp"
+
 #include "utils.hpp"
 
 #include <vector>
@@ -16,19 +18,19 @@ namespace hex {
 
 
     void ViewHashes::createView() {
+        static bool invalidate = false;
+
         if (!this->m_windowOpen)
             return;
 
-        static bool invalidate = false;
-
         if (ImGui::Begin("Hashing", &this->m_windowOpen)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-
             ImGui::NewLine();
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
 
-                ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames, sizeof(HashFunctionNames) / sizeof(const char*));
+                ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,
+                             sizeof(HashFunctionNames) / sizeof(const char *));
 
                 ImGui::NewLine();
                 ImGui::Separator();
@@ -115,10 +117,9 @@ namespace hex {
                     invalidate = true;
 
             }
-
             ImGui::EndChild();
-            ImGui::End();
         }
+        ImGui::End();
     }
 
     void ViewHashes::createMenu() {

@@ -1,5 +1,7 @@
 #include "views/view_pattern_data.hpp"
 
+#include "providers/provider.hpp"
+
 #include <cstring>
 
 namespace hex {
@@ -48,8 +50,8 @@ namespace hex {
             }
 
             ImGui::EndChild();
-            ImGui::End();
         }
+        ImGui::End();
     }
 
     void ViewPatternData::createMenu() {

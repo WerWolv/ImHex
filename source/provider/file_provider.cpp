@@ -27,11 +27,11 @@ namespace hex::prv {
     }
 
     bool FileProvider::isReadable() {
-        return this->m_readable;
+        return isAvailable() && this->m_readable;
     }
 
     bool FileProvider::isWritable() {
-        return this->m_writable;
+        return isAvailable() && this->m_writable;
     }
 
 
