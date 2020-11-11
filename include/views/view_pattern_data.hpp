@@ -10,17 +10,17 @@
 #include <tuple>
 #include <cstdio>
 
-#include "providers/provider.hpp"
-
 namespace hex {
+
+    namespace prv { class Provider; }
 
     class ViewPatternData : public View {
     public:
         ViewPatternData(prv::Provider* &dataProvider, std::vector<Highlight> &highlights);
-        virtual ~ViewPatternData();
+        ~ViewPatternData() override;
 
-        virtual void createView() override;
-        virtual void createMenu() override;
+        void createView() override;
+        void createMenu() override;
 
     private:
         prv::Provider* &m_dataProvider;

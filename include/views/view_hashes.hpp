@@ -4,17 +4,17 @@
 
 #include <cstdio>
 
-#include "providers/provider.hpp"
-
 namespace hex {
+
+    namespace prv { class Provider; }
 
     class ViewHashes : public View {
     public:
-        ViewHashes(prv::Provider* &dataProvider);
-        virtual ~ViewHashes();
+        explicit ViewHashes(prv::Provider* &dataProvider);
+        ~ViewHashes() override;
 
-        virtual void createView() override;
-        virtual void createMenu() override;
+        void createView() override;
+        void createMenu() override;
 
     private:
         prv::Provider* &m_dataProvider;

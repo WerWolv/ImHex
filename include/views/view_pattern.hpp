@@ -14,11 +14,11 @@ namespace hex {
 
     class ViewPattern : public View {
     public:
-        ViewPattern(std::vector<Highlight> &highlights);
-        virtual ~ViewPattern();
+        explicit ViewPattern(std::vector<Highlight> &highlights);
+        ~ViewPattern() override;
 
-        virtual void createMenu() override;
-        virtual void createView() override;
+        void createMenu() override;
+        void createView() override;
 
     private:
         char *m_buffer;

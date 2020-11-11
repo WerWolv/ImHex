@@ -14,17 +14,17 @@
 
 #include "views/highlight.hpp"
 
-#include "providers/provider.hpp"
-
 namespace hex {
+
+    namespace prv { class Provider; }
 
     class ViewHexEditor : public View {
     public:
         ViewHexEditor(prv::Provider* &dataProvider, std::vector<Highlight> &highlights);
-        virtual ~ViewHexEditor();
+        ~ViewHexEditor() override;
 
-        virtual void createView() override;
-        virtual void createMenu() override;
+        void createView() override;
+        void createMenu() override;
 
     private:
         MemoryEditor m_memoryEditor;

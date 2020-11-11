@@ -8,7 +8,6 @@
 
 #include "providers/provider.hpp"
 
-#include <tuple>
 #include <vector>
 
 int main() {
@@ -25,6 +24,9 @@ int main() {
     window.addView<hex::ViewHashes>(dataProvider);
 
     window.loop();
+
+    if (dataProvider != nullptr)
+        delete dataProvider;
 
     return 0;
 }

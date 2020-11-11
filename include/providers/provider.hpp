@@ -6,8 +6,8 @@ namespace hex::prv {
 
     class Provider {
     public:
-        Provider() { }
-        virtual ~Provider() { }
+        Provider() = default;
+        virtual ~Provider() = default;
 
         virtual bool isAvailable() = 0;
         virtual bool isReadable() = 0;
