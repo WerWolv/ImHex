@@ -4,8 +4,8 @@
 
 namespace hex {
 
-    ViewPatternData::ViewPatternData(FILE* &file, std::vector<Highlight> &highlights)
-        : View(), m_file(file), m_highlights(highlights) {
+    ViewPatternData::ViewPatternData(prv::Provider* &dataProvider, std::vector<Highlight> &highlights)
+        : View(), m_dataProvider(dataProvider), m_highlights(highlights) {
 
     }
 
@@ -34,13 +34,15 @@ namespace hex {
 
             for (auto& [offset, size, color, name] : this->m_highlights) {
                 std::vector<u8> buffer(size + 1, 0x00);
-                u64 data = 0;
-                fseek(this->m_file, offset, SEEK_SET);
-                fread(buffer.data(), 1, size, this->m_file);
-                std::memcpy(&data, buffer.data(), size);
 
-                if (size <= 8)
+                this->m_dataProvider->read(offset, buffer.data(), size);
+
+                if (size <= 8) {
+                    u64 data = 0;
+                    std::memcpy(&data, buffer.data(), size);
+
                     ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %lu (0x%08lx) \"%s\"", offset, offset + size, data, data, makeDisplayable(buffer.data(), buffer.size()).c_str());
+                }
                 else
                     ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   [ ARRAY ] \"%s\"", offset, offset + size, makeDisplayable(buffer.data(), buffer.size()).c_str());
             }

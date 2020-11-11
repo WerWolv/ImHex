@@ -14,11 +14,13 @@
 
 #include "views/highlight.hpp"
 
+#include "providers/provider.hpp"
+
 namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(FILE* &file, std::vector<Highlight> &highlights);
+        ViewHexEditor(prv::Provider* &dataProvider, std::vector<Highlight> &highlights);
         virtual ~ViewHexEditor();
 
         virtual void createView() override;
@@ -27,8 +29,7 @@ namespace hex {
     private:
         MemoryEditor m_memoryEditor;
 
-        FILE* &m_file;
-        size_t m_fileSize = 0;
+        prv::Provider* &m_dataProvider;
 
         std::vector<Highlight> &m_highlights;
     };

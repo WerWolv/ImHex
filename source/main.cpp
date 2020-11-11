@@ -6,6 +6,8 @@
 #include "views/view_pattern_data.hpp"
 #include "views/view_hashes.hpp"
 
+#include "providers/provider.hpp"
+
 #include <tuple>
 #include <vector>
 
@@ -14,13 +16,13 @@ int main() {
 
     // Shared Data
     std::vector<hex::Highlight> highlights;
-    FILE *file = nullptr;
+    hex::prv::Provider *dataProvider = nullptr;
 
     // Create views
-    window.addView<hex::ViewHexEditor>(file, highlights);
+    window.addView<hex::ViewHexEditor>(dataProvider, highlights);
     window.addView<hex::ViewPattern>(highlights);
-    window.addView<hex::ViewPatternData>(file, highlights);
-    window.addView<hex::ViewHashes>(file);
+    window.addView<hex::ViewPatternData>(dataProvider, highlights);
+    window.addView<hex::ViewHashes>(dataProvider);
 
     window.loop();
 

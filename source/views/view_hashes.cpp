@@ -6,7 +6,7 @@
 
 namespace hex {
 
-    ViewHashes::ViewHashes(FILE* &file) : View(), m_file(file) {
+    ViewHashes::ViewHashes(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
 
     }
 
@@ -19,77 +19,101 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
+        static bool invalidate = false;
+
         if (ImGui::Begin("Hashing", &this->m_windowOpen)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             ImGui::NewLine();
 
-            ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames, sizeof(HashFunctionNames) / sizeof(const char*));
+            if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
 
-            ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
+                ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames, sizeof(HashFunctionNames) / sizeof(const char*));
 
-            ImGui::InputInt("Begin", &this->m_hashStart, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-            ImGui::InputInt("End", &this->m_hashEnd, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::NewLine();
+                ImGui::Separator();
+                ImGui::NewLine();
 
-            ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
+                ImGui::InputInt("Begin", &this->m_hashStart, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
 
-            switch (this->m_currHashFunction) {
-                case 0: // CRC16
-                {
-                    if (this->m_file == nullptr)
-                        break;
+                ImGui::InputInt("End", &this->m_hashEnd, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
 
-                    std::vector<u8> buffer(this->m_hashEnd - this->m_hashStart + 1, 0x00);
-                    fseek(this->m_file, this->m_hashStart, SEEK_SET);
-                    fread(buffer.data(), 1, buffer.size(), this->m_file);
+                ImGui::NewLine();
+                ImGui::Separator();
+                ImGui::NewLine();
 
-                    static int polynomial = 0, init = 0;
+                if (this->m_hashEnd >= this->m_hashStart) {
 
-                    ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::NewLine();
-                    ImGui::Separator();
-                    ImGui::NewLine();
-                    ImGui::LabelText("Result", "%X", crc16(buffer.data(), buffer.size(), polynomial, init));
+                    std::vector<u8> buffer;
+
+                    if (invalidate) {
+                        buffer = std::vector<u8>(this->m_hashEnd - this->m_hashStart + 1, 0x00);
+                        this->m_dataProvider->read(this->m_hashStart, buffer.data(), buffer.size());
+                    }
+
+                    switch (this->m_currHashFunction) {
+                        case 0: // CRC16
+                        {
+                            static int polynomial = 0, init = 0;
+
+                            ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+
+                            ImGui::NewLine();
+                            ImGui::Separator();
+                            ImGui::NewLine();
+
+                            static u16 result = 0;
+
+                            if (invalidate)
+                                result = crc16(buffer.data(), buffer.size(), polynomial, init);
+
+                            ImGui::LabelText("##nolabel", "%X", result);
+                        }
+                            break;
+                        case 1: // CRC32
+                        {
+                            static int polynomial = 0, init = 0;
+
+                            ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+
+                            ImGui::NewLine();
+                            ImGui::Separator();
+                            ImGui::NewLine();
+
+                            static u32 result = 0;
+
+                            if (invalidate)
+                                result = crc32(buffer.data(), buffer.size(), polynomial, init);
+
+                            ImGui::LabelText("##nolabel", "%X", result);
+                        }
+                            break;
+                        case 2: // MD5
+                        {
+                            static std::array<u32, 4> result;
+
+                            if (invalidate)
+                                result = md5(buffer.data(), buffer.size());
+
+                            ImGui::LabelText("##nolabel", "%08X%08X%08X%08X",
+                                             __builtin_bswap32(result[0]),
+                                             __builtin_bswap32(result[1]),
+                                             __builtin_bswap32(result[2]),
+                                             __builtin_bswap32(result[3]));
+                        }
+                            break;
+                    }
+
                 }
-                break;
-                case 1: // CRC32
-                {
-                    if (this->m_file == nullptr)
-                        break;
 
-                    std::vector<u8> buffer(this->m_hashEnd - this->m_hashStart + 1, 0x00);
-                    fseek(this->m_file, this->m_hashStart, SEEK_SET);
-                    fread(buffer.data(), 1, buffer.size(), this->m_file);
+                invalidate = false;
 
-                    static int polynomial = 0, init = 0;
+                ImGui::SameLine();
+                if (ImGui::Button("Hash"))
+                    invalidate = true;
 
-                    ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::NewLine();
-                    ImGui::Separator();
-                    ImGui::NewLine();
-                    ImGui::LabelText("Result", "%X", crc32(buffer.data(), buffer.size(), polynomial, init));
-                }
-                break;
-                case 2: // MD5
-                {
-                    if (this->m_file == nullptr)
-                        break;
-
-                    std::vector<u8> buffer(this->m_hashEnd - this->m_hashStart + 1, 0x00);
-                    fseek(this->m_file, this->m_hashStart, SEEK_SET);
-                    fread(buffer.data(), 1, buffer.size(), this->m_file);
-
-                    auto result = md5(buffer.data(), buffer.size());
-
-                    ImGui::LabelText("Result", "%08X%08X%08X%08X", __builtin_bswap32(result[0]), __builtin_bswap32(result[1]), __builtin_bswap32(result[2]), __builtin_bswap32(result[3]));
-                }
-                    break;
             }
 
             ImGui::EndChild();

@@ -16,6 +16,8 @@ add_executable(ImHex
         source/parser/lexer.cpp
         source/parser/parser.cpp
 
+        source/provider/file_provider.cpp
+
         source/views/view_hexeditor.cpp
         source/views/view_pattern.cpp
         source/views/view_pattern_data.cpp

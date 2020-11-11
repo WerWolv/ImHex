@@ -4,18 +4,20 @@
 
 #include <cstdio>
 
+#include "providers/provider.hpp"
+
 namespace hex {
 
     class ViewHashes : public View {
     public:
-        ViewHashes(FILE* &file);
+        ViewHashes(prv::Provider* &dataProvider);
         virtual ~ViewHashes();
 
         virtual void createView() override;
         virtual void createMenu() override;
 
     private:
-        FILE* &m_file;
+        prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
 
         int m_currHashFunction = 0;
