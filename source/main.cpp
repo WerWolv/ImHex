@@ -5,6 +5,7 @@
 #include "views/view_pattern.hpp"
 #include "views/view_pattern_data.hpp"
 #include "views/view_hashes.hpp"
+#include "views/view_entropy.hpp"
 
 #include "providers/provider.hpp"
 
@@ -22,6 +23,7 @@ int main() {
     window.addView<hex::ViewPattern>(highlights);
     window.addView<hex::ViewPatternData>(dataProvider, highlights);
     window.addView<hex::ViewHashes>(dataProvider);
+    window.addView<hex::ViewEntropy>(dataProvider);
 
     window.loop();
 
