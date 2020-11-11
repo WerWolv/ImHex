@@ -69,7 +69,7 @@ namespace hex {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Window")) {
+        if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Hex View", "", &this->m_memoryEditor.Open);
             ImGui::EndMenu();
         }

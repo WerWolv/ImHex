@@ -34,8 +34,8 @@ namespace hex {
         void deinitImGui();
 
         GLFWwindow* m_window;
-
         std::vector<View*> m_views;
+        bool m_fpsVisible = false;
     };
 
 }

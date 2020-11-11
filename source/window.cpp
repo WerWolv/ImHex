@@ -64,6 +64,18 @@ namespace hex {
         for (auto &view : this->m_views)
             view->createMenu();
 
+
+        if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("Display FPS", "", &this->m_fpsVisible);
+            ImGui::EndMenu();
+        }
+
+        if (this->m_fpsVisible) {
+            ImGui::SameLine(ImGui::GetWindowWidth() - 80);
+            ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+        }
+
+
         ImGui::EndMenuBar();
 
         ImGui::End();

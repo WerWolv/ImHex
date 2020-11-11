@@ -122,7 +122,7 @@ namespace hex {
     }
 
     void ViewHashes::createMenu() {
-        if (ImGui::BeginMenu("Window")) {
+        if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Hash View", "", &this->m_windowOpen);
             ImGui::EndMenu();
         }

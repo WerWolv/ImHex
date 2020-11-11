@@ -38,7 +38,7 @@ namespace hex {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Window")) {
+        if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Pattern View", "", &this->m_windowOpen);
             ImGui::EndMenu();
         }

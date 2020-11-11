@@ -53,7 +53,7 @@ namespace hex {
     }
 
     void ViewPatternData::createMenu() {
-        if (ImGui::BeginMenu("Window")) {
+        if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Data View", "", &this->m_windowOpen);
             ImGui::EndMenu();
         }
