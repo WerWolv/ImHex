@@ -71,8 +71,11 @@ namespace hex {
         }
 
         if (this->m_fpsVisible) {
-            ImGui::SameLine(ImGui::GetWindowWidth() - 80);
-            ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+            char buffer[0x20];
+            snprintf(buffer, 0x20, "%.1f FPS", ImGui::GetIO().Framerate);
+
+            ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetFontSize() * strlen(buffer) + 20);
+            ImGui::TextUnformatted(buffer);
         }
 
 
