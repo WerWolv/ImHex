@@ -57,6 +57,7 @@ namespace hex {
                 if (this->m_entropy > 0.99)
                     ImGui::TextUnformatted("This file is most likely encrypted or compressed!");
 
+                ImGui::NewLine();
                 ImGui::Separator();
                 ImGui::NewLine();
                 ImGui::PlotHistogram("Byte Distribution", this->m_valueCounts, 256, 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
