@@ -40,6 +40,10 @@ namespace hex {
 
                 ImGui::InputInt("End", &this->m_hashEnd, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
 
+                size_t dataSize = this->m_dataProvider->getSize();
+                if (this->m_hashEnd >= dataSize)
+                    this->m_hashEnd = dataSize - 1;
+
                 ImGui::NewLine();
                 ImGui::Separator();
                 ImGui::NewLine();
