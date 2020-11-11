@@ -64,7 +64,6 @@ namespace hex {
         for (auto &view : this->m_views)
             view->createMenu();
 
-
         if (ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Display FPS", "", &this->m_fpsVisible);
             ImGui::EndMenu();
@@ -82,6 +81,16 @@ namespace hex {
         ImGui::EndMenuBar();
 
         ImGui::End();
+
+        if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
+            for (auto &view : this->m_views) {
+                if (view->handleShortcut(key, mods))
+                    break;
+            }
+
+            Window::s_currShortcut = { -1, -1 };
+        }
+
     }
 
     void Window::frameEnd() {
@@ -96,14 +105,11 @@ namespace hex {
         glfwSwapBuffers(this->m_window);
     }
 
-    static void glfw_error_callback(int error, const char* description)
-    {
-        fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-    }
-
-
      void Window::initGLFW() {
-        glfwSetErrorCallback(glfw_error_callback);
+        glfwSetErrorCallback([](int error, const char* desc) {
+            fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
+        });
+
         if (!glfwInit())
             throw std::runtime_error("Failed to initialize GLFW!");
 
@@ -113,7 +119,7 @@ namespace hex {
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         this->m_window = glfwCreateWindow(1280, 720, "ImHex", nullptr, nullptr);
 
@@ -122,6 +128,11 @@ namespace hex {
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
+
+        glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+            if (action == GLFW_PRESS)
+                Window::s_currShortcut = { key, mods };
+        });
 
         if (gladLoadGL() == 0)
             throw std::runtime_error("Failed to initialize OpenGL loader!");

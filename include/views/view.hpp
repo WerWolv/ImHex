@@ -13,6 +13,7 @@ namespace hex {
 
         virtual void createView() = 0;
         virtual void createMenu() { }
+        virtual bool handleShortcut(int key, int mods) { return false; }
     };
 
 }

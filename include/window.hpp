@@ -36,6 +36,8 @@ namespace hex {
         GLFWwindow* m_window;
         std::vector<View*> m_views;
         bool m_fpsVisible = false;
+
+        static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
     };
 
 }
