@@ -4,13 +4,20 @@
 
 #include "utils.hpp"
 
-#include <algorithm>
-#include <vector>
 #include <cstring>
 #include <cmath>
+#include <filesystem>
+#include <span>
+#include <vector>
+
 #include <magic.h>
 
-#include <span>
+
+#if defined(__EMX__) || defined (WIN32)
+#define MAGIC_PATH_SEPARATOR	";"
+#else
+#define MAGIC_PATH_SEPARATOR	":"
+#endif
 
 namespace hex {
 
@@ -71,19 +78,42 @@ namespace hex {
                         std::vector<u8> buffer(this->m_dataProvider->getSize(), 0x00);
                         this->m_dataProvider->read(0x00, buffer.data(), buffer.size());
 
+                        this->m_fileDescription.clear();
+                        this->m_mimeType.clear();
+
+                        std::string magicFiles;
+
+                        for (const auto &entry : std::filesystem::directory_iterator("magic")) {
+                            if (entry.is_regular_file() && entry.path().extension() == ".mgc")
+                                magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
+                        }
+                        magicFiles.pop_back();
+
                         {
                             magic_t cookie = magic_open(MAGIC_NONE);
-                            magic_load(cookie, "magic");
+                            if (magic_load(cookie, magicFiles.c_str()) == -1)
+                                    goto skip_description;
+
                             this->m_fileDescription = magic_buffer(cookie, buffer.data(), buffer.size());
+
+                            skip_description:
+
                             magic_close(cookie);
                         }
 
+
                         {
                             magic_t cookie = magic_open(MAGIC_MIME);
-                            magic_load(cookie, "magic");
+                            if (magic_load(cookie, magicFiles.c_str()) == -1)
+                                goto skip_mime;
+
                             this->m_mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
+
+                            skip_mime:
+
                             magic_close(cookie);
                         }
+
 
                         this->m_shouldInvalidate = false;
                     }
@@ -115,13 +145,17 @@ namespace hex {
                 ImGui::Separator();
                 ImGui::NewLine();
 
-                ImGui::TextUnformatted("Description:");
-                ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
-                ImGui::NewLine();
-                ImGui::TextUnformatted("MIME Type:");
-                ImGui::TextWrapped("%s", this->m_mimeType.c_str());
+                if (!this->m_fileDescription.empty()) {
+                    ImGui::TextUnformatted("Description:");
+                    ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
+                    ImGui::NewLine();
+                }
 
-                ImGui::NewLine();
+                if (!this->m_mimeType.empty()) {
+                    ImGui::TextUnformatted("MIME Type:");
+                    ImGui::TextWrapped("%s", this->m_mimeType.c_str());
+                    ImGui::NewLine();
+                }
             }
 
             ImGui::EndChild();
