@@ -184,7 +184,7 @@ struct MemoryEditor
         CalcSizes(s, mem_size, base_display_addr);
         ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(s.WindowWidth, FLT_MAX));
 
-        if (ImGui::Begin(title, &Open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
+        if (ImGui::Begin(title, &Open, ImGuiWindowFlags_NoScrollbar))
         {
             if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
                 ImGui::OpenPopup("context");
@@ -213,7 +213,10 @@ struct MemoryEditor
 
         if (mem_size == 0x00) {
             constexpr const char *noDataString = "No data loaded!";
-            draw_list->AddText(ImVec2(ImGui::GetWindowWidth() / 2 - 55, ImGui::GetWindowHeight() / 2), 0xFFFFFFFF, noDataString);
+
+            auto pos = ImGui::GetCursorScreenPos();
+            pos.x += (ImGui::GetWindowWidth() - (ImGui::CalcTextSize(noDataString).x)) / 2;
+            draw_list->AddText(pos, 0xFFFFFFFF, noDataString);
             return;
         }
 

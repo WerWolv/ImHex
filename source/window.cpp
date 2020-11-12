@@ -29,7 +29,6 @@ namespace hex {
             this->frameBegin();
 
             for (auto &view : this->m_views) {
-                ImGui::SetNextWindowSize(ImVec2(250, 250));
                 view->createView();
             }
 
@@ -52,7 +51,6 @@ namespace hex {
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
         windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
         ImGui::Begin("DockSpace", nullptr, windowFlags);
