@@ -133,6 +133,8 @@ namespace hex {
                 Window::s_currShortcut = { key, mods };
         });
 
+         glfwSetWindowSizeLimits(this->m_window, 720, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
         if (gladLoadGL() == 0)
             throw std::runtime_error("Failed to initialize OpenGL loader!");
     }
