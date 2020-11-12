@@ -83,35 +83,40 @@ namespace hex {
 
                         std::string magicFiles;
 
-                        for (const auto &entry : std::filesystem::directory_iterator("magic")) {
+                        std::error_code error;
+                        for (const auto &entry : std::filesystem::directory_iterator("magic", error)) {
                             if (entry.is_regular_file() && entry.path().extension() == ".mgc")
                                 magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
                         }
-                        magicFiles.pop_back();
 
-                        {
-                            magic_t cookie = magic_open(MAGIC_NONE);
-                            if (magic_load(cookie, magicFiles.c_str()) == -1)
+                        if (!error) {
+                            magicFiles.pop_back();
+
+                            {
+                                magic_t cookie = magic_open(MAGIC_NONE);
+                                if (magic_load(cookie, magicFiles.c_str()) == -1)
                                     goto skip_description;
 
-                            this->m_fileDescription = magic_buffer(cookie, buffer.data(), buffer.size());
+                                this->m_fileDescription = magic_buffer(cookie, buffer.data(), buffer.size());
 
-                            skip_description:
+                                skip_description:
 
-                            magic_close(cookie);
-                        }
+                                magic_close(cookie);
+                            }
 
 
-                        {
-                            magic_t cookie = magic_open(MAGIC_MIME);
-                            if (magic_load(cookie, magicFiles.c_str()) == -1)
-                                goto skip_mime;
+                            {
+                                magic_t cookie = magic_open(MAGIC_MIME);
+                                if (magic_load(cookie, magicFiles.c_str()) == -1)
+                                    goto skip_mime;
 
-                            this->m_mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
+                                this->m_mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
 
-                            skip_mime:
+                                skip_mime:
 
-                            magic_close(cookie);
+                                magic_close(cookie);
+                            }
+
                         }
 
 
