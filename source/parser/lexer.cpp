@@ -83,6 +83,12 @@ namespace hex::lang {
             } else if (c == '}') {
                 tokens.push_back({.type = Token::Type::ScopeClose});
                 offset += 1;
+            } else if (c == '[') {
+                tokens.push_back({.type = Token::Type::ArrayOpen});
+                offset += 1;
+            } else if (c == ']') {
+                tokens.push_back({.type = Token::Type::ArrayClose});
+                offset += 1;
             } else if (c == ',') {
                 tokens.push_back({.type = Token::Type::Separator});
                 offset += 1;

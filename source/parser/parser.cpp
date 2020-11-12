@@ -35,6 +35,14 @@ namespace hex::lang {
         return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
     }
 
+    ASTNode* parseBuiltinArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer);
+    }
+
+    ASTNode* parseCustomTypeArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer);
+    }
+
     ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr) {
         return new ASTNodeVariableDecl(curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer);
     }
@@ -52,6 +60,10 @@ namespace hex::lang {
                 nodes.push_back(parseBuiltinVariableDecl(curr));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::EndOfExpression}))
                 nodes.push_back(parseCustomTypeVariableDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinArrayDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeArrayDecl(curr));
             else break;
         }
 

@@ -16,6 +16,8 @@ namespace hex::lang {
             EndOfExpression,
             ScopeOpen,
             ScopeClose,
+            ArrayOpen,
+            ArrayClose,
             Separator,
             EndOfProgram
         } type;

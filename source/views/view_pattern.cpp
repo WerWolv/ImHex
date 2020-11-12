@@ -119,7 +119,7 @@ namespace hex {
 
             u64 offset = varNode->getOffset().value();
             if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                this->setHighlight(offset, static_cast<u32>(varNode->getVariableType()) >> 4, varNode->getVariableName());
+                this->setHighlight(offset, (static_cast<u32>(varNode->getVariableType()) >> 4) * varNode->getArraySize(), varNode->getVariableName());
             } else {
                 for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
                     if (varNode->getCustomVariableTypeName() == structNode->getName())
@@ -139,7 +139,7 @@ namespace hex {
 
     s32 ViewPattern::highlightUsingDecls(std::vector<lang::ASTNode*> &ast, lang::ASTNodeTypeDecl* currTypeDeclNode, lang::ASTNodeVariableDecl* currVarDecl, u64 offset) {
         if (currTypeDeclNode->getAssignedType() != lang::Token::TypeToken::Type::CustomType) {
-            size_t size = static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4;
+            size_t size = (static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4) * currVarDecl->getArraySize();
 
             this->setHighlight(offset, size, currVarDecl->getVariableName());
             offset += size;
@@ -173,7 +173,7 @@ namespace hex {
             auto var = static_cast<lang::ASTNodeVariableDecl*>(node);
 
             if (var->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                size_t size = static_cast<u32>(var->getVariableType()) >> 4;
+                size_t size = (static_cast<u32>(var->getVariableType()) >> 4) * var->getArraySize();
 
                 this->setHighlight(offset, size, var->getVariableName());
                 offset += size;
@@ -181,10 +181,15 @@ namespace hex {
                 bool foundType = false;
                 for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
                     if (structNode->getName() == var->getCustomVariableTypeName()) {
-                        auto size = this->highlightStruct(ast, structNode, offset);
+                        size_t size = 0;
+                        for (size_t i = 0; i < var->getArraySize(); i++) {
+                            size = this->highlightStruct(ast, structNode, offset);
 
-                        if (size == -1)
-                            return -1;
+                            if (size == -1)
+                                return -1;
+
+                            offset += size;
+                        }
 
                         offset += size;
                         foundType = true;
