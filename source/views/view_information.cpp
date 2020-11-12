@@ -106,10 +106,10 @@ namespace hex {
                 ImGui::LabelText("Average entropy", "%.8f", this->m_averageEntropy);
                 ImGui::LabelText("Highest entropy block", "%.8f", this->m_highestBlockEntropy);
 
-                ImGui::NewLine();
-
-                if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9)
+                if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
+                    ImGui::NewLine();
                     ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "This data is most likely encrypted or compressed!");
+                }
 
                 ImGui::NewLine();
                 ImGui::Separator();
