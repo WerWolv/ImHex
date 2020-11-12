@@ -12,6 +12,7 @@ add_executable(ImHex
         source/main.cpp
         source/window.cpp
         source/utils.cpp
+        source/crypto.cpp
 
         source/parser/lexer.cpp
         source/parser/parser.cpp
@@ -36,6 +37,6 @@ add_executable(ImHex
         res.rc
         )
 
-target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libwinpthread.a)
+target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libwinpthread.a libcrypto.a)
 
 

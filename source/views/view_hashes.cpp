@@ -2,7 +2,7 @@
 
 #include "providers/provider.hpp"
 
-#include "utils.hpp"
+#include "crypto.hpp"
 
 #include <vector>
 
@@ -19,6 +19,11 @@ namespace hex {
     }
 
 
+    static void formatBigHexInt(auto dataArray, char *buffer, size_t bufferSize) {
+        for (int i = 0; i < dataArray.size(); i++)
+            snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", __builtin_bswap32(dataArray[i]));
+    }
+
     void ViewHashes::createView() {
         if (!this->m_windowOpen)
             return;
@@ -29,8 +34,8 @@ namespace hex {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
 
-                ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *));
-                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                if (ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *)))
+                    this->m_shouldInvalidate = true;
 
                 ImGui::NewLine();
                 ImGui::Separator();
@@ -52,17 +57,10 @@ namespace hex {
 
                 if (this->m_hashEnd >= this->m_hashStart) {
 
-                    std::vector<u8> buffer;
-
-                    if (this->m_shouldInvalidate) {
-                        buffer = std::vector<u8>(this->m_hashEnd - this->m_hashStart + 1, 0x00);
-                        this->m_dataProvider->read(this->m_hashStart, buffer.data(), buffer.size());
-                    }
-
                     switch (this->m_currHashFunction) {
                         case 0: // CRC16
                         {
-                            static int polynomial = 0, init = 0;
+                            int polynomial = 0, init = 0;
 
                             ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
@@ -77,14 +75,16 @@ namespace hex {
                             static u16 result = 0;
 
                             if (this->m_shouldInvalidate)
-                                result = crc16(buffer.data(), buffer.size(), polynomial, init);
+                                result = crc16(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1, polynomial, init);
 
-                            ImGui::LabelText("##nolabel", "%X", result);
+                            char buffer[sizeof(result) * 2 + 1];
+                            snprintf(buffer, sizeof(buffer), "%04X", result);
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
                         case 1: // CRC32
                         {
-                            static int polynomial = 0, init = 0;
+                            int polynomial = 0, init = 0;
 
                             ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
@@ -99,23 +99,95 @@ namespace hex {
                             static u32 result = 0;
 
                             if (this->m_shouldInvalidate)
-                                result = crc32(buffer.data(), buffer.size(), polynomial, init);
+                                result = crc32(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1, polynomial, init);
 
-                            ImGui::LabelText("##nolabel", "%X", result);
+                            char buffer[sizeof(result) * 2 + 1];
+                            snprintf(buffer, sizeof(buffer), "%08X", result);
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 2: // MD5
+                        case 2: // MD4
                         {
                             static std::array<u32, 4> result;
 
                             if (this->m_shouldInvalidate)
-                                result = md5(buffer.data(), buffer.size());
+                                result = md4(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
 
-                            ImGui::LabelText("##nolabel", "%08X%08X%08X%08X",
-                                             __builtin_bswap32(result[0]),
-                                             __builtin_bswap32(result[1]),
-                                             __builtin_bswap32(result[2]),
-                                             __builtin_bswap32(result[3]));
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
+                        }
+                            break;
+                        case 3: // MD5
+                        {
+                            static std::array<u32, 4> result = { 0 };
+
+                            if (this->m_shouldInvalidate)
+                                result = md5(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
+
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
+                        }
+                            break;
+                        case 4: // SHA-1
+                        {
+                            static std::array<u32, 5> result = { 0 };
+
+                            if (this->m_shouldInvalidate)
+                                result = sha1(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
+
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
+                        }
+                            break;
+                        case 5: // SHA-224
+                        {
+                            static std::array<u32, 7> result = { 0 };
+
+                            if (this->m_shouldInvalidate)
+                                result = sha224(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
+
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
+                        }
+                            break;
+                        case 6: // SHA-256
+                        {
+                            static std::array<u32, 8> result;
+
+                            if (this->m_shouldInvalidate)
+                                result = sha256(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
+
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
+                        }
+                            break;
+                        case 7: // SHA-384
+                        {
+                            static std::array<u32, 12> result;
+
+                            if (this->m_shouldInvalidate)
+                                result = sha384(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
+
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
+                        }
+                            break;
+                        case 8: // SHA-512
+                        {
+                            static std::array<u32, 16> result;
+
+                            if (this->m_shouldInvalidate)
+                                result = sha512(this->m_dataProvider, this->m_hashStart, this->m_hashEnd - this->m_hashStart + 1);
+
+                            char buffer[sizeof(result) * 2 + 1];
+                            formatBigHexInt(result, buffer, sizeof(buffer));
+                            ImGui::InputText("Hash value", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
                     }
