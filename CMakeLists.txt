@@ -3,11 +3,13 @@ project(HexEditor)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_library(GLFW REQUIRED glfw3)
-find_library(OPENGL REQUIRED OpenGL)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
+find_package(OpenGL REQUIRED)
 
 include_directories(include ${GLFW_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
-SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -static-libstdc++ -static-libgcc -static")
+SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
+
 add_executable(ImHex
         source/main.cpp
         source/window.cpp
@@ -37,6 +39,10 @@ add_executable(ImHex
         res.rc
         )
 
-target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libwinpthread.a libcrypto.a)
+if (WIN32)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a)
+endif (WIN32)
 
-
+if (UNIX)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so)
+endif (UNIX)
