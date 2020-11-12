@@ -8,6 +8,4 @@
 
 namespace hex {
 
-    std::optional<std::string> openFileDialog();
-
 }

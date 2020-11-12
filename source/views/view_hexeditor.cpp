@@ -84,7 +84,6 @@ namespace hex {
         return results;
     }
 
-
     void ViewHexEditor::createView() {
         if (!this->m_memoryEditor.Open)
             return;
@@ -98,20 +97,25 @@ namespace hex {
             this->drawGotoPopup();
         }
 
+        this->m_fileBrowser.Display();
+
+        if (this->m_fileBrowser.HasSelected()) {
+            if (this->m_dataProvider != nullptr)
+                delete this->m_dataProvider;
+
+            this->m_dataProvider = new prv::FileProvider(this->m_fileBrowser.GetSelected().string());
+            View::postEvent(Events::DataChanged);
+            this->m_fileBrowser.ClearSelected();
+        }
+
     }
 
     void ViewHexEditor::createMenu() {
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...")) {
-                auto filePath = openFileDialog();
-                if (filePath.has_value()) {
-                    if (this->m_dataProvider != nullptr)
-                        delete this->m_dataProvider;
-
-                    this->m_dataProvider = new prv::FileProvider(filePath.value());
-                    View::postEvent(Events::DataChanged);
-                }
+                this->m_fileBrowser.SetTitle("Open File");
+                this->m_fileBrowser.Open();
             }
 
             ImGui::EndMenu();

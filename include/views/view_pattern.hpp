@@ -10,6 +10,8 @@
 
 #include "views/highlight.hpp"
 
+#include "imfilebrowser.h"
+
 namespace hex {
 
     class ViewPattern : public View {
@@ -25,6 +27,8 @@ namespace hex {
 
         std::vector<Highlight> &m_highlights;
         bool m_windowOpen = true;
+
+        ImGui::FileBrowser m_fileBrowser;
 
 
         void setHighlight(u64 offset, size_t size, std::string name, u32 color = 0);

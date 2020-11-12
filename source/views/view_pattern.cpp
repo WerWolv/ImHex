@@ -16,24 +16,9 @@ namespace hex {
     void ViewPattern::createMenu() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Load pattern...")) {
-                auto filePath = openFileDialog();
-                if (filePath.has_value()) {
-                    FILE *file = fopen(filePath->c_str(), "r+b");
-
-                    fseek(file, 0, SEEK_END);
-                    size_t size = ftell(file);
-                    rewind(file);
-
-                    if (size > 0xFF'FFFF)
-                        return;
-
-                    fread(this->m_buffer, size, 1, file);
-
-                    fclose(file);
-
-                    this->parsePattern(this->m_buffer);
-                }
-
+                this->m_fileBrowser.SetTitle("Open Hex Pattern");
+                this->m_fileBrowser.SetTypeFilters({ ".hexpat" });
+                this->m_fileBrowser.Open();
             }
             ImGui::EndMenu();
         }
@@ -67,6 +52,25 @@ namespace hex {
             ImGui::PopStyleVar(2);
         }
         ImGui::End();
+
+        this->m_fileBrowser.Display();
+
+        if (this->m_fileBrowser.HasSelected()) {
+            FILE *file = fopen(this->m_fileBrowser.GetSelected().string().c_str(), "rb");
+
+            fseek(file, 0, SEEK_END);
+            size_t size = ftell(file);
+            rewind(file);
+
+            if (size > 0xFF'FFFF)
+                return;
+
+            fread(this->m_buffer, size, 1, file);
+
+            fclose(file);
+
+            this->parsePattern(this->m_buffer);
+        }
     }
 
 
