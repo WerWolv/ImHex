@@ -8,7 +8,7 @@ pkg_search_module(GLFW REQUIRED glfw3)
 find_package(OpenGL REQUIRED)
 
 include_directories(include ${GLFW_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
-SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
+SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD -static-libstdc++ -static-libgcc -static")
 
 add_executable(ImHex
         source/main.cpp
@@ -40,7 +40,7 @@ add_executable(ImHex
         )
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a)
 endif (WIN32)
 
 if (UNIX)
