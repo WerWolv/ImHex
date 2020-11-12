@@ -61,7 +61,7 @@ namespace hex {
 
                         for (u64 i = 0; i < this->m_dataProvider->getSize(); i += 512) {
                             std::array<float, 256> blockValueCounts = { 0 };
-                            this->m_dataProvider->read(i, buffer.data(), std::min(512ULL, this->m_dataProvider->getSize() - i));
+                            this->m_dataProvider->read(i, buffer.data(), std::min(size_t(512), this->m_dataProvider->getSize() - i));
 
                             for (u16 j = 0; j < 512; j++) {
                                 blockValueCounts[buffer[j]]++;

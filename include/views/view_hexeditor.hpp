@@ -1,8 +1,5 @@
 #pragma once
 
-#include <windows.h>
-#include <shobjidl.h>
-
 #include "utils.hpp"
 #include "views/view.hpp"
 
