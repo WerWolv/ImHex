@@ -29,6 +29,7 @@ namespace hex {
                 return;
 
             _this->m_dataProvider->write(off, &d, sizeof(ImU8));
+            _this->postEvent(Events::DataChanged);
         };
 
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
@@ -50,9 +51,13 @@ namespace hex {
         };
     }
 
-    ViewHexEditor::~ViewHexEditor() {}
+    ViewHexEditor::~ViewHexEditor() {
+        if (this->m_dataProvider != nullptr)
+            delete this->m_dataProvider;
+        this->m_dataProvider = nullptr;
+    }
 
-    auto findString(prv::Provider* &provider, std::string string) {
+    static auto findString(prv::Provider* &provider, std::string string) {
         std::vector<std::pair<u64, u64>> results;
 
         u32 foundCharacters = 0;
@@ -76,24 +81,76 @@ namespace hex {
             }
         }
 
-
-
         return results;
     }
 
-    void ViewHexEditor::createView() {
-        this->m_memoryEditor.DrawWindow("Hex Editor", this, (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable()) ? 0x00 : this->m_dataProvider->getSize());
 
+    void ViewHexEditor::createView() {
+        if (!this->m_memoryEditor.Open)
+            return;
+
+        size_t dataSize = (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable()) ? 0x00 : this->m_dataProvider->getSize();
+
+        this->m_memoryEditor.DrawWindow("Hex Editor", this, dataSize);
+
+        if (dataSize != 0x00) {
+            this->drawSearchPopup();
+            this->drawGotoPopup();
+        }
+
+    }
+
+    void ViewHexEditor::createMenu() {
+
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open File...")) {
+                auto filePath = openFileDialog();
+                if (filePath.has_value()) {
+                    if (this->m_dataProvider != nullptr)
+                        delete this->m_dataProvider;
+
+                    this->m_dataProvider = new prv::FileProvider(filePath.value());
+                    View::postEvent(Events::DataChanged);
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("View")) {
+            ImGui::MenuItem("Hex View", "", &this->m_memoryEditor.Open);
+            ImGui::EndMenu();
+        }
+    }
+
+    bool ViewHexEditor::handleShortcut(int key, int mods) {
+        if (mods & GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
+            ImGui::OpenPopup("Search");
+            return true;
+        } else if (mods & GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
+            ImGui::OpenPopup("Goto");
+            return true;
+        }
+
+        return false;
+    }
+
+
+    void ViewHexEditor::drawSearchPopup() {
         if (ImGui::BeginPopup("Search")) {
             ImGui::TextUnformatted("Search");
-            ImGui::InputText("##nolabel", this->m_searchBuffer, 0xFFFF, ImGuiInputTextFlags_CallbackEdit,
-                 [](ImGuiInputTextCallbackData* data) -> int {
-                    auto lastSearch = static_cast<std::vector<std::pair<u64, u64>>*>(data->UserData);
+            ImGui::InputText("##nolabel", this->m_searchBuffer, 0xFFFF, ImGuiInputTextFlags_CallbackCompletion,
+             [](ImGuiInputTextCallbackData* data) -> int {
+                auto _this = static_cast<ViewHexEditor*>(data->UserData);
 
-                    lastSearch->clear();
+                 _this->m_lastSearch = findString(_this->m_dataProvider, _this->m_searchBuffer);
+                 _this->m_lastSearchIndex = 0;
 
-                    return 0;
-                 }, &this->m_lastSearch);
+                 if (_this->m_lastSearch.size() > 0)
+                     _this->m_memoryEditor.GotoAddrAndHighlight(_this->m_lastSearch[0].first, _this->m_lastSearch[0].second);
+
+                 return 0;
+             }, this);
 
 
             if (ImGui::Button("Find")) {
@@ -135,35 +192,20 @@ namespace hex {
         }
     }
 
-    void ViewHexEditor::createMenu() {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open File...")) {
-                auto filePath = openFileDialog();
-                if (filePath.has_value()) {
-                    if (this->m_dataProvider != nullptr)
-                        delete this->m_dataProvider;
+    void ViewHexEditor::drawGotoPopup() {
+        if (ImGui::BeginPopup("Goto")) {
+            ImGui::TextUnformatted("Goto");
+            ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    this->m_dataProvider = new prv::FileProvider(filePath.value());
-                }
+            if (this->m_gotoAddress >= this->m_dataProvider->getSize())
+                this->m_gotoAddress = this->m_dataProvider->getSize() - 1;
 
+            if (ImGui::Button("Goto")) {
+                this->m_memoryEditor.GotoAddr = this->m_gotoAddress;
             }
 
-            ImGui::EndMenu();
+            ImGui::EndPopup();
         }
-
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Hex View", "", &this->m_memoryEditor.Open);
-            ImGui::EndMenu();
-        }
-    }
-
-    bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods & GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
-            ImGui::OpenPopup("Search");
-            return true;
-        }
-
-        return false;
     }
 
 }

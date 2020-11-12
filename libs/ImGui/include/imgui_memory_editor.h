@@ -180,9 +180,6 @@ struct MemoryEditor
     // Standalone Memory Editor window
     void DrawWindow(const char* title, void* mem_data, size_t mem_size, size_t base_display_addr = 0x0000)
     {
-        if (!Open)
-            return;
-
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
         ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(s.WindowWidth, FLT_MAX));
@@ -208,13 +205,17 @@ struct MemoryEditor
         if (Cols < 1)
             Cols = 1;
 
-        if (mem_size == 0)
-            return;
-
         ImU8* mem_data = (ImU8*)mem_data_void;
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
         ImGuiStyle& style = ImGui::GetStyle();
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+        if (mem_size == 0x00) {
+            constexpr const char *noDataString = "No data loaded!";
+            draw_list->AddText(ImVec2(ImGui::GetWindowWidth() / 2 - 55, ImGui::GetWindowHeight() / 2), 0xFFFFFFFF, noDataString);
+            return;
+        }
 
         // We begin into our scrolling region with the 'ImGuiWindowFlags_NoMove' in order to prevent click from moving the window.
         // This is used as a facility since our main click detection code doesn't assign an ActiveId so the click would normally be caught as a window-move.
@@ -225,10 +226,11 @@ struct MemoryEditor
         if (OptShowDataPreview)
             footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1 + ImGui::GetTextLineHeightWithSpacing() * 3;
         ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
+
 
         // We are not really using the clipper API correctly here, because we rely on visible_start_addr/visible_end_addr for our scrolling function.
         const int line_total_count = (int)((mem_size + Cols - 1) / Cols);

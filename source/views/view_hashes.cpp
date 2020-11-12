@@ -9,17 +9,17 @@
 namespace hex {
 
     ViewHashes::ViewHashes(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
-
+        View::subscribeEvent(Events::DataChanged, [this](void*){
+            this->m_shouldInvalidate = true;
+        });
     }
 
     ViewHashes::~ViewHashes() {
-
+        View::unsubscribeEvent(Events::DataChanged);
     }
 
 
     void ViewHashes::createView() {
-        static bool invalidate = false;
-
         if (!this->m_windowOpen)
             return;
 
@@ -29,16 +29,18 @@ namespace hex {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
 
-                ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,
-                             sizeof(HashFunctionNames) / sizeof(const char *));
+                ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *));
+                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                 ImGui::NewLine();
                 ImGui::Separator();
                 ImGui::NewLine();
 
                 ImGui::InputInt("Begin", &this->m_hashStart, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                 ImGui::InputInt("End", &this->m_hashEnd, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                 size_t dataSize = this->m_dataProvider->getSize();
                 if (this->m_hashEnd >= dataSize)
@@ -52,7 +54,7 @@ namespace hex {
 
                     std::vector<u8> buffer;
 
-                    if (invalidate) {
+                    if (this->m_shouldInvalidate) {
                         buffer = std::vector<u8>(this->m_hashEnd - this->m_hashStart + 1, 0x00);
                         this->m_dataProvider->read(this->m_hashStart, buffer.data(), buffer.size());
                     }
@@ -63,7 +65,10 @@ namespace hex {
                             static int polynomial = 0, init = 0;
 
                             ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
                             ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                             ImGui::NewLine();
                             ImGui::Separator();
@@ -71,7 +76,7 @@ namespace hex {
 
                             static u16 result = 0;
 
-                            if (invalidate)
+                            if (this->m_shouldInvalidate)
                                 result = crc16(buffer.data(), buffer.size(), polynomial, init);
 
                             ImGui::LabelText("##nolabel", "%X", result);
@@ -82,7 +87,10 @@ namespace hex {
                             static int polynomial = 0, init = 0;
 
                             ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
                             ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                             ImGui::NewLine();
                             ImGui::Separator();
@@ -90,7 +98,7 @@ namespace hex {
 
                             static u32 result = 0;
 
-                            if (invalidate)
+                            if (this->m_shouldInvalidate)
                                 result = crc32(buffer.data(), buffer.size(), polynomial, init);
 
                             ImGui::LabelText("##nolabel", "%X", result);
@@ -100,7 +108,7 @@ namespace hex {
                         {
                             static std::array<u32, 4> result;
 
-                            if (invalidate)
+                            if (this->m_shouldInvalidate)
                                 result = md5(buffer.data(), buffer.size());
 
                             ImGui::LabelText("##nolabel", "%08X%08X%08X%08X",
@@ -114,12 +122,7 @@ namespace hex {
 
                 }
 
-                invalidate = false;
-
-                ImGui::SameLine();
-                if (ImGui::Button("Hash"))
-                    invalidate = true;
-
+                this->m_shouldInvalidate = false;
             }
             ImGui::EndChild();
         }

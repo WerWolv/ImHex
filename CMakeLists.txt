@@ -22,7 +22,7 @@ add_executable(ImHex
         source/views/view_pattern.cpp
         source/views/view_pattern_data.cpp
         source/views/view_hashes.cpp
-        source/views/view_entropy.cpp
+        source/views/view_information.cpp
 
         libs/glad/source/glad.c
 
@@ -36,6 +36,6 @@ add_executable(ImHex
         res.rc
         )
 
-target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a)
+target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libwinpthread.a)
 
 

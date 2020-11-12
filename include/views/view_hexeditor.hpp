@@ -36,6 +36,11 @@ namespace hex {
         char m_searchBuffer[0xFFFF] = { 0 };
         s64 m_lastSearchIndex = 0;
         std::vector<std::pair<u64, u64>> m_lastSearch;
+        u64 m_gotoAddress = 0;
+
+
+        void drawSearchPopup();
+        void drawGotoPopup();
     };
 
 }
