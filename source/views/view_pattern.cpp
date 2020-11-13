@@ -123,14 +123,25 @@ namespace hex {
                 this->setHighlight(offset, (static_cast<u32>(varNode->getVariableType()) >> 4) * varNode->getArraySize(), varNode->getVariableName());
             } else {
                 for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
-                    if (varNode->getCustomVariableTypeName() == structNode->getName())
-                        if (this->highlightStruct(ast, structNode, offset) == -1)
-                            this->m_highlights.clear();
+                    if (varNode->getCustomVariableTypeName() == structNode->getName()) {
+                        for (u32 i = 0; i < varNode->getArraySize(); i++) {
+                            if (size_t size = this->highlightStruct(ast, structNode, offset); size == -1)
+                                this->m_highlights.clear();
+                            else
+                                offset += size;
+                        }
+                    }
 
-                for (auto &usingNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast))
-                    if (varNode->getCustomVariableTypeName() == usingNode->getTypeName())
-                        if (this->highlightUsingDecls(ast, usingNode, varNode, offset) == -1)
-                            this->m_highlights.clear();
+                for (auto &usingNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
+                    if (varNode->getCustomVariableTypeName() == usingNode->getTypeName()) {
+                        for (u32 i = 0; i < varNode->getArraySize(); i++) {
+                            if (size_t size = this->highlightUsingDecls(ast, usingNode, varNode, offset); size == -1)
+                                this->m_highlights.clear();
+                            else
+                                offset += size;
+                        }
+                    }
+                }
             }
 
         }
@@ -139,6 +150,8 @@ namespace hex {
     }
 
     s32 ViewPattern::highlightUsingDecls(std::vector<lang::ASTNode*> &ast, lang::ASTNodeTypeDecl* currTypeDeclNode, lang::ASTNodeVariableDecl* currVarDecl, u64 offset) {
+        u64 startOffset = offset;
+
         if (currTypeDeclNode->getAssignedType() != lang::Token::TypeToken::Type::CustomType) {
             size_t size = (static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4);
 
@@ -148,23 +161,42 @@ namespace hex {
             bool foundType = false;
             for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
                 if (structNode->getName() == currTypeDeclNode->getAssignedCustomTypeName()) {
-                    offset = this->highlightStruct(ast, structNode, offset);
+                    size_t size = 0;
+                    for (size_t i = 0; i < currVarDecl->getArraySize(); i++) {
+                        size = this->highlightStruct(ast, structNode, offset);
+
+                        if (size == -1)
+                            return -1;
+
+                        offset += size;
+                    }
+
                     foundType = true;
                     break;
                 }
 
-            for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast))
+            for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                 if (typeDeclNode->getTypeName() == currTypeDeclNode->getAssignedCustomTypeName()) {
-                    offset = this->highlightUsingDecls(ast, typeDeclNode, currVarDecl, offset);
+                    size_t size = 0;
+                    for (size_t i = 0; i < currVarDecl->getArraySize(); i++) {
+                        size = this->highlightUsingDecls(ast, typeDeclNode, currVarDecl, offset);
+
+                        if (size == -1)
+                            return -1;
+
+                        offset += size;
+                    }
+
                     foundType = true;
                     break;
                 }
+            }
 
             if (!foundType)
                 return -1;
         }
 
-        return offset;
+        return offset - startOffset;
     }
 
     s32 ViewPattern::highlightStruct(std::vector<lang::ASTNode*> &ast, lang::ASTNodeStruct* currStructNode, u64 offset) {
@@ -196,7 +228,7 @@ namespace hex {
                         break;
                     }
 
-                for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast))
+                for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                     if (typeDeclNode->getTypeName() == var->getCustomVariableTypeName()) {
                         size_t size = 0;
                         for (size_t i = 0; i < var->getArraySize(); i++) {
@@ -211,6 +243,7 @@ namespace hex {
                         foundType = true;
                         break;
                     }
+                }
 
                 if (!foundType)
                     return -1;
