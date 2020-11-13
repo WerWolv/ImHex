@@ -1,0 +1,18 @@
+# A libmagic database containing definitions for files used by Nintendo consoles
+
+# Nintendo Switch NRO file
+0x10    string      NRO0                Nintendo Switch NRO file
+>0x08   string      HOMEBREW            (Homebrew)
+>0x18   long        x                   (Size %d)
+
+# Nintendo Switch NSO file
+0x00    string      NSO0                Nintendo Switch NSO file
+>0x04   long        x                   Version %d
+>0x0C   long        x                   Flags %08x
+
+# Nintendo Switch NCA file
+0x200   string      NCA                 Nintendo Switch NCA file
+>0x203  byte        x                   Version %c
+>0x204  byte        0                   System NCA
+>0x204  byte        1                   Gamecard NCA
+>0x210  quad        x                   ProgramId %016llx
