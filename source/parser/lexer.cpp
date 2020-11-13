@@ -70,6 +70,29 @@ namespace hex::lang {
         u32 offset = 0;
 
         while (offset < code.length()) {
+            // Handle comments
+            if (code[offset] == '/') {
+                offset++;
+
+                if (offset < code.length() && code[offset] == '/') {
+                    offset++;
+                    while (offset < code.length()) {
+                        if (code[offset] == '\n' || code[offset] == '\r')
+                            break;
+                        offset++;
+                    }
+                } else if (offset < code.length() && code[offset] == '*') {
+                    offset++;
+                    while (offset < (code.length() - 1)) {
+                        if (code[offset] == '*' && code[offset + 1] == '/')
+                            break;
+                        offset++;
+                    }
+
+                    offset += 2;
+                } else offset--;
+            }
+
             const char& c = code[offset];
 
             if (std::isblank(c) || std::isspace(c)) {

@@ -7,6 +7,9 @@ namespace hex {
 
     ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<Highlight> &highlights)
         : View(), m_dataProvider(dataProvider), m_highlights(highlights) {
+
+        this->m_buffer = new char[0xFF'FFFF];
+        std::memset(this->m_buffer, 0x00, 0xFF'FFFF);
     }
     ViewPattern::~ViewPattern() {
         if (this->m_buffer != nullptr)
@@ -34,7 +37,7 @@ namespace hex {
             return;
 
         if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None)) {
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            if (this->m_buffer != nullptr && this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
@@ -59,23 +62,26 @@ namespace hex {
         this->m_fileBrowser.Display();
 
         if (this->m_fileBrowser.HasSelected()) {
+
             FILE *file = fopen(this->m_fileBrowser.GetSelected().string().c_str(), "rb");
-
-            fseek(file, 0, SEEK_END);
-            size_t size = ftell(file);
-            rewind(file);
-
-            if (this->m_buffer != nullptr)
-                delete[] this->m_buffer;
-            this->m_buffer = new char[size + 1];
-            std::memset(this->m_buffer, 0x00, size + 1);
-
-            fread(this->m_buffer, size, 1, file);
-
-            fclose(file);
-
-            this->parsePattern(this->m_buffer);
             this->m_fileBrowser.ClearSelected();
+
+            if (file != nullptr) {
+                fseek(file, 0, SEEK_END);
+                size_t size = ftell(file);
+                rewind(file);
+
+                if (size >= 0xFF'FFFF) {
+                    fclose(file);
+                    return;
+                }
+
+                fread(this->m_buffer, size, 1, file);
+
+                fclose(file);
+
+                this->parsePattern(this->m_buffer);
+            }
         }
     }
 
