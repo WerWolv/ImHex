@@ -7,11 +7,10 @@ namespace hex {
 
     ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<Highlight> &highlights)
         : View(), m_dataProvider(dataProvider), m_highlights(highlights) {
-        this->m_buffer = new char[0xFFFFFF];
-        std::memset(this->m_buffer, 0x00, 0xFFFFFF);
     }
     ViewPattern::~ViewPattern() {
-        delete[] this->m_buffer;
+        if (this->m_buffer != nullptr)
+            delete[] this->m_buffer;
     }
 
     void ViewPattern::createMenu() {
@@ -66,10 +65,10 @@ namespace hex {
             size_t size = ftell(file);
             rewind(file);
 
-            if (size > 0xFF'FFFF) {
-                fclose(file);
-                return;
-            }
+            if (this->m_buffer != nullptr)
+                delete[] this->m_buffer;
+            this->m_buffer = new char[size + 1];
+            std::memset(this->m_buffer, 0x00, size + 1);
 
             fread(this->m_buffer, size, 1, file);
 

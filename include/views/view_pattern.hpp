@@ -26,7 +26,7 @@ namespace hex {
         void createView() override;
 
     private:
-        char *m_buffer;
+        char *m_buffer = nullptr;
 
         std::vector<Highlight> &m_highlights;
         prv::Provider* &m_dataProvider;
