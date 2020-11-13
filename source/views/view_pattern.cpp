@@ -62,8 +62,10 @@ namespace hex {
             size_t size = ftell(file);
             rewind(file);
 
-            if (size > 0xFF'FFFF)
+            if (size > 0xFF'FFFF) {
+                fclose(file);
                 return;
+            }
 
             fread(this->m_buffer, size, 1, file);
 
