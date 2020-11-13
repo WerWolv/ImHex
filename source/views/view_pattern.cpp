@@ -75,14 +75,25 @@ namespace hex {
     }
 
 
-    void ViewPattern::setHighlight(u64 offset, size_t size, std::string name, u32 color) {
+    void ViewPattern::setHighlight(u64 offset, std::string name, lang::Token::TypeToken::Type type, size_t size, u32 color) {
         if (color == 0)
             color = std::mt19937(std::random_device()())();
 
         color &= ~0xFF00'0000;
         color |= 0x5000'0000;
 
-        this->m_highlights.emplace_back(offset, size, color, name);
+        VariableType varType = { 0 };
+
+        switch (static_cast<u32>(type) & 0x0F) {
+            default:
+            case 0: varType.kind = VariableType::Kind::Unsigned; break;
+            case 1: varType.kind = VariableType::Kind::Signed; break;
+            case 2: varType.kind = VariableType::Kind::FloatingPoint; break;
+        }
+
+        varType.size = size;
+
+        this->m_highlights.emplace_back(offset, varType, color, name);
     }
 
     template<std::derived_from<lang::ASTNode> T>
@@ -120,7 +131,8 @@ namespace hex {
 
             u64 offset = varNode->getOffset().value();
             if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                this->setHighlight(offset, (static_cast<u32>(varNode->getVariableType()) >> 4) * varNode->getArraySize(), varNode->getVariableName());
+                size_t size = static_cast<u32>(varNode->getVariableType()) >> 4 * varNode->getArraySize();
+                this->setHighlight(offset, varNode->getVariableName(), varNode->getVariableType(), size);
             } else {
                 for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
                     if (varNode->getCustomVariableTypeName() == structNode->getName()) {
@@ -163,7 +175,7 @@ namespace hex {
         if (currTypeDeclNode->getAssignedType() != lang::Token::TypeToken::Type::CustomType) {
             size_t size = (static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4);
 
-            this->setHighlight(offset, size, name);
+            this->setHighlight(offset, name, currTypeDeclNode->getAssignedType(), size);
             offset += size;
         } else {
             bool foundType = false;
@@ -218,7 +230,7 @@ namespace hex {
                     if (var->getArraySize() > 1)
                         memberName += "[" + std::to_string(i) + "]";
 
-                    this->setHighlight(offset, size, memberName);
+                    this->setHighlight(offset, memberName, var->getVariableType(), size);
                     offset += size;
                 }
             } else {

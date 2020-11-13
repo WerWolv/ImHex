@@ -36,20 +36,34 @@ namespace hex {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
-                for (auto&[offset, size, color, name] : this->m_highlights) {
-                    std::vector<u8> buffer(size + 1, 0x00);
+                for (auto&[offset, type, color, name] : this->m_highlights) {
+                    std::vector<u8> buffer(type.size + 1, 0x00);
 
-                    this->m_dataProvider->read(offset, buffer.data(), size);
+                    this->m_dataProvider->read(offset, buffer.data(), type.size);
 
-                    if (size <= 8) {
+                    if (type.size <= 8) {
                         u64 data = 0;
-                        std::memcpy(&data, buffer.data(), size);
+                        std::memcpy(&data, buffer.data(), type.size);
 
-                        ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %lu (0x%08lx) \"%s\"", offset,
-                                         offset + size, data, data,
-                                         makeDisplayable(buffer.data(), buffer.size()).c_str());
+                        switch (type.kind) {
+                            case VariableType::Kind::Unsigned:
+                            ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %lu (0x%08lx) \"%s\"", offset,
+                                             offset + type.size, data, data,
+                                             makeDisplayable(buffer.data(), buffer.size()).c_str());
+                            break;
+                            case VariableType::Kind::Signed:
+                                ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %ld (0x%08lx) \"%s\"", offset,
+                                                 offset + type.size, data, data,
+                                                 makeDisplayable(buffer.data(), buffer.size()).c_str());
+                                break;
+                            case VariableType::Kind::FloatingPoint:
+                                ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   %f (0x%08lx) \"%s\"", offset,
+                                                 offset + type.size, data, data,
+                                                 makeDisplayable(buffer.data(), buffer.size()).c_str());
+                                break;
+                        }
                     } else
-                        ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   [ ARRAY ] \"%s\"", offset, offset + size,
+                        ImGui::LabelText(name.c_str(), "[0x%08lx:0x%08lx]   [ ARRAY ] \"%s\"", offset, offset + type.size,
                                          makeDisplayable(buffer.data(), buffer.size()).c_str());
                 }
             }

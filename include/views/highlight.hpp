@@ -5,14 +5,19 @@
 
 namespace hex {
 
+    struct VariableType {
+        size_t size;
+        enum class Kind { Unsigned, Signed, FloatingPoint } kind;
+    };
+
     struct Highlight {
-        Highlight(u64 offset, size_t size, u32 color, std::string name)
-        : offset(offset), size(size), color(color), name(name) {
+        Highlight(u64 offset, VariableType type, u32 color, std::string name)
+        : offset(offset), type(type), color(color), name(name) {
 
         }
 
         u64 offset;
-        size_t size;
+        VariableType type;
         u32 color;
         std::string name;
     };

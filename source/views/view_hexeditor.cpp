@@ -35,12 +35,12 @@ namespace hex {
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
             ViewHexEditor *_this = (ViewHexEditor *) data;
 
-            for (auto&[offset, size, color, name] : _this->m_highlights) {
-                if (next && off == (offset + size)) {
+            for (auto&[offset, type, color, name] : _this->m_highlights) {
+                if (next && off == (offset + type.size)) {
                     return false;
                 }
 
-                if (off >= offset && off < (offset + size)) {
+                if (off >= offset && off < (offset + type.size)) {
                     _this->m_memoryEditor.HighlightColor = color;
                     return true;
                 }
