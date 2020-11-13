@@ -70,6 +70,7 @@ namespace hex {
             fclose(file);
 
             this->parsePattern(this->m_buffer);
+            this->m_fileBrowser.ClearSelected();
         }
     }
 
