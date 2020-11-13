@@ -2,3 +2,7 @@
 cmake-build-debug/
 
 cmake-build-release/
+
+build-linux/
+
+*.mgc
