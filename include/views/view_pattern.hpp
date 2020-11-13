@@ -3,12 +3,15 @@
 #include "parser/ast_node.hpp"
 #include "parser/parser.hpp"
 #include "parser/lexer.hpp"
+
 #include "views/view.hpp"
+#include "views/highlight.hpp"
+
+#include "providers/provider.hpp"
 
 #include <concepts>
 #include <cstring>
 
-#include "views/highlight.hpp"
 
 #include "imfilebrowser.h"
 
@@ -16,7 +19,7 @@ namespace hex {
 
     class ViewPattern : public View {
     public:
-        explicit ViewPattern(std::vector<Highlight> &highlights);
+        explicit ViewPattern(prv::Provider* &dataProvider, std::vector<Highlight> &highlights);
         ~ViewPattern() override;
 
         void createMenu() override;
@@ -26,6 +29,7 @@ namespace hex {
         char *m_buffer;
 
         std::vector<Highlight> &m_highlights;
+        prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
 
         ImGui::FileBrowser m_fileBrowser;

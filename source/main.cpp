@@ -20,7 +20,7 @@ int main() {
 
     // Create views
     window.addView<hex::ViewHexEditor>(dataProvider, highlights);
-    window.addView<hex::ViewPattern>(highlights);
+    window.addView<hex::ViewPattern>(dataProvider, highlights);
     window.addView<hex::ViewPatternData>(dataProvider, highlights);
     window.addView<hex::ViewHashes>(dataProvider);
     window.addView<hex::ViewInformation>(dataProvider);
