@@ -125,7 +125,11 @@ namespace hex {
                 for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
                     if (varNode->getCustomVariableTypeName() == structNode->getName()) {
                         for (u32 i = 0; i < varNode->getArraySize(); i++) {
-                            if (size_t size = this->highlightStruct(ast, structNode, offset); size == -1)
+                            std::string name = varNode->getVariableName();
+                            if (varNode->getArraySize() > 1)
+                                name += "[" + std::to_string(varNode->getArraySize()) + "]";
+
+                            if (size_t size = this->highlightStruct(ast, structNode, offset, name); size == -1)
                                 this->m_highlights.clear();
                             else
                                 offset += size;
@@ -135,7 +139,11 @@ namespace hex {
                 for (auto &usingNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                     if (varNode->getCustomVariableTypeName() == usingNode->getTypeName()) {
                         for (u32 i = 0; i < varNode->getArraySize(); i++) {
-                            if (size_t size = this->highlightUsingDecls(ast, usingNode, varNode, offset); size == -1)
+                            std::string name = varNode->getVariableName();
+                            if (varNode->getArraySize() > 1)
+                                name += "[" + std::to_string(varNode->getArraySize()) + "]";
+
+                            if (size_t size = this->highlightUsingDecls(ast, usingNode, varNode, offset, name); size == -1)
                                 this->m_highlights.clear();
                             else
                                 offset += size;
@@ -149,21 +157,20 @@ namespace hex {
         for(auto &node : ast) delete node;
     }
 
-    s32 ViewPattern::highlightUsingDecls(std::vector<lang::ASTNode*> &ast, lang::ASTNodeTypeDecl* currTypeDeclNode, lang::ASTNodeVariableDecl* currVarDecl, u64 offset) {
+    s32 ViewPattern::highlightUsingDecls(std::vector<lang::ASTNode*> &ast, lang::ASTNodeTypeDecl* currTypeDeclNode, lang::ASTNodeVariableDecl* currVarDecl, u64 offset, std::string name) {
         u64 startOffset = offset;
 
         if (currTypeDeclNode->getAssignedType() != lang::Token::TypeToken::Type::CustomType) {
             size_t size = (static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4);
 
-            this->setHighlight(offset, size, currVarDecl->getVariableName());
+            this->setHighlight(offset, size, name);
             offset += size;
         } else {
             bool foundType = false;
             for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
                 if (structNode->getName() == currTypeDeclNode->getAssignedCustomTypeName()) {
-                    size_t size = 0;
                     for (size_t i = 0; i < currVarDecl->getArraySize(); i++) {
-                        size = this->highlightStruct(ast, structNode, offset);
+                        size_t size = this->highlightStruct(ast, structNode, offset, name);
 
                         if (size == -1)
                             return -1;
@@ -177,9 +184,8 @@ namespace hex {
 
             for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                 if (typeDeclNode->getTypeName() == currTypeDeclNode->getAssignedCustomTypeName()) {
-                    size_t size = 0;
                     for (size_t i = 0; i < currVarDecl->getArraySize(); i++) {
-                        size = this->highlightUsingDecls(ast, typeDeclNode, currVarDecl, offset);
+                        size_t size = this->highlightUsingDecls(ast, typeDeclNode, currVarDecl, offset, name);
 
                         if (size == -1)
                             return -1;
@@ -199,24 +205,32 @@ namespace hex {
         return offset - startOffset;
     }
 
-    s32 ViewPattern::highlightStruct(std::vector<lang::ASTNode*> &ast, lang::ASTNodeStruct* currStructNode, u64 offset) {
+    s32 ViewPattern::highlightStruct(std::vector<lang::ASTNode*> &ast, lang::ASTNodeStruct* currStructNode, u64 offset, std::string name) {
         u64 startOffset = offset;
 
         for (auto &node : currStructNode->getNodes()) {
             auto var = static_cast<lang::ASTNodeVariableDecl*>(node);
 
             if (var->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                size_t size = (static_cast<u32>(var->getVariableType()) >> 4) * var->getArraySize();
+                size_t size = (static_cast<u32>(var->getVariableType()) >> 4);
+                for (size_t i = 0; i < var->getArraySize(); i++) {
+                    std::string memberName = name + "." + var->getVariableName();
+                    if (var->getArraySize() > 1)
+                        memberName += "[" + std::to_string(i) + "]";
 
-                this->setHighlight(offset, size, var->getVariableName());
-                offset += size;
+                    this->setHighlight(offset, size, memberName);
+                    offset += size;
+                }
             } else {
                 bool foundType = false;
-                for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
+                for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast)) {
                     if (structNode->getName() == var->getCustomVariableTypeName()) {
-                        size_t size = 0;
                         for (size_t i = 0; i < var->getArraySize(); i++) {
-                            size = this->highlightStruct(ast, structNode, offset);
+                            std::string memberName = name + "." + var->getVariableName();
+                            if (var->getArraySize() > 1)
+                                memberName += "[" + std::to_string(i) + "]";
+
+                            size_t size = this->highlightStruct(ast, structNode, offset, memberName);
 
                             if (size == -1)
                                 return -1;
@@ -227,12 +241,16 @@ namespace hex {
                         foundType = true;
                         break;
                     }
+                }
 
                 for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                     if (typeDeclNode->getTypeName() == var->getCustomVariableTypeName()) {
-                        size_t size = 0;
                         for (size_t i = 0; i < var->getArraySize(); i++) {
-                            size = this->highlightUsingDecls(ast, typeDeclNode, var, offset);
+                            std::string memberName = name + "." + var->getVariableName();
+                            if (var->getArraySize() > 1)
+                                memberName += "[" + std::to_string(i) + "]";
+
+                            size_t size = this->highlightUsingDecls(ast, typeDeclNode, var, offset, memberName);
 
                             if (size == -1)
                                 return -1;
