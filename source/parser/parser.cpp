@@ -88,17 +88,24 @@ namespace hex::lang {
         auto enumNode = new ASTNodeEnum(underlyingType, enumName);
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
-            if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Separator})) {
+            if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Separator }) || tryConsume(curr, { Token::Type::Identifier, Token::Type::ScopeClose })) {
                 u64 value;
                 if (enumNode->getValues().empty())
                     value = 0;
                 else
                     value = enumNode->getValues().back().first + 1;
 
-                enumNode->getValues().push_back({ value, curr[-2].identifierToken.identifier });
+                enumNode->getValues().emplace_back(value, curr[-2].identifierToken.identifier);
+
+                if (curr[-1].type == Token::Type::ScopeClose)
+                    break;
             }
             else if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::Separator})) {
-                enumNode->getValues().push_back({ curr[-2].integerToken.integer, curr[-4].identifierToken.identifier });
+                enumNode->getValues().emplace_back(curr[-2].integerToken.integer, curr[-4].identifierToken.identifier);
+            }
+            else if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::ScopeClose})) {
+                enumNode->getValues().emplace_back(curr[-2].integerToken.integer, curr[-4].identifierToken.identifier);
+                break;
             }
             else {
                 delete enumNode;
