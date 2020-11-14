@@ -25,6 +25,7 @@ namespace hex {
     private:
         prv::Provider* &m_dataProvider;
         std::vector<hex::PatternData*> &m_patternData;
+        std::vector<hex::PatternData*> m_sortedPatternData;
         bool m_windowOpen = true;
     };
 

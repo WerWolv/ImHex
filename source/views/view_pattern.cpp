@@ -113,6 +113,7 @@ namespace hex {
         static hex::lang::Parser parser;
 
         this->clearPatternData();
+        this->postEvent(Events::PatternChanged);
 
         auto [lexResult, tokens] = lexer.lex(buffer);
 
@@ -196,6 +197,7 @@ namespace hex {
         }
 
         for(auto &node : ast) delete node;
+        this->postEvent(Events::PatternChanged);
     }
 
     s32 ViewPattern::highlightUsingDecls(std::vector<lang::ASTNode*> &ast, lang::ASTNodeTypeDecl* currTypeDeclNode, lang::ASTNodeVariableDecl* currVarDecl, u64 offset, std::string name) {
@@ -205,11 +207,11 @@ namespace hex {
             size_t size = (static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4);
 
             if (isUnsigned(currTypeDeclNode->getAssignedType()))
-                this->addPatternData(new PatternDataUnsigned(offset, size, currTypeDeclNode->getTypeName()));
+                this->addPatternData(new PatternDataUnsigned(offset, size, name));
             else if (isSigned(currTypeDeclNode->getAssignedType()))
-                this->addPatternData(new PatternDataSigned(offset, size, currTypeDeclNode->getTypeName()));
+                this->addPatternData(new PatternDataSigned(offset, size, name));
             else if (isFloatingPoint(currTypeDeclNode->getAssignedType()))
-                this->addPatternData(new PatternDataFloat(offset, size, currTypeDeclNode->getTypeName()));
+                this->addPatternData(new PatternDataFloat(offset, size, name));
 
             offset += size;
         } else {

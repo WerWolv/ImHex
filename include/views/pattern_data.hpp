@@ -47,6 +47,7 @@ namespace hex {
         [[nodiscard]] const std::string& getName() const { return this->m_name; }
 
         virtual std::string format(prv::Provider* &provider) = 0;
+        virtual std::string getTypeName() = 0;
 
     private:
         u64 m_offset;
@@ -67,6 +68,17 @@ namespace hex {
 
             return hex::format("%lu (0x%08lx)", data, data);
         }
+
+        std::string getTypeName() override {
+            switch (this->getSize()) {
+                case 1:     return "u8";
+                case 2:     return "u16";
+                case 4:     return "u32";
+                case 8:     return "u64";
+                case 16:    return "u128";
+                default:    return "Unsigned data";
+            }
+        }
     };
 
     class PatternDataSigned : public PatternData {
@@ -80,6 +92,17 @@ namespace hex {
             s64 signedData = signedData = hex::signExtend(data, this->getSize(), 64);
 
             return hex::format("%ld (0x%08lx)", signedData, data);
+        }
+
+        std::string getTypeName() override {
+            switch (this->getSize()) {
+                case 1:     return "s8";
+                case 2:     return "s16";
+                case 4:     return "s32";
+                case 8:     return "s64";
+                case 16:    return "s128";
+                default:    return "Signed data";
+            }
         }
     };
 
@@ -101,6 +124,14 @@ namespace hex {
 
             return hex::format("%f (0x%08lx)", formatData, formatData);
         }
+
+        std::string getTypeName() override {
+            switch (this->getSize()) {
+                case 4:     return "float";
+                case 8:     return "double";
+                default:    return "Floating point data";
+            }
+        }
     };
 
     class PatternDataCharacter : public PatternData {
@@ -112,6 +143,10 @@ namespace hex {
             provider->read(this->getOffset(), &character, 1);
 
             return hex::format("'%c'", character);
+        }
+
+        std::string getTypeName() override {
+            return "Character";
         }
     };
 
@@ -125,6 +160,10 @@ namespace hex {
             buffer[this->getSize()] = '\0';
 
             return hex::format("\"%s\"", makeDisplayable(buffer.data(), this->getSize()).c_str());
+        }
+
+        std::string getTypeName() override {
+           return "String";
         }
     };
 
@@ -143,6 +182,10 @@ namespace hex {
             }
 
             return hex::format("%lu (0x%08lx)  :  %s::???", value, value, this->m_enumName.c_str());
+        }
+
+        std::string getTypeName() override {
+            return "enum " + this->m_enumName;
         }
 
     private:
