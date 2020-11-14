@@ -3,6 +3,7 @@
 #include "token.hpp"
 
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace hex::lang {
@@ -13,6 +14,7 @@ namespace hex::lang {
             VariableDecl,
             TypeDecl,
             Struct,
+            Enum,
             Scope,
         };
 
@@ -76,6 +78,21 @@ namespace hex::lang {
     private:
         Token::TypeToken::Type m_type;
         std::string m_name, m_customTypeName;
+    };
+
+    class ASTNodeEnum : public ASTNode {
+    public:
+        explicit ASTNodeEnum(const Token::TypeToken::Type &type, const std::string &name)
+                : ASTNode(Type::Enum), m_type(type), m_name(name) { }
+
+        const std::string& getName() const { return this->m_name; };
+
+        const Token::TypeToken::Type& getUnderlyingType() const { return this->m_type; }
+        std::vector<std::pair<u64, std::string>>& getValues() { return this->m_values; }
+    private:
+        Token::TypeToken::Type m_type;
+        std::string m_name;
+        std::vector<std::pair<u64, std::string>> m_values;
     };
 
 }

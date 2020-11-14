@@ -51,7 +51,7 @@ namespace hex::lang {
         return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer);
     }
 
-    std::optional<ASTNode*> parseStruct(TokenIter &curr) {
+    ASTNode* parseStruct(TokenIter &curr) {
         const std::string &structName = curr[-2].identifierToken.identifier;
         std::vector<ASTNode*> nodes;
 
@@ -69,10 +69,49 @@ namespace hex::lang {
 
         if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
             for(auto &node : nodes) delete node;
-            return { };
+            return nullptr;
         }
 
         return new ASTNodeStruct(structName, nodes);
+    }
+
+    ASTNode* parseEnum(TokenIter &curr) {
+        const std::string &enumName = curr[-4].identifierToken.identifier;
+        const Token::TypeToken::Type underlyingType = curr[-2].typeToken.type;
+
+        if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+            return nullptr;
+
+        if ((static_cast<u32>(underlyingType) & 0x0F) != 0x00)
+            return nullptr;
+
+        auto enumNode = new ASTNodeEnum(underlyingType, enumName);
+
+        while (!tryConsume(curr, {Token::Type::ScopeClose})) {
+            if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Separator})) {
+                u64 value;
+                if (enumNode->getValues().empty())
+                    value = 0;
+                else
+                    value = enumNode->getValues().back().first + 1;
+
+                enumNode->getValues().push_back({ value, curr[-2].identifierToken.identifier });
+            }
+            else if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::Separator})) {
+                enumNode->getValues().push_back({ curr[-2].integerToken.integer, curr[-4].identifierToken.identifier });
+            }
+            else {
+                delete enumNode;
+                return nullptr;
+            }
+        }
+
+        if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
+            delete enumNode;
+            return nullptr;
+        }
+
+        return enumNode;
     }
 
     ASTNode *parseScope(TokenIter &curr) {
@@ -111,12 +150,27 @@ namespace hex::lang {
             if (curr[-3].keywordToken.keyword == Token::KeywordToken::Keyword::Struct) {
                 auto structAst = parseStruct(curr);
 
-                if (!structAst.has_value()) {
+                if (structAst == nullptr) {
                     for(auto &node : program) delete node;
                     return { };
                 }
 
-                program.push_back(structAst.value());
+                program.push_back(structAst);
+            }
+
+            return program;
+
+        } // Enum
+        if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::ScopeOpen })) {
+            if (curr[-5].keywordToken.keyword == Token::KeywordToken::Keyword::Enum) {
+                auto enumAst = parseEnum(curr);
+
+                if (enumAst == nullptr) {
+                    for(auto &node : program) delete node;
+                    return { };
+                }
+
+                program.push_back(enumAst);
             }
 
             return program;

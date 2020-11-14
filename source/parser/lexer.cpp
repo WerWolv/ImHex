@@ -70,6 +70,7 @@ namespace hex::lang {
         u32 offset = 0;
 
         while (offset < code.length()) {
+
             // Handle comments
             if (code[offset] == '/') {
                 offset++;
@@ -121,6 +122,9 @@ namespace hex::lang {
             } else if (c == '=') {
                 tokens.push_back({.type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Assignment}});
                 offset += 1;
+            } else if (c == ':') {
+                tokens.push_back({.type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Inherit}});
+                offset += 1;
             } else if (std::isalpha(c)) {
                 std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 
@@ -130,6 +134,8 @@ namespace hex::lang {
                     tokens.push_back({.type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Struct}});
                 else if (identifier == "using")
                     tokens.push_back({.type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Using}});
+                else if (identifier == "enum")
+                    tokens.push_back({.type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Enum}});
 
                 // Check for built-in types
                 else if (identifier == "u8")

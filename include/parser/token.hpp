@@ -25,7 +25,8 @@ namespace hex::lang {
         struct KeywordToken {
             enum class Keyword {
                 Struct,
-                Using
+                Using,
+                Enum
             } keyword;
         } keywordToken;
         struct IdentifierToken {
@@ -34,7 +35,8 @@ namespace hex::lang {
         struct OperatorToken {
             enum class Operator {
                 AtDeclaration,
-                Assignment
+                Assignment,
+                Inherit
             } op;
         } operatorToken;
         struct IntegerToken {
