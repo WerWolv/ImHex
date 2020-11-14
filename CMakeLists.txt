@@ -31,7 +31,6 @@ add_executable(ImHex
         libs/glad/source/glad.c
 
         libs/ImGui/source/imgui.cpp
-        libs/ImGui/source/imgui_demo.cpp
         libs/ImGui/source/imgui_draw.cpp
         libs/ImGui/source/imgui_widgets.cpp
         libs/ImGui/source/imgui_impl_glfw.cpp
