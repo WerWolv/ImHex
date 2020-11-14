@@ -5,8 +5,8 @@
 
 namespace hex {
 
-    ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<Highlight> &highlights)
-        : View(), m_dataProvider(dataProvider), m_highlights(highlights) {
+    ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<hex::PatternData*> &patternData)
+        : View(), m_dataProvider(dataProvider), m_patternData(patternData) {
 
         this->m_buffer = new char[0xFF'FFFF];
         std::memset(this->m_buffer, 0x00, 0xFF'FFFF);
@@ -86,25 +86,15 @@ namespace hex {
     }
 
 
-    void ViewPattern::setHighlight(u64 offset, std::string name, lang::Token::TypeToken::Type type, size_t size, u32 color) {
-        if (color == 0)
-            color = std::mt19937(std::random_device()())();
+    void ViewPattern::addPatternData(PatternData *patternData) {
+        this->m_patternData.push_back(patternData);
+    }
 
-        color &= ~0xFF00'0000;
-        color |= 0x5000'0000;
+    void ViewPattern::clearPatternData() {
+        for (auto &data : this->m_patternData)
+            delete data;
 
-        VariableType varType = { 0 };
-
-        switch (static_cast<u32>(type) & 0x0F) {
-            default:
-            case 0: varType.kind = VariableType::Kind::Unsigned; break;
-            case 1: varType.kind = VariableType::Kind::Signed; break;
-            case 2: varType.kind = VariableType::Kind::FloatingPoint; break;
-        }
-
-        varType.size = size;
-
-        this->m_highlights.emplace_back(offset, varType, color, name);
+        this->m_patternData.clear();
     }
 
     template<std::derived_from<lang::ASTNode> T>
@@ -122,7 +112,7 @@ namespace hex {
         static hex::lang::Lexer lexer;
         static hex::lang::Parser parser;
 
-        this->m_highlights.clear();
+        this->clearPatternData();
 
         auto [lexResult, tokens] = lexer.lex(buffer);
 
@@ -142,10 +132,22 @@ namespace hex {
 
             u64 offset = varNode->getOffset().value();
             if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                size_t size = static_cast<u32>(varNode->getVariableType()) >> 4 * varNode->getArraySize();
-                this->setHighlight(offset, varNode->getVariableName(), varNode->getVariableType(), size);
+                size_t size = getTypeSize(varNode->getVariableType()) * varNode->getArraySize();
+
+                if (isUnsigned(varNode->getVariableType()))
+                    this->addPatternData(new PatternDataUnsigned(offset, size, varNode->getVariableName()));
+                else if (isSigned(varNode->getVariableType())) {
+                    if (getTypeSize(varNode->getVariableType()) == 1 && varNode->getArraySize() == 1)
+                        this->addPatternData(new PatternDataCharacter(offset, size, varNode->getVariableName()));
+                    else if (getTypeSize(varNode->getVariableType()) == 1 && varNode->getArraySize() > 1)
+                        this->addPatternData(new PatternDataString(offset, size, varNode->getVariableName()));
+                    else
+                        this->addPatternData(new PatternDataSigned(offset, size, varNode->getVariableName()));
+                }
+                else if (isFloatingPoint(varNode->getVariableType()))
+                    this->addPatternData(new PatternDataFloat(offset, size, varNode->getVariableName()));
             } else {
-                for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
+                for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast)) {
                     if (varNode->getCustomVariableTypeName() == structNode->getName()) {
                         for (u32 i = 0; i < varNode->getArraySize(); i++) {
                             std::string name = varNode->getVariableName();
@@ -153,11 +155,27 @@ namespace hex {
                                 name += "[" + std::to_string(varNode->getArraySize()) + "]";
 
                             if (size_t size = this->highlightStruct(ast, structNode, offset, name); size == -1)
-                                this->m_highlights.clear();
+                                this->clearPatternData();
                             else
                                 offset += size;
                         }
                     }
+                }
+
+                for (auto &enumNode : findNodes<lang::ASTNodeEnum>(lang::ASTNode::Type::Enum, ast)) {
+                    if (varNode->getCustomVariableTypeName() == enumNode->getName()) {
+                        for (u32 i = 0; i < varNode->getArraySize(); i++) {
+                            std::string name = varNode->getVariableName();
+                            if (varNode->getArraySize() > 1)
+                                name += "[" + std::to_string(varNode->getArraySize()) + "]";
+
+                            if (size_t size = this->highlightEnum(ast, enumNode, offset, name); size == -1)
+                                this->clearPatternData();
+                            else
+                                offset += size;
+                        }
+                    }
+                }
 
                 for (auto &usingNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                     if (varNode->getCustomVariableTypeName() == usingNode->getTypeName()) {
@@ -167,7 +185,7 @@ namespace hex {
                                 name += "[" + std::to_string(varNode->getArraySize()) + "]";
 
                             if (size_t size = this->highlightUsingDecls(ast, usingNode, varNode, offset, name); size == -1)
-                                this->m_highlights.clear();
+                                this->clearPatternData();
                             else
                                 offset += size;
                         }
@@ -186,11 +204,17 @@ namespace hex {
         if (currTypeDeclNode->getAssignedType() != lang::Token::TypeToken::Type::CustomType) {
             size_t size = (static_cast<u32>(currTypeDeclNode->getAssignedType()) >> 4);
 
-            this->setHighlight(offset, name, currTypeDeclNode->getAssignedType(), size);
+            if (isUnsigned(currTypeDeclNode->getAssignedType()))
+                this->addPatternData(new PatternDataUnsigned(offset, size, currTypeDeclNode->getTypeName()));
+            else if (isSigned(currTypeDeclNode->getAssignedType()))
+                this->addPatternData(new PatternDataSigned(offset, size, currTypeDeclNode->getTypeName()));
+            else if (isFloatingPoint(currTypeDeclNode->getAssignedType()))
+                this->addPatternData(new PatternDataFloat(offset, size, currTypeDeclNode->getTypeName()));
+
             offset += size;
         } else {
             bool foundType = false;
-            for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast))
+            for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast)) {
                 if (structNode->getName() == currTypeDeclNode->getAssignedCustomTypeName()) {
                     for (size_t i = 0; i < currVarDecl->getArraySize(); i++) {
                         size_t size = this->highlightStruct(ast, structNode, offset, name);
@@ -204,6 +228,24 @@ namespace hex {
                     foundType = true;
                     break;
                 }
+            }
+
+            for (auto &enumNode : findNodes<lang::ASTNodeEnum>(lang::ASTNode::Type::Enum, ast)) {
+                if (enumNode->getName() == currTypeDeclNode->getAssignedCustomTypeName()) {
+                    for (size_t i = 0; i < currVarDecl->getArraySize(); i++) {
+                        size_t size = this->highlightEnum(ast, enumNode, offset, name);
+
+                        if (size == -1)
+                            return -1;
+
+                        offset += size;
+                    }
+
+                    foundType = true;
+                    break;
+                }
+            }
+
 
             for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
                 if (typeDeclNode->getTypeName() == currTypeDeclNode->getAssignedCustomTypeName()) {
@@ -232,25 +274,40 @@ namespace hex {
         u64 startOffset = offset;
 
         for (auto &node : currStructNode->getNodes()) {
-            auto var = static_cast<lang::ASTNodeVariableDecl*>(node);
+            auto varNode = static_cast<lang::ASTNodeVariableDecl*>(node);
 
-            if (var->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
-                size_t size = (static_cast<u32>(var->getVariableType()) >> 4);
-                for (size_t i = 0; i < var->getArraySize(); i++) {
-                    std::string memberName = name + "." + var->getVariableName();
-                    if (var->getArraySize() > 1)
+            if (varNode->getVariableType() != lang::Token::TypeToken::Type::CustomType) {
+                size_t size = (static_cast<u32>(varNode->getVariableType()) >> 4);
+                for (size_t i = 0; i < varNode->getArraySize(); i++) {
+                    std::string memberName = name + "." + varNode->getVariableName();
+                    if (varNode->getArraySize() > 1)
                         memberName += "[" + std::to_string(i) + "]";
 
-                    this->setHighlight(offset, memberName, var->getVariableType(), size);
+                    if (isUnsigned(varNode->getVariableType()))
+                        this->addPatternData(new PatternDataUnsigned(offset, size, memberName));
+                    else if (isSigned(varNode->getVariableType())) {
+                        if (getTypeSize(varNode->getVariableType()) == 1 && varNode->getArraySize() == 1)
+                            this->addPatternData(new PatternDataCharacter(offset, size, memberName));
+                        else if (getTypeSize(varNode->getVariableType()) == 1 && varNode->getArraySize() > 1) {
+                            this->addPatternData(new PatternDataString(offset, size * varNode->getArraySize(), name + "." + varNode->getVariableName()));
+                            offset += size * varNode->getArraySize();
+                            break;
+                        }
+                        else
+                            this->addPatternData(new PatternDataSigned(offset, size, memberName));
+                    }
+                    else if (isFloatingPoint(varNode->getVariableType()))
+                        this->addPatternData(new PatternDataFloat(offset, size, memberName));
+
                     offset += size;
                 }
             } else {
                 bool foundType = false;
                 for (auto &structNode : findNodes<lang::ASTNodeStruct>(lang::ASTNode::Type::Struct, ast)) {
-                    if (structNode->getName() == var->getCustomVariableTypeName()) {
-                        for (size_t i = 0; i < var->getArraySize(); i++) {
-                            std::string memberName = name + "." + var->getVariableName();
-                            if (var->getArraySize() > 1)
+                    if (structNode->getName() == varNode->getCustomVariableTypeName()) {
+                        for (size_t i = 0; i < varNode->getArraySize(); i++) {
+                            std::string memberName = name + "." + varNode->getVariableName();
+                            if (varNode->getArraySize() > 1)
                                 memberName += "[" + std::to_string(i) + "]";
 
                             size_t size = this->highlightStruct(ast, structNode, offset, memberName);
@@ -266,14 +323,34 @@ namespace hex {
                     }
                 }
 
-                for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
-                    if (typeDeclNode->getTypeName() == var->getCustomVariableTypeName()) {
-                        for (size_t i = 0; i < var->getArraySize(); i++) {
-                            std::string memberName = name + "." + var->getVariableName();
-                            if (var->getArraySize() > 1)
+                for (auto &enumNode : findNodes<lang::ASTNodeEnum>(lang::ASTNode::Type::Enum, ast)) {
+                    if (enumNode->getName() == varNode->getCustomVariableTypeName()) {
+                        for (size_t i = 0; i < varNode->getArraySize(); i++) {
+                            std::string memberName = name + "." + varNode->getVariableName();
+                            if (varNode->getArraySize() > 1)
                                 memberName += "[" + std::to_string(i) + "]";
 
-                            size_t size = this->highlightUsingDecls(ast, typeDeclNode, var, offset, memberName);
+                            size_t size = this->highlightEnum(ast, enumNode, offset, memberName);
+
+                            if (size == -1)
+                                return -1;
+
+                            offset += size;
+                        }
+
+                        foundType = true;
+                        break;
+                    }
+                }
+
+                for (auto &typeDeclNode : findNodes<lang::ASTNodeTypeDecl>(lang::ASTNode::Type::TypeDecl, ast)) {
+                    if (typeDeclNode->getTypeName() == varNode->getCustomVariableTypeName()) {
+                        for (size_t i = 0; i < varNode->getArraySize(); i++) {
+                            std::string memberName = name + "." + varNode->getVariableName();
+                            if (varNode->getArraySize() > 1)
+                                memberName += "[" + std::to_string(i) + "]";
+
+                            size_t size = this->highlightUsingDecls(ast, typeDeclNode, varNode, offset, memberName);
 
                             if (size == -1)
                                 return -1;
@@ -293,6 +370,20 @@ namespace hex {
         }
 
         return offset - startOffset;
+    }
+
+    s32 ViewPattern::highlightEnum(std::vector<lang::ASTNode*> &ast, lang::ASTNodeEnum* currEnumNode, u64 offset, std::string name) {
+        if (!isUnsigned(currEnumNode->getUnderlyingType()))
+            return -1;
+
+        s32 size = static_cast<u32>(currEnumNode->getUnderlyingType()) >> 4;
+
+        if (size > 8)
+            return -1;
+
+        this->addPatternData(new PatternDataEnum(offset, size, name, currEnumNode->getName(), currEnumNode->getValues()));
+
+        return size;
     }
 
 }

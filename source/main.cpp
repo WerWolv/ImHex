@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#include "views/highlight.hpp"
+#include "views/pattern_data.hpp"
 #include "views/view_hexeditor.hpp"
 #include "views/view_pattern.hpp"
 #include "views/view_pattern_data.hpp"
@@ -15,13 +15,13 @@ int main() {
     hex::Window window;
 
     // Shared Data
-    std::vector<hex::Highlight> highlights;
+    std::vector<hex::PatternData*> patternData;
     hex::prv::Provider *dataProvider = nullptr;
 
     // Create views
-    window.addView<hex::ViewHexEditor>(dataProvider, highlights);
-    window.addView<hex::ViewPattern>(dataProvider, highlights);
-    window.addView<hex::ViewPatternData>(dataProvider, highlights);
+    window.addView<hex::ViewHexEditor>(dataProvider, patternData);
+    window.addView<hex::ViewPattern>(dataProvider, patternData);
+    window.addView<hex::ViewPatternData>(dataProvider, patternData);
     window.addView<hex::ViewHashes>(dataProvider);
     window.addView<hex::ViewInformation>(dataProvider);
 

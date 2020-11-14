@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "views/highlight.hpp"
+#include "views/pattern_data.hpp"
 
 namespace hex {
 
@@ -18,7 +18,7 @@ namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(prv::Provider* &dataProvider, std::vector<Highlight> &highlights);
+        ViewHexEditor(prv::Provider* &dataProvider, std::vector<hex::PatternData*> &patternData);
         ~ViewHexEditor() override;
 
         void createView() override;
@@ -32,7 +32,7 @@ namespace hex {
 
 
         prv::Provider* &m_dataProvider;
-        std::vector<Highlight> &m_highlights;
+        std::vector<hex::PatternData*> &m_patternData;
 
         char m_searchBuffer[0xFFFF] = { 0 };
         s64 m_lastSearchIndex = 0;

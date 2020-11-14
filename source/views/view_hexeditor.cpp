@@ -7,8 +7,8 @@
 
 namespace hex {
 
-    ViewHexEditor::ViewHexEditor(prv::Provider* &dataProvider, std::vector<Highlight> &highlights)
-            : View(), m_dataProvider(dataProvider), m_highlights(highlights) {
+    ViewHexEditor::ViewHexEditor(prv::Provider* &dataProvider, std::vector<hex::PatternData*> &patternData)
+            : View(), m_dataProvider(dataProvider), m_patternData(patternData) {
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
             ViewHexEditor *_this = (ViewHexEditor *) data;
@@ -35,13 +35,13 @@ namespace hex {
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
             ViewHexEditor *_this = (ViewHexEditor *) data;
 
-            for (auto&[offset, type, color, name] : _this->m_highlights) {
-                if (next && off == (offset + type.size)) {
+            for (auto& pattern : _this->m_patternData) {
+                if (next && off == (pattern->getOffset() + pattern->getSize())) {
                     return false;
                 }
 
-                if (off >= offset && off < (offset + type.size)) {
-                    _this->m_memoryEditor.HighlightColor = color;
+                if (off >= pattern->getOffset() && off < (pattern->getOffset() + pattern->getSize())) {
+                    _this->m_memoryEditor.HighlightColor = pattern->getColor();
                     return true;
                 }
             }
