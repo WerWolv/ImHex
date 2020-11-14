@@ -6,7 +6,8 @@
 namespace hex {
 
     enum class Events {
-        DataChanged
+        DataChanged,
+        PatternChanged
     };
 
     struct EventHandler {

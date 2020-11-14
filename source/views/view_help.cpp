@@ -156,7 +156,7 @@ namespace hex {
             if (ImGui::MenuItem("About", ""))
                 this->m_aboutWindowOpen = true;
             ImGui::Separator();
-            if (ImGui::MenuItem("Pattern Language Cheat Sheet", ""))
+            if (ImGui::MenuItem("Cheat Sheet", ""))
                 this->m_patternHelpWindowOpen = true;
             ImGui::EndMenu();
         }
