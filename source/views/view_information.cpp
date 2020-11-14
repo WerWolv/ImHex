@@ -55,19 +55,20 @@ namespace hex {
                 if (this->m_shouldInvalidate) {
 
                     {
-                        std::vector<u8> buffer(512, 0x00);
+                        this->m_blockSize = std::ceil(this->m_dataProvider->getSize() / 2048.0F);
+                        std::vector<u8> buffer(this->m_blockSize, 0x00);
                         std::memset(this->m_valueCounts.data(), 0x00, this->m_valueCounts.size() * sizeof(u32));
                         this->m_blockEntropy.clear();
 
-                        for (u64 i = 0; i < this->m_dataProvider->getSize(); i += 512) {
+                        for (u64 i = 0; i < this->m_dataProvider->getSize(); i += this->m_blockSize) {
                             std::array<float, 256> blockValueCounts = { 0 };
-                            this->m_dataProvider->read(i, buffer.data(), std::min(size_t(512), this->m_dataProvider->getSize() - i));
+                            this->m_dataProvider->read(i, buffer.data(), std::min(size_t(this->m_blockSize), this->m_dataProvider->getSize() - i));
 
-                            for (u16 j = 0; j < 512; j++) {
+                            for (size_t j = 0; j < this->m_blockSize; j++) {
                                 blockValueCounts[buffer[j]]++;
                                 this->m_valueCounts[buffer[j]]++;
                             }
-                            this->m_blockEntropy.push_back(calculateEntropy(blockValueCounts, 512));
+                            this->m_blockEntropy.push_back(calculateEntropy(blockValueCounts, this->m_blockSize));
                         }
 
                         this->m_averageEntropy = calculateEntropy(this->m_valueCounts, this->m_dataProvider->getSize());
@@ -138,6 +139,7 @@ namespace hex {
 
                 ImGui::NewLine();
 
+                ImGui::LabelText("Block size", "2048 blocks à %lu bytes", this->m_blockSize);
                 ImGui::LabelText("Average entropy", "%.8f", this->m_averageEntropy);
                 ImGui::LabelText("Highest entropy block", "%.8f", this->m_highestBlockEntropy);
 

@@ -23,6 +23,7 @@ namespace hex {
         prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
 
+        u32 m_blockSize = 0;
         float m_averageEntropy = 0;
         float m_highestBlockEntropy = 0;
         std::vector<float> m_blockEntropy;
