@@ -4,6 +4,8 @@
 
 #include <string_view>
 
+#include <sys/stat.h>
+
 namespace hex::prv {
 
     class FileProvider : public Provider {
