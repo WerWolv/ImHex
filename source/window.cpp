@@ -67,6 +67,10 @@ namespace hex {
         while (!glfwWindowShouldClose(this->m_window)) {
             this->frameBegin();
 
+            for (const auto &call : View::getDeferedCalls())
+                call();
+            View::getDeferedCalls().clear();
+
             for (auto &view : this->m_views) {
                 view->createView();
             }

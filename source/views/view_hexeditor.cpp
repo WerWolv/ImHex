@@ -83,12 +83,58 @@ namespace hex {
 
     }
 
+    void ViewHexEditor::copyBytes() {
+        size_t copySize = (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1;
+
+        std::vector<u8> buffer(copySize, 0x00);
+        this->m_dataProvider->read(this->m_memoryEditor.DataPreviewAddr, buffer.data(), buffer.size());
+
+        std::string str;
+        for (const auto &byte : buffer)
+            str += hex::format("%x ", byte);
+        str.pop_back();
+
+        ImGui::SetClipboardText(str.c_str());
+    }
+
+    void ViewHexEditor::copyString() {
+        size_t copySize = (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1;
+
+        std::string buffer;
+        buffer.reserve(copySize + 1);
+        this->m_dataProvider->read(this->m_memoryEditor.DataPreviewAddr, buffer.data(), copySize);
+
+        ImGui::SetClipboardText(buffer.c_str());
+    }
+
     void ViewHexEditor::createMenu() {
 
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open File...")) {
+            if (ImGui::MenuItem("Open File...", "CTRL + O")) {
                 this->m_fileBrowser.SetTitle("Open File");
                 this->m_fileBrowser.Open();
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Search", "CTRL + F")) {
+                View::doLater([]{ ImGui::OpenPopup("Search"); });
+            }
+
+            if (ImGui::MenuItem("Goto", "CTRL + G")) {
+                View::doLater([]{ ImGui::OpenPopup("Goto"); });
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Copy bytes", "CTRL + ALT + C")) {
+                this->copyBytes();
+            }
+
+            if (ImGui::MenuItem("Copy string", "CTRL + SHIFT + C")) {
+                this->copyString();
             }
 
             ImGui::EndMenu();
@@ -101,11 +147,21 @@ namespace hex {
     }
 
     bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods & GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
+        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
             ImGui::OpenPopup("Search");
             return true;
-        } else if (mods & GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
+        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
             ImGui::OpenPopup("Goto");
+            return true;
+        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
+            this->m_fileBrowser.SetTitle("Open File");
+            this->m_fileBrowser.Open();
+            return true;
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
+            this->copyBytes();
+            return true;
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_C) {
+            this->copyString();
             return true;
         }
 

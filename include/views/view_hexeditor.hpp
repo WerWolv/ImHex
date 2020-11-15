@@ -51,6 +51,9 @@ namespace hex {
         void drawSearchPopup();
         void drawGotoPopup();
 
+        void copyBytes();
+        void copyString();
+
     };
 
 }
