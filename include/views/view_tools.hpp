@@ -4,11 +4,9 @@
 
 #include "imgui.h"
 #include "views/view.hpp"
-#include "views/pattern_data.hpp"
 
-#include <vector>
-#include <tuple>
-#include <cstdio>
+#include <array>
+#include <string>
 
 namespace hex {
 
@@ -30,8 +28,17 @@ namespace hex {
 
         bool m_asciiTableShowOctal = false;
 
+        char *m_regexInput = nullptr;
+        char *m_regexPattern = nullptr;
+        char *m_replacePattern = nullptr;
+        std::string m_regexOutput;
+
+        std::array<float, 4> m_pickedColor;
+
         void drawDemangler();
         void drawASCIITable();
+        void drawRegexReplacer();
+        void drawColorPicker();
     };
 
 }

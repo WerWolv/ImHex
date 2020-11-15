@@ -64,7 +64,7 @@ namespace hex {
         };
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(2000, 1000));
-        if (ImGui::BeginPopupModal("PatternLanguage", &this->m_patternHelpWindowOpen)) {
+        if (ImGui::BeginPopupModal("Pattern Language Cheat Sheet", &this->m_patternHelpWindowOpen)) {
             ImGui::Text("ImHex Pattern Language Cheat Sheet");
             ImGui::Separator();
             ImGui::NewLine();

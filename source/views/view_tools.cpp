@@ -2,20 +2,31 @@
 
 #include <cxxabi.h>
 #include <cstring>
+#include <regex>
 
 namespace hex {
 
     ViewTools::ViewTools() {
-        this->m_mangledBuffer = new char[0xFF'FFFF];
+        this->m_mangledBuffer = new char[0xF'FFFF];
         this->m_demangledName = static_cast<char*>(malloc(8));
 
-        std::memset(this->m_mangledBuffer, 0xFF'FFFF, 0x00);
+        std::memset(this->m_mangledBuffer, 0x00, 0xF'FFFF);
         strcpy(this->m_demangledName, "< ??? >");
+
+        this->m_regexInput = new char[0xF'FFFF];
+        this->m_regexPattern = new char[0xF'FFFF];
+        this->m_replacePattern = new char[0xF'FFFF];
+        std::memset(this->m_regexInput, 0x00, 0xF'FFFF);
+        std::memset(this->m_regexPattern, 0x00, 0xF'FFFF);
+        std::memset(this->m_replacePattern, 0x00, 0xF'FFFF);
     }
 
     ViewTools::~ViewTools() {
         delete[] this->m_mangledBuffer;
         free(this->m_demangledName);
+
+        delete[] this->m_regexInput;
+        delete[] this->m_regexPattern;
     }
 
     static std::string toASCIITableString(char c) {
@@ -60,7 +71,7 @@ namespace hex {
 
     void ViewTools::drawDemangler() {
         if (ImGui::CollapsingHeader("Itanium demangler")) {
-            if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xFF'FFFF)) {
+            if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xF'FFFF)) {
                 size_t length = 0;
                 int status = 0;
 
@@ -76,6 +87,7 @@ namespace hex {
             }
 
             ImGui::InputText("Demangled name", this->m_demangledName, strlen(this->m_demangledName), ImGuiInputTextFlags_ReadOnly);
+            ImGui::NewLine();
         }
     }
 
@@ -128,6 +140,36 @@ namespace hex {
             ImGui::EndTable();
 
             ImGui::Checkbox("Show octal", &this->m_asciiTableShowOctal);
+            ImGui::NewLine();
+        }
+    }
+
+    void ViewTools::drawRegexReplacer() {
+        if (ImGui::CollapsingHeader("Regex replacer")) {
+            bool shouldInvalidate;
+
+            shouldInvalidate = ImGui::InputText("Regex pattern", this->m_regexPattern, 0xF'FFFF);
+            shouldInvalidate = ImGui::InputText("Replace pattern", this->m_replacePattern, 0xF'FFFF) || shouldInvalidate;
+            shouldInvalidate = ImGui::InputTextMultiline("Input", this->m_regexInput, 0xF'FFFF)  || shouldInvalidate;
+
+            if (shouldInvalidate) {
+                try {
+                    this->m_regexOutput = std::regex_replace(this->m_regexInput, std::regex(this->m_regexPattern), this->m_replacePattern);
+                } catch (std::regex_error&) {}
+            }
+
+            ImGui::InputTextMultiline("Output", this->m_regexOutput.data(), this->m_regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+            ImGui::NewLine();
+
+
+        }
+    }
+
+    void ViewTools::drawColorPicker() {
+        if (ImGui::CollapsingHeader("Color picker")) {
+            ImGui::ColorPicker4("Color Picker", this->m_pickedColor.data(),
+            ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHex);
+            ImGui::NewLine();
         }
     }
 
@@ -139,6 +181,8 @@ namespace hex {
 
             this->drawDemangler();
             this->drawASCIITable();
+            this->drawRegexReplacer();
+            this->drawColorPicker();
 
         }
         ImGui::End();
