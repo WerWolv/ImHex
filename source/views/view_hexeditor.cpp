@@ -57,33 +57,6 @@ namespace hex {
         this->m_dataProvider = nullptr;
     }
 
-    static auto findString(prv::Provider* &provider, std::string string) {
-        std::vector<std::pair<u64, u64>> results;
-
-        u32 foundCharacters = 0;
-
-        std::vector<u8> buffer(1024, 0x00);
-        size_t dataSize = provider->getSize();
-        for (u64 offset = 0; offset < dataSize; offset += 1024) {
-            size_t usedBufferSize = std::min(buffer.size(), dataSize - offset);
-            provider->read(offset, buffer.data(), usedBufferSize);
-
-            for (u64 i = 0; i < usedBufferSize; i++) {
-                if (buffer[i] == string[foundCharacters])
-                    foundCharacters++;
-                else
-                    foundCharacters = 0;
-
-                if (foundCharacters == string.size()) {
-                    results.push_back({ offset + i - foundCharacters + 1, offset + i + 1 });
-                    foundCharacters = 0;
-                }
-            }
-        }
-
-        return results;
-    }
-
     void ViewHexEditor::createView() {
         if (!this->m_memoryEditor.Open)
             return;
@@ -140,57 +113,156 @@ namespace hex {
     }
 
 
+    static std::vector<std::pair<u64, u64>> findString(prv::Provider* &provider, std::string string) {
+        std::vector<std::pair<u64, u64>> results;
+
+        u32 foundCharacters = 0;
+
+        std::vector<u8> buffer(1024, 0x00);
+        size_t dataSize = provider->getSize();
+        for (u64 offset = 0; offset < dataSize; offset += 1024) {
+            size_t usedBufferSize = std::min(buffer.size(), dataSize - offset);
+            provider->read(offset, buffer.data(), usedBufferSize);
+
+            for (u64 i = 0; i < usedBufferSize; i++) {
+                if (buffer[i] == string[foundCharacters])
+                    foundCharacters++;
+                else
+                    foundCharacters = 0;
+
+                if (foundCharacters == string.size()) {
+                    results.emplace_back(offset + i - foundCharacters + 1, offset + i + 1);
+                    foundCharacters = 0;
+                }
+            }
+        }
+
+        return results;
+    }
+
+    static std::vector<std::pair<u64, u64>> findHex(prv::Provider* &provider, std::string string) {
+        std::vector<std::pair<u64, u64>> results;
+
+        if ((string.size() % 2) == 1)
+            string = "0" + string;
+
+        std::vector<u8> hex;
+        hex.reserve(string.size() / 2);
+
+        for (u32 i = 0; i < string.size(); i += 2) {
+            char byte[3] = { string[i], string[i + 1], 0 };
+            hex.push_back(strtoul(byte, nullptr, 16));
+        }
+
+        u32 foundCharacters = 0;
+
+        std::vector<u8> buffer(1024, 0x00);
+        size_t dataSize = provider->getSize();
+        for (u64 offset = 0; offset < dataSize; offset += 1024) {
+            size_t usedBufferSize = std::min(buffer.size(), dataSize - offset);
+            provider->read(offset, buffer.data(), usedBufferSize);
+
+            for (u64 i = 0; i < usedBufferSize; i++) {
+                if (buffer[i] == hex[foundCharacters])
+                    foundCharacters++;
+                else
+                    foundCharacters = 0;
+
+                if (foundCharacters == hex.size()) {
+                    results.emplace_back(offset + i - foundCharacters + 1, offset + i + 1);
+                    foundCharacters = 0;
+                }
+            }
+        }
+
+        return results;
+    }
+
+
     void ViewHexEditor::drawSearchPopup() {
+        static auto InputCallback = [](ImGuiInputTextCallbackData* data) -> int {
+            auto _this = static_cast<ViewHexEditor*>(data->UserData);
+
+            *_this->m_lastSearchBuffer = _this->m_searchFunction(_this->m_dataProvider, data->Buf);
+            _this->m_lastSearchIndex = 0;
+
+            if (_this->m_lastSearchBuffer->size() > 0)
+                _this->m_memoryEditor.GotoAddrAndHighlight((*_this->m_lastSearchBuffer)[0].first, (*_this->m_lastSearchBuffer)[0].second);
+
+            return 0;
+        };
+
+        static auto Find = [this](char *buffer) {
+            *this->m_lastSearchBuffer = this->m_searchFunction(this->m_dataProvider, buffer);
+            this->m_lastSearchIndex = 0;
+
+            if (this->m_lastSearchBuffer->size() > 0)
+                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[0].first, (*this->m_lastSearchBuffer)[0].second);
+        };
+
+        static auto FindNext = [this]() {
+            if (this->m_lastSearchBuffer->size() > 0) {
+                ++this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
+                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
+                                                          (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
+            }
+        };
+
+        static auto FindPrevious = [this]() {
+            if (this->m_lastSearchBuffer->size() > 0) {
+                this->m_lastSearchIndex--;
+
+                if (this->m_lastSearchIndex < 0)
+                    this->m_lastSearchIndex = this->m_lastSearchBuffer->size() - 1;
+
+                this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
+
+                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
+                                                          (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
+            }
+        };
+
         if (ImGui::BeginPopup("Search")) {
             ImGui::TextUnformatted("Search");
-            ImGui::InputText("##nolabel", this->m_searchBuffer, 0xFFFF, ImGuiInputTextFlags_CallbackCompletion,
-             [](ImGuiInputTextCallbackData* data) -> int {
-                auto _this = static_cast<ViewHexEditor*>(data->UserData);
+            if (ImGui::BeginTabBar("searchTabs")) {
+                char *currBuffer;
+                if (ImGui::BeginTabItem("String")) {
+                    this->m_searchFunction = findString;
+                    this->m_lastSearchBuffer = &this->m_lastStringSearch;
+                    currBuffer = this->m_searchStringBuffer;
 
-                 _this->m_lastSearch = findString(_this->m_dataProvider, _this->m_searchBuffer);
-                 _this->m_lastSearchIndex = 0;
-
-                 if (_this->m_lastSearch.size() > 0)
-                     _this->m_memoryEditor.GotoAddrAndHighlight(_this->m_lastSearch[0].first, _this->m_lastSearch[0].second);
-
-                 return 0;
-             }, this);
-
-
-            if (ImGui::Button("Find")) {
-                this->m_lastSearch = findString(this->m_dataProvider, this->m_searchBuffer);
-                this->m_lastSearchIndex = 0;
-
-                if (this->m_lastSearch.size() > 0)
-                    this->m_memoryEditor.GotoAddrAndHighlight(this->m_lastSearch[0].first, this->m_lastSearch[0].second);
-            }
-
-            if (this->m_lastSearch.size() > 0) {
-
-                if ((ImGui::Button("Find Next"))) {
-                    if (this->m_lastSearch.size() > 0) {
-                        ++this->m_lastSearchIndex %= this->m_lastSearch.size();
-                        this->m_memoryEditor.GotoAddrAndHighlight(this->m_lastSearch[this->m_lastSearchIndex].first,
-                                                                  this->m_lastSearch[this->m_lastSearchIndex].second);
-                    }
+                    ImGui::InputText("##nolabel", currBuffer, 0xFFFF, ImGuiInputTextFlags_CallbackCompletion,
+                                     InputCallback, this);
+                    ImGui::EndTabItem();
                 }
 
-                ImGui::SameLine();
+                if (ImGui::BeginTabItem("Hex")) {
+                    this->m_searchFunction = findHex;
+                    this->m_lastSearchBuffer = &this->m_lastHexSearch;
+                    currBuffer = this->m_searchHexBuffer;
 
-                if ((ImGui::Button("Find Prev"))) {
-                    if (this->m_lastSearch.size() > 0) {
-                        this->m_lastSearchIndex--;
-
-                        if (this->m_lastSearchIndex < 0)
-                            this->m_lastSearchIndex = this->m_lastSearch.size() - 1;
-
-                        this->m_lastSearchIndex %= this->m_lastSearch.size();
-
-                        this->m_memoryEditor.GotoAddrAndHighlight(this->m_lastSearch[this->m_lastSearchIndex].first,
-                                                                  this->m_lastSearch[this->m_lastSearchIndex].second);
-                    }
+                    ImGui::InputText("##nolabel", currBuffer, 0xFFFF,
+                                     ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion,
+                                     InputCallback, this);
+                    ImGui::EndTabItem();
                 }
+
+                if (ImGui::Button("Find"))
+                    Find(currBuffer);
+
+                if (this->m_lastSearchBuffer->size() > 0) {
+                    if ((ImGui::Button("Find Next")))
+                        FindNext();
+
+                    ImGui::SameLine();
+
+                    if ((ImGui::Button("Find Prev")))
+                        FindPrevious();
+                }
+
+                ImGui::EndTabBar();
             }
+
 
             ImGui::EndPopup();
         }

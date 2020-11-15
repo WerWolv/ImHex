@@ -16,6 +16,8 @@ namespace hex {
 
     namespace prv { class Provider; }
 
+    using SearchFunction = std::vector<std::pair<u64, u64>> (*)(prv::Provider* &provider, std::string string);
+
     class ViewHexEditor : public View {
     public:
         ViewHexEditor(prv::Provider* &dataProvider, std::vector<hex::PatternData*> &patternData);
@@ -34,14 +36,21 @@ namespace hex {
         prv::Provider* &m_dataProvider;
         std::vector<hex::PatternData*> &m_patternData;
 
-        char m_searchBuffer[0xFFFF] = { 0 };
+        char m_searchStringBuffer[0xFFFF] = { 0 };
+        char m_searchHexBuffer[0xFFFF] = { 0 };
+        SearchFunction m_searchFunction = nullptr;
+        std::vector<std::pair<u64, u64>> *m_lastSearchBuffer;
+
         s64 m_lastSearchIndex = 0;
-        std::vector<std::pair<u64, u64>> m_lastSearch;
+        std::vector<std::pair<u64, u64>> m_lastStringSearch;
+        std::vector<std::pair<u64, u64>> m_lastHexSearch;
+
         u64 m_gotoAddress = 0;
 
 
         void drawSearchPopup();
         void drawGotoPopup();
+
     };
 
 }
