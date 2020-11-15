@@ -27,6 +27,11 @@ namespace hex {
 
         char *m_mangledBuffer = nullptr;
         char *m_demangledName = nullptr;
+
+        bool m_asciiTableShowOctal = false;
+
+        void drawDemangler();
+        void drawASCIITable();
     };
 
 }
