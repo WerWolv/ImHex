@@ -24,6 +24,9 @@ namespace hex {
             return static_cast<T*>(this->m_views.back());
         }
 
+    public:
+        float m_globalScale = 1.0f, m_fontScale = 1.0f;
+
     private:
         void frameBegin();
         void frameEnd();
