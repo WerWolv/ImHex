@@ -19,8 +19,14 @@ namespace hex::prv {
         void write(u64 offset, void *buffer, size_t size) override;
         size_t getSize() override;
 
+        std::vector<std::pair<std::string, std::string>> getDataInformation() override;
+
     private:
         FILE *m_file;
+        std::string m_path;
+
+        bool m_fileStatsValid = false;
+        struct stat m_fileStats = { 0 };
 
         bool m_readable, m_writable;
     };

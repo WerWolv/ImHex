@@ -2,6 +2,9 @@
 
 #include <hex.hpp>
 
+#include <string>
+#include <vector>
+
 namespace hex::prv {
 
     class Provider {
@@ -16,6 +19,8 @@ namespace hex::prv {
         virtual void read(u64 offset, void *buffer, size_t size) = 0;
         virtual void write(u64 offset, void *buffer, size_t size) = 0;
         virtual size_t getSize() = 0;
+
+        virtual std::vector<std::pair<std::string, std::string>> getDataInformation() = 0;
     };
 
 }

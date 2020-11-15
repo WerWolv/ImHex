@@ -81,7 +81,7 @@ namespace hex {
 
                     if (sortSpecs->SpecsDirty) {
                         std::sort(this->m_foundStrings.begin(), this->m_foundStrings.end(),
-                                  [this, &sortSpecs](FoundString &left, FoundString &right) -> bool {
+                                  [&sortSpecs](FoundString &left, FoundString &right) -> bool {
                                       if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("position")) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.offset > right.offset;

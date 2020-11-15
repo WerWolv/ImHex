@@ -2,9 +2,16 @@
 
 #include <cstdio>
 
+#include <sys/stat.h>
+#include <time.h>
+
+#include "utils.hpp"
+
 namespace hex::prv {
 
-    FileProvider::FileProvider(std::string_view path) {
+    FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
+        this->m_fileStatsValid = stat(path.data(), &this->m_fileStats) == 0;
+
         this->m_file = fopen(path.data(), "r+b");
 
         this->m_readable = true;
@@ -14,6 +21,7 @@ namespace hex::prv {
             this->m_file = fopen(path.data(), "rb");
             this->m_writable = false;
         }
+
     }
 
     FileProvider::~FileProvider() {
@@ -54,6 +62,21 @@ namespace hex::prv {
     size_t FileProvider::getSize() {
         fseek(this->m_file, 0, SEEK_END);
         return ftell(this->m_file);
+    }
+
+    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
+        std::vector<std::pair<std::string, std::string>> result;
+
+        result.emplace_back("File path", this->m_path);
+        result.emplace_back("Size", hex::toByteString(this->getSize()));
+
+        if (this->m_fileStatsValid) {
+            result.emplace_back("Creation time", ctime(&this->m_fileStats.st_ctime));
+            result.emplace_back("Last access time", ctime(&this->m_fileStats.st_atime));
+            result.emplace_back("Last modification time", ctime(&this->m_fileStats.st_mtime));
+        }
+
+        return result;
     }
 
 }

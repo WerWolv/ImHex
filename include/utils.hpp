@@ -46,5 +46,33 @@ namespace hex {
         return static_cast<u32>(type) >> 4;
     }
 
+    inline std::string toByteString(u64 bytes) {
+        double value = bytes;
+        u8 unitIndex = 0;
+
+        while (value > 1024) {
+            value /= 1024;
+            unitIndex++;
+
+            if (unitIndex == 6)
+                break;
+        }
+
+        std::string result = std::to_string(value);
+
+        switch (unitIndex) {
+            case 0: result += " Bytes"; break;
+            case 1: result += " kB"; break;
+            case 2: result += " MB"; break;
+            case 3: result += " GB"; break;
+            case 4: result += " TB"; break;
+            case 5: result += " PB"; break;
+            case 6: result += " EB"; break;
+            default: result = "A lot!";
+        }
+
+        return result;
+    }
+
 
 }

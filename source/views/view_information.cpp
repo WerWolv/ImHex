@@ -48,7 +48,7 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        if (ImGui::Begin("File Information", &this->m_windowOpen)) {
+        if (ImGui::Begin("Data Information", &this->m_windowOpen)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
@@ -127,6 +127,29 @@ namespace hex {
 
                 ImGui::NewLine();
 
+                for (auto &[name, value] : this->m_dataProvider->getDataInformation()) {
+                    ImGui::LabelText(name.c_str(), "%s", value.c_str());
+                }
+
+                ImGui::NewLine();
+                ImGui::Separator();
+                ImGui::NewLine();
+
+                if (!this->m_fileDescription.empty()) {
+                    ImGui::TextUnformatted("Description:");
+                    ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
+                    ImGui::NewLine();
+                }
+
+                if (!this->m_mimeType.empty()) {
+                    ImGui::TextUnformatted("MIME Type:");
+                    ImGui::TextWrapped("%s", this->m_mimeType.c_str());
+                    ImGui::NewLine();
+                }
+
+                ImGui::Separator();
+                ImGui::NewLine();
+
                 ImGui::Text("Byte Distribution");
                 ImGui::PlotHistogram("##nolabel", this->m_valueCounts.data(), 256, 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 
@@ -147,22 +170,6 @@ namespace hex {
                     ImGui::NewLine();
                     ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "This data is most likely encrypted or compressed!");
                 }
-
-                ImGui::NewLine();
-                ImGui::Separator();
-                ImGui::NewLine();
-
-                if (!this->m_fileDescription.empty()) {
-                    ImGui::TextUnformatted("Description:");
-                    ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
-                    ImGui::NewLine();
-                }
-
-                if (!this->m_mimeType.empty()) {
-                    ImGui::TextUnformatted("MIME Type:");
-                    ImGui::TextWrapped("%s", this->m_mimeType.c_str());
-                    ImGui::NewLine();
-                }
             }
 
             ImGui::EndChild();
@@ -172,7 +179,7 @@ namespace hex {
 
     void ViewInformation::createMenu() {
         if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Entropy View", "", &this->m_windowOpen);
+            ImGui::MenuItem("Data Information View", "", &this->m_windowOpen);
             ImGui::EndMenu();
         }
     }
