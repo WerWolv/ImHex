@@ -8,6 +8,7 @@
 #include "views/view_information.hpp"
 #include "views/view_help.hpp"
 #include "views/view_tools.hpp"
+#include "views/view_strings.hpp"
 
 #include "providers/provider.hpp"
 
@@ -26,6 +27,7 @@ int main() {
     window.addView<hex::ViewPatternData>(dataProvider, patternData);
     window.addView<hex::ViewHashes>(dataProvider);
     window.addView<hex::ViewInformation>(dataProvider);
+    window.addView<hex::ViewStrings>(dataProvider);
     window.addView<hex::ViewHelp>();
     window.addView<hex::ViewTools>();
 

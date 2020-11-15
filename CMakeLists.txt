@@ -28,6 +28,7 @@ add_executable(ImHex
         source/views/view_information.cpp
         source/views/view_help.cpp
         source/views/view_tools.cpp
+        source/views/view_strings.cpp
 
         libs/glad/source/glad.c
 
