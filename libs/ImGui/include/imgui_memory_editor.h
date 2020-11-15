@@ -91,6 +91,7 @@ struct MemoryEditor
     bool            ContentsWidthChanged;
     size_t          DataPreviewAddr;
     size_t          DataEditingAddr;
+    size_t          DataPreviewAddrEnd;
     bool            DataEditingTakeFocus;
     char            DataInputBuf[32];
     char            AddrInputBuf[32];
@@ -120,7 +121,7 @@ struct MemoryEditor
 
         // State/Internals
         ContentsWidthChanged = false;
-        DataPreviewAddr = DataEditingAddr = (size_t)-1;
+        DataPreviewAddr = DataEditingAddr = DataPreviewAddrEnd = (size_t)-1;
         DataEditingTakeFocus = false;
         memset(DataInputBuf, 0, sizeof(DataInputBuf));
         memset(AddrInputBuf, 0, sizeof(AddrInputBuf));
@@ -249,6 +250,8 @@ struct MemoryEditor
             DataEditingAddr = (size_t)-1;
         if (DataPreviewAddr >= mem_size)
             DataPreviewAddr = (size_t)-1;
+        if (DataPreviewAddrEnd >= mem_size)
+            DataPreviewAddrEnd = (size_t)-1;
 
         size_t preview_data_type_size = OptShowDataPreview ? DataTypeGetSize(PreviewDataType) : 0;
 
@@ -300,7 +303,7 @@ struct MemoryEditor
                 // Draw highlight
                 bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
                 bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
-                bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + preview_data_type_size);
+                bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
                 if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
                 {
                     ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -397,10 +400,18 @@ struct MemoryEditor
                         else
                             ImGui::Text(format_byte_space, b);
                     }
-                    if (!ReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0))
+                    if (!ReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
                     {
-                        DataEditingTakeFocus = true;
-                        data_editing_addr_next = addr;
+                        if (ImGui::IsMouseDoubleClicked(0)) {
+                            DataEditingTakeFocus = true;
+                            data_editing_addr_next = addr;
+                        } else {
+                            DataPreviewAddr = addr;
+                            DataPreviewAddrEnd = addr;
+                        }
+                    }
+                    if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                        DataPreviewAddrEnd = addr;
                     }
                 }
             }
