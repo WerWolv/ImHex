@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
@@ -10,6 +11,44 @@
 #include <GLFW/glfw3.h>
 
 namespace hex {
+
+    namespace {
+
+        void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
+            return ctx; // Unused, but the return value has to be non-null
+        }
+
+        void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
+            auto *window = reinterpret_cast<Window *>(handler->UserData);
+
+            float scale;
+            if (sscanf(line, "Scale=%f", &scale) == 1)            { window->m_globalScale = scale; }
+            else if (sscanf(line, "FontScale=%f", &scale) == 1)   { window->m_fontScale   = scale; }
+        }
+
+        void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler) {
+            auto *window = reinterpret_cast<Window *>(handler->UserData);
+            auto &style  = ImGui::GetStyle();
+            auto &io     = ImGui::GetIO();
+
+            if (window->m_globalScale != 0.0f)
+                style.ScaleAllSizes(window->m_globalScale);
+            if (window->m_fontScale != 0.0f)
+                io.FontGlobalScale = window->m_fontScale;
+        }
+
+        void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
+            auto *window = reinterpret_cast<Window *>(handler->UserData);
+
+            buf->reserve(buf->size() + 0x20); // Ballpark reserve
+
+            buf->appendf("[%s][General]\n", handler->TypeName);
+            buf->appendf("Scale=%.1f\n", window->m_globalScale);
+            buf->appendf("FontScale=%.1f\n", window->m_fontScale);
+            buf->append("\n");
+        }
+
+    }
 
     Window::Window() {
         this->initGLFW();
@@ -141,9 +180,20 @@ namespace hex {
 
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        auto *ctx = ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+        // Install custom settings handler
+        ImGuiSettingsHandler handler;
+        handler.TypeName = "ImHex";
+        handler.TypeHash = ImHashStr("ImHex");
+        handler.ReadOpenFn = ImHexSettingsHandler_ReadOpenFn;
+        handler.ReadLineFn = ImHexSettingsHandler_ReadLine;
+        handler.ApplyAllFn = ImHexSettingsHandler_ApplyAll;
+        handler.WriteAllFn = ImHexSettingsHandler_WriteAll;
+        handler.UserData   = this;
+        ctx->SettingsHandlers.push_back(handler);
 
         ImGui::StyleColorsDark();
 
