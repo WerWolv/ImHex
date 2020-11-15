@@ -4,5 +4,7 @@ cmake-build-debug/
 cmake-build-release/
 
 build-linux/
+build/
 
 *.mgc
+imgui.ini
