@@ -1,6 +1,9 @@
-#include <random>
 #include "views/view_pattern.hpp"
+#include <random>
 
+#include "parser/parser.hpp"
+#include "parser/lexer.hpp"
+#include "parser/validator.hpp"
 #include "utils.hpp"
 
 namespace hex {
@@ -111,6 +114,7 @@ namespace hex {
     void ViewPattern::parsePattern(char *buffer) {
         static hex::lang::Lexer lexer;
         static hex::lang::Parser parser;
+        static hex::lang::Validator validator;
 
         this->clearPatternData();
         this->postEvent(Events::PatternChanged);
@@ -123,6 +127,12 @@ namespace hex {
 
         auto [parseResult, ast] = parser.parse(tokens);
         if (parseResult.failed()) {
+            for(auto &node : ast) delete node;
+            return;
+        }
+
+        auto validatorResult = validator.validate(ast);
+        if (!validatorResult) {
             for(auto &node : ast) delete node;
             return;
         }

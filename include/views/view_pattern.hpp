@@ -1,8 +1,6 @@
 #pragma once
 
 #include "parser/ast_node.hpp"
-#include "parser/parser.hpp"
-#include "parser/lexer.hpp"
 
 #include "views/view.hpp"
 #include "views/pattern_data.hpp"
