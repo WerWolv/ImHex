@@ -96,6 +96,9 @@ namespace hex::lang {
 
             const char& c = code[offset];
 
+            if (c == 0x00)
+                break;
+
             if (std::isblank(c) || std::isspace(c)) {
                 offset += 1;
             } else if (c == ';') {
