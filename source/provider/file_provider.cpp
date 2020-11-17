@@ -1,5 +1,6 @@
 #include "providers/file_provider.hpp"
 
+#undef __STRICT_ANSI__
 #include <cstdio>
 
 #include <sys/stat.h>
@@ -47,7 +48,7 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        _fseeki64(this->m_file, offset, SEEK_SET);
+        fseeko64(this->m_file, offset, SEEK_SET);
         fread(buffer, 1, size, this->m_file);
     }
 
@@ -55,13 +56,13 @@ namespace hex::prv {
         if (buffer == nullptr || size == 0)
             return;
 
-        _fseeki64(this->m_file, offset, SEEK_SET);
+        fseeko64(this->m_file, offset, SEEK_SET);
         fwrite(buffer, 1, size, this->m_file);
     }
 
     size_t FileProvider::getSize() {
-        _fseeki64(this->m_file, 0, SEEK_END);
-        return _ftelli64(this->m_file);
+        fseeko64(this->m_file, 0, SEEK_END);
+        return ftello64(this->m_file);
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
