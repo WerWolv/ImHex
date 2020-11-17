@@ -4,7 +4,7 @@
 #include "views/view.hpp"
 
 #include "imgui_memory_editor.h"
-#include "imfilebrowser.h"
+#include "ImGuiFileBrowser.h"
 
 #include <tuple>
 #include <random>
@@ -29,9 +29,7 @@ namespace hex {
 
     private:
         MemoryEditor m_memoryEditor;
-
-        ImGui::FileBrowser m_fileBrowser;
-
+        imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         prv::Provider* &m_dataProvider;
         std::vector<hex::PatternData*> &m_patternData;

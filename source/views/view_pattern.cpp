@@ -22,9 +22,7 @@ namespace hex {
     void ViewPattern::createMenu() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Load pattern...")) {
-                this->m_fileBrowser.SetTitle("Open Hex Pattern");
-                this->m_fileBrowser.SetTypeFilters({ ".hexpat" });
-                this->m_fileBrowser.Open();
+                View::doLater([]{ ImGui::OpenPopup("Open Hex Pattern"); });
             }
             ImGui::EndMenu();
         }
@@ -62,12 +60,9 @@ namespace hex {
         }
         ImGui::End();
 
-        this->m_fileBrowser.Display();
+        if (this->m_fileBrowser.showFileDialog("Open Hex Pattern", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".hexpat")) {
 
-        if (this->m_fileBrowser.HasSelected()) {
-
-            FILE *file = fopen(this->m_fileBrowser.GetSelected().string().c_str(), "rb");
-            this->m_fileBrowser.ClearSelected();
+            FILE *file = fopen(this->m_fileBrowser.selected_path.c_str(), "rb");
 
             if (file != nullptr) {
                 fseek(file, 0, SEEK_END);

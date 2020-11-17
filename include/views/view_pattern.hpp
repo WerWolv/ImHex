@@ -11,7 +11,7 @@
 #include <cstring>
 
 
-#include "imfilebrowser.h"
+#include "ImGuiFileBrowser.h"
 
 namespace hex {
 
@@ -30,7 +30,7 @@ namespace hex {
         prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
 
-        ImGui::FileBrowser m_fileBrowser;
+        imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
 
         void addPatternData(PatternData *patternData);

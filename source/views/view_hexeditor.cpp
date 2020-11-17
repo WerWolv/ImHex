@@ -77,11 +77,8 @@ namespace hex {
             this->drawGotoPopup();
         }
 
-        this->m_fileBrowser.Display();
-
-        if (this->m_fileBrowser.HasSelected()) {
-            this->openFile(this->m_fileBrowser.GetSelected().string());
-            this->m_fileBrowser.ClearSelected();
+        if (this->m_fileBrowser.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
+            this->openFile(this->m_fileBrowser.selected_path);
         }
 
     }
@@ -128,8 +125,7 @@ namespace hex {
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {
-                this->m_fileBrowser.SetTitle("Open File");
-                this->m_fileBrowser.Open();
+                View::doLater([]{ ImGui::OpenPopup("Open File"); });
             }
 
             ImGui::Separator();
@@ -171,8 +167,7 @@ namespace hex {
             ImGui::OpenPopup("Goto");
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-            this->m_fileBrowser.SetTitle("Open File");
-            this->m_fileBrowser.Open();
+            ImGui::OpenPopup("Open File");
             return true;
         } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
             this->copyBytes();
