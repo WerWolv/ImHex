@@ -47,7 +47,7 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        fseek(this->m_file, offset, SEEK_SET);
+        _fseeki64(this->m_file, offset, SEEK_SET);
         fread(buffer, 1, size, this->m_file);
     }
 
@@ -55,13 +55,13 @@ namespace hex::prv {
         if (buffer == nullptr || size == 0)
             return;
 
-        fseek(this->m_file, offset, SEEK_SET);
+        _fseeki64(this->m_file, offset, SEEK_SET);
         fwrite(buffer, 1, size, this->m_file);
     }
 
     size_t FileProvider::getSize() {
-        fseek(this->m_file, 0, SEEK_END);
-        return ftell(this->m_file);
+        _fseeki64(this->m_file, 0, SEEK_END);
+        return _ftelli64(this->m_file);
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
