@@ -84,10 +84,13 @@ namespace hex {
     }
 
     void ViewHexEditor::copyBytes() {
-        size_t copySize = (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1;
+        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+        size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        this->m_dataProvider->read(this->m_memoryEditor.DataPreviewAddr, buffer.data(), buffer.size());
+        this->m_dataProvider->read(start, buffer.data(), buffer.size());
 
         std::string str;
         for (const auto &byte : buffer)
@@ -98,11 +101,14 @@ namespace hex {
     }
 
     void ViewHexEditor::copyString() {
-        size_t copySize = (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1;
+        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+        size_t copySize = (end - start) + 1;
 
         std::string buffer;
         buffer.reserve(copySize + 1);
-        this->m_dataProvider->read(this->m_memoryEditor.DataPreviewAddr, buffer.data(), copySize);
+        this->m_dataProvider->read(start, buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
     }
