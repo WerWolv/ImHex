@@ -20,9 +20,10 @@ add_executable(ImHex
         source/utils.cpp
         source/crypto.cpp
 
-        source/parser/lexer.cpp
-        source/parser/parser.cpp
-        source/parser/validator.cpp
+        source/lang/preprocessor.cpp
+        source/lang/lexer.cpp
+        source/lang/parser.cpp
+        source/lang/validator.cpp
 
         source/provider/file_provider.cpp
 

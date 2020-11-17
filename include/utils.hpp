@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 
-#include "parser/token.hpp"
+#include "lang/token.hpp"
 
 namespace hex {
 

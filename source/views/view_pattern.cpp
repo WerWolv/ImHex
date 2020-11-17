@@ -1,9 +1,9 @@
 #include "views/view_pattern.hpp"
-#include <random>
 
-#include "parser/parser.hpp"
-#include "parser/lexer.hpp"
-#include "parser/validator.hpp"
+#include "lang/preprocessor.hpp"
+#include "lang/parser.hpp"
+#include "lang/lexer.hpp"
+#include "lang/validator.hpp"
 #include "utils.hpp"
 
 namespace hex {
@@ -98,6 +98,7 @@ namespace hex {
             delete data;
 
         this->m_patternData.clear();
+        PatternData::resetPalette();
     }
 
     template<std::derived_from<lang::ASTNode> T>
@@ -112,6 +113,7 @@ namespace hex {
     }
 
     void ViewPattern::parsePattern(char *buffer) {
+        static hex::lang::Preprocessor preprocessor;
         static hex::lang::Lexer lexer;
         static hex::lang::Parser parser;
         static hex::lang::Validator validator;
@@ -119,8 +121,11 @@ namespace hex {
         this->clearPatternData();
         this->postEvent(Events::PatternChanged);
 
-        auto [lexResult, tokens] = lexer.lex(buffer);
+        auto [preprocessingResult, preprocesedCode] = preprocessor.preprocess(buffer);
+        if (preprocessingResult.failed())
+            return;
 
+        auto [lexResult, tokens] = lexer.lex(preprocesedCode);
         if (lexResult.failed()) {
             return;
         }

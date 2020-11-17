@@ -1,4 +1,4 @@
-#include "parser/lexer.hpp"
+#include "lang/lexer.hpp"
 
 #include <vector>
 #include <functional>
