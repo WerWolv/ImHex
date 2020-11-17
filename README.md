@@ -4,4 +4,4 @@ A Hex editor written in C++ using OpenGL, GLFW and Dear ImGui
 
 ## Screenshots
 
-![](https://i.imgur.com/BewCMbw.png)
+![](https://i.imgur.com/ClEsNwL.png)
