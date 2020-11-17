@@ -30,7 +30,7 @@ namespace hex {
             ImGui::NewLine();
             ImGui::BulletText("ImGui by ocornut");
             ImGui::BulletText("imgui_club by ocornut");
-            ImGui::BulletText("imgui-filebrowser by AirGuanZ");
+            ImGui::BulletText("ImGui-Addons by gallickgunner");
             ImGui::NewLine();
             ImGui::BulletText("GNU libmagic");
             ImGui::BulletText("OpenSSL libcrypto");
