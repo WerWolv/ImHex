@@ -25,17 +25,17 @@ namespace hex {
             return View::s_deferedCalls;
         }
 
+        static void postEvent(Events eventType, const void *userData = nullptr) {
+            View::s_eventManager.post(eventType, userData);
+        }
+
     protected:
-        void subscribeEvent(Events eventType, std::function<void(void*)> callback) {
+        void subscribeEvent(Events eventType, std::function<void(const void*)> callback) {
             View::s_eventManager.subscribe(eventType, this, callback);
         }
 
         void unsubscribeEvent(Events eventType) {
             View::s_eventManager.unsubscribe(eventType, this);
-        }
-
-        void postEvent(Events eventType, void *userData = nullptr) {
-            View::s_eventManager.post(eventType, userData);
         }
 
         void doLater(std::function<void()> &&function) {

@@ -7,25 +7,26 @@ namespace hex {
 
     enum class Events {
         DataChanged,
-        PatternChanged
+        PatternChanged,
+        FileDropped
     };
 
     struct EventHandler {
         void *sender;
         Events eventType;
-        std::function<void(void*)> callback;
+        std::function<void(const void*)> callback;
     };
 
     class EventManager {
     public:
 
-        void post(Events eventType, void *userData) {
+        void post(Events eventType, const void *userData) {
             for (auto &handler : this->m_eventHandlers)
                 if (eventType == handler.eventType)
                     handler.callback(userData);
         }
 
-        void subscribe(Events eventType, void *sender, std::function<void(void*)> callback) {
+        void subscribe(Events eventType, void *sender, std::function<void(const void*)> callback) {
             for (auto &handler : this->m_eventHandlers)
                 if (eventType == handler.eventType && sender == handler.sender)
                     return;

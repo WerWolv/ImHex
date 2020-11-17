@@ -51,6 +51,7 @@ namespace hex {
         void drawSearchPopup();
         void drawGotoPopup();
 
+        void openFile(std::string path);
         void copyBytes();
         void copyString();
 

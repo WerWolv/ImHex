@@ -49,6 +49,13 @@ namespace hex {
             _this->m_memoryEditor.HighlightColor = 0x50C08080;
             return false;
         };
+
+        View::subscribeEvent(Events::FileDropped, [this](const void *userData) {
+            auto filePath = static_cast<const char*>(userData);
+
+            if (filePath != nullptr)
+                this->openFile(filePath);
+        });
     }
 
     ViewHexEditor::~ViewHexEditor() {
@@ -73,14 +80,18 @@ namespace hex {
         this->m_fileBrowser.Display();
 
         if (this->m_fileBrowser.HasSelected()) {
-            if (this->m_dataProvider != nullptr)
-                delete this->m_dataProvider;
-
-            this->m_dataProvider = new prv::FileProvider(this->m_fileBrowser.GetSelected().string());
-            View::postEvent(Events::DataChanged);
+            this->openFile(this->m_fileBrowser.GetSelected().string());
             this->m_fileBrowser.ClearSelected();
         }
 
+    }
+
+    void ViewHexEditor::openFile(std::string path) {
+        if (this->m_dataProvider != nullptr)
+            delete this->m_dataProvider;
+
+        this->m_dataProvider = new prv::FileProvider(path);
+        View::postEvent(Events::DataChanged);
     }
 
     void ViewHexEditor::copyBytes() {

@@ -22,7 +22,7 @@
 namespace hex {
 
     ViewInformation::ViewInformation(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
-        View::subscribeEvent(Events::DataChanged, [this](void*) {
+        View::subscribeEvent(Events::DataChanged, [this](const void*) {
            this->m_shouldInvalidate = true;
         });
     }

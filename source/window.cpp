@@ -137,6 +137,7 @@ namespace hex {
 
     void Window::frameEnd() {
         ImGui::Render();
+
         int display_w, display_h;
         glfwGetFramebufferSize(this->m_window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
@@ -174,6 +175,13 @@ namespace hex {
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             if (action == GLFW_PRESS)
                 Window::s_currShortcut = { key, mods };
+        });
+
+        glfwSetDropCallback(this->m_window, [](GLFWwindow *window, int count, const char **paths) {
+            if (count != 1)
+                return;
+
+            View::postEvent(Events::FileDropped, paths[0]);
         });
 
          glfwSetWindowSizeLimits(this->m_window, 720, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
