@@ -11,7 +11,6 @@ namespace hex {
     }
 
     void ViewHelp::drawAboutPopup() {
-        ImGui::OpenPopup("About");
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(450, 300));
         if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_NoResize)) {
 
@@ -44,7 +43,6 @@ namespace hex {
     }
 
     void ViewHelp::drawPatternHelpPopup() {
-        ImGui::OpenPopup("PatternLanguage");
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(450, 300));
 
         constexpr static auto DrawTitle = [](const std::string &title) {
@@ -64,10 +62,20 @@ namespace hex {
         };
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(2000, 1000));
-        if (ImGui::BeginPopupModal("Pattern Language Cheat Sheet", &this->m_patternHelpWindowOpen)) {
+        if (ImGui::BeginPopupModal("Cheat Sheet", &this->m_patternHelpWindowOpen)) {
             ImGui::Text("ImHex Pattern Language Cheat Sheet");
             ImGui::Separator();
             ImGui::NewLine();
+
+            DrawTitle("Preprocessor directives");
+            ImGui::TextWrapped(
+                    "Preprocessor directives can be used to alter the code before it's being parsed. Supported are "
+                    "#define to replace one string with another and #include to include a separate file");
+            DrawCodeSegment("preprocessor", 40,
+                            "#define HEADER_OFFSET 0x100\n"
+                            "#include <cstdint.hexpat>\n"
+                            "#include \"mypattern.hexpat\""
+            );
 
             DrawTitle("Built-in types");
             ImGui::TextWrapped(
@@ -144,20 +152,23 @@ namespace hex {
     }
 
     void ViewHelp::createView() {
-        if (this->m_aboutWindowOpen)
-            drawAboutPopup();
-
-        if (this->m_patternHelpWindowOpen)
-            drawPatternHelpPopup();
+        this->drawAboutPopup();
+        this->drawPatternHelpPopup();
     }
 
     void ViewHelp::createMenu() {
         if (ImGui::BeginMenu("Help")) {
             if (ImGui::MenuItem("About", ""))
-                this->m_aboutWindowOpen = true;
+                View::doLater([this]{
+                    ImGui::OpenPopup("About");
+                    this->m_aboutWindowOpen = true;
+                });
             ImGui::Separator();
             if (ImGui::MenuItem("Cheat Sheet", ""))
-                this->m_patternHelpWindowOpen = true;
+                View::doLater([this]{
+                    ImGui::OpenPopup("Cheat Sheet");
+                    this->m_patternHelpWindowOpen = true;
+                });
             ImGui::EndMenu();
         }
     }
