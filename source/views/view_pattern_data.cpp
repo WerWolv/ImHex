@@ -25,7 +25,8 @@ namespace hex {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
-                if (ImGui::BeginTable("##patterndatatable", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
+                if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
                     ImGui::TableSetupColumn("Name", 0, -1, ImGui::GetID("name"));
                     ImGui::TableSetupColumn("Position", 0, -1, ImGui::GetID("position"));
                     ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
@@ -74,6 +75,12 @@ namespace hex {
                                 else
                                     return left->getTypeName() < right->getTypeName();
                             }
+                            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
+                                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                                    return left->getColor() > right->getColor();
+                                else
+                                    return left->getColor() < right->getColor();
+                            }
 
                             return false;
                         });
@@ -85,6 +92,8 @@ namespace hex {
                     u32 rowCount = 0;
                     for (auto& patternData : this->m_sortedPatternData) {
                         ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+                        ImGui::TableNextColumn();
+                        ImGui::ColorButton("color", ImColor(patternData->getColor()), ImGuiColorEditFlags_NoTooltip);
                         ImGui::TableNextColumn();
                         ImGui::Text("%s", patternData->getName().c_str());
                         ImGui::TableNextColumn();
