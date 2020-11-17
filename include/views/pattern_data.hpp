@@ -30,13 +30,12 @@ namespace hex {
     public:
         PatternData(u64 offset, size_t size, const std::string &name, u32 color = 0)
         : m_offset(offset), m_size(size), m_color(color), m_name(name) {
-            if (color == 0)
-                color = std::mt19937(std::random_device()())();
+            constexpr u32 Palette[] = { 0x50b4771f, 0x500e7fff, 0x502ca02c, 0x502827d6, 0x50bd6794, 0x504b568c, 0x50c277e3, 0x507f7f7f, 0x5022bdbc, 0x50cfbe17 };
 
-            color &= ~0xFF00'0000;
-            color |= 0x5000'0000;
+            this->m_color = Palette[PatternData::s_paletteOffset++];
 
-            this->m_color = color;
+            if (PatternData::s_paletteOffset >= (sizeof(Palette) / sizeof(u32)))
+                PatternData::s_paletteOffset = 0;
         }
         virtual ~PatternData() = default;
 
@@ -49,12 +48,16 @@ namespace hex {
         virtual std::string format(prv::Provider* &provider) = 0;
         virtual std::string getTypeName() = 0;
 
+        static void resetPalette() { PatternData::s_paletteOffset = 0; }
+
     private:
         u64 m_offset;
         size_t m_size;
 
         u32 m_color;
         std::string m_name;
+
+        static inline u8 s_paletteOffset = 0;
     };
 
 
