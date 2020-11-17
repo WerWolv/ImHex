@@ -1,4 +1,4 @@
-#include "parser/validator.hpp"
+#include "lang/validator.hpp"
 
 #include <unordered_set>
 #include <string>
@@ -28,6 +28,9 @@ namespace hex::lang {
                     // Check for duplicate type names
                     auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(node);
                     if (!typeNames.insert(typeDeclNode->getTypeName()).second)
+                        return false;
+
+                    if (typeDeclNode->getAssignedType() == Token::TypeToken::Type::CustomType && !typeNames.contains(typeDeclNode->getAssignedCustomTypeName()))
                         return false;
                 }
                 break;
