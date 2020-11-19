@@ -153,7 +153,7 @@ namespace hex::lang {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
 
-            this->createDefaultEntry(hex::format("%lu (0x%08lx)", data, data));
+            this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, , this->getSize() * 2, data));
         }
 
         std::string getTypeName() override {
@@ -178,7 +178,7 @@ namespace hex::lang {
 
             s64 signedData = signedData = hex::signExtend(data, this->getSize(), 64);
 
-           this->createDefaultEntry(hex::format("%ld (0x%08lx)", signedData, data));
+           this->createDefaultEntry(hex::format("%ld (0x%0*lx)", signedData, this->getSize() * 2, data));
         }
 
         std::string getTypeName() override {
@@ -209,7 +209,7 @@ namespace hex::lang {
                 formatData = data;
             }
 
-            this->createDefaultEntry(hex::format("%f (0x%08lx)", formatData, formatData));
+            this->createDefaultEntry(hex::format("%f (0x%0*lx)", formatData, this->getSize() * 2, formatData));
         }
 
         std::string getTypeName() override {
