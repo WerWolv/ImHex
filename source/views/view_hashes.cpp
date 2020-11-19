@@ -6,6 +6,12 @@
 
 #include <vector>
 
+#ifdef __MINGW32__
+#include <winsock.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 namespace hex {
 
     ViewHashes::ViewHashes(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
@@ -21,7 +27,7 @@ namespace hex {
 
     static void formatBigHexInt(auto dataArray, char *buffer, size_t bufferSize) {
         for (int i = 0; i < dataArray.size(); i++)
-            snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", __builtin_bswap32(dataArray[i]));
+            snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", htonl(dataArray[i]));
     }
 
     void ViewHashes::createView() {
