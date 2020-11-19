@@ -364,7 +364,24 @@ namespace hex::lang {
             : PatternData(Type::Enum, offset, size, name, color), m_enumName(enumName), m_enumValues(enumValues) { }
 
         void createEntry(prv::Provider* &provider) override {
+            u64 value = 0;
+            provider->read(this->getOffset(), &value, this->getSize());
 
+            std::string valueString = this->m_enumName + "::";
+
+            bool foundValue = false;
+            for (auto &[entryValue, entryName] : this->m_enumValues) {
+                if (value == entryValue) {
+                    valueString += entryName;
+                    foundValue = true;
+                    break;
+                }
+            }
+
+            if (!foundValue)
+                valueString += "???";
+
+            this->createDefaultEntry(hex::format("%s (0x0*lx)", valueString.c_str(), this->getSize() * 2, value));
         }
 
         std::string getTypeName() override {
