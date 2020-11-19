@@ -311,7 +311,7 @@ struct MemoryEditor
                     ImVec2 pos = ImGui::GetCursorScreenPos();
                     float highlight_width = s.GlyphWidth * 2;
                     bool is_next_byte_highlighted =  (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1, true)));
-                    if (is_next_byte_highlighted || (n + 1 == Cols))
+                    if (is_next_byte_highlighted)
                     {
                         highlight_width = s.HexCellWidth;
                         if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
@@ -453,18 +453,11 @@ struct MemoryEditor
                     bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
                     if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
                     {
-                        float highlight_width = s.GlyphWidth;
-                        bool is_next_byte_highlighted =  (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1, true)));
-                        if (is_next_byte_highlighted)
-                        {
-                            highlight_width = s.HexCellWidth;
-                        }
-
                         ImU32 color = HighlightColor;
                         if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
                             color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
 
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), color);
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), color);
                     }
 
 
