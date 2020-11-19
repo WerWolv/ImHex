@@ -41,8 +41,6 @@ namespace hex {
                 sortSpecs->SpecsDirty = false;
             }
 
-            ImGui::TableHeadersRow();
-
             return true;
         }
 
@@ -59,11 +57,17 @@ namespace hex {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
                 if (beginPatternDataTable(this->m_dataProvider, this->m_patternData, this->m_sortedPatternData)) {
-                    u32 rowCount = 0;
-                    for (auto& patternData : this->m_sortedPatternData) {
-                        patternData->createEntry(this->m_dataProvider);
-                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-                        rowCount++;
+                    if (this->m_sortedPatternData.size() > 0) {
+                        ImGui::TableHeadersRow();
+
+                        u32 rowCount = 0;
+                        for (auto &patternData : this->m_sortedPatternData) {
+                            patternData->createEntry(this->m_dataProvider);
+                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
+                                                   ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
+                            rowCount++;
+                        }
+
                     }
 
                     ImGui::EndTable();
