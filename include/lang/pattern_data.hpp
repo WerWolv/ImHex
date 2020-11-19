@@ -126,7 +126,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx", this->getSize());
+            ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
@@ -153,7 +153,7 @@ namespace hex::lang {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
 
-            this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, , this->getSize() * 2, data));
+            this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
         }
 
         std::string getTypeName() override {
@@ -268,7 +268,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx", this->getSize());
+            ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
@@ -313,7 +313,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx", this->getSize());
+            ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
