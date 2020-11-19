@@ -31,8 +31,10 @@ namespace hex::lang {
 
     class PatternData {
     public:
-        PatternData(u64 offset, size_t size, const std::string &name, u32 color = 0)
-        : m_offset(offset), m_size(size), m_color(color), m_name(name) {
+        enum class Type { Unsigned, Signed, Float, Character, String, Struct, Array, Enum };
+
+        PatternData(Type type, u64 offset, size_t size, const std::string &name, u32 color = 0)
+        : m_type(type), m_offset(offset), m_size(size), m_color(color), m_name(name) {
             constexpr u32 Palette[] = { 0x50b4771f, 0x500e7fff, 0x502ca02c, 0x502827d6, 0x50bd6794, 0x504b568c, 0x50c277e3, 0x507f7f7f, 0x5022bdbc, 0x50cfbe17 };
 
             if (color != 0)
@@ -45,6 +47,7 @@ namespace hex::lang {
         }
         virtual ~PatternData() = default;
 
+        [[nodiscard]] Type getPatternType() const { return this->m_type; }
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
         [[nodiscard]] size_t getSize() const { return this->m_size; }
 
@@ -61,80 +64,56 @@ namespace hex::lang {
                 return { };
         }
 
+        virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
 
-        static void resetPalette() { PatternData::s_paletteOffset = 0; }
+        static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, lang::PatternData* left, lang::PatternData* right) {
+            if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                    return left->getName() > right->getName();
+                else
+                    return left->getName() < right->getName();
+            }
+            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("position")) {
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                    return left->getOffset() > right->getOffset();
+                else
+                    return left->getOffset() < right->getOffset();
+            }
+            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                    return left->getSize() > right->getSize();
+                else
+                    return left->getSize() < right->getSize();
+            }
+            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
+                size_t biggerSize = std::max(left->getSize(), right->getSize());
+                std::vector<u8> leftBuffer(biggerSize, 0x00), rightBuffer(biggerSize, 0x00);
 
-        static bool beginPatternDataTable(prv::Provider* &provider, const std::vector<lang::PatternData*> &patterns, std::vector<lang::PatternData*> &sortedPatterns) {
-            if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
-                ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
-                ImGui::TableSetupColumn("Name", 0, -1, ImGui::GetID("name"));
-                ImGui::TableSetupColumn("Position", 0, -1, ImGui::GetID("position"));
-                ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
-                ImGui::TableSetupColumn("Type", 0, -1, ImGui::GetID("type"));
-                ImGui::TableSetupColumn("Value", 0, -1, ImGui::GetID("value"));
+                provider->read(left->getOffset(), leftBuffer.data(), left->getSize());
+                provider->read(right->getOffset(), rightBuffer.data(), right->getSize());
 
-                auto sortSpecs = ImGui::TableGetSortSpecs();
-
-                if (sortSpecs->SpecsDirty || sortedPatterns.empty()) {
-                    sortedPatterns = patterns;
-
-                    std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs, &provider](lang::PatternData* left, lang::PatternData* right) -> bool {
-                        if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left->getName() > right->getName();
-                            else
-                                return left->getName() < right->getName();
-                        }
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("position")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left->getOffset() > right->getOffset();
-                            else
-                                return left->getOffset() < right->getOffset();
-                        }
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left->getSize() > right->getSize();
-                            else
-                                return left->getSize() < right->getSize();
-                        }
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
-                            size_t biggerSize = std::max(left->getSize(), right->getSize());
-                            std::vector<u8> leftBuffer(biggerSize, 0x00), rightBuffer(biggerSize, 0x00);
-
-                            provider->read(left->getOffset(), leftBuffer.data(), left->getSize());
-                            provider->read(right->getOffset(), rightBuffer.data(), right->getSize());
-
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return leftBuffer > rightBuffer;
-                            else
-                                return leftBuffer < rightBuffer;
-                        }
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left->getTypeName() > right->getTypeName();
-                            else
-                                return left->getTypeName() < right->getTypeName();
-                        }
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left->getColor() > right->getColor();
-                            else
-                                return left->getColor() < right->getColor();
-                        }
-
-                        return false;
-                    });
-
-                    sortSpecs->SpecsDirty = false;
-                }
-
-                ImGui::TableHeadersRow();
-
-                return true;
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                    return leftBuffer > rightBuffer;
+                else
+                    return leftBuffer < rightBuffer;
+            }
+            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                    return left->getTypeName() > right->getTypeName();
+                else
+                    return left->getTypeName() < right->getTypeName();
+            }
+            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                    return left->getColor() > right->getColor();
+                else
+                    return left->getColor() < right->getColor();
             }
 
             return false;
         }
+
+        static void resetPalette() { PatternData::s_paletteOffset = 0; }
 
     protected:
         void createDefaultEntry(std::string value) {
@@ -155,6 +134,7 @@ namespace hex::lang {
         }
 
     private:
+        Type m_type;
         u64 m_offset;
         size_t m_size;
 
@@ -167,7 +147,7 @@ namespace hex::lang {
 
     class PatternDataUnsigned : public PatternData {
     public:
-        PatternDataUnsigned(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(offset, size, name, color) { }
+        PatternDataUnsigned(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Unsigned, offset, size, name, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
@@ -190,7 +170,7 @@ namespace hex::lang {
 
     class PatternDataSigned : public PatternData {
     public:
-        PatternDataSigned(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(offset, size, name, color) { }
+        PatternDataSigned(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Signed, offset, size, name, color) { }
 
        void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
@@ -215,7 +195,7 @@ namespace hex::lang {
 
     class PatternDataFloat : public PatternData {
     public:
-        PatternDataFloat(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(offset, size, name, color) { }
+        PatternDataFloat(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Float, offset, size, name, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             double formatData = 0;
@@ -243,7 +223,7 @@ namespace hex::lang {
 
     class PatternDataCharacter : public PatternData {
     public:
-        PatternDataCharacter(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(offset, size, name, color) { }
+        PatternDataCharacter(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Character, offset, size, name, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             char character;
@@ -259,7 +239,7 @@ namespace hex::lang {
 
     class PatternDataString : public PatternData {
     public:
-        PatternDataString(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(offset, size, name, color) { }
+        PatternDataString(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::String, offset, size, name, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> buffer(this->getSize() + 1, 0x00);
@@ -277,7 +257,7 @@ namespace hex::lang {
     class PatternDataArray : public PatternData {
     public:
         PatternDataArray(u64 offset, size_t size, const std::string &name, const std::vector<PatternData*> & entries, u32 color = 0)
-            : PatternData(offset, size, name, color), m_entries(entries) { }
+            : PatternData(Type::Array, offset, size, name, color), m_entries(entries) { }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
@@ -322,7 +302,7 @@ namespace hex::lang {
     class PatternDataStruct : public PatternData {
     public:
         PatternDataStruct(u64 offset, size_t size, const std::string &name, const std::string &structName, const std::vector<PatternData*> & members, u32 color = 0)
-                : PatternData(offset, size, name, color), m_structName(structName), m_members(members) { }
+                : PatternData(Type::Struct, offset, size, name, color), m_structName(structName), m_members(members), m_sortedMembers(members) { }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
@@ -340,7 +320,7 @@ namespace hex::lang {
             ImGui::Text("%s", "{ ... }");
 
             if (open) {
-                for (auto &member : this->m_members)
+                for (auto &member : this->m_sortedMembers)
                     member->createEntry(provider);
 
                 ImGui::TreePop();
@@ -357,6 +337,17 @@ namespace hex::lang {
             return { };
         }
 
+        void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
+            this->m_sortedMembers = this->m_members;
+
+            std::sort(this->m_sortedMembers.begin(), this->m_sortedMembers.end(), [&sortSpecs, &provider](PatternData *left, PatternData *right) {
+                return PatternData::sortPatternDataTable(sortSpecs, provider, left, right);
+            });
+
+            for (auto &member : this->m_members)
+                member->sort(sortSpecs, provider);
+        }
+
         std::string getTypeName() override {
             return "struct " + this->m_structName;
         }
@@ -370,7 +361,7 @@ namespace hex::lang {
     class PatternDataEnum : public PatternData {
     public:
         PatternDataEnum(u64 offset, size_t size, const std::string &name, const std::string &enumName, std::vector<std::pair<u64, std::string>> enumValues, u32 color = 0)
-            : PatternData(offset, size, name, color), m_enumName(enumName), m_enumValues(enumValues) { }
+            : PatternData(Type::Enum, offset, size, name, color), m_enumName(enumName), m_enumValues(enumValues) { }
 
         void createEntry(prv::Provider* &provider) override {
 
