@@ -257,7 +257,7 @@ namespace hex::lang {
 
         auto program = parseTillToken(currentToken, Token::Type::EndOfProgram);
 
-        if (program.empty())
+        if (program.empty() || currentToken != tokens.end())
             return { ResultParseError, { } };
 
         return { ResultSuccess, program };
