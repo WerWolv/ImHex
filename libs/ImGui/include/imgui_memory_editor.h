@@ -60,6 +60,8 @@
 #pragma warning (disable: 4996) // warning C4996: 'sprintf': This function or variable may be unsafe.
 #endif
 
+ImU32 ImAlphaBlendColors(ImU32 col_a, ImU32 col_b);
+
 struct MemoryEditor
 {
     enum DataFormat
@@ -315,7 +317,12 @@ struct MemoryEditor
                         if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
                             highlight_width += s.SpacingBetweenMidCols;
                     }
-                    draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), HighlightColor);
+
+                    ImU32 color = HighlightColor;
+                    if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
+                        color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
+
+                    draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), color);
                 }
 
                 if (DataEditingAddr == addr)

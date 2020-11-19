@@ -46,7 +46,7 @@ namespace hex {
                 }
             }
 
-            _this->m_memoryEditor.HighlightColor = 0x50C08080;
+            _this->m_memoryEditor.HighlightColor = 0x60C08080;
             return false;
         };
 
