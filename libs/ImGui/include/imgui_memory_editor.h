@@ -429,13 +429,13 @@ struct MemoryEditor
                 ImGui::SameLine(s.PosAsciiStart);
                 ImVec2 pos = ImGui::GetCursorScreenPos();
                 addr = line_i * Cols;
-                ImGui::PushID(line_i);
-                if (ImGui::InvisibleButton("ascii", ImVec2(s.PosAsciiEnd - s.PosAsciiStart, s.LineHeight)))
-                {
-                    DataEditingAddr = DataPreviewAddr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / s.GlyphWidth);
-                    DataEditingTakeFocus = true;
-                }
+
+                ImGui::PushID(-1);
+                ImGui::SameLine();
+                ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+
                 ImGui::PopID();
+
                 for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
                 {
                     if (addr == DataEditingAddr)
@@ -446,6 +446,48 @@ struct MemoryEditor
                     unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
                     char display_c = (c < 32 || c >= 128) ? '.' : c;
                     draw_list->AddText(pos, (display_c == c) ? color_text : color_disabled, &display_c, &display_c + 1);
+
+                    // Draw highlight
+                    bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
+                    bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
+                    bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
+                    if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
+                    {
+                        float highlight_width = s.GlyphWidth;
+                        bool is_next_byte_highlighted =  (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1, true)));
+                        if (is_next_byte_highlighted)
+                        {
+                            highlight_width = s.HexCellWidth;
+                        }
+
+                        ImU32 color = HighlightColor;
+                        if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
+                            color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
+
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), color);
+                    }
+
+
+                    ImGui::PushID(line_i * Cols + n);
+                    ImGui::SameLine();
+                    ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+
+                    ImGui::PopID();
+
+                    if (!ReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                    {
+                        if (ImGui::IsMouseDoubleClicked(0)) {
+                            DataEditingTakeFocus = true;
+                            data_editing_addr_next = addr;
+                        } else {
+                            DataPreviewAddr = addr;
+                            DataPreviewAddrEnd = addr;
+                        }
+                    }
+                    if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                        DataPreviewAddrEnd = addr;
+                    }
+
                     pos.x += s.GlyphWidth;
                 }
             }
