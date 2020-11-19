@@ -73,7 +73,7 @@ namespace hex {
                 if (ImGui::BeginTable("##strings", 3,
                                       ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
                                       ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
-                    ImGui::TableSetupColumn("Position", 0, -1, ImGui::GetID("position"));
+                    ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
                     ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
                     ImGui::TableSetupColumn("String", 0, -1, ImGui::GetID("string"));
 
@@ -82,7 +82,7 @@ namespace hex {
                     if (sortSpecs->SpecsDirty) {
                         std::sort(this->m_foundStrings.begin(), this->m_foundStrings.end(),
                                   [&sortSpecs](FoundString &left, FoundString &right) -> bool {
-                                      if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("position")) {
+                                      if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.offset > right.offset;
                                           else
@@ -120,9 +120,9 @@ namespace hex {
 
                         ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
                         ImGui::TableNextColumn();
-                        ImGui::Text("0x%08lx:0x%08lx", foundString.offset, foundString.offset + foundString.size);
+                        ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
                         ImGui::TableNextColumn();
-                        ImGui::Text("%08lx", foundString.size);
+                        ImGui::Text("0x%04lx", foundString.size);
                         ImGui::TableNextColumn();
                         ImGui::Text("%s", foundString.string.c_str());
                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,

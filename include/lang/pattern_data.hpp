@@ -73,7 +73,7 @@ namespace hex::lang {
                 else
                     return left->getName() < right->getName();
             }
-            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("position")) {
+            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getOffset() > right->getOffset();
                 else

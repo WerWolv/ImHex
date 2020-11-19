@@ -21,7 +21,7 @@ namespace hex {
         if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
             ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
             ImGui::TableSetupColumn("Name", 0, -1, ImGui::GetID("name"));
-            ImGui::TableSetupColumn("Position", 0, -1, ImGui::GetID("position"));
+            ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
             ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
             ImGui::TableSetupColumn("Type", 0, -1, ImGui::GetID("type"));
             ImGui::TableSetupColumn("Value", 0, -1, ImGui::GetID("value"));
