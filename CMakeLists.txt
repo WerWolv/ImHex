@@ -50,7 +50,7 @@ add_executable(ImHex
         )
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib ws2_32.lib libcrypto.a libwinpthread.a)
 endif (WIN32)
 
 if (UNIX)
