@@ -42,6 +42,7 @@ add_executable(ImHex
         libs/ImGui/source/imgui.cpp
         libs/ImGui/source/imgui_draw.cpp
         libs/ImGui/source/imgui_widgets.cpp
+        libs/ImGui/source/imgui_demo.cpp
         libs/ImGui/source/imgui_impl_glfw.cpp
         libs/ImGui/source/imgui_impl_opengl3.cpp
         libs/ImGui/source/ImGuiFileBrowser.cpp
