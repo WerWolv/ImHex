@@ -4,7 +4,7 @@
 
 #include "imgui.h"
 #include "views/view.hpp"
-#include "views/pattern_data.hpp"
+#include "lang/pattern_data.hpp"
 
 #include <vector>
 #include <tuple>
@@ -16,7 +16,7 @@ namespace hex {
 
     class ViewPatternData : public View {
     public:
-        ViewPatternData(prv::Provider* &dataProvider, std::vector<hex::PatternData*> &patternData);
+        ViewPatternData(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
         ~ViewPatternData() override;
 
         void createView() override;
@@ -24,8 +24,8 @@ namespace hex {
 
     private:
         prv::Provider* &m_dataProvider;
-        std::vector<hex::PatternData*> &m_patternData;
-        std::vector<hex::PatternData*> m_sortedPatternData;
+        std::vector<lang::PatternData*> &m_patternData;
+        std::vector<lang::PatternData*> m_sortedPatternData;
         bool m_windowOpen = true;
     };
 

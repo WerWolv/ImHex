@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "views/pattern_data.hpp"
+#include "lang/pattern_data.hpp"
 
 namespace hex {
 
@@ -20,7 +20,7 @@ namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(prv::Provider* &dataProvider, std::vector<hex::PatternData*> &patternData);
+        ViewHexEditor(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
         ~ViewHexEditor() override;
 
         void createView() override;
@@ -32,7 +32,7 @@ namespace hex {
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         prv::Provider* &m_dataProvider;
-        std::vector<hex::PatternData*> &m_patternData;
+        std::vector<lang::PatternData*> &m_patternData;
 
         char m_searchStringBuffer[0xFFFF] = { 0 };
         char m_searchHexBuffer[0xFFFF] = { 0 };

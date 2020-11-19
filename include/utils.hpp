@@ -3,9 +3,10 @@
 #include <hex.hpp>
 
 #include <array>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <string>
-#include <memory>
 #include <vector>
 
 #include "lang/token.hpp"
@@ -75,4 +76,16 @@ namespace hex {
     }
 
 
+    class ScopeExit {
+    public:
+        ScopeExit(std::function<void()> func) : m_func(func) {}
+        ~ScopeExit() { if (this->m_func != nullptr) this->m_func(); }
+
+        void release() {
+            this->m_func = nullptr;
+        }
+
+    private:
+        std::function<void()> m_func;
+    };
 }

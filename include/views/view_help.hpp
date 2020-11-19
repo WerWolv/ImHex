@@ -4,7 +4,7 @@
 
 #include "imgui.h"
 #include "views/view.hpp"
-#include "views/pattern_data.hpp"
+#include "lang/pattern_data.hpp"
 
 #include <vector>
 #include <tuple>

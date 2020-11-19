@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#include "views/pattern_data.hpp"
+#include "lang/pattern_data.hpp"
 #include "views/view_hexeditor.hpp"
 #include "views/view_pattern.hpp"
 #include "views/view_pattern_data.hpp"
@@ -18,7 +18,7 @@ int main() {
     hex::Window window;
 
     // Shared Data
-    std::vector<hex::PatternData*> patternData;
+    std::vector<hex::lang::PatternData*> patternData;
     hex::prv::Provider *dataProvider = nullptr;
 
     // Create views

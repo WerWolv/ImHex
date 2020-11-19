@@ -24,6 +24,7 @@ add_executable(ImHex
         source/lang/lexer.cpp
         source/lang/parser.cpp
         source/lang/validator.cpp
+        source/lang/evaluator.cpp
 
         source/provider/file_provider.cpp
 
