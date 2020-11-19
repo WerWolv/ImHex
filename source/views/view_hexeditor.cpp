@@ -339,13 +339,57 @@ namespace hex {
     void ViewHexEditor::drawGotoPopup() {
         if (ImGui::BeginPopup("Goto")) {
             ImGui::TextUnformatted("Goto");
-            ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            if (ImGui::BeginTabBar("gotoTabs")) {
+                s64 newOffset = 0;
+                if (ImGui::BeginTabItem("Begin")) {
+                    ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-            if (this->m_gotoAddress >= this->m_dataProvider->getSize())
-                this->m_gotoAddress = this->m_dataProvider->getSize() - 1;
+                    if (this->m_gotoAddress >= this->m_dataProvider->getSize())
+                        this->m_gotoAddress = this->m_dataProvider->getSize() - 1;
 
-            if (ImGui::Button("Goto")) {
-                this->m_memoryEditor.GotoAddr = this->m_gotoAddress;
+                    newOffset = this->m_gotoAddress;
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Current")) {
+                    ImGui::InputScalar("##nolabel", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+
+                    if (this->m_memoryEditor.DataPreviewAddr == -1 || this->m_memoryEditor.DataPreviewAddrEnd == -1) {
+                        this->m_memoryEditor.DataPreviewAddr = 0;
+                        this->m_memoryEditor.DataPreviewAddrEnd = 0;
+                    }
+
+                    s64 currHighlightStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+                    newOffset = this->m_gotoAddress + currHighlightStart;
+                    if (newOffset >= this->m_dataProvider->getSize()) {
+                        newOffset = this->m_dataProvider->getSize() - 1;
+                        this->m_gotoAddress = (this->m_dataProvider->getSize() - 1) - currHighlightStart;
+                    } else if (newOffset < 0) {
+                        newOffset = 0;
+                        this->m_gotoAddress = -currHighlightStart;
+                    }
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("End")) {
+                    ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+
+                    if (this->m_gotoAddress >= this->m_dataProvider->getSize())
+                        this->m_gotoAddress = this->m_dataProvider->getSize() - 1;
+
+                    newOffset = (this->m_dataProvider->getSize() - 1) - this->m_gotoAddress;
+
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::Button("Goto")) {
+                    this->m_memoryEditor.GotoAddr = newOffset;
+                    this->m_memoryEditor.DataPreviewAddr = newOffset;
+                    this->m_memoryEditor.DataPreviewAddrEnd = newOffset;
+                }
+
+                ImGui::EndTabBar();
             }
 
             ImGui::EndPopup();

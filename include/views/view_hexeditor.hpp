@@ -43,7 +43,7 @@ namespace hex {
         std::vector<std::pair<u64, u64>> m_lastStringSearch;
         std::vector<std::pair<u64, u64>> m_lastHexSearch;
 
-        u64 m_gotoAddress = 0;
+        s64 m_gotoAddress = 0;
 
 
         void drawSearchPopup();
