@@ -9,15 +9,71 @@
 
 namespace hex {
 
+    static const TextEditor::LanguageDefinition& PatternLanguage() {
+        static bool initialized = false;
+        static TextEditor::LanguageDefinition langDef;
+        if (!initialized) {
+            static const char* const keywords[] = {
+                "using", "struct", "enum"
+            };
+            for (auto& k : keywords)
+                langDef.mKeywords.insert(k);
+
+            static const char* const builtInTypes[] = {
+                    "u8", "u16", "u32", "u64", "u128",
+                    "s8", "s16", "s32", "s64", "s128",
+                    "float", "double"
+            };
+            for (auto& k : builtInTypes) {
+                TextEditor::Identifier id;
+                id.mDeclaration = "Built-in type";
+                langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
+            }
+
+            langDef.mTokenize = [](const char * inBegin, const char * inEnd, const char *& outBegin, const char *& outEnd, TextEditor::PaletteIndex & paletteIndex) -> bool {
+                paletteIndex = TextEditor::PaletteIndex::Max;
+
+                while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+                    inBegin++;
+
+                if (inBegin == inEnd) {
+                    outBegin = inEnd;
+                    outEnd = inEnd;
+                    paletteIndex = TextEditor::PaletteIndex::Default;
+                }
+                else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd))
+                    paletteIndex = TextEditor::PaletteIndex::Identifier;
+                else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
+                    paletteIndex = TextEditor::PaletteIndex::Number;
+
+                return paletteIndex != TextEditor::PaletteIndex::Max;
+            };
+
+            langDef.mCommentStart = "/*";
+            langDef.mCommentEnd = "*/";
+            langDef.mSingleLineComment = "//";
+
+            langDef.mCaseSensitive = true;
+            langDef.mAutoIndentation = true;
+            langDef.mPreprocChar = '#';
+
+            langDef.mName = "Pattern Language";
+
+            initialized = true;
+        }
+        return langDef;
+    }
+
+
     ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
         : View(), m_dataProvider(dataProvider), m_patternData(patternData) {
 
-        this->m_buffer = new char[0xFF'FFFF];
-        std::memset(this->m_buffer, 0x00, 0xFF'FFFF);
+        this->m_textEditor.SetLanguageDefinition(PatternLanguage());
+        this->m_textEditor.SetShowWhitespaces(false);
     }
+
     ViewPattern::~ViewPattern() {
-        if (this->m_buffer != nullptr)
-            delete[] this->m_buffer;
+
     }
 
     void ViewPattern::createMenu() {
@@ -39,25 +95,7 @@ namespace hex {
             return;
 
         if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None)) {
-            if (this->m_buffer != nullptr && this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-
-                auto size = ImGui::GetWindowSize();
-                size.y -= 50;
-                ImGui::InputTextMultiline("Pattern", this->m_buffer, 0xFFFF, size,
-                                          ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit,
-                                          [](ImGuiInputTextCallbackData *data) -> int {
-                                              auto _this = static_cast<ViewPattern *>(data->UserData);
-
-                                              _this->parsePattern(data->Buf);
-
-                                              return 0;
-                                          }, this
-                );
-
-                ImGui::PopStyleVar(2);
-            }
+            this->m_textEditor.Render("Pattern");
         }
         ImGui::End();
 
@@ -66,20 +104,23 @@ namespace hex {
             FILE *file = fopen(this->m_fileBrowser.selected_path.c_str(), "rb");
 
             if (file != nullptr) {
+                char *buffer;
                 fseek(file, 0, SEEK_END);
                 size_t size = ftell(file);
                 rewind(file);
 
-                if (size >= 0xFF'FFFF) {
-                    fclose(file);
-                    return;
-                }
+                buffer = new char[size + 1];
 
-                fread(this->m_buffer, size, 1, file);
+                fread(buffer, size, 1, file);
+                buffer[size] = 0x00;
+
 
                 fclose(file);
 
-                this->parsePattern(this->m_buffer);
+                this->parsePattern(buffer);
+                this->m_textEditor.SetText(buffer);
+
+                delete[] buffer;
             }
         }
     }

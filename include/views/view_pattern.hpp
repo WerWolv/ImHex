@@ -12,6 +12,7 @@
 
 
 #include "ImGuiFileBrowser.h"
+#include "TextEditor.h"
 
 namespace hex {
 
@@ -24,12 +25,11 @@ namespace hex {
         void createView() override;
 
     private:
-        char *m_buffer = nullptr;
-
         std::vector<lang::PatternData*> &m_patternData;
         prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
 
+        TextEditor m_textEditor;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         void clearPatternData();
