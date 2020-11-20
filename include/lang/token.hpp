@@ -58,7 +58,8 @@ namespace hex::lang {
                 Signed128Bit        = 0x101,
                 Float               = 0x42,
                 Double              = 0x82,
-                CustomType          = 0x00
+                CustomType          = 0x00,
+                Padding             = 0x1F
             } type;
         } typeToken;
     };

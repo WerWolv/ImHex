@@ -169,6 +169,8 @@ namespace hex::lang {
                     tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Float } });
                 else if (identifier == "double")
                     tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Double } });
+                else if (identifier == "padding")
+                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Padding } });
 
                 // If it's not a keyword and a builtin type, it has to be an identifier
 

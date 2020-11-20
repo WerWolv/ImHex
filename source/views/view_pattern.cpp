@@ -22,7 +22,7 @@ namespace hex {
             static const char* const builtInTypes[] = {
                     "u8", "u16", "u32", "u64", "u128",
                     "s8", "s16", "s32", "s64", "s128",
-                    "float", "double"
+                    "float", "double", "padding"
             };
             for (auto& k : builtInTypes) {
                 TextEditor::Identifier id;

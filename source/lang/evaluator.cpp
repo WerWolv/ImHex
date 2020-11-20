@@ -173,32 +173,34 @@ namespace hex::lang {
     std::pair<PatternData*, size_t> Evaluator::createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
         std::vector<PatternData*> entries;
 
-        size_t arraySize = 0;
+        size_t arrayOffset = 0;
         for (u32 i = 0; i < varDeclNode->getArraySize(); i++) {
             ASTNodeVariableDecl *nonArrayVarDeclNode = new ASTNodeVariableDecl(varDeclNode->getVariableType(), "[" + std::to_string(i) + "]", varDeclNode->getCustomVariableTypeName(), varDeclNode->getOffset(), 1);
 
-            if (varDeclNode->getVariableType() != Token::TypeToken::Type::CustomType) {
-                const auto &[pattern, size] = this->createBuiltInTypePattern(nonArrayVarDeclNode, offset + arraySize);
+            if (varDeclNode->getVariableType() == Token::TypeToken::Type::Padding) {
+                return { new PatternDataPadding(offset, varDeclNode->getArraySize()), varDeclNode->getArraySize() };
+            } else if (varDeclNode->getVariableType() != Token::TypeToken::Type::CustomType) {
+                const auto &[pattern, size] = this->createBuiltInTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
 
                 if (pattern == nullptr)
                     return { nullptr, 0 };
 
                 entries.push_back(pattern);
-                arraySize += size;
+                arrayOffset += size;
             } else {
-                const auto &[pattern, size] = this->createCustomTypePattern(nonArrayVarDeclNode, offset + arraySize);
+                const auto &[pattern, size] = this->createCustomTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
 
                 if (pattern == nullptr)
                     return { nullptr, 0 };
 
                 entries.push_back(pattern);
-                arraySize += size;
+                arrayOffset += size;
             }
 
             delete nonArrayVarDeclNode;
         }
 
-        return { new PatternDataArray(offset, arraySize, varDeclNode->getVariableName(), entries, 0x00FFFFFF), arraySize };
+        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), entries, 0x00FFFFFF), arrayOffset };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createStringPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -242,7 +244,7 @@ namespace hex::lang {
         size_t typeSize = getTypeSize(type);
         size_t arraySize = varDeclNode->getArraySize();
 
-        if (isSigned(type)) {
+         if (isSigned(type)) {
             if (typeSize == 1 && arraySize == 1)
                 return { new PatternDataCharacter(offset, typeSize, varDeclNode->getVariableName()), 1 };
             else if (arraySize > 1)

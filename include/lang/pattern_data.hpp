@@ -31,7 +31,7 @@ namespace hex::lang {
 
     class PatternData {
     public:
-        enum class Type { Unsigned, Signed, Float, Character, String, Struct, Union, Array, Enum };
+        enum class Type { Padding, Unsigned, Signed, Float, Character, String, Struct, Union, Array, Enum };
 
         PatternData(Type type, u64 offset, size_t size, const std::string &name, u32 color = 0)
         : m_type(type), m_offset(offset), m_size(size), m_color(color), m_name(name) {
@@ -144,6 +144,17 @@ namespace hex::lang {
         static inline u8 s_paletteOffset = 0;
     };
 
+    class PatternDataPadding : public PatternData {
+    public:
+        PatternDataPadding(u64 offset, size_t size) : PatternData(Type::Padding, offset, size, "", 0x00FFFFFF) { }
+
+        void createEntry(prv::Provider* &provider) override {
+        }
+
+        std::string getTypeName() override {
+            return "";
+        }
+    };
 
     class PatternDataUnsigned : public PatternData {
     public:
