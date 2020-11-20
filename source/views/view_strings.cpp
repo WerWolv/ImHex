@@ -106,30 +106,31 @@ namespace hex {
                     }
 
                     ImGui::TableHeadersRow();
-                    u32 rowCount = 0;
 
                     ImGuiListClipper clipper;
-                    clipper.Begin(this->m_foundStrings.size(), 14);
-                    clipper.Step();
+                    clipper.Begin(this->m_foundStrings.size());
 
-                    for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &foundString = this->m_foundStrings[i];
+                    while (clipper.Step()) {
+                        u32 rowCount = clipper.DisplayStart;
+                        for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            auto &foundString = this->m_foundStrings[i];
 
-                        if (strlen(this->m_filter) != 0 && foundString.string.find(this->m_filter) == std::string::npos)
-                            continue;
+                            if (strlen(this->m_filter) != 0 &&
+                                foundString.string.find(this->m_filter) == std::string::npos)
+                                continue;
 
-                        ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("0x%04lx", foundString.size);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("%s", foundString.string.c_str());
-                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
-                                               ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-                        rowCount++;
+                            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("0x%04lx", foundString.size);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%s", foundString.string.c_str());
+                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
+                                                   ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
+                            rowCount++;
+                        }
                     }
-                    clipper.Step();
                     clipper.End();
 
                     ImGui::EndTable();
