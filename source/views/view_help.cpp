@@ -100,13 +100,26 @@ namespace hex {
 
             DrawTitle("Structs");
             ImGui::TextWrapped(
-                    "To bundle multiple variables together, a struct can be used.");
-            DrawCodeSegment("struct", 70,
+                    "To bundle multiple variables together, a struct can be used. To insert padding bytes which won't show "
+                    "up in the pattern data view or be highlighted, use the padding[size] syntax.");
+            DrawCodeSegment("struct", 85,
                 "struct Header {\n"
                 "   u32 magic;\n"
                 "   u8 version;\n"
+                "   padding[4];\n"
                 "   Flags flags;\n"
                 "}"
+            );
+
+            DrawTitle("Unions");
+            ImGui::TextWrapped(
+                    "A union is used to make two or more variables occupy the same region of memory. "
+                    "The union will have the size of the biggest contained variable.");
+            DrawCodeSegment("union", 55,
+                            "union Color {\n"
+                            "   u32 rgba;\n"
+                            "   Components components;\n"
+                            "}"
             );
 
             DrawTitle("Bitfields");
