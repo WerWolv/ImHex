@@ -31,8 +31,12 @@ namespace hex {
         u8 utf8Char[4];
         float float32;
         double float64;
-        __time32_t time32;
-        __time64_t time64;
+        #if defined(_WIN64)
+            __time32_t time32;
+            __time64_t time64;
+        #else
+            time_t time;
+        #endif
         GUID guid;
     };
 

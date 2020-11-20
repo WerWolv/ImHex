@@ -63,6 +63,7 @@ namespace hex {
             this->m_cachedData.emplace_back("float (32 bit)", hex::format("%e", this->m_previewData.float32));
             this->m_cachedData.emplace_back("double (64 bit)",  hex::format("%e", this->m_previewData.float64));
 
+            #if defined(_WIN64)
             {
                 std::tm * ptm = _localtime32(&this->m_previewData.time32);
                 char buffer[32];
@@ -80,6 +81,16 @@ namespace hex {
                 else
                     this->m_cachedData.emplace_back("__time64_t", "Invalid");
             }
+            #else
+            {
+                std::tm * ptm = localtime(&this->m_previewData.time);
+                char buffer[64];
+                if (std::strftime(buffer, 64, "%a, %d.%m.%Y %H:%M:%S", ptm) != 0)
+                    this->m_cachedData.emplace_back("time_t", buffer);
+                else
+                    this->m_cachedData.emplace_back("time_t", "Invalid");
+            }
+            #endif
 
             this->m_cachedData.emplace_back("GUID", hex::format("{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
                 this->m_previewData.guid.data1, this->m_previewData.guid.data2, this->m_previewData.guid.data3,
