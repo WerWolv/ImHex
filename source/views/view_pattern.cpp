@@ -96,10 +96,12 @@ namespace hex {
             return;
 
         if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None)) {
-            this->m_textEditor.Render("Pattern");
+            if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
+                this->m_textEditor.Render("Pattern");
 
-            if (this->m_textEditor.IsTextChanged()) {
-                this->parsePattern(this->m_textEditor.GetText().data());
+                if (this->m_textEditor.IsTextChanged()) {
+                    this->parsePattern(this->m_textEditor.GetText().data());
+                }
             }
         }
         ImGui::End();

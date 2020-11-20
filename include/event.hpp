@@ -8,7 +8,8 @@ namespace hex {
     enum class Events {
         DataChanged,
         PatternChanged,
-        FileDropped
+        FileDropped,
+        ByteSelected
     };
 
     struct EventHandler {
