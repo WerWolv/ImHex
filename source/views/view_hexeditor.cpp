@@ -145,7 +145,7 @@ namespace hex {
                 str += " };";
                 break;
             case Language::Cpp:
-                str += "const std::array<unsigned char, " + std::to_string(buffer.size()) + "> data = { ";
+                str += "constexpr std::array<unsigned char, " + std::to_string(buffer.size()) + "> data = { ";
 
                 for (const auto &byte : buffer)
                     str += hex::format("0x%02x, ", byte);
