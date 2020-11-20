@@ -221,6 +221,51 @@ namespace hex {
         ImGui::SetClipboardText(str.c_str());
     }
 
+    void ViewHexEditor::copyHexView() {
+        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+        size_t copySize = (end - start) + 1;
+
+        std::vector<u8> buffer(copySize, 0x00);
+        this->m_dataProvider->read(start, buffer.data(), buffer.size());
+
+        std::string str = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
+
+
+        for (u32 col = start >> 4; col <= (end >> 4); col++) {
+            str += hex::format("%08lx  ", col << 4);
+            for (u64 i = 0 ; i < 16; i++) {
+
+                if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
+                    str += "   ";
+                else
+                    str += hex::format("%02lx ", buffer[((col << 4) - start) + i]);
+
+                if ((i & 0xF) == 0x7)
+                    str += " ";
+            }
+
+            str += " ";
+
+            for (u64 i = 0 ; i < 16; i++) {
+
+                if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
+                    str += " ";
+                else {
+                    u8 c = buffer[((col << 4) - start) + i];
+                    char displayChar = (c < 32 || c >= 128) ? '.' : c;
+                    str += hex::format("%c", displayChar);
+                }
+            }
+
+            str += "\n";
+        }
+
+
+        ImGui::SetClipboardText(str.c_str());
+    }
+
     void ViewHexEditor::createMenu() {
 
         if (ImGui::BeginMenu("File")) {
@@ -247,7 +292,9 @@ namespace hex {
                     this->copyBytes();
                 if (ImGui::MenuItem("Hex String", "CTRL + SHIFT + C"))
                     this->copyString();
+
                 ImGui::Separator();
+
                 if (ImGui::MenuItem("C Array"))
                     this->copyLanguageArray(Language::C);
                 if (ImGui::MenuItem("C++ Array"))
@@ -262,6 +309,11 @@ namespace hex {
                     this->copyLanguageArray(Language::Java);
                 if (ImGui::MenuItem("JavaScript Array"))
                     this->copyLanguageArray(Language::JavaScript);
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Editor View"))
+                    this->copyHexView();
 
                 ImGui::EndMenu();
             }
