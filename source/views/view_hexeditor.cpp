@@ -102,7 +102,7 @@ namespace hex {
 
         std::string str;
         for (const auto &byte : buffer)
-            str += hex::format("%x ", byte);
+            str += hex::format("%02x ", byte);
         str.pop_back();
 
         ImGui::SetClipboardText(str.c_str());
@@ -119,6 +119,106 @@ namespace hex {
         this->m_dataProvider->read(start, buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
+    }
+
+    void ViewHexEditor::copyLanguageArray(Language language) {
+        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+        size_t copySize = (end - start) + 1;
+
+        std::vector<u8> buffer(copySize, 0x00);
+        this->m_dataProvider->read(start, buffer.data(), buffer.size());
+
+        std::string str;
+        switch (language) {
+            case Language::C:
+                str += "const unsigned char data[" + std::to_string(buffer.size()) + "] = { ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " };";
+                break;
+            case Language::Cpp:
+                str += "const std::array<unsigned char, " + std::to_string(buffer.size()) + "> data = { ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " };";
+                break;
+            case Language::Java:
+                str += "final byte[] data = { ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " };";
+                break;
+            case Language::CSharp:
+                str += "const byte[] data = { ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " };";
+                break;
+            case Language::Rust:
+                str += "let data: [u8, " + std::to_string(buffer.size()) + "] = [ ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " ];";
+                break;
+            case Language::Python:
+                str += "data = bytes([ ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " ]);";
+                break;
+            case Language::JavaScript:
+                str += "const data = new Uint8Array([ ";
+
+                for (const auto &byte : buffer)
+                    str += hex::format("0x%02x, ", byte);
+
+                // Remove trailing comma
+                str.pop_back();
+                str.pop_back();
+
+                str += " ]);";
+                break;
+        }
+
+        ImGui::SetClipboardText(str.c_str());
     }
 
     void ViewHexEditor::createMenu() {
@@ -142,13 +242,30 @@ namespace hex {
         }
 
         if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::MenuItem("Copy bytes", "CTRL + ALT + C")) {
-                this->copyBytes();
+            if (ImGui::BeginMenu("Copy as...")) {
+                if (ImGui::MenuItem("Bytes", "CTRL + ALT + C"))
+                    this->copyBytes();
+                if (ImGui::MenuItem("Hex String", "CTRL + SHIFT + C"))
+                    this->copyString();
+                ImGui::Separator();
+                if (ImGui::MenuItem("C Array"))
+                    this->copyLanguageArray(Language::C);
+                if (ImGui::MenuItem("C++ Array"))
+                    this->copyLanguageArray(Language::Cpp);
+                if (ImGui::MenuItem("C# Array"))
+                    this->copyLanguageArray(Language::CSharp);
+                if (ImGui::MenuItem("Rust Array"))
+                    this->copyLanguageArray(Language::Rust);
+                if (ImGui::MenuItem("Python Array"))
+                    this->copyLanguageArray(Language::Python);
+                if (ImGui::MenuItem("Java Array"))
+                    this->copyLanguageArray(Language::Java);
+                if (ImGui::MenuItem("JavaScript Array"))
+                    this->copyLanguageArray(Language::JavaScript);
+
+                ImGui::EndMenu();
             }
 
-            if (ImGui::MenuItem("Copy string", "CTRL + SHIFT + C")) {
-                this->copyString();
-            }
 
             ImGui::EndMenu();
         }

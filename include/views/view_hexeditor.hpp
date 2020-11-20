@@ -50,8 +50,11 @@ namespace hex {
         void drawGotoPopup();
 
         void openFile(std::string path);
+
+        enum class Language { C, Cpp, CSharp, Rust, Python, Java, JavaScript };
         void copyBytes();
         void copyString();
+        void copyLanguageArray(Language language);
 
     };
 
