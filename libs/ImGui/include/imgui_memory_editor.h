@@ -231,6 +231,18 @@ struct MemoryEditor
             footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
         if (OptShowDataPreview)
             footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1 + ImGui::GetTextLineHeightWithSpacing() * 3;
+
+        ImGui::BeginChild("offset", ImVec2(0, s.LineHeight), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
+        ImGui::Text("% *c   ", s.AddrDigitsCount, ' ');
+        for (int i = 0; i < Cols; i++) {
+            float byte_pos_x = s.PosHexStart + s.HexCellWidth * i;
+            if (OptMidColsCount > 0)
+                byte_pos_x += (float)(i / OptMidColsCount) * s.SpacingBetweenMidCols;
+            ImGui::SameLine(byte_pos_x);
+            ImGui::Text("%02X", i);
+        }
+        ImGui::EndChild();
+
         ImGui::BeginChild("##scrolling", ImVec2(0, -footer_height), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
