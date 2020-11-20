@@ -1,1 +1,0 @@
-id ICON "icon.ico"

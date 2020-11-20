@@ -47,7 +47,7 @@ add_executable(ImHex
         libs/ImGui/source/imgui_impl_opengl3.cpp
         libs/ImGui/source/ImGuiFileBrowser.cpp
 
-        res.rc
+        resource.rc
         )
 
 if (WIN32)
