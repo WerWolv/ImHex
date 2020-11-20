@@ -21,8 +21,6 @@ namespace hex::lang {
             const auto &member = static_cast<ASTNodeVariableDecl*>(node);
 
             const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
-            if (typeDeclNode == nullptr)
-                return { nullptr, 0 };
 
             if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
                 const auto &[pattern, size] = this->createStringPattern(member, offset + structSize);
@@ -33,7 +31,7 @@ namespace hex::lang {
                 members.push_back(pattern);
                 structSize += size;
             } else if (member->getVariableType() == Token::TypeToken::Type::CustomType
-                && typeDeclNode->getAssignedType() == Token::TypeToken::Type::Signed8Bit
+                && typeDeclNode != nullptr && typeDeclNode->getAssignedType() == Token::TypeToken::Type::Signed8Bit
                 && member->getArraySize() > 1) {
 
                 const auto &[pattern, size] = this->createStringPattern(member, offset + structSize);
