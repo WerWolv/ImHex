@@ -135,6 +135,8 @@ namespace hex::lang {
 
                 if (identifier == "struct")
                     tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Struct } });
+                else if (identifier == "union")
+                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Union } });
                 else if (identifier == "using")
                     tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Using } });
                 else if (identifier == "enum")

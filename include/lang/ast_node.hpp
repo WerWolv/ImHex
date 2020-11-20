@@ -14,6 +14,7 @@ namespace hex::lang {
             VariableDecl,
             TypeDecl,
             Struct,
+            Union,
             Enum,
             Bitfield,
             Scope,
@@ -59,6 +60,18 @@ namespace hex::lang {
     public:
         explicit ASTNodeStruct(std::string name, std::vector<ASTNode*> nodes)
             : ASTNode(Type::Struct), m_name(name), m_nodes(nodes) { }
+
+        const std::string& getName() const { return this->m_name; }
+        std::vector<ASTNode*> &getNodes() { return this->m_nodes; }
+    private:
+        std::string m_name;
+        std::vector<ASTNode*> m_nodes;
+    };
+
+    class ASTNodeUnion : public ASTNode {
+    public:
+        explicit ASTNodeUnion(std::string name, std::vector<ASTNode*> nodes)
+                : ASTNode(Type::Union), m_name(name), m_nodes(nodes) { }
 
         const std::string& getName() const { return this->m_name; }
         std::vector<ASTNode*> &getNodes() { return this->m_nodes; }

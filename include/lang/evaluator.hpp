@@ -21,6 +21,7 @@ namespace hex::lang {
         std::unordered_map<std::string, ASTNode*> m_types;
 
         std::pair<PatternData*, size_t> createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
+        std::pair<PatternData*, size_t> createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createEnumPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createBitfieldPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);

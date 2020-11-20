@@ -31,7 +31,7 @@ namespace hex::lang {
 
     class PatternData {
     public:
-        enum class Type { Unsigned, Signed, Float, Character, String, Struct, Array, Enum };
+        enum class Type { Unsigned, Signed, Float, Character, String, Struct, Union, Array, Enum };
 
         PatternData(Type type, u64 offset, size_t size, const std::string &name, u32 color = 0)
         : m_type(type), m_offset(offset), m_size(size), m_color(color), m_name(name) {
@@ -358,6 +358,65 @@ namespace hex::lang {
         std::vector<PatternData*> m_sortedMembers;
     };
 
+    class PatternDataUnion : public PatternData {
+    public:
+        PatternDataUnion(u64 offset, size_t size, const std::string &name, const std::string &unionName, const std::vector<PatternData*> & members, u32 color = 0)
+                : PatternData(Type::Union, offset, size, name, color), m_unionName(unionName), m_members(members), m_sortedMembers(members) { }
+
+        void createEntry(prv::Provider* &provider) override {
+            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
+            ImGui::TableNextColumn();
+            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", "{ ... }");
+
+            if (open) {
+                for (auto &member : this->m_sortedMembers)
+                    member->createEntry(provider);
+
+                ImGui::TreePop();
+            }
+
+        }
+
+        std::optional<u32> highlightBytes(size_t offset) override{
+            for (auto &member : this->m_members) {
+                if (auto color = member->highlightBytes(offset); color.has_value())
+                    return color.value();
+            }
+
+            return { };
+        }
+
+        void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
+            this->m_sortedMembers = this->m_members;
+
+            std::sort(this->m_sortedMembers.begin(), this->m_sortedMembers.end(), [&sortSpecs, &provider](PatternData *left, PatternData *right) {
+                return PatternData::sortPatternDataTable(sortSpecs, provider, left, right);
+            });
+
+            for (auto &member : this->m_members)
+                member->sort(sortSpecs, provider);
+        }
+
+        std::string getTypeName() override {
+            return "union " + this->m_unionName;
+        }
+
+    private:
+        std::string m_unionName;
+        std::vector<PatternData*> m_members;
+        std::vector<PatternData*> m_sortedMembers;
+    };
+
     class PatternDataEnum : public PatternData {
     public:
         PatternDataEnum(u64 offset, size_t size, const std::string &name, const std::string &enumName, std::vector<std::pair<u64, std::string>> enumValues, u32 color = 0)
@@ -414,7 +473,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", "{ ... }");
+            ImGui::Text("{ %llx }", value);
 
             if (open) {
                 u16 bitOffset = 0;

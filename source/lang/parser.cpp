@@ -75,6 +75,30 @@ namespace hex::lang {
         return new ASTNodeStruct(structName, nodes);
     }
 
+    ASTNode* parseUnion(TokenIter &curr) {
+        const std::string &unionName = curr[-2].identifierToken.identifier;
+        std::vector<ASTNode*> nodes;
+
+        while (!tryConsume(curr, {Token::Type::ScopeClose})) {
+            if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinVariableDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeVariableDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinArrayDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeArrayDecl(curr));
+            else break;
+        }
+
+        if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
+            for(auto &node : nodes) delete node;
+            return nullptr;
+        }
+
+        return new ASTNodeUnion(unionName, nodes);
+    }
+
     ASTNode* parseEnum(TokenIter &curr) {
         const std::string &enumName = curr[-4].identifierToken.identifier;
         const Token::TypeToken::Type underlyingType = curr[-2].typeToken.type;
@@ -183,6 +207,15 @@ namespace hex::lang {
                 }
 
                 program.push_back(structAst);
+            } else if (curr[-3].keywordToken.keyword == Token::KeywordToken::Keyword::Union) {
+                auto unionAst = parseUnion(curr);
+
+                if (unionAst == nullptr) {
+                    for(auto &node : program) delete node;
+                    return { };
+                }
+
+                program.push_back(unionAst);
             } else if (curr[-3].keywordToken.keyword == Token::KeywordToken::Keyword::Bitfield) {
                 auto bitfieldAst = parseBitField(curr);
 

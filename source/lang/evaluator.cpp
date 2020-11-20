@@ -75,6 +75,72 @@ namespace hex::lang {
         return { new PatternDataStruct(offset, structSize, varDeclNode->getVariableName(), structNode->getName(), members, 0x00FFFFFF), structSize };
     }
 
+    std::pair<PatternData*, size_t> Evaluator::createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
+        std::vector<PatternData*> members;
+
+        auto unionNode = static_cast<ASTNodeUnion*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
+
+        if (unionNode == nullptr)
+            return { nullptr, 0 };
+
+        size_t unionSize = 0;
+        for (const auto &node : unionNode->getNodes()) {
+            const auto &member = static_cast<ASTNodeVariableDecl*>(node);
+
+            const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
+
+            if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
+                const auto &[pattern, size] = this->createStringPattern(member, offset);
+
+                if (pattern == nullptr)
+                    return { nullptr, 0 };
+
+                members.push_back(pattern);
+                unionSize = std::max(size, unionSize);
+            } else if (member->getVariableType() == Token::TypeToken::Type::CustomType
+                       && typeDeclNode != nullptr && typeDeclNode->getAssignedType() == Token::TypeToken::Type::Signed8Bit
+                       && member->getArraySize() > 1) {
+
+                const auto &[pattern, size] = this->createStringPattern(member, offset);
+
+                if (pattern == nullptr)
+                    return { nullptr, 0 };
+
+                members.push_back(pattern);
+                unionSize = std::max(size, unionSize);
+            }
+            else if (member->getArraySize() > 1) {
+                const auto &[pattern, size] = this->createArrayPattern(member, offset);
+
+                if (pattern == nullptr)
+                    return { nullptr, 0 };
+
+                members.push_back(pattern);
+                unionSize = std::max(size, unionSize);
+            }
+            else if (member->getVariableType() != Token::TypeToken::Type::CustomType) {
+                const auto &[pattern, size] = this->createBuiltInTypePattern(member, offset);
+
+                if (pattern == nullptr)
+                    return { nullptr, 0 };
+
+                members.push_back(pattern);
+                unionSize = std::max(size, unionSize);
+            }
+            else {
+                const auto &[pattern, size] = this->createCustomTypePattern(member, offset);
+
+                if (pattern == nullptr)
+                    return { nullptr, 0 };
+
+                members.push_back(pattern);
+                unionSize = std::max(size, unionSize);
+            }
+        }
+
+        return { new PatternDataUnion(offset, unionSize, varDeclNode->getVariableName(), unionNode->getName(), members, 0x00FFFFFF), unionSize };
+    }
+
     std::pair<PatternData*, size_t> Evaluator::createEnumPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
         std::vector<std::pair<u64, std::string>> enumValues;
 
@@ -150,6 +216,8 @@ namespace hex::lang {
         switch (currType->getType()) {
             case ASTNode::Type::Struct:
                 return this->createStructPattern(varDeclNode, offset);
+            case ASTNode::Type::Union:
+                return this->createUnionPattern(varDeclNode, offset);
             case ASTNode::Type::Enum:
                 return this->createEnumPattern(varDeclNode, offset);
             case ASTNode::Type::Bitfield:
@@ -206,6 +274,12 @@ namespace hex::lang {
                 {
                     auto *structNode = static_cast<ASTNodeStruct*>(node);
                     this->m_types.emplace(structNode->getName(), structNode);
+                }
+                    break;
+                case ASTNode::Type::Union:
+                {
+                    auto *unionNode = static_cast<ASTNodeUnion*>(node);
+                    this->m_types.emplace(unionNode->getName(), unionNode);
                 }
                     break;
                 case ASTNode::Type::Enum:
