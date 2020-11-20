@@ -412,10 +412,10 @@ struct MemoryEditor
                         if (ImGui::IsMouseDoubleClicked(0)) {
                             DataEditingTakeFocus = true;
                             data_editing_addr_next = addr;
-                        } else {
-                            DataPreviewAddr = addr;
-                            DataPreviewAddrEnd = addr;
                         }
+
+                        DataPreviewAddr = addr;
+                        DataPreviewAddrEnd = addr;
                     }
                     if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
@@ -472,10 +472,11 @@ struct MemoryEditor
                         if (ImGui::IsMouseDoubleClicked(0)) {
                             DataEditingTakeFocus = true;
                             data_editing_addr_next = addr;
-                        } else {
-                            DataPreviewAddr = addr;
-                            DataPreviewAddrEnd = addr;
                         }
+
+                        DataPreviewAddr = addr;
+                        DataPreviewAddrEnd = addr;
+
                     }
                     if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
