@@ -15,6 +15,7 @@ namespace hex::lang {
             TypeDecl,
             Struct,
             Enum,
+            Bitfield,
             Scope,
         };
 
@@ -64,6 +65,18 @@ namespace hex::lang {
     private:
         std::string m_name;
         std::vector<ASTNode*> m_nodes;
+    };
+
+    class ASTNodeBitField : public ASTNode {
+    public:
+        explicit ASTNodeBitField(std::string name, std::vector<std::pair<std::string, size_t>> fields)
+        : ASTNode(Type::Bitfield), m_name(name), m_fields(fields) { }
+
+        const std::string& getName() const { return this->m_name; }
+        std::vector<std::pair<std::string, size_t>> &getFields() { return this->m_fields; }
+    private:
+        std::string m_name;
+        std::vector<std::pair<std::string, size_t>> m_fields;
     };
 
     class ASTNodeTypeDecl : public ASTNode {

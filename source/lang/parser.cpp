@@ -121,6 +121,26 @@ namespace hex::lang {
         return enumNode;
     }
 
+    ASTNode *parseBitField(TokenIter &curr) {
+        const std::string &bitfieldName = curr[-2].identifierToken.identifier;
+        std::vector<std::pair<std::string, size_t>> fields;
+
+        while (!tryConsume(curr, {Token::Type::ScopeClose})) {
+            if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+                if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+                    return nullptr;
+
+                fields.emplace_back(curr[-4].identifierToken.identifier, curr[-2].integerToken.integer);
+            }
+            else break;
+        }
+
+        if (!tryConsume(curr, {Token::Type::EndOfExpression}))
+            return nullptr;
+
+        return new ASTNodeBitField(bitfieldName, fields);
+    }
+
     ASTNode *parseScope(TokenIter &curr) {
         return new ASTNodeScope(parseTillToken(curr, Token::Type::ScopeClose));
     }
@@ -163,12 +183,21 @@ namespace hex::lang {
                 }
 
                 program.push_back(structAst);
+            } else if (curr[-3].keywordToken.keyword == Token::KeywordToken::Keyword::Bitfield) {
+                auto bitfieldAst = parseBitField(curr);
+
+                if (bitfieldAst == nullptr) {
+                    for(auto &node : program) delete node;
+                    return { };
+                }
+
+                program.push_back(bitfieldAst);
             }
 
             return program;
 
         } // Enum
-        if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::ScopeOpen })) {
+        else if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::ScopeOpen })) {
             if (curr[-5].keywordToken.keyword == Token::KeywordToken::Keyword::Enum) {
                 auto enumAst = parseEnum(curr);
 
@@ -181,7 +210,6 @@ namespace hex::lang {
             }
 
             return program;
-
         // Scope
         } else if (tryConsume(curr, { Token::Type::ScopeOpen })) {
             program.push_back(parseScope(curr));

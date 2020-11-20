@@ -75,6 +75,11 @@ namespace hex {
         return result;
     }
 
+    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const u64 &value) {
+        u64 mask = (std::numeric_limits<u64>::max() >> (63 - (from - to))) << to;
+        return (value & mask) >> to;
+    }
+
 
     class ScopeExit {
     public:

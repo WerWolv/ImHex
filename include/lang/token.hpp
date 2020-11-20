@@ -26,7 +26,8 @@ namespace hex::lang {
             enum class Keyword {
                 Struct,
                 Using,
-                Enum
+                Enum,
+                Bitfield
             } keyword;
         } keywordToken;
         struct IdentifierToken {

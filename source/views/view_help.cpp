@@ -109,6 +109,18 @@ namespace hex {
                 "}"
             );
 
+            DrawTitle("Bitfields");
+            ImGui::TextWrapped(
+                    "To decode values that are stored in fields that don't follow the typical 8 bit alignment, bitfields can be used. "
+                    "The size of these fields get specified in numbers of bits.");
+            DrawCodeSegment("bitfield", 70,
+                            "bitfield Permission {\n"
+                            "   r : 1;\n"
+                            "   w : 1;\n"
+                            "   x : 1;\n"
+                            "}"
+            );
+
             DrawTitle("Enum");
             ImGui::TextWrapped(
                     "If a value can only be a few specific values with special meaning, an enum can be used. "

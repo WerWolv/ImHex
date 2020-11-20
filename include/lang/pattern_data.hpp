@@ -117,7 +117,6 @@ namespace hex::lang {
 
     protected:
         void createDefaultEntry(std::string value) {
-            static u64 id = 0;
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
@@ -125,7 +124,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize());
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
@@ -267,7 +266,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize());
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
@@ -312,7 +311,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize());
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
@@ -392,6 +391,66 @@ namespace hex::lang {
     private:
         std::string m_enumName;
         std::vector<std::pair<u64, std::string>> m_enumValues;
+    };
+
+    class PatternDataBitfield : public PatternData {
+    public:
+        PatternDataBitfield(u64 offset, size_t size, const std::string &name, const std::string &bitfieldName, std::vector<std::pair<std::string, size_t>> fields, u32 color = 0)
+                : PatternData(Type::Enum, offset, size, name, color), m_bitfieldName(bitfieldName), m_fields(fields) { }
+
+        void createEntry(prv::Provider* &provider) override {
+            u64 value = 0;
+            provider->read(this->getOffset(), &value, this->getSize());
+
+            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(0x00FFFFFF), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
+            ImGui::TableNextColumn();
+            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", "{ ... }");
+
+            if (open) {
+                u16 bitOffset = 0;
+                for (auto &[entryName, entrySize] : this->m_fields) {
+                    ImGui::TableNextRow();
+                    ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+                    ImGui::TableNextColumn();
+                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", entryName.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::Text("0x%08lx : 0x%08lx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3) - 1);
+                    ImGui::TableNextColumn();
+                    if (entrySize == 1)
+                        ImGui::Text("%llu bit", entrySize);
+                    else
+                        ImGui::Text("%llu bits", entrySize);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", entryName.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%llx", hex::extract((bitOffset + entrySize) - 1, bitOffset, value));
+                    bitOffset += entrySize;
+                }
+
+                ImGui::TreePop();
+            }
+
+        }
+
+        std::string getTypeName() override {
+            return "bitfield " + this->m_bitfieldName;
+        }
+
+    private:
+        std::string m_bitfieldName;
+        std::vector<std::pair<std::string, size_t>> m_fields;
     };
 
 

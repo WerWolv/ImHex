@@ -1,5 +1,6 @@
 #include "lang/evaluator.hpp"
 
+#include <bit>
 #include <unordered_map>
 
 namespace hex::lang {
@@ -87,6 +88,22 @@ namespace hex::lang {
         return { new PatternDataEnum(offset, size, varDeclNode->getVariableName(), enumType->getName(), enumType->getValues()), size };
     }
 
+    std::pair<PatternData*, size_t> Evaluator::createBitfieldPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
+
+        auto *bitfieldType = static_cast<ASTNodeBitField*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
+
+        if (bitfieldType == nullptr)
+            return { nullptr, 0 };
+
+        size_t size = 0;
+        for (auto &[fieldName, fieldSize] : bitfieldType->getFields())
+            size += fieldSize;
+
+        size = std::bit_ceil(size) / 8;
+
+        return { new PatternDataBitfield(offset, size, varDeclNode->getVariableName(), bitfieldType->getName(), bitfieldType->getFields()), size };
+    }
+
     std::pair<PatternData*, size_t> Evaluator::createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
         std::vector<PatternData*> entries;
 
@@ -135,6 +152,8 @@ namespace hex::lang {
                 return this->createStructPattern(varDeclNode, offset);
             case ASTNode::Type::Enum:
                 return this->createEnumPattern(varDeclNode, offset);
+            case ASTNode::Type::Bitfield:
+                return this->createBitfieldPattern(varDeclNode, offset);
             case ASTNode::Type::TypeDecl:
                 return this->createBuiltInTypePattern(varDeclNode, offset);
         }
@@ -193,6 +212,12 @@ namespace hex::lang {
                 {
                     auto *enumNode = static_cast<ASTNodeEnum*>(node);
                     this->m_types.emplace(enumNode->getName(), enumNode);
+                }
+                    break;
+                case ASTNode::Type::Bitfield:
+                {
+                    auto *bitfieldNode = static_cast<ASTNodeBitField*>(node);
+                    this->m_types.emplace(bitfieldNode->getName(), bitfieldNode);
                 }
                     break;
                 case ASTNode::Type::TypeDecl:

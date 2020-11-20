@@ -14,7 +14,7 @@ namespace hex {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             static const char* const keywords[] = {
-                "using", "struct", "enum"
+                "using", "struct", "enum", "bitfield"
             };
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);
@@ -96,6 +96,10 @@ namespace hex {
 
         if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None)) {
             this->m_textEditor.Render("Pattern");
+
+            if (this->m_textEditor.IsTextChanged()) {
+                this->parsePattern(this->m_textEditor.GetText().data());
+            }
         }
         ImGui::End();
 

@@ -61,6 +61,27 @@ namespace hex::lang {
                         if (!constantNames.insert(name).second)
                             return false;
                 }
+                case ASTNode::Type::Bitfield:
+                {
+                    // Check for duplicate type name
+                    auto bitfieldNode = static_cast<ASTNodeBitField*>(node);
+                    if (!typeNames.insert(bitfieldNode->getName()).second)
+                        return false;
+
+                    size_t bitfieldSize = 0;
+
+                    // Check for duplicate constant names
+                    std::unordered_set<std::string> flagNames;
+                    for (const auto &[name, size] : bitfieldNode->getFields()) {
+                        if (!flagNames.insert(name).second)
+                            return false;
+
+                        bitfieldSize += size;
+                    }
+
+                    if (bitfieldSize > 64)
+                        return false;
+                }
                 break;
             }
         }
