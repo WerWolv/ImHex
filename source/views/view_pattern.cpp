@@ -19,15 +19,16 @@ namespace hex {
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);
 
-            static const char* const builtInTypes[] = {
-                    "u8", "u16", "u32", "u64", "u128",
-                    "s8", "s16", "s32", "s64", "s128",
-                    "float", "double", "padding"
+            static std::pair<const char* const, size_t> builtInTypes[] = {
+                    { "u8", 1 }, { "u16", 2 }, { "u32", 4 }, { "u64", 8 }, { "u128", 16 },
+                    { "s8", 1 }, { "s16", 2 }, { "s32", 4 }, { "s64", 8 }, { "s128", 16 },
+                    { "float", 4 }, { "double", 8 }, { "padding", 1 }
             };
-            for (auto& k : builtInTypes) {
+            for (const auto &[name, size] : builtInTypes) {
                 TextEditor::Identifier id;
-                id.mDeclaration = "Built-in type";
-                langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
+                id.mDeclaration = std::to_string(size);
+                id.mDeclaration += size == 1 ? " byte" : " bytes";
+                langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
             }
 
             langDef.mTokenize = [](const char * inBegin, const char * inEnd, const char *& outBegin, const char *& outEnd, TextEditor::PaletteIndex & paletteIndex) -> bool {
