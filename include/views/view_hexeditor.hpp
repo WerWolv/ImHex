@@ -56,6 +56,7 @@ namespace hex {
         void copyString();
         void copyLanguageArray(Language language);
         void copyHexView();
+        void copyHexViewHTML();
 
     };
 
