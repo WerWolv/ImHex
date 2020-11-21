@@ -85,7 +85,7 @@ namespace hex {
                     magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
             }
 
-            std::vector<u8> buffer(this->m_dataProvider->getSize(), 0x00);
+            std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFF'FFFF)), 0x00);
             this->m_dataProvider->read(0, buffer.data(), buffer.size());
 
             std::string mimeType;
@@ -172,7 +172,7 @@ namespace hex {
             this->loadPatternFile(this->m_fileBrowser.selected_path);
         }
 
-        if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+        if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_NoResize)) {
             ImGui::TextUnformatted("A pattern compatible with this data type has been found:");
             ImGui::Text("%ls", this->m_possiblePatternFile.filename().c_str());
             ImGui::NewLine();
@@ -241,7 +241,7 @@ namespace hex {
         hex::lang::Lexer lexer;
         hex::lang::Parser parser;
         hex::lang::Validator validator;
-        hex::lang::Evaluator evaluator;
+        hex::lang::Evaluator evaluator(this->m_dataProvider);
 
         this->clearPatternData();
         this->postEvent(Events::PatternChanged);

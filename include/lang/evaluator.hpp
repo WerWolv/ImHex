@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 
+#include "providers/provider.hpp"
 #include "lang/pattern_data.hpp"
 #include "ast_node.hpp"
 
@@ -13,12 +14,13 @@ namespace hex::lang {
 
     class Evaluator {
     public:
-        Evaluator();
+        Evaluator(prv::Provider* &provider);
 
         std::pair<Result, std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
     private:
         std::unordered_map<std::string, ASTNode*> m_types;
+        prv::Provider* &m_provider;
 
         std::pair<PatternData*, size_t> createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);

@@ -5,7 +5,7 @@
 
 namespace hex::lang {
 
-    Evaluator::Evaluator() {
+    Evaluator::Evaluator(prv::Provider* &provider) : m_provider(provider) {
 
     }
 
@@ -45,6 +45,31 @@ namespace hex::lang {
             }
             else if (member->getArraySize() > 1) {
                 const auto &[pattern, size] = this->createArrayPattern(member, offset + structSize);
+
+                if (pattern == nullptr)
+                    return { nullptr, 0 };
+
+                members.push_back(pattern);
+                structSize += size;
+            }
+            else if (member->getArraySizeVariable().has_value()) {
+                std::optional<size_t> arraySize;
+
+
+                for (auto &prevMember : members) {
+                    if (prevMember->getPatternType() == PatternData::Type::Unsigned && prevMember->getName() == member->getArraySizeVariable()) {
+                        u64 value = 0;
+                        this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
+                        arraySize = value;
+                    }
+                }
+
+                if (!arraySize.has_value())
+                    return { nullptr, 0 };
+
+                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
+
+                const auto &[pattern, size] = this->createArrayPattern(processedMember, offset + structSize);
 
                 if (pattern == nullptr)
                     return { nullptr, 0 };
@@ -173,17 +198,26 @@ namespace hex::lang {
     std::pair<PatternData*, size_t> Evaluator::createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
         std::vector<PatternData*> entries;
 
+        auto arraySizeVariable = varDeclNode->getArraySizeVariable();
+
         size_t arrayOffset = 0;
+        std::optional<u32> arrayColor;
         for (u32 i = 0; i < varDeclNode->getArraySize(); i++) {
             ASTNodeVariableDecl *nonArrayVarDeclNode = new ASTNodeVariableDecl(varDeclNode->getVariableType(), "[" + std::to_string(i) + "]", varDeclNode->getCustomVariableTypeName(), varDeclNode->getOffset(), 1);
+
 
             if (varDeclNode->getVariableType() == Token::TypeToken::Type::Padding) {
                 return { new PatternDataPadding(offset, varDeclNode->getArraySize()), varDeclNode->getArraySize() };
             } else if (varDeclNode->getVariableType() != Token::TypeToken::Type::CustomType) {
-                const auto &[pattern, size] = this->createBuiltInTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
+                const auto& [pattern, size] = this->createBuiltInTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
 
                 if (pattern == nullptr)
                     return { nullptr, 0 };
+
+                if (!arrayColor.has_value())
+                    arrayColor = pattern->getColor();
+
+                pattern->setColor(arrayColor.value());
 
                 entries.push_back(pattern);
                 arrayOffset += size;
@@ -192,6 +226,11 @@ namespace hex::lang {
 
                 if (pattern == nullptr)
                     return { nullptr, 0 };
+
+                if (!arrayColor.has_value())
+                    arrayColor = pattern->getColor();
+
+                pattern->setColor(arrayColor.value());
 
                 entries.push_back(pattern);
                 arrayOffset += size;

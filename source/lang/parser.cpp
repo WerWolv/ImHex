@@ -39,12 +39,20 @@ namespace hex::lang {
         return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* parsePaddingDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-5].typeToken.type, "", "", { }, curr[-3].integerToken.integer);
-    }
-
     ASTNode* parseCustomTypeArrayDecl(TokenIter &curr) {
         return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer);
+    }
+
+    ASTNode* parseBuiltinVariableArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, 0, curr[-3].identifierToken.identifier);
+    }
+
+    ASTNode* parseCustomTypeVariableArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 0, curr[-3].identifierToken.identifier);
+    }
+
+    ASTNode* parsePaddingDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-5].typeToken.type, "", "", { }, curr[-3].integerToken.integer);
     }
 
     ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr) {
@@ -68,6 +76,10 @@ namespace hex::lang {
                 nodes.push_back(parseBuiltinArrayDecl(curr));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
                 nodes.push_back(parseCustomTypeArrayDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Identifier, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinVariableArrayDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Identifier, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeVariableArrayDecl(curr));
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression})) {
                 if (curr[-5].typeToken.type != Token::TypeToken::Type::Padding) {
                     for(auto &node : nodes) delete node;

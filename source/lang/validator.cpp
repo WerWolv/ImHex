@@ -21,6 +21,10 @@ namespace hex::lang {
                     auto varDeclNode = static_cast<ASTNodeVariableDecl*>(node);
                     if (!typeNames.insert(varDeclNode->getVariableName()).second)
                         return false;
+
+                    if (varDeclNode->getArraySize() == 0 && !varDeclNode->getArraySizeVariable().has_value() ||
+                        varDeclNode->getArraySize() != 0 && varDeclNode->getArraySizeVariable().has_value())
+                        return false;
                 }
                     break;
                 case ASTNode::Type::TypeDecl:

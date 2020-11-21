@@ -50,9 +50,10 @@ namespace hex::lang {
         [[nodiscard]] Type getPatternType() const { return this->m_type; }
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
         [[nodiscard]] size_t getSize() const { return this->m_size; }
+        [[nodiscard]] const std::string& getName() const { return this->m_name; }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
+        void setColor(u32 color) { this->m_color = color; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
         virtual std::string getTypeName() = 0;
