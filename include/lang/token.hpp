@@ -38,7 +38,8 @@ namespace hex::lang {
             enum class Operator {
                 AtDeclaration,
                 Assignment,
-                Inherit
+                Inherit,
+                Star
             } op;
         } operatorToken;
         struct IntegerToken {

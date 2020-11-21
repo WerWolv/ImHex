@@ -50,7 +50,9 @@ namespace hex::lang {
         [[nodiscard]] Type getPatternType() const { return this->m_type; }
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
         [[nodiscard]] size_t getSize() const { return this->m_size; }
+
         [[nodiscard]] const std::string& getName() const { return this->m_name; }
+        void setName(std::string name) { this->m_name = name; }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
         void setColor(u32 color) { this->m_color = color; }
@@ -155,6 +157,55 @@ namespace hex::lang {
         std::string getTypeName() override {
             return "";
         }
+    };
+
+    class PatternDataPointer : public PatternData {
+    public:
+        PatternDataPointer(u64 offset, size_t size, const std::string &name, PatternData *pointedAt, u32 color = 0)
+        : PatternData(Type::Unsigned, offset, size, name, color), m_pointedAt(pointedAt) {
+            this->m_pointedAt->setName("*" + this->m_pointedAt->getName());
+        }
+
+        void createEntry(prv::Provider* &provider) override {
+            u64 data = 0;
+            provider->read(this->getOffset(), &data, this->getSize());
+
+            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
+            ImGui::TableNextColumn();
+            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text("*(%08llx)", data);
+
+            if (open) {
+                this->m_pointedAt->createEntry(provider);
+
+                ImGui::TreePop();
+            }
+        }
+
+        virtual std::optional<u32> highlightBytes(size_t offset) {
+            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
+                return this->getColor();
+            else if (auto color = this->m_pointedAt->highlightBytes(offset); color.has_value())
+                return color.value();
+            else
+                return { };
+        }
+
+        std::string getTypeName() override {
+            return "Pointer";
+        }
+
+    private:
+        PatternData *m_pointedAt;
     };
 
     class PatternDataUnsigned : public PatternData {

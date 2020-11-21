@@ -21,36 +21,28 @@ namespace hex::lang {
         for (const auto &node : structNode->getNodes()) {
             const auto &member = static_cast<ASTNodeVariableDecl*>(node);
 
+            u64 memberOffset = 0;
+
+            if (member->getPointerSize().has_value())
+                this->m_provider->read(offset + structSize, &memberOffset, member->getPointerSize().value());
+            else
+                memberOffset = offset + structSize;
+
             const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
 
+            PatternData *pattern = nullptr;
+            u64 memberSize = 0;
+
             if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
-                const auto &[pattern, size] = this->createStringPattern(member, offset + structSize);
-
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                structSize += size;
+                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
             } else if (member->getVariableType() == Token::TypeToken::Type::CustomType
                 && typeDeclNode != nullptr && typeDeclNode->getAssignedType() == Token::TypeToken::Type::Signed8Bit
                 && member->getArraySize() > 1) {
 
-                const auto &[pattern, size] = this->createStringPattern(member, offset + structSize);
-
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                structSize += size;
+                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
             }
             else if (member->getArraySize() > 1) {
-                const auto &[pattern, size] = this->createArrayPattern(member, offset + structSize);
-
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                structSize += size;
+                std::tie(pattern, memberSize) = this->createArrayPattern(member, memberOffset);
             }
             else if (member->getArraySizeVariable().has_value()) {
                 std::optional<size_t> arraySize;
@@ -69,31 +61,25 @@ namespace hex::lang {
 
                 ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
 
-                const auto &[pattern, size] = this->createArrayPattern(processedMember, offset + structSize);
-
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                structSize += size;
+                std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
             }
             else if (member->getVariableType() != Token::TypeToken::Type::CustomType) {
-                const auto &[pattern, size] = this->createBuiltInTypePattern(member, offset + structSize);
-
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                structSize += size;
+                std::tie(pattern, memberSize) = this->createBuiltInTypePattern(member, memberOffset);
             }
             else {
-                const auto &[pattern, size] = this->createCustomTypePattern(member, offset + structSize);
+                std::tie(pattern, memberSize) = this->createCustomTypePattern(member, memberOffset);
+            }
 
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
+            if (pattern == nullptr)
+                return { nullptr, 0 };
 
+            if (member->getPointerSize().has_value()) {
+                members.push_back(new PatternDataPointer(offset + structSize, member->getPointerSize().value(), member->getVariableName(), pattern));
+                structSize += member->getPointerSize().value();
+            }
+            else {
                 members.push_back(pattern);
-                structSize += size;
+                structSize += memberSize;
             }
         }
 
@@ -112,54 +98,68 @@ namespace hex::lang {
         for (const auto &node : unionNode->getNodes()) {
             const auto &member = static_cast<ASTNodeVariableDecl*>(node);
 
+            u64 memberOffset = 0;
+
+            if (member->getPointerSize().has_value())
+                this->m_provider->read(offset + unionSize, &memberOffset, member->getPointerSize().value());
+            else
+                memberOffset = offset;
+
             const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
 
+            PatternData *pattern = nullptr;
+            u64 memberSize = 0;
+
             if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
-                const auto &[pattern, size] = this->createStringPattern(member, offset);
+                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
 
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                unionSize = std::max(size, unionSize);
             } else if (member->getVariableType() == Token::TypeToken::Type::CustomType
                        && typeDeclNode != nullptr && typeDeclNode->getAssignedType() == Token::TypeToken::Type::Signed8Bit
                        && member->getArraySize() > 1) {
 
-                const auto &[pattern, size] = this->createStringPattern(member, offset);
+                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
 
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                unionSize = std::max(size, unionSize);
             }
             else if (member->getArraySize() > 1) {
-                const auto &[pattern, size] = this->createArrayPattern(member, offset);
+                std::tie(pattern, memberSize) = this->createArrayPattern(member, memberOffset);
 
-                if (pattern == nullptr)
+            }
+            else if (member->getArraySizeVariable().has_value()) {
+                std::optional<size_t> arraySize;
+
+
+                for (auto &prevMember : members) {
+                    if (prevMember->getPatternType() == PatternData::Type::Unsigned && prevMember->getName() == member->getArraySizeVariable()) {
+                        u64 value = 0;
+                        this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
+                        arraySize = value;
+                    }
+                }
+
+                if (!arraySize.has_value())
                     return { nullptr, 0 };
 
-                members.push_back(pattern);
-                unionSize = std::max(size, unionSize);
+                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
+
+                std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
             }
             else if (member->getVariableType() != Token::TypeToken::Type::CustomType) {
-                const auto &[pattern, size] = this->createBuiltInTypePattern(member, offset);
-
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
-
-                members.push_back(pattern);
-                unionSize = std::max(size, unionSize);
+                std::tie(pattern, memberSize) = this->createBuiltInTypePattern(member, memberOffset);
             }
             else {
-                const auto &[pattern, size] = this->createCustomTypePattern(member, offset);
+                std::tie(pattern, memberSize) = this->createCustomTypePattern(member, memberOffset);
+            }
 
-                if (pattern == nullptr)
-                    return { nullptr, 0 };
+            if (pattern == nullptr)
+                return { nullptr, 0 };
 
+            if (member->getPointerSize().has_value()) {
+                members.push_back(new PatternDataPointer(offset, member->getPointerSize().value(), member->getVariableName(), pattern));
+                unionSize = std::max(size_t(member->getPointerSize().value()), unionSize);
+            }
+            else {
                 members.push_back(pattern);
-                unionSize = std::max(size, unionSize);
+                unionSize = std::max(memberSize, unionSize);
             }
         }
 

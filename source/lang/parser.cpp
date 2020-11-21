@@ -1,5 +1,7 @@
 #include "lang/parser.hpp"
 
+#include "utils.hpp"
+
 #include <optional>
 
 namespace hex::lang {
@@ -33,6 +35,24 @@ namespace hex::lang {
 
     ASTNode* parseCustomTypeVariableDecl(TokenIter &curr) {
         return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
+    }
+
+    ASTNode* parseBuiltinPointerVariableDecl(TokenIter &curr) {
+        auto pointerType = curr[-2].typeToken.type;
+
+        if (!isUnsigned(pointerType) || curr[-5].operatorToken.op != Token::OperatorToken::Operator::Star || curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+            return nullptr;
+
+        return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType));
+    }
+
+    ASTNode* parseCustomTypePointerVariableDecl(TokenIter &curr) {
+        auto pointerType = curr[-2].typeToken.type;
+
+        if (!isUnsigned(pointerType) || curr[-5].operatorToken.op != Token::OperatorToken::Operator::Star || curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+            return nullptr;
+
+        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType));
     }
 
     ASTNode* parseBuiltinArrayDecl(TokenIter &curr) {
@@ -86,7 +106,10 @@ namespace hex::lang {
                     return nullptr;
                 }
                 nodes.push_back(parsePaddingDecl(curr));
-            }
+            } else if (tryConsume(curr, {Token::Type::Type, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinPointerVariableDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypePointerVariableDecl(curr));
             else break;
         }
 
@@ -111,6 +134,10 @@ namespace hex::lang {
                 nodes.push_back(parseBuiltinArrayDecl(curr));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
                 nodes.push_back(parseCustomTypeArrayDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Type, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinPointerVariableDecl(curr));
+            else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypePointerVariableDecl(curr));
             else break;
         }
 

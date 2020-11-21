@@ -128,6 +128,9 @@ namespace hex::lang {
             } else if (c == ':') {
                 tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Inherit } });
                 offset += 1;
+            } else if (c == '*') {
+                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Star } });
+                offset += 1;
             } else if (std::isalpha(c)) {
                 std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 
