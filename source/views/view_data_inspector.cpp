@@ -99,7 +99,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Data Preview", &this->m_windowOpen)) {
+        if (ImGui::Begin("Data Inspector", &this->m_windowOpen)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (ImGui::BeginChild("##scrolling")) {
                     if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg)) {
