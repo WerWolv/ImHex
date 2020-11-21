@@ -21,7 +21,6 @@ int main() {
     // Shared Data
     std::vector<hex::lang::PatternData*> patternData;
     hex::prv::Provider *dataProvider = nullptr;
-
     // Create views
     window.addView<hex::ViewHexEditor>(dataProvider, patternData);
     window.addView<hex::ViewPattern>(dataProvider, patternData);

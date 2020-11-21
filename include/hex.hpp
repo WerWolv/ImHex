@@ -17,3 +17,9 @@ using s128  = __int128_t;
 
 #include "lang/result.hpp"
 #include "lang/results.hpp"
+
+#if defined(__EMX__) || defined (WIN32)
+#define MAGIC_PATH_SEPARATOR	";"
+#else
+#define MAGIC_PATH_SEPARATOR	":"
+#endif

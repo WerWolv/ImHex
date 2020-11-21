@@ -7,6 +7,8 @@
 #include "lang/evaluator.hpp"
 #include "utils.hpp"
 
+#include <magic.h>
+
 namespace hex {
 
     static const TextEditor::LanguageDefinition& PatternLanguage() {
@@ -71,6 +73,66 @@ namespace hex {
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
+
+        View::subscribeEvent(Events::DataChanged, [this](const void* userData) {
+            lang::Preprocessor preprocessor;
+
+            std::string magicFiles;
+
+            std::error_code error;
+            for (const auto &entry : std::filesystem::directory_iterator("magic", error)) {
+                if (entry.is_regular_file() && entry.path().extension() == ".mgc")
+                    magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
+            }
+
+            std::vector<u8> buffer(this->m_dataProvider->getSize(), 0x00);
+            this->m_dataProvider->read(0, buffer.data(), buffer.size());
+
+            std::string mimeType;
+
+            magic_t cookie = magic_open(MAGIC_MIME_TYPE);
+            if (magic_load(cookie, magicFiles.c_str()) != -1)
+                mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
+
+            magic_close(cookie);
+
+            bool foundCorrectType = false;
+            preprocessor.addPragmaHandler("MIME", [&mimeType, &foundCorrectType](std::string value) {
+                if (value == mimeType) {
+                    foundCorrectType = true;
+                    return true;
+                }
+                return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
+            });
+            preprocessor.addDefaultPragramHandlers();
+
+
+            for (auto &entry : std::filesystem::directory_iterator("patterns")) {
+                if (!entry.is_regular_file())
+                    continue;
+
+                FILE *file = fopen(entry.path().string().c_str(), "r");
+
+                if (file == nullptr)
+                    continue;
+
+                fseek(file, 0, SEEK_END);
+                size_t size = ftell(file);
+                rewind(file);
+
+                std::vector<char> buffer( size + 1, 0x00);
+                fread(buffer.data(), 1, size, file);
+                fclose(file);
+
+                preprocessor.preprocess(buffer.data());
+
+                if (foundCorrectType) {
+                    this->m_possiblePatternFile = entry.path();
+                    ImGui::OpenPopup("Accept Pattern");
+                    ImGui::SetNextWindowSize(ImVec2(200, 100));
+                }
+            }
+        });
     }
 
     ViewPattern::~ViewPattern() {
@@ -107,31 +169,53 @@ namespace hex {
         ImGui::End();
 
         if (this->m_fileBrowser.showFileDialog("Open Hex Pattern", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".hexpat")) {
+            this->loadPatternFile(this->m_fileBrowser.selected_path);
+        }
 
-            FILE *file = fopen(this->m_fileBrowser.selected_path.c_str(), "rb");
+        if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextUnformatted("A pattern compatible with this data type has been found:");
+            ImGui::Text("%ls", this->m_possiblePatternFile.filename().c_str());
+            ImGui::NewLine();
+            ImGui::Text("Do you want to load it?");
+            ImGui::NewLine();
 
-            if (file != nullptr) {
-                char *buffer;
-                fseek(file, 0, SEEK_END);
-                size_t size = ftell(file);
-                rewind(file);
-
-                buffer = new char[size + 1];
-
-                fread(buffer, size, 1, file);
-                buffer[size] = 0x00;
-
-
-                fclose(file);
-
-                this->parsePattern(buffer);
-                this->m_textEditor.SetText(buffer);
-
-                delete[] buffer;
+            if (ImGui::Button("Yes", ImVec2(40, 20))) {
+                this->loadPatternFile(this->m_possiblePatternFile.string());
+                ImGui::CloseCurrentPopup();
             }
+            ImGui::SameLine();
+            if (ImGui::Button("No", ImVec2(40, 20))) {
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
         }
     }
 
+
+    void ViewPattern::loadPatternFile(std::string path) {
+        FILE *file = fopen(path.c_str(), "rb");
+
+        if (file != nullptr) {
+            char *buffer;
+            fseek(file, 0, SEEK_END);
+            size_t size = ftell(file);
+            rewind(file);
+
+            buffer = new char[size + 1];
+
+            fread(buffer, size, 1, file);
+            buffer[size] = 0x00;
+
+
+            fclose(file);
+
+            this->parsePattern(buffer);
+            this->m_textEditor.SetText(buffer);
+
+            delete[] buffer;
+        }
+    }
 
     void ViewPattern::clearPatternData() {
         for (auto &data : this->m_patternData)
@@ -161,6 +245,8 @@ namespace hex {
 
         this->clearPatternData();
         this->postEvent(Events::PatternChanged);
+
+        preprocessor.addDefaultPragramHandlers();
 
         auto [preprocessingResult, preprocesedCode] = preprocessor.preprocess(buffer);
         if (preprocessingResult.failed())

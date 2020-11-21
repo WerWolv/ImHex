@@ -9,7 +9,7 @@
 
 #include <concepts>
 #include <cstring>
-
+#include <filesystem>
 
 #include "ImGuiFileBrowser.h"
 #include "TextEditor.h"
@@ -27,11 +27,13 @@ namespace hex {
     private:
         std::vector<lang::PatternData*> &m_patternData;
         prv::Provider* &m_dataProvider;
+        std::filesystem::path m_possiblePatternFile;
         bool m_windowOpen = true;
 
         TextEditor m_textEditor;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
+        void loadPatternFile(std::string path);
         void clearPatternData();
         void parsePattern(char *buffer);
     };

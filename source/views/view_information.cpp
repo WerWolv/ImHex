@@ -12,16 +12,10 @@
 
 #include <magic.h>
 
-
-#if defined(__EMX__) || defined (WIN32)
-#define MAGIC_PATH_SEPARATOR	";"
-#else
-#define MAGIC_PATH_SEPARATOR	":"
-#endif
-
 namespace hex {
 
-    ViewInformation::ViewInformation(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
+    ViewInformation::ViewInformation(prv::Provider* &dataProvider)
+    : View(), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*) {
            this->m_shouldInvalidate = true;
         });
@@ -76,7 +70,7 @@ namespace hex {
                     }
 
                     {
-                        std::vector<u8> buffer(this->m_dataProvider->getSize(), 0x00);
+                        std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFF'FFFF)), 0x00);
                         this->m_dataProvider->read(0x00, buffer.data(), buffer.size());
 
                         this->m_fileDescription.clear();
@@ -95,12 +89,10 @@ namespace hex {
 
                             {
                                 magic_t cookie = magic_open(MAGIC_NONE);
-                                if (magic_load(cookie, magicFiles.c_str()) == -1)
-                                    goto skip_description;
-
-                                this->m_fileDescription = magic_buffer(cookie, buffer.data(), buffer.size());
-
-                                skip_description:
+                                if (magic_load(cookie, magicFiles.c_str()) != -1)
+                                    this->m_fileDescription = magic_buffer(cookie, buffer.data(), buffer.size());
+                                else
+                                    this->m_fileDescription = "";
 
                                 magic_close(cookie);
                             }
@@ -108,12 +100,10 @@ namespace hex {
 
                             {
                                 magic_t cookie = magic_open(MAGIC_MIME);
-                                if (magic_load(cookie, magicFiles.c_str()) == -1)
-                                    goto skip_mime;
-
-                                this->m_mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
-
-                                skip_mime:
+                                if (magic_load(cookie, magicFiles.c_str()) != -1)
+                                    this->m_mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
+                                else
+                                    this->m_mimeType = "";
 
                                 magic_close(cookie);
                             }
