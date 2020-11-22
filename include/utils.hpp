@@ -65,7 +65,7 @@ namespace hex {
                 break;
         }
 
-        std::string result = std::to_string(value);
+        std::string result = hex::format("%.2f", value);
 
         switch (unitIndex) {
             case 0: result += " Bytes"; break;
