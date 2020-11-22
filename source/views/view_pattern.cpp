@@ -130,6 +130,7 @@ namespace hex {
                     this->m_possiblePatternFile = entry.path();
                     ImGui::OpenPopup("Accept Pattern");
                     ImGui::SetNextWindowSize(ImVec2(200, 100));
+                    break;
                 }
             }
         });
