@@ -72,7 +72,7 @@ namespace hex {
                 auto endianAdjustedTime = hex::changeEndianess(this->m_previewData.time32, this->m_endianess);
                 std::tm * ptm = _localtime32(&endianAdjustedTime);
                 char buffer[32];
-                if (std::strftime(buffer, 32, "%a, %d.%m.%Y %H:%M:%S", ptm))
+                if (ptm != nullptr && std::strftime(buffer, 32, "%a, %d.%m.%Y %H:%M:%S", ptm))
                     this->m_cachedData.emplace_back("__time32_t", buffer);
                 else
                     this->m_cachedData.emplace_back("__time32_t", "Invalid");
@@ -82,7 +82,7 @@ namespace hex {
                 auto endianAdjustedTime = hex::changeEndianess(this->m_previewData.time64, this->m_endianess);
                 std::tm * ptm = _localtime64(&endianAdjustedTime);
                 char buffer[64];
-                if (std::strftime(buffer, 64, "%a, %d.%m.%Y %H:%M:%S", ptm) != 0)
+                if (ptm != nullptr && std::strftime(buffer, 64, "%a, %d.%m.%Y %H:%M:%S", ptm) != 0)
                     this->m_cachedData.emplace_back("__time64_t", buffer);
                 else
                     this->m_cachedData.emplace_back("__time64_t", "Invalid");
