@@ -37,7 +37,7 @@ namespace hex::lang {
                     if (typeDeclNode->getAssignedType() == Token::TypeToken::Type::CustomType && !typeNames.contains(typeDeclNode->getAssignedCustomTypeName()))
                         return false;
                 }
-                break;
+                    break;
                 case ASTNode::Type::Struct:
                 {
                     // Check for duplicate type name
@@ -51,7 +51,7 @@ namespace hex::lang {
                         if (!memberNames.insert(static_cast<ASTNodeVariableDecl*>(member)->getVariableName()).second)
                             return false;
                 }
-                break;
+                    break;
                 case ASTNode::Type::Enum:
                 {
                     // Check for duplicate type name
@@ -65,6 +65,7 @@ namespace hex::lang {
                         if (!constantNames.insert(name).second)
                             return false;
                 }
+                    break;
                 case ASTNode::Type::Bitfield:
                 {
                     // Check for duplicate type name
@@ -86,7 +87,7 @@ namespace hex::lang {
                     if (bitfieldSize > 64)
                         return false;
                 }
-                break;
+                    break;
             }
         }
 
