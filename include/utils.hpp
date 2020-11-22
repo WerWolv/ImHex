@@ -9,6 +9,12 @@
 #include <string>
 #include <vector>
 
+#ifdef __MINGW32__
+#include <winsock.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include "lang/token.hpp"
 
 namespace hex {
@@ -78,6 +84,26 @@ namespace hex {
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const u64 &value) {
         u64 mask = (std::numeric_limits<u64>::max() >> (63 - (from - to))) << to;
         return (value & mask) >> to;
+    }
+
+    template<typename T>
+    struct always_false : std::false_type {};
+
+    template<typename T>
+    constexpr T changeEndianess(T value, std::endian endian) {
+        if (endian == std::endian::native)
+            return value;
+
+        if constexpr (sizeof(T) == 1)
+            return value;
+        else if constexpr (sizeof(T) == 2)
+            return __builtin_bswap16(value);
+        else if constexpr (sizeof(T) == 4)
+            return __builtin_bswap32(value);
+        else if constexpr (sizeof(T) == 8)
+            return __builtin_bswap64(value);
+        else
+            static_assert(always_false<T>::value, "Invalid type provided!");
     }
 
 

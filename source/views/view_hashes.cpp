@@ -6,11 +6,7 @@
 
 #include <vector>
 
-#ifdef __MINGW32__
-#include <winsock.h>
-#else
-#include <arpa/inet.h>
-#endif
+#include "utils.hpp"
 
 namespace hex {
 
@@ -27,7 +23,7 @@ namespace hex {
 
     static void formatBigHexInt(auto dataArray, char *buffer, size_t bufferSize) {
         for (int i = 0; i < dataArray.size(); i++)
-            snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", htonl(dataArray[i]));
+            snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", hex::changeEndianess(dataArray[i], std::endian::big));
     }
 
     void ViewHashes::createView() {

@@ -2,6 +2,7 @@
 
 #include "views/view.hpp"
 
+#include <bit>
 #include <cstdio>
 #include <ctime>
 #include <string>
@@ -52,6 +53,8 @@ namespace hex {
         prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
         bool m_shouldInvalidate = true;
+
+        std::endian m_endianess = std::endian::native;
 
         PreviewData m_previewData = { 0 };
         size_t m_validBytes = 0;
