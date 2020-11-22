@@ -174,7 +174,7 @@ namespace hex {
 
                     ImGui::NewLine();
 
-                    ImGui::LabelText("Block size", "2048 blocks à %lu bytes", this->m_blockSize);
+                    ImGui::LabelText("Block size", "2048 blocks of %lu bytes", this->m_blockSize);
                     ImGui::LabelText("Average entropy", "%.8f", this->m_averageEntropy);
                     ImGui::LabelText("Highest entropy block", "%.8f", this->m_highestBlockEntropy);
 
