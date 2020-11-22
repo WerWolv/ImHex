@@ -56,11 +56,11 @@ namespace hex {
                 char buffer[5] = { 0 };
                 char codepointString[5] = { 0 };
                 u32 codepoint = 0;
-                u8 codepointSize = ImTextCharFromUtf8(&codepoint, buffer, buffer + 4);
 
                 std::memcpy(buffer, &this->m_previewData.utf8Char, 4);
-                std::memcpy(codepointString, &codepoint, std::min(codepointSize, u8(4)));
+                u8 codepointSize = ImTextCharFromUtf8(&codepoint, buffer, buffer + 4);
 
+                std::memcpy(codepointString, &codepoint, std::min(codepointSize, u8(4)));
                 this->m_cachedData.emplace_back("UTF-8 code point",  hex::format("'%s' (U+%04lx)", codepoint == 0xFFFD ? "Invalid" : codepointString, codepoint));
             }
 
