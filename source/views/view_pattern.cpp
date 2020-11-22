@@ -107,7 +107,8 @@ namespace hex {
             preprocessor.addDefaultPragramHandlers();
 
 
-            for (auto &entry : std::filesystem::directory_iterator("patterns")) {
+            std::error_code errorCode;
+            for (auto &entry : std::filesystem::directory_iterator("patterns", errorCode)) {
                 if (!entry.is_regular_file())
                     continue;
 
