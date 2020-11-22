@@ -95,6 +95,11 @@ namespace hex::lang {
                 provider->read(left->getOffset(), leftBuffer.data(), left->getSize());
                 provider->read(right->getOffset(), rightBuffer.data(), right->getSize());
 
+                if (PatternData::s_endianess != std::endian::native) {
+                    std::reverse(leftBuffer.begin(), leftBuffer.end());
+                    std::reverse(rightBuffer.begin(), rightBuffer.end());
+                }
+
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return leftBuffer > rightBuffer;
                 else
@@ -117,6 +122,7 @@ namespace hex::lang {
         }
 
         static void resetPalette() { PatternData::s_paletteOffset = 0; }
+        static void setEndianess(std::endian endianess) { PatternData::s_endianess = endianess; }
 
     protected:
         void createDefaultEntry(std::string value) {
@@ -136,6 +142,9 @@ namespace hex::lang {
             ImGui::Text("%s", value.c_str());
         }
 
+    protected:
+        static inline std::endian s_endianess = std::endian::native;
+
     private:
         Type m_type;
         u64 m_offset;
@@ -145,6 +154,7 @@ namespace hex::lang {
         std::string m_name;
 
         static inline u8 s_paletteOffset = 0;
+
     };
 
     class PatternDataPadding : public PatternData {
@@ -169,6 +179,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
+            data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
 
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
             ImGui::TableNextColumn();
@@ -215,6 +226,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
+            data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
 
             this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
         }
@@ -238,6 +250,7 @@ namespace hex::lang {
        void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
+            data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
 
             s64 signedData = signedData = hex::signExtend(data, this->getSize(), 64);
 
@@ -265,10 +278,14 @@ namespace hex::lang {
             if (this->getSize() == 4) {
                 float data = 0;
                 provider->read(this->getOffset(), &data, 4);
+                data = hex::changeEndianess(data, 4, PatternData::s_endianess);
+
                 formatData = data;
             } else if (this->getSize() == 8) {
                 double data = 0;
                 provider->read(this->getOffset(), &data, 8);
+                data = hex::changeEndianess(data, 8, PatternData::s_endianess);
+
                 formatData = data;
             }
 
@@ -488,6 +505,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
+            value = hex::changeEndianess(value, this->getSize(), PatternData::s_endianess);
 
             std::string valueString = this->m_enumName + "::";
 
@@ -523,6 +541,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
+            value = hex::changeEndianess(value, this->getSize(), PatternData::s_endianess);
 
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
             ImGui::TableNextColumn();

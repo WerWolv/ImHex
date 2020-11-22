@@ -5,8 +5,8 @@
 
 namespace hex::lang {
 
-    Evaluator::Evaluator(prv::Provider* &provider) : m_provider(provider) {
-
+    Evaluator::Evaluator(prv::Provider* &provider, std::endian dataEndianess) : m_provider(provider), m_dataEndianess(dataEndianess) {
+        PatternData::setEndianess(dataEndianess);
     }
 
     std::pair<PatternData*, size_t> Evaluator::createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -23,8 +23,11 @@ namespace hex::lang {
 
             u64 memberOffset = 0;
 
-            if (member->getPointerSize().has_value())
+            if (member->getPointerSize().has_value()) {
                 this->m_provider->read(offset + structSize, &memberOffset, member->getPointerSize().value());
+
+                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), this->m_dataEndianess);
+            }
             else
                 memberOffset = offset + structSize;
 
@@ -52,6 +55,9 @@ namespace hex::lang {
                     if (prevMember->getPatternType() == PatternData::Type::Unsigned && prevMember->getName() == member->getArraySizeVariable()) {
                         u64 value = 0;
                         this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
+
+                        value = hex::changeEndianess(value, prevMember->getSize(), this->m_dataEndianess);
+
                         arraySize = value;
                     }
                 }
@@ -100,8 +106,11 @@ namespace hex::lang {
 
             u64 memberOffset = 0;
 
-            if (member->getPointerSize().has_value())
+            if (member->getPointerSize().has_value()) {
                 this->m_provider->read(offset + unionSize, &memberOffset, member->getPointerSize().value());
+
+                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), this->m_dataEndianess);
+            }
             else
                 memberOffset = offset;
 
@@ -132,6 +141,9 @@ namespace hex::lang {
                     if (prevMember->getPatternType() == PatternData::Type::Unsigned && prevMember->getName() == member->getArraySizeVariable()) {
                         u64 value = 0;
                         this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
+
+                        value = hex::changeEndianess(value, prevMember->getSize(), this->m_dataEndianess);
+
                         arraySize = value;
                     }
                 }

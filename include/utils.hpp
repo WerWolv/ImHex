@@ -106,6 +106,23 @@ namespace hex {
             static_assert(always_false<T>::value, "Invalid type provided!");
     }
 
+    template<typename T>
+    constexpr T changeEndianess(T value, size_t size, std::endian endian) {
+        if (endian == std::endian::native)
+            return value;
+
+        if (size == 1)
+            return value;
+        else if (size == 2)
+            return __builtin_bswap16(value);
+        else if (size == 4)
+            return __builtin_bswap32(value);
+        else if (size == 8)
+            return __builtin_bswap64(value);
+        else
+            throw std::invalid_argument("Invalid value size!");
+    }
+
 
     class ScopeExit {
     public:

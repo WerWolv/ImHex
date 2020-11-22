@@ -237,26 +237,38 @@ namespace hex {
     }
 
     void ViewPattern::parsePattern(char *buffer) {
-        hex::lang::Preprocessor preprocessor;
-        hex::lang::Lexer lexer;
-        hex::lang::Parser parser;
-        hex::lang::Validator validator;
-        hex::lang::Evaluator evaluator(this->m_dataProvider);
-
         this->clearPatternData();
         this->postEvent(Events::PatternChanged);
 
+        hex::lang::Preprocessor preprocessor;
+        std::endian dataEndianess = std::endian::native;
+
+        preprocessor.addPragmaHandler("endian", [&dataEndianess](std::string value) {
+           if (value == "big") {
+               dataEndianess = std::endian::big;
+               return true;
+           } else if (value == "little") {
+               dataEndianess = std::endian::little;
+               return true;
+           } else if (value == "native") {
+               dataEndianess = std::endian::native;
+               return true;
+           } else
+               return false;
+        });
         preprocessor.addDefaultPragramHandlers();
 
         auto [preprocessingResult, preprocesedCode] = preprocessor.preprocess(buffer);
         if (preprocessingResult.failed())
             return;
 
+        hex::lang::Lexer lexer;
         auto [lexResult, tokens] = lexer.lex(preprocesedCode);
         if (lexResult.failed()) {
             return;
         }
 
+        hex::lang::Parser parser;
         auto [parseResult, ast] = parser.parse(tokens);
         if (parseResult.failed()) {
             return;
@@ -264,11 +276,13 @@ namespace hex {
 
         hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast) delete node; });
 
+        hex::lang::Validator validator;
         auto validatorResult = validator.validate(ast);
         if (!validatorResult) {
             return;
         }
 
+        hex::lang::Evaluator evaluator(this->m_dataProvider, dataEndianess);
         auto [evaluateResult, patternData] = evaluator.evaluate(ast);
         if (evaluateResult.failed()) {
             return;

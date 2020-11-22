@@ -6,6 +6,7 @@
 #include "lang/pattern_data.hpp"
 #include "ast_node.hpp"
 
+#include <bit>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -14,13 +15,15 @@ namespace hex::lang {
 
     class Evaluator {
     public:
-        Evaluator(prv::Provider* &provider);
+        Evaluator(prv::Provider* &provider, std::endian dataEndianess);
 
         std::pair<Result, std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
     private:
         std::unordered_map<std::string, ASTNode*> m_types;
         prv::Provider* &m_provider;
+        std::endian m_dataEndianess;
+
 
         std::pair<PatternData*, size_t> createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);

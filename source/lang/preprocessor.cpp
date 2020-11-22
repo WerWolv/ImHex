@@ -172,6 +172,9 @@ namespace hex::lang {
         this->addPragmaHandler("MIME", [](std::string value) {
             return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
         });
+        this->addPragmaHandler("endian", [](std::string value) {
+            return value == "big" || value == "little" || value == "native";
+        });
     }
 
 }
