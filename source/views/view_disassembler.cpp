@@ -211,8 +211,8 @@ namespace hex {
                             break;
                     }
 
-                    ImGui::EndChild();
                 }
+                ImGui::EndChild();
 
                 ImGui::NewLine();
                 if (ImGui::Button("Disassemble"))
