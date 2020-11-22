@@ -18,7 +18,7 @@ namespace hex {
     }
 
     static bool beginPatternDataTable(prv::Provider* &provider, const std::vector<lang::PatternData*> &patterns, std::vector<lang::PatternData*> &sortedPatterns) {
-        if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
+        if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
             ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
             ImGui::TableSetupColumn("Name", 0, -1, ImGui::GetID("name"));
             ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
@@ -60,13 +60,8 @@ namespace hex {
                     if (this->m_sortedPatternData.size() > 0) {
                         ImGui::TableHeadersRow();
 
-                        u32 rowCount = 0;
-                        for (auto &patternData : this->m_sortedPatternData) {
+                        for (auto &patternData : this->m_sortedPatternData)
                             patternData->createEntry(this->m_dataProvider);
-                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
-                                                   ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-                            rowCount++;
-                        }
 
                     }
 

@@ -74,7 +74,7 @@ namespace hex {
 
                 if (ImGui::BeginTable("##strings", 3,
                                       ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
-                                      ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
+                                      ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
                     ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
                     ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
                     ImGui::TableSetupColumn("String", 0, -1, ImGui::GetID("string"));
@@ -113,7 +113,6 @@ namespace hex {
                     clipper.Begin(this->m_foundStrings.size());
 
                     while (clipper.Step()) {
-                        u32 rowCount = clipper.DisplayStart;
                         for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             auto &foundString = this->m_foundStrings[i];
 
@@ -128,9 +127,6 @@ namespace hex {
                             ImGui::Text("0x%04lx", foundString.size);
                             ImGui::TableNextColumn();
                             ImGui::Text("%s", foundString.string.c_str());
-                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
-                                                   ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-                            rowCount++;
                         }
                     }
                     clipper.End();

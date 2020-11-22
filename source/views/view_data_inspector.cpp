@@ -111,21 +111,18 @@ namespace hex {
         if (ImGui::Begin("Data Inspector", &this->m_windowOpen)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (ImGui::BeginChild("##scrolling", ImVec2(0, ImGui::GetWindowHeight() - 60))) {
-                    if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg)) {
+                    if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
                         ImGui::TableSetupColumn("Name");
                         ImGui::TableSetupColumn("Value");
 
                         ImGui::TableHeadersRow();
-                        u32 rowCount = 0;
+
                         for (const auto &[name, value] : this->m_cachedData) {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(name.c_str());
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(value.c_str());
-                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
-                                                   ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-                            rowCount++;
                         }
 
                         {
@@ -135,9 +132,6 @@ namespace hex {
                             ImGui::TableNextColumn();
                             ImGui::ColorButton("##nolabel", ImColor(hex::changeEndianess(this->m_previewData.unsigned32, this->m_endianess)),
                                                ImGuiColorEditFlags_None, ImVec2(ImGui::GetColumnWidth(), 15));
-                            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
-                                                   ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-                            rowCount++;
                         }
 
 
