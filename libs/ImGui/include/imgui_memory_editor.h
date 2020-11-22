@@ -547,18 +547,6 @@ struct MemoryEditor
 
         ImGui::SameLine();
         ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
-        ImGui::SameLine();
-        ImGui::PushItemWidth((s.AddrDigitsCount + 1) * s.GlyphWidth + style.FramePadding.x * 2.0f);
-        if (ImGui::InputText("##addr", AddrInputBuf, 32, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue))
-        {
-            size_t goto_addr;
-            if (sscanf(AddrInputBuf, "%" _PRISizeT "X", &goto_addr) == 1)
-            {
-                GotoAddr = goto_addr - base_display_addr;
-                HighlightMin = HighlightMax = (size_t)-1;
-            }
-        }
-        ImGui::PopItemWidth();
 
         if (GotoAddr != (size_t)-1)
         {

@@ -19,7 +19,7 @@ namespace hex::prv {
 
         void read(u64 offset, void *buffer, size_t size) override;
         void write(u64 offset, void *buffer, size_t size) override;
-        size_t getSize() override;
+        size_t getActualSize() override;
 
         std::vector<std::pair<std::string, std::string>> getDataInformation() override;
 

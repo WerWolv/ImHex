@@ -17,7 +17,15 @@ namespace hex {
     ViewInformation::ViewInformation(prv::Provider* &dataProvider)
     : View(), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*) {
-           this->m_shouldInvalidate = true;
+            this->m_dataValid = false;
+            this->m_highestBlockEntropy = 0;
+            this->m_blockEntropy.clear();
+            this->m_averageEntropy = 0;
+            this->m_blockSize = 0;
+            this->m_valueCounts.fill(0x00);
+            this->m_mimeType = "";
+            this->m_fileDescription = "";
+            this->m_analyzedRegion = { 0, 0 };
         });
     }
 
@@ -48,6 +56,8 @@ namespace hex {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (this->m_shouldInvalidate) {
 
+                    this->m_analyzedRegion = { this->m_dataProvider->getBaseAddress(), this->m_dataProvider->getBaseAddress() + this->m_dataProvider->getSize() };
+
                     {
                         this->m_blockSize = std::ceil(this->m_dataProvider->getSize() / 2048.0F);
                         std::vector<u8> buffer(this->m_blockSize, 0x00);
@@ -70,7 +80,7 @@ namespace hex {
                     }
 
                     {
-                        std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFF'FFFF)), 0x00);
+                        std::vector<u8> buffer(this->m_dataProvider->getSize(), 0x00);
                         this->m_dataProvider->read(0x00, buffer.data(), buffer.size());
 
                         this->m_fileDescription.clear();
@@ -112,53 +122,67 @@ namespace hex {
 
 
                         this->m_shouldInvalidate = false;
+                        this->m_dataValid = true;
                     }
                 }
 
                 ImGui::NewLine();
 
-                for (auto &[name, value] : this->m_dataProvider->getDataInformation()) {
-                    ImGui::LabelText(name.c_str(), "%s", value.c_str());
-                }
+                if (ImGui::Button("Analyze current page"))
+                    this->m_shouldInvalidate = true;
 
                 ImGui::NewLine();
                 ImGui::Separator();
                 ImGui::NewLine();
 
-                if (!this->m_fileDescription.empty()) {
-                    ImGui::TextUnformatted("Description:");
-                    ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
+                if (this->m_dataValid) {
+
+                    for (auto &[name, value] : this->m_dataProvider->getDataInformation()) {
+                        ImGui::LabelText(name.c_str(), "%s", value.c_str());
+                    }
+
+                    ImGui::LabelText("Analyzed region", "0x%llx - 0x%llx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
+
                     ImGui::NewLine();
-                }
-
-                if (!this->m_mimeType.empty()) {
-                    ImGui::TextUnformatted("MIME Type:");
-                    ImGui::TextWrapped("%s", this->m_mimeType.c_str());
+                    ImGui::Separator();
                     ImGui::NewLine();
-                }
 
-                ImGui::Separator();
-                ImGui::NewLine();
+                    if (!this->m_fileDescription.empty()) {
+                        ImGui::TextUnformatted("Description:");
+                        ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
+                        ImGui::NewLine();
+                    }
 
-                ImGui::Text("Byte Distribution");
-                ImGui::PlotHistogram("##nolabel", this->m_valueCounts.data(), 256, 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
+                    if (!this->m_mimeType.empty()) {
+                        ImGui::TextUnformatted("MIME Type:");
+                        ImGui::TextWrapped("%s", this->m_mimeType.c_str());
+                        ImGui::NewLine();
+                    }
 
-                ImGui::NewLine();
-                ImGui::Separator();
-                ImGui::NewLine();
-
-                ImGui::Text("Entropy");
-                ImGui::PlotLines("##nolabel", this->m_blockEntropy.data(), this->m_blockEntropy.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
-
-                ImGui::NewLine();
-
-                ImGui::LabelText("Block size", "2048 blocks à %lu bytes", this->m_blockSize);
-                ImGui::LabelText("Average entropy", "%.8f", this->m_averageEntropy);
-                ImGui::LabelText("Highest entropy block", "%.8f", this->m_highestBlockEntropy);
-
-                if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
+                    ImGui::Separator();
                     ImGui::NewLine();
-                    ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "This data is most likely encrypted or compressed!");
+
+                    ImGui::Text("Byte Distribution");
+                    ImGui::PlotHistogram("##nolabel", this->m_valueCounts.data(), 256, 0, nullptr, FLT_MAX, FLT_MAX,ImVec2(0, 100));
+
+                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::NewLine();
+
+                    ImGui::Text("Entropy");
+                    ImGui::PlotLines("##nolabel", this->m_blockEntropy.data(), this->m_blockEntropy.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
+
+                    ImGui::NewLine();
+
+                    ImGui::LabelText("Block size", "2048 blocks à %lu bytes", this->m_blockSize);
+                    ImGui::LabelText("Average entropy", "%.8f", this->m_averageEntropy);
+                    ImGui::LabelText("Highest entropy block", "%.8f", this->m_highestBlockEntropy);
+
+                    if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
+                        ImGui::NewLine();
+                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),"This data is most likely encrypted or compressed!");
+                    }
+
                 }
             }
 

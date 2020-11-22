@@ -23,13 +23,16 @@ namespace hex {
         prv::Provider* &m_dataProvider;
         bool m_windowOpen = true;
 
+        bool m_dataValid = false;
         u32 m_blockSize = 0;
         float m_averageEntropy = 0;
         float m_highestBlockEntropy = 0;
         std::vector<float> m_blockEntropy;
 
         std::array<float, 256> m_valueCounts = { 0 };
-        bool m_shouldInvalidate = true;
+        bool m_shouldInvalidate = false;
+
+        std::pair<u64, u64> m_analyzedRegion = { 0, 0 };
 
         std::string m_fileDescription;
         std::string m_mimeType;

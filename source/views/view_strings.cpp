@@ -8,7 +8,7 @@ namespace hex {
 
     ViewStrings::ViewStrings(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
-            this->m_shouldInvalidate = true;
+            this->m_foundStrings.clear();
         });
 
         this->m_filter = new char[0xFFFF];
@@ -64,6 +64,8 @@ namespace hex {
                     this->m_shouldInvalidate = true;
 
                 ImGui::InputText("Filter", this->m_filter, 0xFFFF);
+                if (ImGui::Button("Extract"))
+                    this->m_shouldInvalidate = true;
 
                 ImGui::Separator();
                 ImGui::NewLine();

@@ -22,7 +22,6 @@ namespace hex::prv {
             this->m_file = fopen(path.data(), "rb");
             this->m_writable = false;
         }
-
     }
 
     FileProvider::~FileProvider() {
@@ -48,7 +47,7 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        fseeko64(this->m_file, offset, SEEK_SET);
+        fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
         fread(buffer, 1, size, this->m_file);
     }
 
@@ -56,11 +55,11 @@ namespace hex::prv {
         if (buffer == nullptr || size == 0)
             return;
 
-        fseeko64(this->m_file, offset, SEEK_SET);
+        fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
         fwrite(buffer, 1, size, this->m_file);
     }
 
-    size_t FileProvider::getSize() {
+    size_t FileProvider::getActualSize() {
         fseeko64(this->m_file, 0, SEEK_END);
         return ftello64(this->m_file);
     }
@@ -69,7 +68,7 @@ namespace hex::prv {
         std::vector<std::pair<std::string, std::string>> result;
 
         result.emplace_back("File path", this->m_path);
-        result.emplace_back("Size", hex::toByteString(this->getSize()));
+        result.emplace_back("Size", hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStatsValid) {
             result.emplace_back("Creation time", ctime(&this->m_fileStats.st_ctime));

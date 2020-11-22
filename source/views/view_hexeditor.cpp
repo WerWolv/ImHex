@@ -70,9 +70,32 @@ namespace hex {
 
         size_t dataSize = (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable()) ? 0x00 : this->m_dataProvider->getSize();
 
-        this->m_memoryEditor.DrawWindow("Hex Editor", this, dataSize);
+        this->m_memoryEditor.DrawWindow("Hex Editor", this, dataSize, dataSize == 0 ? 0x00 : this->m_dataProvider->getBaseAddress());
 
         if (dataSize != 0x00) {
+            ImGui::Begin("Hex Editor");
+            ImGui::SameLine();
+            ImGui::Text("Page %d / %d", this->m_dataProvider->getCurrentPage() + 1, this->m_dataProvider->getPageCount());
+            ImGui::SameLine();
+
+            if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
+                this->m_dataProvider->setCurrentPage(this->m_dataProvider->getCurrentPage() - 1);
+
+                size_t dataPreviewStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                View::postEvent(Events::ByteSelected, &dataPreviewStart);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
+                this->m_dataProvider->setCurrentPage(this->m_dataProvider->getCurrentPage() + 1);
+
+                size_t dataPreviewStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                View::postEvent(Events::ByteSelected, &dataPreviewStart);
+            }
+
+            ImGui::End();
+
             this->drawSearchPopup();
             this->drawGotoPopup();
         }
@@ -578,8 +601,8 @@ R"(
                 if (ImGui::BeginTabItem("Begin")) {
                     ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= this->m_dataProvider->getSize())
-                        this->m_gotoAddress = this->m_dataProvider->getSize() - 1;
+                    if (this->m_gotoAddress >= this->m_dataProvider->getActualSize())
+                        this->m_gotoAddress = this->m_dataProvider->getActualSize() - 1;
 
                     newOffset = this->m_gotoAddress;
 
@@ -596,9 +619,9 @@ R"(
                     s64 currHighlightStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
                     newOffset = this->m_gotoAddress + currHighlightStart;
-                    if (newOffset >= this->m_dataProvider->getSize()) {
-                        newOffset = this->m_dataProvider->getSize() - 1;
-                        this->m_gotoAddress = (this->m_dataProvider->getSize() - 1) - currHighlightStart;
+                    if (newOffset >= this->m_dataProvider->getActualSize()) {
+                        newOffset = this->m_dataProvider->getActualSize() - 1;
+                        this->m_gotoAddress = (this->m_dataProvider->getActualSize() - 1) - currHighlightStart;
                     } else if (newOffset < 0) {
                         newOffset = 0;
                         this->m_gotoAddress = -currHighlightStart;
@@ -609,15 +632,16 @@ R"(
                 if (ImGui::BeginTabItem("End")) {
                     ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= this->m_dataProvider->getSize())
-                        this->m_gotoAddress = this->m_dataProvider->getSize() - 1;
+                    if (this->m_gotoAddress >= this->m_dataProvider->getActualSize())
+                        this->m_gotoAddress = this->m_dataProvider->getActualSize() - 1;
 
-                    newOffset = (this->m_dataProvider->getSize() - 1) - this->m_gotoAddress;
+                    newOffset = (this->m_dataProvider->getActualSize() - 1) - this->m_gotoAddress;
 
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::Button("Goto")) {
+                    this->m_dataProvider->setCurrentPage(std::floor(newOffset / double(prv::Provider::PageSize)));
                     this->m_memoryEditor.GotoAddr = newOffset;
                     this->m_memoryEditor.DataPreviewAddr = newOffset;
                     this->m_memoryEditor.DataPreviewAddrEnd = newOffset;
