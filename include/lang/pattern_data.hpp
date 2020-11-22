@@ -182,7 +182,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("*(%08llx)", data);
+            ImGui::Text("*(0x%0*llx)", this->getSize() * 2, data);
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
@@ -325,7 +325,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
@@ -503,7 +503,7 @@ namespace hex::lang {
             if (!foundValue)
                 valueString += "???";
 
-            this->createDefaultEntry(hex::format("%s (0x0*lx)", valueString.c_str(), this->getSize() * 2, value));
+            this->createDefaultEntry(hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value));
         }
 
         std::string getTypeName() override {
