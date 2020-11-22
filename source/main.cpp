@@ -10,6 +10,7 @@
 #include "views/view_tools.hpp"
 #include "views/view_strings.hpp"
 #include "views/view_data_inspector.hpp"
+#include "views/view_disassembler.hpp"
 
 #include "providers/provider.hpp"
 
@@ -29,8 +30,9 @@ int main() {
     window.addView<hex::ViewHashes>(dataProvider);
     window.addView<hex::ViewInformation>(dataProvider);
     window.addView<hex::ViewStrings>(dataProvider);
-    window.addView<hex::ViewHelp>();
+    window.addView<hex::ViewDisassembler>(dataProvider);
     window.addView<hex::ViewTools>();
+    window.addView<hex::ViewHelp>();
 
     window.loop();
 
