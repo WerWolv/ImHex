@@ -78,6 +78,15 @@ namespace hex {
                             "#include \"mypattern.hexpat\""
             );
 
+            DrawTitle("Pragma directives");
+            ImGui::TextWrapped(
+                    "Pragma directives are used to give ImHex additional information about the code being read. Currently "
+                    "the following directives are supported.");
+            DrawCodeSegment("pragma", 30,
+                            "// Allow this file to be loaded as pattern when a file identified as application/x-executable gets loaded"
+                            "#pragma MIME application/x-executable\n"
+            );
+
             DrawTitle("Built-in types");
             ImGui::TextWrapped(
                     "The following built-in types are available for use");
@@ -92,10 +101,13 @@ namespace hex {
 
             DrawTitle("Variables and Arrays");
             ImGui::TextWrapped(
-                    "Normal variables as well as arrays are used to highlight and display values.");
-            DrawCodeSegment("vars arrays", 30,
+                    "Normal variables as well as arrays are used to highlight and display values. "
+                    "It is possible to create arrays within structs and unions that use the value of a previously "
+                    "declared variable as size.");
+            DrawCodeSegment("vars arrays", 45,
                     "u32 variable;\n"
-                    "s8 string[16];"
+                    "s8 string[16];\n"
+                    "u8 customSizedArray[variable];"
             );
 
             DrawTitle("Structs");
@@ -108,7 +120,7 @@ namespace hex {
                 "   u8 version;\n"
                 "   padding[4];\n"
                 "   Flags flags;\n"
-                "}"
+                "};"
             );
 
             DrawTitle("Unions");
@@ -119,7 +131,16 @@ namespace hex {
                             "union Color {\n"
                             "   u32 rgba;\n"
                             "   Components components;\n"
-                            "}"
+                            "};"
+            );
+
+            DrawTitle("Pointers");
+            ImGui::TextWrapped(
+                    "\"Another possible type of member in structs and unions are pointers. They are variables"
+                    "whose value is used as an offset from the start of the file to locate the actual offset. "
+                    "The leading type is treated as the data being pointed to and the trailing type as the size of the pointer.");
+            DrawCodeSegment("pointer", 55,
+                            "Data *data : u16;"
             );
 
             DrawTitle("Bitfields");
@@ -131,7 +152,7 @@ namespace hex {
                             "   r : 1;\n"
                             "   w : 1;\n"
                             "   x : 1;\n"
-                            "}"
+                            "};"
             );
 
             DrawTitle("Enum");
@@ -145,7 +166,7 @@ namespace hex {
                     "   Windows = 0x10,\n"
                     "   MacOSX,\n"
                     "   Linux\n"
-                    "}"
+                    "};"
             );
 
             DrawTitle("Using declarations");
