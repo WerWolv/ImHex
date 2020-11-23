@@ -129,6 +129,7 @@ namespace hex {
 
     void ViewTools::drawColorPicker() {
         if (ImGui::CollapsingHeader("Color picker")) {
+            ImGui::SetNextItemWidth(300.0F);
             ImGui::ColorPicker4("Color Picker", this->m_pickedColor.data(),
             ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHex);
             ImGui::NewLine();
