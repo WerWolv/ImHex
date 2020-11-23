@@ -92,7 +92,7 @@ namespace hex {
                 auto endianAdjustedTime = hex::changeEndianess(this->m_previewData.time, this->m_endianess);
                 std::tm * ptm = localtime(&endianAdjustedTime);
                 char buffer[64];
-                if (std::strftime(buffer, 64, "%a, %d.%m.%Y %H:%M:%S", ptm) != 0)
+                if (ptm != nullptr && std::strftime(buffer, 64, "%a, %d.%m.%Y %H:%M:%S", ptm) != 0)
                     this->m_cachedData.emplace_back("time_t", buffer);
                 else
                     this->m_cachedData.emplace_back("time_t", "Invalid");
