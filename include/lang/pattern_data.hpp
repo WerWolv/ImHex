@@ -144,7 +144,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("%s", value.c_str());
         }
@@ -198,7 +198,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("*(0x%0*llx)", this->getSize() * 2, data);
 
@@ -357,7 +357,15 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_entries[0]->getTypeName().c_str());
+            ImGui::SameLine(0, 0);
+
+            ImGui::TextUnformatted("[");
+            ImGui::SameLine(0, 0);
+            ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entries.size());
+            ImGui::SameLine(0, 0);
+            ImGui::TextUnformatted("]");
+
             ImGui::TableNextColumn();
             ImGui::Text("%s", "{ ... }");
 
@@ -402,7 +410,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->m_structName.c_str());
             ImGui::TableNextColumn();
             ImGui::Text("%s", "{ ... }");
 
@@ -461,7 +469,8 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", this->m_unionName.c_str());
+
             ImGui::TableNextColumn();
             ImGui::Text("%s", "{ ... }");
 
@@ -528,7 +537,25 @@ namespace hex::lang {
             if (!foundValue)
                 valueString += "???";
 
-            this->createDefaultEntry(hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value));
+            ImGui::TableNextRow();
+            ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
+            ImGui::TableNextColumn();
+            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                Region selectRegion = { this->getOffset(), this->getSize() };
+                View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+            }
+            ImGui::SameLine();
+            ImGui::Text("%s", this->getName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::TableNextColumn();
+            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", this->m_enumName.c_str());
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value).c_str());
         }
 
         std::string getTypeName() override {
@@ -560,7 +587,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04lx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", this->m_bitfieldName.c_str());
             ImGui::TableNextColumn();
             ImGui::Text("{ %llx }", value);
 

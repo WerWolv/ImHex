@@ -73,11 +73,10 @@ namespace hex {
                 ImGui::Separator();
                 ImGui::NewLine();
 
-                ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-
                 if (ImGui::BeginTable("##strings", 3,
                                       ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
-                                      ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
+                                      ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                    ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
                     ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
                     ImGui::TableSetupColumn("String", 0, -1, ImGui::GetID("string"));
@@ -141,8 +140,6 @@ namespace hex {
 
                     ImGui::EndTable();
                 }
-
-                ImGui::EndChild();
             }
         }
         ImGui::End();

@@ -17,7 +17,8 @@ namespace hex {
         u64 offset;
         size_t size;
         std::string bytes;
-        std::string opcodeString;
+        std::string mnemonic;
+        std::string operators;
     };
 
     class ViewDisassembler : public View {

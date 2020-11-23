@@ -18,7 +18,8 @@ namespace hex {
     }
 
     static bool beginPatternDataTable(prv::Provider* &provider, const std::vector<lang::PatternData*> &patterns, std::vector<lang::PatternData*> &sortedPatterns) {
-        if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
+        if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollY)) {
+            ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
             ImGui::TableSetupColumn("Name", 0, -1, ImGui::GetID("name"));
             ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
@@ -52,8 +53,6 @@ namespace hex {
             return;
 
         if (ImGui::Begin("Pattern Data", &this->m_windowOpen)) {
-            ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
                 if (beginPatternDataTable(this->m_dataProvider, this->m_patternData, this->m_sortedPatternData)) {
@@ -69,8 +68,6 @@ namespace hex {
                 }
 
             }
-
-            ImGui::EndChild();
         }
         ImGui::End();
     }
