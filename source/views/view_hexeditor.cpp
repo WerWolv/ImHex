@@ -68,6 +68,7 @@ namespace hex {
             this->m_memoryEditor.GotoAddr = region.address;
             this->m_memoryEditor.DataPreviewAddr = region.address;
             this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
+            View::postEvent(Events::ByteSelected, &region.address);
         });
     }
 
