@@ -137,7 +137,7 @@ namespace hex {
 
         size_t copySize = (end - start) + 1;
 
-        std::string buffer;
+        std::string buffer(copySize, 0x00);
         buffer.reserve(copySize + 1);
         this->m_dataProvider->read(start, buffer.data(), copySize);
 
