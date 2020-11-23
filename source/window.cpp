@@ -145,6 +145,11 @@ namespace hex {
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context);
+
         glfwSwapBuffers(this->m_window);
     }
 
@@ -194,7 +199,14 @@ namespace hex {
         IMGUI_CHECKVERSION();
         auto *ctx = ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
+        io.ConfigViewportsNoTaskBarIcon = true;
+
+        style.WindowMenuButtonPosition = ImGuiDir_None;
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 
         // Install custom settings handler
         ImGuiSettingsHandler handler;
