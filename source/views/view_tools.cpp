@@ -177,7 +177,7 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        if (ImGui::Begin("Tools", &this->m_windowOpen)) {
+        if (ImGui::Begin("Tools", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
 
             this->drawDemangler();
             this->drawASCIITable();

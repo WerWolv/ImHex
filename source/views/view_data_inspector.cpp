@@ -108,7 +108,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Data Inspector", &this->m_windowOpen)) {
+        if (ImGui::Begin("Data Inspector", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (ImGui::BeginChild("##scrolling", ImVec2(0, ImGui::GetWindowHeight() - 60))) {
                     if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {

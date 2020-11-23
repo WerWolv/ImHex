@@ -61,7 +61,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Strings", &this->m_windowOpen)) {
+        if (ImGui::Begin("Strings", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (ImGui::InputInt("Minimum length", &this->m_minimumLength, 1, 0))
                     this->m_shouldInvalidate = true;

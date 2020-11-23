@@ -50,7 +50,7 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        if (ImGui::Begin("Data Information", &this->m_windowOpen)) {
+        if (ImGui::Begin("Data Information", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {

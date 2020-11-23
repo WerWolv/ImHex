@@ -52,7 +52,7 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        if (ImGui::Begin("Pattern Data", &this->m_windowOpen)) {
+        if (ImGui::Begin("Pattern Data", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
                 if (beginPatternDataTable(this->m_dataProvider, this->m_patternData, this->m_sortedPatternData)) {

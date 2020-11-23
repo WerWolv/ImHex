@@ -30,7 +30,7 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        if (ImGui::Begin("Hashing", &this->m_windowOpen)) {
+        if (ImGui::Begin("Hashing", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
             ImGui::NewLine();
 

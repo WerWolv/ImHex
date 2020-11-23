@@ -159,7 +159,7 @@ namespace hex {
         if (!this->m_windowOpen)
             return;
 
-        if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None)) {
+        if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
                 this->m_textEditor.Render("Pattern");
 

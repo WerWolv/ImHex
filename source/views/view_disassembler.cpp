@@ -85,7 +85,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Disassembler", &this->m_windowOpen)) {
+        if (ImGui::Begin("Disassembler", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum" };
