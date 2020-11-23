@@ -10,7 +10,7 @@
 
 namespace hex {
 
-    ViewHashes::ViewHashes(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
+    ViewHashes::ViewHashes(prv::Provider* &dataProvider) : View("Hashes"), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_shouldInvalidate = true;
         });
@@ -27,10 +27,7 @@ namespace hex {
     }
 
     void ViewHashes::createView() {
-        if (!this->m_windowOpen)
-            return;
-
-        if (ImGui::Begin("Hashing", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Hashing", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
             ImGui::NewLine();
 
@@ -204,10 +201,7 @@ namespace hex {
     }
 
     void ViewHashes::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Hash View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

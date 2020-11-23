@@ -31,8 +31,6 @@ namespace hex {
 
     private:
         prv::Provider* &m_dataProvider;
-        bool m_windowOpen = true;
-
         bool m_shouldInvalidate = false;
 
         u64 m_baseAddress = 0;

@@ -21,7 +21,6 @@ namespace hex {
 
     private:
         prv::Provider* &m_dataProvider;
-        bool m_windowOpen = true;
 
         bool m_dataValid = false;
         u32 m_blockSize = 0;

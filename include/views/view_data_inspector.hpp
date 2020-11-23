@@ -51,7 +51,6 @@ namespace hex {
 
     private:
         prv::Provider* &m_dataProvider;
-        bool m_windowOpen = true;
         bool m_shouldInvalidate = true;
 
         std::endian m_endianess = std::endian::native;

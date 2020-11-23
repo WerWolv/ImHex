@@ -6,7 +6,7 @@
 namespace hex {
 
     ViewPatternData::ViewPatternData(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
-        : View(), m_dataProvider(dataProvider), m_patternData(patternData) {
+        : View("Pattern Data"), m_dataProvider(dataProvider), m_patternData(patternData) {
 
         this->subscribeEvent(Events::PatternChanged, [this](auto data) {
             this->m_sortedPatternData.clear();
@@ -49,10 +49,7 @@ namespace hex {
     }
 
     void ViewPatternData::createView() {
-        if (!this->m_windowOpen)
-            return;
-
-        if (ImGui::Begin("Pattern Data", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Pattern Data", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
                 if (beginPatternDataTable(this->m_dataProvider, this->m_patternData, this->m_sortedPatternData)) {
@@ -73,10 +70,7 @@ namespace hex {
     }
 
     void ViewPatternData::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Data View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

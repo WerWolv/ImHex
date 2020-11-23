@@ -2,8 +2,8 @@
 
 namespace hex {
 
-    ViewHelp::ViewHelp() {
-
+    ViewHelp::ViewHelp() : View("Help") {
+        this->getWindowOpenState() = true;
     }
 
     ViewHelp::~ViewHelp() {

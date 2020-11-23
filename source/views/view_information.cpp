@@ -15,7 +15,7 @@
 namespace hex {
 
     ViewInformation::ViewInformation(prv::Provider* &dataProvider)
-    : View(), m_dataProvider(dataProvider) {
+    : View("Information"), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*) {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
@@ -47,10 +47,7 @@ namespace hex {
     }
 
     void ViewInformation::createView() {
-        if (!this->m_windowOpen)
-            return;
-
-        if (ImGui::Begin("Data Information", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Data Information", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
@@ -192,10 +189,7 @@ namespace hex {
     }
 
     void ViewInformation::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Data Information View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

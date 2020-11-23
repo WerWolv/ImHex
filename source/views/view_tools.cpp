@@ -8,7 +8,7 @@
 
 namespace hex {
 
-    ViewTools::ViewTools() {
+    ViewTools::ViewTools() : View("Tools") {
         this->m_mangledBuffer = new char[0xF'FFFF];
         this->m_demangledName = static_cast<char*>(malloc(8));
 
@@ -136,10 +136,7 @@ namespace hex {
     }
 
     void ViewTools::createView() {
-        if (!this->m_windowOpen)
-            return;
-
-        if (ImGui::Begin("Tools", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Tools", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             this->drawDemangler();
             this->drawASCIITable();
@@ -151,10 +148,7 @@ namespace hex {
     }
 
     void ViewTools::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Tools View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

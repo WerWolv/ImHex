@@ -25,7 +25,6 @@ namespace hex {
 
     private:
         prv::Provider* &m_dataProvider;
-        bool m_windowOpen = true;
         bool m_shouldInvalidate = false;
 
         std::vector<FoundString> m_foundStrings;

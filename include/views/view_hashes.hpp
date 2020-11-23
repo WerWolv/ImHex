@@ -18,7 +18,6 @@ namespace hex {
 
     private:
         prv::Provider* &m_dataProvider;
-        bool m_windowOpen = true;
 
         bool m_shouldInvalidate = true;
         int m_currHashFunction = 0;

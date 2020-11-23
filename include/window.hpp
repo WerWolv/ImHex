@@ -7,6 +7,7 @@
 #include "views/view.hpp"
 
 struct GLFWwindow;
+struct ImGuiSettingsHandler;
 
 namespace hex {
 
@@ -24,8 +25,10 @@ namespace hex {
             return static_cast<T*>(this->m_views.back());
         }
 
-    public:
-        float m_globalScale = 1.0f, m_fontScale = 1.0f;
+        friend void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *);
+        friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
+        friend void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler);
+        friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
 
     private:
         void frameBegin();
@@ -38,6 +41,8 @@ namespace hex {
 
         GLFWwindow* m_window;
         std::vector<View*> m_views;
+
+        float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;
         bool m_demoWindowOpen = false;
 

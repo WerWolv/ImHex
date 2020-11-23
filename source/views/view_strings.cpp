@@ -9,7 +9,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewStrings::ViewStrings(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
+    ViewStrings::ViewStrings(prv::Provider* &dataProvider) : View("Strings"), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_foundStrings.clear();
         });
@@ -24,14 +24,10 @@ namespace hex {
     }
 
     void ViewStrings::createView() {
-        if (!this->m_windowOpen)
-            return;
-
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
 
             this->m_foundStrings.clear();
-
 
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
@@ -62,7 +58,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Strings", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Strings", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (ImGui::InputInt("Minimum length", &this->m_minimumLength, 1, 0))
                     this->m_shouldInvalidate = true;
@@ -147,10 +143,7 @@ namespace hex {
     }
 
     void ViewStrings::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Strings View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

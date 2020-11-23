@@ -69,7 +69,7 @@ namespace hex {
 
 
     ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
-        : View(), m_dataProvider(dataProvider), m_patternData(patternData) {
+        : View("Pattern"), m_dataProvider(dataProvider), m_patternData(patternData) {
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
@@ -148,18 +148,10 @@ namespace hex {
             }
             ImGui::EndMenu();
         }
-
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Pattern View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
     }
 
     void ViewPattern::createView() {
-        if (!this->m_windowOpen)
-            return;
-
-        if (ImGui::Begin("Pattern", &this->m_windowOpen, ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Pattern", &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
                 this->m_textEditor.Render("Pattern");
 

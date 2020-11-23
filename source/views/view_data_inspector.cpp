@@ -9,7 +9,7 @@ extern int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const
 
 namespace hex {
 
-    ViewDataInspector::ViewDataInspector(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
+    ViewDataInspector::ViewDataInspector(prv::Provider* &dataProvider) : View("Data Inspector"), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::ByteSelected, [this](const void* userData){
             size_t offset = *static_cast<const size_t*>(userData);
 
@@ -26,9 +26,6 @@ namespace hex {
     }
 
     void ViewDataInspector::createView() {
-        if (!this->m_windowOpen)
-            return;
-
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
 
@@ -108,7 +105,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Data Inspector", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Data Inspector", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 if (ImGui::BeginChild("##scrolling", ImVec2(0, ImGui::GetWindowHeight() - 60))) {
                     if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
@@ -155,10 +152,7 @@ namespace hex {
     }
 
     void ViewDataInspector::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Data Preview View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

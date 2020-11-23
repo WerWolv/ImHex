@@ -7,6 +7,7 @@
 #include "event.hpp"
 
 #include <functional>
+#include <string>
 #include <vector>
 
 
@@ -14,7 +15,7 @@ namespace hex {
 
     class View {
     public:
-        View() { }
+        View(std::string viewName) : m_viewName(viewName) { }
         virtual ~View() { }
 
         virtual void createView() = 0;
@@ -27,6 +28,14 @@ namespace hex {
 
         static void postEvent(Events eventType, const void *userData = nullptr) {
             View::s_eventManager.post(eventType, userData);
+        }
+
+        bool& getWindowOpenState() {
+            return this->m_windowOpen;
+        }
+
+        const std::string getName() const {
+            return this->m_viewName;
         }
 
     protected:
@@ -42,7 +51,12 @@ namespace hex {
             View::s_deferedCalls.push_back(function);
         }
 
+
+
     private:
+        std::string m_viewName;
+        bool m_windowOpen = false;
+
         static inline EventManager s_eventManager;
         static inline std::vector<std::function<void()>> s_deferedCalls;
     };

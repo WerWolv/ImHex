@@ -12,42 +12,51 @@
 
 namespace hex {
 
-    namespace {
+    constexpr auto MenuBarItems = { "File", "Edit", "View", "Help" };
 
-        void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
-            return ctx; // Unused, but the return value has to be non-null
+    void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
+        return ctx; // Unused, but the return value has to be non-null
+    }
+
+    void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
+        auto *window = reinterpret_cast<Window *>(handler->UserData);
+
+        float scale;
+        if (sscanf(line, "Scale=%f", &scale) == 1)            { window->m_globalScale = scale; }
+        else if (sscanf(line, "FontScale=%f", &scale) == 1)   { window->m_fontScale   = scale; }
+        else {
+            for (auto &view : window->m_views) {
+                std::string format = view->getName() + "=%d";
+                sscanf(line, format.c_str(), &view->getWindowOpenState());
+            }
+        }
+    }
+
+    void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler) {
+        auto *window = reinterpret_cast<Window *>(handler->UserData);
+        auto &style  = ImGui::GetStyle();
+        auto &io     = ImGui::GetIO();
+
+        if (window->m_globalScale != 0.0f)
+            style.ScaleAllSizes(window->m_globalScale);
+        if (window->m_fontScale != 0.0f)
+            io.FontGlobalScale = window->m_fontScale;
+    }
+
+    void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
+        auto *window = reinterpret_cast<Window *>(handler->UserData);
+
+        buf->reserve(buf->size() + 0x20); // Ballpark reserve
+
+        buf->appendf("[%s][General]\n", handler->TypeName);
+        buf->appendf("Scale=%.1f\n", window->m_globalScale);
+        buf->appendf("FontScale=%.1f\n", window->m_fontScale);
+
+        for (auto &view : window->m_views) {
+            buf->appendf("%s=%d\n", view->getName().c_str(), view->getWindowOpenState());
         }
 
-        void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
-            auto *window = reinterpret_cast<Window *>(handler->UserData);
-
-            float scale;
-            if (sscanf(line, "Scale=%f", &scale) == 1)            { window->m_globalScale = scale; }
-            else if (sscanf(line, "FontScale=%f", &scale) == 1)   { window->m_fontScale   = scale; }
-        }
-
-        void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler) {
-            auto *window = reinterpret_cast<Window *>(handler->UserData);
-            auto &style  = ImGui::GetStyle();
-            auto &io     = ImGui::GetIO();
-
-            if (window->m_globalScale != 0.0f)
-                style.ScaleAllSizes(window->m_globalScale);
-            if (window->m_fontScale != 0.0f)
-                io.FontGlobalScale = window->m_fontScale;
-        }
-
-        void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
-            auto *window = reinterpret_cast<Window *>(handler->UserData);
-
-            buf->reserve(buf->size() + 0x20); // Ballpark reserve
-
-            buf->appendf("[%s][General]\n", handler->TypeName);
-            buf->appendf("Scale=%.1f\n", window->m_globalScale);
-            buf->appendf("FontScale=%.1f\n", window->m_fontScale);
-            buf->append("\n");
-        }
-
+        buf->append("\n");
     }
 
     Window::Window() {
@@ -72,6 +81,10 @@ namespace hex {
             View::getDeferedCalls().clear();
 
             for (auto &view : this->m_views) {
+                if (!view->getWindowOpenState())
+                    continue;
+
+                ImGui::SetNextWindowSizeConstraints(ImVec2(480, 720), ImVec2(FLT_MAX, FLT_MAX));
                 view->createView();
             }
 
@@ -102,54 +115,65 @@ namespace hex {
         windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
         windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-        ImGui::Begin("DockSpace", nullptr, windowFlags);
-        ImGui::PopStyleVar(2);
-        ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+        if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
+            ImGui::PopStyleVar(2);
+            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
 
-        ImGui::BeginMenuBar();
+            if (ImGui::BeginMenuBar()) {
 
-        for (auto &view : this->m_views)
-            view->createMenu();
+                for (auto menu : MenuBarItems)
+                    if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
 
-        if (ImGui::BeginMenu("View")) {
-            ImGui::Separator();
-            ImGui::MenuItem("Display FPS", "", &this->m_fpsVisible);
-            #ifdef DEBUG
-                ImGui::MenuItem("Demo View", "", &this->m_demoWindowOpen);
-            #endif
-            ImGui::EndMenu();
-        }
+                if (ImGui::BeginMenu("View")) {
+                    for (auto &view : this->m_views)
+                        ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
+                    ImGui::EndMenu();
+                }
 
-        if (this->m_fpsVisible) {
-            char buffer[0x20];
-            snprintf(buffer, 0x20, "%.1f FPS", ImGui::GetIO().Framerate);
+                for (auto &view : this->m_views) {
+                    view->createMenu();
+                }
 
-            ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetFontSize() * strlen(buffer) + 20);
-            ImGui::TextUnformatted(buffer);
-        }
+                if (ImGui::BeginMenu("View")) {
+                    ImGui::Separator();
+                    ImGui::MenuItem("Display FPS", "", &this->m_fpsVisible);
+                    #ifdef DEBUG
+                        ImGui::MenuItem("Demo View", "", &this->m_demoWindowOpen);
+                    #endif
+                    ImGui::EndMenu();
+                }
 
+                if (this->m_fpsVisible) {
+                    char buffer[0x20];
+                    snprintf(buffer, 0x20, "%.1f FPS", ImGui::GetIO().Framerate);
 
-        ImGui::EndMenuBar();
+                    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetFontSize() * strlen(buffer) + 20);
+                    ImGui::TextUnformatted(buffer);
+                }
 
-        ImGui::End();
-
-        if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
-            for (auto &view : this->m_views) {
-                if (view->handleShortcut(key, mods))
-                    break;
+                ImGui::EndMenuBar();
             }
 
-            Window::s_currShortcut = { -1, -1 };
+            if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
+                for (auto &view : this->m_views) {
+                    if (view->handleShortcut(key, mods))
+                        break;
+                }
+
+                Window::s_currShortcut = { -1, -1 };
+            }
+
         }
+        ImGui::End();
 
     }
 
     void Window::frameEnd() {
         ImGui::Render();
 
-        int display_w, display_h;
-        glfwGetFramebufferSize(this->m_window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        int displayWidth, displayHeight;
+        glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
+        glViewport(0, 0, displayWidth, displayHeight);
         glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -179,6 +203,7 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         this->m_window = glfwCreateWindow(1280, 720, "ImHex", nullptr, nullptr);
+
 
         if (this->m_window == nullptr)
             throw std::runtime_error("Failed to create window!");

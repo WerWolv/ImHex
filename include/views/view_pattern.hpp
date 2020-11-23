@@ -28,7 +28,6 @@ namespace hex {
         std::vector<lang::PatternData*> &m_patternData;
         prv::Provider* &m_dataProvider;
         std::filesystem::path m_possiblePatternFile;
-        bool m_windowOpen = true;
 
         TextEditor m_textEditor;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;

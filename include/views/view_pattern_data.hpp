@@ -23,10 +23,10 @@ namespace hex {
         void createMenu() override;
 
     private:
+
         prv::Provider* &m_dataProvider;
         std::vector<lang::PatternData*> &m_patternData;
         std::vector<lang::PatternData*> m_sortedPatternData;
-        bool m_windowOpen = true;
     };
 
 }

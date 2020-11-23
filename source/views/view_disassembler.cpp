@@ -9,7 +9,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewDisassembler::ViewDisassembler(prv::Provider* &dataProvider) : View(), m_dataProvider(dataProvider) {
+    ViewDisassembler::ViewDisassembler(prv::Provider* &dataProvider) : View("Disassembler"), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_shouldInvalidate = true;
         });
@@ -20,9 +20,6 @@ namespace hex {
     }
 
     void ViewDisassembler::createView() {
-        if (!this->m_windowOpen)
-            return;
-
         if (this->m_shouldInvalidate) {
             this->m_disassembly.clear();
 
@@ -85,7 +82,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Disassembler", &this->m_windowOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("Disassembler", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum" };
@@ -277,10 +274,7 @@ namespace hex {
     }
 
     void ViewDisassembler::createMenu() {
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Disassembler View", "", &this->m_windowOpen);
-            ImGui::EndMenu();
-        }
+
     }
 
 }

@@ -21,8 +21,6 @@ namespace hex {
         void createMenu() override;
 
     private:
-        bool m_windowOpen = true;
-
         char *m_mangledBuffer = nullptr;
         char *m_demangledName = nullptr;
 

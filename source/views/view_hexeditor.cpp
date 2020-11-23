@@ -8,7 +8,7 @@
 namespace hex {
 
     ViewHexEditor::ViewHexEditor(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
-            : View(), m_dataProvider(dataProvider), m_patternData(patternData) {
+            : View("Hex Editor"), m_dataProvider(dataProvider), m_patternData(patternData) {
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
             ViewHexEditor *_this = (ViewHexEditor *) data;
@@ -79,12 +79,9 @@ namespace hex {
     }
 
     void ViewHexEditor::createView() {
-        if (!this->m_memoryEditor.Open)
-            return;
-
         size_t dataSize = (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable()) ? 0x00 : this->m_dataProvider->getSize();
 
-        this->m_memoryEditor.DrawWindow("Hex Editor", this, dataSize, dataSize == 0 ? 0x00 : this->m_dataProvider->getBaseAddress());
+        this->m_memoryEditor.DrawWindow("Hex Editor", &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : this->m_dataProvider->getBaseAddress());
 
         if (dataSize != 0x00) {
             ImGui::Begin("Hex Editor");
@@ -421,11 +418,6 @@ R"(
             }
 
 
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Hex View", "", &this->m_memoryEditor.Open);
             ImGui::EndMenu();
         }
     }
