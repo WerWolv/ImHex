@@ -15,6 +15,7 @@ namespace hex {
     struct Disassembly {
         u64 address;
         u64 offset;
+        size_t size;
         std::string bytes;
         std::string opcodeString;
     };

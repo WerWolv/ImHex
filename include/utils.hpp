@@ -136,4 +136,9 @@ namespace hex {
     private:
         std::function<void()> m_func;
     };
+
+    struct Region {
+        u64 address;
+        size_t size;
+    };
 }

@@ -56,6 +56,19 @@ namespace hex {
             if (filePath != nullptr)
                 this->openFile(filePath);
         });
+
+        View::subscribeEvent(Events::SelectionChangeRequest, [this](const void *userData) {
+            const Region &region = *reinterpret_cast<const Region*>(userData);
+
+            auto page = this->m_dataProvider->getPageOfAddress(region.address);
+            if (!page.has_value())
+                return;
+
+            this->m_dataProvider->setCurrentPage(page.value());
+            this->m_memoryEditor.GotoAddr = region.address;
+            this->m_memoryEditor.DataPreviewAddr = region.address;
+            this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
+        });
     }
 
     ViewHexEditor::~ViewHexEditor() {

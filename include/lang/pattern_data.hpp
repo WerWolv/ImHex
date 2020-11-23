@@ -13,6 +13,8 @@
 
 namespace hex::lang {
 
+    using namespace ::std::literals::string_literals;
+
     namespace {
 
         std::string makeDisplayable(u8 *data, size_t size) {
@@ -131,6 +133,11 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
             ImGui::TableNextColumn();
+            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                Region selectRegion = { this->getOffset(), this->getSize() };
+                View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+            }
+            ImGui::SameLine();
             ImGui::Text("%s", this->getName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);

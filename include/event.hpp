@@ -9,7 +9,9 @@ namespace hex {
         DataChanged,
         PatternChanged,
         FileDropped,
-        ByteSelected
+        ByteSelected,
+
+        SelectionChangeRequest
     };
 
     struct EventHandler {

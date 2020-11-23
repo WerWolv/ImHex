@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <cmath>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,15 @@ namespace hex::prv {
 
         virtual size_t getSize() {
             return std::min(this->getActualSize() - PageSize * this->m_currPage, PageSize);
+        }
+
+        virtual std::optional<u32> getPageOfAddress(u64 address) {
+            u32 page = std::floor(address / double(PageSize));
+
+            if (page >= this->getPageCount())
+                return { };
+
+            return page;
         }
 
         virtual std::vector<std::pair<std::string, std::string>> getDataInformation() = 0;

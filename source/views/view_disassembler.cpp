@@ -59,6 +59,7 @@ namespace hex {
                         Disassembly disassembly = { 0 };
                         disassembly.address = instructions[instr].address;
                         disassembly.offset = this->m_codeOffset + address + usedBytes;
+                        disassembly.size = instructions[instr].size;
                         disassembly.opcodeString = instructions[instr].mnemonic + "  "s + instructions[instr].op_str;
 
                         for (u8 i = 0; i < instructions[instr].size; i++)
@@ -120,6 +121,9 @@ namespace hex {
                             this->m_micoMode = false;
                             this->m_sparcV9Mode = false;
 
+                            if (this->m_modeBasicARM == cs_mode(0))
+                                this->m_modeBasicARM = CS_MODE_ARM;
+
                             if (ImGui::RadioButton("ARM mode", this->m_modeBasicARM == CS_MODE_ARM))
                                 this->m_modeBasicARM = CS_MODE_ARM;
                             ImGui::SameLine();
@@ -142,6 +146,9 @@ namespace hex {
                             this->m_modeBasicPPC = cs_mode(0);
                             this->m_sparcV9Mode = false;
 
+                            if (this->m_modeBasicMIPS == cs_mode(0))
+                                this->m_modeBasicMIPS = CS_MODE_MIPS32;
+
                             if (ImGui::RadioButton("MIPS32 mode", this->m_modeBasicMIPS == CS_MODE_MIPS32))
                                 this->m_modeBasicMIPS = CS_MODE_MIPS32;
                             ImGui::SameLine();
@@ -161,6 +168,9 @@ namespace hex {
                             this->m_micoMode = false;
                             this->m_sparcV9Mode = false;
 
+                            if (this->m_modeBasicX86 == cs_mode(0))
+                                this->m_modeBasicX86 = CS_MODE_16;
+
                             if (ImGui::RadioButton("16-bit mode", this->m_modeBasicX86 == CS_MODE_16))
                                 this->m_modeBasicX86 = CS_MODE_16;
                             ImGui::SameLine();
@@ -177,6 +187,9 @@ namespace hex {
                             this->m_modeBasicX86 = cs_mode(0);
                             this->m_micoMode = false;
                             this->m_sparcV9Mode = false;
+
+                            if (m_modeBasicPPC == cs_mode(0))
+                                this->m_modeBasicPPC = CS_MODE_32;
 
                             if (ImGui::RadioButton("32-bit mode", this->m_modeBasicPPC == CS_MODE_32))
                                 this->m_modeBasicPPC = CS_MODE_32;
@@ -236,6 +249,11 @@ namespace hex {
                             for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
+                                if (ImGui::Selectable(("##DisassemblyLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                    Region selectRegion = { this->m_disassembly[i].offset, this->m_disassembly[i].size };
+                                    View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+                                }
+                                ImGui::SameLine();
                                 ImGui::Text("0x%llx", this->m_disassembly[i].address);
                                 ImGui::TableNextColumn();
                                 ImGui::Text("0x%llx", this->m_disassembly[i].offset);

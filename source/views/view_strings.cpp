@@ -1,8 +1,11 @@
 #include "views/view_strings.hpp"
 
 #include "providers/provider.hpp"
+#include "utils.hpp"
 
 #include <cstring>
+
+using namespace std::literals::string_literals;
 
 namespace hex {
 
@@ -122,6 +125,11 @@ namespace hex {
 
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
+                            if (ImGui::Selectable(("##StringLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                Region selectRegion = { foundString.offset, foundString.size };
+                                View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+                            }
+                            ImGui::SameLine();
                             ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
                             ImGui::TableNextColumn();
                             ImGui::Text("0x%04lx", foundString.size);
