@@ -75,6 +75,11 @@ namespace hex {
                 view->createView();
             }
 
+            #ifdef DEBUG
+                if (this->m_demoWindowOpen)
+                    ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
+            #endif
+
             this->frameEnd();
         }
     }
@@ -107,7 +112,11 @@ namespace hex {
             view->createMenu();
 
         if (ImGui::BeginMenu("View")) {
+            ImGui::Separator();
             ImGui::MenuItem("Display FPS", "", &this->m_fpsVisible);
+            #ifdef DEBUG
+                ImGui::MenuItem("Demo View", "", &this->m_demoWindowOpen);
+            #endif
             ImGui::EndMenu();
         }
 
@@ -161,9 +170,9 @@ namespace hex {
         if (!glfwInit())
             throw std::runtime_error("Failed to initialize GLFW!");
 
-#ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+        #ifdef __APPLE__
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        #endif
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);

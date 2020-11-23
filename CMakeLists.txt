@@ -16,6 +16,9 @@ if (WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
 endif (WIN32)
 
+SET(CMAKE_CXX_FLAGS_RELEASE -DRELEASE)
+SET(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
+
 add_executable(ImHex
         source/main.cpp
         source/window.cpp
