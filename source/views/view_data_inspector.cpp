@@ -50,8 +50,8 @@ namespace hex {
             this->m_cachedData.emplace_back("uint64_t", hex::format("%llu", hex::changeEndianess(this->m_previewData.unsigned64, this->m_endianess)));
             this->m_cachedData.emplace_back("int64_t",  hex::format("%lld", hex::changeEndianess(this->m_previewData.signed64, this->m_endianess)));
 
-            this->m_cachedData.emplace_back("ANSI Character / char8_t",  hex::format("%c", hex::changeEndianess(this->m_previewData.ansiChar, this->m_endianess)));
-            this->m_cachedData.emplace_back("Wide Character / char16_t",  hex::format("%lc", hex::changeEndianess(this->m_previewData.wideChar, this->m_endianess)));
+            this->m_cachedData.emplace_back("ASCII Character",  hex::format("'%s'", makePrintable(this->m_previewData.ansiChar).c_str()));
+            this->m_cachedData.emplace_back("Wide Character",  hex::format("'%lc'", this->m_previewData.wideChar == 0 ? '\x01' : hex::changeEndianess(this->m_previewData.wideChar, this->m_endianess)));
             {
                 char buffer[5] = { 0 };
                 char codepointString[5] = { 0 };
