@@ -36,9 +36,10 @@ namespace hex {
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
             for (u64 offset = 0; offset < this->m_dataProvider->getSize(); offset += buffer.size()) {
-                this->m_dataProvider->read(offset,  buffer.data(), buffer.size());
+                size_t readSize = std::min(buffer.size(), this->m_dataProvider->getSize() - offset);
+                this->m_dataProvider->read(offset,  buffer.data(), readSize);
 
-                for (u32 i = 0; i < buffer.size(); i++) {
+                for (u32 i = 0; i < readSize; i++) {
                     if (buffer[i] >= 0x20 && buffer[i] <= 0x7E)
                         foundCharacters++;
                     else {
