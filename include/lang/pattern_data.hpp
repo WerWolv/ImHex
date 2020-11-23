@@ -181,7 +181,7 @@ namespace hex::lang {
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
             ImGui::TableNextColumn();
@@ -340,7 +340,7 @@ namespace hex::lang {
             : PatternData(Type::Array, offset, size, name, color), m_entries(entries) { }
 
         void createEntry(prv::Provider* &provider) override {
-            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
             ImGui::TableNextColumn();
@@ -385,7 +385,7 @@ namespace hex::lang {
                 : PatternData(Type::Struct, offset, size, name, color), m_structName(structName), m_members(members), m_sortedMembers(members) { }
 
         void createEntry(prv::Provider* &provider) override {
-            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
             ImGui::TableNextColumn();
@@ -444,7 +444,7 @@ namespace hex::lang {
                 : PatternData(Type::Union, offset, size, name, color), m_unionName(unionName), m_members(members), m_sortedMembers(members) { }
 
         void createEntry(prv::Provider* &provider) override {
-            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
             ImGui::TableNextColumn();
@@ -543,7 +543,7 @@ namespace hex::lang {
             provider->read(this->getOffset(), &value, this->getSize());
             value = hex::changeEndianess(value, this->getSize(), PatternData::s_endianess);
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(0x00FFFFFF), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
             ImGui::TableNextColumn();

@@ -74,7 +74,7 @@ namespace hex {
 
                 if (ImGui::BeginTable("##strings", 3,
                                       ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
-                                      ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
+                                      ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
                     ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
                     ImGui::TableSetupColumn("String", 0, -1, ImGui::GetID("string"));
@@ -120,7 +120,7 @@ namespace hex {
                                 foundString.string.find(this->m_filter) == std::string::npos)
                                 continue;
 
-                            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+                            ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
                             ImGui::TableNextColumn();

@@ -222,7 +222,7 @@ namespace hex {
                 ImGui::NewLine();
 
                 if (ImGui::BeginChild("##scrolling")) {
-                    if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
+                    if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Reorderable)) {
                         ImGui::TableSetupColumn("Address");
                         ImGui::TableSetupColumn("Offset");
                         ImGui::TableSetupColumn("Bytes");
