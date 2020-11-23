@@ -129,16 +129,16 @@ namespace hex::lang {
     protected:
         void createDefaultEntry(std::string value) {
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
-            ImGui::TableNextColumn();
-            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
                 View::postEvent(Events::SelectionChangeRequest, &selectRegion);
             }
             ImGui::SameLine();
             ImGui::Text("%s", this->getName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -190,9 +190,9 @@ namespace hex::lang {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
-            ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -349,9 +349,9 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
-            ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -402,9 +402,8 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
-            ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -461,9 +460,8 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
-            ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -540,14 +538,14 @@ namespace hex::lang {
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
-            ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
                 View::postEvent(Events::SelectionChangeRequest, &selectRegion);
             }
             ImGui::SameLine();
             ImGui::Text("%s", this->getName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -579,9 +577,8 @@ namespace hex::lang {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(0x00FFFFFF), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaPreview);
-            ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TableNextColumn();
             ImGui::TableNextColumn();
             ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -597,9 +594,9 @@ namespace hex::lang {
                     ImGui::TableNextRow();
                     ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
                     ImGui::TableNextColumn();
-                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip);
-                    ImGui::TableNextColumn();
                     ImGui::Text("%s", entryName.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
                     ImGui::TableNextColumn();
                     ImGui::Text("0x%08lx : 0x%08lx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3) - 1);
                     ImGui::TableNextColumn();

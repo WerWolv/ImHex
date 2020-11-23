@@ -18,10 +18,10 @@ namespace hex {
     }
 
     static bool beginPatternDataTable(prv::Provider* &provider, const std::vector<lang::PatternData*> &patterns, std::vector<lang::PatternData*> &sortedPatterns) {
-        if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_ScrollY)) {
+        if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
             ImGui::TableSetupColumn("Name", 0, -1, ImGui::GetID("name"));
+            ImGui::TableSetupColumn("Color", 0, -1, ImGui::GetID("color"));
             ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
             ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
             ImGui::TableSetupColumn("Type", 0, -1, ImGui::GetID("type"));

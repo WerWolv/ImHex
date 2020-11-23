@@ -205,8 +205,7 @@ namespace hex {
         io.ConfigViewportsNoTaskBarIcon = true;
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
-        style.WindowRounding = 0.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        style.IndentSpacing = 10.0F;
 
         // Install custom settings handler
         ImGuiSettingsHandler handler;
