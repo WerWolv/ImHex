@@ -11,7 +11,6 @@
 
 #ifdef __MINGW32__
 #include <winsock.h>
-#include <cxxabi.h>
 
 #else
 #include <arpa/inet.h>
