@@ -23,6 +23,21 @@ namespace hex {
         delete[] this->m_filter;
     }
 
+
+    static void createStringContextMenu(const FoundString &foundString) {
+        if (ImGui::TableGetHoveredColumn() == 2  && ImGui::IsMouseReleased(1))
+            ImGui::OpenPopup("StringContextMenu");
+        if (ImGui::BeginPopup("StringContextMenu")) {
+            if (ImGui::MenuItem("Copy string"))
+                ImGui::SetClipboardText(foundString.string.c_str());
+            ImGui::Separator();
+            if (ImGui::MenuItem("Copy demangled string"))
+                ImGui::SetClipboardText(demangleItaniumSymbol(foundString.string).c_str());
+            ImGui::EndPopup();
+        }
+    }
+
+
     void ViewStrings::createView() {
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
@@ -131,6 +146,10 @@ namespace hex {
                             ImGui::Text("0x%04lx", foundString.size);
                             ImGui::TableNextColumn();
                             ImGui::Text("%s", foundString.string.c_str());
+
+                            ImGui::PushID(i + 1);
+                            createStringContextMenu(foundString);
+                            ImGui::PopID();
                         }
                     }
                     clipper.End();

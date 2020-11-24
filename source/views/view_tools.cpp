@@ -10,10 +10,9 @@ namespace hex {
 
     ViewTools::ViewTools() : View("Tools") {
         this->m_mangledBuffer = new char[0xF'FFFF];
-        this->m_demangledName = static_cast<char*>(malloc(8));
 
         std::memset(this->m_mangledBuffer, 0x00, 0xF'FFFF);
-        strcpy(this->m_demangledName, "< ??? >");
+        this->m_demangledName = "< ??? >";
 
         this->m_regexInput = new char[0xF'FFFF];
         this->m_regexPattern = new char[0xF'FFFF];
@@ -25,7 +24,6 @@ namespace hex {
 
     ViewTools::~ViewTools() {
         delete[] this->m_mangledBuffer;
-        free(this->m_demangledName);
 
         delete[] this->m_regexInput;
         delete[] this->m_regexPattern;
@@ -34,21 +32,10 @@ namespace hex {
     void ViewTools::drawDemangler() {
         if (ImGui::CollapsingHeader("Itanium demangler")) {
             if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xF'FFFF)) {
-                size_t length = 0;
-                int status = 0;
-
-                if (this->m_demangledName != nullptr)
-                    free(this->m_demangledName);
-
-                this->m_demangledName = abi::__cxa_demangle(this->m_mangledBuffer, nullptr, &length, &status);
-
-                if (status != 0) {
-                    this->m_demangledName = static_cast<char*>(malloc(8));
-                    strcpy(this->m_demangledName, "< ??? >");
-                }
+                this->m_demangledName = demangleItaniumSymbol(this->m_mangledBuffer);
             }
 
-            ImGui::InputText("Demangled name", this->m_demangledName, strlen(this->m_demangledName), ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputText("Demangled name", this->m_demangledName.data(), this->m_demangledName.size(), ImGuiInputTextFlags_ReadOnly);
             ImGui::NewLine();
         }
     }

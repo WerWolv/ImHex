@@ -116,6 +116,8 @@ namespace hex {
             this->drawGotoPopup();
         }
 
+
+
         if (this->m_fileBrowser.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
             this->openFile(this->m_fileBrowser.selected_path);
         }

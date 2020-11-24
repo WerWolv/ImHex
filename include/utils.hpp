@@ -11,6 +11,8 @@
 
 #ifdef __MINGW32__
 #include <winsock.h>
+#include <cxxabi.h>
+
 #else
 #include <arpa/inet.h>
 #endif
@@ -161,6 +163,24 @@ namespace hex {
             case 127: return "DEL";
             default:  return std::string() + c;
         }
+    }
+
+    inline std::string demangleItaniumSymbol(const std::string &mangledSymbol) {
+        size_t length = 0;
+        int status = 0;
+        char *demangledSymbol = abi::__cxa_demangle(mangledSymbol.c_str(), nullptr, &length, &status);
+
+        if (demangledSymbol == nullptr)
+            return "< ??? >";
+
+        std::string result = demangledSymbol;
+
+        free(demangledSymbol);
+
+        if (status != 0)
+            result = "< ??? >";
+
+        return result;
     }
 
 

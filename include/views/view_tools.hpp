@@ -22,7 +22,7 @@ namespace hex {
 
     private:
         char *m_mangledBuffer = nullptr;
-        char *m_demangledName = nullptr;
+        std::string m_demangledName;
 
         bool m_asciiTableShowOctal = false;
 
