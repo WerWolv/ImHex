@@ -6,10 +6,16 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 pkg_search_module(GLM REQUIRED glm)
+pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
+find_package(LLVM REQUIRED CONFIG)
 
-include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
+llvm_map_components_to_libnames(demangler)
+
+include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
+add_definitions(${LLVM_DEFINITIONS})
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
 
 if (WIN32)
@@ -58,10 +64,12 @@ add_executable(ImHex
         resource.rc
         )
 
+llvm_map_components_to_libnames(LLVM_LIBRARIES Demangle)
+
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${LLVM_LIBRARIES})
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${LLVM_LIBRARIES})
 endif (UNIX)

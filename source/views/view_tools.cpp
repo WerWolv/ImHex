@@ -1,10 +1,11 @@
 #include "views/view_tools.hpp"
 
-#include <cxxabi.h>
 #include <cstring>
 #include <regex>
 
 #include "utils.hpp"
+
+#include <llvm/Demangle/Demangle.h>
 
 namespace hex {
 
@@ -30,9 +31,9 @@ namespace hex {
     }
 
     void ViewTools::drawDemangler() {
-        if (ImGui::CollapsingHeader("Itanium demangler")) {
+        if (ImGui::CollapsingHeader("Itanium/MSVC demangler")) {
             if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xF'FFFF)) {
-                this->m_demangledName = demangleItaniumSymbol(this->m_mangledBuffer);
+                this->m_demangledName = llvm::demangle(this->m_mangledBuffer);
             }
 
             ImGui::InputText("Demangled name", this->m_demangledName.data(), this->m_demangledName.size(), ImGuiInputTextFlags_ReadOnly);

@@ -165,25 +165,6 @@ namespace hex {
         }
     }
 
-    inline std::string demangleItaniumSymbol(const std::string &mangledSymbol) {
-        size_t length = 0;
-        int status = 0;
-        char *demangledSymbol = abi::__cxa_demangle(mangledSymbol.c_str(), nullptr, &length, &status);
-
-        if (demangledSymbol == nullptr)
-            return "< ??? >";
-
-        std::string result = demangledSymbol;
-
-        free(demangledSymbol);
-
-        if (status != 0)
-            result = "< ??? >";
-
-        return result;
-    }
-
-
     class ScopeExit {
     public:
         ScopeExit(std::function<void()> func) : m_func(func) {}

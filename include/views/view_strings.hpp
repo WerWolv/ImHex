@@ -30,6 +30,11 @@ namespace hex {
         std::vector<FoundString> m_foundStrings;
         int m_minimumLength = 5;
         char *m_filter;
+
+        std::string m_selectedString;
+        std::string m_demangledName;
+
+        void createStringContextMenu(const FoundString &foundString);
     };
 
 }

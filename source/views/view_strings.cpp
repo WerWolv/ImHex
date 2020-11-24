@@ -5,6 +5,8 @@
 
 #include <cstring>
 
+#include <llvm/Demangle/Demangle.h>
+
 using namespace std::literals::string_literals;
 
 namespace hex {
@@ -24,15 +26,21 @@ namespace hex {
     }
 
 
-    static void createStringContextMenu(const FoundString &foundString) {
-        if (ImGui::TableGetHoveredColumn() == 2  && ImGui::IsMouseReleased(1))
+    void ViewStrings::createStringContextMenu(const FoundString &foundString) {
+        if (ImGui::TableGetHoveredColumn() == 2  && ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
             ImGui::OpenPopup("StringContextMenu");
+            this->m_selectedString = foundString.string;
+        }
         if (ImGui::BeginPopup("StringContextMenu")) {
-            if (ImGui::MenuItem("Copy string"))
-                ImGui::SetClipboardText(foundString.string.c_str());
+            if (ImGui::MenuItem("Copy string")) {
+                ImGui::SetClipboardText(this->m_selectedString.c_str());
+            }
             ImGui::Separator();
-            if (ImGui::MenuItem("Copy demangled string"))
-                ImGui::SetClipboardText(demangleItaniumSymbol(foundString.string).c_str());
+            if (ImGui::MenuItem("Demangle")) {
+                this->m_demangledName = llvm::demangle(this->m_selectedString);
+                if (!this->m_demangledName.empty())
+                    View::doLater([]{ ImGui::OpenPopup("Demangled Name"); });
+            }
             ImGui::EndPopup();
         }
     }
@@ -140,16 +148,15 @@ namespace hex {
                                 Region selectRegion = { foundString.offset, foundString.size };
                                 View::postEvent(Events::SelectionChangeRequest, &selectRegion);
                             }
+                            ImGui::PushID(i + 1);
+                            createStringContextMenu(foundString);
+                            ImGui::PopID();
                             ImGui::SameLine();
                             ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
                             ImGui::TableNextColumn();
                             ImGui::Text("0x%04lx", foundString.size);
                             ImGui::TableNextColumn();
                             ImGui::Text("%s", foundString.string.c_str());
-
-                            ImGui::PushID(i + 1);
-                            createStringContextMenu(foundString);
-                            ImGui::PopID();
                         }
                     }
                     clipper.End();
@@ -159,6 +166,19 @@ namespace hex {
             }
         }
         ImGui::End();
+
+        if (ImGui::BeginPopup("Demangled Name")) {
+            if (ImGui::BeginChild("##scrolling", ImVec2(500, 150))) {
+                ImGui::Text("Demangled Name");
+                ImGui::Separator();
+                ImGui::TextWrapped("%s", this->m_demangledName.c_str());
+                ImGui::EndChild();
+                ImGui::NewLine();
+                if (ImGui::Button("Copy"))
+                    ImGui::SetClipboardText(this->m_demangledName.c_str());
+            }
+            ImGui::EndPopup();
+        }
     }
 
     void ViewStrings::createMenu() {
