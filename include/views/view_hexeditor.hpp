@@ -45,11 +45,14 @@ namespace hex {
 
         s64 m_gotoAddress = 0;
 
+        std::vector<u8> m_importData;
 
         void drawSearchPopup();
         void drawGotoPopup();
 
         void openFile(std::string path);
+        bool saveToFile(std::string path, const std::vector<u8>& data);
+        bool loadFromFile(std::string path, std::vector<u8>& data);
 
         enum class Language { C, Cpp, CSharp, Rust, Python, Java, JavaScript };
         void copyBytes();

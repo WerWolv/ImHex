@@ -6,6 +6,8 @@
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
+#include <openssl/evp.h>
+
 #include <array>
 #include <span>
 
@@ -213,6 +215,26 @@ namespace hex {
         SHA512_Final(reinterpret_cast<u8*>(result.data()), &ctx);
 
         return result;
+    }
+
+    std::vector<u8> decode64(const std::vector<u8> &input) {
+        size_t outputSize = (3 * input.size()) / 4;
+        std::vector<u8> output(outputSize + 1, 0x00);
+
+        if (EVP_DecodeBlock(output.data(), reinterpret_cast<const unsigned char *>(input.data()), input.size()) != outputSize)
+            return { };
+
+        return output;
+    }
+
+    std::vector<u8> encode64(const std::vector<u8> &input) {
+        size_t outputSize = 4 * ((input.size() + 2) / 3);
+        std::vector<u8> output(outputSize + 1, 0x00);
+
+        if (EVP_EncodeBlock(output.data(), reinterpret_cast<const unsigned char *>(input.data()), input.size()) != outputSize)
+            return { };
+
+        return output;
     }
 
 }

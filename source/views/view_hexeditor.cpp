@@ -5,6 +5,11 @@
 
 #include <GLFW/glfw3.h>
 
+#include "crypto.hpp"
+
+#undef __STRICT_ANSI__
+#include <cstdio>
+
 namespace hex {
 
     ViewHexEditor::ViewHexEditor(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
@@ -115,7 +120,112 @@ namespace hex {
             this->openFile(this->m_fileBrowser.selected_path);
         }
 
+        if (this->m_fileBrowser.showFileDialog("Open Base64 File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
+            std::vector<u8> base64;
+            this->loadFromFile(this->m_fileBrowser.selected_path, base64);
+
+            if (!base64.empty()) {
+                this->m_importData = decode64(base64);
+                ImGui::OpenPopup("Save File");
+            }
+
+        }
+
+        if (this->m_fileBrowser.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
+            this->saveToFile(this->m_fileBrowser.selected_path, this->m_importData);
+            this->openFile(this->m_fileBrowser.selected_path);
+        }
+
     }
+
+    void ViewHexEditor::createMenu() {
+
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open File...", "CTRL + O")) {
+                View::doLater([]{ ImGui::OpenPopup("Open File"); });
+            }
+
+            if (ImGui::BeginMenu("Import...")) {
+                if (ImGui::MenuItem("Base64 File")) {
+                    View::doLater([]{ ImGui::OpenPopup("Open Base64 File"); });
+                }
+
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Search", "CTRL + F")) {
+                View::doLater([]{ ImGui::OpenPopup("Search"); });
+            }
+
+            if (ImGui::MenuItem("Goto", "CTRL + G")) {
+                View::doLater([]{ ImGui::OpenPopup("Goto"); });
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::BeginMenu("Copy as...", this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
+                if (ImGui::MenuItem("Bytes", "CTRL + ALT + C"))
+                    this->copyBytes();
+                if (ImGui::MenuItem("Hex String", "CTRL + SHIFT + C"))
+                    this->copyString();
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("C Array"))
+                    this->copyLanguageArray(Language::C);
+                if (ImGui::MenuItem("C++ Array"))
+                    this->copyLanguageArray(Language::Cpp);
+                if (ImGui::MenuItem("C# Array"))
+                    this->copyLanguageArray(Language::CSharp);
+                if (ImGui::MenuItem("Rust Array"))
+                    this->copyLanguageArray(Language::Rust);
+                if (ImGui::MenuItem("Python Array"))
+                    this->copyLanguageArray(Language::Python);
+                if (ImGui::MenuItem("Java Array"))
+                    this->copyLanguageArray(Language::Java);
+                if (ImGui::MenuItem("JavaScript Array"))
+                    this->copyLanguageArray(Language::JavaScript);
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Editor View"))
+                    this->copyHexView();
+                if (ImGui::MenuItem("HTML"))
+                    this->copyHexViewHTML();
+
+                ImGui::EndMenu();
+            }
+
+
+            ImGui::EndMenu();
+        }
+    }
+
+    bool ViewHexEditor::handleShortcut(int key, int mods) {
+        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
+            ImGui::OpenPopup("Search");
+            return true;
+        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
+            ImGui::OpenPopup("Goto");
+            return true;
+        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
+            ImGui::OpenPopup("Open File");
+            return true;
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
+            this->copyBytes();
+            return true;
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_C) {
+            this->copyString();
+            return true;
+        }
+
+        return false;
+    }
+
 
     void ViewHexEditor::openFile(std::string path) {
         if (this->m_dataProvider != nullptr)
@@ -123,6 +233,35 @@ namespace hex {
 
         this->m_dataProvider = new prv::FileProvider(path);
         View::postEvent(Events::DataChanged);
+    }
+
+    bool ViewHexEditor::saveToFile(std::string path, const std::vector<u8>& data) {
+        FILE *file = fopen(path.c_str(), "wb");
+
+        if (file == nullptr)
+            return false;
+
+        fwrite(data.data(), 1, data.size(), file);
+        fclose(file);
+
+        return true;
+    }
+
+    bool ViewHexEditor::loadFromFile(std::string path, std::vector<u8>& data) {
+        FILE *file = fopen(path.c_str(), "rb");
+
+        if (file == nullptr)
+            return false;
+
+        fseek(file, 0, SEEK_END);
+        size_t size = ftello64(file);
+        rewind(file);
+
+        data.resize(size);
+        fread(data.data(), 1, data.size(), file);
+        fclose(file);
+
+        return true;
     }
 
     void ViewHexEditor::copyBytes() {
@@ -362,87 +501,6 @@ R"(
 
         ImGui::SetClipboardText(str.c_str());
     }
-
-    void ViewHexEditor::createMenu() {
-
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open File...", "CTRL + O")) {
-                View::doLater([]{ ImGui::OpenPopup("Open File"); });
-            }
-
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("Search", "CTRL + F")) {
-                View::doLater([]{ ImGui::OpenPopup("Search"); });
-            }
-
-            if (ImGui::MenuItem("Goto", "CTRL + G")) {
-                View::doLater([]{ ImGui::OpenPopup("Goto"); });
-            }
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::BeginMenu("Copy as...", this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-                if (ImGui::MenuItem("Bytes", "CTRL + ALT + C"))
-                    this->copyBytes();
-                if (ImGui::MenuItem("Hex String", "CTRL + SHIFT + C"))
-                    this->copyString();
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("C Array"))
-                    this->copyLanguageArray(Language::C);
-                if (ImGui::MenuItem("C++ Array"))
-                    this->copyLanguageArray(Language::Cpp);
-                if (ImGui::MenuItem("C# Array"))
-                    this->copyLanguageArray(Language::CSharp);
-                if (ImGui::MenuItem("Rust Array"))
-                    this->copyLanguageArray(Language::Rust);
-                if (ImGui::MenuItem("Python Array"))
-                    this->copyLanguageArray(Language::Python);
-                if (ImGui::MenuItem("Java Array"))
-                    this->copyLanguageArray(Language::Java);
-                if (ImGui::MenuItem("JavaScript Array"))
-                    this->copyLanguageArray(Language::JavaScript);
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("Editor View"))
-                    this->copyHexView();
-                if (ImGui::MenuItem("HTML"))
-                    this->copyHexViewHTML();
-
-                ImGui::EndMenu();
-            }
-
-
-            ImGui::EndMenu();
-        }
-    }
-
-    bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
-            ImGui::OpenPopup("Search");
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
-            ImGui::OpenPopup("Goto");
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-            ImGui::OpenPopup("Open File");
-            return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
-            this->copyBytes();
-            return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_C) {
-            this->copyString();
-            return true;
-        }
-
-        return false;
-    }
-
 
     static std::vector<std::pair<u64, u64>> findString(prv::Provider* &provider, std::string string) {
         std::vector<std::pair<u64, u64>> results;
