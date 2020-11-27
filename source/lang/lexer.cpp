@@ -131,6 +131,37 @@ namespace hex::lang {
             } else if (c == '*') {
                 tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Star } });
                 offset += 1;
+            } else if (c == '\'') {
+                offset += 1;
+
+                if (offset >= code.length())
+                    return { ResultLexicalError, { } };
+
+                char character = code[offset];
+
+                if (character == '\\') {
+                    offset += 1;
+
+                    if (offset >= code.length())
+                        return { ResultLexicalError, { } };
+
+                    if (code[offset] != '\\' && code[offset] != '\'')
+                        return { ResultLexicalError, { } };
+
+                    character = code[offset];
+                } else {
+                    if (code[offset] == '\\' || code[offset] == '\'')
+                        return { ResultLexicalError, { } };
+                }
+
+                offset += 1;
+
+                if (offset >= code.length() || code[offset] != '\'')
+                    return { ResultLexicalError, { } };
+
+                tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = character } });
+                offset += 1;
+
             } else if (std::isalpha(c)) {
                 std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 

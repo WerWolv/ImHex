@@ -48,6 +48,8 @@ namespace hex {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
                 else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
                     paletteIndex = TextEditor::PaletteIndex::Number;
+                else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd))
+                    paletteIndex = TextEditor::PaletteIndex::CharLiteral;
 
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
