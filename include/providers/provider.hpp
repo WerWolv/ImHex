@@ -26,10 +26,10 @@ namespace hex::prv {
         virtual bool isWritable() = 0;
 
         virtual void read(u64 offset, void *buffer, size_t size) { this->readRaw(offset, buffer, size); }
-        virtual void write(u64 offset, void *buffer, size_t size) { this->writeRaw(offset, buffer, size); }
+        virtual void write(u64 offset, const void *buffer, size_t size) { this->writeRaw(offset, buffer, size); }
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
-        virtual void writeRaw(u64 offset, void *buffer, size_t size) = 0;
+        virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
         virtual size_t getActualSize() = 0;
 
         const std::map<u64, u8>& getPatches() { return this->m_patches.back(); }

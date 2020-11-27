@@ -74,7 +74,7 @@ namespace hex {
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
-        View::subscribeEvent(Events::DataChanged, [this](const void* userData) {
+        View::subscribeEvent(Events::FileLoaded, [this](const void* userData) {
             lang::Preprocessor preprocessor;
 
             std::string magicFiles;
@@ -85,7 +85,7 @@ namespace hex {
                     magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
             }
 
-            std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFF'FFFF)), 0x00);
+            std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFFFF)), 0x00);
             this->m_dataProvider->read(0, buffer.data(), buffer.size());
 
             std::string mimeType;

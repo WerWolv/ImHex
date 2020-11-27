@@ -6,6 +6,7 @@
 namespace hex {
 
     enum class Events {
+        FileLoaded,
         DataChanged,
         PatternChanged,
         FileDropped,
