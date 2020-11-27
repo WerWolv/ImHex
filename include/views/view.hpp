@@ -30,6 +30,28 @@ namespace hex {
             View::s_eventManager.post(eventType, userData);
         }
 
+        static void drawCommonInterfaces() {
+            if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::NewLine();
+                if (ImGui::BeginChild("##scrolling", ImVec2(300, 100))) {
+                    ImGui::SetCursorPosX((300 - ImGui::CalcTextSize(View::s_errorMessage.c_str(), nullptr, false).x) / 2.0F);
+                    ImGui::TextWrapped("%s", View::s_errorMessage.c_str());
+                    ImGui::EndChild();
+                }
+                ImGui::NewLine();
+                ImGui::SetCursorPosX(75);
+                if (ImGui::Button("Okay", ImVec2(150, 20)))
+                    ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
+            }
+        }
+
+        static void showErrorPopup(std::string_view errorMessage) {
+            View::s_errorMessage = errorMessage;
+
+            ImGui::OpenPopup("Error");
+        }
+
         bool& getWindowOpenState() {
             return this->m_windowOpen;
         }
@@ -59,6 +81,8 @@ namespace hex {
 
         static inline EventManager s_eventManager;
         static inline std::vector<std::function<void()>> s_deferedCalls;
+
+        static inline std::string s_errorMessage;
     };
 
 }

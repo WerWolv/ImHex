@@ -88,6 +88,8 @@ namespace hex {
                 view->createView();
             }
 
+            View::drawCommonInterfaces();
+
             #ifdef DEBUG
                 if (this->m_demoWindowOpen)
                     ImGui::ShowDemoWindow(&this->m_demoWindowOpen);

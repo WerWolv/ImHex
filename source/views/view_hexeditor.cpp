@@ -262,6 +262,7 @@ namespace hex {
 
         this->m_dataProvider = new prv::FileProvider(path);
         this->m_memoryEditor.ReadOnly = !this->m_dataProvider->isWritable();
+        View::postEvent(Events::FileLoaded);
         View::postEvent(Events::DataChanged);
     }
 
