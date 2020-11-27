@@ -129,15 +129,39 @@ namespace hex {
 
             if (!base64.empty()) {
                 this->m_dataToSave = decode64(base64);
-                ImGui::OpenPopup("Save Data");
-            }
+
+                if (this->m_dataToSave.empty())
+                    View::showErrorPopup("File is not in a valid Base64 format!");
+                else
+                    ImGui::OpenPopup("Save Data");
+            } else View::showErrorPopup("Failed to open file!");
 
         }
 
-        if (this->m_fileBrowser.showFileDialog("Save Data", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
+        if (this->m_fileBrowser.showFileDialog("Export File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
             this->saveToFile(this->m_fileBrowser.selected_path, this->m_dataToSave);
         }
 
+        if (this->m_fileBrowser.showFileDialog("Save As", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
+            FILE *file = fopen(this->m_fileBrowser.selected_path.c_str(), "wb");
+
+            if (file != nullptr) {
+                std::vector<u8> buffer(0xFF'FFFF, 0x00);
+                size_t bufferSize = buffer.size();
+
+                fseek(file, 0, SEEK_SET);
+
+                for (u64 offset = 0; offset < this->m_dataProvider->getActualSize(); offset += bufferSize) {
+                    if (bufferSize > this->m_dataProvider->getActualSize() - offset)
+                        bufferSize = this->m_dataProvider->getActualSize() - offset;
+
+                    this->m_dataProvider->read(offset, buffer.data(), bufferSize);
+                    fwrite(buffer.data(), 1, bufferSize, file);
+                }
+
+                fclose(file);
+            }
+        }
     }
 
     void ViewHexEditor::createMenu() {
@@ -145,6 +169,15 @@ namespace hex {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {
                 View::doLater([]{ ImGui::OpenPopup("Open File"); });
+            }
+
+            if (ImGui::MenuItem("Save", "CTRL + S", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
+                for (const auto &[address, value] : this->m_dataProvider->getPatches())
+                    this->m_dataProvider->writeRaw(address, &value, sizeof(u8));
+            }
+
+            if (ImGui::MenuItem("Save As...", "CTRL + SHIFT + S", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
+                View::doLater([]{ ImGui::OpenPopup("Save As"); });
             }
 
             if (ImGui::BeginMenu("Import...")) {
@@ -155,7 +188,7 @@ namespace hex {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Export...")) {
+            if (ImGui::BeginMenu("Export...", this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
                 if (ImGui::MenuItem("IPS Patch")) {
                     Patches patches = this->m_dataProvider->getPatches();
                     if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
@@ -165,7 +198,7 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPSPatch(patches);
-                    View::doLater([]{ ImGui::OpenPopup("Save Data"); });
+                    View::doLater([]{ ImGui::OpenPopup("Export File"); });
                 }
                 if (ImGui::MenuItem("IPS32 Patch")) {
                     Patches patches = this->m_dataProvider->getPatches();
@@ -176,11 +209,13 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPS32Patch(patches);
-                    View::doLater([]{ ImGui::OpenPopup("Save Data"); });
+                    View::doLater([]{ ImGui::OpenPopup("Export File"); });
                 }
 
                 ImGui::EndMenu();
             }
+
+
 
             ImGui::Separator();
 
@@ -235,7 +270,14 @@ namespace hex {
     }
 
     bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
+        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S) {
+            for (const auto &[address, value] : this->m_dataProvider->getPatches())
+                this->m_dataProvider->writeRaw(address, &value, sizeof(u8));
+            return true;
+        } else if (mods == GLFW_MOD_CONTROL | GLFW_MOD_SHIFT && key == GLFW_KEY_S) {
+            ImGui::OpenPopup("Save As");
+            return true;
+        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
             ImGui::OpenPopup("Search");
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
