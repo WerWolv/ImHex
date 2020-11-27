@@ -15,6 +15,11 @@ namespace hex::lang {
         Validator();
 
         bool validate(const std::vector<ASTNode*>& ast);
+
+        const std::pair<u32, std::string>& getError() { return this->m_error; }
+
+    private:
+        std::pair<u32, std::string> m_error;
     };
 
 }

@@ -19,11 +19,14 @@ namespace hex::lang {
 
         std::pair<Result, std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
+        const std::pair<u32, std::string>& getError() { return this->m_error; }
+
     private:
         std::unordered_map<std::string, ASTNode*> m_types;
         prv::Provider* &m_provider;
         std::endian m_dataEndianess;
 
+        std::pair<u32, std::string> m_error;
 
         std::pair<PatternData*, size_t> createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);

@@ -8,6 +8,7 @@ namespace hex::lang {
 
     std::pair<Result, std::string> Preprocessor::preprocess(const std::string& code, bool initialRun) {
         u32 offset = 0;
+        u32 lineNumber = 1;
 
         if (initialRun) {
             this->m_defines.clear();
@@ -136,6 +137,9 @@ namespace hex::lang {
                     return { ResultPreprocessingError, "" };
             }
 
+            if (code[offset] == '\n')
+                lineNumber++;
+
             output += code[offset];
             offset += 1;
         }
@@ -168,7 +172,7 @@ namespace hex::lang {
             this->m_pragmaHandlers.emplace(pragmaType, function);
     }
 
-    void Preprocessor::addDefaultPragramHandlers() {
+    void Preprocessor::addDefaultPragmaHandlers() {
         this->addPragmaHandler("MIME", [](std::string value) {
             return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
         });

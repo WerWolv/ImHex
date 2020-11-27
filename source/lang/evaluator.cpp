@@ -14,8 +14,10 @@ namespace hex::lang {
 
         auto structNode = static_cast<ASTNodeStruct*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
 
-        if (structNode == nullptr)
+        if (structNode == nullptr) {
+            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
             return { nullptr, 0 };
+        }
 
         size_t structSize = 0;
         for (const auto &node : structNode->getNodes()) {
@@ -62,10 +64,12 @@ namespace hex::lang {
                     }
                 }
 
-                if (!arraySize.has_value())
+                if (!arraySize.has_value()) {
+                    this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a previous member of '%s'", member->getArraySizeVariable().value().c_str(), varDeclNode->getCustomVariableTypeName().c_str()) };
                     return { nullptr, 0 };
+                }
 
-                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
+                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getLineNumber(), member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
 
                 std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
             }
@@ -97,8 +101,10 @@ namespace hex::lang {
 
         auto unionNode = static_cast<ASTNodeUnion*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
 
-        if (unionNode == nullptr)
+        if (unionNode == nullptr) {
+            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
             return { nullptr, 0 };
+        }
 
         size_t unionSize = 0;
         for (const auto &node : unionNode->getNodes()) {
@@ -148,10 +154,12 @@ namespace hex::lang {
                     }
                 }
 
-                if (!arraySize.has_value())
+                if (!arraySize.has_value()) {
+                    this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a previous member of '%s'", member->getArraySizeVariable().value().c_str(), varDeclNode->getCustomVariableTypeName().c_str()) };
                     return { nullptr, 0 };
+                }
 
-                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
+                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getLineNumber(), member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
 
                 std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
             }
@@ -179,12 +187,12 @@ namespace hex::lang {
     }
 
     std::pair<PatternData*, size_t> Evaluator::createEnumPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        std::vector<std::pair<u64, std::string>> enumValues;
-
         auto *enumType = static_cast<ASTNodeEnum*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
 
-        if (enumType == nullptr)
+        if (enumType == nullptr) {
+            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
             return { nullptr, 0 };
+        }
 
         size_t size = getTypeSize(enumType->getUnderlyingType());
 
@@ -195,8 +203,10 @@ namespace hex::lang {
 
         auto *bitfieldType = static_cast<ASTNodeBitField*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
 
-        if (bitfieldType == nullptr)
+        if (bitfieldType == nullptr) {
+            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
             return { nullptr, 0 };
+        }
 
         size_t size = 0;
         for (auto &[fieldName, fieldSize] : bitfieldType->getFields())
@@ -215,7 +225,7 @@ namespace hex::lang {
         size_t arrayOffset = 0;
         std::optional<u32> arrayColor;
         for (u32 i = 0; i < varDeclNode->getArraySize(); i++) {
-            ASTNodeVariableDecl *nonArrayVarDeclNode = new ASTNodeVariableDecl(varDeclNode->getVariableType(), "[" + std::to_string(i) + "]", varDeclNode->getCustomVariableTypeName(), varDeclNode->getOffset(), 1);
+            ASTNodeVariableDecl *nonArrayVarDeclNode = new ASTNodeVariableDecl(varDeclNode->getLineNumber(), varDeclNode->getVariableType(), "[" + std::to_string(i) + "]", varDeclNode->getCustomVariableTypeName(), varDeclNode->getOffset(), 1);
 
 
             if (varDeclNode->getVariableType() == Token::TypeToken::Type::Padding) {
@@ -263,8 +273,10 @@ namespace hex::lang {
     std::pair<PatternData*, size_t> Evaluator::createCustomTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
         auto &currType = this->m_types[varDeclNode->getCustomVariableTypeName()];
 
-        if (currType == nullptr)
+        if (currType == nullptr) {
+            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
             return { nullptr, 0 };
+        }
 
         switch (currType->getType()) {
             case ASTNode::Type::Struct:
@@ -286,8 +298,10 @@ namespace hex::lang {
         auto type = varDeclNode->getVariableType();
         if (type == Token::TypeToken::Type::CustomType) {
             const auto &currType =  static_cast<ASTNodeTypeDecl*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
-            if (currType == nullptr)
+            if (currType == nullptr) {
+                this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
                 return { nullptr, 0 };
+            }
 
             type = currType->getAssignedType();
         }

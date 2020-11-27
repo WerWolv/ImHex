@@ -14,6 +14,11 @@ namespace hex::lang {
         Lexer();
 
         std::pair<Result, std::vector<Token>> lex(const std::string& code);
+
+        const std::pair<u32, std::string>& getError() { return this->m_error; }
+
+    private:
+        std::pair<u32, std::string> m_error;
     };
 
 }

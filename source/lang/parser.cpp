@@ -10,11 +10,7 @@ namespace hex::lang {
 
     }
 
-    using TokenIter = std::vector<Token>::const_iterator;
-
-    std::vector<ASTNode*> parseTillToken(TokenIter &curr, Token::Type endTokenType);
-
-    bool tryConsume(TokenIter &curr, std::initializer_list<Token::Type> tokenTypes) {
+    bool Parser::tryConsume(TokenIter &curr, std::initializer_list<Token::Type> tokenTypes) {
         std::vector<Token>::const_iterator originalPosition = curr;
 
         for (const auto& type : tokenTypes) {
@@ -29,63 +25,89 @@ namespace hex::lang {
     }
 
 
-    ASTNode* parseBuiltinVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-3].typeToken.type, curr[-2].identifierToken.identifier);
+    ASTNode* Parser::parseBuiltinVariableDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-3].lineNumber, curr[-3].typeToken.type, curr[-2].identifierToken.identifier);
     }
 
-    ASTNode* parseCustomTypeVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
+    ASTNode* Parser::parseCustomTypeVariableDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-3].lineNumber, Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
     }
 
-    ASTNode* parseBuiltinPointerVariableDecl(TokenIter &curr) {
+    ASTNode* Parser::parseBuiltinPointerVariableDecl(TokenIter &curr) {
         auto pointerType = curr[-2].typeToken.type;
 
-        if (!isUnsigned(pointerType) || curr[-5].operatorToken.op != Token::OperatorToken::Operator::Star || curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+        if (!isUnsigned(pointerType)) {
+            this->m_error = { curr->lineNumber, "Pointer size needs to be a unsigned type" };
             return nullptr;
+        }
 
-        return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType));
+        if (curr[-5].operatorToken.op != Token::OperatorToken::Operator::Star) {
+            this->m_error = { curr->lineNumber, "Expected '*' for pointer definition" };
+            return nullptr;
+        }
+
+        if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit) {
+            this->m_error = { curr->lineNumber, "Expected ':' after member name" };
+            return nullptr;
+        }
+
+        return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType));
     }
 
-    ASTNode* parseCustomTypePointerVariableDecl(TokenIter &curr) {
+    ASTNode* Parser::parseCustomTypePointerVariableDecl(TokenIter &curr) {
         auto pointerType = curr[-2].typeToken.type;
 
-        if (!isUnsigned(pointerType) || curr[-5].operatorToken.op != Token::OperatorToken::Operator::Star || curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+        if (!isUnsigned(pointerType)) {
+            this->m_error = { curr->lineNumber, "Pointer size needs to be a unsigned type" };
             return nullptr;
+        }
 
-        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType));
+        if (curr[-5].operatorToken.op != Token::OperatorToken::Operator::Star) {
+            this->m_error = { curr->lineNumber, "Expected '*' for pointer definition" };
+            return nullptr;
+        }
+
+        if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit) {
+            this->m_error = { curr->lineNumber, "Expected ':' after member name" };
+            return nullptr;
+        }
+
+        return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType));
     }
 
-    ASTNode* parseBuiltinArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer);
+    ASTNode* Parser::parseBuiltinArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* parseCustomTypeArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer);
+    ASTNode* Parser::parseCustomTypeArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* parseBuiltinVariableArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, 0, curr[-3].identifierToken.identifier);
+    ASTNode* Parser::parseBuiltinVariableArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, 0, curr[-3].identifierToken.identifier);
     }
 
-    ASTNode* parseCustomTypeVariableArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 0, curr[-3].identifierToken.identifier);
+    ASTNode* Parser::parseCustomTypeVariableArrayDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 0, curr[-3].identifierToken.identifier);
     }
 
-    ASTNode* parsePaddingDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-5].typeToken.type, "", "", { }, curr[-3].integerToken.integer);
+    ASTNode* Parser::parsePaddingDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-5].lineNumber, curr[-5].typeToken.type, "", "", { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer);
+    ASTNode* Parser::parseFreeBuiltinVariableDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-5].lineNumber, curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer);
     }
 
-    ASTNode* parseFreeCustomTypeVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer);
+    ASTNode* Parser::parseFreeCustomTypeVariableDecl(TokenIter &curr) {
+        return new ASTNodeVariableDecl(curr[-5].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer);
     }
 
-    ASTNode* parseStruct(TokenIter &curr) {
+    ASTNode* Parser::parseStruct(TokenIter &curr) {
         const std::string &structName = curr[-2].identifierToken.identifier;
         std::vector<ASTNode*> nodes;
+
+        u32 startLineNumber = curr[-3].lineNumber;
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
@@ -103,6 +125,8 @@ namespace hex::lang {
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression})) {
                 if (curr[-5].typeToken.type != Token::TypeToken::Type::Padding) {
                     for(auto &node : nodes) delete node;
+
+                    this->m_error = { curr[-5].lineNumber, "No member name provided" };
                     return nullptr;
                 }
                 nodes.push_back(parsePaddingDecl(curr));
@@ -110,20 +134,27 @@ namespace hex::lang {
                 nodes.push_back(parseBuiltinPointerVariableDecl(curr));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
                 nodes.push_back(parseCustomTypePointerVariableDecl(curr));
-            else break;
+            else {
+                for(auto &node : nodes) delete node;
+                this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
+                return nullptr;
+            }
         }
 
         if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
+            this->m_error = { curr->lineNumber, "Expected ';' after struct definition" };
             for(auto &node : nodes) delete node;
             return nullptr;
         }
 
-        return new ASTNodeStruct(structName, nodes);
+        return new ASTNodeStruct(startLineNumber, structName, nodes);
     }
 
-    ASTNode* parseUnion(TokenIter &curr) {
+    ASTNode* Parser::parseUnion(TokenIter &curr) {
         const std::string &unionName = curr[-2].identifierToken.identifier;
         std::vector<ASTNode*> nodes;
+
+        u32 startLineNumber = curr[-3].lineNumber;
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
@@ -138,28 +169,39 @@ namespace hex::lang {
                 nodes.push_back(parseBuiltinPointerVariableDecl(curr));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
                 nodes.push_back(parseCustomTypePointerVariableDecl(curr));
-            else break;
+            else {
+                for(auto &node : nodes) delete node;
+                this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
+                return nullptr;
+            }
         }
 
         if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
             for(auto &node : nodes) delete node;
+            this->m_error = { curr[-1].lineNumber, "Expected ';' after union definition" };
             return nullptr;
         }
 
-        return new ASTNodeUnion(unionName, nodes);
+        return new ASTNodeUnion(startLineNumber, unionName, nodes);
     }
 
-    ASTNode* parseEnum(TokenIter &curr) {
+    ASTNode* Parser::parseEnum(TokenIter &curr) {
         const std::string &enumName = curr[-4].identifierToken.identifier;
         const Token::TypeToken::Type underlyingType = curr[-2].typeToken.type;
 
-        if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
-            return nullptr;
+        u32 startLineNumber = curr[-5].lineNumber;
 
-        if ((static_cast<u32>(underlyingType) & 0x0F) != 0x00)
+        if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit) {
+            this->m_error = { curr[-3].lineNumber, "Expected ':' after enum name" };
             return nullptr;
+        }
 
-        auto enumNode = new ASTNodeEnum(underlyingType, enumName);
+        if (!isUnsigned(underlyingType)) {
+            this->m_error = { curr[-3].lineNumber, "Underlying type needs to be an unsigned type" };
+            return nullptr;
+        }
+
+        auto enumNode = new ASTNodeEnum(startLineNumber, underlyingType, enumName);
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Separator }) || tryConsume(curr, { Token::Type::Identifier, Token::Type::ScopeClose })) {
@@ -183,67 +225,83 @@ namespace hex::lang {
             }
             else {
                 delete enumNode;
+                this->m_error = { curr->lineNumber, "Expected constant identifier" };
                 return nullptr;
             }
         }
 
         if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
             delete enumNode;
+            this->m_error = { curr[-1].lineNumber, "Expected ';' after enum definition" };
             return nullptr;
         }
 
         return enumNode;
     }
 
-    ASTNode *parseBitField(TokenIter &curr) {
+    ASTNode* Parser::parseBitField(TokenIter &curr) {
         const std::string &bitfieldName = curr[-2].identifierToken.identifier;
         std::vector<std::pair<std::string, size_t>> fields;
 
+        u32 startLineNumber = curr[-3].lineNumber;
+
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
-                if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit)
+                if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::Inherit) {
+                    this->m_error = { curr[-3].lineNumber, "Expected ':' after member name" };
                     return nullptr;
+                }
 
                 fields.emplace_back(curr[-4].identifierToken.identifier, curr[-2].integerToken.integer);
             }
-            else break;
+            else {
+                this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
+                return nullptr;
+            }
         }
 
-        if (!tryConsume(curr, {Token::Type::EndOfExpression}))
+        if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
+            this->m_error = { curr[-1].lineNumber, "Expected ';' after bitfield definition" };
             return nullptr;
+        }
 
-        return new ASTNodeBitField(bitfieldName, fields);
+        return new ASTNodeBitField(startLineNumber, bitfieldName, fields);
     }
 
-    ASTNode *parseScope(TokenIter &curr) {
-        return new ASTNodeScope(parseTillToken(curr, Token::Type::ScopeClose));
+    ASTNode* Parser::parseScope(TokenIter &curr) {
+        return new ASTNodeScope(curr[-1].lineNumber, parseTillToken(curr, Token::Type::ScopeClose));
     }
 
-    std::optional<ASTNode*> parseUsingDeclaration(TokenIter &curr) {
+    std::optional<ASTNode*> Parser::parseUsingDeclaration(TokenIter &curr) {
         auto keyword = curr[-5].keywordToken;
         auto name = curr[-4].identifierToken;
         auto op = curr[-3].operatorToken;
 
-        if (keyword.keyword != Token::KeywordToken::Keyword::Using)
+        if (keyword.keyword != Token::KeywordToken::Keyword::Using) {
+            this->m_error = { curr[-5].lineNumber, "Invalid keyword. Expected 'using'" };
             return { };
+        }
 
-        if (op.op != Token::OperatorToken::Operator::Assignment)
+        if (op.op != Token::OperatorToken::Operator::Assignment) {
+            this->m_error = { curr[-3].lineNumber, "Invalid operator. Expected '='" };
             return { };
+        }
 
         if (curr[-2].type == Token::Type::Type) {
             auto type = curr[-2].typeToken;
 
-            return new ASTNodeTypeDecl(type.type, name.identifier);
+            return new ASTNodeTypeDecl(curr[-2].lineNumber, type.type, name.identifier);
         } else if (curr[-2].type == Token::Type::Identifier) {
             auto customType = curr[-2].identifierToken;
 
-            return new ASTNodeTypeDecl(Token::TypeToken::Type::CustomType, name.identifier, customType.identifier);
+            return new ASTNodeTypeDecl(curr[-2].lineNumber, Token::TypeToken::Type::CustomType, name.identifier, customType.identifier);
         }
 
+        this->m_error = { curr[-2].lineNumber, hex::format("'%s' does not name a type") };
         return { };
     }
 
-    std::optional<std::vector<ASTNode*>> parseStatement(TokenIter &curr) {
+    std::optional<std::vector<ASTNode*>> Parser::parseStatement(TokenIter &curr) {
         std::vector<ASTNode*> program;
 
         // Struct
@@ -324,16 +382,28 @@ namespace hex::lang {
             program.push_back(usingDecl.value());
 
             return program;
-        // Variable declaration with built-in type
+        // Variable placement declaration with built-in type
         } else if (tryConsume(curr, { Token::Type::Type, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+            if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::AtDeclaration) {
+                this->m_error = { curr[-3].lineNumber, "Expected '@' after variable placement declaration" };
+                for(auto &node : program) delete node;
+                return { };
+            }
+
             auto variableDecl = parseFreeBuiltinVariableDecl(curr);
 
             program.push_back(variableDecl);
 
             return program;
 
-        // Variable declaration with custom type
+        // Variable placement declaration with custom type
         } else if (tryConsume(curr, { Token::Type::Identifier, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+            if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::AtDeclaration) {
+                this->m_error = { curr[-3].lineNumber, "Expected '@' after variable placement declaration" };
+                for(auto &node : program) delete node;
+                return { };
+            }
+
             auto variableDecl = parseFreeCustomTypeVariableDecl(curr);
 
             program.push_back(variableDecl);
@@ -342,11 +412,12 @@ namespace hex::lang {
         }
         else {
             for(auto &node : program) delete node;
+            this->m_error = { curr->lineNumber, "Invalid sequence" };
             return { };
         }
     }
 
-    std::vector<ASTNode*> parseTillToken(TokenIter &curr, Token::Type endTokenType) {
+    std::vector<ASTNode*> Parser::parseTillToken(TokenIter &curr, Token::Type endTokenType) {
         std::vector<ASTNode*> program;
 
         while (curr->type != endTokenType) {

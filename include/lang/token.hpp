@@ -63,5 +63,7 @@ namespace hex::lang {
                 Padding             = 0x1F
             } type;
         } typeToken;
+
+        u32 lineNumber;
     };
 }

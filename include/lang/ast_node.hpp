@@ -20,19 +20,21 @@ namespace hex::lang {
             Scope,
         };
 
-        explicit ASTNode(Type type) : m_type(type) {}
+        explicit ASTNode(Type type, u32 lineNumber) : m_type(type), m_lineNumber(lineNumber) {}
         virtual ~ASTNode() = default;
 
         Type getType() { return this->m_type; }
+        u32 getLineNumber() { return this->m_lineNumber; }
 
     private:
         Type m_type;
+        u32 m_lineNumber;
     };
 
     class ASTNodeVariableDecl : public ASTNode {
     public:
-        explicit ASTNodeVariableDecl(const Token::TypeToken::Type &type, const std::string &name, const std::string& customTypeName = "", std::optional<u64> offset = { }, size_t arraySize = 1, std::optional<std::string> arraySizeVariable = { }, std::optional<u8> pointerSize = { })
-            : ASTNode(Type::VariableDecl), m_type(type), m_name(name), m_customTypeName(customTypeName), m_offset(offset), m_arraySize(arraySize), m_arraySizeVariable(arraySizeVariable), m_pointerSize(pointerSize) { }
+        explicit ASTNodeVariableDecl(u32 lineNumber, const Token::TypeToken::Type &type, const std::string &name, const std::string& customTypeName = "", std::optional<u64> offset = { }, size_t arraySize = 1, std::optional<std::string> arraySizeVariable = { }, std::optional<u8> pointerSize = { })
+            : ASTNode(Type::VariableDecl, lineNumber), m_type(type), m_name(name), m_customTypeName(customTypeName), m_offset(offset), m_arraySize(arraySize), m_arraySizeVariable(arraySizeVariable), m_pointerSize(pointerSize) { }
 
         const Token::TypeToken::Type& getVariableType() const { return this->m_type; }
         const std::string& getCustomVariableTypeName() const { return this->m_customTypeName; }
@@ -53,7 +55,7 @@ namespace hex::lang {
 
     class ASTNodeScope : public ASTNode {
     public:
-        explicit ASTNodeScope(std::vector<ASTNode*> nodes) : ASTNode(Type::Scope), m_nodes(nodes) { }
+        explicit ASTNodeScope(u32 lineNumber, std::vector<ASTNode*> nodes) : ASTNode(Type::Scope, lineNumber), m_nodes(nodes) { }
 
         std::vector<ASTNode*> &getNodes() { return this->m_nodes; }
     private:
@@ -62,8 +64,8 @@ namespace hex::lang {
 
     class ASTNodeStruct : public ASTNode {
     public:
-        explicit ASTNodeStruct(std::string name, std::vector<ASTNode*> nodes)
-            : ASTNode(Type::Struct), m_name(name), m_nodes(nodes) { }
+        explicit ASTNodeStruct(u32 lineNumber, std::string name, std::vector<ASTNode*> nodes)
+            : ASTNode(Type::Struct, lineNumber), m_name(name), m_nodes(nodes) { }
 
         const std::string& getName() const { return this->m_name; }
         std::vector<ASTNode*> &getNodes() { return this->m_nodes; }
@@ -74,8 +76,8 @@ namespace hex::lang {
 
     class ASTNodeUnion : public ASTNode {
     public:
-        explicit ASTNodeUnion(std::string name, std::vector<ASTNode*> nodes)
-                : ASTNode(Type::Union), m_name(name), m_nodes(nodes) { }
+        explicit ASTNodeUnion(u32 lineNumber, std::string name, std::vector<ASTNode*> nodes)
+                : ASTNode(Type::Union, lineNumber), m_name(name), m_nodes(nodes) { }
 
         const std::string& getName() const { return this->m_name; }
         std::vector<ASTNode*> &getNodes() { return this->m_nodes; }
@@ -86,8 +88,8 @@ namespace hex::lang {
 
     class ASTNodeBitField : public ASTNode {
     public:
-        explicit ASTNodeBitField(std::string name, std::vector<std::pair<std::string, size_t>> fields)
-        : ASTNode(Type::Bitfield), m_name(name), m_fields(fields) { }
+        explicit ASTNodeBitField(u32 lineNumber, std::string name, std::vector<std::pair<std::string, size_t>> fields)
+        : ASTNode(Type::Bitfield, lineNumber), m_name(name), m_fields(fields) { }
 
         const std::string& getName() const { return this->m_name; }
         std::vector<std::pair<std::string, size_t>> &getFields() { return this->m_fields; }
@@ -98,8 +100,8 @@ namespace hex::lang {
 
     class ASTNodeTypeDecl : public ASTNode {
     public:
-        explicit ASTNodeTypeDecl(const Token::TypeToken::Type &type, const std::string &name, const std::string& customTypeName = "")
-                : ASTNode(Type::TypeDecl), m_type(type), m_name(name), m_customTypeName(customTypeName) { }
+        explicit ASTNodeTypeDecl(u32 lineNumber, const Token::TypeToken::Type &type, const std::string &name, const std::string& customTypeName = "")
+                : ASTNode(Type::TypeDecl, lineNumber), m_type(type), m_name(name), m_customTypeName(customTypeName) { }
 
         const std::string& getTypeName() const { return this->m_name; };
 
@@ -112,8 +114,8 @@ namespace hex::lang {
 
     class ASTNodeEnum : public ASTNode {
     public:
-        explicit ASTNodeEnum(const Token::TypeToken::Type &type, const std::string &name)
-                : ASTNode(Type::Enum), m_type(type), m_name(name) { }
+        explicit ASTNodeEnum(u32 lineNumber, const Token::TypeToken::Type &type, const std::string &name)
+                : ASTNode(Type::Enum, lineNumber), m_type(type), m_name(name) { }
 
         const std::string& getName() const { return this->m_name; };
 

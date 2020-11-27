@@ -106,7 +106,7 @@ namespace hex {
                 }
                 return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
             });
-            preprocessor.addDefaultPragramHandlers();
+            preprocessor.addDefaultPragmaHandlers();
 
 
             std::error_code errorCode;
@@ -234,6 +234,7 @@ namespace hex {
 
     void ViewPattern::parsePattern(char *buffer) {
         this->clearPatternData();
+        this->m_textEditor.SetErrorMarkers({ });
         this->postEvent(Events::PatternChanged);
 
         hex::lang::Preprocessor preprocessor;
@@ -252,21 +253,25 @@ namespace hex {
            } else
                return false;
         });
-        preprocessor.addDefaultPragramHandlers();
+        preprocessor.addDefaultPragmaHandlers();
 
         auto [preprocessingResult, preprocesedCode] = preprocessor.preprocess(buffer);
-        if (preprocessingResult.failed())
+        if (preprocessingResult.failed()) {
+            this->m_textEditor.SetErrorMarkers({ preprocessor.getError() });
             return;
+        }
 
         hex::lang::Lexer lexer;
         auto [lexResult, tokens] = lexer.lex(preprocesedCode);
         if (lexResult.failed()) {
+            this->m_textEditor.SetErrorMarkers({ lexer.getError() });
             return;
         }
 
         hex::lang::Parser parser;
         auto [parseResult, ast] = parser.parse(tokens);
         if (parseResult.failed()) {
+            this->m_textEditor.SetErrorMarkers({ parser.getError() });
             return;
         }
 
@@ -275,12 +280,14 @@ namespace hex {
         hex::lang::Validator validator;
         auto validatorResult = validator.validate(ast);
         if (!validatorResult) {
+            this->m_textEditor.SetErrorMarkers({ validator.getError() });
             return;
         }
 
         hex::lang::Evaluator evaluator(this->m_dataProvider, dataEndianess);
         auto [evaluateResult, patternData] = evaluator.evaluate(ast);
         if (evaluateResult.failed()) {
+            this->m_textEditor.SetErrorMarkers({ evaluator.getError() });
             return;
         }
         this->m_patternData = patternData;
