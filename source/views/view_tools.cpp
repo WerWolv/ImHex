@@ -13,7 +13,6 @@ namespace hex {
         this->m_mangledBuffer = new char[0xF'FFFF];
 
         std::memset(this->m_mangledBuffer, 0x00, 0xF'FFFF);
-        this->m_demangledName = "< ??? >";
 
         this->m_regexInput = new char[0xF'FFFF];
         this->m_regexPattern = new char[0xF'FFFF];
@@ -28,6 +27,7 @@ namespace hex {
 
         delete[] this->m_regexInput;
         delete[] this->m_regexPattern;
+        delete[] this->m_replacePattern;
     }
 
     void ViewTools::drawDemangler() {

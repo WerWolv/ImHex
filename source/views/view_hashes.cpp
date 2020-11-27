@@ -59,7 +59,7 @@ namespace hex {
                     switch (this->m_currHashFunction) {
                         case 0: // CRC16
                         {
-                            int polynomial = 0, init = 0;
+                            static int polynomial = 0, init = 0;
 
                             ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
@@ -83,7 +83,7 @@ namespace hex {
                             break;
                         case 1: // CRC32
                         {
-                            int polynomial = 0, init = 0;
+                            static int polynomial = 0, init = 0;
 
                             ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;

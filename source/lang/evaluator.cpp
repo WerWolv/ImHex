@@ -251,7 +251,7 @@ namespace hex::lang {
             delete nonArrayVarDeclNode;
         }
 
-        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), entries, 0x00FFFFFF), arrayOffset };
+        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), entries, arrayColor.value()), arrayOffset };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createStringPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
