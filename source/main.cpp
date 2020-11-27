@@ -11,6 +11,7 @@
 #include "views/view_strings.hpp"
 #include "views/view_data_inspector.hpp"
 #include "views/view_disassembler.hpp"
+#include "views/view_bookmarks.hpp"
 
 #include "providers/provider.hpp"
 
@@ -22,6 +23,7 @@ int main() {
     // Shared Data
     std::vector<hex::lang::PatternData*> patternData;
     hex::prv::Provider *dataProvider = nullptr;
+
     // Create views
     window.addView<hex::ViewHexEditor>(dataProvider, patternData);
     window.addView<hex::ViewPattern>(dataProvider, patternData);
@@ -31,6 +33,7 @@ int main() {
     window.addView<hex::ViewInformation>(dataProvider);
     window.addView<hex::ViewStrings>(dataProvider);
     window.addView<hex::ViewDisassembler>(dataProvider);
+    window.addView<hex::ViewBookmarks>(dataProvider);
     window.addView<hex::ViewTools>();
     window.addView<hex::ViewHelp>();
 

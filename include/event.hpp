@@ -12,7 +12,9 @@ namespace hex {
         FileDropped,
         ByteSelected,
 
-        SelectionChangeRequest
+        SelectionChangeRequest,
+
+        AddBookmark
     };
 
     struct EventHandler {

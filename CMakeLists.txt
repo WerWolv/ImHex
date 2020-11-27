@@ -4,7 +4,6 @@ project(HexEditor)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(PkgConfig REQUIRED)
-pkg_search_module(CRYPTO REQUIRED crypto)
 pkg_search_module(GLFW REQUIRED glfw3)
 pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(CRYPTO REQUIRED libcrypto)
@@ -50,6 +49,7 @@ add_executable(ImHex
         source/views/view_strings.cpp
         source/views/view_data_inspector.cpp
         source/views/view_disassembler.cpp
+        source/views/view_bookmarks.cpp
 
         libs/glad/source/glad.c
 

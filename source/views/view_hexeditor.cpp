@@ -264,6 +264,13 @@ namespace hex {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::MenuItem("Create bookmark", nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
+                size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                Region selectionRegion = { start, end - start + 1 };
+
+                View::postEvent(Events::AddBookmark, &selectionRegion);
+            }
 
             ImGui::EndMenu();
         }
