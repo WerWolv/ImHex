@@ -45,7 +45,7 @@ namespace hex {
 
         s64 m_gotoAddress = 0;
 
-        std::vector<u8> m_importData;
+        std::vector<u8> m_dataToSave;
 
         void drawSearchPopup();
         void drawGotoPopup();

@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "crypto.hpp"
+#include "patches.hpp"
 
 #undef __STRICT_ANSI__
 #include <cstdio>
@@ -127,15 +128,14 @@ namespace hex {
             this->loadFromFile(this->m_fileBrowser.selected_path, base64);
 
             if (!base64.empty()) {
-                this->m_importData = decode64(base64);
-                ImGui::OpenPopup("Save File");
+                this->m_dataToSave = decode64(base64);
+                ImGui::OpenPopup("Save Data");
             }
 
         }
 
-        if (this->m_fileBrowser.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
-            this->saveToFile(this->m_fileBrowser.selected_path, this->m_importData);
-            this->openFile(this->m_fileBrowser.selected_path);
+        if (this->m_fileBrowser.showFileDialog("Save Data", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
+            this->saveToFile(this->m_fileBrowser.selected_path, this->m_dataToSave);
         }
 
     }
@@ -150,6 +150,33 @@ namespace hex {
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("Base64 File")) {
                     View::doLater([]{ ImGui::OpenPopup("Open Base64 File"); });
+                }
+
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Export...")) {
+                if (ImGui::MenuItem("IPS Patch")) {
+                    Patches patches = this->m_dataProvider->getPatches();
+                    if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
+                        u8 value = 0;
+                        this->m_dataProvider->read(0x00454F45, &value, sizeof(u8));
+                        patches[0x00454F45] = value;
+                    }
+
+                    this->m_dataToSave = generateIPSPatch(patches);
+                    View::doLater([]{ ImGui::OpenPopup("Save Data"); });
+                }
+                if (ImGui::MenuItem("IPS32 Patch")) {
+                    Patches patches = this->m_dataProvider->getPatches();
+                    if (!patches.contains(0x00454F45) && patches.contains(0x45454F46)) {
+                        u8 value = 0;
+                        this->m_dataProvider->read(0x45454F45, &value, sizeof(u8));
+                        patches[0x45454F45] = value;
+                    }
+
+                    this->m_dataToSave = generateIPS32Patch(patches);
+                    View::doLater([]{ ImGui::OpenPopup("Save Data"); });
                 }
 
                 ImGui::EndMenu();
@@ -234,6 +261,7 @@ namespace hex {
             delete this->m_dataProvider;
 
         this->m_dataProvider = new prv::FileProvider(path);
+        this->m_memoryEditor.ReadOnly = !this->m_dataProvider->isWritable();
         View::postEvent(Events::DataChanged);
     }
 

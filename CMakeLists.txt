@@ -30,6 +30,7 @@ add_executable(ImHex
         source/window.cpp
         source/utils.cpp
         source/crypto.cpp
+        source/patches.cpp
 
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp
@@ -37,7 +38,7 @@ add_executable(ImHex
         source/lang/validator.cpp
         source/lang/evaluator.cpp
 
-        source/provider/file_provider.cpp
+        source/providers/file_provider.cpp
 
         source/views/view_hexeditor.cpp
         source/views/view_pattern.cpp

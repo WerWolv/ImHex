@@ -49,16 +49,39 @@ namespace hex::prv {
 
         fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
         fread(buffer, 1, size, this->m_file);
+
+
+
+        for (u64 i = 0; i < size; i++)
+            if (this->m_patches.back().contains(offset + i))
+                reinterpret_cast<u8*>(buffer)[i] = this->m_patches.back()[offset + i];
     }
 
     void FileProvider::write(u64 offset, void *buffer, size_t size) {
         if (buffer == nullptr || size == 0)
             return;
 
-        fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
-        fwrite(buffer, 1, size, this->m_file);
+        this->m_patches.push_back(this->m_patches.back());
+
+        for (u64 i = 0; i < size; i++)
+            this->m_patches.back()[offset + i] = reinterpret_cast<u8*>(buffer)[i];
     }
 
+    void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
+        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+            return;
+
+        fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
+        fread(buffer, 1, size, this->m_file);
+    }
+
+    void FileProvider::writeRaw(u64 offset, void *buffer, size_t size) {
+        if (buffer == nullptr || size == 0)
+            return;
+
+        fseeko64(this->m_file, offset, SEEK_SET);
+        fwrite(&buffer, 1, size, this->m_file);
+    }
     size_t FileProvider::getActualSize() {
         fseeko64(this->m_file, 0, SEEK_END);
         return ftello64(this->m_file);
