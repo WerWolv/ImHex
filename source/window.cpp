@@ -127,8 +127,10 @@ namespace hex {
                     if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
 
                 if (ImGui::BeginMenu("View")) {
-                    for (auto &view : this->m_views)
-                        ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
+                    for (auto &view : this->m_views) {
+                        if (view->hasViewMenuItemEntry())
+                            ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
+                    }
                     ImGui::EndMenu();
                 }
 

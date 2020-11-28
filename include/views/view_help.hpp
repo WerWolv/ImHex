@@ -22,6 +22,8 @@ namespace hex {
         void createView() override;
         void createMenu() override;
 
+        bool hasViewMenuItemEntry() override { return false; }
+
     private:
         bool m_aboutWindowOpen = false;
         bool m_patternHelpWindowOpen = false;

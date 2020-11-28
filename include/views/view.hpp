@@ -52,6 +52,8 @@ namespace hex {
             ImGui::OpenPopup("Error");
         }
 
+        virtual bool hasViewMenuItemEntry() { return true; }
+
         bool& getWindowOpenState() {
             return this->m_windowOpen;
         }
