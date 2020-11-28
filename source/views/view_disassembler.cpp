@@ -13,10 +13,20 @@ namespace hex {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_shouldInvalidate = true;
         });
+
+        View::subscribeEvent(Events::RegionSelected, [this](const void *userData) {
+            Region region = *static_cast<const Region*>(userData);
+
+            if (this->m_shouldMatchSelection) {
+                this->m_codeRegion[0] = region.address;
+                this->m_codeRegion[1] = region.address + region.size - 1;
+            }
+        });
     }
 
     ViewDisassembler::~ViewDisassembler() {
         View::unsubscribeEvent(Events::DataChanged);
+        View::unsubscribeEvent(Events::RegionSelected);
     }
 
     void ViewDisassembler::createView() {
@@ -42,11 +52,11 @@ namespace hex {
             if (cs_open(this->m_architecture, mode, &capstoneHandle) == CS_ERR_OK) {
 
                 std::vector<u8> buffer(2048, 0x00);
-                for (u64 address = 0; address < this->m_codeSize; address += 2048) {
-                    size_t bufferSize = std::min(u64(2048), this->m_codeSize - address);
-                    this->m_dataProvider->read(this->m_codeOffset + address, buffer.data(), bufferSize);
+                for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
+                    size_t bufferSize = std::min(u64(2048), (this->m_codeRegion[1] - this->m_codeRegion[0] + 1) - address);
+                    this->m_dataProvider->read(this->m_codeRegion[0] + address, buffer.data(), bufferSize);
 
-                    size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), buffer.size(), this->m_baseAddress + address, 0, &instructions);
+                    size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, this->m_baseAddress + address, 0, &instructions);
 
                     if (instructionCount == 0)
                         break;
@@ -55,7 +65,7 @@ namespace hex {
                     for (u32 instr = 0; instr < instructionCount; instr++) {
                         Disassembly disassembly = { 0 };
                         disassembly.address = instructions[instr].address;
-                        disassembly.offset = this->m_codeOffset + address + usedBytes;
+                        disassembly.offset = this->m_codeRegion[0] + address + usedBytes;
                         disassembly.size = instructions[instr].size;
                         disassembly.mnemonic = instructions[instr].mnemonic;
                         disassembly.operators = instructions[instr].op_str;
@@ -87,16 +97,16 @@ namespace hex {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
                 constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum" };
 
-                ImGui::InputScalar("Base address", ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
-
-                ImGui::NewLine();
-
-                ImGui::InputScalar("Code start offset", ImGuiDataType_U64, &this->m_codeOffset, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::InputScalar("Code size", ImGuiDataType_U64, &this->m_codeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
-
-                ImGui::NewLine();
+                ImGui::TextUnformatted("Position");
                 ImGui::Separator();
+
+                ImGui::InputScalar("Base address", ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::InputScalarN("Code region", ImGuiDataType_U64, this->m_codeRegion, 2, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::Checkbox("Match selection", &this->m_shouldMatchSelection);
+
                 ImGui::NewLine();
+                ImGui::TextUnformatted("Settings");
+                ImGui::Separator();
 
                 ImGui::Combo("Architecture", reinterpret_cast<int*>(&this->m_architecture), ArchitectureNames, 12);
 
@@ -225,12 +235,13 @@ namespace hex {
                 }
                 ImGui::EndChild();
 
-                ImGui::NewLine();
-                if (ImGui::Button("Disassemble"))
+                ImGui::SetCursorPosX((ImGui::GetContentRegionAvailWidth() - 300) / 2);
+                if (ImGui::Button("Disassemble", ImVec2(300, 20)))
                     this->m_shouldInvalidate = true;
                 ImGui::NewLine();
+
+                ImGui::TextUnformatted("Disassembly");
                 ImGui::Separator();
-                ImGui::NewLine();
 
                 if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Reorderable)) {
                     ImGui::TableSetupScrollFreeze(0, 1);

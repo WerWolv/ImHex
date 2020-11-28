@@ -34,8 +34,8 @@ namespace hex {
         bool m_shouldInvalidate = false;
 
         u64 m_baseAddress = 0;
-        u64 m_codeOffset = 0;
-        u64 m_codeSize = 0;
+        u64 m_codeRegion[2] = { 0 };
+        bool m_shouldMatchSelection = false;
 
         cs_arch m_architecture = CS_ARCH_ARM;
         cs_mode m_modeBasicARM = cs_mode(0), m_modeExtraARM = cs_mode(0), m_modeBasicMIPS = cs_mode(0), m_modeBasicPPC = cs_mode(0), m_modeBasicX86 = cs_mode(0);
