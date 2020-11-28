@@ -27,9 +27,11 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 add_executable(ImHex
         source/main.cpp
         source/window.cpp
-        source/utils.cpp
-        source/crypto.cpp
-        source/patches.cpp
+
+        source/helpers/utils.cpp
+        source/helpers/crypto.cpp
+        source/helpers/patches.cpp
+        source/helpers/math_evaluator.cpp
 
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp

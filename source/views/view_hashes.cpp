@@ -2,11 +2,11 @@
 
 #include "providers/provider.hpp"
 
-#include "crypto.hpp"
+#include "helpers/crypto.hpp"
 
 #include <vector>
 
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 namespace hex {
 

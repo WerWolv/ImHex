@@ -5,7 +5,7 @@
 #include "lang/lexer.hpp"
 #include "lang/validator.hpp"
 #include "lang/evaluator.hpp"
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 #include <magic.h>
 

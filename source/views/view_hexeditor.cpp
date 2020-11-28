@@ -5,8 +5,8 @@
 
 #include <GLFW/glfw3.h>
 
-#include "crypto.hpp"
-#include "patches.hpp"
+#include "helpers/crypto.hpp"
+#include "helpers/patches.hpp"
 
 #undef __STRICT_ANSI__
 #include <cstdio>

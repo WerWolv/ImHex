@@ -1,7 +1,7 @@
 #include "views/view_data_inspector.hpp"
 
 #include "providers/provider.hpp"
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 #include <cstring>
 

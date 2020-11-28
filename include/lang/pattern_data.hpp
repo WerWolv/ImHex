@@ -7,7 +7,7 @@
 #include "imgui_memory_editor.h"
 
 #include "providers/provider.hpp"
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 #include <random>
 

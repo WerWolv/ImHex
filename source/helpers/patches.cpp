@@ -1,11 +1,11 @@
-#include "patches.hpp"
+#include "helpers/patches.hpp"
 
 #include <concepts>
 #include <cstring>
 #include <string_view>
 #include <type_traits>
 
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 namespace hex {
 

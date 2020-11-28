@@ -46,7 +46,7 @@
 
 #include <stdio.h>      // sprintf, scanf
 #include <stdint.h>     // uint8_t, etc.
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 #include "views/view.hpp"
 

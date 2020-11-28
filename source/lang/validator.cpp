@@ -3,7 +3,7 @@
 #include <unordered_set>
 #include <string>
 
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 namespace hex::lang {
 
