@@ -10,7 +10,7 @@ namespace hex {
         DataChanged,
         PatternChanged,
         FileDropped,
-        ByteSelected,
+        RegionSelected,
 
         SelectionChangeRequest,
 

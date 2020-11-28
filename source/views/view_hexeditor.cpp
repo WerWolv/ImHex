@@ -74,7 +74,7 @@ namespace hex {
             this->m_memoryEditor.GotoAddr = region.address;
             this->m_memoryEditor.DataPreviewAddr = region.address;
             this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
-            View::postEvent(Events::ByteSelected, &region.address);
+            View::postEvent(Events::RegionSelected, &region);
         });
     }
 
@@ -98,8 +98,8 @@ namespace hex {
             if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
                 this->m_dataProvider->setCurrentPage(this->m_dataProvider->getCurrentPage() - 1);
 
-                size_t dataPreviewStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-                View::postEvent(Events::ByteSelected, &dataPreviewStart);
+                Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
+                View::postEvent(Events::RegionSelected, &dataPreview);
             }
 
             ImGui::SameLine();
@@ -107,8 +107,8 @@ namespace hex {
             if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
                 this->m_dataProvider->setCurrentPage(this->m_dataProvider->getCurrentPage() + 1);
 
-                size_t dataPreviewStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-                View::postEvent(Events::ByteSelected, &dataPreviewStart);
+                Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
+                View::postEvent(Events::RegionSelected, &dataPreview);
             }
 
             ImGui::End();

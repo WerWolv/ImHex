@@ -46,6 +46,7 @@
 
 #include <stdio.h>      // sprintf, scanf
 #include <stdint.h>     // uint8_t, etc.
+#include "utils.hpp"
 
 #include "views/view.hpp"
 
@@ -420,14 +421,16 @@ struct MemoryEditor
                         DataPreviewAddr = addr;
                         DataPreviewAddrEnd = addr;
 
-                        hex::View::postEvent(hex::Events::ByteSelected, &DataPreviewAddr);
+                        hex::Region selectionRegion { addr, 1 };
+                        hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
                     }
                     if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
 
                         size_t dataPreviewStart = std::min(DataPreviewAddr, DataPreviewAddrEnd);
 
-                        hex::View::postEvent(hex::Events::ByteSelected, &dataPreviewStart);
+                        hex::Region selectionRegion { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) + 1 };
+                        hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
                     }
                 }
             }

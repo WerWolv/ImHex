@@ -10,19 +10,19 @@ extern int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const
 namespace hex {
 
     ViewDataInspector::ViewDataInspector(prv::Provider* &dataProvider) : View("Data Inspector"), m_dataProvider(dataProvider) {
-        View::subscribeEvent(Events::ByteSelected, [this](const void* userData){
-            size_t offset = *static_cast<const size_t*>(userData);
+        View::subscribeEvent(Events::RegionSelected, [this](const void* userData){
+            Region region = *static_cast<const Region*>(userData);
 
-            this->m_validBytes = std::min(this->m_dataProvider->getSize() - offset, sizeof(PreviewData));
+            this->m_validBytes = std::min(this->m_dataProvider->getSize() - region.address, sizeof(PreviewData));
             std::memset(&this->m_previewData, 0x00, sizeof(PreviewData));
-            this->m_dataProvider->read(offset, &this->m_previewData, sizeof(PreviewData));
+            this->m_dataProvider->read(region.address, &this->m_previewData, sizeof(PreviewData));
 
             this->m_shouldInvalidate = true;
         });
     }
 
     ViewDataInspector::~ViewDataInspector() {
-        View::unsubscribeEvent(Events::ByteSelected);
+        View::unsubscribeEvent(Events::RegionSelected);
     }
 
     void ViewDataInspector::createView() {
