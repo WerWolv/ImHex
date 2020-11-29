@@ -32,7 +32,7 @@ namespace hex::prv {
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
         virtual size_t getActualSize() = 0;
 
-        const std::map<u64, u8>& getPatches() { return this->m_patches.back(); }
+        std::map<u64, u8>& getPatches() { return this->m_patches.back(); }
         void applyPatches() {
             for (auto &[patchAddress, patch] : this->m_patches.back())
                 this->writeRaw(patchAddress, &patch, 1);

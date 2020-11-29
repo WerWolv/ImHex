@@ -12,6 +12,7 @@
 #include "views/view_data_inspector.hpp"
 #include "views/view_disassembler.hpp"
 #include "views/view_bookmarks.hpp"
+#include "views/view_patches.hpp"
 
 #include "providers/provider.hpp"
 
@@ -34,6 +35,7 @@ int main() {
     window.addView<hex::ViewStrings>(dataProvider);
     window.addView<hex::ViewDisassembler>(dataProvider);
     window.addView<hex::ViewBookmarks>(dataProvider);
+    window.addView<hex::ViewPatches>(dataProvider);
     window.addView<hex::ViewTools>();
     window.addView<hex::ViewHelp>();
 
