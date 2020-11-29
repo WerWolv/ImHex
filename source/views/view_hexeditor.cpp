@@ -168,6 +168,7 @@ namespace hex {
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {
+                this->getWindowOpenState() = true;
                 View::doLater([]{ ImGui::OpenPopup("Open File"); });
             }
 
@@ -182,6 +183,7 @@ namespace hex {
 
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("Base64 File")) {
+                    this->getWindowOpenState() = true;
                     View::doLater([]{ ImGui::OpenPopup("Open Base64 File"); });
                 }
 
@@ -220,10 +222,12 @@ namespace hex {
             ImGui::Separator();
 
             if (ImGui::MenuItem("Search", "CTRL + F")) {
+                this->getWindowOpenState() = true;
                 View::doLater([]{ ImGui::OpenPopup("Search"); });
             }
 
             if (ImGui::MenuItem("Goto", "CTRL + G")) {
+                this->getWindowOpenState() = true;
                 View::doLater([]{ ImGui::OpenPopup("Goto"); });
             }
 
