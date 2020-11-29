@@ -1,5 +1,6 @@
 #include "helpers/utils.hpp"
 
+#include <cstdio>
 #include <codecvt>
 #include <locale>
 
@@ -71,6 +72,22 @@ namespace hex {
             case 127: return "DEL";
             default:  return std::string() + c;
         }
+    }
+
+    std::vector<u8> readFile(std::string_view path) {
+        FILE *file = fopen(path.data(), "rb");
+
+        if (file == nullptr) return { };
+
+        std::vector<u8> result;
+
+        fseek(file, 0, SEEK_END);
+        result.resize(ftell(file));
+        rewind(file);
+
+        fread(result.data(), 1, result.size(), file);
+
+        return result;
     }
 
 }

@@ -12,4 +12,6 @@ namespace hex {
     std::vector<u8> generateIPSPatch(const Patches &patches);
     std::vector<u8> generateIPS32Patch(const Patches &patches);
 
+    Patches loadIPSPatch(const std::vector<u8> &ipsPatch);
+    Patches loadIPS32Patch(const std::vector<u8> &ipsPatch);
 }

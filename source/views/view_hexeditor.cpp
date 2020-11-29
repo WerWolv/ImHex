@@ -142,6 +142,24 @@ namespace hex {
             this->saveToFile(this->m_fileBrowser.selected_path, this->m_dataToSave);
         }
 
+        if (this->m_fileBrowser.showFileDialog("Apply IPS Patch", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
+            auto patchData = hex::readFile(this->m_fileBrowser.selected_path);
+            auto patch = hex::loadIPSPatch(patchData);
+
+            for (auto &[address, value] : patch) {
+                this->m_dataProvider->write(address, &value, 1);
+            }
+        }
+
+        if (this->m_fileBrowser.showFileDialog("Apply IPS32 Patch", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
+            auto patchData = hex::readFile(this->m_fileBrowser.selected_path);
+            auto patch = hex::loadIPS32Patch(patchData);
+
+            for (auto &[address, value] : patch) {
+                this->m_dataProvider->write(address, &value, 1);
+            }
+        }
+
         if (this->m_fileBrowser.showFileDialog("Save As", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
             FILE *file = fopen(this->m_fileBrowser.selected_path.c_str(), "wb");
 
@@ -185,6 +203,18 @@ namespace hex {
                 if (ImGui::MenuItem("Base64 File")) {
                     this->getWindowOpenState() = true;
                     View::doLater([]{ ImGui::OpenPopup("Open Base64 File"); });
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("IPS Patch")) {
+                    this->getWindowOpenState() = true;
+                    View::doLater([]{ ImGui::OpenPopup("Apply IPS Patch"); });
+                }
+
+                if (ImGui::MenuItem("IPS32 Patch")) {
+                    this->getWindowOpenState() = true;
+                    View::doLater([]{ ImGui::OpenPopup("Apply IPS32 Patch"); });
                 }
 
                 ImGui::EndMenu();

@@ -20,7 +20,7 @@ namespace hex {
         buffer.resize(buffer.size() + sizeof(T));
         std::memcpy((&buffer.back() - sizeof(T)) + 1, &bytes, sizeof(T));
     }
-
+    
     std::vector<u8> generateIPSPatch(const Patches &patches) {
         std::vector<u8> result;
 
@@ -111,6 +111,108 @@ namespace hex {
         pushBytesBack(result, "EEOF");
 
         return result;
+    }
+
+    Patches loadIPSPatch(const std::vector<u8> &ipsPatch) {
+        if (ipsPatch.size() < (5 + 3))
+            return { };
+
+        if (std::memcmp(ipsPatch.data(), "PATCH", 5) != 0)
+            return { };
+
+        Patches result;
+        bool foundEOF = false;
+
+        u32 ipsOffset = 5;
+        while (ipsOffset < ipsPatch.size() - (5 + 3)) {
+            u32 offset = ipsPatch[ipsOffset + 2] | (ipsPatch[ipsOffset + 1] << 8) | (ipsPatch[ipsOffset + 0] << 16);
+            u16 size = ipsPatch[ipsOffset + 4] | (ipsPatch[ipsOffset + 3] << 8);
+
+            ipsOffset += 5;
+
+            // Handle normal record
+            if (size > 0x0000) {
+                if (ipsOffset + size > ipsPatch.size() - 3)
+                    return { };
+
+                for (u16 i = 0; i < size; i++)
+                    result[offset + i] = ipsPatch[ipsOffset + i];
+                ipsOffset += size;
+            }
+            // Handle RLE record
+            else {
+                if (ipsOffset + 3 > ipsPatch.size() - 3)
+                    return { };
+
+                u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
+
+                ipsOffset += 2;
+
+                for (u16 i = 0; i < rleSize; i++)
+                    result[offset + i] = ipsPatch[ipsOffset + 0];
+
+                ipsOffset += 1;
+            }
+
+            if (std::memcmp(ipsPatch.data(), "EOF", 3))
+                foundEOF = true;
+        }
+
+        if (foundEOF)
+            return result;
+        else
+            return { };
+    }
+
+    Patches loadIPS32Patch(const std::vector<u8> &ipsPatch) {
+        if (ipsPatch.size() < (5 + 4))
+            return { };
+
+        if (std::memcmp(ipsPatch.data(), "IPS32", 5) != 0)
+            return { };
+
+        Patches result;
+        bool foundEEOF = false;
+
+        u32 ipsOffset = 5;
+        while (ipsOffset < ipsPatch.size() - (5 + 4)) {
+            u32 offset = ipsPatch[ipsOffset + 3] | (ipsPatch[ipsOffset + 2] << 8) | (ipsPatch[ipsOffset + 1] << 16) | (ipsPatch[ipsOffset + 0] << 24);
+            u16 size = ipsPatch[ipsOffset + 5] | (ipsPatch[ipsOffset + 4] << 8);
+
+            ipsOffset += 6;
+
+            // Handle normal record
+            if (size > 0x0000) {
+                if (ipsOffset + size > ipsPatch.size() - 3)
+                    return { };
+
+                for (u16 i = 0; i < size; i++)
+                    result[offset + i] = ipsPatch[ipsOffset + i];
+                ipsOffset += size;
+            }
+            // Handle RLE record
+            else {
+                if (ipsOffset + 3 > ipsPatch.size() - 3)
+                    return { };
+
+                u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
+
+                ipsOffset += 2;
+
+                for (u16 i = 0; i < rleSize; i++)
+                    result[offset + i] = ipsPatch[ipsOffset + 0];
+
+                ipsOffset += 1;
+            }
+
+            if (std::memcmp(ipsPatch.data(), "EEOF", 4))
+                foundEEOF = true;
+        }
+
+        if (foundEEOF)
+            return result;
+        else
+            return { };
     }
 
 }

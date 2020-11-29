@@ -99,6 +99,8 @@ namespace hex {
             throw std::invalid_argument("Invalid value size!");
     }
 
+    std::vector<u8> readFile(std::string_view path);
+
     class ScopeExit {
     public:
         ScopeExit(std::function<void()> func) : m_func(func) {}
