@@ -11,13 +11,6 @@ namespace hex {
 
     namespace prv { class Provider; }
 
-    struct Bookmark {
-        Region region;
-
-        std::vector<char> name;
-        std::vector<char> comment;
-    };
-
     class ViewBookmarks : public View {
     public:
         explicit ViewBookmarks(prv::Provider* &dataProvider);

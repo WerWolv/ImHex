@@ -1,6 +1,7 @@
 #include "views/view_bookmarks.hpp"
 
 #include "providers/provider.hpp"
+#include "helpers/project_file_handler.hpp"
 
 #include <cstring>
 
@@ -19,11 +20,21 @@ namespace hex {
             std::strcpy(bookmark.name.data(), ("Bookmark " + std::to_string(this->m_bookmarks.size() + 1)).c_str());
 
             this->m_bookmarks.push_back(bookmark);
+            ProjectFile::markDirty();
+        });
+
+        View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
+            this->m_bookmarks = ProjectFile::getBookmarks();
+        });
+        View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
+            ProjectFile::setBookmarks(this->m_bookmarks);
         });
     }
 
     ViewBookmarks::~ViewBookmarks() {
         View::unsubscribeEvent(Events::AddBookmark);
+        View::unsubscribeEvent(Events::ProjectFileLoad);
+        View::unsubscribeEvent(Events::ProjectFileStore);
     }
 
     void ViewBookmarks::createView() {
@@ -83,8 +94,10 @@ namespace hex {
                     }
                 }
 
-                if (bookmarkToRemove != this->m_bookmarks.end())
+                if (bookmarkToRemove != this->m_bookmarks.end()) {
                     this->m_bookmarks.erase(bookmarkToRemove);
+                    ProjectFile::markDirty();
+                }
 
                 ImGui::EndChild();
             }

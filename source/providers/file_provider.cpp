@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "helpers/utils.hpp"
+#include "helpers/project_file_handler.hpp"
 
 namespace hex::prv {
 
@@ -22,6 +23,9 @@ namespace hex::prv {
             this->m_file = fopen(path.data(), "rb");
             this->m_writable = false;
         }
+
+        if (this->m_file != nullptr)
+            ProjectFile::setFilePath(path);
     }
 
     FileProvider::~FileProvider() {

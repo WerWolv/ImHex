@@ -3,6 +3,7 @@
 #include "providers/provider.hpp"
 
 #include "helpers/utils.hpp"
+#include "helpers/project_file_handler.hpp"
 
 #include <string>
 
@@ -11,11 +12,20 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewPatches::ViewPatches(prv::Provider* &dataProvider) : View("Patches"), m_dataProvider(dataProvider) {
+        View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
+            if (this->m_dataProvider != nullptr)
+                ProjectFile::setPatches(this->m_dataProvider->getPatches());
+        });
 
+        View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
+            if (this->m_dataProvider != nullptr)
+                this->m_dataProvider->getPatches() = ProjectFile::getPatches();
+        });
     }
 
     ViewPatches::~ViewPatches() {
-
+        View::unsubscribeEvent(Events::ProjectFileStore);
+        View::unsubscribeEvent(Events::ProjectFileLoad);
     }
 
     void ViewPatches::createView() {
@@ -62,6 +72,7 @@ namespace hex {
                     if (ImGui::BeginPopup("PatchContextMenu")) {
                         if (ImGui::MenuItem("Remove")) {
                             patches.erase(this->m_selectedPatch);
+                            ProjectFile::markDirty();
                         }
                         ImGui::EndPopup();
                     }

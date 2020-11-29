@@ -7,6 +7,7 @@
 
 #include "helpers/crypto.hpp"
 #include "helpers/patches.hpp"
+#include "helpers/project_file_handler.hpp"
 
 #undef __STRICT_ANSI__
 #include <cstdio>
@@ -36,6 +37,7 @@ namespace hex {
 
             _this->m_dataProvider->write(off, &d, sizeof(ImU8));
             _this->postEvent(Events::DataChanged);
+            ProjectFile::markDirty();
         };
 
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
@@ -75,6 +77,19 @@ namespace hex {
             this->m_memoryEditor.DataPreviewAddr = region.address;
             this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
             View::postEvent(Events::RegionSelected, &region);
+        });
+
+        View::subscribeEvent(Events::ProjectFileLoad, [this](const void *userData) {
+            this->openFile(ProjectFile::getFilePath());
+        });
+
+        View::subscribeEvent(Events::WindowClosing, [this](const void *userData) {
+            auto window = const_cast<GLFWwindow*>(static_cast<const GLFWwindow*>(userData));
+
+            if (ProjectFile::hasUnsavedChanges()) {
+                glfwSetWindowShouldClose(window, GLFW_FALSE);
+                View::doLater([] { ImGui::OpenPopup("Save Changes"); });
+            }
         });
     }
 
@@ -118,6 +133,24 @@ namespace hex {
         }
 
 
+        if (ImGui::BeginPopupModal("Save Changes", nullptr, ImGuiWindowFlags_NoResize)) {
+            constexpr auto Message = "You have unsaved changes made to your Project. Are you sure you want to exit?";
+            ImGui::NewLine();
+            if (ImGui::BeginChild("##scrolling", ImVec2(300, 50))) {
+                ImGui::SetCursorPosX(10);
+                ImGui::TextWrapped("%s", Message);
+                ImGui::EndChild();
+            }
+            ImGui::SetCursorPosX(40);
+            if (ImGui::Button("Yes", ImVec2(100, 20)))
+                std::exit(0);
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(160);
+            if (ImGui::Button("No", ImVec2(100, 20)))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+
 
         if (this->m_fileBrowser.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
             this->openFile(this->m_fileBrowser.selected_path);
@@ -137,6 +170,17 @@ namespace hex {
             } else View::showErrorPopup("Failed to open file!");
 
         }
+
+
+        if (this->m_fileBrowser.showFileDialog("Open Project", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".hexproj")) {
+            ProjectFile::load(this->m_fileBrowser.selected_path);
+            View::postEvent(Events::ProjectFileLoad);
+        }
+
+        if (this->m_fileBrowser.showFileDialog("Save Project", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".hexproj")) {
+            ProjectFile::store(this->m_fileBrowser.selected_path);
+        }
+
 
         if (this->m_fileBrowser.showFileDialog("Export File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
             this->saveToFile(this->m_fileBrowser.selected_path, this->m_dataToSave);
@@ -198,6 +242,24 @@ namespace hex {
             if (ImGui::MenuItem("Save As...", "CTRL + SHIFT + S", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
                 View::doLater([]{ ImGui::OpenPopup("Save As"); });
             }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Open Project", "")) {
+                this->getWindowOpenState() = true;
+                View::doLater([]{ ImGui::OpenPopup("Open Project"); });
+            }
+
+            if (ImGui::MenuItem("Save Project", "", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
+                View::postEvent(Events::ProjectFileStore);
+
+                if (ProjectFile::getProjectFilePath() == "")
+                    View::doLater([] { ImGui::OpenPopup("Save Project"); });
+                else
+                    ProjectFile::store();
+            }
+
+            ImGui::Separator();
 
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("Base64 File")) {
@@ -315,7 +377,7 @@ namespace hex {
             for (const auto &[address, value] : this->m_dataProvider->getPatches())
                 this->m_dataProvider->writeRaw(address, &value, sizeof(u8));
             return true;
-        } else if (mods == GLFW_MOD_CONTROL | GLFW_MOD_SHIFT && key == GLFW_KEY_S) {
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_S) {
             ImGui::OpenPopup("Save As");
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
@@ -345,8 +407,13 @@ namespace hex {
 
         this->m_dataProvider = new prv::FileProvider(path);
         this->m_memoryEditor.ReadOnly = !this->m_dataProvider->isWritable();
+
+        if (this->m_dataProvider->isAvailable())
+            ProjectFile::setFilePath(path);
+
         View::postEvent(Events::FileLoaded);
         View::postEvent(Events::DataChanged);
+        ProjectFile::markDirty();
     }
 
     bool ViewHexEditor::saveToFile(std::string path, const std::vector<u8>& data) {

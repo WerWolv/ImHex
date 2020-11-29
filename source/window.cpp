@@ -107,15 +107,17 @@ namespace hex {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->GetWorkPos());
         ImGui::SetNextWindowSize(viewport->GetWorkSize());
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
-        windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar     | ImGuiWindowFlags_NoDocking
+                                     | ImGuiWindowFlags_NoTitleBar  | ImGuiWindowFlags_NoCollapse
+                                     | ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoResize
+                                     | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
             ImGui::PopStyleVar(2);
@@ -208,6 +210,7 @@ namespace hex {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
         this->m_window = glfwCreateWindow(1280, 720, "ImHex", nullptr, nullptr);
 
 
@@ -229,7 +232,12 @@ namespace hex {
             View::postEvent(Events::FileDropped, paths[0]);
         });
 
-         glfwSetWindowSizeLimits(this->m_window, 720, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
+            View::postEvent(Events::WindowClosing, window);
+        });
+
+
+        glfwSetWindowSizeLimits(this->m_window, 720, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         if (gladLoadGL() == 0)
             throw std::runtime_error("Failed to initialize OpenGL loader!");

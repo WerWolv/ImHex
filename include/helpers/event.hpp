@@ -10,11 +10,15 @@ namespace hex {
         DataChanged,
         PatternChanged,
         FileDropped,
+        WindowClosing,
         RegionSelected,
 
         SelectionChangeRequest,
 
-        AddBookmark
+        AddBookmark,
+
+        ProjectFileStore,
+        ProjectFileLoad
     };
 
     struct EventHandler {

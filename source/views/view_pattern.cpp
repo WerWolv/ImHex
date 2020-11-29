@@ -5,6 +5,8 @@
 #include "lang/lexer.hpp"
 #include "lang/validator.hpp"
 #include "lang/evaluator.hpp"
+
+#include "helpers/project_file_handler.hpp"
 #include "helpers/utils.hpp"
 
 #include <magic.h>
@@ -76,9 +78,20 @@ namespace hex {
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
-        View::subscribeEvent(Events::FileLoaded, [this](const void* userData) {
-            lang::Preprocessor preprocessor;
+        View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
+            ProjectFile::setPattern(this->m_textEditor.GetText());
+        });
 
+        View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
+            this->m_textEditor.SetText(ProjectFile::getPattern());
+            this->parsePattern(this->m_textEditor.GetText().data());
+        });
+
+        View::subscribeEvent(Events::FileLoaded, [this](const void* userData) {
+            if (!this->m_textEditor.GetText().empty())
+                return;
+
+            lang::Preprocessor preprocessor;
             std::string magicFiles;
 
             std::error_code error;
@@ -140,7 +153,8 @@ namespace hex {
     }
 
     ViewPattern::~ViewPattern() {
-
+        View::unsubscribeEvent(Events::ProjectFileStore);
+        View::unsubscribeEvent(Events::ProjectFileLoad);
     }
 
     void ViewPattern::createMenu() {

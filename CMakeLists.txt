@@ -10,6 +10,7 @@ pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
+find_package(nlohmann_json REQUIRED)
 
 llvm_map_components_to_libnames(demangler)
 
@@ -32,6 +33,7 @@ add_executable(ImHex
         source/helpers/crypto.cpp
         source/helpers/patches.cpp
         source/helpers/math_evaluator.cpp
+        source/helpers/project_file_handler.cpp
 
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp
@@ -69,9 +71,9 @@ add_executable(ImHex
         )
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a libLLVMDemangle.a)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a libLLVMDemangle.a  nlohmann_json::nlohmann_json)
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so libLLVMDemangle.so)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so libLLVMDemangle.so nlohmann_json::nlohmann_json)
 endif (UNIX)

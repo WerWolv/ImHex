@@ -118,4 +118,11 @@ namespace hex {
         u64 address;
         size_t size;
     };
+
+    struct Bookmark {
+        Region region;
+
+        std::vector<char> name;
+        std::vector<char> comment;
+    };
 }
