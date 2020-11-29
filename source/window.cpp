@@ -160,8 +160,10 @@ namespace hex {
 
             if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
                 for (auto &view : this->m_views) {
-                    if (view->handleShortcut(key, mods))
-                        break;
+                    if (view->getWindowOpenState()) {
+                        if (view->handleShortcut(key, mods))
+                            break;
+                    }
                 }
 
                 Window::s_currShortcut = { -1, -1 };
