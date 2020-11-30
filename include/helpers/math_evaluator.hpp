@@ -74,7 +74,7 @@ namespace hex {
         void setVariable(std::string name, long double value);
         void setFunction(std::string name, std::function<std::optional<long double>(std::vector<long double>)> function, size_t minNumArgs, size_t maxNumArgs);
 
-        const std::unordered_map<std::string, long double>& getVariables() { return this->m_variables; }
+        std::unordered_map<std::string, long double>& getVariables() { return this->m_variables; }
 
     private:
         std::queue<Token> parseInput(const char *input);

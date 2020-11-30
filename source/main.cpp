@@ -36,7 +36,7 @@ int main() {
     window.addView<hex::ViewDisassembler>(dataProvider);
     window.addView<hex::ViewBookmarks>(dataProvider);
     window.addView<hex::ViewPatches>(dataProvider);
-    window.addView<hex::ViewTools>();
+    window.addView<hex::ViewTools>(dataProvider);
     window.addView<hex::ViewHelp>();
 
     window.loop();

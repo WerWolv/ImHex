@@ -15,13 +15,15 @@ namespace hex {
 
     class ViewTools : public View {
     public:
-        ViewTools();
+        ViewTools(hex::prv::Provider* &provider);
         ~ViewTools() override;
 
         void createView() override;
         void createMenu() override;
 
     private:
+        hex::prv::Provider* &m_dataProvider;
+
         char *m_mangledBuffer = nullptr;
         std::string m_demangledName;
 

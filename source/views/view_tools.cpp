@@ -4,13 +4,14 @@
 #include <regex>
 #include <optional>
 
+#include "providers/provider.hpp"
 #include "helpers/utils.hpp"
 
 #include <llvm/Demangle/Demangle.h>
 
 namespace hex {
 
-    ViewTools::ViewTools() : View("Tools") {
+    ViewTools::ViewTools(hex::prv::Provider* &provider) : View("Tools"), m_dataProvider(provider) {
         this->m_mangledBuffer = new char[0xF'FFFF];
         std::memset(this->m_mangledBuffer, 0x00, 0xF'FFFF);
 
@@ -26,13 +27,40 @@ namespace hex {
         std::memset(this->m_mathInput, 0x00, 0xFFFF);
         this->m_mathEvaluator.registerStandardVariables();
         this->m_mathEvaluator.registerStandardFunctions();
+
         this->m_mathEvaluator.setFunction("clear", [this](auto args) -> std::optional<long double> {
             this->m_mathHistory.clear();
             this->m_lastMathError.clear();
+            this->m_mathEvaluator.getVariables().clear();
+            this->m_mathEvaluator.registerStandardVariables();
             std::memset(this->m_mathInput, 0x00, 0xFFFF);
 
             return { };
         }, 0, 0);
+
+        this->m_mathEvaluator.setFunction("read", [this](auto args) -> std::optional<long double> {
+            u8 value = 0;
+
+            if (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable() || args[0] >= this->m_dataProvider->getActualSize())
+                return { };
+
+            this->m_dataProvider->read(args[0], &value, sizeof(u8));
+
+            return value;
+        }, 1, 1);
+
+        this->m_mathEvaluator.setFunction("write", [this](auto args) -> std::optional<long double> {
+            if (this->m_dataProvider == nullptr || !this->m_dataProvider->isWritable() || args[0] >= this->m_dataProvider->getActualSize())
+                return { };
+
+            if (args[1] > 0xFF)
+                return { };
+
+            u8 value = args[1];
+            this->m_dataProvider->write(args[0], &value, sizeof(u8));
+
+            return { };
+        }, 2, 2);
     }
 
     ViewTools::~ViewTools() {
@@ -198,6 +226,9 @@ namespace hex {
                     ImGui::TableHeadersRow();
                     while (clipper.Step()) {
                         for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            if (i == 0)
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImU32(ImColor(0xA5, 0x45, 0x45)));
+
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
 
@@ -214,6 +245,9 @@ namespace hex {
                                                 u64(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]));
                                     break;
                             }
+
+                            if (i == 0)
+                                ImGui::PopStyleColor();
                         }
                     }
 
