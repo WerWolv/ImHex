@@ -27,9 +27,11 @@ namespace hex {
     private:
         bool m_aboutWindowOpen = false;
         bool m_patternHelpWindowOpen = false;
+        bool m_mathHelpWindowOpen = false;
 
         void drawAboutPopup();
         void drawPatternHelpPopup();
+        void drawMathEvaluatorHelp();
     };
 
 }
