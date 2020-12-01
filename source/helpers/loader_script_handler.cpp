@@ -119,17 +119,48 @@ namespace hex {
                 PyErr_SetString(PyExc_TypeError, "member needs to have a annotation extending from ImHexType");
                 return nullptr;
             }
-            auto memberTypeInstance = PyObject_CallObject(memberType, nullptr);
-            if (memberTypeInstance == nullptr || memberTypeInstance->ob_type->tp_base == nullptr || memberTypeInstance->ob_type->tp_base->tp_name != "ImHexType"s) {
-                PyErr_SetString(PyExc_TypeError, "member needs to have a annotation extending from ImHexType");
+
+            // Array already is an object
+            if (memberType->ob_type->tp_name == "array"s) {
+
+                auto arrayType = PyObject_GetAttrString(memberType, "array_type");
+                if (arrayType == nullptr) {
+                    PyErr_BadArgument();
+                    return nullptr;
+                }
+
+                code += "   "s + arrayType->ob_type->tp_name + " " + memberName;
+
+                auto arraySize = PyObject_GetAttrString(memberType, "size");
+                if (arraySize == nullptr) {
+                    PyErr_BadArgument();
+                    return nullptr;
+                }
+
+                if (PyUnicode_Check(arraySize))
+                    code += "["s + PyUnicode_AsUTF8(arraySize) + "];\n";
+                else if (PyLong_Check(arraySize))
+                    code += "["s + std::to_string(PyLong_AsLong(arraySize)) + "];\n";
+                else {
+                    PyErr_SetString(PyExc_TypeError, "invalid array size type. Expected string or int");
+                    return nullptr;
+                }
+
+
+            } else {
+                auto memberTypeInstance = PyObject_CallObject(memberType, nullptr);
+                if (memberTypeInstance == nullptr || memberTypeInstance->ob_type->tp_base == nullptr || memberTypeInstance->ob_type->tp_base->tp_name != "ImHexType"s) {
+                    PyErr_SetString(PyExc_TypeError, "member needs to have a annotation extending from ImHexType");
+                    if (memberTypeInstance != nullptr)
+                        Py_DECREF(memberTypeInstance);
+
+                    return nullptr;
+                }
+
+                code += "   "s + memberTypeInstance->ob_type->tp_name + " "s + memberName + ";\n";
+
                 Py_DECREF(memberTypeInstance);
-
-                return nullptr;
             }
-
-            code += "   "s + memberTypeInstance->ob_type->tp_name + " "s + memberName + ";\n";
-
-            Py_DECREF(memberTypeInstance);
         }
 
         code += "};\n";
