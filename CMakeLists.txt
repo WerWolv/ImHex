@@ -11,7 +11,7 @@ pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python 3.8.6 COMPONENTS Interpreter Development)
 
 llvm_map_components_to_libnames(demangler)
 
