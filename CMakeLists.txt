@@ -11,10 +11,11 @@ pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED)
+find_package(Python COMPONENTS Interpreter Development)
 
 llvm_map_components_to_libnames(demangler)
 
-include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include)
+include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
 
@@ -34,6 +35,7 @@ add_executable(ImHex
         source/helpers/patches.cpp
         source/helpers/math_evaluator.cpp
         source/helpers/project_file_handler.cpp
+        source/helpers/loader_script_handler.cpp
 
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp
@@ -71,9 +73,9 @@ add_executable(ImHex
         )
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a libLLVMDemangle.a  nlohmann_json::nlohmann_json)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a libLLVMDemangle.a ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so libLLVMDemangle.so nlohmann_json::nlohmann_json)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so libLLVMDemangle.so ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 endif (UNIX)

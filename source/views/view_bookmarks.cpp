@@ -9,15 +9,17 @@ namespace hex {
 
     ViewBookmarks::ViewBookmarks(prv::Provider* &dataProvider) : View("Bookmarks"), m_dataProvider(dataProvider) {
         View::subscribeEvent(Events::AddBookmark, [this](const void *userData) {
-            Bookmark bookmark;
-            bookmark.region = *reinterpret_cast<const Region*>(userData);
+            Bookmark bookmark = *reinterpret_cast<const Bookmark*>(userData);
             bookmark.name.resize(64);
             bookmark.comment.resize(0xF'FFFF);
 
-            std::memset(bookmark.name.data(), 0x00, 64);
-            std::memset(bookmark.comment.data(), 0x00, 0xF'FFFF);
+            if (bookmark.name.empty()) {
+                std::memset(bookmark.name.data(), 0x00, 64);
+                std::strcpy(bookmark.name.data(), ("Bookmark " + std::to_string(this->m_bookmarks.size() + 1)).c_str());
+            }
 
-            std::strcpy(bookmark.name.data(), ("Bookmark " + std::to_string(this->m_bookmarks.size() + 1)).c_str());
+            if (bookmark.comment.empty())
+                std::memset(bookmark.comment.data(), 0x00, 0xF'FFFF);
 
             this->m_bookmarks.push_back(bookmark);
             ProjectFile::markDirty();

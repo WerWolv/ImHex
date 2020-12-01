@@ -8,6 +8,7 @@
 #include "helpers/crypto.hpp"
 #include "helpers/patches.hpp"
 #include "helpers/project_file_handler.hpp"
+#include "helpers/loader_script_handler.hpp"
 
 #undef __STRICT_ANSI__
 #include <cstdio>
@@ -151,6 +152,53 @@ namespace hex {
             ImGui::EndPopup();
         }
 
+        if (ImGui::BeginPopupModal("Load File with Loader Script", nullptr, ImGuiWindowFlags_NoResize)) {
+            constexpr auto Message = "Load a file using a Python loader script.";
+            ImGui::NewLine();
+            if (ImGui::BeginChild("##scrolling", ImVec2(500, 20))) {
+                ImGui::SetCursorPosX(10);
+                ImGui::TextWrapped("%s", Message);
+                ImGui::EndChild();
+            }
+
+            ImGui::NewLine();
+            ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::SameLine();
+            if (ImGui::Button("Script"))
+                ImGui::OpenPopup("Loader Script: Open Script");
+            ImGui::InputText("##nolabel", this->m_loaderScriptFilePath.data(), this->m_loaderScriptFilePath.length(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::SameLine();
+            if (ImGui::Button("File"))
+                ImGui::OpenPopup("Loader Script: Open File");
+
+
+            if (this->m_fileBrowser.showFileDialog("Loader Script: Open Script", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".py")) {
+                this->m_loaderScriptScriptPath = this->m_fileBrowser.selected_path;
+            }
+            if (this->m_fileBrowser.showFileDialog("Loader Script: Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
+                this->m_loaderScriptFilePath = this->m_fileBrowser.selected_path;
+            }
+
+            ImGui::NewLine();
+
+            ImGui::SetCursorPosX(40);
+            if (ImGui::Button("Load", ImVec2(100, 20))) {
+                if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
+                    this->openFile(this->m_loaderScriptFilePath);
+                    LoaderScript::setFilePath(this->m_loaderScriptFilePath);
+                    LoaderScript::setDataProvider(this->m_dataProvider);
+                    LoaderScript::processFile(this->m_loaderScriptScriptPath);
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(160);
+            if (ImGui::Button("Cancel", ImVec2(100, 20))) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
 
         if (this->m_fileBrowser.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
             this->openFile(this->m_fileBrowser.selected_path);
@@ -279,6 +327,13 @@ namespace hex {
                     View::doLater([]{ ImGui::OpenPopup("Apply IPS32 Patch"); });
                 }
 
+                if (ImGui::MenuItem("File with Loader Script")) {
+                    this->getWindowOpenState() = true;
+                    this->m_loaderScriptFilePath.clear();
+                    this->m_loaderScriptScriptPath.clear();
+                    View::doLater([]{ ImGui::OpenPopup("Load File with Loader Script"); });
+                }
+
                 ImGui::EndMenu();
             }
 
@@ -363,9 +418,9 @@ namespace hex {
             if (ImGui::MenuItem("Create bookmark", nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
                 size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
                 size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-                Region selectionRegion = { start, end - start + 1 };
+                Bookmark bookmark = { start, end - start + 1, { }, { } };
 
-                View::postEvent(Events::AddBookmark, &selectionRegion);
+                View::postEvent(Events::AddBookmark, &bookmark);
             }
 
             ImGui::EndMenu();

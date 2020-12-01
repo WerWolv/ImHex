@@ -47,6 +47,9 @@ namespace hex {
 
         std::vector<u8> m_dataToSave;
 
+        std::string m_loaderScriptScriptPath;
+        std::string m_loaderScriptFilePath;
+
         void drawSearchPopup();
         void drawGotoPopup();
 
