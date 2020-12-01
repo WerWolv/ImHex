@@ -16,6 +16,7 @@ namespace hex {
         SelectionChangeRequest,
 
         AddBookmark,
+        AppendPatternLanguageCode,
 
         ProjectFileStore,
         ProjectFileLoad

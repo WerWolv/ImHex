@@ -87,6 +87,13 @@ namespace hex {
             this->parsePattern(this->m_textEditor.GetText().data());
         });
 
+        View::subscribeEvent(Events::AppendPatternLanguageCode, [this](const void *userData) {
+             const char *code = static_cast<const char*>(userData);
+
+             this->m_textEditor.InsertText("\n");
+             this->m_textEditor.InsertText(code);
+        });
+
         View::subscribeEvent(Events::FileLoaded, [this](const void* userData) {
             if (!this->m_textEditor.GetText().empty())
                 return;

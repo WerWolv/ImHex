@@ -25,6 +25,9 @@ namespace hex {
         static PyObject* Py_getFilePath(PyObject *self, PyObject *args);
         static PyObject* Py_addPatch(PyObject *self, PyObject *args);
         static PyObject* Py_addBookmark(PyObject *self, PyObject *args);
+
+        static PyObject* Py_addStruct(PyObject *self, PyObject *args);
+        static PyObject* Py_addUnion(PyObject *self, PyObject *args);
     };
 
 }
