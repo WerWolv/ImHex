@@ -18,6 +18,9 @@ using s128  = __int128_t;
 #include "lang/result.hpp"
 #include "lang/results.hpp"
 
+extern int mainArgc;
+extern char **mainArgv;
+
 #if defined(__EMX__) || defined (WIN32)
 #define MAGIC_PATH_SEPARATOR	";"
 #else

@@ -18,7 +18,13 @@
 
 #include <vector>
 
-int main() {
+int mainArgc;
+char **mainArgv;
+
+int main(int argc, char **argv) {
+    mainArgc = argc;
+    mainArgv = argv;
+
     hex::Window window;
 
     // Shared Data
