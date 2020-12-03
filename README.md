@@ -96,7 +96,7 @@ cmake ..
 make -j
 ```
 
-On Windows, download the python standard library from https://github.com/python/cpython/tree/master/Lib and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` from your mingw setup next to the executable.
+On Windows, download the python standard library from https://github.com/python/cpython/tree/master/Lib and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` and `libwinpthread-1.dll` from your mingw setup next to the executable.
 
 On both Windows and Linux, copy the files from `python_libs` in the `lib` folder next to your built executable.
 Place your magic databases in the `magic` folder next to your built executable
