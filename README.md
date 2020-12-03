@@ -102,3 +102,13 @@ On both Windows and Linux, copy the files from `python_libs` in the `lib` folder
 Place your magic databases in the `magic` folder next to your built executable
 Place your patterns in the `pattern` folder next to your built executable
 Place your include pattern files in the `include` folder next to your built executable
+
+## Credits
+
+Thanks a lot to ocornut for their amazing [Dear ImGui](https://github.com/ocornut/imgui) which is used for building the entire interface
+- Thanks to orconut as well for their hex editor view used as base for this project.
+- Thanks to BalazsJako for their incredible [ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit) used for the pattern language syntax highlighting
+- Thanks to AirGuanZ for their amazing [imgui-filebrowser](https://github.com/AirGuanZ/imgui-filebrowser) used for loading and saving files
+Thanks to nlohmann for their [json](https://github.com/nlohmann/json) library used for project files
+Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
+
