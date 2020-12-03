@@ -44,10 +44,10 @@ A Hex Editor for Reverse Engineers, Programmers and people that value their eye 
   - Sparc
   - SystemZ
   - XCore
-  - 68K
-  - TMS320C64x
-  - 680X
-  - Etherium
+  - M68K
+  - TMS320C64X
+  - M680X
+  - Ethereum 
 - Bookmarks
   - Region highlighting
   - Comments
