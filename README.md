@@ -71,6 +71,10 @@ A Hex Editor for Reverse Engineers, Programmers and people that value their eye 
 ![](https://i.imgur.com/xH7xJ4g.png)
 ![](https://i.imgur.com/fhVJYEa.png)
 
+## Additional Files
+
+For format patterns, includable libraries and magic files, check of the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository here. Feel free to PR your own files there as well!
+
 ## Compiling
 
 This guide assumes you're either on Windows using mingw or on Arch Linux
