@@ -45,6 +45,9 @@ int main(int argc, char **argv) {
     window.addView<hex::ViewTools>(dataProvider);
     window.addView<hex::ViewHelp>();
 
+    if (argc > 1)
+        hex::View::postEvent(hex::Events::FileDropped, argv[1]);
+
     window.loop();
 
     return 0;

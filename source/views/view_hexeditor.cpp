@@ -466,6 +466,8 @@ namespace hex {
         if (this->m_dataProvider->isAvailable())
             ProjectFile::setFilePath(path);
 
+        this->getWindowOpenState() = true;
+
         View::postEvent(Events::FileLoaded);
         View::postEvent(Events::DataChanged);
         ProjectFile::markDirty();
