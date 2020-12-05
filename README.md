@@ -87,6 +87,7 @@ For format patterns, includable libraries and magic files, check of the [ImHex-P
 
 This guide assumes you're either on Windows using mingw or on Arch Linux
 
+You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex.
 The following libraries are needed to compile ImHex. All of them can be found in the default pacman repositories
 ```
 GLFW3                                             ( (sudo) pacman -S glfw )
@@ -98,6 +99,7 @@ nlohmann json                                     ( (sudo) pacman -S nlohmann-js
 Python3                                           ( (sudo) pacman -S python3 )
 
 All in one: sudo pacman -S glfw file openssl capstone llvm llvm-libs nlohmann-json python3
+All in one for mingw: pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make mingw-w64-x86_64-capstone mingw-w64-x86_64-glfw mingw-w64-x86_64-glm mingw-w64-x86_64-file mingw-w64-x86_64-llvm mingw-w64-x86_64-nlohmann-json mingw-w64-x86_64-openssl mingw-w64-x86_64-polly mingw-w64-x86_64-python
 ```
 
 After all the libraries are installed, run the following commands to build ImHex
