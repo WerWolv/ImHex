@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(HexEditor)
 
+SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
+SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
+
 set(CMAKE_CXX_STANDARD 20)
+
 
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
