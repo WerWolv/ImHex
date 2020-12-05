@@ -18,9 +18,12 @@ jobs:
           # currently fail
           #{ msystem: MINGW32, arch: i686   }
         ]
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }}
     defaults:
       run:
         shell: msys2 {0}
+    env:
+      MINGW_INSTALLS: ${{ matrix.msystem }}
     steps:
 
     - run: git config --global core.autocrlf input
@@ -37,22 +40,14 @@ jobs:
         msystem: ${{ matrix.msystem }}
         update: true
         install: >
-          mingw-w64-${{ matrix.arch }}-gcc
-          mingw-w64-${{ matrix.arch }}-cmake
-          mingw-w64-${{ matrix.arch }}-make
-          mingw-w64-${{ matrix.arch }}-capstone
-          mingw-w64-${{ matrix.arch }}-glfw
-          mingw-w64-${{ matrix.arch }}-glm
-          mingw-w64-${{ matrix.arch }}-file
-          mingw-w64-${{ matrix.arch }}-llvm
-          mingw-w64-${{ matrix.arch }}-nlohmann-json
-          mingw-w64-${{ matrix.arch }}-openssl
-          mingw-w64-${{ matrix.arch }}-polly
-          mingw-w64-${{ matrix.arch }}-python
+          base-devel
+          mingw-w64-${{ matrix.arch }}-toolchain
 
-    - name: ⚙️ Build
+    - name: 🔧 Build
       run: |
-        mkdir build
-        cd build
-        cmake -G "MinGW Makefiles" ..
-        mingw32-make -j 4
+        cd msys2
+        makepkg-mingw --noconfirm --noprogressbar -sCLf
+
+    - name: ⚙️ Install
+      run: |
+        pacman -U msys2/*.zst
