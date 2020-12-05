@@ -66,10 +66,10 @@ namespace hex {
     }
 
     void ViewHelp::drawPatternHelpPopup() {
-        ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(450, 300));
-        
+        if (!this->m_patternHelpWindowOpen) return;
+
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(2000, 1000));
-        if (ImGui::BeginPopupModal("Pattern Language Cheat Sheet", &this->m_patternHelpWindowOpen)) {
+        if (ImGui::Begin("Pattern Language Cheat Sheet", &this->m_patternHelpWindowOpen)) {
             ImGui::Text("ImHex Pattern Language Cheat Sheet");
             ImGui::Separator();
             ImGui::NewLine();
@@ -201,15 +201,15 @@ namespace hex {
                     "a unsigned 32 bit variable named data and places it at offset 0x100."
                     );
             drawCodeSegment("var placement", "u32 data @ 0x100;");
-            ImGui::EndPopup();
         }
+        ImGui::End();
     }
 
     void ViewHelp::drawMathEvaluatorHelp() {
-        ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(450, 300));
+        if (!this->m_mathHelpWindowOpen) return;
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(2000, 1000));
-        if (ImGui::BeginPopupModal("Calculator Cheat Sheet", &this->m_mathHelpWindowOpen)) {
+        if (ImGui::Begin("Calculator Cheat Sheet", &this->m_mathHelpWindowOpen)) {
             ImGui::Text("ImHex Math Evaluator Cheat Sheet");
             ImGui::Separator();
             ImGui::NewLine();
@@ -276,8 +276,8 @@ namespace hex {
                             "read(a)     : Read 1 byte from loaded data\n"
                             "write(a, x) : Write 1 byte to loaded data");
 
-            ImGui::EndPopup();
         }
+        ImGui::End();
     }
 
     void ViewHelp::createView() {
@@ -294,11 +294,9 @@ namespace hex {
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Pattern Language Cheat Sheet", "")) {
-                View::doLater([] { ImGui::OpenPopup("Pattern Language Cheat Sheet"); });
                 this->m_patternHelpWindowOpen = true;
             }
             if (ImGui::MenuItem("Calculator Cheat Sheet", "")) {
-                View::doLater([] { ImGui::OpenPopup("Calculator Cheat Sheet"); });
                 this->m_mathHelpWindowOpen = true;
             }
             ImGui::EndMenu();
