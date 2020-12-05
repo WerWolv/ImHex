@@ -15,7 +15,7 @@ namespace hex {
 
             this->m_validBytes = std::min(this->m_dataProvider->getSize() - region.address, sizeof(PreviewData));
             std::memset(&this->m_previewData, 0x00, sizeof(PreviewData));
-            this->m_dataProvider->read(region.address, &this->m_previewData, sizeof(PreviewData));
+            this->m_dataProvider->read(region.address, &this->m_previewData, this->m_validBytes);
 
             this->m_shouldInvalidate = true;
         });
