@@ -49,7 +49,7 @@ namespace hex {
             if (this->m_sparcV9Mode)
                 mode = cs_mode(mode | CS_MODE_V9);
 
-            if (cs_open(this->m_architecture, mode, &capstoneHandle) == CS_ERR_OK) {
+            if (cs_open(Disassembler::toCapstoneArchictecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
 
                 std::vector<u8> buffer(2048, 0x00);
                 for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
@@ -95,8 +95,6 @@ namespace hex {
         if (ImGui::Begin("Disassembler", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
-                constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum" };
-
                 ImGui::TextUnformatted("Position");
                 ImGui::Separator();
 
@@ -108,7 +106,7 @@ namespace hex {
                 ImGui::TextUnformatted("Settings");
                 ImGui::Separator();
 
-                ImGui::Combo("Architecture", reinterpret_cast<int*>(&this->m_architecture), ArchitectureNames, 12);
+                ImGui::Combo("Architecture", reinterpret_cast<int*>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount());
 
 
                 if (ImGui::BeginChild("modes", ImVec2(0, 100), true)) {
@@ -122,7 +120,7 @@ namespace hex {
                     ImGui::NewLine();
 
                     switch (this->m_architecture) {
-                        case CS_ARCH_ARM:
+                        case Architecture::ARM:
                             this->m_modeBasicMIPS = cs_mode(0);
                             this->m_modeBasicX86 = cs_mode(0);
                             this->m_modeBasicPPC = cs_mode(0);
@@ -147,7 +145,7 @@ namespace hex {
                             if (ImGui::RadioButton("ARMv8 mode", (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == CS_MODE_V8))
                                 this->m_modeExtraARM = CS_MODE_V8;
                             break;
-                        case CS_ARCH_MIPS:
+                        case Architecture::MIPS:
                             this->m_modeBasicARM = cs_mode(0);
                             this->m_modeExtraARM = cs_mode(0);
                             this->m_modeBasicX86 = cs_mode(0);
@@ -168,7 +166,7 @@ namespace hex {
 
                             ImGui::Checkbox("Micro Mode", &this->m_micoMode);
                             break;
-                        case CS_ARCH_X86:
+                        case Architecture::X86:
                             this->m_modeBasicARM = cs_mode(0);
                             this->m_modeExtraARM = cs_mode(0);
                             this->m_modeBasicMIPS = cs_mode(0);
@@ -188,7 +186,7 @@ namespace hex {
                             if (ImGui::RadioButton("64-bit mode", this->m_modeBasicX86 == CS_MODE_64))
                                 this->m_modeBasicX86 = CS_MODE_64;
                             break;
-                        case CS_ARCH_PPC:
+                        case Architecture::PPC:
                             this->m_modeBasicARM = cs_mode(0);
                             this->m_modeExtraARM = cs_mode(0);
                             this->m_modeBasicMIPS = cs_mode(0);
@@ -205,7 +203,7 @@ namespace hex {
                             if (ImGui::RadioButton("64-bit mode", this->m_modeBasicPPC == CS_MODE_64))
                                 this->m_modeBasicPPC = CS_MODE_64;
                             break;
-                        case CS_ARCH_SPARC:
+                        case Architecture::SPARC:
                             this->m_modeBasicARM = cs_mode(0);
                             this->m_modeExtraARM = cs_mode(0);
                             this->m_modeBasicMIPS = cs_mode(0);
@@ -215,13 +213,13 @@ namespace hex {
 
                             ImGui::Checkbox("Sparc V9 mode", &this->m_sparcV9Mode);
                             break;
-                        case CS_ARCH_ARM64:
-                        case CS_ARCH_SYSZ:
-                        case CS_ARCH_XCORE:
-                        case CS_ARCH_M68K:
-                        case CS_ARCH_TMS320C64X:
-                        case CS_ARCH_M680X:
-                        case CS_ARCH_EVM:
+                        case Architecture::ARM64:
+                        case Architecture::SYSZ:
+                        case Architecture::XCORE:
+                        case Architecture::M68K:
+                        case Architecture::TMS320C64X:
+                        case Architecture::M680X:
+                        case Architecture::EVM:
                             this->m_modeBasicARM = cs_mode(0);
                             this->m_modeExtraARM = cs_mode(0);
                             this->m_modeBasicMIPS = cs_mode(0);
