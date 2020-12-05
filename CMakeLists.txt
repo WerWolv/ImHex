@@ -11,13 +11,23 @@ pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED)
-find_package(Python 3.8.6 COMPONENTS Interpreter Development)
+find_package(Python COMPONENTS Interpreter Development)
+
+if(Python_VERSION LESS 3)
+    message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
+    message(FATAL_ERROR "No valid version of Python 3 was found.")
+endif()
 
 llvm_map_components_to_libnames(demangler)
 
 include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
+# Get Python major and minor
+string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
+list(REMOVE_AT PYTHON_VERSION_MAJOR_MINOR 2)
+list(JOIN PYTHON_VERSION_MAJOR_MINOR "." PYTHON_VERSION_MAJOR_MINOR)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
 
 if (WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
