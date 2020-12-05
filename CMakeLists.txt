@@ -18,7 +18,8 @@ if(Python_VERSION LESS 3)
     message(FATAL_ERROR "No valid version of Python 3 was found.")
 endif()
 
-llvm_map_components_to_libnames(demangler)
+llvm_map_components_to_libnames(_llvm_libs demangle)
+llvm_expand_dependencies(llvm_libs ${_llvm_libs})
 
 include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
 
@@ -83,10 +84,12 @@ add_executable(ImHex
         resource.rc
         )
 
+target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
+
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a libLLVMDemangle.a ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_libs} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so libLLVMDemangle.so ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_libs} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 endif (UNIX)
