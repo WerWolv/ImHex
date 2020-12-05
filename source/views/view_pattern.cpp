@@ -95,7 +95,7 @@ namespace hex {
         });
 
         View::subscribeEvent(Events::FileLoaded, [this](const void* userData) {
-            if (!this->m_textEditor.GetText().empty())
+            if (this->m_textEditor.GetText().find_first_not_of(" \f\n\r\t\v") != std::string::npos)
                 return;
 
             lang::Preprocessor preprocessor;
@@ -106,6 +106,9 @@ namespace hex {
                 if (entry.is_regular_file() && entry.path().extension() == ".mgc")
                     magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
             }
+
+            if (error)
+                return;
 
             std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFFFF)), 0x00);
             this->m_dataProvider->read(0, buffer.data(), buffer.size());
@@ -151,7 +154,7 @@ namespace hex {
 
                 if (foundCorrectType) {
                     this->m_possiblePatternFile = entry.path();
-                    ImGui::OpenPopup("Accept Pattern");
+                    View::doLater([] { ImGui::OpenPopup("Accept Pattern"); });
                     ImGui::SetNextWindowSize(ImVec2(200, 100));
                     break;
                 }
