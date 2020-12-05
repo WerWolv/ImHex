@@ -18,21 +18,39 @@ jobs:
           # currently fail
           #{ msystem: MINGW32, arch: i686   }
         ]
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-    - name: Checkout
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
-    - name: Setup
+    - name: 🟪 Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.msystem }}
-        install: mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-cmake mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-capstone mingw-w64-${{ matrix.arch }}-glfw mingw-w64-${{ matrix.arch }}-glm mingw-w64-${{ matrix.arch }}-file mingw-w64-${{ matrix.arch }}-llvm mingw-w64-${{ matrix.arch }}-nlohmann-json mingw-w64-${{ matrix.arch }}-openssl mingw-w64-${{ matrix.arch }}-polly mingw-w64-${{ matrix.arch }}-python
         update: true
+        install: >
+          mingw-w64-${{ matrix.arch }}-gcc
+          mingw-w64-${{ matrix.arch }}-cmake
+          mingw-w64-${{ matrix.arch }}-make
+          mingw-w64-${{ matrix.arch }}-capstone
+          mingw-w64-${{ matrix.arch }}-glfw
+          mingw-w64-${{ matrix.arch }}-glm
+          mingw-w64-${{ matrix.arch }}-file
+          mingw-w64-${{ matrix.arch }}-llvm
+          mingw-w64-${{ matrix.arch }}-nlohmann-json
+          mingw-w64-${{ matrix.arch }}-openssl
+          mingw-w64-${{ matrix.arch }}-polly
+          mingw-w64-${{ matrix.arch }}-python
 
-    - name: Build
-      shell: msys2 {0}
+    - name: ⚙️ Build
       run: |
         mkdir build
         cd build
