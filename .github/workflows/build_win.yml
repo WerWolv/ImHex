@@ -13,17 +13,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: [
-          { msystem: MINGW64, arch: x86_64 },
-          # currently fail
-          #{ msystem: MINGW32, arch: i686   }
-        ]
-    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }}
+        env:
+          - { msystem: MINGW64, arch: x86_64 }
+          #- { msystem: MINGW32, arch: i686   } # currently fail
+        build:
+          - manual
+          - makepkg
+    name: 🟪 ${{ matrix.env.msystem }} · ${{ matrix.env.arch }} · ${{ matrix.build }}
     defaults:
       run:
         shell: msys2 {0}
     env:
-      MINGW_INSTALLS: ${{ matrix.msystem }}
+      MINGW_INSTALLS: ${{ matrix.env.msystem }}
     steps:
 
     - run: git config --global core.autocrlf input
@@ -37,17 +38,39 @@ jobs:
     - name: 🟪 Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: ${{ matrix.msystem }}
+        msystem: ${{ matrix.env.msystem }}
         update: true
         install: >
           base-devel
-          mingw-w64-${{ matrix.arch }}-toolchain
+          mingw-w64-${{ matrix.env.arch }}-toolchain
+          mingw-w64-${{ matrix.env.arch }}-gcc
+          mingw-w64-${{ matrix.env.arch }}-cmake
+          mingw-w64-${{ matrix.env.arch }}-make
+          mingw-w64-${{ matrix.env.arch }}-capstone
+          mingw-w64-${{ matrix.env.arch }}-glfw
+          mingw-w64-${{ matrix.env.arch }}-glm
+          mingw-w64-${{ matrix.env.arch }}-file
+          mingw-w64-${{ matrix.env.arch }}-llvm
+          mingw-w64-${{ matrix.env.arch }}-nlohmann-json
+          mingw-w64-${{ matrix.env.arch }}-openssl
+          mingw-w64-${{ matrix.env.arch }}-polly
+          mingw-w64-${{ matrix.env.arch }}-python
 
-    - name: 🔧 Build
+    - name: ✋ Build (manual)
+      if: matrix.build == 'manual'
+      run: |
+        mkdir build
+        cd build
+        cmake -G "MinGW Makefiles" ..
+        mingw32-make -j 4
+
+    - name: 🔧 Build (makepkg)
+      if: matrix.build == 'makepkg'
       run: |
         cd msys2
         makepkg-mingw --noconfirm --noprogressbar -sCLf
 
-    - name: ⚙️ Install
+    - name: ⚙️ Install (makepkg)
+      if: matrix.build == 'makepkg'
       run: |
         pacman -U msys2/*.zst
