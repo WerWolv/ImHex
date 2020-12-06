@@ -89,6 +89,7 @@ namespace hex {
 
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
+                this->getWindowOpenState() = true;
                 View::doLater([] { ImGui::OpenPopup("Save Changes"); });
             }
         });
