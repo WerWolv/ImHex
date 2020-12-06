@@ -69,6 +69,9 @@ namespace hex::lang {
                     return { nullptr, 0 };
                 }
 
+                if (arraySize.value() == 0)
+                    continue;
+
                 ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getLineNumber(), member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
 
                 std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
@@ -161,10 +164,8 @@ namespace hex::lang {
                     return { nullptr, 0 };
                 }
 
-                if (arraySize.value() == 0) {
-                    this->m_error = { varDeclNode->getLineNumber(), hex::format("Value of '%s' is zero", member->getArraySizeVariable().value().c_str()) };
-                    return { nullptr, 0 };
-                }
+                if (arraySize.value() == 0)
+                    continue;
 
                 ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getLineNumber(), member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
 
