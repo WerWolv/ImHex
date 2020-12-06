@@ -31,7 +31,7 @@ If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPa
 - Data importing
   - Base64 files
   - IPS and IPS32 patches
-- Data exporting 
+- Data exporting
   - IPS and IPS32 patches
 - Data Exporting
 - Data inspector allowing interpretation of data as many different types (little and big endian)
@@ -55,7 +55,7 @@ If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPa
   - M68K
   - TMS320C64X
   - M680X
-  - Ethereum 
+  - Ethereum
 - Bookmarks
   - Region highlighting
   - Comments
@@ -98,8 +98,9 @@ libLLVMDemangle                                   ( (sudo) pacman -S llvm llvm-l
 nlohmann json                                     ( (sudo) pacman -S nlohmann-json )
 Python3                                           ( (sudo) pacman -S python3 )
 
-All in one: sudo pacman -S glfw file openssl capstone llvm llvm-libs nlohmann-json python3
-All in one for mingw: pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make mingw-w64-x86_64-capstone mingw-w64-x86_64-glfw mingw-w64-x86_64-glm mingw-w64-x86_64-file mingw-w64-x86_64-llvm mingw-w64-x86_64-nlohmann-json mingw-w64-x86_64-openssl mingw-w64-x86_64-polly mingw-w64-x86_64-python
+All in one for Arch Linux: sudo pacman -S glfw file openssl capstone llvm llvm-libs nlohmann-json python3
+All in one for Fedora: sudo dnf install cmake gcc-c++ capstone-devel glfw-devel glm-devel json-devel llvm-devel mesa-libGL-devel openssl-devel python-devel
+All in one for MinGW: pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make mingw-w64-x86_64-capstone mingw-w64-x86_64-glfw mingw-w64-x86_64-glm mingw-w64-x86_64-file mingw-w64-x86_64-llvm mingw-w64-x86_64-nlohmann-json mingw-w64-x86_64-openssl mingw-w64-x86_64-polly mingw-w64-x86_64-pytho
 ```
 
 After all the libraries are installed, run the following commands to build ImHex
