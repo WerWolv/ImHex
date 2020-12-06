@@ -28,6 +28,7 @@ build() {
   cd "${srcdir}"/../..
   mkdir build
   cd build
+  export BUILD_TYPE='Release'
   MSYS2_ARG_CONV_EXCL=- cmake \
     -G "MinGW Makefiles" \
     -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
