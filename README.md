@@ -1,3 +1,8 @@
+<p align="center">
+  <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild"><img alt="'Build' workflow Status" src="https://img.shields.io/github/workflow/status/WerWolv/ImHex/Build?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions"></a><!--
+  -->
+</p>
+
 # ImHex
 
 A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM.
