@@ -5,8 +5,8 @@
 
 namespace hex::lang {
 
-    Evaluator::Evaluator(prv::Provider* &provider, std::endian dataEndianess) : m_provider(provider), m_dataEndianess(dataEndianess) {
-        PatternData::setEndianess(dataEndianess);
+    Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndianess) : m_provider(provider), m_defaultDataEndianess(defaultDataEndianess) {
+
     }
 
     std::pair<PatternData*, size_t> Evaluator::createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -28,7 +28,7 @@ namespace hex::lang {
             if (member->getPointerSize().has_value()) {
                 this->m_provider->read(offset + structSize, &memberOffset, member->getPointerSize().value());
 
-                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), this->m_dataEndianess);
+                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
             }
             else
                 memberOffset = offset + structSize;
@@ -58,7 +58,7 @@ namespace hex::lang {
                         u64 value = 0;
                         this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
 
-                        value = hex::changeEndianess(value, prevMember->getSize(), this->m_dataEndianess);
+                        value = hex::changeEndianess(value, prevMember->getSize(), prevMember->getEndianess());
 
                         arraySize = value;
                     }
@@ -83,8 +83,10 @@ namespace hex::lang {
             if (pattern == nullptr)
                 return { nullptr, 0 };
 
+            pattern->setEndianess(member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
+
             if (member->getPointerSize().has_value()) {
-                members.push_back(new PatternDataPointer(offset + structSize, member->getPointerSize().value(), member->getVariableName(), pattern));
+                members.push_back(new PatternDataPointer(offset + structSize, member->getPointerSize().value(), member->getVariableName(), pattern, member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess))));
                 structSize += member->getPointerSize().value();
             }
             else {
@@ -93,7 +95,7 @@ namespace hex::lang {
             }
         }
 
-        return { new PatternDataStruct(offset, structSize, varDeclNode->getVariableName(), structNode->getName(), members, 0x00FFFFFF), structSize };
+        return { new PatternDataStruct(offset, structSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), structNode->getName(), members, 0x00FFFFFF), structSize };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -115,7 +117,7 @@ namespace hex::lang {
             if (member->getPointerSize().has_value()) {
                 this->m_provider->read(offset + unionSize, &memberOffset, member->getPointerSize().value());
 
-                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), this->m_dataEndianess);
+                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), member->getEndianess().value_or(this->m_defaultDataEndianess));
             }
             else
                 memberOffset = offset;
@@ -148,7 +150,7 @@ namespace hex::lang {
                         u64 value = 0;
                         this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
 
-                        value = hex::changeEndianess(value, prevMember->getSize(), this->m_dataEndianess);
+                        value = hex::changeEndianess(value, prevMember->getSize(), prevMember->getEndianess());
 
                         arraySize = value;
                     }
@@ -178,8 +180,10 @@ namespace hex::lang {
             if (pattern == nullptr)
                 return { nullptr, 0 };
 
+            pattern->setEndianess(member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
+
             if (member->getPointerSize().has_value()) {
-                members.push_back(new PatternDataPointer(offset, member->getPointerSize().value(), member->getVariableName(), pattern));
+                members.push_back(new PatternDataPointer(offset, member->getPointerSize().value(), member->getVariableName(), pattern, member->getEndianess().value_or(this->m_defaultDataEndianess)));
                 unionSize = std::max(size_t(member->getPointerSize().value()), unionSize);
             }
             else {
@@ -188,7 +192,7 @@ namespace hex::lang {
             }
         }
 
-        return { new PatternDataUnion(offset, unionSize, varDeclNode->getVariableName(), unionNode->getName(), members, 0x00FFFFFF), unionSize };
+        return { new PatternDataUnion(offset, unionSize, varDeclNode->getVariableName(), unionNode->getName(), members, varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), 0x00FFFFFF), unionSize };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createEnumPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -201,7 +205,7 @@ namespace hex::lang {
 
         size_t size = getTypeSize(enumType->getUnderlyingType());
 
-        return { new PatternDataEnum(offset, size, varDeclNode->getVariableName(), enumType->getName(), enumType->getValues()), size };
+        return { new PatternDataEnum(offset, size, varDeclNode->getVariableName(), enumType->getName(), enumType->getValues(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), size };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createBitfieldPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -219,7 +223,7 @@ namespace hex::lang {
 
         size = std::bit_ceil(size) / 8;
 
-        return { new PatternDataBitfield(offset, size, varDeclNode->getVariableName(), bitfieldType->getName(), bitfieldType->getFields()), size };
+        return { new PatternDataBitfield(offset, size, varDeclNode->getVariableName(), bitfieldType->getName(), bitfieldType->getFields(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), size };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -236,8 +240,12 @@ namespace hex::lang {
             } else if (varDeclNode->getVariableType() != Token::TypeToken::Type::CustomType) {
                 const auto& [pattern, size] = this->createBuiltInTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
 
-                if (pattern == nullptr)
+                if (pattern == nullptr) {
+                    delete nonArrayVarDeclNode;
                     return { nullptr, 0 };
+                }
+
+                pattern->setEndianess(varDeclNode->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
 
                 if (!arrayColor.has_value())
                     arrayColor = pattern->getColor();
@@ -249,8 +257,12 @@ namespace hex::lang {
             } else {
                 const auto &[pattern, size] = this->createCustomTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
 
-                if (pattern == nullptr)
+                if (pattern == nullptr) {
+                    delete nonArrayVarDeclNode;
                     return { nullptr, 0 };
+                }
+
+                pattern->setEndianess(varDeclNode->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
 
                 if (!arrayColor.has_value())
                     arrayColor = pattern->getColor();
@@ -264,13 +276,13 @@ namespace hex::lang {
             delete nonArrayVarDeclNode;
         }
 
-        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), entries, arrayColor.value()), arrayOffset };
+        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), entries, arrayColor.value()), arrayOffset };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createStringPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
         size_t arraySize = varDeclNode->getArraySize();
 
-        return { new PatternDataString(offset, arraySize, varDeclNode->getVariableName()), arraySize };
+        return { new PatternDataString(offset, arraySize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), arraySize };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createCustomTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
@@ -314,21 +326,21 @@ namespace hex::lang {
 
          if (isSigned(type)) {
             if (typeSize == 1 && arraySize == 1)
-                return { new PatternDataCharacter(offset, typeSize, varDeclNode->getVariableName()), 1 };
+                return { new PatternDataCharacter(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), 1 };
             else if (arraySize > 1)
                 return createArrayPattern(varDeclNode, offset);
             else
-                return { new PatternDataSigned(offset, typeSize, varDeclNode->getVariableName()), typeSize * arraySize };
+                return { new PatternDataSigned(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
         } else if (isUnsigned(varDeclNode->getVariableType())) {
             if (arraySize > 1)
                 return createArrayPattern(varDeclNode, offset);
             else
-                return { new PatternDataUnsigned(offset, typeSize, varDeclNode->getVariableName()), typeSize * arraySize };
+                return { new PatternDataUnsigned(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
         } else if (isFloatingPoint(varDeclNode->getVariableType())) {
             if (arraySize > 1)
                 return createArrayPattern(varDeclNode, offset);
             else
-                return { new PatternDataFloat(offset, typeSize, varDeclNode->getVariableName()), typeSize * arraySize };
+                return { new PatternDataFloat(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
         }
 
         return { nullptr, 0 };

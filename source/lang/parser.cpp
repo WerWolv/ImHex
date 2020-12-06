@@ -25,15 +25,42 @@ namespace hex::lang {
     }
 
 
-    ASTNode* Parser::parseBuiltinVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-3].lineNumber, curr[-3].typeToken.type, curr[-2].identifierToken.identifier);
+    ASTNode* Parser::parseBuiltinVariableDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-4].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-4].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-4].lineNumber, curr[-3].typeToken.type, curr[-2].identifierToken.identifier, "", {}, 1, {}, {}, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-3].lineNumber, curr[-3].typeToken.type, curr[-2].identifierToken.identifier);
     }
 
-    ASTNode* Parser::parseCustomTypeVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-3].lineNumber, Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
+    ASTNode* Parser::parseCustomTypeVariableDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-4].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-4].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else return nullptr;
+
+            return new ASTNodeVariableDecl(curr[-4].lineNumber, Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier, {}, 1, {}, {}, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-3].lineNumber, Token::TypeToken::Type::CustomType, curr[-2].identifierToken.identifier, curr[-3].identifierToken.identifier);
     }
 
-    ASTNode* Parser::parseBuiltinPointerVariableDecl(TokenIter &curr) {
+    ASTNode* Parser::parseBuiltinPointerVariableDecl(TokenIter &curr, bool hasEndianDef) {
         auto pointerType = curr[-2].typeToken.type;
 
         if (!isUnsigned(pointerType)) {
@@ -51,10 +78,23 @@ namespace hex::lang {
             return nullptr;
         }
 
-        return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType));
+
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else return nullptr;
+
+            return new ASTNodeVariableDecl(curr[-7].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType), endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType));
     }
 
-    ASTNode* Parser::parseCustomTypePointerVariableDecl(TokenIter &curr) {
+    ASTNode* Parser::parseCustomTypePointerVariableDecl(TokenIter &curr, bool hasEndianDef) {
         auto pointerType = curr[-2].typeToken.type;
 
         if (!isUnsigned(pointerType)) {
@@ -72,35 +112,140 @@ namespace hex::lang {
             return nullptr;
         }
 
-        return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType));
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-7].lineNumber,Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType), endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType));
     }
 
-    ASTNode* Parser::parseBuiltinArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer);
+    ASTNode* Parser::parseBuiltinArrayDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-7].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer, { }, { }, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* Parser::parseCustomTypeArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer);
+    ASTNode* Parser::parseCustomTypeArrayDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-7].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer, { }, { }, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* Parser::parseBuiltinVariableArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, 0, curr[-3].identifierToken.identifier);
+    ASTNode* Parser::parseBuiltinVariableArrayDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-7].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, 0, curr[-3].identifierToken.identifier, { }, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-5].identifierToken.identifier, "", { }, 0, curr[-3].identifierToken.identifier);
     }
 
-    ASTNode* Parser::parseCustomTypeVariableArrayDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 0, curr[-3].identifierToken.identifier);
+    ASTNode* Parser::parseCustomTypeVariableArrayDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-7].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-7].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 0, curr[-3].identifierToken.identifier, { }, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-5].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 0, curr[-3].identifierToken.identifier);
     }
 
     ASTNode* Parser::parsePaddingDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-5].lineNumber, curr[-5].typeToken.type, "", "", { }, curr[-3].integerToken.integer);
+            return new ASTNodeVariableDecl(curr[-5].lineNumber, curr[-5].typeToken.type, "", "", { }, curr[-3].integerToken.integer);
     }
 
-    ASTNode* Parser::parseFreeBuiltinVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-5].lineNumber, curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer);
+    ASTNode* Parser::parseFreeBuiltinVariableDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-6].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-6].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer, 1, { }, { }, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-5].lineNumber, curr[-5].typeToken.type, curr[-4].identifierToken.identifier, "", curr[-2].integerToken.integer);
     }
 
-    ASTNode* Parser::parseFreeCustomTypeVariableDecl(TokenIter &curr) {
-        return new ASTNodeVariableDecl(curr[-5].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer);
+    ASTNode* Parser::parseFreeCustomTypeVariableDecl(TokenIter &curr, bool hasEndianDef) {
+        if (hasEndianDef) {
+            std::endian endianess;
+
+            if (curr[-6].keywordToken.keyword == Token::KeywordToken::Keyword::LittleEndian)
+                endianess = std::endian::little;
+            else if (curr[-6].keywordToken.keyword == Token::KeywordToken::Keyword::BigEndian)
+                endianess = std::endian::big;
+            else {
+                this->m_error = { curr->lineNumber, "Expected be or le identifier" };
+                return nullptr;
+            }
+
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer, 1, { }, { }, endianess);
+        }
+        else
+            return new ASTNodeVariableDecl(curr[-5].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-5].identifierToken.identifier, curr[-2].integerToken.integer);
     }
 
     ASTNode* Parser::parseStruct(TokenIter &curr) {
@@ -111,17 +256,17 @@ namespace hex::lang {
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinVariableDecl(curr));
+                nodes.push_back(parseBuiltinVariableDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypeVariableDecl(curr));
+                nodes.push_back(parseCustomTypeVariableDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinArrayDecl(curr));
+                nodes.push_back(parseBuiltinArrayDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypeArrayDecl(curr));
+                nodes.push_back(parseCustomTypeArrayDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Identifier, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinVariableArrayDecl(curr));
+                nodes.push_back(parseBuiltinVariableArrayDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Identifier, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypeVariableArrayDecl(curr));
+                nodes.push_back(parseCustomTypeVariableArrayDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression})) {
                 if (curr[-5].typeToken.type != Token::TypeToken::Type::Padding) {
                     for(auto &node : nodes) delete node;
@@ -131,9 +276,25 @@ namespace hex::lang {
                 }
                 nodes.push_back(parsePaddingDecl(curr));
             } else if (tryConsume(curr, {Token::Type::Type, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinPointerVariableDecl(curr));
+                nodes.push_back(parseBuiltinPointerVariableDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypePointerVariableDecl(curr));
+                nodes.push_back(parseCustomTypePointerVariableDecl(curr, false));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinVariableDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeVariableDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinArrayDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeArrayDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Identifier, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinVariableArrayDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Identifier, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeVariableArrayDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinPointerVariableDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypePointerVariableDecl(curr, true));
             else {
                 for(auto &node : nodes) delete node;
                 this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
@@ -158,17 +319,29 @@ namespace hex::lang {
 
         while (!tryConsume(curr, {Token::Type::ScopeClose})) {
             if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinVariableDecl(curr));
+                nodes.push_back(parseBuiltinVariableDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypeVariableDecl(curr));
+                nodes.push_back(parseCustomTypeVariableDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinArrayDecl(curr));
+                nodes.push_back(parseBuiltinArrayDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypeArrayDecl(curr));
+                nodes.push_back(parseCustomTypeArrayDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Type, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
-                nodes.push_back(parseBuiltinPointerVariableDecl(curr));
+                nodes.push_back(parseBuiltinPointerVariableDecl(curr, false));
             else if (tryConsume(curr, {Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
-                nodes.push_back(parseCustomTypePointerVariableDecl(curr));
+                nodes.push_back(parseCustomTypePointerVariableDecl(curr, false));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Identifier, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinVariableDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeVariableDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinArrayDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::ArrayOpen, Token::Type::Integer, Token::Type::ArrayClose, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypeArrayDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Type, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseBuiltinPointerVariableDecl(curr, true));
+            else if (tryConsume(curr, {Token::Type::Keyword, Token::Type::Identifier, Token::Type::Operator, Token::Type::Identifier, Token::Type::Operator, Token::Type::Type, Token::Type::EndOfExpression}))
+                nodes.push_back(parseCustomTypePointerVariableDecl(curr, true));
             else {
                 for(auto &node : nodes) delete node;
                 this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
@@ -390,7 +563,7 @@ namespace hex::lang {
                 return { };
             }
 
-            auto variableDecl = parseFreeBuiltinVariableDecl(curr);
+            auto variableDecl = parseFreeBuiltinVariableDecl(curr, false);
 
             program.push_back(variableDecl);
 
@@ -404,7 +577,35 @@ namespace hex::lang {
                 return { };
             }
 
-            auto variableDecl = parseFreeCustomTypeVariableDecl(curr);
+            auto variableDecl = parseFreeCustomTypeVariableDecl(curr, false);
+
+            program.push_back(variableDecl);
+
+            return program;
+
+            // Variable placement declaration with built-in type and big/little endian setting
+        } else if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Type, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+            if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::AtDeclaration) {
+                this->m_error = { curr[-3].lineNumber, "Expected '@' after variable placement declaration" };
+                for(auto &node : program) delete node;
+                return { };
+            }
+
+            auto variableDecl = parseFreeBuiltinVariableDecl(curr, true);
+
+            program.push_back(variableDecl);
+
+            return program;
+
+            // Variable placement declaration with custom type and big/little endian setting
+        } else if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
+            if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::AtDeclaration) {
+                this->m_error = { curr[-3].lineNumber, "Expected '@' after variable placement declaration" };
+                for(auto &node : program) delete node;
+                return { };
+            }
+
+            auto variableDecl = parseFreeCustomTypeVariableDecl(curr, true);
 
             program.push_back(variableDecl);
 

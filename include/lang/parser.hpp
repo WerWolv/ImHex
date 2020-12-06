@@ -22,17 +22,18 @@ namespace hex::lang {
         std::pair<u32, std::string> m_error;
 
 
-        ASTNode* parseBuiltinVariableDecl(TokenIter &curr);
-        ASTNode* parseCustomTypeVariableDecl(TokenIter &curr);
-        ASTNode* parseBuiltinPointerVariableDecl(TokenIter &curr);
-        ASTNode* parseCustomTypePointerVariableDecl(TokenIter &curr);
-        ASTNode* parseBuiltinArrayDecl(TokenIter &curr);
-        ASTNode* parseCustomTypeArrayDecl(TokenIter &curr);
-        ASTNode* parseBuiltinVariableArrayDecl(TokenIter &curr);
-        ASTNode* parseCustomTypeVariableArrayDecl(TokenIter &curr);
+        ASTNode* parseBuiltinVariableDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseCustomTypeVariableDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseBuiltinPointerVariableDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseCustomTypePointerVariableDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseBuiltinArrayDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseCustomTypeArrayDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseBuiltinVariableArrayDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseCustomTypeVariableArrayDecl(TokenIter &curr, bool hasEndianDef);
         ASTNode* parsePaddingDecl(TokenIter &curr);
-        ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr);
-        ASTNode* parseFreeCustomTypeVariableDecl(TokenIter &curr);
+        ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr, bool hasEndianDef);
+        ASTNode* parseFreeCustomTypeVariableDecl(TokenIter &curr, bool hasEndianDef);
+
         ASTNode* parseStruct(TokenIter &curr);
         ASTNode* parseUnion(TokenIter &curr);
         ASTNode* parseEnum(TokenIter &curr);

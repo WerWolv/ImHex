@@ -18,7 +18,7 @@ namespace hex {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             static const char* const keywords[] = {
-                "using", "struct", "union", "enum", "bitfield"
+                "using", "struct", "union", "enum", "bitfield", "be", "le"
             };
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);
@@ -262,17 +262,17 @@ namespace hex {
         this->postEvent(Events::PatternChanged);
 
         hex::lang::Preprocessor preprocessor;
-        std::endian dataEndianess = std::endian::native;
+        std::endian defaultDataEndianess = std::endian::native;
 
-        preprocessor.addPragmaHandler("endian", [&dataEndianess](std::string value) {
+        preprocessor.addPragmaHandler("endian", [&defaultDataEndianess](std::string value) {
            if (value == "big") {
-               dataEndianess = std::endian::big;
+               defaultDataEndianess = std::endian::big;
                return true;
            } else if (value == "little") {
-               dataEndianess = std::endian::little;
+               defaultDataEndianess = std::endian::little;
                return true;
            } else if (value == "native") {
-               dataEndianess = std::endian::native;
+               defaultDataEndianess = std::endian::native;
                return true;
            } else
                return false;
@@ -308,7 +308,7 @@ namespace hex {
             return;
         }
 
-        hex::lang::Evaluator evaluator(this->m_dataProvider, dataEndianess);
+        hex::lang::Evaluator evaluator(this->m_dataProvider, defaultDataEndianess);
         auto [evaluateResult, patternData] = evaluator.evaluate(ast);
         if (evaluateResult.failed()) {
             this->m_textEditor.SetErrorMarkers({ evaluator.getError() });

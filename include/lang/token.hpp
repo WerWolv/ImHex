@@ -28,7 +28,9 @@ namespace hex::lang {
                 Union,
                 Using,
                 Enum,
-                Bitfield
+                Bitfield,
+                LittleEndian,
+                BigEndian
             } keyword;
         } keywordToken;
         struct IdentifierToken {

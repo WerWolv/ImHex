@@ -35,8 +35,8 @@ namespace hex::lang {
     public:
         enum class Type { Padding, Unsigned, Signed, Float, Character, String, Struct, Union, Array, Enum };
 
-        PatternData(Type type, u64 offset, size_t size, const std::string &name, u32 color = 0)
-        : m_type(type), m_offset(offset), m_size(size), m_color(color), m_name(name) {
+        PatternData(Type type, u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
+        : m_type(type), m_offset(offset), m_size(size), m_name(name), m_endianess(endianess), m_color(color) {
             constexpr u32 Palette[] = { 0x50b4771f, 0x500e7fff, 0x502ca02c, 0x502827d6, 0x50bd6794, 0x504b568c, 0x50c277e3, 0x507f7f7f, 0x5022bdbc, 0x50cfbe17 };
 
             if (color != 0)
@@ -58,6 +58,9 @@ namespace hex::lang {
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
         void setColor(u32 color) { this->m_color = color; }
+
+        [[nodiscard]] std::endian getEndianess() const { return this->m_endianess; }
+        void setEndianess(std::endian endianess) { this->m_endianess = endianess; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
         virtual std::string getTypeName() = 0;
@@ -97,10 +100,10 @@ namespace hex::lang {
                 provider->read(left->getOffset(), leftBuffer.data(), left->getSize());
                 provider->read(right->getOffset(), rightBuffer.data(), right->getSize());
 
-                if (PatternData::s_endianess != std::endian::native) {
+                if (left->m_endianess != std::endian::native)
                     std::reverse(leftBuffer.begin(), leftBuffer.end());
+                if (right->m_endianess != std::endian::native)
                     std::reverse(rightBuffer.begin(), rightBuffer.end());
-                }
 
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return leftBuffer > rightBuffer;
@@ -124,7 +127,6 @@ namespace hex::lang {
         }
 
         static void resetPalette() { PatternData::s_paletteOffset = 0; }
-        static void setEndianess(std::endian endianess) { PatternData::s_endianess = endianess; }
 
     protected:
         void createDefaultEntry(std::string value) {
@@ -150,7 +152,7 @@ namespace hex::lang {
         }
 
     protected:
-        static inline std::endian s_endianess = std::endian::native;
+        std::endian m_endianess = std::endian::native;
 
     private:
         Type m_type;
@@ -166,7 +168,7 @@ namespace hex::lang {
 
     class PatternDataPadding : public PatternData {
     public:
-        PatternDataPadding(u64 offset, size_t size) : PatternData(Type::Padding, offset, size, "", 0x00FFFFFF) { }
+        PatternDataPadding(u64 offset, size_t size) : PatternData(Type::Padding, offset, size, "", { }, 0x00FFFFFF) { }
 
         void createEntry(prv::Provider* &provider) override {
         }
@@ -178,15 +180,15 @@ namespace hex::lang {
 
     class PatternDataPointer : public PatternData {
     public:
-        PatternDataPointer(u64 offset, size_t size, const std::string &name, PatternData *pointedAt, u32 color = 0)
-        : PatternData(Type::Unsigned, offset, size, name, color), m_pointedAt(pointedAt) {
+        PatternDataPointer(u64 offset, size_t size, const std::string &name, PatternData *pointedAt, std::endian endianess, u32 color = 0)
+        : PatternData(Type::Unsigned, offset, size, name, endianess, color), m_pointedAt(pointedAt) {
             this->m_pointedAt->setName("*" + this->m_pointedAt->getName());
         }
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
+            data = hex::changeEndianess(data, this->getSize(), this->m_endianess);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -228,12 +230,13 @@ namespace hex::lang {
 
     class PatternDataUnsigned : public PatternData {
     public:
-        PatternDataUnsigned(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Unsigned, offset, size, name, color) { }
+        PatternDataUnsigned(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
+            : PatternData(Type::Unsigned, offset, size, name, endianess, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
+            data = hex::changeEndianess(data, this->getSize(), this->m_endianess);
 
             this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
         }
@@ -252,12 +255,13 @@ namespace hex::lang {
 
     class PatternDataSigned : public PatternData {
     public:
-        PatternDataSigned(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Signed, offset, size, name, color) { }
+        PatternDataSigned(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
+            : PatternData(Type::Signed, offset, size, name, endianess, color) { }
 
        void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), PatternData::s_endianess);
+            data = hex::changeEndianess(data, this->getSize(), this->m_endianess);
 
             s64 signedData = signedData = hex::signExtend(data, this->getSize(), 64);
 
@@ -278,20 +282,21 @@ namespace hex::lang {
 
     class PatternDataFloat : public PatternData {
     public:
-        PatternDataFloat(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Float, offset, size, name, color) { }
+        PatternDataFloat(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
+            : PatternData(Type::Float, offset, size, name, endianess, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             double formatData = 0;
             if (this->getSize() == 4) {
                 float data = 0;
                 provider->read(this->getOffset(), &data, 4);
-                data = hex::changeEndianess(data, 4, PatternData::s_endianess);
+                data = hex::changeEndianess(data, 4, this->m_endianess);
 
                 formatData = data;
             } else if (this->getSize() == 8) {
                 double data = 0;
                 provider->read(this->getOffset(), &data, 8);
-                data = hex::changeEndianess(data, 8, PatternData::s_endianess);
+                data = hex::changeEndianess(data, 8, this->m_endianess);
 
                 formatData = data;
             }
@@ -310,7 +315,8 @@ namespace hex::lang {
 
     class PatternDataCharacter : public PatternData {
     public:
-        PatternDataCharacter(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::Character, offset, size, name, color) { }
+        PatternDataCharacter(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
+            : PatternData(Type::Character, offset, size, name, endianess, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             char character;
@@ -326,7 +332,8 @@ namespace hex::lang {
 
     class PatternDataString : public PatternData {
     public:
-        PatternDataString(u64 offset, size_t size, const std::string &name, u32 color = 0) : PatternData(Type::String, offset, size, name, color) { }
+        PatternDataString(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
+            : PatternData(Type::String, offset, size, name, endianess, color) { }
 
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> buffer(this->getSize() + 1, 0x00);
@@ -343,8 +350,8 @@ namespace hex::lang {
 
     class PatternDataArray : public PatternData {
     public:
-        PatternDataArray(u64 offset, size_t size, const std::string &name, const std::vector<PatternData*> & entries, u32 color = 0)
-            : PatternData(Type::Array, offset, size, name, color), m_entries(entries) { }
+        PatternDataArray(u64 offset, size_t size, const std::string &name, std::endian endianess, const std::vector<PatternData*> & entries, u32 color = 0)
+            : PatternData(Type::Array, offset, size, name, endianess, color), m_entries(entries) { }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
@@ -396,8 +403,8 @@ namespace hex::lang {
 
     class PatternDataStruct : public PatternData {
     public:
-        PatternDataStruct(u64 offset, size_t size, const std::string &name, const std::string &structName, const std::vector<PatternData*> & members, u32 color = 0)
-                : PatternData(Type::Struct, offset, size, name, color), m_structName(structName), m_members(members), m_sortedMembers(members) { }
+        PatternDataStruct(u64 offset, size_t size, const std::string &name, std::endian endianess, const std::string &structName, const std::vector<PatternData*> & members, u32 color = 0)
+                : PatternData(Type::Struct, offset, size, name, endianess, color), m_structName(structName), m_members(members), m_sortedMembers(members) { }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
@@ -454,8 +461,8 @@ namespace hex::lang {
 
     class PatternDataUnion : public PatternData {
     public:
-        PatternDataUnion(u64 offset, size_t size, const std::string &name, const std::string &unionName, const std::vector<PatternData*> & members, u32 color = 0)
-                : PatternData(Type::Union, offset, size, name, color), m_unionName(unionName), m_members(members), m_sortedMembers(members) { }
+        PatternDataUnion(u64 offset, size_t size, const std::string &name, const std::string &unionName, const std::vector<PatternData*> & members, std::endian endianess, u32 color = 0)
+                : PatternData(Type::Union, offset, size, name, endianess, color), m_unionName(unionName), m_members(members), m_sortedMembers(members) { }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
@@ -513,13 +520,13 @@ namespace hex::lang {
 
     class PatternDataEnum : public PatternData {
     public:
-        PatternDataEnum(u64 offset, size_t size, const std::string &name, const std::string &enumName, std::vector<std::pair<u64, std::string>> enumValues, u32 color = 0)
-            : PatternData(Type::Enum, offset, size, name, color), m_enumName(enumName), m_enumValues(enumValues) { }
+        PatternDataEnum(u64 offset, size_t size, const std::string &name, const std::string &enumName, std::vector<std::pair<u64, std::string>> enumValues, std::endian endianess, u32 color = 0)
+            : PatternData(Type::Enum, offset, size, name, endianess, color), m_enumName(enumName), m_enumValues(enumValues) { }
 
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
-            value = hex::changeEndianess(value, this->getSize(), PatternData::s_endianess);
+            value = hex::changeEndianess(value, this->getSize(), this->m_endianess);
 
             std::string valueString = this->m_enumName + "::";
 
@@ -567,13 +574,13 @@ namespace hex::lang {
 
     class PatternDataBitfield : public PatternData {
     public:
-        PatternDataBitfield(u64 offset, size_t size, const std::string &name, const std::string &bitfieldName, std::vector<std::pair<std::string, size_t>> fields, u32 color = 0)
-                : PatternData(Type::Enum, offset, size, name, color), m_bitfieldName(bitfieldName), m_fields(fields) { }
+        PatternDataBitfield(u64 offset, size_t size, const std::string &name, const std::string &bitfieldName, std::vector<std::pair<std::string, size_t>> fields, std::endian endianess, u32 color = 0)
+                : PatternData(Type::Enum, offset, size, name, endianess, color), m_bitfieldName(bitfieldName), m_fields(fields) { }
 
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
-            value = hex::changeEndianess(value, this->getSize(), PatternData::s_endianess);
+            value = hex::changeEndianess(value, this->getSize(), this->m_endianess);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();

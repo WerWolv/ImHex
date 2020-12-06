@@ -110,11 +110,13 @@ namespace hex {
             ImGui::TextWrapped(
                     "Normal variables as well as arrays are used to highlight and display values. "
                     "It is possible to create arrays within structs and unions that use the value of a previously "
-                    "declared variable as size.");
+                    "declared variable as size. In order to override the native / globally set endianess setting, every "
+                    "type in a variable declaration may be prefixed with be or le to turn only it into a big or little endian type.");
             drawCodeSegment("vars arrays",
                     "u32 variable;\n"
                     "s8 string[16];\n"
-                    "u8 customSizedArray[variable];"
+                    "u8 customSizedArray[variable];\n"
+                    "be u32 bigEndianVariable;"
             );
 
             drawTitle("Structs");

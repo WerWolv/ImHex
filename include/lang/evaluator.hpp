@@ -15,7 +15,7 @@ namespace hex::lang {
 
     class Evaluator {
     public:
-        Evaluator(prv::Provider* &provider, std::endian dataEndianess);
+        Evaluator(prv::Provider* &provider, std::endian defaultDataEndianess);
 
         std::pair<Result, std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
@@ -24,7 +24,7 @@ namespace hex::lang {
     private:
         std::unordered_map<std::string, ASTNode*> m_types;
         prv::Provider* &m_provider;
-        std::endian m_dataEndianess;
+        std::endian m_defaultDataEndianess;
 
         std::pair<u32, std::string> m_error;
 

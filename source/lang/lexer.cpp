@@ -192,8 +192,12 @@ namespace hex::lang {
                     tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Enum }, .lineNumber = lineNumber });
                 else if (identifier == "bitfield")
                     tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Bitfield }, .lineNumber = lineNumber });
+                else if (identifier == "be")
+                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::BigEndian }, .lineNumber = lineNumber });
+                else if (identifier == "le")
+                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::LittleEndian }, .lineNumber = lineNumber });
 
-                // Check for built-in types
+                    // Check for built-in types
                 else if (identifier == "u8")
                     tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned8Bit }, .lineNumber = lineNumber });
                 else if (identifier == "s8")
