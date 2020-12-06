@@ -41,7 +41,7 @@ namespace hex {
         std::array<u8, 512> buffer = { 0 };
 
         for (u64 bufferOffset = 0; offset < size; offset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
 
             for (size_t i = 0; i < readSize; i++) {
@@ -74,7 +74,7 @@ namespace hex {
         std::array<u8, 512> buffer = { 0 };
 
         for (u64 bufferOffset = 0; offset < size; offset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
 
             for (size_t i = 0; i < readSize; i++) {
@@ -94,7 +94,7 @@ namespace hex {
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             MD4_Update(&ctx, buffer.data(), readSize);
         }
@@ -113,7 +113,7 @@ namespace hex {
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             MD5_Update(&ctx, buffer.data(), readSize);
         }
@@ -131,7 +131,7 @@ namespace hex {
         SHA1_Init(&ctx);
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             SHA1_Update(&ctx, buffer.data(), readSize);
         }
@@ -150,7 +150,7 @@ namespace hex {
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             SHA224_Update(&ctx, buffer.data(), readSize);
         }
@@ -169,7 +169,7 @@ namespace hex {
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             SHA256_Update(&ctx, buffer.data(), readSize);
         }
@@ -188,7 +188,7 @@ namespace hex {
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             SHA384_Update(&ctx, buffer.data(), readSize);
         }
@@ -207,7 +207,7 @@ namespace hex {
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             SHA512_Update(&ctx, buffer.data(), readSize);
         }

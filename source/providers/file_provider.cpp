@@ -9,18 +9,26 @@
 #include "helpers/utils.hpp"
 #include "helpers/project_file_handler.hpp"
 
+
+#ifdef __APPLE__
+    #define off64_t off_t
+    #define fopen64 fopen
+    #define fseeko64 fseek
+    #define ftello64 ftell
+#endif
+
 namespace hex::prv {
 
     FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
         this->m_fileStatsValid = stat(path.data(), &this->m_fileStats) == 0;
 
-        this->m_file = fopen(path.data(), "r+b");
+        this->m_file = fopen64(path.data(), "r+b");
 
         this->m_readable = true;
         this->m_writable = true;
 
         if (this->m_file == nullptr) {
-            this->m_file = fopen(path.data(), "rb");
+            this->m_file = fopen64(path.data(), "rb");
             this->m_writable = false;
         }
 

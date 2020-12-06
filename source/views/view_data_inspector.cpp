@@ -13,7 +13,7 @@ namespace hex {
         View::subscribeEvent(Events::RegionSelected, [this](const void* userData){
             Region region = *static_cast<const Region*>(userData);
 
-            this->m_validBytes = std::min(this->m_dataProvider->getSize() - region.address, sizeof(PreviewData));
+            this->m_validBytes = std::min(u64(this->m_dataProvider->getSize() - region.address), u64(sizeof(PreviewData)));
             std::memset(&this->m_previewData, 0x00, sizeof(PreviewData));
             this->m_dataProvider->read(region.address, &this->m_previewData, this->m_validBytes);
 

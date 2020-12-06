@@ -227,7 +227,7 @@ struct MemoryEditor
             footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
 
         ImGui::BeginChild("offset", ImVec2(0, s.LineHeight), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
-        ImGui::Text("% *c   ", s.AddrDigitsCount, ' ');
+        ImGui::Text("%*c   ", s.AddrDigitsCount, ' ');
         for (int i = 0; i < Cols; i++) {
             float byte_pos_x = s.PosHexStart + s.HexCellWidth * i;
             if (OptMidColsCount > 0)

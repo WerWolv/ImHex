@@ -231,7 +231,7 @@ namespace hex::lang {
                 char *end = nullptr;
                 std::strtoull(&code[offset], &end, 0);
 
-                auto integer = parseInt(std::string_view(&code[offset], end));
+                auto integer = parseInt(std::string_view(&code[offset], end - &code[offset]));
 
                 if (!integer.has_value()) {
                     this->m_error = { lineNumber, "Invalid integer literal" };
