@@ -354,6 +354,9 @@ namespace hex::lang {
             : PatternData(Type::Array, offset, size, name, endianess, color), m_entries(entries) { }
 
         void createEntry(prv::Provider* &provider) override {
+            if (this->m_entries.empty())
+                return;
+
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);

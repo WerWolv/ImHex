@@ -46,7 +46,7 @@ namespace hex::lang {
 
                 std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
             }
-            else if (member->getArraySize() > 1) {
+            else if (member->getArraySize() > 1 || member->getVariableType() == Token::TypeToken::Type::Padding) {
                 std::tie(pattern, memberSize) = this->createArrayPattern(member, memberOffset);
             }
             else if (member->getArraySizeVariable().has_value()) {
@@ -140,7 +140,7 @@ namespace hex::lang {
                 std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
 
             }
-            else if (member->getArraySize() > 1) {
+            else if (member->getArraySize() > 1 || member->getVariableType() == Token::TypeToken::Type::Padding) {
                 std::tie(pattern, memberSize) = this->createArrayPattern(member, memberOffset);
 
             }
@@ -277,7 +277,7 @@ namespace hex::lang {
             delete nonArrayVarDeclNode;
         }
 
-        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), entries, arrayColor.value()), arrayOffset };
+        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), entries, arrayColor.value_or(0xFF000000)), arrayOffset };
     }
 
     std::pair<PatternData*, size_t> Evaluator::createStringPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
