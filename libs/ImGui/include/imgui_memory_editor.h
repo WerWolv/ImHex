@@ -254,7 +254,7 @@ struct MemoryEditor
 
         bool data_next = false;
 
-        if (ReadOnly || DataEditingAddr >= mem_size)
+        if (DataEditingAddr >= mem_size)
             DataEditingAddr = (size_t)-1;
         if (DataPreviewAddr >= mem_size)
             DataPreviewAddr = (size_t)-1;
@@ -427,9 +427,9 @@ struct MemoryEditor
                         else
                             ImGui::Text(format_byte_space, b);
                     }
-                    if (!ReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
                     {
-                        if (ImGui::IsMouseDoubleClicked(0)) {
+                        if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
                             DataEditingTakeFocus = true;
                             data_editing_addr_next = addr;
                         }
@@ -440,7 +440,7 @@ struct MemoryEditor
                         hex::Region selectionRegion { addr, 1 };
                         hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
                     }
-                    if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                    if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
 
                         size_t dataPreviewStart = std::min(DataPreviewAddr, DataPreviewAddrEnd);
@@ -495,9 +495,9 @@ struct MemoryEditor
 
                     ImGui::PopID();
 
-                    if (!ReadOnly && ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
                     {
-                        if (ImGui::IsMouseDoubleClicked(0)) {
+                        if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
                             DataEditingTakeFocus = true;
                             data_editing_addr_next = addr;
                         }
@@ -506,7 +506,7 @@ struct MemoryEditor
                         DataPreviewAddrEnd = addr;
 
                     }
-                    if (!ReadOnly && ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                    if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
                     }
 
