@@ -8,4 +8,5 @@ pacman -S \
   llvm \
   llvm-libs \
   nlohmann-json \
+  glm \
   python3
