@@ -775,7 +775,8 @@ R"(
             string = "0" + string;
 
         std::vector<u8> hex;
-        hex.reserve(string.size() / 2);
+        hex.reserve(string.size() / 2 + 1);
+        hex[hex.size()-1] = '\0';
 
         for (u32 i = 0; i < string.size(); i += 2) {
             char byte[3] = { string[i], string[i + 1], 0 };
