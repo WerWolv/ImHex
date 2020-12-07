@@ -16,6 +16,11 @@ namespace hex::lang {
         std::unordered_set<std::string> typeNames;
 
         for (const auto &node : ast) {
+            if (node == nullptr) {
+                this->m_error = { 1, "Empty AST" };
+                return false;
+            }
+
             switch (node->getType()) {
                 case ASTNode::Type::VariableDecl:
                 {

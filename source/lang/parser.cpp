@@ -297,13 +297,13 @@ namespace hex::lang {
                 nodes.push_back(parseCustomTypePointerVariableDecl(curr, true));
             else {
                 for(auto &node : nodes) delete node;
-                this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
+                this->m_error = { curr[-1].lineNumber, "Invalid sequence, expected member declaration" };
                 return nullptr;
             }
         }
 
         if (!tryConsume(curr, {Token::Type::EndOfExpression})) {
-            this->m_error = { curr->lineNumber, "Expected ';' after struct definition" };
+            this->m_error = { curr[-1].lineNumber, "Expected ';' after struct definition" };
             for(auto &node : nodes) delete node;
             return nullptr;
         }
@@ -344,7 +344,7 @@ namespace hex::lang {
                 nodes.push_back(parseCustomTypePointerVariableDecl(curr, true));
             else {
                 for(auto &node : nodes) delete node;
-                this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
+                this->m_error = { curr[-1].lineNumber, "Invalid sequence, expected member declaration" };
                 return nullptr;
             }
         }
@@ -428,7 +428,7 @@ namespace hex::lang {
                 fields.emplace_back(curr[-4].identifierToken.identifier, curr[-2].integerToken.integer);
             }
             else {
-                this->m_error = { curr->lineNumber, "Invalid sequence, expected member declaration" };
+                this->m_error = { curr[-1].lineNumber, "Invalid sequence, expected member declaration" };
                 return nullptr;
             }
         }
@@ -591,6 +591,12 @@ namespace hex::lang {
                 return { };
             }
 
+            if (curr[-6].keywordToken.keyword != Token::KeywordToken::Keyword::LittleEndian && curr[-6].keywordToken.keyword != Token::KeywordToken::Keyword::BigEndian) {
+                this->m_error = { curr[-3].lineNumber, "Expected endianess identifier" };
+                for(auto &node : program) delete node;
+                return { };
+            }
+
             auto variableDecl = parseFreeBuiltinVariableDecl(curr, true);
 
             program.push_back(variableDecl);
@@ -601,6 +607,12 @@ namespace hex::lang {
         } else if (tryConsume(curr, { Token::Type::Keyword, Token::Type::Identifier, Token::Type::Identifier, Token::Type::Operator, Token::Type::Integer, Token::Type::EndOfExpression})) {
             if (curr[-3].operatorToken.op != Token::OperatorToken::Operator::AtDeclaration) {
                 this->m_error = { curr[-3].lineNumber, "Expected '@' after variable placement declaration" };
+                for(auto &node : program) delete node;
+                return { };
+            }
+
+            if (curr[-6].keywordToken.keyword != Token::KeywordToken::Keyword::LittleEndian && curr[-6].keywordToken.keyword != Token::KeywordToken::Keyword::BigEndian) {
+                this->m_error = { curr[-6].lineNumber, "Expected endianess identifier" };
                 for(auto &node : program) delete node;
                 return { };
             }
@@ -624,8 +636,10 @@ namespace hex::lang {
         while (curr->type != endTokenType) {
             auto newTokens = parseStatement(curr);
 
-            if (!newTokens.has_value())
-                break;
+            if (!newTokens.has_value()) {
+                for (auto &node : program) delete node;
+                return { };
+            }
 
             program.insert(program.end(), newTokens->begin(), newTokens->end());
         }
