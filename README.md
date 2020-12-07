@@ -85,38 +85,37 @@ For format patterns, includable libraries and magic files, check of the [ImHex-P
 
 ## Compiling
 
-This guide assumes you're either on Windows using mingw or on Arch Linux
+You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreover, The following dependencies are needed for compiling ImHex:
 
-You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex.
-The following libraries are needed to compile ImHex. All of them can be found in the default pacman repositories
-```
-GLFW3                                             ( (sudo) pacman -S glfw )
-libmagic, libgnurx, libtre, libintl, libiconv     ( (sudo) pacman -S file )
-libcrypto                                         ( (sudo) pacman -S openssl )
-capstone                                          ( (sudo) pacman -S capstone )
-libLLVMDemangle                                   ( (sudo) pacman -S llvm llvm-libs )
-nlohmann json                                     ( (sudo) pacman -S nlohmann-json )
-Python3                                           ( (sudo) pacman -S python3 )
+- GLFW3
+- libmagic, libgnurx, libtre, libintl, libiconv
+- libcrypto
+- capstone
+- libLLVMDemangle
+- nlohmann json
+- Python3
 
-All in one for Arch Linux: sudo pacman -S glfw file openssl capstone llvm llvm-libs nlohmann-json python3
-All in one for Fedora: sudo dnf install cmake gcc-c++ capstone-devel glfw-devel glm-devel json-devel llvm-devel mesa-libGL-devel openssl-devel python-devel
-All in one for MinGW: pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-make mingw-w64-x86_64-capstone mingw-w64-x86_64-glfw mingw-w64-x86_64-glm mingw-w64-x86_64-file mingw-w64-x86_64-llvm mingw-w64-x86_64-nlohmann-json mingw-w64-x86_64-openssl mingw-w64-x86_64-polly mingw-w64-x86_64-pytho
-```
+Find all in one dependency installation scripts for Arch Linux, Fedora and/or MSYS2 in [dist](dist).
 
-After all the libraries are installed, run the following commands to build ImHex
-```
+After all the dependencies are installed, run the following commands to build ImHex:
+
+```sh
 mkdir build
 cd build
 cmake ..
 make -j
 ```
 
-On Windows, download the python standard library from https://github.com/python/cpython/tree/master/Lib and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` and `libwinpthread-1.dll` from your mingw setup next to the executable.
+---
 
-On both Windows and Linux, copy the files from `python_libs` in the `lib` folder next to your built executable.
-Place your magic databases in the `magic` folder next to your built executable
-Place your patterns in the `pattern` folder next to your built executable
-Place your include pattern files in the `include` folder next to your built executable
+To create a standalone zipfile on Windows, get the Python standard library (e.g. from https://github.com/python/cpython/tree/master/Lib) and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` and `libwinpthread-1.dll` from your mingw setup next to the executable.
+
+On both Windows and Linux:
+
+- Copy the files from `python_libs` in the `lib` folder next to your built executable.
+- Place your magic databases in the `magic` folder next to your built executable
+- Place your patterns in the `pattern` folder next to your built executable
+- Place your include pattern files in the `include` folder next to your built executable
 
 ## Credits
 
@@ -126,4 +125,3 @@ Place your include pattern files in the `include` folder next to your built exec
   - Thanks to AirGuanZ for their amazing [imgui-filebrowser](https://github.com/AirGuanZ/imgui-filebrowser) used for loading and saving files
 - Thanks to nlohmann for their [json](https://github.com/nlohmann/json) library used for project files
 - Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
-
