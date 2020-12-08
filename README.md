@@ -1,6 +1,6 @@
 # ImHex
 
-A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM.
+Sorry, I am just practicing pull requests
 
 ## Supporting
 
