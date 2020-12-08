@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=ImHex
+GenericName=Hex editor
+GenericName[fr]=Éditeur hexadécimal
+Comment=Hexadecimal editor and disassembler
+Comment[fr]=Éditeur hexadécimal et désassembleur
+Exec=imhex
+Icon=imhex
+Terminal=false
+Type=Application
+Categories=Development;

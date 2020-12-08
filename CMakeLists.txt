@@ -46,7 +46,7 @@ endif (WIN32)
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE")
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
-add_executable(ImHex
+add_executable(imhex
         source/main.cpp
         source/window.cpp
 
@@ -93,14 +93,17 @@ add_executable(ImHex
         resource.rc
         )
 
-target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
+target_link_directories(imhex PRIVATE ${LLVM_LIBRARY_DIR})
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+    target_link_libraries(imhex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+    target_link_libraries(imhex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif (UNIX)
 
-install(TARGETS ImHex DESTINATION bin)
+install(TARGETS imhex DESTINATION bin)
+install(FILES icon.png DESTINATION share/icons/hicolor/256x256/apps RENAME imhex.png)
+install(FILES dist/linux/net.werwolv.ImHex.desktop DESTINATION share/applications)
+install(FILES dist/linux/net.werwolv.ImHex.appdata.xml DESTINATION share/appdata)
