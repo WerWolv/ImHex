@@ -4,6 +4,7 @@ dnf install \
   cmake \
   gcc-c++ \
   capstone-devel \
+  file-devel \
   glfw-devel \
   glm-devel \
   json-devel \
