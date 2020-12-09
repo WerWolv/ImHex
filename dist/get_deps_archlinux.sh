@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-pacman -S \
+pacman -S --needed \
   glfw \
   file \
   openssl \
