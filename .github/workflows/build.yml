@@ -52,15 +52,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env:
+        include:
           - { msystem: MINGW64, arch: x86_64 }
           #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟪 ${{ matrix.env.msystem }} · ${{ matrix.env.arch }} · manual
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · manual
     defaults:
       run:
         shell: msys2 {0}
     env:
-      MINGW_INSTALLS: ${{ matrix.env.msystem }}
+      MINGW_INSTALLS: ${{ matrix.msystem }}
     steps:
 
     - name: 🧰 Checkout
@@ -71,21 +71,21 @@ jobs:
     - name: 🟪 Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: ${{ matrix.env.msystem }}
+        msystem: ${{ matrix.msystem }}
         update: true
         install: >
-          mingw-w64-${{ matrix.env.arch }}-gcc
-          mingw-w64-${{ matrix.env.arch }}-cmake
-          mingw-w64-${{ matrix.env.arch }}-make
-          mingw-w64-${{ matrix.env.arch }}-capstone
-          mingw-w64-${{ matrix.env.arch }}-glfw
-          mingw-w64-${{ matrix.env.arch }}-glm
-          mingw-w64-${{ matrix.env.arch }}-file
-          mingw-w64-${{ matrix.env.arch }}-llvm
-          mingw-w64-${{ matrix.env.arch }}-nlohmann-json
-          mingw-w64-${{ matrix.env.arch }}-openssl
-          mingw-w64-${{ matrix.env.arch }}-polly
-          mingw-w64-${{ matrix.env.arch }}-python
+          mingw-w64-${{ matrix.arch }}-gcc
+          mingw-w64-${{ matrix.arch }}-cmake
+          mingw-w64-${{ matrix.arch }}-make
+          mingw-w64-${{ matrix.arch }}-capstone
+          mingw-w64-${{ matrix.arch }}-glfw
+          mingw-w64-${{ matrix.arch }}-glm
+          mingw-w64-${{ matrix.arch }}-file
+          mingw-w64-${{ matrix.arch }}-llvm
+          mingw-w64-${{ matrix.arch }}-nlohmann-json
+          mingw-w64-${{ matrix.arch }}-openssl
+          mingw-w64-${{ matrix.arch }}-polly
+          mingw-w64-${{ matrix.arch }}-python
 
     - name: ✋ Build
       run: |
@@ -100,10 +100,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env:
+        include:
           - { msystem: MINGW64, arch: x86_64 }
           #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟪 ${{ matrix.env.msystem }} · ${{ matrix.env.arch }} · makepkg
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · makepkg
     defaults:
       run:
         shell: msys2 {0}
@@ -120,18 +120,18 @@ jobs:
     - name: 🟪 Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: ${{ matrix.env.msystem }}
+        msystem: ${{ matrix.msystem }}
         update: true
         install: >
           base-devel
-          mingw-w64-${{ matrix.env.arch }}-toolchain
+          mingw-w64-${{ matrix.arch }}-toolchain
 
     - name: 🔧 Build
       run: |
         cd msys2
         makepkg-mingw --noconfirm --noprogressbar -sCLf
       env:
-        MINGW_INSTALLS: ${{ matrix.env.msystem }}
+        MINGW_INSTALLS: ${{ matrix.msystem }}
 
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
@@ -145,10 +145,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env:
+        include:
           - { msystem: MINGW64, arch: x86_64 }
           #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟪 ${{ matrix.env.msystem }} · ${{ matrix.env.arch }} · test
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · test
     defaults:
       run:
         shell: msys2 {0}
@@ -157,7 +157,7 @@ jobs:
     - name: 🟪 Setup MSYS2
       uses: msys2/setup-msys2@v2
       with:
-        msystem: ${{ matrix.env.msystem }}
+        msystem: ${{ matrix.msystem }}
         update: true
 
     - name: '📥 Download artifacts'
