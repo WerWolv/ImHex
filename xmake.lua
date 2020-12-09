@@ -7,7 +7,7 @@ toolchain_end()
 
 add_requires("brew::libmagic","nlohmann_json","brew::glfw", "brew::capstone","brew::openssl@1.1","brew::python@3.8/python-3.8")
 
-target("imhex")
+target("ImHex")
     set_kind("binary")
     set_languages("c99", "c++20")
     set_toolchains("mygcc")
