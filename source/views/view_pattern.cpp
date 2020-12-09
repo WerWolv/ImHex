@@ -302,7 +302,6 @@ namespace hex {
         auto ast = parser.parse(tokens.value());
         if (!ast.has_value()) {
             this->m_textEditor.SetErrorMarkers({ parser.getError() });
-            printf("%d %s\n", parser.getError().first, parser.getError().second.c_str());
             return;
         }
 

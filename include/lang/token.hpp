@@ -2,6 +2,8 @@
 
 #include <hex.hpp>
 
+#include "helpers/utils.hpp"
+
 #include <string>
 #include <variant>
 
@@ -54,6 +56,10 @@ namespace hex::lang {
             CustomType          = 0x00,
             Padding             = 0x1F,
 
+            Unsigned            = 0xFF00,
+            Signed              = 0xFF01,
+            FloatingPoint       = 0xFF02,
+            Integer             = 0xFF03,
             Any                 = 0xFFFF
         };
 
@@ -69,19 +75,53 @@ namespace hex::lang {
             EndOfProgram
         };
 
+        using ValueTypes = std::variant<Keyword, std::string, Operator, s128, ValueType, Separator>;
+
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
 
         }
 
-    private:
-        using ValueTypes = std::variant<Keyword, std::string, Operator, s128, ValueType, Separator>;
+        [[nodiscard]] constexpr static inline bool isUnsigned(const lang::Token::ValueType type) {
+            return (static_cast<u32>(type) & 0x0F) == 0x00;
+        }
 
-    public:
-        bool operator==(const ValueTypes &value) const {
-            if (this->type == Type::Integer || this->type == Type::Identifier || (this->type == Type::ValueType && *std::get_if<ValueType>(&value) == ValueType::Any))
+        [[nodiscard]] constexpr static inline bool isSigned(const lang::Token::ValueType type) {
+            return (static_cast<u32>(type) & 0x0F) == 0x01;
+        }
+
+        [[nodiscard]] constexpr static inline bool isFloatingPoint(const lang::Token::ValueType type) {
+            return (static_cast<u32>(type) & 0x0F) == 0x02;
+        }
+
+        [[nodiscard]] constexpr static inline u32 getTypeSize(const lang::Token::ValueType type) {
+            return static_cast<u32>(type) >> 4;
+        }
+
+        bool operator==(const ValueTypes &other) const {
+            if (this->type == Type::Integer || this->type == Type::Identifier)
                 return true;
+            else if (this->type == Type::ValueType) {
+                auto otherValueType =  std::get_if<ValueType>(&other);
+                auto valueType =  std::get_if<ValueType>(&this->value);
+
+                if (otherValueType == nullptr) return false;
+                if (valueType == nullptr) return false;
+
+                if (*otherValueType == ValueType::Any)
+                    return true;
+                else if (*otherValueType == ValueType::Unsigned)
+                    return isUnsigned(*valueType);
+                else if (*otherValueType == ValueType::Signed)
+                    return isSigned(*valueType);
+                else if (*otherValueType == ValueType::FloatingPoint)
+                    return isFloatingPoint(*valueType);
+                else if (*otherValueType == ValueType::Integer)
+                    return isUnsigned(*valueType) || isSigned(*valueType);
+            }
             else
-                return value == this->value;
+                return other == this->value;
+
+            return false;
         }
 
         bool operator!=(const ValueTypes &value) const {
@@ -134,6 +174,10 @@ namespace hex::lang {
 
 #define VALUETYPE_CUSTOMTYPE            COMPONENT(ValueType, CustomType)
 #define VALUETYPE_PADDING               COMPONENT(ValueType, Padding)
+#define VALUETYPE_UNSIGNED              COMPONENT(ValueType, Unsigned)
+#define VALUETYPE_SIGNED                COMPONENT(ValueType, Signed)
+#define VALUETYPE_FLOATINGPOINT         COMPONENT(ValueType, FloatingPoint)
+#define VALUETYPE_INTEGER               COMPONENT(ValueType, Integer)
 #define VALUETYPE_ANY                   COMPONENT(ValueType, Any)
 
 #define SEPARATOR_ROUNDBRACKETOPEN      COMPONENT(Separator, RoundBracketOpen)
