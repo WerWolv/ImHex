@@ -1,0 +1,172 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+
+
+  lin:
+    runs-on: ubuntu-20.04
+    name: 🐧 Ubuntu 20.04
+    steps:
+
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: ⬇️ Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential       \
+          gcc-10                \
+          g++-10                \
+          pkg-config            \
+          cmake                 \
+          make                  \
+          libglfw3-dev          \
+          libglm-dev            \
+          libmagic-dev          \
+          libssl-dev            \
+          libcapstone-dev       \
+          llvm-dev              \
+          nlohmann-json3-dev    \
+          python3-dev           \
+
+    - name: ✋ Build
+      run: |
+        mkdir build
+        cd build
+        CC=gcc-10 CXX=g++-10 cmake ..
+        make -j 4
+
+
+  win-manual:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { msystem: MINGW64, arch: x86_64 }
+          #- { msystem: MINGW32, arch: i686   } # currently fail
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · manual
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      MINGW_INSTALLS: ${{ matrix.msystem }}
+    steps:
+
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: 🟪 Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        update: true
+        install: >
+          mingw-w64-${{ matrix.arch }}-gcc
+          mingw-w64-${{ matrix.arch }}-cmake
+          mingw-w64-${{ matrix.arch }}-make
+          mingw-w64-${{ matrix.arch }}-capstone
+          mingw-w64-${{ matrix.arch }}-glfw
+          mingw-w64-${{ matrix.arch }}-glm
+          mingw-w64-${{ matrix.arch }}-file
+          mingw-w64-${{ matrix.arch }}-llvm
+          mingw-w64-${{ matrix.arch }}-nlohmann-json
+          mingw-w64-${{ matrix.arch }}-openssl
+          mingw-w64-${{ matrix.arch }}-polly
+          mingw-w64-${{ matrix.arch }}-python
+
+    - name: ✋ Build
+      run: |
+        mkdir build
+        cd build
+        cmake -G "MinGW Makefiles" ..
+        mingw32-make -j 4
+
+
+  win-makepkg:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { msystem: MINGW64, arch: x86_64 }
+          #- { msystem: MINGW32, arch: i686   } # currently fail
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · makepkg
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: 🟪 Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        update: true
+        install: >
+          base-devel
+          mingw-w64-${{ matrix.arch }}-toolchain
+
+    - name: 🔧 Build
+      run: |
+        cd msys2
+        makepkg-mingw --noconfirm --noprogressbar -sCLf
+      env:
+        MINGW_INSTALLS: ${{ matrix.msystem }}
+
+    - name: '📤 Upload artifact: package'
+      uses: actions/upload-artifact@v2
+      with:
+        path: msys2/*.zst
+
+
+  win-test:
+    needs: win-makepkg
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { msystem: MINGW64, arch: x86_64 }
+          #- { msystem: MINGW32, arch: i686   } # currently fail
+    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · test
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: 🟪 Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        update: true
+
+    - name: '📥 Download artifacts'
+      uses: actions/download-artifact@v2
+
+    - name: ⚙️ Install
+      run: |
+        pacman -U --noconfirm --noprogressbar artifact/*.zst
+
+    - name: ▶️ Test
+      run: |
+        which ImHex

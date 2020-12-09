@@ -1,3 +1,8 @@
+<p align="center">
+  <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild"><img alt="'Build' workflow Status" src="https://img.shields.io/github/workflow/status/WerWolv/ImHex/Build?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions"></a><!--
+  -->
+</p>
+
 # ImHex
 
 A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM.
@@ -6,9 +11,11 @@ A Hex Editor for Reverse Engineers, Programmers and people that value their eye 
 
 If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPal. Thanks a lot!
 
+<p align="center">
 <a href="https://github.com/sponsors/WerWolv"><img src="https://werwolv.net/assets/github_banner.png" alt="GitHub donate button" /> </a>
 <a href="https://www.patreon.com/werwolv"><img src="https://c5.patreon.com/external/logo/become_a_patron_button.png" alt="Patreon donate button" /> </a>
 <a href="https://werwolv.net/donate"><img src="https://werwolv.net/assets/paypal_banner.png" alt="PayPal donate button" /> </a>
+</p>
 
 ## Features
 
