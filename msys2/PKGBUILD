@@ -1,0 +1,46 @@
+_realname=ImHex
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=ci
+pkgrel=1
+pkgdesc="${_realname}: a Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM (mingw-w64)"
+arch=('any')
+url="https://github.com/WerWolv/ImHex"
+license=('GPLv2')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-make"
+             "${MINGW_PACKAGE_PREFIX}-capstone"
+             "${MINGW_PACKAGE_PREFIX}-glfw"
+             "${MINGW_PACKAGE_PREFIX}-glm"
+             "${MINGW_PACKAGE_PREFIX}-file"
+             "${MINGW_PACKAGE_PREFIX}-llvm"
+             "${MINGW_PACKAGE_PREFIX}-nlohmann-json"
+             "${MINGW_PACKAGE_PREFIX}-openssl"
+             "${MINGW_PACKAGE_PREFIX}-polly"
+             "${MINGW_PACKAGE_PREFIX}-python")
+
+source=()
+sha256sums=()
+
+build() {
+  cd "${srcdir}"/../..
+  mkdir build
+  cd build
+  export BUILD_TYPE='Release'
+  MSYS2_ARG_CONV_EXCL=- cmake \
+    -G "MinGW Makefiles" \
+    -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+    ../
+  mingw32-make
+}
+
+package() {
+  cd "${srcdir}"/../../build
+  mingw32-make DESTDIR="${pkgdir}" install
+
+  _licenses="${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+  mkdir -p "${_licenses}"
+  install -m 644 ../LICENSE "${_licenses}"
+}
