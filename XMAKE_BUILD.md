@@ -1,12 +1,14 @@
 # Build ImHex with xmake on mac
 
-## XMake Introduction
-
 <div align="center">
   <a href="https://xmake.io">
     <img width="160" heigth="160" src="https://tboox.org/static/img/xmake/logo256c.png">
   </a>
-<div>
+</div>
+
+## XMake Introduction
+
+A cross-platform build utility based on Lua
 
 ### docs
 https://github.com/xmake-io/xmake
