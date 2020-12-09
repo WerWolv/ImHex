@@ -493,7 +493,7 @@ namespace hex {
             return false;
 
         fseek(file, 0, SEEK_END);
-        size_t size = ftello64(file);
+        size_t size = ftello(file);
         rewind(file);
 
         data.resize(size);

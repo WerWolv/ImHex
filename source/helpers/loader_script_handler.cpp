@@ -181,7 +181,7 @@ namespace hex {
     bool LoaderScript::processFile(std::string_view scriptPath) {
         Py_SetProgramName(Py_DecodeLocale(mainArgv[0], nullptr));
 
-        if (std::filesystem::exists(std::filesystem::path(mainArgv[0]).parent_path().string() + "/lib/python" PYTHON_VERSION_MAJOR_MINOR))
+        if (std::filesystem::exists(std::filesystem::path(mainArgv[0]).parent_path().string() + "/lib/python3.8"))
             Py_SetPythonHome(Py_DecodeLocale(std::filesystem::path(mainArgv[0]).parent_path().string().c_str(), nullptr));
 
         PyImport_AppendInittab("_imhex", []() -> PyObject* {

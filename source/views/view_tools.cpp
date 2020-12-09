@@ -7,8 +7,11 @@
 #include "providers/provider.hpp"
 #include "helpers/utils.hpp"
 
+#if !defined(__GNUC__)
 #include <llvm/Demangle/Demangle.h>
+#endif
 
+extern "C" char* __cxa_demangle(const char*, char*, size_t*, int*);
 namespace hex {
 
     ViewTools::ViewTools(hex::prv::Provider* &provider) : View("Tools"), m_dataProvider(provider) {
@@ -76,7 +79,11 @@ namespace hex {
     void ViewTools::drawDemangler() {
         if (ImGui::CollapsingHeader("Itanium/MSVC demangler")) {
             if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xF'FFFF)) {
+                #if !defined(__GNUC__)
                 this->m_demangledName = llvm::demangle(this->m_mangledBuffer);
+                #else
+                this->m_demangledName  = __cxa_demangle(this->m_mangledBuffer, nullptr, nullptr, nullptr);
+                #endif
             }
 
             ImGui::InputText("Demangled name", this->m_demangledName.data(), this->m_demangledName.size(), ImGuiInputTextFlags_ReadOnly);

@@ -4,10 +4,12 @@
 #include "helpers/utils.hpp"
 
 #include <cstring>
-
+#if !defined(__GNUC__)
 #include <llvm/Demangle/Demangle.h>
+#endif
 
 using namespace std::literals::string_literals;
+extern "C" char* __cxa_demangle(const char*, char*, size_t*, int*);
 
 namespace hex {
 
@@ -37,7 +39,11 @@ namespace hex {
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Demangle")) {
+                #if !defined(__GNUC__)
                 this->m_demangledName = llvm::demangle(this->m_selectedString);
+                #else
+                this->m_demangledName  = __cxa_demangle(this->m_selectedString.c_str(), nullptr, nullptr, nullptr);
+                #endif
                 if (!this->m_demangledName.empty())
                     View::doLater([]{ ImGui::OpenPopup("Demangled Name"); });
             }
