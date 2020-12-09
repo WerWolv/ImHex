@@ -34,10 +34,10 @@ namespace hex::lang {
 
     class ASTNodeVariableDecl : public ASTNode {
     public:
-        explicit ASTNodeVariableDecl(u32 lineNumber, const Token::TypeToken::Type &type, const std::string &name, const std::string& customTypeName = "", std::optional<u64> offset = { }, size_t arraySize = 1, std::optional<std::string> arraySizeVariable = { }, std::optional<u8> pointerSize = { }, std::optional<std::endian> endianess = { })
+        explicit ASTNodeVariableDecl(u32 lineNumber, const Token::ValueType &type, const std::string &name, const std::string& customTypeName = "", std::optional<u64> offset = { }, size_t arraySize = 1, std::optional<std::string> arraySizeVariable = { }, std::optional<u8> pointerSize = { }, std::optional<std::endian> endianess = { })
             : ASTNode(Type::VariableDecl, lineNumber), m_type(type), m_name(name), m_customTypeName(customTypeName), m_offset(offset), m_arraySize(arraySize), m_arraySizeVariable(arraySizeVariable), m_pointerSize(pointerSize), m_endianess(endianess) { }
 
-        const Token::TypeToken::Type& getVariableType() const { return this->m_type; }
+        const Token::ValueType& getVariableType() const { return this->m_type; }
         const std::string& getCustomVariableTypeName() const { return this->m_customTypeName; }
         const std::string& getVariableName() const { return this->m_name; };
         std::optional<u64> getOffset() const { return this->m_offset; }
@@ -47,7 +47,7 @@ namespace hex::lang {
         std::optional<std::endian> getEndianess() const { return this->m_endianess; }
 
     private:
-        Token::TypeToken::Type m_type;
+        Token::ValueType m_type;
         std::string m_name, m_customTypeName;
         std::optional<u64> m_offset;
         size_t m_arraySize;
@@ -103,29 +103,29 @@ namespace hex::lang {
 
     class ASTNodeTypeDecl : public ASTNode {
     public:
-        explicit ASTNodeTypeDecl(u32 lineNumber, const Token::TypeToken::Type &type, const std::string &name, const std::string& customTypeName = "")
+        explicit ASTNodeTypeDecl(u32 lineNumber, const Token::ValueType &type, const std::string &name, const std::string& customTypeName = "")
                 : ASTNode(Type::TypeDecl, lineNumber), m_type(type), m_name(name), m_customTypeName(customTypeName) { }
 
         const std::string& getTypeName() const { return this->m_name; };
 
-        const Token::TypeToken::Type& getAssignedType() const { return this->m_type; }
+        const Token::ValueType& getAssignedType() const { return this->m_type; }
         const std::string& getAssignedCustomTypeName() const { return this->m_customTypeName; }
     private:
-        Token::TypeToken::Type m_type;
+        Token::ValueType m_type;
         std::string m_name, m_customTypeName;
     };
 
     class ASTNodeEnum : public ASTNode {
     public:
-        explicit ASTNodeEnum(u32 lineNumber, const Token::TypeToken::Type &type, const std::string &name)
+        explicit ASTNodeEnum(u32 lineNumber, const Token::ValueType &type, const std::string &name)
                 : ASTNode(Type::Enum, lineNumber), m_type(type), m_name(name) { }
 
         const std::string& getName() const { return this->m_name; };
 
-        const Token::TypeToken::Type& getUnderlyingType() const { return this->m_type; }
+        const Token::ValueType& getUnderlyingType() const { return this->m_type; }
         std::vector<std::pair<u64, std::string>>& getValues() { return this->m_values; }
     private:
-        Token::TypeToken::Type m_type;
+        Token::ValueType m_type;
         std::string m_name;
         std::vector<std::pair<u64, std::string>> m_values;
     };

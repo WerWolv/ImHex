@@ -48,7 +48,7 @@ namespace hex::lang {
                         return false;
                     }
 
-                    if (typeDeclNode->getAssignedType() == Token::TypeToken::Type::CustomType && !typeNames.contains(typeDeclNode->getAssignedCustomTypeName())) {
+                    if (typeDeclNode->getAssignedType() == Token::ValueType::CustomType && !typeNames.contains(typeDeclNode->getAssignedCustomTypeName())) {
                         this->m_error = { typeDeclNode->getLineNumber(), "Type declaration without a name" };
                         return false;
                     }

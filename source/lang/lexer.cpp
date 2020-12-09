@@ -6,6 +6,9 @@
 
 namespace hex::lang {
 
+#define TOKEN(type, value) Token(Token::Type::type, Token::type::value, lineNumber)
+#define VALUE_TOKEN(type, value) Token(Token::Type::type, value, lineNumber)
+
     Lexer::Lexer() { }
 
     std::string matchTillInvalid(const char* characters, std::function<bool(char)> predicate) {
@@ -108,34 +111,40 @@ namespace hex::lang {
                 if (code[offset] == '\n') lineNumber++;
                 offset += 1;
             } else if (c == ';') {
-                tokens.push_back({ .type = Token::Type::EndOfExpression, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Separator, EndOfExpression));
+                offset += 1;
+            } else if (c == '(') {
+                tokens.push_back(TOKEN(Separator, RoundBracketOpen));
+                offset += 1;
+            } else if (c == ')') {
+                tokens.push_back(TOKEN(Separator, RoundBracketClose));
                 offset += 1;
             } else if (c == '{') {
-                tokens.push_back({ .type = Token::Type::ScopeOpen, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Separator, CurlyBracketOpen));
                 offset += 1;
             } else if (c == '}') {
-                tokens.push_back({ .type = Token::Type::ScopeClose, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Separator, CurlyBracketClose));
                 offset += 1;
             } else if (c == '[') {
-                tokens.push_back({ .type = Token::Type::ArrayOpen, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Separator, SquareBracketOpen));
                 offset += 1;
             } else if (c == ']') {
-                tokens.push_back({.type = Token::Type::ArrayClose, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Separator, SquareBracketClose));
                 offset += 1;
             } else if (c == ',') {
-                tokens.push_back({ .type = Token::Type::Separator, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Separator, Comma));
                 offset += 1;
             } else if (c == '@') {
-              tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::AtDeclaration }, .lineNumber = lineNumber });
+              tokens.push_back(TOKEN(Operator, AtDeclaration));
               offset += 1;
             } else if (c == '=') {
-                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Assignment }, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Operator, Assignment));
                 offset += 1;
             } else if (c == ':') {
-                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Inherit }, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Operator, Inherit));
                 offset += 1;
             } else if (c == '*') {
-                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Star }, .lineNumber = lineNumber });
+                tokens.push_back(TOKEN(Operator, Star));
                 offset += 1;
             } else if (c == '\'') {
                 offset += 1;
@@ -175,7 +184,7 @@ namespace hex::lang {
                     return { };
                 }
 
-                tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = character }, .lineNumber = lineNumber });
+                tokens.push_back(VALUE_TOKEN(Integer, character));
                 offset += 1;
 
             } else if (std::isalpha(c)) {
@@ -184,52 +193,52 @@ namespace hex::lang {
                 // Check for reserved keywords
 
                 if (identifier == "struct")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Struct }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, Struct));
                 else if (identifier == "union")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Union }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, Union));
                 else if (identifier == "using")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Using }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, Using));
                 else if (identifier == "enum")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Enum }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, Enum));
                 else if (identifier == "bitfield")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Bitfield }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, Bitfield));
                 else if (identifier == "be")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::BigEndian }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, BigEndian));
                 else if (identifier == "le")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::LittleEndian }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(Keyword, LittleEndian));
 
                     // Check for built-in types
                 else if (identifier == "u8")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned8Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Unsigned8Bit));
                 else if (identifier == "s8")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed8Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Signed8Bit));
                 else if (identifier == "u16")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned16Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Unsigned16Bit));
                 else if (identifier == "s16")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed16Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Signed16Bit));
                 else if (identifier == "u32")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned32Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Unsigned32Bit));
                 else if (identifier == "s32")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed32Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Signed32Bit));
                 else if (identifier == "u64")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned64Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Unsigned64Bit));
                 else if (identifier == "s64")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed64Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Signed64Bit));
                 else if (identifier == "u128")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned128Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Unsigned128Bit));
                 else if (identifier == "s128")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed128Bit }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Signed128Bit));
                 else if (identifier == "float")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Float }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Float));
                 else if (identifier == "double")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Double }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Double));
                 else if (identifier == "padding")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Padding }, .lineNumber = lineNumber });
+                    tokens.push_back(TOKEN(ValueType, Padding));
 
                 // If it's not a keyword and a builtin type, it has to be an identifier
 
                 else
-                    tokens.push_back({.type = Token::Type::Identifier, .identifierToken = { .identifier = identifier }, .lineNumber = lineNumber });
+                    tokens.push_back(VALUE_TOKEN(Identifier, identifier));
 
                 offset += identifier.length();
             } else if (std::isdigit(c)) {
@@ -243,7 +252,7 @@ namespace hex::lang {
                     return { };
                 }
 
-                tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = integer.value() }, .lineNumber = lineNumber });
+                tokens.push_back(VALUE_TOKEN(Integer, integer.value()));
                 offset += (end - &code[offset]);
             } else {
                 this->m_error = { lineNumber, "Unknown token" };
@@ -251,7 +260,7 @@ namespace hex::lang {
             }
         }
 
-        tokens.push_back({ .type = Token::Type::EndOfProgram, .lineNumber = lineNumber });
+        tokens.push_back(TOKEN(Separator, EndOfProgram));
 
         return tokens;
     }

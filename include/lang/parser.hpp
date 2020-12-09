@@ -1,9 +1,14 @@
 #pragma once
 
 #include <hex.hpp>
+
 #include "token.hpp"
 #include "ast_node.hpp"
 
+#include "helpers/utils.hpp"
+
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace hex::lang {
@@ -19,31 +24,53 @@ namespace hex::lang {
         const std::pair<u32, std::string>& getError() { return this->m_error; }
 
     private:
-        std::pair<u32, std::string> m_error;
+        using ParseError = std::pair<u32, std::string>;
 
+        ParseError m_error;
+        TokenIter m_curr;
 
-        ASTNode* parseBuiltinVariableDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseCustomTypeVariableDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseBuiltinPointerVariableDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseCustomTypePointerVariableDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseBuiltinArrayDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseCustomTypeArrayDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseBuiltinVariableArrayDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseCustomTypeVariableArrayDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parsePaddingDecl(TokenIter &curr);
-        ASTNode* parseFreeBuiltinVariableDecl(TokenIter &curr, bool hasEndianDef);
-        ASTNode* parseFreeCustomTypeVariableDecl(TokenIter &curr, bool hasEndianDef);
+        void throwParseError(std::string_view error) {
+            throw ParseError(this->m_curr[-1].lineNumber, error);
+        }
 
-        ASTNode* parseStruct(TokenIter &curr);
-        ASTNode* parseUnion(TokenIter &curr);
-        ASTNode* parseEnum(TokenIter &curr);
-        ASTNode *parseBitField(TokenIter &curr);
-        ASTNode *parseScope(TokenIter &curr);
-        std::optional<ASTNode*> parseUsingDeclaration(TokenIter &curr);
-        std::optional<std::vector<ASTNode*>> parseStatement(TokenIter &curr);
+        std::vector<ASTNode*> parseStatement();
 
-        std::vector<ASTNode*> parseTillToken(TokenIter &curr, Token::Type endTokenType);
-        bool tryConsume(TokenIter &curr, std::initializer_list<Token::Type> tokenTypes);
+        std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {
+            std::vector<ASTNode*> program;
+            SCOPE_EXIT( for (auto &node : program) delete node; );
+
+            while (this->m_curr->type != endTokenType || (*this->m_curr) != value) {
+                auto newTokens = parseStatement();
+
+                program.insert(program.end(), newTokens.begin(), newTokens.end());
+            }
+
+            this->m_curr++;
+
+            return program;
+        }
+
+        bool tryConsume() {
+            return true;
+        }
+
+        bool tryConsume(Token::Type type, auto value, auto ... args) {
+            auto originalPosition = this->m_curr;
+
+            if (this->m_curr->type != type || (*this->m_curr) != value) {
+                this->m_curr = originalPosition;
+                return false;
+            }
+
+            this->m_curr++;
+
+            if (!tryConsume(args...)) {
+                this->m_curr = originalPosition;
+                return false;
+            }
+
+            return true;
+        }
     };
 
 }
