@@ -96,7 +96,7 @@ namespace hex {
         // Load font data & build atlas
         std::uint8_t *px;
         int w, h, bpp;
-        io.Fonts->AddFontFromFileTTF(path.c_str(), 15.0f * this->m_fontScale);
+        io.Fonts->AddFontFromFileTTF(path.string().c_str(), 15.0f * this->m_fontScale); // Needs conversion to char for Windows
         io.Fonts->GetTexDataAsAlpha8(&px, &w, &h, &bpp);
 
         // Create new font atlas
@@ -293,15 +293,15 @@ namespace hex {
         ImGui_ImplOpenGL3_Init("#version 150");
 
 #ifdef __WIN32
-        constexpr std::string_view resourcePath = mainArgv[0];
+        std::string_view resourcePath = mainArgv[0];
 #elif defined(__linux__)
-        constexpr std::string_view resourcePath = "/usr/share/ImHex";
+        std::string_view resourcePath = "/usr/share/ImHex";
 #else
-        constexpr std::string_view resourcePath = "";
+        std::string_view resourcePath = "";
 #   warning "Unsupported OS for custom font support"
 #endif
 
-        if constexpr (!resourcePath.empty())
+        if (!resourcePath.empty())
             this->setFont(std::filesystem::path(resourcePath) / "font.ttf");
     }
 
