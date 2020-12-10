@@ -12,8 +12,15 @@ pkg_search_module(GLFW REQUIRED glfw3)
 pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
+if (NOT LLVM_DEMANGLE)
+    include(CheckCXXSymbolExists)
+    check_cxx_symbol_exists(abi::__cxa_demangle "cxxabi.h" HAVE_CXXABI)
+endif (NOT LLVM_DEMANGLE)
+
 find_package(OpenGL REQUIRED)
-find_package(LLVM REQUIRED CONFIG)
+if (LLVM_DEMANGLE OR NOT HAVE_CXXABI)
+    find_package(LLVM REQUIRED CONFIG)
+endif (LLVM_DEMANGLE OR NOT HAVE_CXXABI)
 find_package(nlohmann_json REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
@@ -22,10 +29,14 @@ if(Python_VERSION LESS 3)
     message(FATAL_ERROR "No valid version of Python 3 was found.")
 endif()
 
-llvm_map_components_to_libnames(_llvm_libs demangle)
-llvm_expand_dependencies(llvm_libs ${_llvm_libs})
 
-include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
+if (LLVM_FOUND)
+    llvm_map_components_to_libnames(_llvm_libs demangle)
+    llvm_expand_dependencies(llvm_libs ${_llvm_libs})
+    include_directories(include ${LLVM_INCLUDE_DIRS})
+endif (LLVM_FOUND)
+
+include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
 
 # Get Python major and minor
 string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
@@ -42,6 +53,7 @@ endif (WIN32)
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE")
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
+add_definitions(-DLLVM_DEMANGLE=${LLVM_DEMANGLE})
 add_executable(ImHex
         source/main.cpp
         source/window.cpp
@@ -88,7 +100,9 @@ add_executable(ImHex
         resource.rc
         )
 
-target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
+if (LLVM_FOUND)
+    target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
+endif (LLVM_FOUND)
 
 if (WIN32)
     target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_libs} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)

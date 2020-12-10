@@ -3,6 +3,13 @@
 #include <cstdio>
 #include <codecvt>
 #include <locale>
+#include <iostream>
+
+#if !(LLVM_DEMANGLE + 0) && (defined(__clang__) || defined(__GNUG__))
+#include <cxxabi.h>
+#else
+#include <llvm/Demangle/Demangle.h>
+#endif
 
 namespace hex {
 
@@ -89,5 +96,24 @@ namespace hex {
 
         return result;
     }
+
+#if !(LLVM_DEMANGLE + 0) && (defined(__clang__) || defined(__GNUG__))
+    std::string demangle(const std::string &mangled_name) {
+        int status = 0;
+        int skip_underscore = mangled_name.find("__") == 0;
+        char *realname = abi::__cxa_demangle(mangled_name.c_str() + skip_underscore,
+                                             0, 0, &status);
+        std::string result{mangled_name};
+        if (status == 0 && realname) {
+            result = realname;
+            std::free(realname);
+        }
+        return result;
+    }
+#else
+    std::string demangle(const std::string &mangled_name) {
+        return llvm::demangle(mangled_name);
+    }
+#endif
 
 }

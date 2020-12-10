@@ -7,6 +7,13 @@
 #include "patches.hpp"
 #include "utils.hpp"
 
+#ifdef __APPLE__
+#define off64_t off_t
+#define fopen64 fopen
+#define fseeko64 fseek
+#define ftello64 ftell
+#endif
+
 namespace hex {
 
     class ProjectFile {

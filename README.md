@@ -124,6 +124,9 @@ On both Windows and Linux:
 - Place your patterns in the `pattern` folder next to your built executable
 - Place your include pattern files in the `include` folder next to your built executable
 
+By default the cxxabi demangler is used when available.
+To use the LLVM demangler anyway add `-DLLVM_DEMANGLE=1` as first `cmake` argument.
+
 ## Credits
 
 - Thanks a lot to ocornut for their amazing [Dear ImGui](https://github.com/ocornut/imgui) which is used for building the entire interface
