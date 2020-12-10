@@ -28,14 +28,14 @@ namespace hex::lang {
 
         std::pair<u32, std::string> m_error;
 
-        std::pair<PatternData*, size_t> createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
+        /*std::pair<PatternData*, size_t> createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createEnumPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createBitfieldPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createStringPattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
         std::pair<PatternData*, size_t> createCustomTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
-        std::pair<PatternData*, size_t> createBuiltInTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset);
+        std::pair<PatternData*, size_t> createBuiltInTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset);*/
 
     };
 

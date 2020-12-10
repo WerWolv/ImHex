@@ -251,17 +251,6 @@ namespace hex {
         lang::PatternData::resetPalette();
     }
 
-    template<derived_from<lang::ASTNode> T>
-    static std::vector<T*> findNodes(const lang::ASTNode::Type type, const std::vector<lang::ASTNode*> &nodes) {
-        std::vector<T*> result;
-
-        for (const auto & node : nodes)
-            if (node->getType() == type)
-                result.push_back(static_cast<T*>(node));
-
-        return result;
-    }
-
     void ViewPattern::parsePattern(char *buffer) {
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });

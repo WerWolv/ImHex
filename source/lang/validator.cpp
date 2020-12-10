@@ -13,7 +13,7 @@ namespace hex::lang {
 
     bool Validator::validate(const std::vector<ASTNode*>& ast) {
 
-        std::unordered_set<std::string> typeNames;
+        /*std::unordered_set<std::string> typeNames;
 
         for (const auto &node : ast) {
             if (node == nullptr) {
@@ -119,7 +119,7 @@ namespace hex::lang {
                 }
                     break;
             }
-        }
+        }*/
 
         return true;
     }

@@ -161,7 +161,7 @@ namespace hex::lang {
 #define KEYWORD_LE                      COMPONENT(Keyword, LittleEndian)
 #define KEYWORD_BE                      COMPONENT(Keyword, BigEndian)
 
-#define INTEGER                         hex::lang::Token::Type::Integer, 0xFFFF'FFFF'FFFF'FFFF'FFFF'FFFF'FFFF'FFFF
+#define INTEGER                         hex::lang::Token::Type::Integer, 0xFFFF'FFFF'FFFF'FFFF
 #define IDENTIFIER                      hex::lang::Token::Type::Identifier, ""
 
 #define OPERATOR_AT                     COMPONENT(Operator, AtDeclaration)

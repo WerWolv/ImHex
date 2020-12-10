@@ -7,6 +7,7 @@
 
 #include "helpers/utils.hpp"
 
+#include <unordered_map>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -30,6 +31,9 @@ namespace hex::lang {
         TokenIter m_curr;
         TokenIter m_originalPosition;
 
+        std::unordered_map<std::string, ASTNode*> m_types;
+        std::vector<TokenIter> m_matchedOptionals;
+
         u32 getLineNumber(s32 index) const {
             return this->m_curr[index].lineNumber;
         }
@@ -44,9 +48,13 @@ namespace hex::lang {
             return *value;
         }
 
+        const Token::Type getType(s32 index) const {
+            return this->m_curr[index].type;
+        }
 
-
+        ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
+        ASTNode* parseVariablePlacement();
         ASTNode* parseStatement();
 
         std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {
@@ -72,6 +80,8 @@ namespace hex::lang {
 
         bool begin() {
             this->m_originalPosition = this->m_curr;
+            this->m_matchedOptionals.clear();
+
             return true;
         }
 
@@ -80,7 +90,7 @@ namespace hex::lang {
         }
 
         bool sequence(Token::Type type, auto value, auto ... args) {
-            if (this->m_curr->type != type || (*this->m_curr) != value) {
+            if (!matches(type, value)) {
                 this->m_curr = this->m_originalPosition;
                 return false;
             }
@@ -96,8 +106,8 @@ namespace hex::lang {
         }
 
         bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {
-            if (this->m_curr->type != type1 || (*this->m_curr) != value1) {
-                if (this->m_curr->type != type2 || (*this->m_curr) != value2) {
+            if (!matches(type1, value1)) {
+                if (!matches(type2, value2)) {
                     this->m_curr = this->m_originalPosition;
                     return false;
                 }
@@ -108,12 +118,25 @@ namespace hex::lang {
             return true;
         }
 
-        bool optional(Token::Type type, auto value, Token::Type nextType, auto nextValue) {
-            if (this->m_curr->type != type || (*this->m_curr) != value)
+        bool optional(Token::Type type, auto value) {
+            if (matches(type, value)) {
+                this->m_matchedOptionals.push_back(this->m_curr);
                 this->m_curr++;
+            }
 
-            return sequence(nextType, nextValue);
+            return true;
         }
+
+        bool matches(Token::Type type, auto value, s32 index = 0) {
+            return this->m_curr[index].type == type && this->m_curr[index] == value;
+        }
+
+        bool matchesOptional(Token::Type type, auto value, u32 index = 0) {
+            if (index >= this->m_matchedOptionals.size())
+                return false;
+            return matches(type, value, std::distance(this->m_curr, this->m_matchedOptionals[index]));
+        }
+
     };
 
 }
