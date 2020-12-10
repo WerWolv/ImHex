@@ -54,6 +54,9 @@ namespace hex::lang {
 
         ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
+        ASTNode* parseMemberVariable();
+        ASTNode* parseStruct();
+        ASTNode* parseUnion();
         ASTNode* parseVariablePlacement();
         ASTNode* parseStatement();
 
@@ -72,8 +75,8 @@ namespace hex::lang {
             return program;
         }
 
-        void throwParseError(std::string_view error, u32 token = 1) const {
-            throw ParseError(this->m_curr[-token].lineNumber, error);
+        void throwParseError(std::string_view error, s32 token = -1) const {
+            throw ParseError(this->m_curr[token].lineNumber, error);
         }
 
         /* Token consuming */

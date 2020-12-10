@@ -34,22 +34,31 @@ namespace hex::lang {
 
     class ASTNodeTypeDecl : public ASTNode {
     public:
-        ASTNodeTypeDecl(std::string_view name, ASTNode *type, std::endian endian = std::endian::native)
+        ASTNodeTypeDecl(std::string_view name, ASTNode *type, std::optional<std::endian> endian = { })
             : ASTNode(), m_name(name), m_type(type), m_endian(endian) { }
 
+        ASTNodeTypeDecl(const ASTNodeTypeDecl& other) = default;
+        ASTNodeTypeDecl(ASTNodeTypeDecl &&other) {
+            this->m_name = other.m_name;
+            this->m_type = other.m_type;
+            this->m_endian = other.m_endian;
+
+            other.m_type = nullptr;
+        }
 
         virtual ~ASTNodeTypeDecl() {
-            //TODO: Delete type again and make sure this type can be moved
+            if (this->m_type != nullptr)
+                delete this->m_type;
         }
 
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
         [[nodiscard]] ASTNode* getType() { return this->m_type; }
-        [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
+        [[nodiscard]] std::optional<std::endian> getEndian() const { return this->m_endian; }
 
     private:
         std::string m_name;
         ASTNode *m_type;
-        std::endian m_endian;
+        std::optional<std::endian> m_endian;
     };
 
     class ASTNodeVariableDecl : public ASTNode {
@@ -65,6 +74,38 @@ namespace hex::lang {
     private:
         std::string m_name;
         ASTNode *m_type;
+    };
+
+    class ASTNodeStruct : public ASTNode {
+    public:
+        ASTNodeStruct() : ASTNode() { }
+
+        virtual ~ASTNodeStruct() {
+            for (auto &member : this->m_members)
+                delete member;
+        }
+
+        [[nodiscard]] const auto& getMembers() const { return this->m_members; }
+        void addMember(ASTNode *node) { this->m_members.push_back(node); }
+
+    private:
+        std::vector<ASTNode*> m_members;
+    };
+
+    class ASTNodeUnion : public ASTNode {
+    public:
+        ASTNodeUnion() : ASTNode() { }
+
+        virtual ~ASTNodeUnion() {
+            for (auto &member : this->m_members)
+                delete member;
+        }
+
+        [[nodiscard]] const auto& getMembers() const { return this->m_members; }
+        void addMember(ASTNode *node) { this->m_members.push_back(node); }
+
+    private:
+        std::vector<ASTNode*> m_members;
     };
 
 }
