@@ -1,7 +1,9 @@
+#include "hex.hpp"
 #include "window.hpp"
 
 #include <iostream>
 #include <numeric>
+#include <string_view>
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -82,6 +84,30 @@ namespace hex {
         }
     }
 
+    void Window::setFont(const std::filesystem::path &path) {
+        if (!std::filesystem::exists(path))
+            return;
+
+        auto &io = ImGui::GetIO();
+
+        // If we have a custom font, then rescaling is unnecessary and will make it blurry
+        io.FontGlobalScale = 1.0f;
+
+        // Load font data & build atlas
+        std::uint8_t *px;
+        int w, h, bpp;
+        io.Fonts->AddFontFromFileTTF(path.c_str(), 15.0f * this->m_fontScale);
+        io.Fonts->GetTexDataAsAlpha8(&px, &w, &h, &bpp);
+
+        // Create new font atlas
+        GLuint tex;
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, px);
+        io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
+    }
 
     void Window::frameBegin() {
         glfwPollEvents();
@@ -265,6 +291,18 @@ namespace hex {
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 150");
+
+#ifdef __WIN32
+        constexpr std::string_view resourcePath = mainArgv[0];
+#elif defined(__linux__)
+        constexpr std::string_view resourcePath = "/usr/share/ImHex";
+#else
+        constexpr std::string_view resourcePath = "";
+#   warning "Unsupported OS for custom font support"
+#endif
+
+        if constexpr (!resourcePath.empty())
+            this->setFont(std::filesystem::path(resourcePath) / "font.ttf");
     }
 
     void Window::deinitGLFW() {
