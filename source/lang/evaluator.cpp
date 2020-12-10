@@ -189,7 +189,7 @@ namespace hex::lang {
             }
             else {
                 members.push_back(pattern);
-                unionSize = std::max(memberSize, unionSize);
+                unionSize = std::max(memberSize, (u64)unionSize);
             }
         }
 

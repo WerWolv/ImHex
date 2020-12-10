@@ -102,7 +102,7 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 - nlohmann json
 - Python3
 
-Find all in one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu and/or MSYS2 in [dist](dist).
+Find all in one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu, Homebrew and/or MSYS2 in [dist](dist).
 
 After all the dependencies are installed, run the following commands to build ImHex:
 
@@ -123,6 +123,19 @@ On both Windows and Linux:
 - Place your magic databases in the `magic` folder next to your built executable
 - Place your patterns in the `pattern` folder next to your built executable
 - Place your include pattern files in the `include` folder next to your built executable
+
+On macOS:
+
+- Install Homebrew (https://brew.sh)
+- Run `./dist/get_deps_homebrew.sh`
+- Finally run:
+
+```sh
+mkdir build
+cd build
+CXX=g++-10 PKG_CONFIG_PATH=/usr/local/opt/openssl/lib/pkgconfig cmake ..
+make -j
+```
 
 By default the cxxabi demangler is used when available.
 To use the LLVM demangler anyway add `-DLLVM_DEMANGLE=1` as first `cmake` argument.

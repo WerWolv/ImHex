@@ -12,6 +12,10 @@ pkg_search_module(GLFW REQUIRED glfw3)
 pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
+if (APPLE)
+    pkg_search_module(OPENSSL REQUIRED OpenSSL)
+endif (APPLE)
+
 if (NOT LLVM_DEMANGLE)
     include(CheckCXXSymbolExists)
     check_cxx_symbol_exists(abi::__cxa_demangle "cxxabi.h" HAVE_CXXABI)
@@ -23,6 +27,14 @@ if (LLVM_DEMANGLE OR NOT HAVE_CXXABI)
 endif (LLVM_DEMANGLE OR NOT HAVE_CXXABI)
 find_package(nlohmann_json REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
+if (APPLE)
+    find_package(Python3 REQUIRED)
+    find_package(glfw3 REQUIRED)
+    find_package(OpenSSL REQUIRED)
+    find_library(CAPSTONE_LIBRARY capstone)
+    find_library(MAGIC_LIBRARY magic)
+endif (APPLE)
+
 
 if(Python_VERSION LESS 3)
     message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
@@ -37,6 +49,10 @@ if (LLVM_FOUND)
 endif (LLVM_FOUND)
 
 include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
+if (APPLE)
+    include_directories(include ${OPENSSL_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS})
+endif (APPLE)
+
 
 # Get Python major and minor
 string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
@@ -54,6 +70,11 @@ SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE")
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
 
 add_definitions(-DLLVM_DEMANGLE=${LLVM_DEMANGLE})
+if (APPLE)
+    set(VAR "Python_LINK_OPTIONS" CACHE STRING "LINKER:-rpath,/Library/Developer/CommandLineTools/Library/Frameworks")
+    add_link_options(${Python_LINK_OPTIONS})
+endif (APPLE)
+
 add_executable(ImHex
         source/main.cpp
         source/window.cpp
@@ -104,12 +125,16 @@ if (LLVM_FOUND)
     target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
 endif (LLVM_FOUND)
 
+if (APPLE)
+    target_link_libraries(ImHex PRIVATE ${GLFW_LIBRARIES} ${MAGIC_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} ${CAPSTONE_LIBRARY} ${Python_LIBRARIES})
+endif (APPLE)
+
 if (WIN32)
     target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_libs} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 endif (WIN32)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
     target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_libs} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
-endif (UNIX)
+endif (UNIX AND NOT APPLE)
 
 install(TARGETS ImHex DESTINATION bin)
