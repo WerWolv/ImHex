@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <numeric>
-#include <string_view>
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -293,16 +292,16 @@ namespace hex {
         ImGui_ImplOpenGL3_Init("#version 150");
 
 #ifdef __WIN32
-        std::string_view resourcePath = mainArgv[0];
+        std::filesystem::path resourcePath = std::filesystem::path(mainArgv[0]).parent_path();
 #elif defined(__linux__)
-        std::string_view resourcePath = "/usr/share/ImHex";
+        std::filesystem::path resourcePath = "/usr/share/ImHex";
 #else
-        std::string_view resourcePath = "";
+        std::filesystem::path resourcePath = "";
 #   warning "Unsupported OS for custom font support"
 #endif
 
         if (!resourcePath.empty())
-            this->setFont(std::filesystem::path(resourcePath) / "font.ttf");
+            this->setFont(resourcePath / "font.ttf");
     }
 
     void Window::deinitGLFW() {
