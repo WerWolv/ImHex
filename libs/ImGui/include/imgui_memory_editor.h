@@ -550,7 +550,7 @@ struct MemoryEditor
             ImGui::OpenPopup("options");
 
         if (ImGui::BeginPopup("options")) {
-            ImGui::PushItemWidth(56);
+            ImGui::PushItemWidth(ImGui::CalcTextSize("00 cols").x * 1.1f);
             if (ImGui::DragInt("##cols", &Cols, 0.2f, 4, 32, "%d cols")) { ContentsWidthChanged = true; if (Cols < 1) Cols = 1; }
             ImGui::PopItemWidth();
             ImGui::Checkbox("Show HexII", &OptShowHexII);

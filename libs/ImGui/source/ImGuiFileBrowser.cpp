@@ -43,7 +43,6 @@ namespace imgui_addons
         selected_ext_idx = 0;
         ext_box_width = -1.0f;
         col_width = 280.0f;
-        min_size = ImVec2(500,300);
 
         invfile_modal_id = "Invalid File!";
         repfile_modal_id = "Replace File?";
@@ -109,11 +108,12 @@ namespace imgui_addons
 
     bool ImGuiFileBrowser::showFileDialog(const std::string& label, const DialogMode mode, const ImVec2& sz_xy, const std::string& valid_types)
     {
-
         dialog_mode = mode;
         ImGuiIO& io = ImGui::GetIO();
-        max_size.x = io.DisplaySize.x;
-        max_size.y = io.DisplaySize.y;
+        max_size = ImVec2(       io.DisplaySize.x,        io.DisplaySize.y);
+        min_size = ImVec2(0.5f * io.DisplaySize.x, 0.5f * io.DisplaySize.y);
+
+
         ImGui::SetNextWindowSizeConstraints(min_size, max_size);
         ImGui::SetNextWindowPos(io.DisplaySize * 0.5f, ImGuiCond_Appearing, ImVec2(0.5f,0.5f));
         ImGui::SetNextWindowSize(ImVec2(std::max(sz_xy.x, min_size.x), std::max(sz_xy.y, min_size.y)), ImGuiCond_Appearing);

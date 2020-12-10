@@ -25,13 +25,11 @@ namespace hex {
         ImGui::NewLine();
         ImGui::PopStyleColor();
     };
-    
-    
+
+
 
     void ViewHelp::drawAboutPopup() {
-        ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(450, 300));
-        if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_NoResize)) {
-
+        if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("ImHex Hex Editor");
             ImGui::Text("by WerWolv");
             ImGui::Separator();
@@ -44,7 +42,6 @@ namespace hex {
             ImGui::Separator();
             ImGui::Text("Libraries used");
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
-            ImGui::BeginChild("##scroll");
             ImGui::NewLine();
             ImGui::BulletText("ImGui by ocornut");
             ImGui::BulletText("imgui_club by ocornut");
@@ -59,7 +56,6 @@ namespace hex {
             ImGui::BulletText("LLVM");
             ImGui::BulletText("Python 3");
 
-            ImGui::EndChild();
             ImGui::PopStyleColor();
             ImGui::EndPopup();
         }

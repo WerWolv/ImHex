@@ -135,32 +135,20 @@ namespace hex {
         }
 
 
-        if (ImGui::BeginPopupModal("Save Changes", nullptr, ImGuiWindowFlags_NoResize)) {
-            constexpr auto Message = "You have unsaved changes made to your Project. Are you sure you want to exit?";
+        if (ImGui::BeginPopupModal("Save Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            constexpr auto Message = "You have unsaved changes made to your Project.\nAre you sure you want to exit?";
             ImGui::NewLine();
-            if (ImGui::BeginChild("##scrolling", ImVec2(300, 50))) {
-                ImGui::SetCursorPosX(10);
-                ImGui::TextWrapped("%s", Message);
-                ImGui::EndChild();
-            }
-            ImGui::SetCursorPosX(40);
-            if (ImGui::Button("Yes", ImVec2(100, 20)))
-                std::exit(0);
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(160);
-            if (ImGui::Button("No", ImVec2(100, 20)))
-                ImGui::CloseCurrentPopup();
+            ImGui::TextUnformatted(Message);
+            ImGui::NewLine();
+
+            confirmButtons("Yes", "No", [] { std::exit(0); }, [] { ImGui::CloseCurrentPopup(); });
             ImGui::EndPopup();
         }
 
-        if (ImGui::BeginPopupModal("Load File with Loader Script", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::BeginPopupModal("Load File with Loader Script", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             constexpr auto Message = "Load a file using a Python loader script.";
-            ImGui::NewLine();
-            if (ImGui::BeginChild("##scrolling", ImVec2(500, 20))) {
-                ImGui::SetCursorPosX(10);
-                ImGui::TextWrapped("%s", Message);
-                ImGui::EndChild();
-            }
+            ImGui::SetCursorPosX(10);
+            ImGui::TextWrapped(Message);
 
             ImGui::NewLine();
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
@@ -182,22 +170,23 @@ namespace hex {
 
             ImGui::NewLine();
 
-            ImGui::SetCursorPosX(40);
-            if (ImGui::Button("Load", ImVec2(100, 20))) {
-                if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
-                    this->openFile(this->m_loaderScriptFilePath);
-                    LoaderScript::setFilePath(this->m_loaderScriptFilePath);
-                    LoaderScript::setDataProvider(this->m_dataProvider);
-                    LoaderScript::processFile(this->m_loaderScriptScriptPath);
+            confirmButtons("Load", "Cancel",
+                [this] {
+                    if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
+                        this->openFile(this->m_loaderScriptFilePath);
+                        LoaderScript::setFilePath(this->m_loaderScriptFilePath);
+                        LoaderScript::setDataProvider(this->m_dataProvider);
+                        LoaderScript::processFile(this->m_loaderScriptScriptPath);
+                        ImGui::CloseCurrentPopup();
+                    }
+                },
+                [] {
                     ImGui::CloseCurrentPopup();
                 }
-            }
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(160);
-            if (ImGui::Button("Cancel", ImVec2(100, 20))) {
-                ImGui::CloseCurrentPopup();
-            }
+            );
+
             ImGui::EndPopup();
+
         }
 
 
