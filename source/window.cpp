@@ -1,6 +1,7 @@
 #include "window.hpp"
 
 #include <iostream>
+#include <numeric>
 
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -21,26 +22,10 @@ namespace hex {
     void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
         auto *window = reinterpret_cast<Window *>(handler->UserData);
 
-        float scale;
-        if (sscanf(line, "Scale=%f", &scale) == 1)            { window->m_globalScale = scale; }
-        else if (sscanf(line, "FontScale=%f", &scale) == 1)   { window->m_fontScale   = scale; }
-        else {
-            for (auto &view : window->m_views) {
-                std::string format = view->getName() + "=%d";
-                sscanf(line, format.c_str(), &view->getWindowOpenState());
-            }
+        for (auto &view : window->m_views) {
+            std::string format = view->getName() + "=%d";
+            sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
-    }
-
-    void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler) {
-        auto *window = reinterpret_cast<Window *>(handler->UserData);
-        auto &style  = ImGui::GetStyle();
-        auto &io     = ImGui::GetIO();
-
-        if (window->m_globalScale != 0.0f)
-            style.ScaleAllSizes(window->m_globalScale);
-        if (window->m_fontScale != 0.0f)
-            io.FontGlobalScale = window->m_fontScale;
     }
 
     void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
@@ -49,8 +34,6 @@ namespace hex {
         buf->reserve(buf->size() + 0x20); // Ballpark reserve
 
         buf->appendf("[%s][General]\n", handler->TypeName);
-        buf->appendf("Scale=%.1f\n", window->m_globalScale);
-        buf->appendf("FontScale=%.1f\n", window->m_fontScale);
 
         for (auto &view : window->m_views) {
             buf->appendf("%s=%d\n", view->getName().c_str(), view->getWindowOpenState());
@@ -206,12 +189,20 @@ namespace hex {
             glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         #endif
 
+        if (auto *monitor = glfwGetPrimaryMonitor(); monitor) {
+            float xscale, yscale;
+            glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+
+            // In case the horizontal and vertical scale are different, fall back on the average
+            this->m_globalScale = this->m_fontScale = std::midpoint(xscale, yscale);
+        }
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 
-        this->m_window = glfwCreateWindow(1280, 720, "ImHex", nullptr, nullptr);
+        this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, "ImHex", nullptr, nullptr);
 
 
         if (this->m_window == nullptr)
@@ -252,6 +243,11 @@ namespace hex {
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
         io.ConfigViewportsNoTaskBarIcon = true;
 
+        if (this->m_globalScale != 0.0f)
+            style.ScaleAllSizes(this->m_globalScale);
+        if (this->m_fontScale != 0.0f)
+            io.FontGlobalScale = this->m_fontScale;
+
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing = 10.0F;
 
@@ -261,7 +257,6 @@ namespace hex {
         handler.TypeHash = ImHashStr("ImHex");
         handler.ReadOpenFn = ImHexSettingsHandler_ReadOpenFn;
         handler.ReadLineFn = ImHexSettingsHandler_ReadLine;
-        handler.ApplyAllFn = ImHexSettingsHandler_ApplyAll;
         handler.WriteAllFn = ImHexSettingsHandler_WriteAll;
         handler.UserData   = this;
         ctx->SettingsHandlers.push_back(handler);
