@@ -11,4 +11,5 @@ dnf install \
   llvm-devel \
   mesa-libGL-devel \
   openssl-devel \
-  python-devel
+  python-devel \
+  freetype-devel

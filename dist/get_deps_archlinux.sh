@@ -9,4 +9,5 @@ pacman -S --needed \
   llvm-libs \
   nlohmann-json \
   glm \
-  python3
+  python3 \
+  freetype2

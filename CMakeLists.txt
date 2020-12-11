@@ -15,6 +15,7 @@ pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED)
+find_package(Freetype REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
 if(Python_VERSION LESS 3)
@@ -83,6 +84,7 @@ add_executable(ImHex
         libs/ImGui/source/imgui_draw.cpp
         libs/ImGui/source/imgui_widgets.cpp
         libs/ImGui/source/imgui_demo.cpp
+        libs/ImGui/source/imgui_freetype.cpp
         libs/ImGui/source/imgui_impl_glfw.cpp
         libs/ImGui/source/imgui_impl_opengl3.cpp
         libs/ImGui/source/ImGuiFileBrowser.cpp
@@ -94,11 +96,11 @@ add_executable(ImHex
 target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif (UNIX)
 
 install(TARGETS ImHex DESTINATION bin)

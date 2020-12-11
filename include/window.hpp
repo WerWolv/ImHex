@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -29,6 +30,8 @@ namespace hex {
         friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
         friend void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler);
         friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
+
+        bool setFont(const std::filesystem::path &font_path);
 
     private:
         void frameBegin();

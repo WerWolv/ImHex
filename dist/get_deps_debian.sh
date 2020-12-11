@@ -23,7 +23,8 @@ apt install \
   llvm-dev \
   libssl-dev \
   libstdc++-10-dev \
-  python3-dev
+  python3-dev \
+  libfreetype-dev
 
 echo "Please consider this before running cmake (useful on e.g. Ubuntu 20.04):"
 echo "export CXX=g++-10"

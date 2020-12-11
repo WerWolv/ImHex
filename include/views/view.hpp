@@ -87,4 +87,15 @@ namespace hex {
         static inline std::string s_errorMessage;
     };
 
+    void confirmButtons(const char *textLeft, const char *textRight, auto leftButtonFn, auto rightButtonFn) {
+            auto width = ImGui::GetWindowWidth();
+            ImGui::SetCursorPosX(width / 9);
+            if (ImGui::Button(textLeft, ImVec2(width / 3, 0)))
+                leftButtonFn();
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(width / 9 * 5);
+            if (ImGui::Button(textRight, ImVec2(width / 3, 0)))
+                rightButtonFn();
+    }
+
 }
