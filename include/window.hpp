@@ -31,7 +31,7 @@ namespace hex {
         friend void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler);
         friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
 
-        void setFont(const std::filesystem::path &font_path);
+        bool setFont(const std::filesystem::path &font_path);
 
     private:
         void frameBegin();

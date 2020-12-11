@@ -84,9 +84,9 @@ namespace hex {
         }
     }
 
-    void Window::setFont(const std::filesystem::path &path) {
+    bool Window::setFont(const std::filesystem::path &path) {
         if (!std::filesystem::exists(path))
-            return;
+            return false;
 
         auto &io = ImGui::GetIO();
 
@@ -108,6 +108,8 @@ namespace hex {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
         io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
+
+        return true;
     }
 
     void Window::frameBegin() {
@@ -272,8 +274,26 @@ namespace hex {
 
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
-        if (this->m_fontScale != 0.0f)
-            io.FontGlobalScale = this->m_fontScale;
+
+#ifdef __WIN32
+        std::filesystem::path resourcePath = std::filesystem::path(mainArgv[0]).parent_path();
+#elif defined(__linux__)
+        std::filesystem::path resourcePath = "/usr/share/ImHex";
+#else
+        std::filesystem::path resourcePath = "";
+#   warning "Unsupported OS for custom font support"
+#endif
+
+        if (!resourcePath.empty() && this->setFont(resourcePath / "font.ttf"))
+            ;
+        else if ((this->m_fontScale != 0.0f) && (this->m_fontScale != 1.0f)) {
+            io.Fonts->Clear();
+
+            ImFontConfig cfg;
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = 13.0f * this->m_fontScale;
+            io.Fonts->AddFontDefault(&cfg);
+        }
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing = 10.0F;
@@ -292,18 +312,6 @@ namespace hex {
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 150");
-
-#ifdef __WIN32
-        std::filesystem::path resourcePath = std::filesystem::path(mainArgv[0]).parent_path();
-#elif defined(__linux__)
-        std::filesystem::path resourcePath = "/usr/share/ImHex";
-#else
-        std::filesystem::path resourcePath = "";
-#   warning "Unsupported OS for custom font support"
-#endif
-
-        if (!resourcePath.empty())
-            this->setFont(resourcePath / "font.ttf");
     }
 
     void Window::deinitGLFW() {
