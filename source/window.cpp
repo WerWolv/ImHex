@@ -8,6 +8,7 @@
 #include "imgui_internal.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_freetype.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -94,9 +95,10 @@ namespace hex {
 
         // Load font data & build atlas
         std::uint8_t *px;
-        int w, h, bpp;
+        int w, h;
         io.Fonts->AddFontFromFileTTF(path.string().c_str(), 15.0f * this->m_fontScale); // Needs conversion to char for Windows
-        io.Fonts->GetTexDataAsAlpha8(&px, &w, &h, &bpp);
+        ImGuiFreeType::BuildFontAtlas(io.Fonts);
+        io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
         // Create new font atlas
         GLuint tex;
@@ -104,7 +106,7 @@ namespace hex {
         glBindTexture(GL_TEXTURE_2D, tex);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, px);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
         io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
     }
 
