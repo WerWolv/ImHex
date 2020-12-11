@@ -96,8 +96,8 @@ namespace hex {
         // Load font data & build atlas
         std::uint8_t *px;
         int w, h;
-        io.Fonts->AddFontFromFileTTF(path.string().c_str(), 15.0f * this->m_fontScale); // Needs conversion to char for Windows
-        ImGuiFreeType::BuildFontAtlas(io.Fonts);
+        io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale)); // Needs conversion to char for Windows
+        ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeType::Monochrome);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
         // Create new font atlas
