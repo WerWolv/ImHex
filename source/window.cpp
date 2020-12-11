@@ -275,7 +275,7 @@ namespace hex {
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
 
-#ifdef __WIN32
+#ifdef __MINGW32__
         std::filesystem::path resourcePath = std::filesystem::path(mainArgv[0]).parent_path();
 #elif defined(__linux__)
         std::filesystem::path resourcePath = "/usr/share/ImHex";
