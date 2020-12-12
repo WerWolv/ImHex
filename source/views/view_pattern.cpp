@@ -300,7 +300,7 @@ namespace hex {
             return;
         }
 
-        hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast) delete node; });
+        hex::ScopeExit deleteAst([&ast=ast]{ for(auto &node : ast) delete node; });
 
         hex::lang::Validator validator;
         auto validatorResult = validator.validate(ast);
