@@ -18,6 +18,94 @@ namespace hex::lang {
 
     }
 
+    ASTNode* Parser::parseFactor() {
+        if (MATCHES(sequence(INTEGER)))
+            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral(getValue<s128>(-1), Token::ValueType::Signed128Bit), new ASTNodeIntegerLiteral(0, Token::ValueType::Signed128Bit), Token::Operator::Plus);
+        else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
+            auto node = this->parseMathematicalExpression();
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+                throwParseError("Expected closing parenthesis");
+            return node;
+        }
+        else
+            throwParseError("Expected integer or parenthesis");
+
+        return nullptr;
+    }
+
+    ASTNode* Parser::parseMultiplicativeExpression() {
+        auto node = this->parseFactor();
+
+        while (MATCHES(variant(OPERATOR_STAR, OPERATOR_SLASH))) {
+            if (matches(OPERATOR_STAR, -1))
+                node = new ASTNodeNumericExpression(node, this->parseFactor(), Token::Operator::Star);
+            else
+                node = new ASTNodeNumericExpression(node, this->parseFactor(), Token::Operator::Slash);
+        }
+
+        return node;
+    }
+
+    ASTNode* Parser::parseAdditiveExpression() {
+        auto node = this->parseMultiplicativeExpression();
+
+        while (MATCHES(variant(OPERATOR_PLUS, OPERATOR_MINUS))) {
+            if (matches(OPERATOR_PLUS, -1))
+                node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), Token::Operator::Plus);
+            else
+                node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), Token::Operator::Minus);
+        }
+
+        return node;
+    }
+
+    ASTNode* Parser::parseShiftExpression() {
+        auto node = this->parseAdditiveExpression();
+
+        while (MATCHES(variant(OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT))) {
+            if (matches(OPERATOR_SHIFTLEFT, -1))
+                node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), Token::Operator::ShiftLeft);
+            else
+                node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), Token::Operator::ShiftRight);
+        }
+
+        return node;
+    }
+
+    ASTNode* Parser::parseBinaryAndExpression() {
+        auto node = this->parseShiftExpression();
+
+        while (MATCHES(sequence(OPERATOR_BITAND))) {
+            node = new ASTNodeNumericExpression(node, this->parseShiftExpression(), Token::Operator::BitAnd);
+        }
+
+        return node;
+    }
+
+    ASTNode* Parser::parseBinaryXorExpression() {
+        auto node = this->parseBinaryAndExpression();
+
+        while (MATCHES(sequence(OPERATOR_BITXOR))) {
+            node = new ASTNodeNumericExpression(node, this->parseBinaryAndExpression(), Token::Operator::BitXor);
+        }
+
+        return node;
+    }
+
+    ASTNode* Parser::parseBinaryOrExpression() {
+        auto node = this->parseBinaryXorExpression();
+
+        while (MATCHES(sequence(OPERATOR_BITOR))) {
+            node = new ASTNodeNumericExpression(node, this->parseBinaryXorExpression(), Token::Operator::BitOr);
+        }
+
+        return node;
+    }
+
+    ASTNode* Parser::parseMathematicalExpression() {
+        return this->parseBinaryOrExpression();
+    }
+
     // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double>
     ASTNode* Parser::parseType(s32 startIndex) {
         std::optional<std::endian> endian;
@@ -30,8 +118,6 @@ namespace hex::lang {
         if (getType(startIndex) == Token::Type::Identifier) { // Custom type
             if (!this->m_types.contains(getValue<std::string>(startIndex)))
                 throwParseError("Failed to parse type");
-
-            auto type = dynamic_cast<ASTNodeTypeDecl*>(this->m_types[getValue<std::string>(startIndex + 1)]);
 
             return new ASTNodeTypeDecl("[Temporary Type]", this->m_types[getValue<std::string>(startIndex)], endian);
         }
@@ -109,6 +195,55 @@ namespace hex::lang {
         return new ASTNodeTypeDecl(typeName, unionNode);
     }
 
+    // enum Identifier : (parseType) { <(parseEnumEntry)...> };
+    ASTNode* Parser::parseEnum() {
+        const auto enumNode = new ASTNodeEnum();
+        ScopeExit enumGuard([&]{ delete enumNode; });
+
+        std::string typeName;
+        if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
+            typeName = getValue<std::string>(-5);
+        else
+            typeName = getValue<std::string>(-4);
+
+        auto underlyingType = static_cast<ASTNodeBuiltinType*>(static_cast<ASTNodeTypeDecl*>(parseType(-2))->getType());
+
+        while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE, SEPARATOR_ENDOFEXPRESSION))) {
+            if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT))) {
+                auto name = getValue<std::string>(-2);
+                auto x = parseMathematicalExpression();
+                enumNode->addEntry(name, x);
+
+                printf("%ld\n", (s64)std::get<s128>(static_cast<ASTNodeNumericExpression*>(x)->evaluate()->getValue()));
+            }
+            else if (MATCHES(sequence(IDENTIFIER))) {
+                ASTNode *valueExpr;
+                auto name = getValue<std::string>(-1);
+                if (enumNode->getEntries().size() == 0)
+                    valueExpr = new ASTNodeIntegerLiteral(0, underlyingType->getType());
+                else
+                    valueExpr = new ASTNodeNumericExpression(enumNode->getEntries().back().second, new ASTNodeIntegerLiteral(1, Token::ValueType::Signed128Bit), Token::Operator::Plus);
+
+                enumNode->addEntry(name, valueExpr);
+            }
+            else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
+                throwParseError("Unexpected end of program", -2);
+            else
+                throwParseError("Invalid union member", 0);
+
+            if (!MATCHES(sequence(SEPARATOR_COMMA))) {
+                if (MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE, SEPARATOR_ENDOFEXPRESSION)))
+                    break;
+                else
+                    throwParseError("Missing ',' between enum entries", 0);
+            }
+        }
+
+        enumGuard.release();
+
+        return new ASTNodeTypeDecl(typeName, enumNode);
+    }
+
     // (parseType) Identifier @ Integer;
     ASTNode* Parser::parseVariablePlacement() {
         ASTNodeTypeDecl* temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-5));
@@ -136,6 +271,10 @@ namespace hex::lang {
             return parseVariablePlacement();
         else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             return parseStruct();
+        else if (MATCHES(sequence(KEYWORD_UNION, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
+            return parseUnion();
+        else if (MATCHES(sequence(KEYWORD_ENUM, IDENTIFIER, OPERATOR_INHERIT) && (optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED, SEPARATOR_CURLYBRACKETOPEN)))
+            return parseEnum();
         else throwParseError("Invalid sequence", 0);
 
         return nullptr;

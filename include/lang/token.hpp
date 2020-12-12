@@ -38,6 +38,11 @@ namespace hex::lang {
             Minus,
             Star,
             Slash,
+            ShiftLeft,
+            ShiftRight,
+            BitOr,
+            BitAnd,
+            BitXor
         };
 
         enum class ValueType {
@@ -171,6 +176,11 @@ namespace hex::lang {
 #define OPERATOR_MINUS                  COMPONENT(Operator, Minus)
 #define OPERATOR_STAR                   COMPONENT(Operator, Star)
 #define OPERATOR_SLASH                  COMPONENT(Operator, Slash)
+#define OPERATOR_SHIFTLEFT              COMPONENT(Operator, ShiftLeft)
+#define OPERATOR_SHIFTRIGHT             COMPONENT(Operator, ShiftRight)
+#define OPERATOR_BITOR                  COMPONENT(Operator, BitOr)
+#define OPERATOR_BITAND                 COMPONENT(Operator, BitAnd)
+#define OPERATOR_BITXOR                 COMPONENT(Operator, BitXor)
 
 #define VALUETYPE_CUSTOMTYPE            COMPONENT(ValueType, CustomType)
 #define VALUETYPE_PADDING               COMPONENT(ValueType, Padding)

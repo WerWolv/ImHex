@@ -143,8 +143,32 @@ namespace hex::lang {
             } else if (c == ':') {
                 tokens.push_back(TOKEN(Operator, Inherit));
                 offset += 1;
+            } else if (c == '+') {
+                tokens.push_back(TOKEN(Operator, Plus));
+                offset += 1;
+            } else if (c == '-') {
+                tokens.push_back(TOKEN(Operator, Minus));
+                offset += 1;
             } else if (c == '*') {
                 tokens.push_back(TOKEN(Operator, Star));
+                offset += 1;
+            } else if (c == '/') {
+                tokens.push_back(TOKEN(Operator, Slash));
+                offset += 1;
+            } else if (offset + 1 <= code.length() && code[offset] == '<' && code[offset + 1] == '<') {
+                tokens.push_back(TOKEN(Operator, ShiftLeft));
+                offset += 2;
+            } else if (offset + 1 <= code.length() && code[offset] == '>' && code[offset + 1] == '>') {
+                tokens.push_back(TOKEN(Operator, ShiftRight));
+                offset += 2;
+            } else if (c == '|') {
+                tokens.push_back(TOKEN(Operator, BitOr));
+                offset += 1;
+            } else if (c == '&') {
+                tokens.push_back(TOKEN(Operator, BitAnd));
+                offset += 1;
+            } else if (c == '^') {
+                tokens.push_back(TOKEN(Operator, BitXor));
                 offset += 1;
             } else if (c == '\'') {
                 offset += 1;

@@ -52,11 +52,21 @@ namespace hex::lang {
             return this->m_curr[index].type;
         }
 
+        ASTNode* parseFactor();
+        ASTNode* parseMultiplicativeExpression();
+        ASTNode* parseAdditiveExpression();
+        ASTNode* parseShiftExpression();
+        ASTNode* parseBinaryAndExpression();
+        ASTNode* parseBinaryXorExpression();
+        ASTNode* parseBinaryOrExpression();
+        ASTNode* parseMathematicalExpression();
+
         ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
         ASTNode* parseMemberVariable();
         ASTNode* parseStruct();
         ASTNode* parseUnion();
+        ASTNode* parseEnum();
         ASTNode* parseVariablePlacement();
         ASTNode* parseStatement();
 
