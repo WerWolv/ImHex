@@ -128,7 +128,7 @@ namespace hex::lang {
             const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
 
             PatternData *pattern = nullptr;
-            u64 memberSize = 0;
+            size_t memberSize = 0;
 
             if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
                 std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
