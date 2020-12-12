@@ -18,6 +18,9 @@ namespace hex::lang {
 
     }
 
+    /* Mathematical expressions */
+
+    // <Integer|((parseMathematicalExpression))>
     ASTNode* Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
             return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral(getValue<s128>(-1), Token::ValueType::Signed128Bit), new ASTNodeIntegerLiteral(0, Token::ValueType::Signed128Bit), Token::Operator::Plus);
@@ -33,6 +36,7 @@ namespace hex::lang {
         return nullptr;
     }
 
+    // (parseFactor) <*|/> (parseFactor)
     ASTNode* Parser::parseMultiplicativeExpression() {
         auto node = this->parseFactor();
 
@@ -46,6 +50,7 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseMultiplicativeExpression) <+|-> (parseMultiplicativeExpression)
     ASTNode* Parser::parseAdditiveExpression() {
         auto node = this->parseMultiplicativeExpression();
 
@@ -59,6 +64,7 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseAdditiveExpression) <>>|<<> (parseAdditiveExpression)
     ASTNode* Parser::parseShiftExpression() {
         auto node = this->parseAdditiveExpression();
 
@@ -72,6 +78,7 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseShiftExpression) & (parseShiftExpression)
     ASTNode* Parser::parseBinaryAndExpression() {
         auto node = this->parseShiftExpression();
 
@@ -82,6 +89,7 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseBinaryAndExpression) ^ (parseBinaryAndExpression)
     ASTNode* Parser::parseBinaryXorExpression() {
         auto node = this->parseBinaryAndExpression();
 
@@ -92,6 +100,7 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseBinaryXorExpression) | (parseBinaryXorExpression)
     ASTNode* Parser::parseBinaryOrExpression() {
         auto node = this->parseBinaryXorExpression();
 
@@ -102,9 +111,12 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseBinaryOrExpression)
     ASTNode* Parser::parseMathematicalExpression() {
         return this->parseBinaryOrExpression();
     }
+
+    /* Type declarations */
 
     // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double>
     ASTNode* Parser::parseType(s32 startIndex) {
@@ -206,15 +218,15 @@ namespace hex::lang {
         else
             typeName = getValue<std::string>(-4);
 
-        auto underlyingType = static_cast<ASTNodeBuiltinType*>(static_cast<ASTNodeTypeDecl*>(parseType(-2))->getType());
+        auto temporaryTypeDecl = dynamic_cast<ASTNodeTypeDecl*>(parseType(-2));
+        if (temporaryTypeDecl == nullptr) throwParseError("Failed to parse type");
+        auto underlyingType = dynamic_cast<ASTNodeBuiltinType*>(temporaryTypeDecl->getType());
+        if (underlyingType == nullptr) throwParseError("Underlying type is not a built-in type");
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE, SEPARATOR_ENDOFEXPRESSION))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT))) {
                 auto name = getValue<std::string>(-2);
-                auto x = parseMathematicalExpression();
-                enumNode->addEntry(name, x);
-
-                printf("%ld\n", (s64)std::get<s128>(static_cast<ASTNodeNumericExpression*>(x)->evaluate()->getValue()));
+                enumNode->addEntry(name, parseMathematicalExpression());
             }
             else if (MATCHES(sequence(IDENTIFIER))) {
                 ASTNode *valueExpr;
@@ -260,6 +272,8 @@ namespace hex::lang {
         return nullptr;
     }
 
+    /* Program */
+
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
     ASTNode* Parser::parseStatement() {
         if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT) && (optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(SEPARATOR_ENDOFEXPRESSION))) {
@@ -293,7 +307,6 @@ namespace hex::lang {
             return { ResultSuccess, program };
         } catch (ParseError &e) {
             this->m_error = e;
-            printf("Hit error\n");
         }
 
         return { ResultParseError, { } };
