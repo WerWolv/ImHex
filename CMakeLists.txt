@@ -19,6 +19,12 @@ find_package(Python COMPONENTS Interpreter Development)
 
 add_subdirectory(external/llvm/Demangle)
 
+pkg_search_module(MAGIC libmagic)
+if(NOT MAGIC_FOUND)
+    # Some linux distros don't ship pkgconfig files for libmagic. Try to find it in another way
+    find_library(MAGIC magic REQUIRED)
+endif()
+
 if(Python_VERSION LESS 3)
     message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
     message(FATAL_ERROR "No valid version of Python 3 was found.")
