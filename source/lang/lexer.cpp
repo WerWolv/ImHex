@@ -1,5 +1,6 @@
 #include "lang/lexer.hpp"
 
+#include <optional>
 #include <vector>
 #include <functional>
 
