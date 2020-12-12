@@ -9,14 +9,6 @@
 #include "helpers/utils.hpp"
 #include "helpers/project_file_handler.hpp"
 
-
-#ifdef __APPLE__
-    #define off64_t off_t
-    #define fopen64 fopen
-    #define fseeko64 fseek
-    #define ftello64 ftell
-#endif
-
 namespace hex::prv {
 
     FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
