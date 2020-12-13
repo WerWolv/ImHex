@@ -17,6 +17,7 @@ namespace hex::lang {
     class Parser {
     public:
         Parser();
+        ~Parser();
 
         using TokenIter = std::vector<Token>::const_iterator;
 
@@ -64,10 +65,12 @@ namespace hex::lang {
         ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
         ASTNode* parseMemberVariable();
+        ASTNode* parseMemberArrayVariable();
         ASTNode* parseStruct();
         ASTNode* parseUnion();
         ASTNode* parseEnum();
         ASTNode* parseVariablePlacement();
+        ASTNode* parseArrayVariablePlacement();
         ASTNode* parseStatement();
 
         std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {

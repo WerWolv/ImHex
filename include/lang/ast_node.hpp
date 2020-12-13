@@ -11,8 +11,8 @@ namespace hex::lang {
 
     class ASTNode {
     public:
-        constexpr ASTNode() { }
-        constexpr virtual ~ASTNode() { }
+        constexpr ASTNode() = default;
+        constexpr virtual ~ASTNode() = default;
 
         [[nodiscard]] constexpr u32 getLineNumber() const { return this->m_lineNumber; }
         constexpr void setLineNumber(u32 lineNumber) { this->m_lineNumber = lineNumber; }
@@ -45,6 +45,11 @@ namespace hex::lang {
     public:
         ASTNodeNumericExpression(ASTNode *left, ASTNode *right, Token::Operator op)
             : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
+
+        ~ASTNodeNumericExpression() override {
+            delete this->m_left;
+            delete this->m_right;
+        }
 
         ASTNodeIntegerLiteral* evaluate() {
             ASTNodeIntegerLiteral *leftInteger, *rightInteger;
@@ -124,7 +129,7 @@ namespace hex::lang {
 
     class ASTNodeBuiltinType : public ASTNode {
     public:
-        constexpr ASTNodeBuiltinType(Token::ValueType type)
+        constexpr explicit ASTNodeBuiltinType(Token::ValueType type)
             : ASTNode(), m_type(type) { }
 
         [[nodiscard]] constexpr const auto& getType() const { return this->m_type; }
@@ -138,8 +143,8 @@ namespace hex::lang {
         ASTNodeTypeDecl(std::string_view name, ASTNode *type, std::optional<std::endian> endian = { })
             : ASTNode(), m_name(name), m_type(type), m_endian(endian) { }
 
-        ASTNodeTypeDecl(const ASTNodeTypeDecl& other) = default;
-        ASTNodeTypeDecl(ASTNodeTypeDecl &&other) {
+        ASTNodeTypeDecl(const ASTNodeTypeDecl& other) = delete;
+        ASTNodeTypeDecl(ASTNodeTypeDecl &&other) noexcept {
             this->m_name = other.m_name;
             this->m_type = other.m_type;
             this->m_endian = other.m_endian;
@@ -147,8 +152,8 @@ namespace hex::lang {
             other.m_type = nullptr;
         }
 
-        virtual ~ASTNodeTypeDecl() {
-            if (this->m_type != nullptr)
+        ~ASTNodeTypeDecl() override {
+            if (dynamic_cast<ASTNodeTypeDecl*>(this->m_type) == nullptr)
                 delete this->m_type;
         }
 
@@ -164,24 +169,74 @@ namespace hex::lang {
 
     class ASTNodeVariableDecl : public ASTNode {
     public:
-        ASTNodeVariableDecl(std::string_view name, ASTNode *type)
-            : ASTNode(), m_name(name), m_type(type) { }
+        ASTNodeVariableDecl(std::string_view name, ASTNode *type, std::optional<u64> placementOffset = { })
+            : ASTNode(), m_name(name), m_type(type), m_placementOffset(placementOffset) { }
 
-        virtual ~ASTNodeVariableDecl() {}
+        ASTNodeVariableDecl(ASTNodeVariableDecl &&other) noexcept {
+            this->m_name = other.m_name;
+            this->m_type = other.m_type;
+            this->m_placementOffset = other.m_placementOffset;
+
+            other.m_type = nullptr;
+        }
+
+        ~ASTNodeVariableDecl() override {
+            delete this->m_type;
+        }
 
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
         [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
+        [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
 
     private:
         std::string m_name;
         ASTNode *m_type;
+        std::optional<u64> m_placementOffset;
+    };
+
+    class ASTNodeArrayVariableDecl : public ASTNode {
+    public:
+        ASTNodeArrayVariableDecl(std::string_view name, ASTNode *type, ASTNode *size, std::optional<u64> placementOffset = { })
+                : ASTNode(), m_name(name), m_type(type), m_size(size) { }
+
+        ASTNodeArrayVariableDecl(ASTNodeArrayVariableDecl &&other) noexcept {
+            this->m_name = other.m_name;
+            this->m_type = other.m_type;
+            this->m_size = other.m_size;
+            this->m_placementOffset = other.m_placementOffset;
+
+            other.m_type = nullptr;
+            other.m_size = nullptr;
+        }
+
+        ~ASTNodeArrayVariableDecl() override {
+            delete this->m_type;
+            delete this->m_size;
+        }
+
+        [[nodiscard]] std::string_view getName() const { return this->m_name; }
+        [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
+        [[nodiscard]] constexpr ASTNode* getSize() const { return this->m_size; }
+        [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
+
+    private:
+        std::string m_name;
+        ASTNode *m_type;
+        ASTNode *m_size;
+        std::optional<u64> m_placementOffset;
     };
 
     class ASTNodeStruct : public ASTNode {
     public:
         ASTNodeStruct() : ASTNode() { }
 
-        virtual ~ASTNodeStruct() {
+        ASTNodeStruct(ASTNodeStruct &&other) noexcept {
+            this->m_members = other.m_members;
+
+            other.m_members.clear();
+        }
+
+        ~ASTNodeStruct() override {
             for (auto &member : this->m_members)
                 delete member;
         }
@@ -197,7 +252,13 @@ namespace hex::lang {
     public:
         ASTNodeUnion() : ASTNode() { }
 
-        virtual ~ASTNodeUnion() {
+        ASTNodeUnion(ASTNodeUnion &&other) noexcept {
+            this->m_members = other.m_members;
+
+            other.m_members.clear();
+        }
+
+        ~ASTNodeUnion() override {
             for (auto &member : this->m_members)
                 delete member;
         }
@@ -213,13 +274,19 @@ namespace hex::lang {
     public:
         ASTNodeEnum() : ASTNode() { }
 
-        virtual ~ASTNodeEnum() {
+        ASTNodeEnum(ASTNodeEnum &&other) noexcept {
+            this->m_entries = other.m_entries;
+
+            other.m_entries.clear();
+        }
+
+        ~ASTNodeEnum() override {
             for (auto &[name, expr] : this->m_entries)
                 delete expr;
         }
 
         [[nodiscard]] const auto& getEntries() const { return this->m_entries; }
-        void addEntry(std::string name, ASTNode* expression) { this->m_entries.push_back({ name, expression }); }
+        void addEntry(std::string name, ASTNode* expression) { this->m_entries.emplace_back(name, expression); }
 
     private:
         std::vector<std::pair<std::string, ASTNode*>> m_entries;

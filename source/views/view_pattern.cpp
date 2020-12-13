@@ -296,6 +296,8 @@ namespace hex {
 
         hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast.value()) delete node; });
 
+        return;
+
         hex::lang::Validator validator;
         auto validatorResult = validator.validate(ast.value());
         if (!validatorResult) {
@@ -312,7 +314,7 @@ namespace hex {
         }
         this->m_patternData = patternData.value();
 
-        this->postEvent(Events::PatternChanged);
+        //this->postEvent(Events::PatternChanged);
     }
 
 }
