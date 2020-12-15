@@ -65,12 +65,21 @@ namespace hex::lang {
                     printf("%*c ASTNodeVariableDecl (%s)\n", INDENT_VALUE, variableDeclNode->getName().data());
                 this->printAST({ variableDeclNode->getType() });
             } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
-                if (arrayDeclNode->getPlacementOffset().has_value())
-                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(static_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize())->evaluate()->getValue()), arrayDeclNode->getPlacementOffset().value());
-                else
-                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld])\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(static_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize())->evaluate()->getValue()));
+                auto sizeExpr = dynamic_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize());
+                if (sizeExpr == nullptr) {
+                    printf("%*c Invalid size!\n", INDENT_VALUE);
+                    continue;
+                }
 
-                printf("%*c ASTNodeVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), std::get<s128>(static_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize())->evaluate()->getValue()), arrayDeclNode->getPlacementOffset().value_or(-1));
+                auto sizeValue = sizeExpr->evaluate();
+
+                if (arrayDeclNode->getPlacementOffset().has_value())
+                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(sizeValue->getValue()), arrayDeclNode->getPlacementOffset().value());
+                else
+                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld])\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(sizeValue->getValue()));
+
+                delete sizeValue;
+
                 this->printAST({ arrayDeclNode->getType() });
                 this->printAST({ arrayDeclNode->getSize() });
             } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {

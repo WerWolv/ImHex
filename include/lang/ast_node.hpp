@@ -230,7 +230,7 @@ namespace hex::lang {
         ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
-            this->m_size = other.m_size;
+            this->m_size = other.m_size->clone();
             this->m_placementOffset = other.m_placementOffset;
         }
 

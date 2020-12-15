@@ -26,7 +26,7 @@ namespace hex {
             static std::pair<const char* const, size_t> builtInTypes[] = {
                     { "u8", 1 }, { "u16", 2 }, { "u32", 4 }, { "u64", 8 }, { "u128", 16 },
                     { "s8", 1 }, { "s16", 2 }, { "s32", 4 }, { "s64", 8 }, { "s128", 16 },
-                    { "float", 4 }, { "double", 8 }, { "padding", 1 }
+                    { "float", 4 }, { "double", 8 }, { "char", 1 }, { "padding", 1 }
             };
             for (const auto &[name, size] : builtInTypes) {
                 TextEditor::Identifier id;

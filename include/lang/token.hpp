@@ -126,14 +126,16 @@ namespace hex::lang {
             if (this->type == Type::Integer || this->type == Type::Identifier)
                 return true;
             else if (this->type == Type::ValueType) {
-                auto otherValueType =  std::get_if<ValueType>(&other);
-                auto valueType =  std::get_if<ValueType>(&this->value);
+                auto otherValueType =   std::get_if<ValueType>(&other);
+                auto valueType =        std::get_if<ValueType>(&this->value);
 
                 if (otherValueType == nullptr) return false;
                 if (valueType == nullptr) return false;
 
-                if (*otherValueType == ValueType::Any)
+                if (*otherValueType == *valueType)
                     return true;
+                else if (*otherValueType == ValueType::Any)
+                    return *valueType != ValueType::CustomType && *valueType != ValueType::Padding;
                 else if (*otherValueType == ValueType::Unsigned)
                     return isUnsigned(*valueType);
                 else if (*otherValueType == ValueType::Signed)

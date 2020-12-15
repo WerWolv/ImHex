@@ -147,18 +147,32 @@ namespace hex::lang {
 
         auto arraySize = std::get<s128>(sizeNode->evaluate()->getValue());
 
+        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
+            if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
+                if (builtinType->getType() == Token::ValueType::Padding) {
+                    this->m_currOffset += arraySize;
+                    return new PatternDataPadding(startOffset, arraySize);
+                }
+            }
+        }
+
         std::vector<PatternData*> entries;
+        std::optional<u32> color;
         for (s128 i = 0; i < arraySize; i++) {
             PatternData *entry;
             if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
                 entry = this->evaluateType(typeDecl);
-            else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
+            else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr) {
                 entry = this->evaluateBuiltinType(builtinTypeDecl);
+            }
             else
                 throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
 
             entry->setVariableName(hex::format("[%llu]", (u64)i));
             entry->setEndian(this->getCurrentEndian());
+            if (!color.has_value())
+                color = entry->getColor();
+            entry->setColor(color.value_or(0));
 
             entries.push_back(entry);
 
@@ -172,9 +186,9 @@ namespace hex::lang {
 
         PatternData *pattern;
         if (dynamic_cast<PatternDataCharacter*>(entries[0]))
-            pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset));
+            pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
         else
-            pattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), entries);
+            pattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), entries, color.value_or(0));
 
         pattern->setVariableName(node->getName().data());
 

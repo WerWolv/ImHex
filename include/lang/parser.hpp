@@ -64,6 +64,7 @@ namespace hex::lang {
 
         ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
+        ASTNode* parsePadding();
         ASTNode* parseMemberVariable();
         ASTNode* parseMemberArrayVariable();
         ASTNode* parseStruct();
