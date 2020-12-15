@@ -116,15 +116,18 @@ namespace hex::lang {
     }
 
     PatternData* Evaluator::evaluateVariable(ASTNodeVariableDecl *node) {
-        const auto& type = dynamic_cast<ASTNodeTypeDecl*>(node->getType());
+        PatternData *pattern;
 
-        if (type == nullptr)
+        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
+            pattern = this->evaluateType(typeDecl);
+        else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
+            pattern = this->evaluateBuiltinType(builtinTypeDecl);
+        else
             throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
 
         if (node->getPlacementOffset().has_value())
             this->m_currOffset = node->getPlacementOffset().value();
 
-        auto pattern = this->evaluateType(type);
         pattern->setVariableName(node->getName().data());
         pattern->setEndian(this->getCurrentEndian());
 
@@ -132,10 +135,6 @@ namespace hex::lang {
     }
 
     PatternData* Evaluator::evaluateArray(ASTNodeArrayVariableDecl *node) {
-        const auto& type = dynamic_cast<ASTNodeTypeDecl*>(node->getType());
-
-        if (type == nullptr)
-            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
 
         if (node->getPlacementOffset().has_value())
             this->m_currOffset = node->getPlacementOffset().value();
@@ -150,15 +149,36 @@ namespace hex::lang {
 
         std::vector<PatternData*> entries;
         for (s128 i = 0; i < arraySize; i++) {
-            auto entry = this->evaluateType(type);
-            entry->setVariableName(node->getName().data());
-            entry->setTypeName(node->getName().data());
+            PatternData *entry;
+            if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
+                entry = this->evaluateType(typeDecl);
+            else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
+                entry = this->evaluateBuiltinType(builtinTypeDecl);
+            else
+                throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+
+            entry->setVariableName(hex::format("[%llu]", (u64)i));
             entry->setEndian(this->getCurrentEndian());
 
             entries.push_back(entry);
+
+            if (this->m_currOffset >= this->m_provider->getActualSize())
+                throwEvaluateError("Array bigger than size of file", node->getLineNumber());
         }
 
-        return new PatternDataArray(startOffset, (this->m_currOffset - startOffset) * arraySize, entries);
+        if (entries.empty())
+            throwEvaluateError("Array size must be greater than zero", node->getLineNumber());
+
+
+        PatternData *pattern;
+        if (dynamic_cast<PatternDataCharacter*>(entries[0]))
+            pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset));
+        else
+            pattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), entries);
+
+        pattern->setVariableName(node->getName().data());
+
+        return pattern;
     }
 
     std::pair<Result, std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {

@@ -47,6 +47,8 @@ namespace hex::lang {
         }
         virtual ~PatternData() = default;
 
+        virtual PatternData* clone() = 0;
+
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
         [[nodiscard]] size_t getSize() const { return this->m_size; }
 
@@ -63,7 +65,7 @@ namespace hex::lang {
         void setEndian(std::endian endian) { this->m_endian = endian; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
-        virtual std::string getFormattedName() = 0;
+        virtual std::string getFormattedName() const = 0;
 
         virtual std::optional<u32> highlightBytes(size_t offset) {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
@@ -146,7 +148,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("%s", value.data());
         }
@@ -170,10 +172,14 @@ namespace hex::lang {
     public:
         PatternDataPadding(u64 offset, size_t size) : PatternData(offset, size, 0x00FFFFFF) { }
 
+        PatternData* clone() override {
+            return new PatternDataPadding(*this);
+        }
+
         void createEntry(prv::Provider* &provider) override {
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "";
         }
     };
@@ -183,6 +189,10 @@ namespace hex::lang {
         PatternDataPointer(u64 offset, size_t size, PatternData *pointedAt, u32 color = 0)
         : PatternData(offset, size, color), m_pointedAt(pointedAt) {
             this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataPointer(*this);
         }
 
         void createEntry(prv::Provider* &provider) override {
@@ -200,7 +210,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s*", this->m_pointedAt->getFormattedName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("*(0x%llx)", data);
 
@@ -220,7 +230,7 @@ namespace hex::lang {
                 return { };
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "Pointer";
         }
 
@@ -233,6 +243,10 @@ namespace hex::lang {
         PatternDataUnsigned(u64 offset, size_t size, u32 color = 0)
             : PatternData(offset, size, color) { }
 
+        PatternData* clone() override {
+            return new PatternDataUnsigned(*this);
+        }
+
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
@@ -241,7 +255,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:     return "u8";
                 case 2:     return "u16";
@@ -258,6 +272,10 @@ namespace hex::lang {
         PatternDataSigned(u64 offset, size_t size, u32 color = 0)
             : PatternData(offset, size, color) { }
 
+        PatternData* clone() override {
+            return new PatternDataSigned(*this);
+        }
+
        void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
@@ -268,7 +286,7 @@ namespace hex::lang {
            this->createDefaultEntry(hex::format("%ld (0x%0*lx)", signedData, this->getSize() * 2, data));
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:     return "s8";
                 case 2:     return "s16";
@@ -284,6 +302,10 @@ namespace hex::lang {
     public:
         PatternDataFloat(u64 offset, size_t size, u32 color = 0)
             : PatternData(offset, size, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataFloat(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             double formatData = 0;
@@ -304,7 +326,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("%f (0x%0*lx)", formatData, this->getSize() * 2, formatData));
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 4:     return "float";
                 case 8:     return "double";
@@ -318,6 +340,10 @@ namespace hex::lang {
         PatternDataCharacter(u64 offset, u32 color = 0)
             : PatternData(offset, 1, color) { }
 
+        PatternData* clone() override {
+            return new PatternDataCharacter(*this);
+        }
+
         void createEntry(prv::Provider* &provider) override {
             char character;
             provider->read(this->getOffset(), &character, 1);
@@ -325,7 +351,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("'%c'", character));
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "Character";
         }
     };
@@ -335,6 +361,10 @@ namespace hex::lang {
         PatternDataString(u64 offset, size_t size, u32 color = 0)
             : PatternData(offset, size, color) { }
 
+        PatternData* clone() override {
+            return new PatternDataString(*this);
+        }
+
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> buffer(this->getSize() + 1, 0x00);
             provider->read(this->getOffset(), buffer.data(), this->getSize());
@@ -343,7 +373,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("\"%s\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
            return "String";
         }
     };
@@ -352,6 +382,15 @@ namespace hex::lang {
     public:
         PatternDataArray(u64 offset, size_t size, std::vector<PatternData*> entries, u32 color = 0)
             : PatternData(offset, size, color), m_entries(std::move(entries)) { }
+
+        PatternDataArray(const PatternDataArray &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            for (const auto &entry : other.m_entries)
+                this->m_entries.push_back(entry->clone());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataArray(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             if (this->m_entries.empty())
@@ -396,7 +435,7 @@ namespace hex::lang {
             return { };
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
 
@@ -408,6 +447,15 @@ namespace hex::lang {
     public:
         PatternDataStruct(u64 offset, size_t size, const std::vector<PatternData*> & members, u32 color = 0)
                 : PatternData(offset, size, color), m_members(members), m_sortedMembers(members) { }
+
+        PatternDataStruct(const PatternDataStruct &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            for (const auto &member : other.m_members)
+                this->m_members.push_back(member->clone());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataStruct(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
@@ -452,7 +500,7 @@ namespace hex::lang {
                 member->sort(sortSpecs, provider);
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "struct " + PatternData::getTypeName();
         }
 
@@ -465,6 +513,15 @@ namespace hex::lang {
     public:
         PatternDataUnion(u64 offset, size_t size, const std::vector<PatternData*> & members, u32 color = 0)
                 : PatternData(offset, size, color), m_members(members), m_sortedMembers(members) { }
+
+        PatternDataUnion(const PatternDataUnion &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            for (const auto &member : other.m_members)
+                this->m_members.push_back(member->clone());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataUnion(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
@@ -510,7 +567,7 @@ namespace hex::lang {
                 member->sort(sortSpecs, provider);
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "union " + this->m_unionName;
         }
 
@@ -524,6 +581,10 @@ namespace hex::lang {
     public:
         PatternDataEnum(u64 offset, size_t size, std::vector<std::pair<u64, std::string>> enumValues, u32 color = 0)
             : PatternData(offset, size, color), m_enumValues(std::move(enumValues)) { }
+
+        PatternData* clone() override {
+            return new PatternDataEnum(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
@@ -565,7 +626,7 @@ namespace hex::lang {
             ImGui::Text("%s", hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value).c_str());
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "enum " + this->m_enumName;
         }
 
@@ -578,6 +639,10 @@ namespace hex::lang {
     public:
         PatternDataBitfield(u64 offset, size_t size, std::vector<std::pair<std::string, size_t>> fields, u32 color = 0)
                 : PatternData(offset, size, color), m_fields(std::move(fields)) { }
+
+        PatternData* clone() override {
+            return new PatternDataBitfield(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
@@ -625,7 +690,7 @@ namespace hex::lang {
 
         }
 
-        std::string getFormattedName() override {
+        std::string getFormattedName() const override {
             return "bitfield " + this->m_bitfieldName;
         }
 
