@@ -26,7 +26,7 @@ namespace hex::lang {
         else if (Token::isFloatingPoint(type))
             pattern = new PatternDataFloat(this->m_currOffset, typeSize);
         else
-            throwEvaluateError("Invalid builtin type", node->getLineNumber());
+            throwEvaluateError("invalid builtin type", node->getLineNumber());
 
         this->m_currOffset += typeSize;
 
@@ -45,7 +45,7 @@ namespace hex::lang {
             else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
                 memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
             else
-                throwEvaluateError("Invalid struct member", member->getLineNumber());
+                throwEvaluateError("invalid struct member", member->getLineNumber());
         }
 
         return new PatternDataStruct(startOffset, this->m_currOffset - startOffset, memberPatterns);
@@ -61,7 +61,7 @@ namespace hex::lang {
             else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
                 memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
             else
-                throwEvaluateError("Invalid union member", member->getLineNumber());
+                throwEvaluateError("invalid union member", member->getLineNumber());
         }
 
         return new PatternDataUnion(startOffset, this->m_currOffset - startOffset, memberPatterns);
@@ -74,7 +74,7 @@ namespace hex::lang {
         for (auto &[name, value] : node->getEntries()) {
             auto expression = dynamic_cast<ASTNodeNumericExpression*>(value);
             if (expression == nullptr)
-                throwEvaluateError("Invalid expression in enum value", value->getLineNumber());
+                throwEvaluateError("invalid expression in enum value", value->getLineNumber());
 
             entryPatterns.emplace_back( std::get<s128>(expression->evaluate()->getValue()), name );
         }
@@ -83,7 +83,7 @@ namespace hex::lang {
         if (auto underlyingType = dynamic_cast<const ASTNodeBuiltinType*>(node->getUnderlyingType()); underlyingType != nullptr)
             size = Token::getTypeSize(underlyingType->getType());
         else
-            throwEvaluateError("Invalid enum underlying type", node->getLineNumber());
+            throwEvaluateError("invalid enum underlying type", node->getLineNumber());
 
         return new PatternDataEnum(startOffset, size, entryPatterns);
     }
@@ -107,7 +107,7 @@ namespace hex::lang {
         else if (auto enumNode = dynamic_cast<ASTNodeEnum*>(type); enumNode != nullptr)
             pattern = this->evaluateEnum(enumNode);
         else
-            throwEvaluateError("Type could not be evaluated", node->getLineNumber());
+            throwEvaluateError("type could not be evaluated", node->getLineNumber());
 
         if (!node->getName().empty())
             pattern->setTypeName(node->getName().data());
@@ -143,7 +143,7 @@ namespace hex::lang {
 
         auto sizeNode = dynamic_cast<ASTNodeNumericExpression*>(node->getSize());
         if (sizeNode == nullptr)
-            throwEvaluateError("Array size not a numeric expression", node->getLineNumber());
+            throwEvaluateError("array size not a numeric expression", node->getLineNumber());
 
         auto arraySize = std::get<s128>(sizeNode->evaluate()->getValue());
 
@@ -163,11 +163,11 @@ namespace hex::lang {
             entries.push_back(entry);
 
             if (this->m_currOffset >= this->m_provider->getActualSize())
-                throwEvaluateError("Array bigger than size of file", node->getLineNumber());
+                throwEvaluateError("array bigger than size of file", node->getLineNumber());
         }
 
         if (entries.empty())
-            throwEvaluateError("Array size must be greater than zero", node->getLineNumber());
+            throwEvaluateError("array size must be greater than zero", node->getLineNumber());
 
 
         PatternData *pattern;

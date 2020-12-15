@@ -75,216 +75,213 @@ namespace hex::lang {
 
         u32 lineNumber = 1;
 
-        while (offset < code.length()) {
+        try {
 
-            // Handle comments
-            if (code[offset] == '/') {
-                offset++;
+            while (offset < code.length()) {
 
-                if (offset < code.length() && code[offset] == '/') {
+                // Handle comments
+                if (code[offset] == '/') {
                     offset++;
-                    while (offset < code.length()) {
-                        if (code[offset] == '\n' || code[offset] == '\r')
-                            break;
+
+                    if (offset < code.length() && code[offset] == '/') {
                         offset++;
-                    }
-                } else if (offset < code.length() && code[offset] == '*') {
-                    offset++;
-                    while (offset < (code.length() - 1)) {
-                        if (code[offset] == '\n') lineNumber++;
-
-                        if (code[offset] == '*' && code[offset + 1] == '/')
-                            break;
+                        while (offset < code.length()) {
+                            if (code[offset] == '\n' || code[offset] == '\r')
+                                break;
+                            offset++;
+                        }
+                    } else if (offset < code.length() && code[offset] == '*') {
                         offset++;
-                    }
+                        while (offset < (code.length() - 1)) {
+                            if (code[offset] == '\n') lineNumber++;
 
-                    offset += 2;
-                } else offset--;
-            }
+                            if (code[offset] == '*' && code[offset + 1] == '/')
+                                break;
+                            offset++;
+                        }
 
-            const char& c = code[offset];
-
-            if (c == 0x00)
-                break;
-
-            if (std::isblank(c) || std::isspace(c)) {
-                if (code[offset] == '\n') lineNumber++;
-                offset += 1;
-            } else if (c == ';') {
-                tokens.emplace_back(TOKEN(Separator, EndOfExpression));
-                offset += 1;
-            } else if (c == '(') {
-                tokens.emplace_back(TOKEN(Separator, RoundBracketOpen));
-                offset += 1;
-            } else if (c == ')') {
-                tokens.emplace_back(TOKEN(Separator, RoundBracketClose));
-                offset += 1;
-            } else if (c == '{') {
-                tokens.emplace_back(TOKEN(Separator, CurlyBracketOpen));
-                offset += 1;
-            } else if (c == '}') {
-                tokens.emplace_back(TOKEN(Separator, CurlyBracketClose));
-                offset += 1;
-            } else if (c == '[') {
-                tokens.emplace_back(TOKEN(Separator, SquareBracketOpen));
-                offset += 1;
-            } else if (c == ']') {
-                tokens.emplace_back(TOKEN(Separator, SquareBracketClose));
-                offset += 1;
-            } else if (c == ',') {
-                tokens.emplace_back(TOKEN(Separator, Comma));
-                offset += 1;
-            } else if (c == '@') {
-                tokens.emplace_back(TOKEN(Operator, AtDeclaration));
-                offset += 1;
-            } else if (c == '=') {
-                tokens.emplace_back(TOKEN(Operator, Assignment));
-                offset += 1;
-            } else if (c == ':') {
-                tokens.emplace_back(TOKEN(Operator, Inherit));
-                offset += 1;
-            } else if (c == '+') {
-                tokens.emplace_back(TOKEN(Operator, Plus));
-                offset += 1;
-            } else if (c == '-') {
-                tokens.emplace_back(TOKEN(Operator, Minus));
-                offset += 1;
-            } else if (c == '*') {
-                tokens.emplace_back(TOKEN(Operator, Star));
-                offset += 1;
-            } else if (c == '/') {
-                tokens.emplace_back(TOKEN(Operator, Slash));
-                offset += 1;
-            } else if (offset + 1 <= code.length() && code[offset] == '<' && code[offset + 1] == '<') {
-                tokens.emplace_back(TOKEN(Operator, ShiftLeft));
-                offset += 2;
-            } else if (offset + 1 <= code.length() && code[offset] == '>' && code[offset + 1] == '>') {
-                tokens.emplace_back(TOKEN(Operator, ShiftRight));
-                offset += 2;
-            } else if (c == '|') {
-                tokens.emplace_back(TOKEN(Operator, BitOr));
-                offset += 1;
-            } else if (c == '&') {
-                tokens.emplace_back(TOKEN(Operator, BitAnd));
-                offset += 1;
-            } else if (c == '^') {
-                tokens.emplace_back(TOKEN(Operator, BitXor));
-                offset += 1;
-            } else if (c == '\'') {
-                offset += 1;
-
-                if (offset >= code.length()) {
-                    this->m_error = { lineNumber, "Invalid character literal" };
-                    return { };
+                        offset += 2;
+                    } else offset--;
                 }
 
-                char character = code[offset];
+                const char& c = code[offset];
 
-                if (character == '\\') {
+                if (c == 0x00)
+                    break;
+
+                if (std::isblank(c) || std::isspace(c)) {
+                    if (code[offset] == '\n') lineNumber++;
+                    offset += 1;
+                } else if (c == ';') {
+                    tokens.emplace_back(TOKEN(Separator, EndOfExpression));
+                    offset += 1;
+                } else if (c == '(') {
+                    tokens.emplace_back(TOKEN(Separator, RoundBracketOpen));
+                    offset += 1;
+                } else if (c == ')') {
+                    tokens.emplace_back(TOKEN(Separator, RoundBracketClose));
+                    offset += 1;
+                } else if (c == '{') {
+                    tokens.emplace_back(TOKEN(Separator, CurlyBracketOpen));
+                    offset += 1;
+                } else if (c == '}') {
+                    tokens.emplace_back(TOKEN(Separator, CurlyBracketClose));
+                    offset += 1;
+                } else if (c == '[') {
+                    tokens.emplace_back(TOKEN(Separator, SquareBracketOpen));
+                    offset += 1;
+                } else if (c == ']') {
+                    tokens.emplace_back(TOKEN(Separator, SquareBracketClose));
+                    offset += 1;
+                } else if (c == ',') {
+                    tokens.emplace_back(TOKEN(Separator, Comma));
+                    offset += 1;
+                } else if (c == '@') {
+                    tokens.emplace_back(TOKEN(Operator, AtDeclaration));
+                    offset += 1;
+                } else if (c == '=') {
+                    tokens.emplace_back(TOKEN(Operator, Assignment));
+                    offset += 1;
+                } else if (c == ':') {
+                    tokens.emplace_back(TOKEN(Operator, Inherit));
+                    offset += 1;
+                } else if (c == '+') {
+                    tokens.emplace_back(TOKEN(Operator, Plus));
+                    offset += 1;
+                } else if (c == '-') {
+                    tokens.emplace_back(TOKEN(Operator, Minus));
+                    offset += 1;
+                } else if (c == '*') {
+                    tokens.emplace_back(TOKEN(Operator, Star));
+                    offset += 1;
+                } else if (c == '/') {
+                    tokens.emplace_back(TOKEN(Operator, Slash));
+                    offset += 1;
+                } else if (offset + 1 <= code.length() && code[offset] == '<' && code[offset + 1] == '<') {
+                    tokens.emplace_back(TOKEN(Operator, ShiftLeft));
+                    offset += 2;
+                } else if (offset + 1 <= code.length() && code[offset] == '>' && code[offset + 1] == '>') {
+                    tokens.emplace_back(TOKEN(Operator, ShiftRight));
+                    offset += 2;
+                } else if (c == '|') {
+                    tokens.emplace_back(TOKEN(Operator, BitOr));
+                    offset += 1;
+                } else if (c == '&') {
+                    tokens.emplace_back(TOKEN(Operator, BitAnd));
+                    offset += 1;
+                } else if (c == '^') {
+                    tokens.emplace_back(TOKEN(Operator, BitXor));
+                    offset += 1;
+                } else if (c == '\'') {
                     offset += 1;
 
-                    if (offset >= code.length()) {
-                        this->m_error = { lineNumber, "Invalid character literal" };
-                        return { };
+                    if (offset >= code.length())
+                        throwLexerError("invalid character literal", lineNumber);
+
+                    char character = code[offset];
+
+                    if (character == '\\') {
+                        offset += 1;
+
+                        if (offset >= code.length())
+                            throwLexerError("invalid character literal", lineNumber);
+
+                        if (code[offset] != '\\' && code[offset] != '\'')
+                            throwLexerError("invalid escape sequence", lineNumber);
+
+
+                        character = code[offset];
+                    } else {
+                        if (code[offset] == '\\' || code[offset] == '\'' || character == '\n' || character == '\r')
+                            throwLexerError("invalid character literal", lineNumber);
+
                     }
 
-                    if (code[offset] != '\\' && code[offset] != '\'') {
-                        this->m_error = { lineNumber, "Invalid escape sequence" };
-                        return { };
-                    }
+                    offset += 1;
 
-                    character = code[offset];
-                } else {
-                    if (code[offset] == '\\' || code[offset] == '\'' || character == '\n' || character == '\r') {
-                        this->m_error = { lineNumber, "Invalid character literal" };
-                        return { };
-                    }
-                }
+                    if (offset >= code.length() || code[offset] != '\'')
+                        throwLexerError("Missing terminating ' after character literal", lineNumber);
 
-                offset += 1;
+                    tokens.emplace_back(VALUE_TOKEN(Integer, character));
+                    offset += 1;
 
-                if (offset >= code.length() || code[offset] != '\'') {
-                    this->m_error = { lineNumber, "Missing terminating ' after character literal" };
-                    return { };
-                }
+                } else if (std::isalpha(c)) {
+                    std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 
-                tokens.emplace_back(VALUE_TOKEN(Integer, character));
-                offset += 1;
+                    // Check for reserved keywords
 
-            } else if (std::isalpha(c)) {
-                std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
+                    if (identifier == "struct")
+                        tokens.emplace_back(TOKEN(Keyword, Struct));
+                    else if (identifier == "union")
+                        tokens.emplace_back(TOKEN(Keyword, Union));
+                    else if (identifier == "using")
+                        tokens.emplace_back(TOKEN(Keyword, Using));
+                    else if (identifier == "enum")
+                        tokens.emplace_back(TOKEN(Keyword, Enum));
+                    else if (identifier == "bitfield")
+                        tokens.emplace_back(TOKEN(Keyword, Bitfield));
+                    else if (identifier == "be")
+                        tokens.emplace_back(TOKEN(Keyword, BigEndian));
+                    else if (identifier == "le")
+                        tokens.emplace_back(TOKEN(Keyword, LittleEndian));
 
-                // Check for reserved keywords
+                        // Check for built-in types
+                    else if (identifier == "u8")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned8Bit));
+                    else if (identifier == "s8")
+                        tokens.emplace_back(TOKEN(ValueType, Signed8Bit));
+                    else if (identifier == "u16")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned16Bit));
+                    else if (identifier == "s16")
+                        tokens.emplace_back(TOKEN(ValueType, Signed16Bit));
+                    else if (identifier == "u32")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned32Bit));
+                    else if (identifier == "s32")
+                        tokens.emplace_back(TOKEN(ValueType, Signed32Bit));
+                    else if (identifier == "u64")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned64Bit));
+                    else if (identifier == "s64")
+                        tokens.emplace_back(TOKEN(ValueType, Signed64Bit));
+                    else if (identifier == "u128")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned128Bit));
+                    else if (identifier == "s128")
+                        tokens.emplace_back(TOKEN(ValueType, Signed128Bit));
+                    else if (identifier == "float")
+                        tokens.emplace_back(TOKEN(ValueType, Float));
+                    else if (identifier == "double")
+                        tokens.emplace_back(TOKEN(ValueType, Double));
+                    else if (identifier == "padding")
+                        tokens.emplace_back(TOKEN(ValueType, Padding));
 
-                if (identifier == "struct")
-                    tokens.emplace_back(TOKEN(Keyword, Struct));
-                else if (identifier == "union")
-                    tokens.emplace_back(TOKEN(Keyword, Union));
-                else if (identifier == "using")
-                    tokens.emplace_back(TOKEN(Keyword, Using));
-                else if (identifier == "enum")
-                    tokens.emplace_back(TOKEN(Keyword, Enum));
-                else if (identifier == "bitfield")
-                    tokens.emplace_back(TOKEN(Keyword, Bitfield));
-                else if (identifier == "be")
-                    tokens.emplace_back(TOKEN(Keyword, BigEndian));
-                else if (identifier == "le")
-                    tokens.emplace_back(TOKEN(Keyword, LittleEndian));
+                    // If it's not a keyword and a builtin type, it has to be an identifier
 
-                    // Check for built-in types
-                else if (identifier == "u8")
-                    tokens.emplace_back(TOKEN(ValueType, Unsigned8Bit));
-                else if (identifier == "s8")
-                    tokens.emplace_back(TOKEN(ValueType, Signed8Bit));
-                else if (identifier == "u16")
-                    tokens.emplace_back(TOKEN(ValueType, Unsigned16Bit));
-                else if (identifier == "s16")
-                    tokens.emplace_back(TOKEN(ValueType, Signed16Bit));
-                else if (identifier == "u32")
-                    tokens.emplace_back(TOKEN(ValueType, Unsigned32Bit));
-                else if (identifier == "s32")
-                    tokens.emplace_back(TOKEN(ValueType, Signed32Bit));
-                else if (identifier == "u64")
-                    tokens.emplace_back(TOKEN(ValueType, Unsigned64Bit));
-                else if (identifier == "s64")
-                    tokens.emplace_back(TOKEN(ValueType, Signed64Bit));
-                else if (identifier == "u128")
-                    tokens.emplace_back(TOKEN(ValueType, Unsigned128Bit));
-                else if (identifier == "s128")
-                    tokens.emplace_back(TOKEN(ValueType, Signed128Bit));
-                else if (identifier == "float")
-                    tokens.emplace_back(TOKEN(ValueType, Float));
-                else if (identifier == "double")
-                    tokens.emplace_back(TOKEN(ValueType, Double));
-                else if (identifier == "padding")
-                    tokens.emplace_back(TOKEN(ValueType, Padding));
+                    else
+                        tokens.emplace_back(VALUE_TOKEN(Identifier, identifier));
 
-                // If it's not a keyword and a builtin type, it has to be an identifier
+                    offset += identifier.length();
+                } else if (std::isdigit(c)) {
+                    char *end = nullptr;
+                    std::strtoull(&code[offset], &end, 0);
 
-                else
-                    tokens.emplace_back(VALUE_TOKEN(Identifier, identifier));
+                    auto integer = parseInt(std::string_view(&code[offset], end - &code[offset]));
 
-                offset += identifier.length();
-            } else if (std::isdigit(c)) {
-                char *end = nullptr;
-                std::strtoull(&code[offset], &end, 0);
+                    if (!integer.has_value())
+                        throwLexerError("invalid integer literal", lineNumber);
 
-                auto integer = parseInt(std::string_view(&code[offset], end - &code[offset]));
 
-                if (!integer.has_value()) {
-                    this->m_error = { lineNumber, "Invalid integer literal" };
-                    return { };
-                }
+                    tokens.emplace_back(VALUE_TOKEN(Integer, integer.value()));
+                    offset += (end - &code[offset]);
+                } else
+                    throwLexerError("unknown token", lineNumber);
 
-                tokens.emplace_back(VALUE_TOKEN(Integer, integer.value()));
-                offset += (end - &code[offset]);
-            } else {
-                this->m_error = { lineNumber, "Unknown token" };
-                return { };
             }
+
+            tokens.emplace_back(TOKEN(Separator, EndOfProgram));
+        } catch (LexerError &e) {
+            this->m_error = e;
+            return { ResultLexicalError, { } };
         }
 
-        tokens.emplace_back(TOKEN(Separator, EndOfProgram));
 
         return tokens;
     }

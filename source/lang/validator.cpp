@@ -18,16 +18,16 @@ namespace hex::lang {
 
             for (const auto &node : ast) {
                 if (node == nullptr)
-                    throwValidateError("Nullptr in AST. This is a bug!", 1);
+                    throwValidateError("nullptr in AST. This is a bug!", 1);
 
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
                     if (!identifiers.insert(variableDeclNode->getName().data()).second)
-                        throwValidateError(hex::format("Redefinition of identifier '%s'", variableDeclNode->getName().data()), variableDeclNode->getLineNumber());
+                        throwValidateError(hex::format("redefinition of identifier '%s'", variableDeclNode->getName().data()), variableDeclNode->getLineNumber());
 
                     this->validate({ variableDeclNode->getType() });
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
                     if (!identifiers.insert(typeDeclNode->getName().data()).second)
-                        throwValidateError(hex::format("Redefinition of identifier '%s'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
+                        throwValidateError(hex::format("redefinition of identifier '%s'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
 
                     this->validate({ typeDeclNode->getType() });
                 } else if (auto structNode = dynamic_cast<ASTNodeStruct*>(node); structNode != nullptr) {
@@ -38,7 +38,7 @@ namespace hex::lang {
                     std::unordered_set<std::string> enumIdentifiers;
                     for (auto &[name, value] : enumNode->getEntries()) {
                         if (!enumIdentifiers.insert(name).second)
-                            throwValidateError(hex::format("Redefinition of enum constant '%s'", name.c_str()), value->getLineNumber());
+                            throwValidateError(hex::format("redefinition of enum constant '%s'", name.c_str()), value->getLineNumber());
                     }
                 }
             }
@@ -52,6 +52,7 @@ namespace hex::lang {
     }
 
     void Validator::printAST(const std::vector<ASTNode*>& ast){
+    #if DEBUG
         #define INDENT_VALUE indent, ' '
         static s32 indent = -2;
 
@@ -59,11 +60,16 @@ namespace hex::lang {
         for (const auto &node : ast) {
             if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
                 if (variableDeclNode->getPlacementOffset().has_value())
-                    printf("%*c ASTNodeVariableDecl (%s) @ 0x%llx\n", INDENT_VALUE, variableDeclNode->getName().data(), variableDeclNode->getPlacementOffset().value());
+                    printf("%*c ASTNodeVariableDecl (%s) @ 0x%llx\n", INDENT_VALUE, variableDeclNode->getName().data(), (s64)variableDeclNode->getPlacementOffset().value());
                 else
                     printf("%*c ASTNodeVariableDecl (%s)\n", INDENT_VALUE, variableDeclNode->getName().data());
                 this->printAST({ variableDeclNode->getType() });
             } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
+                if (arrayDeclNode->getPlacementOffset().has_value())
+                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(static_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize())->evaluate()->getValue()), arrayDeclNode->getPlacementOffset().value());
+                else
+                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld])\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(static_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize())->evaluate()->getValue()));
+
                 printf("%*c ASTNodeVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), std::get<s128>(static_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize())->evaluate()->getValue()), arrayDeclNode->getPlacementOffset().value_or(-1));
                 this->printAST({ arrayDeclNode->getType() });
                 this->printAST({ arrayDeclNode->getSize() });
@@ -116,6 +122,7 @@ namespace hex::lang {
         indent -= 2;
 
         #undef INDENT_VALUE
+    #endif
     }
 
 }

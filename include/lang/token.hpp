@@ -147,8 +147,8 @@ namespace hex::lang {
             return false;
         }
 
-        bool operator!=(const ValueTypes &value) const {
-            return !operator==(value);
+        bool operator!=(const ValueTypes &other) const {
+            return !operator==(other);
         }
 
         Type type;

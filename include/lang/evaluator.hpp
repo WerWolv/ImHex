@@ -33,7 +33,7 @@ namespace hex::lang {
         using EvaluateError = std::pair<u32, std::string>;
 
         [[noreturn]] static void throwEvaluateError(std::string_view error, u32 lineNumber) {
-            throw EvaluateError(lineNumber, error);
+            throw EvaluateError(lineNumber, "Evaluator: " + std::string(error));
         }
 
         [[nodiscard]] std::endian getCurrentEndian() const {

@@ -89,7 +89,7 @@ namespace hex::lang {
         }
 
         [[noreturn]] void throwParseError(std::string_view error, s32 token = -1) const {
-            throw ParseError(this->m_curr[token].lineNumber, error);
+            throw ParseError(this->m_curr[token].lineNumber, "Parser: " + std::string(error));
         }
 
         /* Token consuming */

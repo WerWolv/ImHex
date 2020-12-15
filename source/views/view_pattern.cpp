@@ -297,6 +297,7 @@ namespace hex {
         hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast.value()) delete node; });
 
         hex::lang::Validator validator;
+        validator.printAST(ast);
         auto validatorResult = validator.validate(ast.value());
         if (!validatorResult) {
             this->m_textEditor.SetErrorMarkers({ validator.getError() });
