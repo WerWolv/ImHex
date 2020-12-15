@@ -17,10 +17,10 @@ namespace hex::lang {
 
         PatternData *pattern;
 
-        if (Token::isUnsigned(type))
-            pattern = new PatternDataUnsigned(this->m_currOffset, typeSize);
-        else if (Token::isSigned(type) && typeSize == 1)
+        if (type == Token::ValueType::Character)
             pattern = new PatternDataCharacter(this->m_currOffset);
+        else if (Token::isUnsigned(type))
+            pattern = new PatternDataUnsigned(this->m_currOffset, typeSize);
         else if (Token::isSigned(type))
             pattern = new PatternDataSigned(this->m_currOffset, typeSize);
         else if (Token::isFloatingPoint(type))

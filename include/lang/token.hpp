@@ -56,6 +56,7 @@ namespace hex::lang {
             Signed64Bit         = 0x81,
             Unsigned128Bit      = 0x100,
             Signed128Bit        = 0x101,
+            Character           = 0x13,
             Float               = 0x42,
             Double              = 0x82,
             CustomType          = 0x00,
@@ -116,6 +117,7 @@ namespace hex::lang {
                 case ValueType::Unsigned128Bit: return "u128";
                 case ValueType::Float:          return "float";
                 case ValueType::Double:         return "double";
+                case ValueType::Character:      return "char";
                 default:                        return "< ??? >";
             }
         }

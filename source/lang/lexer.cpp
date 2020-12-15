@@ -250,6 +250,8 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(ValueType, Float));
                     else if (identifier == "double")
                         tokens.emplace_back(TOKEN(ValueType, Double));
+                    else if (identifier == "char")
+                        tokens.emplace_back(TOKEN(ValueType, Character));
                     else if (identifier == "padding")
                         tokens.emplace_back(TOKEN(ValueType, Padding));
 
