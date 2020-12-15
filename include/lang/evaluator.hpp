@@ -44,6 +44,7 @@ namespace hex::lang {
         PatternData* evaluateStruct(ASTNodeStruct *node);
         PatternData* evaluateUnion(ASTNodeUnion *node);
         PatternData* evaluateEnum(ASTNodeEnum *node);
+        PatternData* evaluateBitfield(ASTNodeBitfield *node);
         PatternData* evaluateType(ASTNodeTypeDecl *node);
         PatternData* evaluateVariable(ASTNodeVariableDecl *node);
         PatternData* evaluateArray(ASTNodeArrayVariableDecl *node);

@@ -58,8 +58,8 @@ namespace hex {
         return std::string(buffer.data(), buffer.data() + size);
     }
 
-    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const u64 &value) {
-        u64 mask = (std::numeric_limits<u64>::max() >> (63 - (from - to))) << to;
+    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
+        std::remove_cvref_t<decltype(value)> mask = (std::numeric_limits<std::remove_cvref_t<decltype(value)>>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
         return (value & mask) >> to;
     }
 

@@ -46,6 +46,8 @@ namespace hex::lang {
                 memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
             else
                 throwEvaluateError("invalid struct member", member->getLineNumber());
+
+            this->m_currEndian.reset();
         }
 
         return new PatternDataStruct(startOffset, this->m_currOffset - startOffset, memberPatterns);
@@ -62,6 +64,9 @@ namespace hex::lang {
                 memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
             else
                 throwEvaluateError("invalid union member", member->getLineNumber());
+
+            this->m_currOffset = startOffset;
+            this->m_currEndian.reset();
         }
 
         return new PatternDataUnion(startOffset, this->m_currOffset - startOffset, memberPatterns);
@@ -88,6 +93,28 @@ namespace hex::lang {
         return new PatternDataEnum(startOffset, size, entryPatterns);
     }
 
+    PatternData* Evaluator::evaluateBitfield(ASTNodeBitfield *node) {
+        std::vector<std::pair<std::string, size_t>> entryPatterns;
+
+        auto startOffset = this->m_currOffset;
+        size_t bits = 0;
+        for (auto &[name, value] : node->getEntries()) {
+            auto expression = dynamic_cast<ASTNodeNumericExpression*>(value);
+            if (expression == nullptr)
+                throwEvaluateError("invalid expression in bitfield field size", value->getLineNumber());
+
+            auto fieldBits = std::get<s128>(expression->evaluate()->getValue());
+            if (fieldBits > 64)
+                throwEvaluateError("bitfield entry must at most occupy 64 bits", value->getLineNumber());
+
+            bits += fieldBits;
+
+            entryPatterns.emplace_back(name, fieldBits);
+        }
+
+        return new PatternDataBitfield(startOffset, (bits / 8) + 1, entryPatterns);
+    }
+
     PatternData* Evaluator::evaluateType(ASTNodeTypeDecl *node) {
         auto type = node->getType();
 
@@ -106,6 +133,8 @@ namespace hex::lang {
             pattern = this->evaluateUnion(unionNode);
         else if (auto enumNode = dynamic_cast<ASTNodeEnum*>(type); enumNode != nullptr)
             pattern = this->evaluateEnum(enumNode);
+        else if (auto bitfieldNode = dynamic_cast<ASTNodeBitfield*>(type); bitfieldNode != nullptr)
+            pattern = this->evaluateBitfield(bitfieldNode);
         else
             throwEvaluateError("type could not be evaluated", node->getLineNumber());
 
@@ -116,8 +145,13 @@ namespace hex::lang {
     }
 
     PatternData* Evaluator::evaluateVariable(ASTNodeVariableDecl *node) {
-        PatternData *pattern;
 
+        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr)
+            this->m_currOffset = std::get<s128>(offset->evaluate()->getValue());
+        if (this->m_currOffset >= this->m_provider->getActualSize())
+            throwEvaluateError("array exceeds size of file", node->getLineNumber());
+
+        PatternData *pattern;
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
             pattern = this->evaluateType(typeDecl);
         else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
@@ -125,19 +159,17 @@ namespace hex::lang {
         else
             throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
 
-        if (node->getPlacementOffset().has_value())
-            this->m_currOffset = node->getPlacementOffset().value();
-
         pattern->setVariableName(node->getName().data());
         pattern->setEndian(this->getCurrentEndian());
+        this->m_currEndian.reset();
 
         return pattern;
     }
 
     PatternData* Evaluator::evaluateArray(ASTNodeArrayVariableDecl *node) {
 
-        if (node->getPlacementOffset().has_value())
-            this->m_currOffset = node->getPlacementOffset().value();
+        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr)
+            this->m_currOffset = std::get<s128>(offset->evaluate()->getValue());
 
         auto startOffset = this->m_currOffset;
 
@@ -170,6 +202,7 @@ namespace hex::lang {
 
             entry->setVariableName(hex::format("[%llu]", (u64)i));
             entry->setEndian(this->getCurrentEndian());
+
             if (!color.has_value())
                 color = entry->getColor();
             entry->setColor(color.value_or(0));
@@ -177,8 +210,10 @@ namespace hex::lang {
             entries.push_back(entry);
 
             if (this->m_currOffset >= this->m_provider->getActualSize())
-                throwEvaluateError("array bigger than size of file", node->getLineNumber());
+                throwEvaluateError("array exceeds size of file", node->getLineNumber());
         }
+
+        this->m_currEndian.reset();
 
         if (entries.empty())
             throwEvaluateError("array size must be greater than zero", node->getLineNumber());
@@ -201,6 +236,7 @@ namespace hex::lang {
 
         try {
             for (const auto& node : ast) {
+                this->m_currEndian.reset();
 
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
                     patterns.push_back(this->evaluateVariable(variableDeclNode));

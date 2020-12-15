@@ -59,7 +59,7 @@ namespace hex::lang {
             delete this->m_right;
         }
 
-        ASTNodeNumericExpression(const ASTNodeNumericExpression &other) {
+        ASTNodeNumericExpression(const ASTNodeNumericExpression &other) : ASTNode(other) {
             this->m_operator = other.m_operator;
             this->m_left = other.m_left->clone();
             this->m_right = other.m_right->clone();
@@ -169,7 +169,7 @@ namespace hex::lang {
         ASTNodeTypeDecl(std::string_view name, ASTNode *type, std::optional<std::endian> endian = { })
             : ASTNode(), m_name(name), m_type(type), m_endian(endian) { }
 
-        ASTNodeTypeDecl(const ASTNodeTypeDecl& other) {
+        ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
             this->m_endian = other.m_endian;
@@ -195,13 +195,15 @@ namespace hex::lang {
 
     class ASTNodeVariableDecl : public ASTNode {
     public:
-        ASTNodeVariableDecl(std::string_view name, ASTNode *type, std::optional<u64> placementOffset = { })
+        ASTNodeVariableDecl(std::string_view name, ASTNode *type, ASTNode *placementOffset = nullptr)
             : ASTNode(), m_name(name), m_type(type), m_placementOffset(placementOffset) { }
 
-        ASTNodeVariableDecl(const ASTNodeVariableDecl &other) {
+        ASTNodeVariableDecl(const ASTNodeVariableDecl &other) : ASTNode(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
-            this->m_placementOffset = other.m_placementOffset;
+
+            if (this->m_placementOffset != nullptr)
+                this->m_placementOffset = other.m_placementOffset->clone();
         }
 
         ~ASTNodeVariableDecl() override {
@@ -219,19 +221,21 @@ namespace hex::lang {
     private:
         std::string m_name;
         ASTNode *m_type;
-        std::optional<u64> m_placementOffset;
+        ASTNode *m_placementOffset;
     };
 
     class ASTNodeArrayVariableDecl : public ASTNode {
     public:
-        ASTNodeArrayVariableDecl(std::string_view name, ASTNode *type, ASTNode *size, std::optional<u64> placementOffset = { })
+        ASTNodeArrayVariableDecl(std::string_view name, ASTNode *type, ASTNode *size, ASTNode *placementOffset = nullptr)
                 : ASTNode(), m_name(name), m_type(type), m_size(size) { }
 
-        ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) {
+        ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) : ASTNode(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
             this->m_size = other.m_size->clone();
-            this->m_placementOffset = other.m_placementOffset;
+
+            if (this->m_placementOffset != nullptr)
+                this->m_placementOffset = other.m_placementOffset->clone();
         }
 
         ~ASTNodeArrayVariableDecl() override {
@@ -252,14 +256,14 @@ namespace hex::lang {
         std::string m_name;
         ASTNode *m_type;
         ASTNode *m_size;
-        std::optional<u64> m_placementOffset;
+        ASTNode *m_placementOffset;
     };
 
     class ASTNodeStruct : public ASTNode {
     public:
         ASTNodeStruct() : ASTNode() { }
 
-        ASTNodeStruct(const ASTNodeStruct &other) {
+        ASTNodeStruct(const ASTNodeStruct &other) : ASTNode(other) {
             for (const auto &otherMember : other.getMembers())
                 this->m_members.push_back(otherMember->clone());
         }
@@ -284,7 +288,7 @@ namespace hex::lang {
     public:
         ASTNodeUnion() : ASTNode() { }
 
-        ASTNodeUnion(const ASTNodeUnion &other) {
+        ASTNodeUnion(const ASTNodeUnion &other) : ASTNode(other) {
             for (const auto &otherMember : other.getMembers())
                 this->m_members.push_back(otherMember->clone());
         }
@@ -307,9 +311,9 @@ namespace hex::lang {
 
     class ASTNodeEnum : public ASTNode {
     public:
-        ASTNodeEnum(ASTNode *underlyingType) : ASTNode(), m_underlyingType(underlyingType) { }
+        explicit ASTNodeEnum(ASTNode *underlyingType) : ASTNode(), m_underlyingType(underlyingType) { }
 
-        ASTNodeEnum(const ASTNodeEnum &other) {
+        ASTNodeEnum(const ASTNodeEnum &other) : ASTNode(other) {
             for (const auto &[name, entry] : other.getEntries())
                 this->m_entries.emplace_back(name, entry->clone());
             this->m_underlyingType = other.m_underlyingType->clone();
@@ -326,13 +330,38 @@ namespace hex::lang {
         }
 
         [[nodiscard]] const std::vector<std::pair<std::string, ASTNode*>>& getEntries() const { return this->m_entries; }
-        void addEntry(std::string name, ASTNode* expression) { this->m_entries.emplace_back(name, expression); }
+        void addEntry(const std::string &name, ASTNode* expression) { this->m_entries.emplace_back(name, expression); }
 
         [[nodiscard]] const ASTNode *getUnderlyingType() const { return this->m_underlyingType; }
 
     private:
         std::vector<std::pair<std::string, ASTNode*>> m_entries;
         ASTNode *m_underlyingType;
+    };
+
+    class ASTNodeBitfield : public ASTNode {
+    public:
+        ASTNodeBitfield() : ASTNode() { }
+
+        ASTNodeBitfield(const ASTNodeBitfield &other) : ASTNode(other) {
+            for (const auto &[name, entry] : other.getEntries())
+                this->m_entries.emplace_back(name, entry->clone());
+        }
+
+        ~ASTNodeBitfield() override {
+            for (auto &[name, expr] : this->m_entries)
+                delete expr;
+        }
+
+        ASTNode* clone() override {
+            return new ASTNodeBitfield(*this);
+        }
+
+        [[nodiscard]] const std::vector<std::pair<std::string, ASTNode*>>& getEntries() const { return this->m_entries; }
+        void addEntry(const std::string &name, ASTNode* size) { this->m_entries.emplace_back(name, size); }
+
+    private:
+        std::vector<std::pair<std::string, ASTNode*>> m_entries;
     };
 
 }

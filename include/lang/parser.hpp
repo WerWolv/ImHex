@@ -70,6 +70,7 @@ namespace hex::lang {
         ASTNode* parseStruct();
         ASTNode* parseUnion();
         ASTNode* parseEnum();
+        ASTNode* parseBitfield();
         ASTNode* parseVariablePlacement();
         ASTNode* parseArrayVariablePlacement();
         ASTNode* parseStatement();

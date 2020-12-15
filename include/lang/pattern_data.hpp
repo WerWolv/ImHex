@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hex.hpp>
-#include <string>
 
 #include "imgui.h"
 #include "imgui_memory_editor.h"
@@ -9,7 +8,9 @@
 #include "providers/provider.hpp"
 #include "helpers/utils.hpp"
 
+#include <cstring>
 #include <random>
+#include <string>
 
 namespace hex::lang {
 
@@ -65,7 +66,7 @@ namespace hex::lang {
         void setEndian(std::endian endian) { this->m_endian = endian; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
-        virtual std::string getFormattedName() const = 0;
+        [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
         virtual std::optional<u32> highlightBytes(size_t offset) {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
@@ -179,7 +180,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "";
         }
     };
@@ -230,7 +231,7 @@ namespace hex::lang {
                 return { };
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "Pointer";
         }
 
@@ -255,7 +256,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:     return "u8";
                 case 2:     return "u16";
@@ -286,7 +287,7 @@ namespace hex::lang {
            this->createDefaultEntry(hex::format("%ld (0x%0*lx)", signedData, this->getSize() * 2, data));
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:     return "s8";
                 case 2:     return "s16";
@@ -326,7 +327,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("%f (0x%0*lx)", formatData, this->getSize() * 2, formatData));
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 4:     return "float";
                 case 8:     return "double";
@@ -337,7 +338,7 @@ namespace hex::lang {
 
     class PatternDataCharacter : public PatternData {
     public:
-        PatternDataCharacter(u64 offset, u32 color = 0)
+        explicit PatternDataCharacter(u64 offset, u32 color = 0)
             : PatternData(offset, 1, color) { }
 
         PatternData* clone() override {
@@ -351,7 +352,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("'%c'", character));
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "Character";
         }
     };
@@ -373,7 +374,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("\"%s\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
            return "String";
         }
     };
@@ -435,7 +436,7 @@ namespace hex::lang {
             return { };
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
 
@@ -500,7 +501,7 @@ namespace hex::lang {
                 member->sort(sortSpecs, provider);
         }
 
-        std::string getFormattedName() const override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "struct " + PatternData::getTypeName();
         }
 
@@ -533,7 +534,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", this->m_unionName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
 
             ImGui::TableNextColumn();
             ImGui::Text("%s", "{ ... }");
@@ -567,12 +568,11 @@ namespace hex::lang {
                 member->sort(sortSpecs, provider);
         }
 
-        std::string getFormattedName() const override {
-            return "union " + this->m_unionName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "union " + PatternData::getTypeName();;
         }
 
     private:
-        std::string m_unionName;
         std::vector<PatternData*> m_members;
         std::vector<PatternData*> m_sortedMembers;
     };
@@ -591,7 +591,7 @@ namespace hex::lang {
             provider->read(this->getOffset(), &value, this->getSize());
             value = hex::changeEndianess(value, this->getSize(), this->getEndian());
 
-            std::string valueString = this->m_enumName + "::";
+            std::string valueString = PatternData::getTypeName() + "::";
 
             bool foundValue = false;
             for (auto &[entryValue, entryName] : this->m_enumValues) {
@@ -621,17 +621,16 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", this->m_enumName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("%s", hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value).c_str());
         }
 
-        std::string getFormattedName() const override {
-            return "enum " + this->m_enumName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "enum " + PatternData::getTypeName();
         }
 
     private:
-        std::string m_enumName;
         std::vector<std::pair<u64, std::string>> m_enumValues;
     };
 
@@ -645,9 +644,11 @@ namespace hex::lang {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            u64 value = 0;
-            provider->read(this->getOffset(), &value, this->getSize());
-            value = hex::changeEndianess(value, this->getSize(), this->getEndian());
+            std::vector<u8> value(this->getSize(), 0);
+            provider->read(this->getOffset(), &value[0], value.size());
+
+            if (this->m_endian == std::endian::big)
+                std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -658,9 +659,15 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", this->m_bitfieldName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("{ %llx }", value);
+
+            std::string valueString = "{ ";
+            for (u64 i = 0; i < value.size(); i++)
+                valueString += hex::format("%02x ", value[i]);
+            valueString += "}";
+
+            ImGui::TextUnformatted(valueString.c_str());
 
             if (open) {
                 u16 bitOffset = 0;
@@ -672,7 +679,7 @@ namespace hex::lang {
                     ImGui::TableNextColumn();
                     ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
                     ImGui::TableNextColumn();
-                    ImGui::Text("0x%08llx : 0x%08llx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3) - 1);
+                    ImGui::Text("0x%08llx : 0x%08llx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3));
                     ImGui::TableNextColumn();
                     if (entrySize == 1)
                         ImGui::Text("%llu bit", entrySize);
@@ -681,7 +688,11 @@ namespace hex::lang {
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", entryName.c_str());
                     ImGui::TableNextColumn();
-                    ImGui::Text("%llx", hex::extract((bitOffset + entrySize) - 1, bitOffset, value));
+                    {
+                        u128 fieldValue = 0;
+                        std::memcpy(&fieldValue, value.data() + (bitOffset / 8), (entrySize / 8) + 1);
+                        ImGui::Text("%llx", hex::extract((bitOffset + entrySize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
+                    }
                     bitOffset += entrySize;
                 }
 
@@ -690,12 +701,11 @@ namespace hex::lang {
 
         }
 
-        std::string getFormattedName() const override {
-            return "bitfield " + this->m_bitfieldName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "bitfield " + PatternData::getTypeName();
         }
 
     private:
-        std::string m_bitfieldName;
         std::vector<std::pair<std::string, size_t>> m_fields;
     };
 

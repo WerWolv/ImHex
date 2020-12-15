@@ -59,8 +59,8 @@ namespace hex::lang {
         indent += 2;
         for (const auto &node : ast) {
             if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
-                if (variableDeclNode->getPlacementOffset().has_value())
-                    printf("%*c ASTNodeVariableDecl (%s) @ 0x%llx\n", INDENT_VALUE, variableDeclNode->getName().data(), (s64)variableDeclNode->getPlacementOffset().value());
+                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(variableDeclNode->getPlacementOffset()); offset != nullptr)
+                    printf("%*c ASTNodeVariableDecl (%s) @ 0x%llx\n", INDENT_VALUE, variableDeclNode->getName().data(), (u64)std::get<s128>(offset->evaluate()->getValue()));
                 else
                     printf("%*c ASTNodeVariableDecl (%s)\n", INDENT_VALUE, variableDeclNode->getName().data());
                 this->printAST({ variableDeclNode->getType() });
@@ -73,10 +73,10 @@ namespace hex::lang {
 
                 auto sizeValue = sizeExpr->evaluate();
 
-                if (arrayDeclNode->getPlacementOffset().has_value())
-                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(sizeValue->getValue()), arrayDeclNode->getPlacementOffset().value());
+                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(arrayDeclNode->getPlacementOffset()); offset != nullptr)
+                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), (u64)std::get<s128>(sizeValue->getValue()), (u64)std::get<s128>(offset->evaluate()->getValue()));
                 else
-                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld])\n", INDENT_VALUE, arrayDeclNode->getName().data(), (s64)std::get<s128>(sizeValue->getValue()));
+                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld])\n", INDENT_VALUE, arrayDeclNode->getName().data(), (u64)std::get<s128>(sizeValue->getValue()));
 
                 delete sizeValue;
 
@@ -122,6 +122,13 @@ namespace hex::lang {
 
                 for (const auto &[name, entry] : enumNode->getEntries()) {
                     printf("%*c ::%s\n", INDENT_VALUE, name.c_str());
+                    this->printAST({ entry });
+                }
+            } else if (auto bitfieldNode = dynamic_cast<ASTNodeBitfield*>(node); bitfieldNode != nullptr) {
+                printf("%*c ASTNodeBitfield\n", INDENT_VALUE);
+
+                for (const auto &[name, entry] : bitfieldNode->getEntries()) {
+                    printf("%*c %s : \n", INDENT_VALUE, name.c_str());
                     this->printAST({ entry });
                 }
             } else {

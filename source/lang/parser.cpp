@@ -232,7 +232,7 @@ namespace hex::lang {
         return new ASTNodeTypeDecl(typeName, unionNode);
     }
 
-    // enum Identifier : (parseType) { <(parseEnumEntry)...> }
+    // enum Identifier : (parseType) { <<Identifier|Identifier = (parseMathematicalExpression)[,]>...> }
     ASTNode* Parser::parseEnum() {
         std::string typeName;
         if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
@@ -281,20 +281,45 @@ namespace hex::lang {
         return new ASTNodeTypeDecl(typeName, enumNode);
     }
 
+    // bitfield Identifier { <Identifier : (parseMathematicalExpression)[;]...> }
+    ASTNode* Parser::parseBitfield() {
+        std::string typeName = getValue<std::string>(-2);
+
+        const auto bitfieldNode = new ASTNodeBitfield();
+        ScopeExit enumGuard([&]{ delete bitfieldNode; });
+
+        while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+            if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
+                auto name = getValue<std::string>(-2);
+                bitfieldNode->addEntry(name, parseMathematicalExpression());
+            }
+            else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
+                throwParseError("Unexpected end of program", -2);
+            else
+                throwParseError("Invalid bitfield member", 0);
+
+            if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION))) {
+                throwParseError("missing ';' at end of expression", -1);
+            }
+        }
+
+        enumGuard.release();
+
+        return new ASTNodeTypeDecl(typeName, bitfieldNode);
+    }
+
     // (parseType) Identifier @ Integer
     ASTNode* Parser::parseVariablePlacement() {
-        auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
+        auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
         if (temporaryType == nullptr) throwParseError("Invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
 
-        return new ASTNodeVariableDecl(getValue<std::string>(-3), temporaryType->getType()->clone(), getValue<s128>(-1));
+        return new ASTNodeVariableDecl(getValue<std::string>(-2), temporaryType, parseMathematicalExpression());
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)] @ Integer
     ASTNode* Parser::parseArrayVariablePlacement() {
         auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
         if (temporaryType == nullptr) throwParseError("Invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
 
         auto name = getValue<std::string>(-2);
         auto size = parseMathematicalExpression();
@@ -305,7 +330,7 @@ namespace hex::lang {
         if (!MATCHES(sequence(OPERATOR_AT, INTEGER)))
             throwParseError("Expected placement instruction", -1);
 
-        return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size, getValue<s128>(-1));
+        return new ASTNodeArrayVariableDecl(name, temporaryType, size, parseMathematicalExpression());
     }
 
 
@@ -320,7 +345,7 @@ namespace hex::lang {
             statement = dynamic_cast<ASTNodeTypeDecl*>(parseUsingDeclaration());
         else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
             statement = parseArrayVariablePlacement();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, OPERATOR_AT, INTEGER)))
+        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, OPERATOR_AT)))
             statement = parseVariablePlacement();
         else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseStruct();
@@ -328,6 +353,8 @@ namespace hex::lang {
             statement = parseUnion();
         else if (MATCHES(sequence(KEYWORD_ENUM, IDENTIFIER, OPERATOR_INHERIT) && (optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseEnum();
+        else if (MATCHES(sequence(KEYWORD_BITFIELD, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
+            statement = parseBitfield();
         else throwParseError("Invalid sequence", 0);
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
