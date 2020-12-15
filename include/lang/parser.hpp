@@ -16,8 +16,8 @@ namespace hex::lang {
 
     class Parser {
     public:
-        Parser();
-        ~Parser();
+        Parser() = default;
+        ~Parser() = default;
 
         using TokenIter = std::vector<Token>::const_iterator;
 
@@ -49,7 +49,7 @@ namespace hex::lang {
             return *value;
         }
 
-        const Token::Type getType(s32 index) const {
+        Token::Type getType(s32 index) const {
             return this->m_curr[index].type;
         }
 

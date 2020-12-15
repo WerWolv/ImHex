@@ -3,428 +3,185 @@
 #include "lang/token.hpp"
 
 #include <bit>
-#include <unordered_map>
 
 namespace hex::lang {
 
-    Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndianess) : m_provider(provider), m_defaultDataEndianess(defaultDataEndianess) {
+    Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
+        : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
 
     }
 
-    /*std::pair<PatternData*, size_t> Evaluator::createStructPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        std::vector<PatternData*> members;
+    PatternData* Evaluator::evaluateBuiltinType(ASTNodeBuiltinType *node) {
+        auto &type = node->getType();
+        auto typeSize = Token::getTypeSize(type);
 
-        auto structNode = static_cast<ASTNodeStruct*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
+        PatternData *pattern;
 
-        if (structNode == nullptr) {
-            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
-            return { nullptr, 0 };
-        }
+        if (Token::isUnsigned(type))
+            pattern = new PatternDataUnsigned(this->m_currOffset, typeSize);
+        else if (Token::isSigned(type) && typeSize == 1)
+            pattern = new PatternDataCharacter(this->m_currOffset);
+        else if (Token::isSigned(type))
+            pattern = new PatternDataSigned(this->m_currOffset, typeSize);
+        else if (Token::isFloatingPoint(type))
+            pattern = new PatternDataFloat(this->m_currOffset, typeSize);
+        else
+            throwEvaluateError("Invalid builtin type", node->getLineNumber());
 
-        size_t structSize = 0;
-        for (const auto &node : structNode->getNodes()) {
-            const auto &member = static_cast<ASTNodeVariableDecl*>(node);
+        this->m_currOffset += typeSize;
 
-            u64 memberOffset = 0;
+        pattern->setTypeName(Token::getTypeName(type));
 
-            if (member->getPointerSize().has_value()) {
-                this->m_provider->read(offset + structSize, &memberOffset, member->getPointerSize().value());
+        return pattern;
+    }
 
-                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
-            }
+    PatternData* Evaluator::evaluateStruct(ASTNodeStruct *node) {
+        std::vector<PatternData*> memberPatterns;
+
+        auto startOffset = this->m_currOffset;
+        for (auto &member : node->getMembers()) {
+            if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(member); memberVariableNode != nullptr)
+                memberPatterns.emplace_back(this->evaluateVariable(memberVariableNode));
+            else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
+                memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
             else
-                memberOffset = offset + structSize;
-
-            const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
-
-            PatternData *pattern = nullptr;
-            size_t memberSize = 0;
-
-            if (member->getVariableType() == Token::ValueType::Signed8Bit && member->getArraySize() > 1) {
-                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
-            } else if (member->getVariableType() == Token::ValueType::CustomType
-                && typeDeclNode != nullptr && typeDeclNode->getAssignedType() == Token::ValueType::Signed8Bit
-                && member->getArraySize() > 1) {
-
-                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
-            }
-            else if (member->getArraySize() > 1 || member->getVariableType() == Token::ValueType::Padding) {
-                std::tie(pattern, memberSize) = this->createArrayPattern(member, memberOffset);
-            }
-            else if (member->getArraySizeVariable().has_value()) {
-                std::optional<size_t> arraySize;
-
-
-                for (auto &prevMember : members) {
-                    if (prevMember->getPatternType() == PatternData::Type::Unsigned && prevMember->getName() == member->getArraySizeVariable()) {
-                        u64 value = 0;
-                        this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
-
-                        value = hex::changeEndianess(value, prevMember->getSize(), prevMember->getEndianess());
-
-                        arraySize = value;
-                    }
-                }
-
-                if (!arraySize.has_value()) {
-                    this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a previous member of '%s'", member->getArraySizeVariable().value().c_str(), varDeclNode->getCustomVariableTypeName().c_str()) };
-                    return { nullptr, 0 };
-                }
-
-                if (arraySize.value() == 0)
-                    continue;
-
-                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getLineNumber(), member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
-
-                std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
-            }
-            else if (member->getVariableType() != Token::ValueType::CustomType) {
-                std::tie(pattern, memberSize) = this->createBuiltInTypePattern(member, memberOffset);
-            }
-            else {
-                std::tie(pattern, memberSize) = this->createCustomTypePattern(member, memberOffset);
-            }
-
-            if (pattern == nullptr)
-                return { nullptr, 0 };
-
-            pattern->setEndianess(member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
-
-            if (member->getPointerSize().has_value()) {
-                members.push_back(new PatternDataPointer(offset + structSize, member->getPointerSize().value(), member->getVariableName(), pattern, member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess))));
-                structSize += member->getPointerSize().value();
-            }
-            else {
-                members.push_back(pattern);
-                structSize += memberSize;
-            }
+                throwEvaluateError("Invalid struct member", member->getLineNumber());
         }
 
-        return { new PatternDataStruct(offset, structSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), structNode->getName(), members, 0x00FFFFFF), structSize };
+        return new PatternDataStruct(startOffset, this->m_currOffset - startOffset, memberPatterns);
     }
 
-    std::pair<PatternData*, size_t> Evaluator::createUnionPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        std::vector<PatternData*> members;
+    PatternData* Evaluator::evaluateUnion(ASTNodeUnion *node) {
+        std::vector<PatternData*> memberPatterns;
 
-        auto unionNode = static_cast<ASTNodeUnion*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
-
-        if (unionNode == nullptr) {
-            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
-            return { nullptr, 0 };
-        }
-
-        size_t unionSize = 0;
-        for (const auto &node : unionNode->getNodes()) {
-            const auto &member = static_cast<ASTNodeVariableDecl*>(node);
-
-            u64 memberOffset = 0;
-
-            if (member->getPointerSize().has_value()) {
-                this->m_provider->read(offset + unionSize, &memberOffset, member->getPointerSize().value());
-
-                memberOffset = hex::changeEndianess(memberOffset, member->getPointerSize().value(), member->getEndianess().value_or(this->m_defaultDataEndianess));
-            }
+        auto startOffset = this->m_currOffset;
+        for (auto &member : node->getMembers()) {
+            if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(member); memberVariableNode != nullptr)
+                memberPatterns.emplace_back(this->evaluateVariable(memberVariableNode));
+            else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
+                memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
             else
-                memberOffset = offset;
-
-            const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
-
-            PatternData *pattern = nullptr;
-            size_t memberSize = 0;
-
-            if (member->getVariableType() == Token::ValueType::Signed8Bit && member->getArraySize() > 1) {
-                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
-
-            } else if (member->getVariableType() == Token::ValueType::CustomType
-                       && typeDeclNode != nullptr && typeDeclNode->getAssignedType() == Token::ValueType::Signed8Bit
-                       && member->getArraySize() > 1) {
-
-                std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
-
-            }
-            else if (member->getArraySize() > 1 || member->getVariableType() == Token::ValueType::Padding) {
-                std::tie(pattern, memberSize) = this->createArrayPattern(member, memberOffset);
-
-            }
-            else if (member->getArraySizeVariable().has_value()) {
-                std::optional<size_t> arraySize;
-
-
-                for (auto &prevMember : members) {
-                    if (prevMember->getPatternType() == PatternData::Type::Unsigned && prevMember->getName() == member->getArraySizeVariable()) {
-                        u64 value = 0;
-                        this->m_provider->read(prevMember->getOffset(), &value, prevMember->getSize());
-
-                        value = hex::changeEndianess(value, prevMember->getSize(), prevMember->getEndianess());
-
-                        arraySize = value;
-                    }
-                }
-
-                if (!arraySize.has_value()) {
-                    this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a previous member of '%s'", member->getArraySizeVariable().value().c_str(), varDeclNode->getCustomVariableTypeName().c_str()) };
-                    return { nullptr, 0 };
-                }
-
-                if (arraySize.value() == 0)
-                    continue;
-
-                ASTNodeVariableDecl *processedMember = new ASTNodeVariableDecl(member->getLineNumber(), member->getVariableType(), member->getVariableName(), member->getCustomVariableTypeName(), member->getOffset(), arraySize.value());
-
-                std::tie(pattern, memberSize) = this->createArrayPattern(processedMember, memberOffset);
-            }
-            else if (member->getVariableType() != Token::ValueType::CustomType) {
-                std::tie(pattern, memberSize) = this->createBuiltInTypePattern(member, memberOffset);
-            }
-            else {
-                std::tie(pattern, memberSize) = this->createCustomTypePattern(member, memberOffset);
-            }
-
-            if (pattern == nullptr)
-                return { nullptr, 0 };
-
-            pattern->setEndianess(member->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
-
-            if (member->getPointerSize().has_value()) {
-                members.push_back(new PatternDataPointer(offset, member->getPointerSize().value(), member->getVariableName(), pattern, member->getEndianess().value_or(this->m_defaultDataEndianess)));
-                unionSize = std::max(size_t(member->getPointerSize().value()), unionSize);
-            }
-            else {
-                members.push_back(pattern);
-                unionSize = std::max(memberSize, unionSize);
-            }
+                throwEvaluateError("Invalid union member", member->getLineNumber());
         }
 
-        return { new PatternDataUnion(offset, unionSize, varDeclNode->getVariableName(), unionNode->getName(), members, varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), 0x00FFFFFF), unionSize };
+        return new PatternDataUnion(startOffset, this->m_currOffset - startOffset, memberPatterns);
     }
 
-    std::pair<PatternData*, size_t> Evaluator::createEnumPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        auto *enumType = static_cast<ASTNodeEnum*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
+    PatternData* Evaluator::evaluateEnum(ASTNodeEnum *node) {
+        std::vector<std::pair<u64, std::string>> entryPatterns;
 
-        if (enumType == nullptr) {
-            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
-            return { nullptr, 0 };
+        auto startOffset = this->m_currOffset;
+        for (auto &[name, value] : node->getEntries()) {
+            auto expression = dynamic_cast<ASTNodeNumericExpression*>(value);
+            if (expression == nullptr)
+                throwEvaluateError("Invalid expression in enum value", value->getLineNumber());
+
+            entryPatterns.emplace_back( std::get<s128>(expression->evaluate()->getValue()), name );
         }
 
-        size_t size = Token::getTypeSize(enumType->getUnderlyingType());
+        size_t size;
+        if (auto underlyingType = dynamic_cast<const ASTNodeBuiltinType*>(node->getUnderlyingType()); underlyingType != nullptr)
+            size = Token::getTypeSize(underlyingType->getType());
+        else
+            throwEvaluateError("Invalid enum underlying type", node->getLineNumber());
 
-        return { new PatternDataEnum(offset, size, varDeclNode->getVariableName(), enumType->getName(), enumType->getValues(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), size };
+        return new PatternDataEnum(startOffset, size, entryPatterns);
     }
 
-    std::pair<PatternData*, size_t> Evaluator::createBitfieldPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
+    PatternData* Evaluator::evaluateType(ASTNodeTypeDecl *node) {
+        auto type = node->getType();
 
-        auto *bitfieldType = static_cast<ASTNodeBitField*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
+        if (!this->m_currEndian.has_value())
+            this->m_currEndian = node->getEndian();
 
-        if (bitfieldType == nullptr) {
-            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
-            return { nullptr, 0 };
-        }
+        PatternData *pattern;
 
-        size_t size = 0;
-        for (auto &[fieldName, fieldSize] : bitfieldType->getFields())
-            size += fieldSize;
+        if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(type); builtinTypeNode != nullptr)
+            return this->evaluateBuiltinType(builtinTypeNode);
+        else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(type); typeDeclNode != nullptr)
+            pattern = this->evaluateType(typeDeclNode);
+        else if (auto structNode = dynamic_cast<ASTNodeStruct*>(type); structNode != nullptr)
+            pattern = this->evaluateStruct(structNode);
+        else if (auto unionNode = dynamic_cast<ASTNodeUnion*>(type); unionNode != nullptr)
+            pattern = this->evaluateUnion(unionNode);
+        else if (auto enumNode = dynamic_cast<ASTNodeEnum*>(type); enumNode != nullptr)
+            pattern = this->evaluateEnum(enumNode);
+        else
+            throwEvaluateError("Type could not be evaluated", node->getLineNumber());
 
-        size = bit_ceil(size) / 8;
+        if (!node->getName().empty())
+            pattern->setTypeName(node->getName().data());
 
-        return { new PatternDataBitfield(offset, size, varDeclNode->getVariableName(), bitfieldType->getName(), bitfieldType->getFields(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), size };
+        return pattern;
     }
 
-    std::pair<PatternData*, size_t> Evaluator::createArrayPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
+    PatternData* Evaluator::evaluateVariable(ASTNodeVariableDecl *node) {
+        const auto& type = dynamic_cast<ASTNodeTypeDecl*>(node->getType());
+
+        if (type == nullptr)
+            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+
+        if (node->getPlacementOffset().has_value())
+            this->m_currOffset = node->getPlacementOffset().value();
+
+        auto pattern = this->evaluateType(type);
+        pattern->setVariableName(node->getName().data());
+        pattern->setEndian(this->getCurrentEndian());
+
+        return pattern;
+    }
+
+    PatternData* Evaluator::evaluateArray(ASTNodeArrayVariableDecl *node) {
+        const auto& type = dynamic_cast<ASTNodeTypeDecl*>(node->getType());
+
+        if (type == nullptr)
+            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+
+        if (node->getPlacementOffset().has_value())
+            this->m_currOffset = node->getPlacementOffset().value();
+
+        auto startOffset = this->m_currOffset;
+
+        auto sizeNode = dynamic_cast<ASTNodeNumericExpression*>(node->getSize());
+        if (sizeNode == nullptr)
+            throwEvaluateError("Array size not a numeric expression", node->getLineNumber());
+
+        auto arraySize = std::get<s128>(sizeNode->evaluate()->getValue());
+
         std::vector<PatternData*> entries;
+        for (s128 i = 0; i < arraySize; i++) {
+            auto entry = this->evaluateType(type);
+            entry->setVariableName(node->getName().data());
+            entry->setTypeName(node->getName().data());
+            entry->setEndian(this->getCurrentEndian());
 
-        size_t arrayOffset = 0;
-        std::optional<u32> arrayColor;
-        for (u32 i = 0; i < varDeclNode->getArraySize(); i++) {
-            ASTNodeVariableDecl *nonArrayVarDeclNode = new ASTNodeVariableDecl(varDeclNode->getLineNumber(), varDeclNode->getVariableType(), "[" + std::to_string(i) + "]", varDeclNode->getCustomVariableTypeName(), varDeclNode->getOffset(), 1);
-
-
-            if (varDeclNode->getVariableType() == Token::ValueType::Padding) {
-                return { new PatternDataPadding(offset, varDeclNode->getArraySize()), varDeclNode->getArraySize() };
-            } else if (varDeclNode->getVariableType() != Token::ValueType::CustomType) {
-                const auto& [pattern, size] = this->createBuiltInTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
-
-                if (pattern == nullptr) {
-                    delete nonArrayVarDeclNode;
-                    return { nullptr, 0 };
-                }
-
-                pattern->setEndianess(varDeclNode->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
-
-                if (!arrayColor.has_value())
-                    arrayColor = pattern->getColor();
-
-                pattern->setColor(arrayColor.value());
-
-                entries.push_back(pattern);
-                arrayOffset += size;
-            } else {
-                const auto &[pattern, size] = this->createCustomTypePattern(nonArrayVarDeclNode, offset + arrayOffset);
-
-                if (pattern == nullptr) {
-                    delete nonArrayVarDeclNode;
-                    return { nullptr, 0 };
-                }
-
-                pattern->setEndianess(varDeclNode->getEndianess().value_or(varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)));
-
-                if (!arrayColor.has_value())
-                    arrayColor = pattern->getColor();
-
-                pattern->setColor(arrayColor.value());
-
-                entries.push_back(pattern);
-                arrayOffset += size;
-            }
-
-            delete nonArrayVarDeclNode;
+            entries.push_back(entry);
         }
 
-        return { new PatternDataArray(offset, arrayOffset, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess), entries, arrayColor.value_or(0xFF000000)), arrayOffset };
+        return new PatternDataArray(startOffset, (this->m_currOffset - startOffset) * arraySize, entries);
     }
-
-    std::pair<PatternData*, size_t> Evaluator::createStringPattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        size_t arraySize = varDeclNode->getArraySize();
-
-        return { new PatternDataString(offset, arraySize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), arraySize };
-    }
-
-    std::pair<PatternData*, size_t> Evaluator::createCustomTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        auto &currType = this->m_types[varDeclNode->getCustomVariableTypeName()];
-
-        if (currType == nullptr) {
-            this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
-            return { nullptr, 0 };
-        }
-
-        switch (currType->getType()) {
-            case ASTNode::Type::Struct:
-                return this->createStructPattern(varDeclNode, offset);
-            case ASTNode::Type::Union:
-                return this->createUnionPattern(varDeclNode, offset);
-            case ASTNode::Type::Enum:
-                return this->createEnumPattern(varDeclNode, offset);
-            case ASTNode::Type::Bitfield:
-                return this->createBitfieldPattern(varDeclNode, offset);
-            case ASTNode::Type::TypeDecl:
-                return this->createBuiltInTypePattern(varDeclNode, offset);
-        }
-
-        return { nullptr, 0 };
-    }
-
-    std::pair<PatternData*, size_t> Evaluator::createBuiltInTypePattern(ASTNodeVariableDecl *varDeclNode, u64 offset) {
-        auto type = varDeclNode->getVariableType();
-        if (type == Token::ValueType::CustomType) {
-            const auto &currType =  static_cast<ASTNodeTypeDecl*>(this->m_types[varDeclNode->getCustomVariableTypeName()]);
-            if (currType == nullptr) {
-                this->m_error = { varDeclNode->getLineNumber(), hex::format("'%s' does not name a type", varDeclNode->getCustomVariableTypeName().c_str()) };
-                return { nullptr, 0 };
-            }
-
-            type = currType->getAssignedType();
-        }
-
-        size_t typeSize = Token::getTypeSize(type);
-        size_t arraySize = varDeclNode->getArraySize();
-
-         if (Token::isSigned(type)) {
-            if (typeSize == 1 && arraySize == 1)
-                return { new PatternDataCharacter(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), 1 };
-            else if (arraySize > 1)
-                return createArrayPattern(varDeclNode, offset);
-            else
-                return { new PatternDataSigned(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
-        } else if (Token::isUnsigned(varDeclNode->getVariableType())) {
-            if (arraySize > 1)
-                return createArrayPattern(varDeclNode, offset);
-            else
-                return { new PatternDataUnsigned(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
-        } else if (Token::isFloatingPoint(varDeclNode->getVariableType())) {
-            if (arraySize > 1)
-                return createArrayPattern(varDeclNode, offset);
-            else
-                return { new PatternDataFloat(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
-        }
-
-        return { nullptr, 0 };
-    }*/
 
     std::pair<Result, std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
-/*
-        // Evaluate types
-        for (const auto &node : ast) {
 
-            switch(node->getType()) {
-                case ASTNode::Type::Struct:
-                {
-                    auto *structNode = static_cast<ASTNodeStruct*>(node);
-                    this->m_types.emplace(structNode->getName(), structNode);
-                }
-                    break;
-                case ASTNode::Type::Union:
-                {
-                    auto *unionNode = static_cast<ASTNodeUnion*>(node);
-                    this->m_types.emplace(unionNode->getName(), unionNode);
-                }
-                    break;
-                case ASTNode::Type::Enum:
-                {
-                    auto *enumNode = static_cast<ASTNodeEnum*>(node);
-                    this->m_types.emplace(enumNode->getName(), enumNode);
-                }
-                    break;
-                case ASTNode::Type::Bitfield:
-                {
-                    auto *bitfieldNode = static_cast<ASTNodeBitField*>(node);
-                    this->m_types.emplace(bitfieldNode->getName(), bitfieldNode);
-                }
-                    break;
-                case ASTNode::Type::TypeDecl:
-                {
-                    auto *typeDeclNode = static_cast<ASTNodeTypeDecl*>(node);
+        std::vector<PatternData*> patterns;
 
-                    if (typeDeclNode->getAssignedType() == Token::ValueType::CustomType)
-                        this->m_types.emplace(typeDeclNode->getTypeName(), this->m_types[typeDeclNode->getAssignedCustomTypeName()]);
-                    else
-                        this->m_types.emplace(typeDeclNode->getTypeName(), typeDeclNode);
+        try {
+            for (const auto& node : ast) {
+
+                if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
+                    patterns.push_back(this->evaluateVariable(variableDeclNode));
+                } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
+                    patterns.push_back(this->evaluateArray(arrayDeclNode));
                 }
-                    break;
-                case ASTNode::Type::VariableDecl: break;
-                case ASTNode::Type::Scope: break;
+
             }
+        } catch (EvaluateError &e) {
+            this->m_error = e;
+            return { ResultEvaluatorError, { } };
         }
 
-        // Evaluate variable declarations
 
-        std::vector<PatternData*> variables;
-        for (const auto &node : ast) {
-            if (node->getType() != ASTNode::Type::VariableDecl)
-                continue;
-
-            auto *varDeclNode = static_cast<ASTNodeVariableDecl*>(node);
-
-            if (varDeclNode->getVariableType() == Token::ValueType::Signed8Bit && varDeclNode->getArraySize() > 1) {
-                const auto &[pattern, _] = createStringPattern(varDeclNode, varDeclNode->getOffset().value());
-                variables.push_back(pattern);
-            }
-            else if (varDeclNode->getArraySize() > 1) {
-                const auto &[pattern, _] = this->createArrayPattern(varDeclNode, varDeclNode->getOffset().value());
-                variables.push_back(pattern);
-
-            } else if (varDeclNode->getVariableType() != Token::ValueType::CustomType) {
-                const auto &[pattern, _] = this->createBuiltInTypePattern(varDeclNode, varDeclNode->getOffset().value());
-                variables.push_back(pattern);
-            } else {
-                const auto &[pattern, _] = this->createCustomTypePattern(varDeclNode, varDeclNode->getOffset().value());
-                variables.push_back(pattern);
-            }
-        }
-
-        for (const auto &var : variables)
-            if (var == nullptr)
-                return { ResultEvaluatorError, { } };
-*/
-        return { ResultSuccess, {} };
+        return { ResultSuccess, patterns };
     }
 
 }

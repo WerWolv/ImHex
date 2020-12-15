@@ -102,6 +102,24 @@ namespace hex::lang {
             return static_cast<u32>(type) >> 4;
         }
 
+        [[nodiscard]] constexpr static auto getTypeName(const lang::Token::ValueType type) {
+            switch (type) {
+                case ValueType::Signed8Bit:     return "s8";
+                case ValueType::Signed16Bit:    return "s16";
+                case ValueType::Signed32Bit:    return "s32";
+                case ValueType::Signed64Bit:    return "s64";
+                case ValueType::Signed128Bit:   return "s128";
+                case ValueType::Unsigned8Bit:   return "u8";
+                case ValueType::Unsigned16Bit:  return "u16";
+                case ValueType::Unsigned32Bit:  return "u32";
+                case ValueType::Unsigned64Bit:  return "u64";
+                case ValueType::Unsigned128Bit: return "u128";
+                case ValueType::Float:          return "float";
+                case ValueType::Double:         return "double";
+                default:                        return "< ??? >";
+            }
+        }
+
         bool operator==(const ValueTypes &other) const {
             if (this->type == Type::Integer || this->type == Type::Identifier)
                 return true;

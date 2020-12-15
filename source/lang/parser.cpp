@@ -14,15 +14,6 @@
 // (parseXXXX)  : Parsing handled by other function
 namespace hex::lang {
 
-    Parser::Parser() {
-
-    }
-
-    Parser::~Parser() {
-        for (auto &[name, type] : this->m_types) delete type;
-        this->m_types.clear();
-    }
-
     /* Mathematical expressions */
 
     // <Integer|((parseMathematicalExpression))>
@@ -136,7 +127,7 @@ namespace hex::lang {
             if (!this->m_types.contains(getValue<std::string>(startIndex)))
                 throwParseError("Failed to parse type");
 
-            return new ASTNodeTypeDecl({ }, this->m_types[getValue<std::string>(startIndex)], endian);
+            return new ASTNodeTypeDecl({ }, this->m_types[getValue<std::string>(startIndex)]->clone(), endian);
         }
         else { // Builtin type
             return new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(getValue<Token::ValueType>(startIndex)), endian);
@@ -145,23 +136,14 @@ namespace hex::lang {
 
     // using Identifier = (parseType);
     ASTNode* Parser::parseUsingDeclaration() {
-        auto *temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-2));
+        auto *temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
         if (temporaryType == nullptr) throwParseError("Invalid type used in variable declaration", -1);
         SCOPE_EXIT( delete temporaryType; );
 
-        if (auto *typeDecl = dynamic_cast<ASTNodeTypeDecl*>(temporaryType->getType()); typeDecl != nullptr) {
-            if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
-                return new ASTNodeTypeDecl(getValue<std::string>(-5), new ASTNodeTypeDecl(std::move(*typeDecl)), temporaryType->getEndian());
-            else
-                return new ASTNodeTypeDecl(getValue<std::string>(-4), new ASTNodeTypeDecl(std::move(*typeDecl)), temporaryType->getEndian());
-        } else if (auto *builtInType = dynamic_cast<ASTNodeBuiltinType*>(temporaryType->getType()); builtInType != nullptr) {
-            if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
-                return new ASTNodeTypeDecl(getValue<std::string>(-5), new ASTNodeBuiltinType(*builtInType), temporaryType->getEndian());
-            else
-                return new ASTNodeTypeDecl(getValue<std::string>(-4), new ASTNodeBuiltinType(*builtInType), temporaryType->getEndian());
-        }
-
-        throwParseError("Invalid type used in using declaration", -1);
+        if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
+            return new ASTNodeTypeDecl(getValue<std::string>(-4), temporaryType->getType()->clone(), temporaryType->getEndian());
+        else
+            return new ASTNodeTypeDecl(getValue<std::string>(-3), temporaryType->getType()->clone(), temporaryType->getEndian());
     }
 
     // (parseType) Identifier;
@@ -170,12 +152,7 @@ namespace hex::lang {
         if (temporaryType == nullptr) throwParseError("Invalid type used in variable declaration", -1);
         SCOPE_EXIT( delete temporaryType; );
 
-        if (auto *typeDecl = dynamic_cast<ASTNodeTypeDecl*>(temporaryType->getType()); typeDecl != nullptr) {
-            return new ASTNodeVariableDecl(getValue<std::string>(-1), new ASTNodeTypeDecl(std::move(*typeDecl)));
-        } else if (auto *builtInType = dynamic_cast<ASTNodeBuiltinType*>(temporaryType->getType()); builtInType != nullptr) {
-            return new ASTNodeVariableDecl(getValue<std::string>(-1), new ASTNodeBuiltinType(std::move(*builtInType)));
-        } else
-            throwParseError("Invalid type used in variable declaration", -1);
+        return new ASTNodeVariableDecl(getValue<std::string>(-1), temporaryType->getType()->clone());
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)];
@@ -190,12 +167,7 @@ namespace hex::lang {
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
             throwParseError("Expected closing ']' at end of array declaration", -1);
 
-        if (auto *typeDecl = dynamic_cast<ASTNodeTypeDecl*>(temporaryType->getType()); typeDecl != nullptr) {
-            return new ASTNodeArrayVariableDecl(name, new ASTNodeTypeDecl(std::move(*typeDecl)), size);
-        } else if (auto *builtInType = dynamic_cast<ASTNodeBuiltinType*>(temporaryType->getType()); builtInType != nullptr) {
-            return new ASTNodeArrayVariableDecl(name, new ASTNodeBuiltinType(std::move(*builtInType)), size);
-        } else
-            throwParseError("Invalid type used in variable declaration", -1);
+        return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size);
     }
 
     // struct Identifier { <(parseMember)...> };
@@ -250,9 +222,6 @@ namespace hex::lang {
 
     // enum Identifier : (parseType) { <(parseEnumEntry)...> };
     ASTNode* Parser::parseEnum() {
-        const auto enumNode = new ASTNodeEnum();
-        ScopeExit enumGuard([&]{ delete enumNode; });
-
         std::string typeName;
         if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
             typeName = getValue<std::string>(-5);
@@ -263,6 +232,9 @@ namespace hex::lang {
         if (temporaryTypeDecl == nullptr) throwParseError("Failed to parse type", -2);
         auto underlyingType = dynamic_cast<ASTNodeBuiltinType*>(temporaryTypeDecl->getType());
         if (underlyingType == nullptr) throwParseError("Underlying type is not a built-in type", -2);
+
+        const auto enumNode = new ASTNodeEnum(underlyingType);
+        ScopeExit enumGuard([&]{ delete enumNode; });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT))) {
@@ -303,13 +275,7 @@ namespace hex::lang {
         if (temporaryType == nullptr) throwParseError("Invalid type used in variable declaration", -1);
         SCOPE_EXIT( delete temporaryType; );
 
-        if (auto *typeDecl = dynamic_cast<ASTNodeTypeDecl*>(temporaryType->getType()); typeDecl != nullptr) {
-            return new ASTNodeVariableDecl(getValue<std::string>(-3), new ASTNodeTypeDecl(std::move(*typeDecl)), getValue<s128>(-1));
-        } else if (auto *builtInType = dynamic_cast<ASTNodeBuiltinType*>(temporaryType->getType()); builtInType != nullptr) {
-            return new ASTNodeVariableDecl(getValue<std::string>(-3), new ASTNodeBuiltinType(std::move(*builtInType)), getValue<s128>(-1));
-        }
-
-        throwParseError("Invalid type used in variable placement", -1);
+        return new ASTNodeVariableDecl(getValue<std::string>(-3), temporaryType->getType()->clone(), getValue<s128>(-1));
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)] @ Integer;
@@ -327,12 +293,7 @@ namespace hex::lang {
         if (!MATCHES(sequence(OPERATOR_AT, INTEGER)))
             throwParseError("Expected placement instruction", -1);
 
-        if (auto *typeDecl = dynamic_cast<ASTNodeTypeDecl*>(temporaryType->getType()); typeDecl != nullptr) {
-            return new ASTNodeArrayVariableDecl(name, new ASTNodeTypeDecl(std::move(*typeDecl)), size, getValue<s128>(-1));
-        } else if (auto *builtInType = dynamic_cast<ASTNodeBuiltinType*>(temporaryType->getType()); builtInType != nullptr) {
-            return new ASTNodeArrayVariableDecl(name, new ASTNodeBuiltinType(std::move(*builtInType)), size, getValue<s128>(-1));
-        } else
-            throwParseError("Invalid type used in variable declaration", -1);
+        return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size, getValue<s128>(-1));
     }
 
 
@@ -341,7 +302,7 @@ namespace hex::lang {
 
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
     ASTNode* Parser::parseStatement() {
-        ASTNode *statement = nullptr;
+        ASTNode *statement;
 
         if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT) && (optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY)))
             statement = dynamic_cast<ASTNodeTypeDecl*>(parseUsingDeclaration());
@@ -358,7 +319,7 @@ namespace hex::lang {
         else throwParseError("Invalid sequence", 0);
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
-            throwParseError("Missing ';' at end of expression", -2);
+            throwParseError("Missing ';' at end of expression", -1);
 
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(statement); typeDecl != nullptr)
             this->m_types.insert({ typeDecl->getName().data(), typeDecl });
@@ -370,7 +331,6 @@ namespace hex::lang {
     std::pair<Result, std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
         this->m_curr = tokens.begin();
 
-        for (auto &[name, type] : this->m_types) delete type;
         this->m_types.clear();
 
         try {
