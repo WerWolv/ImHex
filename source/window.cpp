@@ -69,7 +69,7 @@ namespace hex {
                 if (!view->getWindowOpenState())
                     continue;
 
-                ImGui::SetNextWindowSizeConstraints(ImVec2(480, 720), ImVec2(FLT_MAX, FLT_MAX));
+                ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
                 view->createView();
             }
 
@@ -239,6 +239,26 @@ namespace hex {
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
+
+         {
+             int x = 0, y = 0;
+             glfwGetWindowPos(this->m_window, &x, &y);
+             View::setWindowPosition(x, y);
+         }
+
+         {
+             int width = 0, height = 0;
+             glfwGetWindowSize(this->m_window, &width, &height);
+             View::setWindowSize(width, height);
+         }
+
+         glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
+             View::setWindowPosition(x, y);
+         });
+
+        glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
+            View::setWindowSize(width, height);
+        });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             if (action == GLFW_PRESS)

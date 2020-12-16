@@ -13,6 +13,7 @@
 #include "views/view_disassembler.hpp"
 #include "views/view_bookmarks.hpp"
 #include "views/view_patches.hpp"
+#include "views/view_command_palette.hpp"
 
 #include "providers/provider.hpp"
 
@@ -43,6 +44,7 @@ int main(int argc, char **argv) {
     window.addView<hex::ViewBookmarks>(dataProvider);
     window.addView<hex::ViewPatches>(dataProvider);
     window.addView<hex::ViewTools>(dataProvider);
+    window.addView<hex::ViewCommandPalette>();
     window.addView<hex::ViewHelp>();
 
     if (argc > 1)

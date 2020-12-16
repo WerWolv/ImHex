@@ -77,6 +77,7 @@ add_executable(ImHex
         source/views/view_disassembler.cpp
         source/views/view_bookmarks.cpp
         source/views/view_patches.cpp
+        source/views/view_command_palette.cpp
 
         libs/glad/source/glad.c
 

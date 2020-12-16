@@ -52,7 +52,25 @@ namespace hex {
             ImGui::OpenPopup("Error");
         }
 
+        static void setWindowPosition(s32 x, s32 y) {
+            View::s_windowPos = ImVec2(x, y);
+        }
+
+        static const ImVec2& getWindowPosition() {
+            return View::s_windowPos;
+        }
+
+        static void setWindowSize(s32 width, s32 height) {
+            View::s_windowSize = ImVec2(width, height);
+        }
+
+        static const ImVec2& getWindowSize() {
+            return View::s_windowSize;
+        }
+
         virtual bool hasViewMenuItemEntry() { return true; }
+        virtual ImVec2 getMinSize() { return ImVec2(480, 720); }
+        virtual ImVec2 getMaxSize() { return ImVec2(FLT_MAX, FLT_MAX); }
 
         bool& getWindowOpenState() {
             return this->m_windowOpen;
@@ -85,6 +103,9 @@ namespace hex {
         static inline std::vector<std::function<void()>> s_deferedCalls;
 
         static inline std::string s_errorMessage;
+
+        static inline ImVec2 s_windowPos;
+        static inline ImVec2 s_windowSize;
     };
 
     void confirmButtons(const char *textLeft, const char *textRight, auto leftButtonFn, auto rightButtonFn) {
