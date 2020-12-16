@@ -25,6 +25,24 @@
     #define ftello64 ftell
 #endif
 
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
+#if __has_include(<concepts>)
+// Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
+#include <concepts>
+#endif
+// libcpp 12 still doesn't have derived_from implemented
+// [concept.derived] (patch from https://reviews.llvm.org/D74292 )
+namespace hex {
+template<class _Dp, class _Bp>
+    concept derived_from =
+      __is_base_of(_Bp, _Dp) && __is_convertible_to(const volatile _Dp*, const volatile _Bp*);
+}
+#else
+#include <concepts>
+namespace hex {
+    using std::derived_from;
+}
+#endif
 
 namespace hex {
 

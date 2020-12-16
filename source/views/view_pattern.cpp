@@ -245,7 +245,7 @@ namespace hex {
         lang::PatternData::resetPalette();
     }
 
-    template<std::derived_from<lang::ASTNode> T>
+    template<derived_from<lang::ASTNode> T>
     static std::vector<T*> findNodes(const lang::ASTNode::Type type, const std::vector<lang::ASTNode*> &nodes) {
         std::vector<T*> result;
 
