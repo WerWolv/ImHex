@@ -116,6 +116,7 @@ namespace hex::lang {
                     CHECK_TYPE(Token::ValueType::Signed16Bit);
                     CHECK_TYPE(Token::ValueType::Unsigned8Bit);
                     CHECK_TYPE(Token::ValueType::Signed8Bit);
+                    CHECK_TYPE(Token::ValueType::Character);
                     DEFAULT_TYPE(Token::ValueType::Signed32Bit);
 
                     #undef CHECK_TYPE
@@ -362,6 +363,24 @@ namespace hex::lang {
 
     private:
         std::vector<std::pair<std::string, ASTNode*>> m_entries;
+    };
+
+    class ASTNodeRValue : public ASTNode {
+    public:
+        explicit ASTNodeRValue(std::vector<std::string> path) : ASTNode(), m_path(std::move(path)) { }
+
+        ASTNodeRValue(const ASTNodeRValue&) = default;
+
+        ASTNode* clone() override {
+            return new ASTNodeRValue(*this);
+        }
+
+        const std::vector<std::string>& getPath() {
+            return this->m_path;
+        }
+
+    private:
+        std::vector<std::string> m_path;
     };
 
 }

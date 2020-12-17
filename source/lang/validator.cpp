@@ -131,6 +131,13 @@ namespace hex::lang {
                     printf("%*c %s : \n", INDENT_VALUE, name.c_str());
                     this->printAST({ entry });
                 }
+            } else if (auto rvalueNode = dynamic_cast<ASTNodeRValue*>(node); rvalueNode != nullptr) {
+                printf("%*c ASTNodeRValue\n", INDENT_VALUE);
+
+                printf("%*c ", INDENT_VALUE);
+                for (const auto &path : rvalueNode->getPath())
+                    printf("%s.", path.c_str());
+                printf("\n");
             } else {
                 printf("%*c Invalid AST node!\n", INDENT_VALUE);
             }

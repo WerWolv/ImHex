@@ -16,6 +16,19 @@ namespace hex::lang {
 
     /* Mathematical expressions */
 
+    // <Identifier[.]...>
+    ASTNode* Parser::parseRValue(std::vector<std::string> &path) {
+        path.push_back(getValue<std::string>(-1));
+
+        if (MATCHES(sequence(SEPARATOR_DOT))) {
+            if (MATCHES(sequence(IDENTIFIER)))
+                return this->parseRValue(path);
+            else
+                throwParseError("expected member name", -1);
+        } else
+            return new ASTNodeRValue(path);
+    }
+
     // <Integer|((parseMathematicalExpression))>
     ASTNode* Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
@@ -25,6 +38,9 @@ namespace hex::lang {
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                 throwParseError("Expected closing parenthesis");
             return node;
+        } else if (MATCHES(sequence(IDENTIFIER))) {
+            std::vector<std::string> path;
+            return this->parseRValue(path);
         }
         else
             throwParseError("Expected integer or parenthesis");

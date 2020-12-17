@@ -77,6 +77,7 @@ namespace hex::lang {
             SquareBracketOpen,
             SquareBracketClose,
             Comma,
+            Dot,
             EndOfExpression,
             EndOfProgram
         };
@@ -219,5 +220,6 @@ namespace hex::lang {
 #define SEPARATOR_SQUAREBRACKETOPEN     COMPONENT(Separator, SquareBracketOpen)
 #define SEPARATOR_SQUAREBRACKETCLOSE    COMPONENT(Separator, SquareBracketClose)
 #define SEPARATOR_COMMA                 COMPONENT(Separator, Comma)
+#define SEPARATOR_DOT                   COMPONENT(Separator, Dot)
 #define SEPARATOR_ENDOFEXPRESSION       COMPONENT(Separator, EndOfExpression)
 #define SEPARATOR_ENDOFPROGRAM          COMPONENT(Separator, EndOfProgram)
