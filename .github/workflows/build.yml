@@ -171,4 +171,4 @@ jobs:
 
     - name: ▶️ Test
       run: |
-        which ImHex
+        which imhex

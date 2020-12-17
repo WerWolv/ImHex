@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2020 WerWolv -->
+<component type="desktop">
+  <id>net.werwolv.ImHex.desktop</id>
+  <name>ImHex</name>
+  <summary>A hex editor for reverse engineers and programmers</summary>
+  <description>
+    <p>
+      ImHex is a hex editor for reverse engineers, programmers and people that
+      value their eye sight when working at 3 AM.
+    </p>
+    <p>
+      Features:
+      <ul>
+        <li>Featureful hex view</li>
+        <li>Custom C++-like pattern language for parsing highlighting a file's content</li>
+        <li>Data importing</li>
+        <li>Data exporting</li>
+        <li>
+          Data inspector allowing interpretation of data as many different types
+          (little and big endian)
+        </li>
+        <li>Huge file support with fast and efficient loading</li>
+        <li>Strings search</li>
+        <li>File hashing support</li>
+        <li>Disassembler supporting many different architectures: ARM, x86, PowerPC, MIPS, and more</li>
+        <li>Bookmarks</li>
+        <li>Data analyzer</li>
+        <li>
+          Helpful tools: Itanium and MSVC demangler, ASCII table, Regex
+          replacer, mathematical expression evaluator (calculator), hexadecimal
+          color picker
+        </li>
+        <li>Built-in cheat sheet for pattern language and Math evaluator</li>
+      </ul>
+    </p>
+  </description>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0-only</project_license>
+  <developer_name>WerWolv</developer_name>
+  <url type="homepage">https://github.com/WerWolv/ImHex</url>
+  <url type="help">https://github.com/WerWolv/ImHex</url>
+  <url type="bugtracker">https://github.com/WerWolv/ImHex/issues</url>
+  <url type="donation">https://www.patreon.com/werwolv</url>
+  <screenshots>
+    <screenshot type="default" width="1920" height="1017">
+      <image type="source">https://i.imgur.com/xH7xJ4g.png</image>
+      <caption>Inspecting a binary file</caption>
+    </screenshot>
+    <screenshot type="default" width="1920" height="1017">
+        <image type="source">https://i.imgur.com/fhVJYEa.png</image>
+        <caption>Disassembling a binary file</caption>
+      </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.5.0" date="2020-12-06"/>
+    <release version="1.4.0" date="2020-11-28"/>
+    <release version="1.3.1" date="2020-11-23"/>
+    <release version="1.3.0" date="2020-11-22"/>
+    <release version="1.2.0" date="2020-11-21"/>
+    <release version="1.1.0" date="2020-11-17"/>
+    <release version="1.0.0" date="2020-11-12"/>
+  </releases>
+  <update_contact>werwolv98@gmail.com</update_contact>
+</component>
