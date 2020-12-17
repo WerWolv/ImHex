@@ -33,17 +33,16 @@ If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPa
   - Goto from start, end and current cursor position
 - Custom C++-like pattern language for parsing highlighting a file's content
   - Automatic loading based on MIME type
-  - arrays, pointers, structs, unions, enums, bitfields, using declarations, litte and big endian support
+  - arrays, pointers, structs, unions, enums, bitfields, using declarations, little and big endian support
   - Useful error messages, syntax highlighting and error marking
 - Data importing
   - Base64 files
   - IPS and IPS32 patches
 - Data exporting
   - IPS and IPS32 patches
-- Data Exporting
 - Data inspector allowing interpretation of data as many different types (little and big endian)
 - Huge file support with fast and efficient loading
-- Strings search
+- String search
   - Copying of strings
   - Copying of demangled strings
 - File hashing support
@@ -51,14 +50,14 @@ If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPa
   - MD4, MD5
   - SHA-1, SHA-224, SHA-256, SHA-384, SHA-512
 - Disassembler supporting many different architectures
-  - ARM32 (ARM, Thumb, Cortex-M, aarch32)
+  - ARM32 (ARM, Thumb, Cortex-M, AArch32)
   - ARM64
   - MIPS (MIPS32, MIPS64, MIPS32R6, Micro)
-  - x86 (16 bit, 32 bit, 64 bit)
-  - PowerPC (32 bit, 64 bit)
-  - Sparc
-  - SystemZ
-  - XCore
+  - x86 (16-bit, 32-bit, 64-bit)
+  - PowerPC (32-bit, 64-bit)
+  - SPARC
+  - IBM SystemZ
+  - xCORE
   - M68K
   - TMS320C64X
   - M680X
@@ -67,7 +66,7 @@ If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPa
   - Region highlighting
   - Comments
 - Data Analyzer
-  - File magic based file parser and MIME type database
+  - File magic-based file parser and MIME type database
   - Byte distribution graph
   - Entropy graph
   - Highest and avarage entropy
@@ -88,11 +87,11 @@ If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPa
 
 ## Additional Files
 
-For format patterns, includable libraries and magic files, check of the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository here. Feel free to PR your own files there as well!
+For format patterns, includable libraries and magic files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. Feel free to PR your own files there as well!
 
 ## Compiling
 
-You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreover, The following dependencies are needed for compiling ImHex:
+You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreover, the following dependencies are needed for compiling ImHex:
 
 - GLFW3
 - libmagic, libgnurx, libtre, libintl, libiconv
@@ -102,7 +101,7 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 - nlohmann json
 - Python3
 
-Find all in one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu and/or MSYS2 in [dist](dist).
+Find all-in-one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu and/or MSYS2 in [dist](dist).
 
 After all the dependencies are installed, run the following commands to build ImHex:
 
