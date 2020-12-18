@@ -5,8 +5,6 @@ pacman -S --needed \
   file \
   openssl \
   capstone \
-  llvm \
-  llvm-libs \
   nlohmann-json \
   glm \
   python3 \

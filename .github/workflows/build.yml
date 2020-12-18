@@ -35,7 +35,6 @@ jobs:
           libmagic-dev          \
           libssl-dev            \
           libcapstone-dev       \
-          llvm-dev              \
           nlohmann-json3-dev    \
           python3-dev           \
           libfreetype-dev       \
@@ -82,7 +81,6 @@ jobs:
           mingw-w64-${{ matrix.arch }}-glfw
           mingw-w64-${{ matrix.arch }}-glm
           mingw-w64-${{ matrix.arch }}-file
-          mingw-w64-${{ matrix.arch }}-llvm
           mingw-w64-${{ matrix.arch }}-nlohmann-json
           mingw-w64-${{ matrix.arch }}-openssl
           mingw-w64-${{ matrix.arch }}-polly

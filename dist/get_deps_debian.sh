@@ -20,7 +20,6 @@ apt install \
   libglfw3-dev \
   libglm-dev \
   libjsoncpp-dev \
-  llvm-dev \
   libssl-dev \
   libstdc++-10-dev \
   python3-dev \

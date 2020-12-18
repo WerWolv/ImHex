@@ -13,23 +13,18 @@ pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
-find_package(LLVM REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
+
+add_subdirectory(external/llvm/Demangle)
 
 if(Python_VERSION LESS 3)
     message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
     message(FATAL_ERROR "No valid version of Python 3 was found.")
 endif()
 
-llvm_map_components_to_libnames(_llvm_demangle_lib demangle)
-llvm_expand_dependencies(_llvm_demangle_lib ${_llvm_demangle_lib})
-
-# NOTE: if the demangle library cannot be found try to fallback to libLLVM (that is required on openSUSE and Gentoo)
-find_library(llvm_demangle_lib NAMES ${_llvm_demangle_lib} LLVM PATHS ${LLVM_LIBRARY_DIR})
-
-include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
+include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
 
 # Get Python major and minor
 string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
@@ -94,14 +89,12 @@ add_executable(ImHex
         resource.rc
         )
 
-target_link_directories(ImHex PRIVATE ${LLVM_LIBRARY_DIR})
-
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif (WIN32)
 
 if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so ${llvm_demangle_lib} ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif (UNIX)
 
 install(TARGETS ImHex DESTINATION bin)
