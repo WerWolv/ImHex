@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
+
 project(HexEditor)
 
 SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
-
 set(CMAKE_CXX_STANDARD 20)
+
+# Enforce that we use non system Python 3 on macOS.
+set(Python_FIND_FRAMEWORK NEVER)
 
 
 find_package(PkgConfig REQUIRED)
@@ -22,6 +25,11 @@ add_subdirectory(external/llvm/Demangle)
 if(Python_VERSION LESS 3)
     message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
     message(FATAL_ERROR "No valid version of Python 3 was found.")
+endif()
+
+pkg_search_module(MAGIC libmagic)
+if(NOT MAGIC_FOUND)
+    find_library(MAGIC magic REQUIRED)
 endif()
 
 include_directories(include ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${CRYPTO_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
@@ -88,6 +96,8 @@ add_executable(ImHex
 
         resource.rc
         )
+
+set_target_properties(ImHex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_link_directories(ImHex PRIVATE ${GLFW_LIBRARY_DIRS} ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 

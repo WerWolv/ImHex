@@ -10,7 +10,7 @@ env:
 jobs:
 
 
-  lin:
+  linux:
     runs-on: ubuntu-20.04
     name: 🐧 Ubuntu 20.04
     steps:
@@ -138,6 +138,26 @@ jobs:
       with:
         path: msys2/*.zst
 
+  macos-build:
+    runs-on: macos-11.0
+    name: 🍎 macOS 11.0
+    steps:
+
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: ⬇️ Install dependencies
+      run: |
+        brew bundle --no-lock --file dist/Brewfile
+
+    - name: ✋ Build
+      run: |
+        mkdir build
+        cd build
+        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake ..
+        make -j 4
 
   win-test:
     needs: win-makepkg

@@ -100,6 +100,9 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 - nlohmann json
 - Python3
 - freetype2
+- Brew (macOS only)
+
+### Windows and Linux
 
 Find all-in-one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu and/or MSYS2 in [dist](dist).
 
@@ -122,6 +125,18 @@ On both Windows and Linux:
 - Place your magic databases in the `magic` folder next to your built executable
 - Place your patterns in the `pattern` folder next to your built executable
 - Place your include pattern files in the `include` folder next to your built executable
+
+### macOS
+
+To build ImHex on macOS, run the following commands:
+
+```sh
+brew bundle --no-lock --file dist/Brewfile
+mkdir build
+cd build
+CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake ..
+make -j
+```
 
 ## Credits
 

@@ -36,7 +36,7 @@ namespace hex::lang {
             const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
 
             PatternData *pattern = nullptr;
-            u64 memberSize = 0;
+            size_t memberSize = 0;
 
             if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
                 std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
@@ -128,7 +128,7 @@ namespace hex::lang {
             const auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(this->m_types[member->getCustomVariableTypeName()]);
 
             PatternData *pattern = nullptr;
-            u64 memberSize = 0;
+            size_t memberSize = 0;
 
             if (member->getVariableType() == Token::TypeToken::Type::Signed8Bit && member->getArraySize() > 1) {
                 std::tie(pattern, memberSize) = this->createStringPattern(member, memberOffset);
@@ -222,7 +222,7 @@ namespace hex::lang {
         for (auto &[fieldName, fieldSize] : bitfieldType->getFields())
             size += fieldSize;
 
-        size = std::bit_ceil(size) / 8;
+        size = bit_ceil(size) / 8;
 
         return { new PatternDataBitfield(offset, size, varDeclNode->getVariableName(), bitfieldType->getName(), bitfieldType->getFields(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), size };
     }

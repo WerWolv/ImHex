@@ -245,7 +245,7 @@ namespace hex {
         lang::PatternData::resetPalette();
     }
 
-    template<std::derived_from<lang::ASTNode> T>
+    template<derived_from<lang::ASTNode> T>
     static std::vector<T*> findNodes(const lang::ASTNode::Type type, const std::vector<lang::ASTNode*> &nodes) {
         std::vector<T*> result;
 
@@ -300,7 +300,7 @@ namespace hex {
             return;
         }
 
-        hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast) delete node; });
+        hex::ScopeExit deleteAst([&ast=ast]{ for(auto &node : ast) delete node; });
 
         hex::lang::Validator validator;
         auto validatorResult = validator.validate(ast);

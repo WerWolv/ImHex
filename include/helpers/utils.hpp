@@ -18,6 +18,33 @@
 
 #include "lang/token.hpp"
 
+#ifdef __APPLE__
+    #define off64_t off_t
+    #define fopen64 fopen
+    #define fseeko64 fseek
+    #define ftello64 ftell
+#endif
+
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
+#if __has_include(<concepts>)
+// Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
+#include <concepts>
+#endif
+// libcxx 12 still doesn't have derived_from implemented, as a result we need to define it ourself using clang built-ins.
+// [concept.derived] (patch from https://reviews.llvm.org/D74292)
+namespace hex {
+template<class _Dp, class _Bp>
+    concept derived_from =
+      __is_base_of(_Bp, _Dp) && __is_convertible_to(const volatile _Dp*, const volatile _Bp*);
+}
+#else
+// Assume supported
+#include <concepts>
+namespace hex {
+    using std::derived_from;
+}
+#endif
+
 namespace hex {
 
     template<typename ... Args>
@@ -97,6 +124,19 @@ namespace hex {
             return __builtin_bswap64(value);
         else
             throw std::invalid_argument("Invalid value size!");
+    }
+
+    template< class T >
+    constexpr T bit_width(T x) noexcept {
+        return std::numeric_limits<T>::digits - std::countl_zero(x);
+    }
+
+    template<typename T>
+    constexpr T bit_ceil(T x) noexcept {
+        if (x <= 1u)
+            return T(1);
+
+        return T(1) << bit_width(T(x - 1));
     }
 
     std::vector<u8> readFile(std::string_view path);

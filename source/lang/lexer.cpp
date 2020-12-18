@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <functional>
+#include <optional>
 
 namespace hex::lang {
 

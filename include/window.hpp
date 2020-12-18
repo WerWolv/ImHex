@@ -1,10 +1,10 @@
 #pragma once
 
-#include <concepts>
 #include <filesystem>
 #include <memory>
 #include <vector>
 
+#include "helpers/utils.hpp"
 #include "views/view.hpp"
 
 struct GLFWwindow;
@@ -19,7 +19,7 @@ namespace hex {
 
         void loop();
 
-        template<std::derived_from<View> T, typename ... Args>
+        template<derived_from<View> T, typename ... Args>
         T* addView(Args&& ... args) {
             this->m_views.emplace_back(new T(std::forward<Args>(args)...));
 
