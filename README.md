@@ -99,6 +99,7 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 - capstone
 - nlohmann json
 - Python3
+- freetype2
 
 Find all-in-one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu and/or MSYS2 in [dist](dist).
 
