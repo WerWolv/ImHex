@@ -24,14 +24,14 @@ if(Python_VERSION LESS 3)
     message(FATAL_ERROR "No valid version of Python 3 was found.")
 endif()
 
-include_directories(include ${GLFW_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
+include_directories(include ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${CRYPTO_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} libs/ImGui/include libs/glad/include ${Python_INCLUDE_DIRS})
 
 # Get Python major and minor
 string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
 list(REMOVE_AT PYTHON_VERSION_MAJOR_MINOR 2)
 list(JOIN PYTHON_VERSION_MAJOR_MINOR "." PYTHON_VERSION_MAJOR_MINOR)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
 
 if (WIN32)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
@@ -89,12 +89,12 @@ add_executable(ImHex
         resource.rc
         )
 
+target_link_directories(ImHex PRIVATE ${GLFW_LIBRARY_DIRS} ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
+
 if (WIN32)
     target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
-endif (WIN32)
-
-if (UNIX)
-    target_link_libraries(ImHex libglfw.so libmagic.so libcrypto.so libdl.so libcapstone.so LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
-endif (UNIX)
+elseif (UNIX)
+    target_link_libraries(ImHex glfw magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+endif()
 
 install(TARGETS ImHex DESTINATION bin)
