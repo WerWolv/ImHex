@@ -1,15 +1,15 @@
-<p align="center">
-  <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild"><img alt="'Build' workflow Status" src="https://img.shields.io/github/workflow/status/WerWolv/ImHex/Build?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions"></a><!--
-  -->
-</p>
-
-# ImHex
+<h1 align="center">:mag: ImHex</h1>
 
 A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM.
 
+<p align="center">
+  <a title="'Build' workflow Status" href="https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild"><img alt="'Build' workflow Status" src="https://img.shields.io/github/workflow/status/WerWolv/ImHex/Build?longCache=true&style=for-the-badge&label=Build&logoColor=fff&logo=GitHub%20Actions"></a>
+   <a title="Discord Server" href="https://discord.gg/X63jZ36xBY"><img alt="Discord Server" src="https://img.shields.io/discord/789833418631675954?label=Discord&logo=Discord&style=for-the-badge"></a>
+</p>
+
 ## Supporting
 
-If you like my work, consider supporting me on GitHub Sponsors, Patreon or PayPal. Thanks a lot!
+If you like my work, please consider supporting me on GitHub Sponsors, Patreon or PayPal. Thanks a lot!
 
 <p align="center">
 <a href="https://github.com/sponsors/WerWolv"><img src="https://werwolv.net/assets/github_banner.png" alt="GitHub donate button" /> </a>
