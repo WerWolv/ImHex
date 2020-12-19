@@ -1,3 +1,4 @@
+#include "helpers/utils.hpp"
 #include "window.hpp"
 
 #include "lang/pattern_data.hpp"
