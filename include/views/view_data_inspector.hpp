@@ -41,6 +41,14 @@ namespace hex {
         GUID guid;
     };
 
+    struct CachedData {
+        CachedData(std::string name, std::string value, size_t size) : name(name), value(value), size(size) { }
+
+        std::string name;
+        std::string value;
+        size_t size;
+    };
+
     class ViewDataInspector : public View {
     public:
         explicit ViewDataInspector(prv::Provider* &dataProvider);
@@ -57,7 +65,7 @@ namespace hex {
 
         PreviewData m_previewData = { 0 };
         size_t m_validBytes = 0;
-        std::vector<std::pair<std::string, std::string>> m_cachedData;
+        std::vector<CachedData> m_cachedData;
     };
 
 }

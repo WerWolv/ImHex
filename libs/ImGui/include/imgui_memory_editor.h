@@ -93,8 +93,10 @@ struct MemoryEditor
     // [Internal State]
     bool            ContentsWidthChanged;
     size_t          DataPreviewAddr;
-    size_t          DataEditingAddr;
+    size_t          DataPreviewAddrOld;
     size_t          DataPreviewAddrEnd;
+    size_t          DataPreviewAddrEndOld;
+    size_t          DataEditingAddr;
     bool            DataEditingTakeFocus;
     char            DataInputBuf[32];
     char            AddrInputBuf[32];
@@ -187,6 +189,14 @@ struct MemoryEditor
 
         if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse))
         {
+            if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
+                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
+                hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
+            }
+
+            DataPreviewAddrOld = DataPreviewAddr;
+            DataPreviewAddrEndOld = DataPreviewAddrEnd;
+
             DrawContents(mem_data, mem_size, base_display_addr);
             if (ContentsWidthChanged)
             {
@@ -436,17 +446,9 @@ struct MemoryEditor
 
                         DataPreviewAddr = addr;
                         DataPreviewAddrEnd = addr;
-
-                        hex::Region selectionRegion { addr, 1 };
-                        hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
                     }
                     if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
-
-                        size_t dataPreviewStart = std::min(DataPreviewAddr, DataPreviewAddrEnd);
-
-                        hex::Region selectionRegion { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) + 1 };
-                        hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
                     }
                 }
             }
