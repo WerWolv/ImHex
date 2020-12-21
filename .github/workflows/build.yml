@@ -9,7 +9,6 @@ env:
 
 jobs:
 
-
   linux:
     runs-on: ubuntu-20.04
     name: 🐧 Ubuntu 20.04
@@ -43,7 +42,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        CC=gcc-10 CXX=g++-10 cmake ..
+        CC=gcc-10 CXX=g++-10 cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         make -j 4
 
 
@@ -55,7 +54,7 @@ jobs:
         include:
           - { msystem: MINGW64, arch: x86_64 }
           #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · manual
+    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }}
     defaults:
       run:
         shell: msys2 {0}
@@ -68,7 +67,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: 🟪 Setup MSYS2
+    - name: ⬇️ Install dependencies
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.msystem }}
@@ -91,52 +90,9 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "MinGW Makefiles" ..
+        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         mingw32-make -j 4
 
-
-  win-makepkg:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { msystem: MINGW64, arch: x86_64 }
-          #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · makepkg
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-
-    - run: git config --global core.autocrlf input
-      shell: bash
-
-    - name: 🧰 Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: 🟪 Setup MSYS2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: ${{ matrix.msystem }}
-        update: true
-        install: >
-          base-devel
-          mingw-w64-${{ matrix.arch }}-toolchain
-
-    - name: 🔧 Build
-      run: |
-        cd msys2
-        makepkg-mingw --noconfirm --noprogressbar -sCLf
-      env:
-        MINGW_INSTALLS: ${{ matrix.msystem }}
-
-    - name: '📤 Upload artifact: package'
-      uses: actions/upload-artifact@v2
-      with:
-        path: msys2/*.zst
 
   macos-build:
     runs-on: macos-11.0
@@ -156,37 +112,5 @@ jobs:
       run: |
         mkdir build
         cd build
-        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake ..
+        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         make -j 4
-
-  win-test:
-    needs: win-makepkg
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { msystem: MINGW64, arch: x86_64 }
-          #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟪 ${{ matrix.msystem }} · ${{ matrix.arch }} · test
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-
-    - name: 🟪 Setup MSYS2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: ${{ matrix.msystem }}
-        update: true
-
-    - name: '📥 Download artifacts'
-      uses: actions/download-artifact@v2
-
-    - name: ⚙️ Install
-      run: |
-        pacman -U --noconfirm --noprogressbar artifact/*.zst
-
-    - name: ▶️ Test
-      run: |
-        which ImHex
