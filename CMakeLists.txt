@@ -126,7 +126,7 @@ target_link_directories(imhex PRIVATE ${GLFW_LIBRARY_DIRS} ${CRYPTO_LIBRARY_DIRS
 if (WIN32)
     target_link_libraries(imhex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
 elseif (UNIX)
-    target_link_libraries(imhex glfw magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
+    target_link_libraries(imhex glfw magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle dl imgui ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 endif()
 
 install(TARGETS imhex DESTINATION bin)
