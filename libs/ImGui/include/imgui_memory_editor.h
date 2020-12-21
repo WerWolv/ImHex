@@ -547,6 +547,7 @@ struct MemoryEditor
         IM_UNUSED(mem_data);
         ImGuiStyle& style = ImGui::GetStyle();
         const char* format_range = OptUpperCaseHex ? "Range %0*" _PRISizeT "X..%0*" _PRISizeT "X" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x";
+        const char* format_selection = OptUpperCaseHex ? "Selection %0*" _PRISizeT "X..%0*" _PRISizeT "X (%ld %s)" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x (%ld %s)";
 
         // Options menu
         if (ImGui::Button("Options"))
@@ -566,6 +567,17 @@ struct MemoryEditor
 
         ImGui::SameLine();
         ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
+        if (DataPreviewAddr != (size_t)-1 && DataPreviewAddrEnd != (size_t)-1) {
+            ImGui::SameLine();
+            ImGui::Spacing();
+            ImGui::SameLine();
+
+            auto selectionStart = std::min(DataPreviewAddr, DataPreviewAddrEnd);
+            auto selectionEnd = std::max(DataPreviewAddr, DataPreviewAddrEnd);
+
+            size_t regionSize = (selectionEnd - selectionStart) + 1;
+            ImGui::Text(format_selection, s.AddrDigitsCount, selectionStart, s.AddrDigitsCount, selectionEnd, regionSize, regionSize == 1 ? "byte" : "bytes");
+        }
 
         if (GotoAddr != (size_t)-1)
         {

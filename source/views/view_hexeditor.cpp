@@ -109,6 +109,8 @@ namespace hex {
         if (dataSize != 0x00) {
             ImGui::Begin("Hex Editor");
             ImGui::SameLine();
+            ImGui::Spacing();
+            ImGui::SameLine();
             ImGui::Text("Page %d / %d", this->m_dataProvider->getCurrentPage() + 1, this->m_dataProvider->getPageCount());
             ImGui::SameLine();
 
