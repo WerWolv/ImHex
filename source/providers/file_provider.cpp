@@ -10,7 +10,7 @@
 #include "helpers/project_file_handler.hpp"
 
 
-#ifdef __APPLE__
+#ifdef OS_MACOS
     #define off64_t off_t
     #define fopen64 fopen
     #define fseeko64 fseek

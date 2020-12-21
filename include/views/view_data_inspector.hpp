@@ -32,7 +32,7 @@ namespace hex {
         u8 utf8Char[4];
         float float32;
         double float64;
-        #if defined(_WIN64)
+        #if defined(OS_WINDOWS) && defined(ARCH_64_BIT)
             __time32_t time32;
             __time64_t time64;
         #else

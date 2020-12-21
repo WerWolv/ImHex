@@ -74,7 +74,7 @@ namespace hex {
             this->m_cachedData.emplace_back("float (32 bit)", hex::format("%e", hex::changeEndianess(this->m_previewData.float32, this->m_endianess)), sizeof(float));
             this->m_cachedData.emplace_back("double (64 bit)",  hex::format("%e", hex::changeEndianess(this->m_previewData.float64, this->m_endianess)), sizeof(double));
 
-            #if defined(_WIN64)
+            #if defined(OS_WINDOWS) && defined(ARCH_64_BIT)
             {
                 auto endianAdjustedTime = hex::changeEndianess(this->m_previewData.time32, this->m_endianess);
                 std::tm * ptm = _localtime32(&endianAdjustedTime);
@@ -107,7 +107,7 @@ namespace hex {
             #endif
 
             this->m_cachedData.emplace_back("GUID", hex::format("%s{%08lX-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
-                (this->m_previewData.guid.data3 >> 12) <= 5 && ((this->m_previewData.guid.data4[0] >> 4) >= 8 || (this->m_previewData.guid.data4[0] >> 4) == 0) ? "" : "[INVALID] ",
+                (this->m_previewData.guid.data3 >> 12) <= 5 && ((this->m_previewData.guid.data4[0] >> 4) >= 8 || (this->m_previewData.guid.data4[0] >> 4) == 0) ? "" : "Invalid ",
                 hex::changeEndianess(this->m_previewData.guid.data1, this->m_endianess),
                 hex::changeEndianess(this->m_previewData.guid.data2, this->m_endianess),
                 hex::changeEndianess(this->m_previewData.guid.data3, this->m_endianess),

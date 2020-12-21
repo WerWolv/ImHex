@@ -21,7 +21,7 @@ using s128  = __int128_t;
 extern int mainArgc;
 extern char **mainArgv;
 
-#if defined(__EMX__) || defined (WIN32)
+#ifdef OS_WINDOWS
 #define MAGIC_PATH_SEPARATOR	";"
 #else
 #define MAGIC_PATH_SEPARATOR	":"
