@@ -27,22 +27,17 @@ namespace hex {
     };
 
 
-
     void ViewHelp::drawAboutPopup() {
         if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("ImHex Hex Editor");
-            ImGui::Text("by WerWolv");
-            ImGui::Separator();
+            ImGui::Text("ImHex Hex Editor v%s by WerWolv", IMHEX_VERSION);
+            ImGui::NewLine();
+            ImGui::Text("Source code available on GitHub:"); ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), "WerWolv/ImHex   ");
             ImGui::NewLine();
 
-            ImGui::Text("Source code found at"); ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), "https://github.com/WerWolv/ImHex");
-            ImGui::NewLine();
-
-            ImGui::Separator();
             ImGui::Text("Libraries used");
+            ImGui::Separator();
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
-            ImGui::NewLine();
             ImGui::BulletText("ImGui by ocornut");
             ImGui::BulletText("imgui_club by ocornut");
             ImGui::BulletText("ImGui-Addons by gallickgunner");
@@ -55,6 +50,7 @@ namespace hex {
             ImGui::BulletText("GLFW3");
             ImGui::BulletText("LLVM");
             ImGui::BulletText("Python 3");
+            ImGui::BulletText("FreeType");
 
             ImGui::PopStyleColor();
             ImGui::EndPopup();

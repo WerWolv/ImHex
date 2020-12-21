@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(HexEditor)
+project(imhex VERSION 1.5.0)
 
 SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
@@ -46,10 +46,10 @@ if (WIN32)
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wl,-subsystem,windows")
 endif (WIN32)
 
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}\"\\\"")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-Debug\"\\\"")
 
-add_executable(ImHex
+add_executable(imhex
         source/main.cpp
         source/window.cpp
 
@@ -97,14 +97,14 @@ add_executable(ImHex
         resource.rc
         )
 
-set_target_properties(ImHex PROPERTIES CXX_VISIBILITY_PRESET hidden)
+set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_link_directories(ImHex PRIVATE ${GLFW_LIBRARY_DIRS} ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
+target_link_directories(imhex PRIVATE ${GLFW_LIBRARY_DIRS} ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(ImHex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+    target_link_libraries(imhex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 elseif (UNIX)
-    target_link_libraries(ImHex glfw magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
+    target_link_libraries(imhex glfw magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle ${Python_LIBRARIES} nlohmann_json::nlohmann_json Freetype::Freetype)
 endif()
 
-install(TARGETS ImHex DESTINATION bin)
+install(TARGETS imhex DESTINATION bin)
