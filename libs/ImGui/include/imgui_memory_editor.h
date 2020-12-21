@@ -218,14 +218,13 @@ struct MemoryEditor
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
         ImGuiStyle& style = ImGui::GetStyle();
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
         if (mem_size == 0x00) {
             constexpr const char *noDataString = "No data loaded!";
 
             auto pos = ImGui::GetCursorScreenPos();
             pos.x += (ImGui::GetWindowWidth() - (ImGui::CalcTextSize(noDataString).x)) / 2;
-            draw_list->AddText(pos, 0xFFFFFFFF, noDataString);
+            ImGui::GetWindowDrawList()->AddText(pos, 0xFFFFFFFF, noDataString);
             return;
         }
 
@@ -255,8 +254,10 @@ struct MemoryEditor
 
 
         // We are not really using the clipper API correctly here, because we rely on visible_start_addr/visible_end_addr for our scrolling function.
-        const int line_total_count = (int)((mem_size + Cols - 1) / Cols);
         ImGuiListClipper clipper;
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+        const int line_total_count = (int)((mem_size + Cols - 1) / Cols);
         clipper.Begin(line_total_count, s.LineHeight);
         clipper.Step();
         const size_t visible_start_addr = clipper.DisplayStart * Cols;
