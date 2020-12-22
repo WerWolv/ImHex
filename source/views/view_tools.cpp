@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "providers/provider.hpp"
+#include "helpers/plugin_handler.hpp"
 #include "helpers/utils.hpp"
 
 #include <llvm/Demangle/Demangle.h>
@@ -291,7 +292,7 @@ namespace hex {
         }
     }
 
-    void ViewTools::createView() {
+    void ViewTools::drawContent() {
         if (ImGui::Begin("Tools", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             this->drawDemangler();
@@ -300,11 +301,14 @@ namespace hex {
             this->drawMathEvaluator();
             this->drawColorPicker();
 
+            for (const auto& plugin : PluginHandler::getPlugins())
+                plugin.drawToolsEntry();
+
         }
         ImGui::End();
     }
 
-    void ViewTools::createMenu() {
+    void ViewTools::drawMenu() {
 
     }
 

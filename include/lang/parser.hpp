@@ -14,7 +14,7 @@ namespace hex::lang {
 
         using TokenIter = std::vector<Token>::const_iterator;
 
-        std::pair<Result, std::vector<ASTNode*>> parse(const std::vector<Token> &tokens);
+        std::optional<std::vector<ASTNode*>> parse(const std::vector<Token> &tokens);
 
         const std::pair<u32, std::string>& getError() { return this->m_error; }
 

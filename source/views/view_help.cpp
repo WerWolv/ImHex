@@ -275,13 +275,13 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewHelp::createView() {
+    void ViewHelp::drawContent() {
         this->drawAboutPopup();
         this->drawPatternHelpPopup();
         this->drawMathEvaluatorHelp();
     }
 
-    void ViewHelp::createMenu() {
+    void ViewHelp::drawMenu() {
         if (ImGui::BeginMenu("Help")) {
             if (ImGui::MenuItem("About", "")) {
                 View::doLater([] { ImGui::OpenPopup("About"); });

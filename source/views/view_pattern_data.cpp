@@ -48,7 +48,7 @@ namespace hex {
         return false;
     }
 
-    void ViewPatternData::createView() {
+    void ViewPatternData::drawContent() {
         if (ImGui::Begin("Pattern Data", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
 
@@ -69,7 +69,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewPatternData::createMenu() {
+    void ViewPatternData::drawMenu() {
 
     }
 

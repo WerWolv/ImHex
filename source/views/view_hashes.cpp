@@ -37,7 +37,7 @@ namespace hex {
             snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", hex::changeEndianess(dataArray[i], std::endian::big));
     }
 
-    void ViewHashes::createView() {
+    void ViewHashes::drawContent() {
         if (ImGui::Begin("Hashing", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
@@ -240,7 +240,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewHashes::createMenu() {
+    void ViewHashes::drawMenu() {
 
     }
 

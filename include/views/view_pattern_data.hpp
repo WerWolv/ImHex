@@ -19,8 +19,8 @@ namespace hex {
         ViewPatternData(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
         ~ViewPatternData() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
 
     private:
 

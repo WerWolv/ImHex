@@ -15,11 +15,15 @@ using s32   = std::int32_t;
 using s64   = std::int64_t;
 using s128  = __int128_t;
 
-#include "lang/result.hpp"
-#include "lang/results.hpp"
-
 extern int mainArgc;
 extern char **mainArgv;
+
+#define IMHEX_PLUGIN    namespace hex::plugin::internal {               \
+                            void setImGuiContext(ImGuiContext *ctx) {   \
+                                ImGui::SetCurrentContext(ctx);          \
+                            }                                           \
+                        }                                               \
+                        namespace hex::plugin
 
 #ifdef OS_WINDOWS
 #define MAGIC_PATH_SEPARATOR	";"

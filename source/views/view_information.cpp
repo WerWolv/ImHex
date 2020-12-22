@@ -46,7 +46,7 @@ namespace hex {
         return entropy / 8;
     }
 
-    void ViewInformation::createView() {
+    void ViewInformation::drawContent() {
         if (ImGui::Begin("Data Information", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
@@ -188,7 +188,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewInformation::createMenu() {
+    void ViewInformation::drawMenu() {
 
     }
 

@@ -29,7 +29,7 @@ namespace hex {
         View::unsubscribeEvent(Events::RegionSelected);
     }
 
-    void ViewDisassembler::createView() {
+    void ViewDisassembler::drawContent() {
         if (this->m_shouldInvalidate) {
             this->m_disassembly.clear();
 
@@ -282,7 +282,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewDisassembler::createMenu() {
+    void ViewDisassembler::drawMenu() {
 
     }
 

@@ -16,8 +16,8 @@ namespace hex {
         explicit ViewBookmarks(prv::Provider* &dataProvider);
         ~ViewBookmarks() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
 
     private:
         prv::Provider* &m_dataProvider;

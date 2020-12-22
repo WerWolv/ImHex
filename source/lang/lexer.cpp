@@ -66,7 +66,7 @@ namespace hex::lang {
         return integer;
     }
 
-    std::pair<Result, std::vector<Token>> Lexer::lex(const std::string& code) {
+    std::optional<std::vector<Token>> Lexer::lex(const std::string& code) {
         std::vector<Token> tokens;
         u32 offset = 0;
 
@@ -142,7 +142,7 @@ namespace hex::lang {
 
                 if (offset >= code.length()) {
                     this->m_error = { lineNumber, "Invalid character literal" };
-                    return { ResultLexicalError, { } };
+                    return { };
                 }
 
                 char character = code[offset];
@@ -152,19 +152,19 @@ namespace hex::lang {
 
                     if (offset >= code.length()) {
                         this->m_error = { lineNumber, "Invalid character literal" };
-                        return { ResultLexicalError, { } };
+                        return { };
                     }
 
                     if (code[offset] != '\\' && code[offset] != '\'') {
                         this->m_error = { lineNumber, "Invalid escape sequence" };
-                        return { ResultLexicalError, { } };
+                        return { };
                     }
 
                     character = code[offset];
                 } else {
                     if (code[offset] == '\\' || code[offset] == '\'' || character == '\n' || character == '\r') {
                         this->m_error = { lineNumber, "Invalid character literal" };
-                        return { ResultLexicalError, { } };
+                        return { };
                     }
                 }
 
@@ -172,7 +172,7 @@ namespace hex::lang {
 
                 if (offset >= code.length() || code[offset] != '\'') {
                     this->m_error = { lineNumber, "Missing terminating ' after character literal" };
-                    return { ResultLexicalError, { } };
+                    return { };
                 }
 
                 tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = character }, .lineNumber = lineNumber });
@@ -240,19 +240,19 @@ namespace hex::lang {
 
                 if (!integer.has_value()) {
                     this->m_error = { lineNumber, "Invalid integer literal" };
-                    return { ResultLexicalError, {}};
+                    return { };
                 }
 
                 tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = integer.value() }, .lineNumber = lineNumber });
                 offset += (end - &code[offset]);
             } else {
                 this->m_error = { lineNumber, "Unknown token" };
-                return { ResultLexicalError, {} };
+                return { };
             }
         }
 
         tokens.push_back({ .type = Token::Type::EndOfProgram, .lineNumber = lineNumber });
 
-        return { ResultSuccess, tokens };
+        return tokens;
     }
 }

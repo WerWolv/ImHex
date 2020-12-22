@@ -6,7 +6,7 @@ namespace hex::lang {
 
     }
 
-    std::pair<Result, std::string> Preprocessor::preprocess(const std::string& code, bool initialRun) {
+    std::optional<std::string> Preprocessor::preprocess(const std::string& code, bool initialRun) {
         u32 offset = 0;
         u32 lineNumber = 1;
 
@@ -29,7 +29,7 @@ namespace hex::lang {
                         offset += 1;
 
                     if (code[offset] != '<' && code[offset] != '"')
-                        return { ResultPreprocessingError, "" };
+                        return { };
 
                     char endChar = code[offset];
                     if (endChar == '<') endChar = '>';
@@ -42,7 +42,7 @@ namespace hex::lang {
                         offset += 1;
 
                         if (offset >= code.length())
-                            return { ResultPreprocessingError, "" };
+                            return { };
                     }
                     offset += 1;
 
@@ -51,7 +51,7 @@ namespace hex::lang {
 
                     FILE *file = fopen(includeFile.c_str(), "r");
                     if (file == nullptr)
-                        return { ResultPreprocessingError, "" };
+                        return { };
 
                     fseek(file, 0, SEEK_END);
                     size_t size = ftell(file);
@@ -61,11 +61,11 @@ namespace hex::lang {
                     fread(buffer, size, 1, file);
                     buffer[size] = 0x00;
 
-                    auto [result, preprocessedInclude] = this->preprocess(buffer, false);
-                    if (result.failed())
-                        return { ResultPreprocessingError, "" };
+                    auto preprocessedInclude = this->preprocess(buffer, false);
+                    if (!preprocessedInclude.has_value())
+                        return { };
 
-                    output += preprocessedInclude;
+                    output += preprocessedInclude.value();
 
                     delete[] buffer;
 
@@ -81,7 +81,7 @@ namespace hex::lang {
                         defineName += code[offset];
 
                         if (offset >= code.length() || code[offset] == '\n' || code[offset] == '\r')
-                            return { ResultPreprocessingError, "" };
+                            return { };
                         offset += 1;
                     }
 
@@ -91,14 +91,14 @@ namespace hex::lang {
                     std::string replaceValue;
                     while (code[offset] != '\n' && code[offset] != '\r') {
                         if (offset >= code.length())
-                            return { ResultPreprocessingError, "" };
+                            return { };
 
                         replaceValue += code[offset];
                         offset += 1;
                     }
 
                     if (replaceValue.empty())
-                        return { ResultPreprocessingError, "" };
+                        return { };
 
                     this->m_defines.emplace(defineName, replaceValue);
                 } else if (code.substr(offset, 6) == "pragma") {
@@ -112,7 +112,7 @@ namespace hex::lang {
                         pragmaKey += code[offset];
 
                         if (offset >= code.length() || code[offset] == '\n' || code[offset] == '\r')
-                            return { ResultPreprocessingError, "" };
+                            return { };
 
                         offset += 1;
                     }
@@ -123,18 +123,18 @@ namespace hex::lang {
                     std::string pragmaValue;
                     while (code[offset] != '\n' && code[offset] != '\r') {
                         if (offset >= code.length())
-                            return { ResultPreprocessingError, "" };
+                            return { };
 
                         pragmaValue += code[offset];
                         offset += 1;
                     }
 
                     if (pragmaValue.empty())
-                        return { ResultPreprocessingError, "" };
+                        return { };
 
                     this->m_pragmas.emplace(pragmaKey, pragmaValue);
                 } else
-                    return { ResultPreprocessingError, "" };
+                    return { };
             }
 
             if (code[offset] == '\n')
@@ -158,13 +158,13 @@ namespace hex::lang {
             for (const auto &[type, value] : this->m_pragmas) {
                 if (this->m_pragmaHandlers.contains(type)) {
                     if (!this->m_pragmaHandlers[type](value))
-                        return { ResultPreprocessingError, { } };
+                        return { };
                 } else
-                    return { ResultPreprocessingError, { } };
+                    return { };
             }
         }
 
-        return { ResultSuccess, output };
+        return output;
     }
 
     void Preprocessor::addPragmaHandler(std::string pragmaType, std::function<bool(std::string)> function) {

@@ -16,8 +16,8 @@ namespace hex {
         explicit ViewPatches(prv::Provider* &dataProvider);
         ~ViewPatches() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
 
     private:
         prv::Provider* &m_dataProvider;

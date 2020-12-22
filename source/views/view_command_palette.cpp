@@ -17,7 +17,7 @@ namespace hex {
 
     }
 
-    void ViewCommandPalette::createView() {
+    void ViewCommandPalette::drawContent() {
 
         auto windowPos = View::getWindowPosition();
         auto windowSize = View::getWindowSize();
@@ -54,7 +54,7 @@ namespace hex {
         }
     }
 
-    void ViewCommandPalette::createMenu() {
+    void ViewCommandPalette::drawMenu() {
 
     }
 

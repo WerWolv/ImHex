@@ -23,8 +23,8 @@ namespace hex {
         ViewHexEditor(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
         ~ViewHexEditor() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
         bool handleShortcut(int key, int mods) override;
 
     private:

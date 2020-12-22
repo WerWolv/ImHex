@@ -39,11 +39,14 @@ namespace hex {
 
         void initGLFW();
         void initImGui();
+        void initPlugins();
         void deinitGLFW();
         void deinitImGui();
+        void deinitPlugins();
 
         GLFWwindow* m_window;
         std::vector<View*> m_views;
+        std::vector<View*> m_pluginViews;
 
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;

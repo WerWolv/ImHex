@@ -1,5 +1,6 @@
-#include "hex.hpp"
 #include "window.hpp"
+
+#include <hex.hpp>
 
 #include <iostream>
 #include <numeric>
@@ -9,6 +10,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_freetype.h"
+
+#include "helpers/plugin_handler.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -47,11 +50,13 @@ namespace hex {
     Window::Window() {
         this->initGLFW();
         this->initImGui();
+        this->initPlugins();
     }
 
     Window::~Window() {
         this->deinitImGui();
         this->deinitGLFW();
+        this->deinitPlugins();
 
         for (auto &view : this->m_views)
             delete view;
@@ -60,6 +65,9 @@ namespace hex {
     void Window::loop() {
         while (!glfwWindowShouldClose(this->m_window)) {
             this->frameBegin();
+
+            for (const auto &plugin : PluginHandler::getPlugins())
+                plugin.setImGuiContext(ImGui::GetCurrentContext());
 
             for (const auto &call : View::getDeferedCalls())
                 call();
@@ -70,7 +78,15 @@ namespace hex {
                     continue;
 
                 ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
-                view->createView();
+                view->drawContent();
+            }
+
+            for (auto &view : this->m_pluginViews) {
+                if (!view->getWindowOpenState())
+                    continue;
+
+                ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
+                view->drawContent();
             }
 
             View::drawCommonInterfaces();
@@ -145,11 +161,25 @@ namespace hex {
                         if (view->hasViewMenuItemEntry())
                             ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
                     }
+
+                    if (ImGui::BeginMenu("Plugin Views")) {
+                        for (auto &view : this->m_pluginViews) {
+                            if (view->hasViewMenuItemEntry())
+                                ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
+                        }
+
+                        ImGui::EndMenu();
+                    }
+
                     ImGui::EndMenu();
                 }
 
                 for (auto &view : this->m_views) {
-                    view->createMenu();
+                    view->drawMenu();
+                }
+
+                for (auto &view : this->m_pluginViews) {
+                    view->drawMenu();
                 }
 
                 if (ImGui::BeginMenu("View")) {
@@ -173,10 +203,22 @@ namespace hex {
             }
 
             if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
-                for (auto &view : this->m_views) {
+                bool shortcutHandled = false;
+                for (auto &view : this->m_pluginViews) {
                     if (view->getWindowOpenState()) {
-                        if (view->handleShortcut(key, mods))
+                        if (view->handleShortcut(key, mods)) {
+                            shortcutHandled = true;
                             break;
+                        }
+                    }
+                }
+
+                if (!shortcutHandled) {
+                    for (auto &view : this->m_views) {
+                        if (view->getWindowOpenState()) {
+                            if (view->handleShortcut(key, mods))
+                                break;
+                        }
                     }
                 }
 
@@ -334,6 +376,15 @@ namespace hex {
         ImGui_ImplOpenGL3_Init("#version 150");
     }
 
+    void Window::initPlugins() {
+        PluginHandler::load((std::filesystem::path(mainArgv[0]).parent_path() / "plugins").string());
+
+        for (const auto &plugin : PluginHandler::getPlugins()) {
+            if (auto view = plugin.createView(); view != nullptr)
+                this->m_pluginViews.push_back(view);
+        }
+    }
+
     void Window::deinitGLFW() {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
@@ -343,6 +394,13 @@ namespace hex {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
+    }
+
+    void Window::deinitPlugins() {
+        PluginHandler::unload();
+
+        for (auto &view : this->m_pluginViews)
+            delete view;
     }
 
 }

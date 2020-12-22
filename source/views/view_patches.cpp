@@ -28,7 +28,7 @@ namespace hex {
         View::unsubscribeEvent(Events::ProjectFileLoad);
     }
 
-    void ViewPatches::createView() {
+    void ViewPatches::drawContent() {
         if (ImGui::Begin("Patches", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
@@ -84,7 +84,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewPatches::createMenu() {
+    void ViewPatches::drawMenu() {
 
     }
 

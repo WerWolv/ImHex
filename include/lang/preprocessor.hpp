@@ -16,7 +16,7 @@ namespace hex::lang {
     public:
         Preprocessor();
 
-        std::pair<Result, std::string> preprocess(const std::string& code, bool initialRun = true);
+        std::optional<std::string> preprocess(const std::string& code, bool initialRun = true);
 
         void addPragmaHandler(std::string pragmaType, std::function<bool(std::string)> function);
         void addDefaultPragmaHandlers();
