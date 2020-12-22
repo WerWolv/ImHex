@@ -62,11 +62,11 @@ namespace hex::lang {
                         fread(buffer, size, 1, file);
                         buffer[size] = 0x00;
 
-                        auto [result, preprocessedInclude] = this->preprocess(buffer, false);
-                        if (result.failed())
+                        auto preprocessedInclude = this->preprocess(buffer, false);
+                        if (!preprocessedInclude.has_value())
                             throw this->m_error;
 
-                        output += preprocessedInclude;
+                        output += preprocessedInclude.value();
 
                         delete[] buffer;
 
@@ -170,7 +170,7 @@ namespace hex::lang {
             }
         } catch (PreprocessorError &e) {
             this->m_error = e;
-            return { ResultPreprocessingError, { } };
+            return { };
         }
 
         return output;

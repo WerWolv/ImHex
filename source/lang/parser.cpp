@@ -383,7 +383,7 @@ namespace hex::lang {
     }
 
     // <(parseStatement)...> EndOfProgram
-    std::pair<Result, std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
+    std::optional<std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
         this->m_curr = tokens.begin();
 
         this->m_types.clear();
@@ -394,12 +394,12 @@ namespace hex::lang {
             if (program.empty() || this->m_curr != tokens.end())
                 throwParseError("Program is empty!", -1);
 
-            return { ResultSuccess, program };
+            return program;
         } catch (ParseError &e) {
             this->m_error = e;
         }
 
-        return { ResultParseError, { } };
+        return { };
     }
 
 }

@@ -284,7 +284,7 @@ namespace hex::lang {
             tokens.emplace_back(TOKEN(Separator, EndOfProgram));
         } catch (LexerError &e) {
             this->m_error = e;
-            return { ResultLexicalError, { } };
+            return { };
         }
 
 

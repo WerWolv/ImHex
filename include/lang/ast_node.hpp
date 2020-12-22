@@ -27,7 +27,7 @@ namespace hex::lang {
     class ASTNodeIntegerLiteral : public ASTNode {
     public:
         ASTNodeIntegerLiteral(std::variant<u128, s128> value, Token::ValueType type)
-            : ASTNode(), m_value(value), m_type(type) {
+                : ASTNode(), m_value(value), m_type(type) {
 
         }
         ASTNodeIntegerLiteral(const ASTNodeIntegerLiteral&) = default;
@@ -52,7 +52,7 @@ namespace hex::lang {
     class ASTNodeNumericExpression : public ASTNode {
     public:
         ASTNodeNumericExpression(ASTNode *left, ASTNode *right, Token::Operator op)
-            : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
+                : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
 
         ~ASTNodeNumericExpression() override {
             delete this->m_left;
@@ -101,8 +101,8 @@ namespace hex::lang {
             return std::visit([&](auto &&leftValue, auto &&rightValue) -> ASTNodeIntegerLiteral* {
 
                 auto newType = [&] {
-                    #define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
-                    #define DEFAULT_TYPE(type) return (type)
+#define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
+#define DEFAULT_TYPE(type) return (type)
 
                     CHECK_TYPE(Token::ValueType::Double);
                     CHECK_TYPE(Token::ValueType::Float);
@@ -119,8 +119,8 @@ namespace hex::lang {
                     CHECK_TYPE(Token::ValueType::Character);
                     DEFAULT_TYPE(Token::ValueType::Signed32Bit);
 
-                    #undef CHECK_TYPE
-                    #undef DEFAULT_TYPE
+#undef CHECK_TYPE
+#undef DEFAULT_TYPE
                 }();
 
                 switch (this->m_operator) {
@@ -153,7 +153,7 @@ namespace hex::lang {
     class ASTNodeBuiltinType : public ASTNode {
     public:
         constexpr explicit ASTNodeBuiltinType(Token::ValueType type)
-            : ASTNode(), m_type(type) { }
+                : ASTNode(), m_type(type) { }
 
         [[nodiscard]] constexpr const auto& getType() const { return this->m_type; }
 
@@ -168,7 +168,7 @@ namespace hex::lang {
     class ASTNodeTypeDecl : public ASTNode {
     public:
         ASTNodeTypeDecl(std::string_view name, ASTNode *type, std::optional<std::endian> endian = { })
-            : ASTNode(), m_name(name), m_type(type), m_endian(endian) { }
+                : ASTNode(), m_name(name), m_type(type), m_endian(endian) { }
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other) {
             this->m_name = other.m_name;
@@ -197,14 +197,16 @@ namespace hex::lang {
     class ASTNodeVariableDecl : public ASTNode {
     public:
         ASTNodeVariableDecl(std::string_view name, ASTNode *type, ASTNode *placementOffset = nullptr)
-            : ASTNode(), m_name(name), m_type(type), m_placementOffset(placementOffset) { }
+                : ASTNode(), m_name(name), m_type(type), m_placementOffset(placementOffset) { }
 
         ASTNodeVariableDecl(const ASTNodeVariableDecl &other) : ASTNode(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
 
-            if (this->m_placementOffset != nullptr)
+            if (other.m_placementOffset != nullptr)
                 this->m_placementOffset = other.m_placementOffset->clone();
+            else
+                this->m_placementOffset = nullptr;
         }
 
         ~ASTNodeVariableDecl() override {

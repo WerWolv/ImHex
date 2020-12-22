@@ -230,7 +230,7 @@ namespace hex::lang {
         return pattern;
     }
 
-    std::pair<Result, std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
+    std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
 
         std::vector<PatternData*> patterns;
 
@@ -247,11 +247,11 @@ namespace hex::lang {
             }
         } catch (EvaluateError &e) {
             this->m_error = e;
-            return { ResultEvaluatorError, { } };
+            return { };
         }
 
 
-        return { ResultSuccess, patterns };
+        return patterns;
     }
 
 }
