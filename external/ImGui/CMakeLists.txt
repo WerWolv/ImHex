@@ -3,7 +3,9 @@ project(imgui)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(PkgConfig REQUIRED)
 find_package(Freetype REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
 
 add_library(imgui
     source/imgui.cpp
@@ -17,9 +19,17 @@ add_library(imgui
     source/TextEditor.cpp
 )
 
-add_subdirectory(glad)
-
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(imgui Freetype::Freetype glad)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../glad ${CMAKE_CURRENT_BINARY_DIR}/external/glad)
+
+target_include_directories(imgui PUBLIC include)
+target_include_directories(imgui PRIVATE ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+
+target_link_directories(imgui PRIVATE ${GLFW_LIBRARY_DIRS})
+
+if (WIN32)
+    target_link_libraries(imgui Freetype::Freetype glad libglfw3.a)
+elseif (UNIX)
+    target_link_libraries(imgui Freetype::Freetype glad glfw)
+endif()
