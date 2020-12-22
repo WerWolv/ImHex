@@ -9,8 +9,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libimhex ${CMAKE_CURRENT_BINARY_
 set(CMAKE_SHARED_LIBRARY_PREFIX "plugin")
 
 add_library(example SHARED
-        source/test.cpp
-        )
+        source/plugin_example.cpp
+)
 
 target_include_directories(example PUBLIC include)
 target_link_libraries(example imgui libimhex)

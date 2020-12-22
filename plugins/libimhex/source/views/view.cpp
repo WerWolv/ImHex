@@ -11,6 +11,11 @@ namespace hex {
 
     View::View(std::string viewName) : m_viewName(viewName) { }
 
+    void View::createView(ImGuiContext *ctx) {
+        ImGui::SetCurrentContext(ctx);
+        this->createView();
+    }
+
     void View::createMenu() { }
     bool View::handleShortcut(int key, int mods) { return false; }
 

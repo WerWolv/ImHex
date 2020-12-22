@@ -94,6 +94,7 @@ add_executable(imhex
         source/helpers/math_evaluator.cpp
         source/helpers/project_file_handler.cpp
         source/helpers/loader_script_handler.cpp
+        source/helpers/plugin_handler.cpp
 
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp

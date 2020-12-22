@@ -18,6 +18,8 @@ using s128  = __int128_t;
 extern int mainArgc;
 extern char **mainArgv;
 
+#define PLUGIN_EXPORT __attribute__((visibility("default")))
+
 #ifdef OS_WINDOWS
 #define MAGIC_PATH_SEPARATOR	";"
 #else
