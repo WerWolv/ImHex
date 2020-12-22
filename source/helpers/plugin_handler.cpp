@@ -5,7 +5,12 @@
 
 namespace hex {
 
-    constexpr auto CreateViewSymbol = "_ZN3hex6plugin10createViewEv"; // hex::plugin::createView(void)
+    // hex::plugin::createView(void)
+    constexpr auto CreateViewSymbol         = "_ZN3hex6plugin10createViewEv";
+    // hex::plugin::drawToolsEntry(void)
+    constexpr auto DrawToolsEntrySymbol     = "_ZN3hex6plugin14drawToolsEntryEv";
+    // hex::plugin::internal::setImGuiContext(ImGuiContext*)
+    constexpr auto SetImGuiContextSymbol    = "_ZN3hex6plugin8internal15setImGuiContextEP12ImGuiContext";
 
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
@@ -14,6 +19,8 @@ namespace hex {
             return;
 
         this->m_createViewFunction = reinterpret_cast<CreateViewFunc>(dlsym(this->m_handle, CreateViewSymbol));
+        this->m_drawToolsEntryFunction = reinterpret_cast<DrawToolsEntryFunc>(dlsym(this->m_handle, DrawToolsEntrySymbol));
+        this->m_setImGuiContextFunction = reinterpret_cast<SetImGuiContextFunc>(dlsym(this->m_handle, SetImGuiContextSymbol));
     }
 
     Plugin::~Plugin() {
@@ -21,11 +28,21 @@ namespace hex {
             dlclose(this->m_handle);
     }
 
+    void Plugin::setImGuiContext(ImGuiContext *ctx) const {
+        if (this->m_setImGuiContextFunction != nullptr)
+            this->m_setImGuiContextFunction(ctx);
+    }
+
     View* Plugin::createView() const {
         if (this->m_createViewFunction != nullptr)
             return this->m_createViewFunction();
 
         return nullptr;
+    }
+
+    void Plugin::drawToolsEntry() const {
+        if (this->m_drawToolsEntryFunction != nullptr)
+            this->m_drawToolsEntryFunction();
     }
 
 

@@ -18,9 +18,8 @@ namespace hex {
         View(std::string viewName);
         virtual ~View() = default;
 
-        virtual void createView(ImGuiContext *ctx);
-        virtual void createView() = 0;
-        virtual void createMenu();
+        virtual void drawContent() = 0;
+        virtual void drawMenu();
         virtual bool handleShortcut(int key, int mods);
 
         static std::vector<std::function<void()>>& getDeferedCalls();

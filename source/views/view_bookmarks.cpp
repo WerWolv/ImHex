@@ -39,7 +39,7 @@ namespace hex {
         View::unsubscribeEvent(Events::ProjectFileStore);
     }
 
-    void ViewBookmarks::createView() {
+    void ViewBookmarks::drawContent() {
         if (ImGui::Begin("Bookmarks", &this->getWindowOpenState())) {
             if (ImGui::BeginChild("##scrolling")) {
 
@@ -107,7 +107,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewBookmarks::createMenu() {
+    void ViewBookmarks::drawMenu() {
 
     }
 

@@ -167,7 +167,7 @@ namespace hex {
         View::unsubscribeEvent(Events::ProjectFileLoad);
     }
 
-    void ViewPattern::createMenu() {
+    void ViewPattern::drawMenu() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Load pattern...")) {
                 View::doLater([]{ ImGui::OpenPopup("Open Hex Pattern"); });
@@ -176,7 +176,7 @@ namespace hex {
         }
     }
 
-    void ViewPattern::createView() {
+    void ViewPattern::drawContent() {
         if (ImGui::Begin("Pattern", &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
             if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
                 this->m_textEditor.Render("Pattern");

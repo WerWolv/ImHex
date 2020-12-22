@@ -66,6 +66,9 @@ namespace hex {
         while (!glfwWindowShouldClose(this->m_window)) {
             this->frameBegin();
 
+            for (const auto &plugin : PluginHandler::getPlugins())
+                plugin.setImGuiContext(ImGui::GetCurrentContext());
+
             for (const auto &call : View::getDeferedCalls())
                 call();
             View::getDeferedCalls().clear();
@@ -75,7 +78,7 @@ namespace hex {
                     continue;
 
                 ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
-                view->createView();
+                view->drawContent();
             }
 
             for (auto &view : this->m_pluginViews) {
@@ -83,7 +86,7 @@ namespace hex {
                     continue;
 
                 ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
-                view->createView(ImGui::GetCurrentContext());
+                view->drawContent();
             }
 
             View::drawCommonInterfaces();
@@ -172,11 +175,11 @@ namespace hex {
                 }
 
                 for (auto &view : this->m_views) {
-                    view->createMenu();
+                    view->drawMenu();
                 }
 
                 for (auto &view : this->m_pluginViews) {
-                    view->createMenu();
+                    view->drawMenu();
                 }
 
                 if (ImGui::BeginMenu("View")) {

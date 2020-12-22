@@ -35,7 +35,7 @@ namespace hex {
         View::unsubscribeEvent(Events::RegionSelected);
     }
 
-    void ViewDataInspector::createView() {
+    void ViewDataInspector::drawContent() {
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
 
@@ -165,7 +165,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewDataInspector::createMenu() {
+    void ViewDataInspector::drawMenu() {
 
     }
 

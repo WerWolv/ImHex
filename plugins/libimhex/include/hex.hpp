@@ -18,7 +18,12 @@ using s128  = __int128_t;
 extern int mainArgc;
 extern char **mainArgv;
 
-#define PLUGIN_EXPORT __attribute__((visibility("default")))
+#define IMHEX_PLUGIN    namespace hex::plugin::internal {               \
+                            void setImGuiContext(ImGuiContext *ctx) {   \
+                                ImGui::SetCurrentContext(ctx);          \
+                            }                                           \
+                        }                                               \
+                        namespace hex::plugin
 
 #ifdef OS_WINDOWS
 #define MAGIC_PATH_SEPARATOR	";"

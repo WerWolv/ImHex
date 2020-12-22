@@ -46,7 +46,7 @@ namespace hex {
     }
 
 
-    void ViewStrings::createView() {
+    void ViewStrings::drawContent() {
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
 
@@ -181,7 +181,7 @@ namespace hex {
         }
     }
 
-    void ViewStrings::createMenu() {
+    void ViewStrings::drawMenu() {
 
     }
 

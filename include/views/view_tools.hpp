@@ -18,8 +18,8 @@ namespace hex {
         ViewTools(hex::prv::Provider* &provider);
         ~ViewTools() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
 
     private:
         hex::prv::Provider* &m_dataProvider;

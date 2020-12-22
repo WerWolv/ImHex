@@ -101,7 +101,7 @@ namespace hex {
         this->m_dataProvider = nullptr;
     }
 
-    void ViewHexEditor::createView() {
+    void ViewHexEditor::drawContent() {
         size_t dataSize = (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable()) ? 0x00 : this->m_dataProvider->getSize();
 
         this->m_memoryEditor.DrawWindow("Hex Editor", &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : this->m_dataProvider->getBaseAddress());
@@ -266,7 +266,7 @@ namespace hex {
         }
     }
 
-    void ViewHexEditor::createMenu() {
+    void ViewHexEditor::drawMenu() {
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {

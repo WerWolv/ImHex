@@ -20,8 +20,8 @@ namespace hex {
         explicit ViewPattern(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
         ~ViewPattern() override;
 
-        void createMenu() override;
-        void createView() override;
+        void drawMenu() override;
+        void drawContent() override;
 
     private:
         std::vector<lang::PatternData*> &m_patternData;

@@ -19,8 +19,8 @@ namespace hex {
         ViewCommandPalette();
         ~ViewCommandPalette() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
 
         bool handleShortcut(int key, int mods) override;
 

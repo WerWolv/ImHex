@@ -19,8 +19,8 @@ namespace hex {
         ViewHelp();
         ~ViewHelp() override;
 
-        void createView() override;
-        void createMenu() override;
+        void drawContent() override;
+        void drawMenu() override;
 
         bool hasViewMenuItemEntry() override { return false; }
 

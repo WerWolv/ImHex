@@ -11,14 +11,21 @@ namespace hex {
         Plugin(std::string_view path);
         ~Plugin();
 
+        void setImGuiContext(ImGuiContext *ctx) const;
         View* createView() const;
+        void drawToolsEntry() const;
 
     private:
+        using SetImGuiContextFunc = void(*)(ImGuiContext*);
         using CreateViewFunc = View*(*)();
+        using DrawToolsEntryFunc = void(*)();
 
         void *m_handle = nullptr;
 
+        SetImGuiContextFunc m_setImGuiContextFunction = nullptr;
         CreateViewFunc m_createViewFunction = nullptr;
+        DrawToolsEntryFunc m_drawToolsEntryFunction = nullptr;
+
     };
 
     class PluginHandler {
