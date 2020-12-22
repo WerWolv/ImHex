@@ -279,43 +279,43 @@ namespace hex {
         });
         preprocessor.addDefaultPragmaHandlers();
 
-        auto [preprocessingResult, preprocesedCode] = preprocessor.preprocess(buffer);
-        if (preprocessingResult.failed()) {
+        auto preprocesedCode = preprocessor.preprocess(buffer);
+        if (!preprocesedCode.has_value()) {
             this->m_textEditor.SetErrorMarkers({ preprocessor.getError() });
             return;
         }
 
         hex::lang::Lexer lexer;
-        auto [lexResult, tokens] = lexer.lex(preprocesedCode);
-        if (lexResult.failed()) {
+        auto tokens = lexer.lex(preprocesedCode.value());
+        if (!tokens.has_value()) {
             this->m_textEditor.SetErrorMarkers({ lexer.getError() });
             return;
         }
 
         hex::lang::Parser parser;
-        auto [parseResult, ast] = parser.parse(tokens);
-        if (parseResult.failed()) {
+        auto ast = parser.parse(tokens.value());
+        if (!ast.has_value()) {
             this->m_textEditor.SetErrorMarkers({ parser.getError() });
             printf("%d %s\n", parser.getError().first, parser.getError().second.c_str());
             return;
         }
 
-        hex::ScopeExit deleteAst([&ast=ast]{ for(auto &node : ast) delete node; });
+        hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast.value()) delete node; });
 
         hex::lang::Validator validator;
-        auto validatorResult = validator.validate(ast);
+        auto validatorResult = validator.validate(ast.value());
         if (!validatorResult) {
             this->m_textEditor.SetErrorMarkers({ validator.getError() });
             return;
         }
 
         hex::lang::Evaluator evaluator(this->m_dataProvider, defaultDataEndianess);
-        auto [evaluateResult, patternData] = evaluator.evaluate(ast);
-        if (evaluateResult.failed()) {
+        auto patternData = evaluator.evaluate(ast.value());
+        if (!patternData.has_value()) {
             this->m_textEditor.SetErrorMarkers({ evaluator.getError() });
             return;
         }
-        this->m_patternData = patternData;
+        this->m_patternData = patternData.value();
 
         this->postEvent(Events::PatternChanged);
     }

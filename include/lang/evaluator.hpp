@@ -17,7 +17,7 @@ namespace hex::lang {
     public:
         Evaluator(prv::Provider* &provider, std::endian defaultDataEndianess);
 
-        std::pair<Result, std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
+        std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
         const std::pair<u32, std::string>& getError() { return this->m_error; }
 

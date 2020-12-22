@@ -649,15 +649,15 @@ namespace hex::lang {
         return program;
     }
 
-    std::pair<Result, std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
+    std::optional<std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
         auto currentToken = tokens.begin();
 
         auto program = parseTillToken(currentToken, Token::Type::EndOfProgram);
 
         if (program.empty() || currentToken != tokens.end())
-            return { ResultParseError, { } };
+            return { };
 
-        return { ResultSuccess, program };
+        return program;
     }
 
 }

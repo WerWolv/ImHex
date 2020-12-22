@@ -347,7 +347,7 @@ namespace hex::lang {
         return { nullptr, 0 };
     }
 
-    std::pair<Result, std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
+    std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
 
         // Evaluate types
         for (const auto &node : ast) {
@@ -420,9 +420,9 @@ namespace hex::lang {
 
         for (const auto &var : variables)
             if (var == nullptr)
-                return { ResultEvaluatorError, { } };
+                return { };
 
-        return { ResultSuccess, variables };
+        return variables;
     }
 
 }
