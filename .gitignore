@@ -10,3 +10,5 @@ build/
 
 *.mgc
 imgui.ini
+
+plugins/wintools/.idea/
