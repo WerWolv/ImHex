@@ -20,6 +20,7 @@ extern char **mainArgv;
 
 #define IMHEX_PLUGIN    namespace hex::plugin::internal {               \
                             void setImGuiContext(ImGuiContext *ctx) {   \
+                                gladLoadGL();                           \
                                 ImGui::SetCurrentContext(ctx);          \
                             }                                           \
                         }                                               \

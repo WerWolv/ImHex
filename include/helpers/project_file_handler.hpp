@@ -5,7 +5,7 @@
 #include <string_view>
 
 #include "patches.hpp"
-#include "utils.hpp"
+#include "helpers/utils.hpp"
 
 namespace hex {
 

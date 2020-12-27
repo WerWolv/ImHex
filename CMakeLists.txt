@@ -11,8 +11,6 @@ set(Python_FIND_FRAMEWORK NEVER)
 
 # Find packages
 find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
-pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
@@ -20,8 +18,8 @@ find_package(nlohmann_json REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
 add_subdirectory(external/llvm/Demangle)
-add_subdirectory(external/ImGui)
 add_subdirectory(plugins/libimhex)
+
 
 if(Python_VERSION LESS 3)
     message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
@@ -34,7 +32,7 @@ if(NOT MAGIC_FOUND)
 endif()
 
 # Add include directories
-include_directories(include ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${CRYPTO_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
+include_directories(include ${CRYPTO_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
 
 # Get Python major and minor
 string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
@@ -88,7 +86,6 @@ add_executable(imhex
         source/main.cpp
         source/window.cpp
 
-        source/helpers/utils.cpp
         source/helpers/crypto.cpp
         source/helpers/patches.cpp
         source/helpers/math_evaluator.cpp
@@ -123,12 +120,12 @@ add_executable(imhex
 
 set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_link_directories(imhex PRIVATE ${GLFW_LIBRARY_DIRS} ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
+target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex libglfw3.a libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
+    target_link_libraries(imhex libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
 elseif (UNIX)
-    target_link_libraries(imhex glfw magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
+    target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
 endif()
 
 install(TARGETS imhex DESTINATION bin)
