@@ -230,15 +230,17 @@ namespace hex::lang {
     class ASTNodeArrayVariableDecl : public ASTNode {
     public:
         ASTNodeArrayVariableDecl(std::string_view name, ASTNode *type, ASTNode *size, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(name), m_type(type), m_size(size) { }
+                : ASTNode(), m_name(name), m_type(type), m_size(size), m_placementOffset(placementOffset) { }
 
         ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) : ASTNode(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
             this->m_size = other.m_size->clone();
 
-            if (this->m_placementOffset != nullptr)
+            if (other.m_placementOffset != nullptr)
                 this->m_placementOffset = other.m_placementOffset->clone();
+            else
+                this->m_placementOffset = nullptr;
         }
 
         ~ASTNodeArrayVariableDecl() override {
