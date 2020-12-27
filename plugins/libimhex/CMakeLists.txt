@@ -17,4 +17,4 @@ add_library(libimhex STATIC
         )
 
 target_include_directories(libimhex PUBLIC include)
-target_link_libraries(libimhex PRIVATE imgui)
+target_link_libraries(libimhex PUBLIC imgui)

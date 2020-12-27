@@ -3,10 +3,7 @@ project(example)
 
 set(CMAKE_CXX_STANDARD 20)
 
-if (TARGET ${CMAKE_PROJECT_NAME})
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURRENT_BINARY_DIR}/external/ImGui)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libimhex ${CMAKE_CURRENT_BINARY_DIR}/plugins/libimhex)
-endif()
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libimhex ${CMAKE_CURRENT_BINARY_DIR}/plugins/libimhex)
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "plugin")
 
@@ -14,5 +11,5 @@ add_library(example SHARED
         source/plugin_example.cpp
 )
 
-target_include_directories(example PUBLIC include)
-target_link_libraries(example PRIVATE imgui libimhex)
+target_include_directories(example PRIVATE include)
+target_link_libraries(example PRIVATE libimhex)

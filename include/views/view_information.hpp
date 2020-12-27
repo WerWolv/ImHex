@@ -13,15 +13,13 @@ namespace hex {
 
     class ViewInformation : public View {
     public:
-        explicit ViewInformation(prv::Provider* &dataProvider);
+        explicit ViewInformation();
         ~ViewInformation() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
-
         bool m_dataValid = false;
         u32 m_blockSize = 0;
         float m_averageEntropy = 0;

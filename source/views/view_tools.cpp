@@ -12,7 +12,7 @@
 
 namespace hex {
 
-    ViewTools::ViewTools(hex::prv::Provider* &provider) : View("Tools"), m_dataProvider(provider) {
+    ViewTools::ViewTools() : View("Tools") {
         this->m_mangledBuffer = new char[0xF'FFFF];
         std::memset(this->m_mangledBuffer, 0x00, 0xF'FFFF);
 
@@ -42,23 +42,25 @@ namespace hex {
         this->m_mathEvaluator.setFunction("read", [this](auto args) -> std::optional<long double> {
             u8 value = 0;
 
-            if (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable() || args[0] >= this->m_dataProvider->getActualSize())
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider == nullptr || !provider->isReadable() || args[0] >= provider->getActualSize())
                 return { };
 
-            this->m_dataProvider->read(args[0], &value, sizeof(u8));
+            provider->read(args[0], &value, sizeof(u8));
 
             return value;
         }, 1, 1);
 
         this->m_mathEvaluator.setFunction("write", [this](auto args) -> std::optional<long double> {
-            if (this->m_dataProvider == nullptr || !this->m_dataProvider->isWritable() || args[0] >= this->m_dataProvider->getActualSize())
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider == nullptr || !provider->isWritable() || args[0] >= provider->getActualSize())
                 return { };
 
             if (args[1] > 0xFF)
                 return { };
 
             u8 value = args[1];
-            this->m_dataProvider->write(args[0], &value, sizeof(u8));
+            provider->write(args[0], &value, sizeof(u8));
 
             return { };
         }, 2, 2);

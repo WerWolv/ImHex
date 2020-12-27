@@ -13,15 +13,13 @@ namespace hex {
 
     class ViewBookmarks : public View {
     public:
-        explicit ViewBookmarks(prv::Provider* &dataProvider);
+        explicit ViewBookmarks();
         ~ViewBookmarks() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
-
         std::list<Bookmark> m_bookmarks;
     };
 

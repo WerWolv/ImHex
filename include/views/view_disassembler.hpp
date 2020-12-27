@@ -24,14 +24,13 @@ namespace hex {
 
     class ViewDisassembler : public View {
     public:
-        explicit ViewDisassembler(prv::Provider* &dataProvider);
+        explicit ViewDisassembler();
         ~ViewDisassembler() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
         bool m_shouldInvalidate = false;
 
         u64 m_baseAddress = 0;

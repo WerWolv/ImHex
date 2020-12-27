@@ -14,8 +14,7 @@
 
 namespace hex {
 
-    ViewInformation::ViewInformation(prv::Provider* &dataProvider)
-    : View("Information"), m_dataProvider(dataProvider) {
+    ViewInformation::ViewInformation() : View("Information") {
         View::subscribeEvent(Events::DataChanged, [this](const void*) {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
@@ -50,20 +49,22 @@ namespace hex {
         if (ImGui::Begin("Data Information", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            auto provider = prv::Provider::getCurrentProvider();
+
+            if (provider != nullptr && provider->isReadable()) {
                 if (this->m_shouldInvalidate) {
 
-                    this->m_analyzedRegion = { this->m_dataProvider->getBaseAddress(), this->m_dataProvider->getBaseAddress() + this->m_dataProvider->getSize() };
+                    this->m_analyzedRegion = { provider->getBaseAddress(), provider->getBaseAddress() + provider->getSize() };
 
                     {
-                        this->m_blockSize = std::ceil(this->m_dataProvider->getSize() / 2048.0F);
+                        this->m_blockSize = std::ceil(provider->getSize() / 2048.0F);
                         std::vector<u8> buffer(this->m_blockSize, 0x00);
                         std::memset(this->m_valueCounts.data(), 0x00, this->m_valueCounts.size() * sizeof(u32));
                         this->m_blockEntropy.clear();
 
-                        for (u64 i = 0; i < this->m_dataProvider->getSize(); i += this->m_blockSize) {
+                        for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
                             std::array<float, 256> blockValueCounts = { 0 };
-                            this->m_dataProvider->read(i, buffer.data(), std::min(u64(this->m_blockSize), this->m_dataProvider->getSize() - i));
+                            provider->read(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
 
                             for (size_t j = 0; j < this->m_blockSize; j++) {
                                 blockValueCounts[buffer[j]]++;
@@ -72,13 +73,13 @@ namespace hex {
                             this->m_blockEntropy.push_back(calculateEntropy(blockValueCounts, this->m_blockSize));
                         }
 
-                        this->m_averageEntropy = calculateEntropy(this->m_valueCounts, this->m_dataProvider->getSize());
+                        this->m_averageEntropy = calculateEntropy(this->m_valueCounts, provider->getSize());
                         this->m_highestBlockEntropy = *std::max_element(this->m_blockEntropy.begin(), this->m_blockEntropy.end());
                     }
 
                     {
-                        std::vector<u8> buffer(this->m_dataProvider->getSize(), 0x00);
-                        this->m_dataProvider->read(0x00, buffer.data(), buffer.size());
+                        std::vector<u8> buffer(provider->getSize(), 0x00);
+                        provider->read(0x00, buffer.data(), buffer.size());
 
                         this->m_fileDescription.clear();
                         this->m_mimeType.clear();
@@ -134,7 +135,7 @@ namespace hex {
 
                 if (this->m_dataValid) {
 
-                    for (auto &[name, value] : this->m_dataProvider->getDataInformation()) {
+                    for (auto &[name, value] : prv::Provider::getCurrentProvider()->getDataInformation()) {
                         ImGui::LabelText(name.c_str(), "%s", value.c_str());
                     }
 

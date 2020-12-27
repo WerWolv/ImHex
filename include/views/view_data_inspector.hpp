@@ -51,14 +51,13 @@ namespace hex {
 
     class ViewDataInspector : public View {
     public:
-        explicit ViewDataInspector(prv::Provider* &dataProvider);
+        explicit ViewDataInspector();
         ~ViewDataInspector() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
         bool m_shouldInvalidate = true;
 
         std::endian m_endianess = std::endian::native;

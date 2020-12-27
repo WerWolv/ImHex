@@ -1,6 +1,9 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include "views/view.hpp"
+#include "providers/provider.hpp"
 
 #include <string_view>
 
@@ -11,18 +14,18 @@ namespace hex {
         Plugin(std::string_view path);
         ~Plugin();
 
-        void setImGuiContext(ImGuiContext *ctx) const;
+        void initializePlugin(ImGuiContext *ctx, prv::Provider **provider) const;
         View* createView() const;
         void drawToolsEntry() const;
 
     private:
-        using SetImGuiContextFunc = void(*)(ImGuiContext*);
+        using InitializePluginFunc = void(*)(ImGuiContext*, hex::prv::Provider**);
         using CreateViewFunc = View*(*)();
         using DrawToolsEntryFunc = void(*)();
 
         void *m_handle = nullptr;
 
-        SetImGuiContextFunc m_setImGuiContextFunction = nullptr;
+        InitializePluginFunc m_initializePluginFunction = nullptr;
         CreateViewFunc m_createViewFunction = nullptr;
         DrawToolsEntryFunc m_drawToolsEntryFunction = nullptr;
 

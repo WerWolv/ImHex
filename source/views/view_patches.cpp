@@ -11,15 +11,17 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewPatches::ViewPatches(prv::Provider* &dataProvider) : View("Patches"), m_dataProvider(dataProvider) {
+    ViewPatches::ViewPatches() : View("Patches") {
         View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
-            if (this->m_dataProvider != nullptr)
-                ProjectFile::setPatches(this->m_dataProvider->getPatches());
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider != nullptr)
+                ProjectFile::setPatches(provider->getPatches());
         });
 
         View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
-            if (this->m_dataProvider != nullptr)
-                this->m_dataProvider->getPatches() = ProjectFile::getPatches();
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider != nullptr)
+                provider->getPatches() = ProjectFile::getPatches();
         });
     }
 
@@ -30,8 +32,9 @@ namespace hex {
 
     void ViewPatches::drawContent() {
         if (ImGui::Begin("Patches", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+            auto provider = prv::Provider::getCurrentProvider();
 
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            if (provider != nullptr && provider->isReadable()) {
 
                 if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
                                                         ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
@@ -42,7 +45,7 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
-                    auto& patches = this->m_dataProvider->getPatches();
+                    auto& patches = provider->getPatches();
                     u32 index = 0;
                     for (const auto &[address, patch] : patches) {
 
@@ -61,7 +64,7 @@ namespace hex {
 
                         ImGui::TableNextColumn();
                         u8 previousValue = 0x00;
-                        this->m_dataProvider->readRaw(address, &previousValue, sizeof(u8));
+                        provider->readRaw(address, &previousValue, sizeof(u8));
                         ImGui::Text("0x%02X", previousValue);
 
                         ImGui::TableNextColumn();

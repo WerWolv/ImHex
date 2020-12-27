@@ -10,7 +10,7 @@
 
 namespace hex {
 
-    ViewHashes::ViewHashes(prv::Provider* &dataProvider) : View("Hashes"), m_dataProvider(dataProvider) {
+    ViewHashes::ViewHashes() : View("Hashes") {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_shouldInvalidate = true;
         });
@@ -41,7 +41,8 @@ namespace hex {
         if (ImGui::Begin("Hashing", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider != nullptr && provider->isAvailable()) {
 
                 ImGui::TextUnformatted("Region");
                 ImGui::Separator();
@@ -59,7 +60,7 @@ namespace hex {
                 if (ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *)))
                     this->m_shouldInvalidate = true;
 
-                size_t dataSize = this->m_dataProvider->getSize();
+                size_t dataSize = provider->getSize();
                 if (this->m_hashRegion[1] >= dataSize)
                     this->m_hashRegion[1] = dataSize - 1;
 
@@ -82,7 +83,7 @@ namespace hex {
                             static u16 result = 0;
 
                             if (this->m_shouldInvalidate)
-                                result = crc16(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
+                                result = crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
 
                             char buffer[sizeof(result) * 2 + 1];
                             snprintf(buffer, sizeof(buffer), "%04X", result);
@@ -107,7 +108,7 @@ namespace hex {
                             static u32 result = 0;
 
                             if (this->m_shouldInvalidate)
-                                result = crc32(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
+                                result = crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
 
                             char buffer[sizeof(result) * 2 + 1];
                             snprintf(buffer, sizeof(buffer), "%08X", result);
@@ -122,7 +123,7 @@ namespace hex {
                             static std::array<u32, 4> result;
 
                             if (this->m_shouldInvalidate)
-                                result = md4(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = md4(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -138,7 +139,7 @@ namespace hex {
                             static std::array<u32, 4> result = { 0 };
 
                             if (this->m_shouldInvalidate)
-                                result = md5(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = md5(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -154,7 +155,7 @@ namespace hex {
                             static std::array<u32, 5> result = { 0 };
 
                             if (this->m_shouldInvalidate)
-                                result = sha1(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = sha1(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -170,7 +171,7 @@ namespace hex {
                             static std::array<u32, 7> result = { 0 };
 
                             if (this->m_shouldInvalidate)
-                                result = sha224(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = sha224(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -186,7 +187,7 @@ namespace hex {
                             static std::array<u32, 8> result;
 
                             if (this->m_shouldInvalidate)
-                                result = sha256(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = sha256(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -202,7 +203,7 @@ namespace hex {
                             static std::array<u32, 12> result;
 
                             if (this->m_shouldInvalidate)
-                                result = sha384(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = sha384(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -218,7 +219,7 @@ namespace hex {
                             static std::array<u32, 16> result;
 
                             if (this->m_shouldInvalidate)
-                                result = sha512(this->m_dataProvider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = sha512(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));

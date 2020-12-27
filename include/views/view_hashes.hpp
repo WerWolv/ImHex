@@ -10,15 +10,13 @@ namespace hex {
 
     class ViewHashes : public View {
     public:
-        explicit ViewHashes(prv::Provider* &dataProvider);
+        explicit ViewHashes();
         ~ViewHashes() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
-
         bool m_shouldInvalidate = true;
         int m_currHashFunction = 0;
         u64 m_hashRegion[2] = { 0 };

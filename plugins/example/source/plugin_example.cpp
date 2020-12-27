@@ -1,7 +1,6 @@
-#include <hex.hpp>
+#include <plugin.hpp>
 
 #include <views/view.hpp>
-#include <imgui.h>
 
 class ViewExample : public hex::View {
 public:

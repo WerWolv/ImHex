@@ -20,7 +20,7 @@ namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
+        ViewHexEditor(std::vector<lang::PatternData*> &patternData);
         ~ViewHexEditor() override;
 
         void drawContent() override;
@@ -31,7 +31,6 @@ namespace hex {
         MemoryEditor m_memoryEditor;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
-        prv::Provider* &m_dataProvider;
         std::vector<lang::PatternData*> &m_patternData;
 
         char m_searchStringBuffer[0xFFFF] = { 0 };

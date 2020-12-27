@@ -16,7 +16,7 @@ namespace hex {
 
     class ViewPatternData : public View {
     public:
-        ViewPatternData(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
+        ViewPatternData(std::vector<lang::PatternData*> &patternData);
         ~ViewPatternData() override;
 
         void drawContent() override;
@@ -24,7 +24,6 @@ namespace hex {
 
     private:
 
-        prv::Provider* &m_dataProvider;
         std::vector<lang::PatternData*> &m_patternData;
         std::vector<lang::PatternData*> m_sortedPatternData;
     };

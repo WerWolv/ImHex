@@ -40,10 +40,20 @@ namespace hex::prv {
 
         virtual std::vector<std::pair<std::string, std::string>> getDataInformation() = 0;
 
+        static void setProviderStorage(Provider* &provider) {
+            Provider::s_currProvider = &provider;
+        }
+
+        static Provider*& getCurrentProvider() {
+            return *Provider::s_currProvider;
+        }
+
     protected:
         u32 m_currPage = 0;
 
         std::vector<std::map<u64, u8>> m_patches;
+
+        static inline Provider **s_currProvider = nullptr;
     };
 
 }

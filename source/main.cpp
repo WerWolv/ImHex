@@ -31,19 +31,20 @@ int main(int argc, char **argv) {
     // Shared Data
     std::vector<hex::lang::PatternData*> patternData;
     hex::prv::Provider *dataProvider = nullptr;
+    hex::prv::Provider::setProviderStorage(dataProvider);
 
     // Create views
-    window.addView<hex::ViewHexEditor>(dataProvider, patternData);
-    window.addView<hex::ViewPattern>(dataProvider, patternData);
-    window.addView<hex::ViewPatternData>(dataProvider, patternData);
-    window.addView<hex::ViewDataInspector>(dataProvider);
-    window.addView<hex::ViewHashes>(dataProvider);
-    window.addView<hex::ViewInformation>(dataProvider);
-    window.addView<hex::ViewStrings>(dataProvider);
-    window.addView<hex::ViewDisassembler>(dataProvider);
-    window.addView<hex::ViewBookmarks>(dataProvider);
-    window.addView<hex::ViewPatches>(dataProvider);
-    window.addView<hex::ViewTools>(dataProvider);
+    window.addView<hex::ViewHexEditor>(patternData);
+    window.addView<hex::ViewPattern>(patternData);
+    window.addView<hex::ViewPatternData>(patternData);
+    window.addView<hex::ViewDataInspector>();
+    window.addView<hex::ViewHashes>();
+    window.addView<hex::ViewInformation>();
+    window.addView<hex::ViewStrings>();
+    window.addView<hex::ViewDisassembler>();
+    window.addView<hex::ViewBookmarks>();
+    window.addView<hex::ViewPatches>();
+    window.addView<hex::ViewTools>();
     window.addView<hex::ViewCommandPalette>();
     window.addView<hex::ViewHelp>();
 

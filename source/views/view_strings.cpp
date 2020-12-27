@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewStrings::ViewStrings(prv::Provider* &dataProvider) : View("Strings"), m_dataProvider(dataProvider) {
+    ViewStrings::ViewStrings() : View("Strings") {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_foundStrings.clear();
         });
@@ -47,6 +47,8 @@ namespace hex {
 
 
     void ViewStrings::drawContent() {
+        auto provider = prv::Provider::getCurrentProvider();
+
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
 
@@ -54,9 +56,10 @@ namespace hex {
 
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
-            for (u64 offset = 0; offset < this->m_dataProvider->getSize(); offset += buffer.size()) {
-                size_t readSize = std::min(u64(buffer.size()), this->m_dataProvider->getSize() - offset);
-                this->m_dataProvider->read(offset,  buffer.data(), readSize);
+
+            for (u64 offset = 0; offset < provider->getSize(); offset += buffer.size()) {
+                size_t readSize = std::min(u64(buffer.size()), provider->getSize() - offset);
+                provider->read(offset,  buffer.data(), readSize);
 
                 for (u32 i = 0; i < readSize; i++) {
                     if (buffer[i] >= 0x20 && buffer[i] <= 0x7E)
@@ -69,7 +72,7 @@ namespace hex {
                             foundString.size = foundCharacters;
                             foundString.string.reserve(foundCharacters);
                             foundString.string.resize(foundCharacters);
-                            this->m_dataProvider->read(foundString.offset, foundString.string.data(), foundCharacters);
+                            provider->read(foundString.offset, foundString.string.data(), foundCharacters);
 
                             this->m_foundStrings.push_back(foundString);
                         }
@@ -82,7 +85,7 @@ namespace hex {
 
 
         if (ImGui::Begin("Strings", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            if (provider != nullptr && provider->isReadable()) {
                 if (ImGui::InputInt("Minimum length", &this->m_minimumLength, 1, 0))
                     this->m_shouldInvalidate = true;
 

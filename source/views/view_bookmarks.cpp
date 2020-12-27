@@ -7,7 +7,7 @@
 
 namespace hex {
 
-    ViewBookmarks::ViewBookmarks(prv::Provider* &dataProvider) : View("Bookmarks"), m_dataProvider(dataProvider) {
+    ViewBookmarks::ViewBookmarks() : View("Bookmarks") {
         View::subscribeEvent(Events::AddBookmark, [this](const void *userData) {
             Bookmark bookmark = *reinterpret_cast<const Bookmark*>(userData);
             bookmark.name.resize(64);
@@ -55,7 +55,7 @@ namespace hex {
 
                         {
                             u8 bytes[10] = { 0 };
-                            this->m_dataProvider->read(region.address, bytes, std::min(region.size, size_t(10)));
+                            prv::Provider::getCurrentProvider()->read(region.address, bytes, std::min(region.size, size_t(10)));
 
                             std::string bytesString;
                             for (u8 i = 0; i < std::min(region.size, size_t(10)); i++) {

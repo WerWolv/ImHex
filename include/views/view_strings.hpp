@@ -17,14 +17,13 @@ namespace hex {
 
     class ViewStrings : public View {
     public:
-        explicit ViewStrings(prv::Provider* &dataProvider);
+        explicit ViewStrings();
         ~ViewStrings() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
         bool m_shouldInvalidate = false;
 
         std::vector<FoundString> m_foundStrings;

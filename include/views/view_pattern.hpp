@@ -17,7 +17,7 @@ namespace hex {
 
     class ViewPattern : public View {
     public:
-        explicit ViewPattern(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData);
+        explicit ViewPattern(std::vector<lang::PatternData*> &patternData);
         ~ViewPattern() override;
 
         void drawMenu() override;
@@ -25,7 +25,6 @@ namespace hex {
 
     private:
         std::vector<lang::PatternData*> &m_patternData;
-        prv::Provider* &m_dataProvider;
         std::filesystem::path m_possiblePatternFile;
 
         TextEditor m_textEditor;

@@ -9,11 +9,13 @@ extern int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const
 
 namespace hex {
 
-    ViewDataInspector::ViewDataInspector(prv::Provider* &dataProvider) : View("Data Inspector"), m_dataProvider(dataProvider) {
+    ViewDataInspector::ViewDataInspector() : View("Data Inspector") {
         View::subscribeEvent(Events::RegionSelected, [this](const void* userData){
             Region region = *static_cast<const Region*>(userData);
 
-            if (this->m_dataProvider == nullptr) {
+            auto provider = prv::Provider::getCurrentProvider();
+
+            if (provider == nullptr) {
                 this->m_validBytes = 0;
                 return;
             }
@@ -23,9 +25,9 @@ namespace hex {
                 return;
             }
 
-            this->m_validBytes = std::min(u64(this->m_dataProvider->getSize() - region.address), u64(sizeof(PreviewData)));
+            this->m_validBytes = std::min(u64(provider->getSize() - region.address), u64(sizeof(PreviewData)));
             std::memset(&this->m_previewData, 0x00, sizeof(PreviewData));
-            this->m_dataProvider->read(region.address, &this->m_previewData, this->m_validBytes);
+            provider->read(region.address, &this->m_previewData, this->m_validBytes);
 
             this->m_shouldInvalidate = true;
         });
@@ -118,7 +120,9 @@ namespace hex {
 
 
         if (ImGui::Begin("Data Inspector", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            auto provider = prv::Provider::getCurrentProvider();
+
+            if (provider != nullptr && provider->isReadable()) {
                 if (ImGui::BeginChild("##scrolling", ImVec2(0, ImGui::GetWindowHeight() - 60))) {
                     if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody)) {
                         ImGui::TableSetupColumn("Name");

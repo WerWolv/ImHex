@@ -5,8 +5,8 @@
 
 namespace hex {
 
-    ViewPatternData::ViewPatternData(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
-        : View("Pattern Data"), m_dataProvider(dataProvider), m_patternData(patternData) {
+    ViewPatternData::ViewPatternData(std::vector<lang::PatternData*> &patternData)
+        : View("Pattern Data"), m_patternData(patternData) {
 
         this->subscribeEvent(Events::PatternChanged, [this](auto data) {
             this->m_sortedPatternData.clear();
@@ -50,14 +50,15 @@ namespace hex {
 
     void ViewPatternData::drawContent() {
         if (ImGui::Begin("Pattern Data", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider != nullptr && provider->isReadable()) {
 
-                if (beginPatternDataTable(this->m_dataProvider, this->m_patternData, this->m_sortedPatternData)) {
+                if (beginPatternDataTable(provider, this->m_patternData, this->m_sortedPatternData)) {
                     if (this->m_sortedPatternData.size() > 0) {
                         ImGui::TableHeadersRow();
 
                         for (auto &patternData : this->m_sortedPatternData)
-                            patternData->createEntry(this->m_dataProvider);
+                            patternData->createEntry(provider);
 
                     }
 

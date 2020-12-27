@@ -13,16 +13,13 @@ namespace hex {
 
     class ViewPatches : public View {
     public:
-        explicit ViewPatches(prv::Provider* &dataProvider);
+        explicit ViewPatches();
         ~ViewPatches() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-        prv::Provider* &m_dataProvider;
-
-
         u64 m_selectedPatch;
     };
 

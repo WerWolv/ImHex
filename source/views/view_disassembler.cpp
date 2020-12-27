@@ -9,7 +9,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewDisassembler::ViewDisassembler(prv::Provider* &dataProvider) : View("Disassembler"), m_dataProvider(dataProvider) {
+    ViewDisassembler::ViewDisassembler() : View("Disassembler") {
         View::subscribeEvent(Events::DataChanged, [this](const void*){
             this->m_shouldInvalidate = true;
         });
@@ -51,10 +51,11 @@ namespace hex {
 
             if (cs_open(Disassembler::toCapstoneArchictecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
 
+                auto provider = prv::Provider::getCurrentProvider();
                 std::vector<u8> buffer(2048, 0x00);
                 for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
                     size_t bufferSize = std::min(u64(2048), (this->m_codeRegion[1] - this->m_codeRegion[0] + 1) - address);
-                    this->m_dataProvider->read(this->m_codeRegion[0] + address, buffer.data(), bufferSize);
+                    provider->read(this->m_codeRegion[0] + address, buffer.data(), bufferSize);
 
                     size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, this->m_baseAddress + address, 0, &instructions);
 
@@ -94,7 +95,8 @@ namespace hex {
 
         if (ImGui::Begin("Disassembler", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isReadable()) {
+            auto provider = prv::Provider::getCurrentProvider();
+            if (provider != nullptr && provider->isReadable()) {
                 ImGui::TextUnformatted("Position");
                 ImGui::Separator();
 

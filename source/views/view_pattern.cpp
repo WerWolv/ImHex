@@ -72,8 +72,7 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
-        : View("Pattern"), m_dataProvider(dataProvider), m_patternData(patternData) {
+    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("Pattern"), m_patternData(patternData) {
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
@@ -110,8 +109,13 @@ namespace hex {
             if (error)
                 return;
 
-            std::vector<u8> buffer(std::min(this->m_dataProvider->getSize(), size_t(0xFFFF)), 0x00);
-            this->m_dataProvider->read(0, buffer.data(), buffer.size());
+            auto provider = prv::Provider::getCurrentProvider();
+
+            if (provider == nullptr)
+                return;
+
+            std::vector<u8> buffer(std::min(provider->getSize(), size_t(0xFFFF)), 0x00);
+            provider->read(0, buffer.data(), buffer.size());
 
             std::string mimeType;
 
@@ -178,7 +182,9 @@ namespace hex {
 
     void ViewPattern::drawContent() {
         if (ImGui::Begin("Pattern", &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
-            if (this->m_dataProvider != nullptr && this->m_dataProvider->isAvailable()) {
+            auto provider = prv::Provider::getCurrentProvider();
+
+            if (provider != nullptr && provider->isAvailable()) {
                 this->m_textEditor.Render("Pattern");
 
                 if (this->m_textEditor.IsTextChanged()) {
@@ -309,7 +315,8 @@ namespace hex {
             return;
         }
 
-        hex::lang::Evaluator evaluator(this->m_dataProvider, defaultDataEndianess);
+        auto provider = prv::Provider::getCurrentProvider();
+        hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
         auto patternData = evaluator.evaluate(ast.value());
         if (!patternData.has_value()) {
             this->m_textEditor.SetErrorMarkers({ evaluator.getError() });

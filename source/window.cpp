@@ -66,9 +66,6 @@ namespace hex {
         while (!glfwWindowShouldClose(this->m_window)) {
             this->frameBegin();
 
-            for (const auto &plugin : PluginHandler::getPlugins())
-                plugin.setImGuiContext(ImGui::GetCurrentContext());
-
             for (const auto &call : View::getDeferedCalls())
                 call();
             View::getDeferedCalls().clear();
@@ -380,6 +377,7 @@ namespace hex {
         PluginHandler::load((std::filesystem::path(mainArgv[0]).parent_path() / "plugins").string());
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
+            plugin.initializePlugin(ImGui::GetCurrentContext(), &prv::Provider::getCurrentProvider());
             if (auto view = plugin.createView(); view != nullptr)
                 this->m_pluginViews.push_back(view);
         }

@@ -15,29 +15,27 @@
 
 namespace hex {
 
-    ViewHexEditor::ViewHexEditor(prv::Provider* &dataProvider, std::vector<lang::PatternData*> &patternData)
-            : View("Hex Editor"), m_dataProvider(dataProvider), m_patternData(patternData) {
+    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
+            : View("Hex Editor"), m_patternData(patternData) {
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
-            ViewHexEditor *_this = (ViewHexEditor *) data;
-
-            if (!_this->m_dataProvider->isAvailable() || !_this->m_dataProvider->isReadable())
+            auto provider = prv::Provider::getCurrentProvider();
+            if (!provider->isAvailable() || !provider->isReadable())
                 return 0x00;
 
             ImU8 byte;
-            _this->m_dataProvider->read(off, &byte, sizeof(ImU8));
+            provider->read(off, &byte, sizeof(ImU8));
 
             return byte;
         };
 
         this->m_memoryEditor.WriteFn = [](ImU8 *data, size_t off, ImU8 d) -> void {
-            ViewHexEditor *_this = (ViewHexEditor *) data;
-
-            if (!_this->m_dataProvider->isAvailable() || !_this->m_dataProvider->isWritable())
+            auto provider = prv::Provider::getCurrentProvider();
+            if (!provider->isAvailable() || !provider->isWritable())
                 return;
 
-            _this->m_dataProvider->write(off, &d, sizeof(ImU8));
-            _this->postEvent(Events::DataChanged);
+            provider->write(off, &d, sizeof(ImU8));
+            View::postEvent(Events::DataChanged);
             ProjectFile::markDirty();
         };
 
@@ -69,11 +67,12 @@ namespace hex {
         View::subscribeEvent(Events::SelectionChangeRequest, [this](const void *userData) {
             const Region &region = *reinterpret_cast<const Region*>(userData);
 
-            auto page = this->m_dataProvider->getPageOfAddress(region.address);
+            auto provider = prv::Provider::getCurrentProvider();
+            auto page = provider->getPageOfAddress(region.address);
             if (!page.has_value())
                 return;
 
-            this->m_dataProvider->setCurrentPage(page.value());
+            provider->setCurrentPage(page.value());
             this->m_memoryEditor.GotoAddr = region.address;
             this->m_memoryEditor.DataPreviewAddr = region.address;
             this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
@@ -96,26 +95,26 @@ namespace hex {
     }
 
     ViewHexEditor::~ViewHexEditor() {
-        if (this->m_dataProvider != nullptr)
-            delete this->m_dataProvider;
-        this->m_dataProvider = nullptr;
+
     }
 
     void ViewHexEditor::drawContent() {
-        size_t dataSize = (this->m_dataProvider == nullptr || !this->m_dataProvider->isReadable()) ? 0x00 : this->m_dataProvider->getSize();
+        auto provider = prv::Provider::getCurrentProvider();
 
-        this->m_memoryEditor.DrawWindow("Hex Editor", &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : this->m_dataProvider->getBaseAddress());
+        size_t dataSize = (provider == nullptr || !provider->isReadable()) ? 0x00 : provider->getSize();
+
+        this->m_memoryEditor.DrawWindow("Hex Editor", &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
 
         if (dataSize != 0x00) {
             ImGui::Begin("Hex Editor");
             ImGui::SameLine();
             ImGui::Spacing();
             ImGui::SameLine();
-            ImGui::Text("Page %d / %d", this->m_dataProvider->getCurrentPage() + 1, this->m_dataProvider->getPageCount());
+            ImGui::Text("Page %d / %d", provider->getCurrentPage() + 1, provider->getPageCount());
             ImGui::SameLine();
 
             if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
-                this->m_dataProvider->setCurrentPage(this->m_dataProvider->getCurrentPage() - 1);
+                provider->setCurrentPage(provider->getCurrentPage() - 1);
 
                 Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
                 View::postEvent(Events::RegionSelected, &dataPreview);
@@ -124,7 +123,7 @@ namespace hex {
             ImGui::SameLine();
 
             if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
-                this->m_dataProvider->setCurrentPage(this->m_dataProvider->getCurrentPage() + 1);
+                provider->setCurrentPage(provider->getCurrentPage() + 1);
 
                 Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
                 View::postEvent(Events::RegionSelected, &dataPreview);
@@ -173,11 +172,11 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("Load", "Cancel",
-                [this] {
+                [this, &provider] {
                     if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
                         this->openFile(this->m_loaderScriptFilePath);
                         LoaderScript::setFilePath(this->m_loaderScriptFilePath);
-                        LoaderScript::setDataProvider(this->m_dataProvider);
+                        LoaderScript::setDataProvider(provider);
                         LoaderScript::processFile(this->m_loaderScriptScriptPath);
                         ImGui::CloseCurrentPopup();
                     }
@@ -231,7 +230,7 @@ namespace hex {
             auto patch = hex::loadIPSPatch(patchData);
 
             for (auto &[address, value] : patch) {
-                this->m_dataProvider->write(address, &value, 1);
+                provider->write(address, &value, 1);
             }
         }
 
@@ -240,7 +239,7 @@ namespace hex {
             auto patch = hex::loadIPS32Patch(patchData);
 
             for (auto &[address, value] : patch) {
-                this->m_dataProvider->write(address, &value, 1);
+                provider->write(address, &value, 1);
             }
         }
 
@@ -253,11 +252,11 @@ namespace hex {
 
                 fseek(file, 0, SEEK_SET);
 
-                for (u64 offset = 0; offset < this->m_dataProvider->getActualSize(); offset += bufferSize) {
-                    if (bufferSize > this->m_dataProvider->getActualSize() - offset)
-                        bufferSize = this->m_dataProvider->getActualSize() - offset;
+                for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
+                    if (bufferSize > provider->getActualSize() - offset)
+                        bufferSize = provider->getActualSize() - offset;
 
-                    this->m_dataProvider->read(offset, buffer.data(), bufferSize);
+                    provider->read(offset, buffer.data(), bufferSize);
                     fwrite(buffer.data(), 1, bufferSize, file);
                 }
 
@@ -267,6 +266,7 @@ namespace hex {
     }
 
     void ViewHexEditor::drawMenu() {
+        auto provider = prv::Provider::getCurrentProvider();
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {
@@ -274,12 +274,12 @@ namespace hex {
                 View::doLater([]{ ImGui::OpenPopup("Open File"); });
             }
 
-            if (ImGui::MenuItem("Save", "CTRL + S", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
-                for (const auto &[address, value] : this->m_dataProvider->getPatches())
-                    this->m_dataProvider->writeRaw(address, &value, sizeof(u8));
+            if (ImGui::MenuItem("Save", "CTRL + S", false, provider != nullptr && provider->isWritable())) {
+                for (const auto &[address, value] : provider->getPatches())
+                    provider->writeRaw(address, &value, sizeof(u8));
             }
 
-            if (ImGui::MenuItem("Save As...", "CTRL + SHIFT + S", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
+            if (ImGui::MenuItem("Save As...", "CTRL + SHIFT + S", false, provider != nullptr && provider->isWritable())) {
                 View::doLater([]{ ImGui::OpenPopup("Save As"); });
             }
 
@@ -290,7 +290,7 @@ namespace hex {
                 View::doLater([]{ ImGui::OpenPopup("Open Project"); });
             }
 
-            if (ImGui::MenuItem("Save Project", "", false, this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
+            if (ImGui::MenuItem("Save Project", "", false, provider != nullptr && provider->isWritable())) {
                 View::postEvent(Events::ProjectFileStore);
 
                 if (ProjectFile::getProjectFilePath() == "")
@@ -329,12 +329,12 @@ namespace hex {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("Export...", this->m_dataProvider != nullptr && this->m_dataProvider->isWritable())) {
+            if (ImGui::BeginMenu("Export...", provider != nullptr && provider->isWritable())) {
                 if (ImGui::MenuItem("IPS Patch")) {
-                    Patches patches = this->m_dataProvider->getPatches();
+                    Patches patches = provider->getPatches();
                     if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
                         u8 value = 0;
-                        this->m_dataProvider->read(0x00454F45, &value, sizeof(u8));
+                        provider->read(0x00454F45, &value, sizeof(u8));
                         patches[0x00454F45] = value;
                     }
 
@@ -342,10 +342,10 @@ namespace hex {
                     View::doLater([]{ ImGui::OpenPopup("Export File"); });
                 }
                 if (ImGui::MenuItem("IPS32 Patch")) {
-                    Patches patches = this->m_dataProvider->getPatches();
+                    Patches patches = provider->getPatches();
                     if (!patches.contains(0x00454F45) && patches.contains(0x45454F46)) {
                         u8 value = 0;
-                        this->m_dataProvider->read(0x45454F45, &value, sizeof(u8));
+                        provider->read(0x45454F45, &value, sizeof(u8));
                         patches[0x45454F45] = value;
                     }
 
@@ -421,8 +421,9 @@ namespace hex {
 
     bool ViewHexEditor::handleShortcut(int key, int mods) {
         if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S) {
-            for (const auto &[address, value] : this->m_dataProvider->getPatches())
-                this->m_dataProvider->writeRaw(address, &value, sizeof(u8));
+            auto provider = prv::Provider::getCurrentProvider();
+            for (const auto &[address, value] : provider->getPatches())
+                provider->writeRaw(address, &value, sizeof(u8));
             return true;
         } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_S) {
             ImGui::OpenPopup("Save As");
@@ -449,13 +450,15 @@ namespace hex {
 
 
     void ViewHexEditor::openFile(std::string path) {
-        if (this->m_dataProvider != nullptr)
-            delete this->m_dataProvider;
+        auto& provider = prv::Provider::getCurrentProvider();
 
-        this->m_dataProvider = new prv::FileProvider(path);
-        this->m_memoryEditor.ReadOnly = !this->m_dataProvider->isWritable();
+        if (provider != nullptr)
+            delete provider;
 
-        if (this->m_dataProvider->isAvailable())
+        provider = new prv::FileProvider(path);
+        this->m_memoryEditor.ReadOnly = !provider->isWritable();
+
+        if (provider->isAvailable())
             ProjectFile::setFilePath(path);
 
         this->getWindowOpenState() = true;
@@ -495,13 +498,15 @@ namespace hex {
     }
 
     void ViewHexEditor::copyBytes() {
+        auto provider = prv::Provider::getCurrentProvider();
+
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        this->m_dataProvider->read(start, buffer.data(), buffer.size());
+        provider->read(start, buffer.data(), buffer.size());
 
         std::string str;
         for (const auto &byte : buffer)
@@ -512,6 +517,8 @@ namespace hex {
     }
 
     void ViewHexEditor::copyString() {
+        auto provider = prv::Provider::getCurrentProvider();
+
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
@@ -519,19 +526,21 @@ namespace hex {
 
         std::string buffer(copySize, 0x00);
         buffer.reserve(copySize + 1);
-        this->m_dataProvider->read(start, buffer.data(), copySize);
+        provider->read(start, buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
     }
 
     void ViewHexEditor::copyLanguageArray(Language language) {
+        auto provider = prv::Provider::getCurrentProvider();
+
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        this->m_dataProvider->read(start, buffer.data(), buffer.size());
+        provider->read(start, buffer.data(), buffer.size());
 
         std::string str;
         switch (language) {
@@ -625,13 +634,15 @@ namespace hex {
     }
 
     void ViewHexEditor::copyHexView() {
+        auto provider = prv::Provider::getCurrentProvider();
+
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        this->m_dataProvider->read(start, buffer.data(), buffer.size());
+        provider->read(start, buffer.data(), buffer.size());
 
         std::string str = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
 
@@ -670,13 +681,15 @@ namespace hex {
     }
 
     void ViewHexEditor::copyHexViewHTML() {
+        auto provider = prv::Provider::getCurrentProvider();
+
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        this->m_dataProvider->read(start, buffer.data(), buffer.size());
+        provider->read(start, buffer.data(), buffer.size());
 
         std::string str =
 R"(
@@ -801,8 +814,9 @@ R"(
     void ViewHexEditor::drawSearchPopup() {
         static auto InputCallback = [](ImGuiInputTextCallbackData* data) -> int {
             auto _this = static_cast<ViewHexEditor*>(data->UserData);
+            auto provider = prv::Provider::getCurrentProvider();
 
-            *_this->m_lastSearchBuffer = _this->m_searchFunction(_this->m_dataProvider, data->Buf);
+            *_this->m_lastSearchBuffer = _this->m_searchFunction(provider, data->Buf);
             _this->m_lastSearchIndex = 0;
 
             if (_this->m_lastSearchBuffer->size() > 0)
@@ -812,7 +826,9 @@ R"(
         };
 
         static auto Find = [this](char *buffer) {
-            *this->m_lastSearchBuffer = this->m_searchFunction(this->m_dataProvider, buffer);
+            auto provider = prv::Provider::getCurrentProvider();
+
+            *this->m_lastSearchBuffer = this->m_searchFunction(provider, buffer);
             this->m_lastSearchIndex = 0;
 
             if (this->m_lastSearchBuffer->size() > 0)
@@ -888,6 +904,8 @@ R"(
     }
 
     void ViewHexEditor::drawGotoPopup() {
+        auto provider = prv::Provider::getCurrentProvider();
+
         if (ImGui::BeginPopup("Goto")) {
             ImGui::TextUnformatted("Goto");
             if (ImGui::BeginTabBar("gotoTabs")) {
@@ -895,8 +913,8 @@ R"(
                 if (ImGui::BeginTabItem("Begin")) {
                     ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= this->m_dataProvider->getActualSize())
-                        this->m_gotoAddress = this->m_dataProvider->getActualSize() - 1;
+                    if (this->m_gotoAddress >= provider->getActualSize())
+                        this->m_gotoAddress = provider->getActualSize() - 1;
 
                     newOffset = this->m_gotoAddress;
 
@@ -913,9 +931,9 @@ R"(
                     s64 currHighlightStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
                     newOffset = this->m_gotoAddress + currHighlightStart;
-                    if (newOffset >= this->m_dataProvider->getActualSize()) {
-                        newOffset = this->m_dataProvider->getActualSize() - 1;
-                        this->m_gotoAddress = (this->m_dataProvider->getActualSize() - 1) - currHighlightStart;
+                    if (newOffset >= provider->getActualSize()) {
+                        newOffset = provider->getActualSize() - 1;
+                        this->m_gotoAddress = (provider->getActualSize() - 1) - currHighlightStart;
                     } else if (newOffset < 0) {
                         newOffset = 0;
                         this->m_gotoAddress = -currHighlightStart;
@@ -926,16 +944,16 @@ R"(
                 if (ImGui::BeginTabItem("End")) {
                     ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= this->m_dataProvider->getActualSize())
-                        this->m_gotoAddress = this->m_dataProvider->getActualSize() - 1;
+                    if (this->m_gotoAddress >= provider->getActualSize())
+                        this->m_gotoAddress = provider->getActualSize() - 1;
 
-                    newOffset = (this->m_dataProvider->getActualSize() - 1) - this->m_gotoAddress;
+                    newOffset = (provider->getActualSize() - 1) - this->m_gotoAddress;
 
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::Button("Goto")) {
-                    this->m_dataProvider->setCurrentPage(std::floor(newOffset / double(prv::Provider::PageSize)));
+                    provider->setCurrentPage(std::floor(newOffset / double(prv::Provider::PageSize)));
                     this->m_memoryEditor.GotoAddr = newOffset;
                     this->m_memoryEditor.DataPreviewAddr = newOffset;
                     this->m_memoryEditor.DataPreviewAddrEnd = newOffset;
