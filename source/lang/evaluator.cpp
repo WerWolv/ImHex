@@ -1,5 +1,7 @@
 #include "lang/evaluator.hpp"
 
+#include "lang/token.hpp"
+
 #include <bit>
 #include <unordered_map>
 
@@ -204,7 +206,7 @@ namespace hex::lang {
             return { nullptr, 0 };
         }
 
-        size_t size = getTypeSize(enumType->getUnderlyingType());
+        size_t size = Token::getTypeSize(enumType->getUnderlyingType());
 
         return { new PatternDataEnum(offset, size, varDeclNode->getVariableName(), enumType->getName(), enumType->getValues(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), size };
     }
@@ -322,22 +324,22 @@ namespace hex::lang {
             type = currType->getAssignedType();
         }
 
-        size_t typeSize = getTypeSize(type);
+        size_t typeSize = Token::getTypeSize(type);
         size_t arraySize = varDeclNode->getArraySize();
 
-         if (isSigned(type)) {
+         if (Token::isSigned(type)) {
             if (typeSize == 1 && arraySize == 1)
                 return { new PatternDataCharacter(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), 1 };
             else if (arraySize > 1)
                 return createArrayPattern(varDeclNode, offset);
             else
                 return { new PatternDataSigned(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
-        } else if (isUnsigned(varDeclNode->getVariableType())) {
+        } else if (Token::isUnsigned(varDeclNode->getVariableType())) {
             if (arraySize > 1)
                 return createArrayPattern(varDeclNode, offset);
             else
                 return { new PatternDataUnsigned(offset, typeSize, varDeclNode->getVariableName(), varDeclNode->getEndianess().value_or(this->m_defaultDataEndianess)), typeSize * arraySize };
-        } else if (isFloatingPoint(varDeclNode->getVariableType())) {
+        } else if (Token::isFloatingPoint(varDeclNode->getVariableType())) {
             if (arraySize > 1)
                 return createArrayPattern(varDeclNode, offset);
             else

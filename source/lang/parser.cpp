@@ -1,6 +1,7 @@
 #include "lang/parser.hpp"
 
 #include "helpers/utils.hpp"
+#include "lang/token.hpp"
 
 #include <optional>
 
@@ -63,7 +64,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBuiltinPointerVariableDecl(TokenIter &curr, bool hasEndianDef) {
         auto pointerType = curr[-2].typeToken.type;
 
-        if (!isUnsigned(pointerType)) {
+        if (!Token::isUnsigned(pointerType)) {
             this->m_error = { curr->lineNumber, "Pointer size needs to be a unsigned type" };
             return nullptr;
         }
@@ -88,16 +89,16 @@ namespace hex::lang {
                 endianess = std::endian::big;
             else return nullptr;
 
-            return new ASTNodeVariableDecl(curr[-7].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType), endianess);
+            return new ASTNodeVariableDecl(curr[-7].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, Token::getTypeSize(pointerType), endianess);
         }
         else
-            return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, getTypeSize(pointerType));
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, curr[-6].typeToken.type, curr[-4].identifierToken.identifier, "", { }, 1, { }, Token::getTypeSize(pointerType));
     }
 
     ASTNode* Parser::parseCustomTypePointerVariableDecl(TokenIter &curr, bool hasEndianDef) {
         auto pointerType = curr[-2].typeToken.type;
 
-        if (!isUnsigned(pointerType)) {
+        if (!Token::isUnsigned(pointerType)) {
             this->m_error = { curr->lineNumber, "Pointer size needs to be a unsigned type" };
             return nullptr;
         }
@@ -124,10 +125,10 @@ namespace hex::lang {
                 return nullptr;
             }
 
-            return new ASTNodeVariableDecl(curr[-7].lineNumber,Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType), endianess);
+            return new ASTNodeVariableDecl(curr[-7].lineNumber,Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, Token::getTypeSize(pointerType), endianess);
         }
         else
-            return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, getTypeSize(pointerType));
+            return new ASTNodeVariableDecl(curr[-6].lineNumber, Token::TypeToken::Type::CustomType, curr[-4].identifierToken.identifier, curr[-6].identifierToken.identifier, { }, 1, { }, Token::getTypeSize(pointerType));
     }
 
     ASTNode* Parser::parseBuiltinArrayDecl(TokenIter &curr, bool hasEndianDef) {
@@ -369,7 +370,7 @@ namespace hex::lang {
             return nullptr;
         }
 
-        if (!isUnsigned(underlyingType)) {
+        if (!Token::isUnsigned(underlyingType)) {
             this->m_error = { curr[-3].lineNumber, "Underlying type needs to be an unsigned type" };
             return nullptr;
         }

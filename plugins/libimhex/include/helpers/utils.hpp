@@ -2,23 +2,11 @@
 
 #include <hex.hpp>
 
-#define TOKEN_CONCAT_IMPL(x, y) x ## y
-#define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
-
-#ifdef __APPLE__
-    #define off64_t off_t
-    #define fopen64 fopen
-    #define fseeko64 fseek
-    #define ftello64 ftell
-#endif
-
 #include <array>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #ifdef __MINGW32__
@@ -26,6 +14,33 @@
 
 #else
 #include <arpa/inet.h>
+#endif
+
+#ifdef __APPLE__
+#define off64_t off_t
+    #define fopen64 fopen
+    #define fseeko64 fseek
+    #define ftello64 ftell
+#endif
+
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
+#if __has_include(<concepts>)
+// Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
+#include <concepts>
+#endif
+// libcxx 12 still doesn't have derived_from implemented, as a result we need to define it ourself using clang built-ins.
+// [concept.derived] (patch from https://reviews.llvm.org/D74292)
+namespace hex {
+template<class _Dp, class _Bp>
+    concept derived_from =
+      __is_base_of(_Bp, _Dp) && __is_convertible_to(const volatile _Dp*, const volatile _Bp*);
+}
+#else
+// Assume supported
+#include <concepts>
+namespace hex {
+    using std::derived_from;
+}
 #endif
 
 namespace hex {
@@ -43,8 +58,8 @@ namespace hex {
         return std::string(buffer.data(), buffer.data() + size);
     }
 
-    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
-        std::remove_cvref_t<decltype(value)> mask = (std::numeric_limits<std::remove_cvref_t<decltype(value)>>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
+    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const u64 &value) {
+        u64 mask = (std::numeric_limits<u64>::max() >> (63 - (from - to))) << to;
         return (value & mask) >> to;
     }
 
@@ -73,7 +88,7 @@ namespace hex {
         else if constexpr (sizeof(T) == 8)
             return __builtin_bswap64(value);
         else
-            static_assert(always_false<T>::value, "Invalid type provided!");
+                static_assert(always_false<T>::value, "Invalid type provided!");
     }
 
     template<typename T>
@@ -108,18 +123,16 @@ namespace hex {
 
     std::vector<u8> readFile(std::string_view path);
 
-    #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
     class ScopeExit {
     public:
-        ScopeExit(std::function<void()> func) : m_func(std::move(func)) {}
-        ~ScopeExit() { if (!this->m_released) this->m_func(); }
+        ScopeExit(std::function<void()> func) : m_func(func) {}
+        ~ScopeExit() { if (this->m_func != nullptr) this->m_func(); }
 
         void release() {
-            this->m_released = true;
+            this->m_func = nullptr;
         }
 
     private:
-        bool m_released = false;
         std::function<void()> m_func;
     };
 
