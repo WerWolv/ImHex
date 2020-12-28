@@ -87,6 +87,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DIMHEX_VERSIO
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-Debug\"\\\"")
 
 set(install_dest RUNTIME)
+set(destination_info "${CMAKE_INSTALL_BINDIR}")
 
 if (WIN32)
     set(application_type WIN32)
@@ -103,12 +104,20 @@ elseif (APPLE)
         set(MACOSX_BUNDLE_LONG_VERSION_STRING ${CPACK_PACKAGE_VERSION})
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
         set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 WerWolv. All rights reserved." )
+        set(destination_info ".")
         set(install_dest BUNDLE)
+        if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
+            set ( bundle_path "${destination_info}/${CMAKE_BUILD_TYPE}/imhex.app" )
+        else ()
+            set ( bundle_path "${destination_info}/imhex.app" )
+        endif()
+
+        # FIXME: Remove this once we move/integrate the plugins directory.
+        install(DIRECTORY DESTINATION "${bundle_path}/Contents/MacOS/plugins")
     endif()
 endif()
 
-add_executable(imhex
-        ${application_type}
+add_executable(imhex ${application_type}
         source/main.cpp
         source/window.cpp
 
@@ -154,4 +163,4 @@ elseif (UNIX)
     target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
 endif()
 
-install(TARGETS imhex ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS imhex ${install_dest} DESTINATION "${destination_info}")
