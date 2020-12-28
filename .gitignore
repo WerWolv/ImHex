@@ -10,3 +10,4 @@ build/
 
 *.mgc
 imgui.ini
+.DS_Store
