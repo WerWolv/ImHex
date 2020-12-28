@@ -111,7 +111,7 @@ After all the dependencies are installed, run the following commands to build Im
 ```sh
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
 
@@ -134,7 +134,7 @@ To build ImHex on macOS, run the following commands:
 brew bundle --no-lock --file dist/Brewfile
 mkdir build
 cd build
-CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake ..
+CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
 
