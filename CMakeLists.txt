@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(imhex VERSION 1.5.0)
 
-if (APPLE)
-    option (CREATE_BUNDLE "Create a bundle on macOS" OFF)
-endif()
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+
 
 set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
@@ -87,7 +86,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DIMHEX_VERSIO
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-Debug\"\\\"")
 
 set(install_dest RUNTIME)
-set(destination_info "${CMAKE_INSTALL_BINDIR}")
 
 if (WIN32)
     set(application_type WIN32)
@@ -104,16 +102,12 @@ elseif (APPLE)
         set(MACOSX_BUNDLE_LONG_VERSION_STRING ${CPACK_PACKAGE_VERSION})
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
         set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 WerWolv. All rights reserved." )
-        set(destination_info ".")
         set(install_dest BUNDLE)
         if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
-            set ( bundle_path "${destination_info}/${CMAKE_BUILD_TYPE}/imhex.app" )
+            set ( bundle_path "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/imhex.app" )
         else ()
-            set ( bundle_path "${destination_info}/imhex.app" )
+            set ( bundle_path "${CMAKE_BINARY_DIR}/imhex.app" )
         endif()
-
-        # FIXME: Remove this once we move/integrate the plugins directory.
-        install(DIRECTORY DESTINATION "${bundle_path}/Contents/MacOS/plugins")
     endif()
 endif()
 
@@ -155,7 +149,7 @@ add_executable(imhex ${application_type}
 
 set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
+target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS} ${GETTEXT_LIBRARY_DIRS})
 
 if (WIN32)
     target_link_libraries(imhex libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
@@ -163,4 +157,16 @@ elseif (UNIX)
     target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
 endif()
 
-install(TARGETS imhex ${install_dest} DESTINATION "${destination_info}")
+if (CREATE_BUNDLE)
+    # Update library references to make the bundle portable
+    include(PostprocessBundle)
+    postprocess_bundle(imhex)
+
+    # Fix rpath
+    add_custom_command(TARGET imhex POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:imhex>)
+
+    # FIXME: Remove this once we move/integrate the plugins directory.
+    add_custom_target(build-time-make-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
+else()
+    install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
