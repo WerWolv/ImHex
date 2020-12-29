@@ -4,6 +4,9 @@ project(imhex VERSION 1.5.0)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
+if (APPLE)
+    option (CREATE_BUNDLE "Create a bundle on macOS" OFF)
+endif()
 
 set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
