@@ -85,8 +85,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGIT_BRANCH=\"\\\"${GIT_BRANCH}\"\\\"")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}\"\\\"")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-Debug\"\\\"")
 
-set(install_dest RUNTIME)
-
 if (WIN32)
     set(application_type WIN32)
     set(imhex_icon resource.rc)
@@ -102,7 +100,6 @@ elseif (APPLE)
         set(MACOSX_BUNDLE_LONG_VERSION_STRING ${CPACK_PACKAGE_VERSION})
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
         set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 WerWolv. All rights reserved." )
-        set(install_dest BUNDLE)
         if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
             set ( bundle_path "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/imhex.app" )
         else ()
@@ -149,7 +146,7 @@ add_executable(imhex ${application_type}
 
 set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS} ${GETTEXT_LIBRARY_DIRS})
+target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
     target_link_libraries(imhex libgcc.a libstdc++.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a shlwapi.lib libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
