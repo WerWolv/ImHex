@@ -4,6 +4,8 @@ project(imhex VERSION 1.5.0)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
+option (CREATE_PACKAGE "Create a package with CPack" OFF)
+
 if (APPLE)
     option (CREATE_BUNDLE "Create a bundle on macOS" OFF)
 endif()
@@ -21,7 +23,7 @@ pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python COMPONENTS Development)
 
 add_subdirectory(external/llvm/Demangle)
 add_subdirectory(plugins/libimhex)
@@ -99,8 +101,10 @@ elseif (APPLE)
         set_source_files_properties(${imhex_icon} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
         set(MACOSX_BUNDLE_ICON_FILE "AppIcon.icns")
         set(MACOSX_BUNDLE_INFO_STRING "WerWolv")
+        set(MACOSX_BUNDLE_BUNDLE_NAME "ImHex")
+        set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
         set(MACOSX_BUNDLE_GUI_IDENTIFIER "WerWolv.ImHex")
-        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${PROJECT_VERSION})
+        set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}-${GIT_COMMIT_HASH}")
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
         set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 WerWolv and Thog. All rights reserved." )
         if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
@@ -158,15 +162,27 @@ elseif (UNIX)
 endif()
 
 if (CREATE_BUNDLE)
-    # Update library references to make the bundle portable
     include(PostprocessBundle)
-    postprocess_bundle(imhex)
 
     # Fix rpath
     add_custom_command(TARGET imhex POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:imhex>)
 
     # FIXME: Remove this once we move/integrate the plugins directory.
-    add_custom_target(build-time-make-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
+    add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
+
+    # Update library references to make the bundle portable
+    postprocess_bundle(imhex)
+
+    # Enforce DragNDrop packaging.
+    set(CPACK_GENERATOR "DragNDrop")
+
+    install(TARGETS imhex BUNDLE DESTINATION .)
 else()
     install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+
+if (CREATE_PACKAGE)
+    include(apple)
+    include(CPack)
 endif()

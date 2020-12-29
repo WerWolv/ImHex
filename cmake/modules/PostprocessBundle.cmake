@@ -15,7 +15,7 @@ if(CMAKE_GENERATOR)
 	set(_POSTPROCESS_BUNDLE_MODULE_LOCATION "${CMAKE_CURRENT_LIST_FILE}")
 	function(postprocess_bundle target)
 		add_custom_command(TARGET ${target} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${target}>/../.."
+			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${target}>/../.." -DCODE_SIGN_CERTIFICATE_ID="${CODE_SIGN_CERTIFICATE_ID}"
 				-P "${_POSTPROCESS_BUNDLE_MODULE_LOCATION}"
 		)
 	endfunction()
@@ -48,3 +48,12 @@ endfunction()
 include(BundleUtilities)
 set(BU_CHMOD_BUNDLE_ITEMS ON)
 fixup_bundle("${BUNDLE_PATH}" "${extra_libs}" "${extra_dirs}" IGNORE_ITEM "Python")
+
+if (CODE_SIGN_CERTIFICATE_ID)
+	# Hack around Apple Silicon signing bugs by copying the real app, signing it and moving it back.
+	# IMPORTANT: DON'T USE ${CMAKE_COMMAND} -E copy_directory HERE (this follow symbolic links).
+	execute_process(COMMAND cp -R "${BUNDLE_PATH}" "${BUNDLE_PATH}.temp")
+	execute_process(COMMAND codesign --deep --force --sign "${CODE_SIGN_CERTIFICATE_ID}" "${BUNDLE_PATH}.temp")
+	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${BUNDLE_PATH}")
+	execute_process(COMMAND ${CMAKE_COMMAND} -E rename "${BUNDLE_PATH}.temp" "${BUNDLE_PATH}")
+endif()
