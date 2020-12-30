@@ -89,6 +89,12 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 For format patterns, includable libraries and magic files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. Feel free to PR your own files there as well!
 
+## Nightly builds
+
+See latest nightly builds on the artifacts result of the Build action [here](https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild).
+
+NOTE: **We currently only provide nightly builds for macOS (x86_64)**
+
 ## Compiling
 
 You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreover, the following dependencies are needed for compiling ImHex:

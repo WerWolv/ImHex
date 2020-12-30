@@ -113,5 +113,11 @@ jobs:
       run: |
         mkdir build
         cd build
-        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-        make -j 4
+        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCREATE_BUNDLE=ON -DCREATE_PACKAGE=ON ..
+        make -j 4 package
+
+    - name: 📦 Uploading artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: macOS DMG
+        path: build/*.dmg
