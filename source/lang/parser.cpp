@@ -18,7 +18,8 @@ namespace hex::lang {
 
     // <Identifier[.]...>
     ASTNode* Parser::parseRValue(std::vector<std::string> &path) {
-        path.push_back(getValue<std::string>(-1));
+        if (peek(IDENTIFIER, -1))
+            path.push_back(getValue<std::string>(-1));
 
         if (MATCHES(sequence(SEPARATOR_DOT))) {
             if (MATCHES(sequence(IDENTIFIER)))
@@ -51,7 +52,7 @@ namespace hex::lang {
         auto node = this->parseFactor();
 
         while (MATCHES(variant(OPERATOR_STAR, OPERATOR_SLASH))) {
-            if (matches(OPERATOR_STAR, -1))
+            if (peek(OPERATOR_STAR, -1))
                 node = new ASTNodeNumericExpression(node, this->parseFactor(), Token::Operator::Star);
             else
                 node = new ASTNodeNumericExpression(node, this->parseFactor(), Token::Operator::Slash);
@@ -65,7 +66,7 @@ namespace hex::lang {
         auto node = this->parseMultiplicativeExpression();
 
         while (MATCHES(variant(OPERATOR_PLUS, OPERATOR_MINUS))) {
-            if (matches(OPERATOR_PLUS, -1))
+            if (peek(OPERATOR_PLUS, -1))
                 node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), Token::Operator::Plus);
             else
                 node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), Token::Operator::Minus);
@@ -79,7 +80,7 @@ namespace hex::lang {
         auto node = this->parseAdditiveExpression();
 
         while (MATCHES(variant(OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT))) {
-            if (matches(OPERATOR_SHIFTLEFT, -1))
+            if (peek(OPERATOR_SHIFTLEFT, -1))
                 node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), Token::Operator::ShiftLeft);
             else
                 node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), Token::Operator::ShiftRight);
@@ -132,9 +133,9 @@ namespace hex::lang {
     ASTNode* Parser::parseType(s32 startIndex) {
         std::optional<std::endian> endian;
 
-        if (matchesOptional(KEYWORD_LE, 0))
+        if (peekOptional(KEYWORD_LE, 0))
             endian = std::endian::little;
-        else if (matchesOptional(KEYWORD_BE, 0))
+        else if (peekOptional(KEYWORD_BE, 0))
             endian = std::endian::big;
 
         if (getType(startIndex) == Token::Type::Identifier) { // Custom type
@@ -154,7 +155,7 @@ namespace hex::lang {
         if (temporaryType == nullptr) throwParseError("Invalid type used in variable declaration", -1);
         SCOPE_EXIT( delete temporaryType; );
 
-        if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
+        if (peekOptional(KEYWORD_BE) || peekOptional(KEYWORD_LE))
             return new ASTNodeTypeDecl(getValue<std::string>(-4), temporaryType->getType()->clone(), temporaryType->getEndian());
         else
             return new ASTNodeTypeDecl(getValue<std::string>(-3), temporaryType->getType()->clone(), temporaryType->getEndian());
@@ -251,7 +252,7 @@ namespace hex::lang {
     // enum Identifier : (parseType) { <<Identifier|Identifier = (parseMathematicalExpression)[,]>...> }
     ASTNode* Parser::parseEnum() {
         std::string typeName;
-        if (matchesOptional(KEYWORD_BE) || matchesOptional(KEYWORD_LE))
+        if (peekOptional(KEYWORD_BE) || peekOptional(KEYWORD_LE))
             typeName = getValue<std::string>(-5);
         else
             typeName = getValue<std::string>(-4);

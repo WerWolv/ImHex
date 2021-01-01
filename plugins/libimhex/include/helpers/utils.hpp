@@ -83,9 +83,10 @@ namespace hex {
         return (value & mask) >> to;
     }
 
-    [[nodiscard]] constexpr inline u64 signExtend(u64 value, u8 currWidth, u8 targetWidth) {
-        u64 mask = 1LLU << (currWidth - 1);
-        return (((value ^ mask) - mask) << (64 - targetWidth)) >> (64 - targetWidth);
+    template<std::integral T>
+    [[nodiscard]] constexpr inline T signExtend(T value, u8 currWidth, u8 targetWidth) {
+        T mask = 1LLU << (currWidth - 1);
+        return (((value ^ mask) - mask) << ((sizeof(T) * 8) - targetWidth)) >> ((sizeof(T) * 8) - targetWidth);
     }
 
     std::string toByteString(u64 bytes);

@@ -3,12 +3,126 @@
 #include "lang/token.hpp"
 
 #include <bit>
+#include <algorithm>
+#include <ranges>
+
+#include <unistd.h>
 
 namespace hex::lang {
 
     Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
         : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
+    }
 
+    ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
+
+        const std::vector<PatternData*>* currMembers = this->m_currMembers;
+
+        PatternData *currPattern = nullptr;
+        for (const auto &identifier : node->getPath()) {
+            if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
+                currMembers = &structPattern->getMembers();
+            else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
+                currMembers = &unionPattern->getMembers();
+            else if (currPattern != nullptr)
+                throwEvaluateError("tried to access member of a non-struct/union type", node->getLineNumber());
+
+            auto candidate = std::find_if(currMembers->begin(), currMembers->end(), [&](auto member) {
+                return member->getVariableName() == identifier;
+            });
+
+            if (candidate != currMembers->end())
+                currPattern = *candidate;
+            else
+                throwEvaluateError(hex::format("could not find identifier '%s'", identifier.c_str()), node->getLineNumber());
+        }
+
+        if (auto unsignedPattern = dynamic_cast<PatternDataUnsigned*>(currPattern); unsignedPattern != nullptr) {
+            s128 value = 0;
+            this->m_provider->read(unsignedPattern->getOffset(), &value, unsignedPattern->getSize());
+            return new ASTNodeIntegerLiteral(value, Token::ValueType::Signed128Bit);
+        } else if (auto signedPattern = dynamic_cast<PatternDataSigned*>(currPattern); signedPattern != nullptr) {
+            s128 value = 0;
+            this->m_provider->read(signedPattern->getOffset(), &value, signedPattern->getSize());
+            return new ASTNodeIntegerLiteral(signExtend(value, signedPattern->getSize() * 8, 128), Token::ValueType::Signed128Bit);
+        } else
+            throwEvaluateError("tried to use non-integer value in numeric expression", node->getLineNumber());
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op) {
+        return std::visit([&](auto &&leftValue, auto &&rightValue) -> ASTNodeIntegerLiteral* {
+
+            auto newType = [&] {
+                #define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
+                #define DEFAULT_TYPE(type) return (type)
+
+                CHECK_TYPE(Token::ValueType::Double);
+                CHECK_TYPE(Token::ValueType::Float);
+                CHECK_TYPE(Token::ValueType::Unsigned128Bit);
+                CHECK_TYPE(Token::ValueType::Signed128Bit);
+                CHECK_TYPE(Token::ValueType::Unsigned64Bit);
+                CHECK_TYPE(Token::ValueType::Signed64Bit);
+                CHECK_TYPE(Token::ValueType::Unsigned32Bit);
+                CHECK_TYPE(Token::ValueType::Signed32Bit);
+                CHECK_TYPE(Token::ValueType::Unsigned16Bit);
+                CHECK_TYPE(Token::ValueType::Signed16Bit);
+                CHECK_TYPE(Token::ValueType::Unsigned8Bit);
+                CHECK_TYPE(Token::ValueType::Signed8Bit);
+                CHECK_TYPE(Token::ValueType::Character);
+                DEFAULT_TYPE(Token::ValueType::Signed32Bit);
+
+                #undef CHECK_TYPE
+                #undef DEFAULT_TYPE
+            }();
+
+            switch (op) {
+                case Token::Operator::Plus:
+                    return new ASTNodeIntegerLiteral(leftValue + rightValue, newType);
+                case Token::Operator::Minus:
+                    return new ASTNodeIntegerLiteral(leftValue - rightValue, newType);
+                case Token::Operator::Star:
+                    return new ASTNodeIntegerLiteral(leftValue * rightValue, newType);
+                case Token::Operator::Slash:
+                    return new ASTNodeIntegerLiteral(leftValue / rightValue, newType);
+                case Token::Operator::ShiftLeft:
+                    return new ASTNodeIntegerLiteral(leftValue << rightValue, newType);
+                case Token::Operator::ShiftRight:
+                    return new ASTNodeIntegerLiteral(leftValue >> rightValue, newType);
+                case Token::Operator::BitAnd:
+                    return new ASTNodeIntegerLiteral(leftValue & rightValue, newType);
+                case Token::Operator::BitXor:
+                    return new ASTNodeIntegerLiteral(leftValue ^ rightValue, newType);
+                case Token::Operator::BitOr:
+                    return new ASTNodeIntegerLiteral(leftValue | rightValue, newType);
+                default: throwEvaluateError("invalid operator used in mathematical expression", left->getLineNumber());
+
+            }
+
+        }, left->getValue(), right->getValue());
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateMathematicalExpression(ASTNodeNumericExpression *node) {
+        ASTNodeIntegerLiteral *leftInteger, *rightInteger;
+
+        if (auto leftExprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(node->getLeftOperand()); leftExprLiteral != nullptr)
+            leftInteger = leftExprLiteral;
+        else if (auto leftExprExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getLeftOperand()); leftExprExpression != nullptr)
+            leftInteger = evaluateMathematicalExpression(leftExprExpression);
+        else if (auto leftExprRvalue = dynamic_cast<ASTNodeRValue*>(node->getLeftOperand()); leftExprRvalue != nullptr)
+            leftInteger = evaluateRValue(leftExprRvalue);
+        else
+            throwEvaluateError("invalid expression. Expected integer literal", node->getLineNumber());
+
+        if (auto rightExprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(node->getRightOperand()); rightExprLiteral != nullptr)
+            rightInteger = rightExprLiteral;
+        else if (auto rightExprExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getRightOperand()); rightExprExpression != nullptr)
+            rightInteger = evaluateMathematicalExpression(rightExprExpression);
+        else if (auto rightExprRvalue = dynamic_cast<ASTNodeRValue*>(node->getRightOperand()); rightExprRvalue != nullptr)
+            rightInteger = evaluateRValue(rightExprRvalue);
+        else
+            throwEvaluateError("invalid expression. Expected integer literal", node->getLineNumber());
+
+        return evaluateOperator(leftInteger, rightInteger, node->getOperator());
     }
 
     PatternData* Evaluator::evaluateBuiltinType(ASTNodeBuiltinType *node) {
@@ -38,6 +152,12 @@ namespace hex::lang {
     PatternData* Evaluator::evaluateStruct(ASTNodeStruct *node) {
         std::vector<PatternData*> memberPatterns;
 
+        ScopeExit currMemberReset([this] { this->m_currMembers = nullptr; });
+        if (this->m_currMembers == nullptr)
+            this->m_currMembers = &memberPatterns;
+        else
+            currMemberReset.release();
+
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
             if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(member); memberVariableNode != nullptr)
@@ -55,6 +175,12 @@ namespace hex::lang {
 
     PatternData* Evaluator::evaluateUnion(ASTNodeUnion *node) {
         std::vector<PatternData*> memberPatterns;
+
+        ScopeExit currMemberReset([this] { this->m_currMembers = nullptr; });
+        if (this->m_currMembers == nullptr)
+            this->m_currMembers = &memberPatterns;
+        else
+            currMemberReset.release();
 
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
@@ -81,7 +207,10 @@ namespace hex::lang {
             if (expression == nullptr)
                 throwEvaluateError("invalid expression in enum value", value->getLineNumber());
 
-            entryPatterns.emplace_back( std::get<s128>(expression->evaluate()->getValue()), name );
+            auto valueNode = evaluateMathematicalExpression(expression);
+            SCOPE_EXIT( delete valueNode; );
+
+            entryPatterns.emplace_back( std::get<s128>(valueNode->getValue()), name );
         }
 
         size_t size;
@@ -103,7 +232,10 @@ namespace hex::lang {
             if (expression == nullptr)
                 throwEvaluateError("invalid expression in bitfield field size", value->getLineNumber());
 
-            auto fieldBits = std::get<s128>(expression->evaluate()->getValue());
+            auto valueNode = evaluateMathematicalExpression(expression);
+            SCOPE_EXIT( delete valueNode; );
+
+            auto fieldBits = std::get<s128>(valueNode->getValue());
             if (fieldBits > 64)
                 throwEvaluateError("bitfield entry must at most occupy 64 bits", value->getLineNumber());
 
@@ -146,8 +278,12 @@ namespace hex::lang {
 
     PatternData* Evaluator::evaluateVariable(ASTNodeVariableDecl *node) {
 
-        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr)
-            this->m_currOffset = std::get<s128>(offset->evaluate()->getValue());
+        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
+            auto valueNode = evaluateMathematicalExpression(offset);
+            SCOPE_EXIT( delete valueNode; );
+
+            this->m_currOffset = std::get<s128>(valueNode->getValue());
+        }
         if (this->m_currOffset >= this->m_provider->getActualSize())
             throwEvaluateError("array exceeds size of file", node->getLineNumber());
 
@@ -168,8 +304,12 @@ namespace hex::lang {
 
     PatternData* Evaluator::evaluateArray(ASTNodeArrayVariableDecl *node) {
 
-        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr)
-            this->m_currOffset = std::get<s128>(offset->evaluate()->getValue());
+        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
+            auto valueNode = evaluateMathematicalExpression(offset);
+            SCOPE_EXIT( delete valueNode; );
+
+            this->m_currOffset = std::get<s128>(valueNode->getValue());
+        }
 
         auto startOffset = this->m_currOffset;
 
@@ -177,7 +317,10 @@ namespace hex::lang {
         if (sizeNode == nullptr)
             throwEvaluateError("array size not a numeric expression", node->getLineNumber());
 
-        auto arraySize = std::get<s128>(sizeNode->evaluate()->getValue());
+        auto valueNode = evaluateMathematicalExpression(sizeNode);
+        SCOPE_EXIT( delete valueNode; );
+
+        auto arraySize = std::get<s128>(valueNode->getValue());
 
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
             if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {

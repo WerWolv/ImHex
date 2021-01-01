@@ -27,7 +27,7 @@ namespace hex::lang {
             Enum,
             Bitfield,
             LittleEndian,
-            BigEndian
+            BigEndian,
         };
 
         enum class Operator {

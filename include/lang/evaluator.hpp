@@ -27,6 +27,7 @@ namespace hex::lang {
         std::endian m_defaultDataEndian;
         u64 m_currOffset = 0;
         std::optional<std::endian> m_currEndian;
+        std::vector<PatternData*> *m_currMembers = nullptr;
 
         std::pair<u32, std::string> m_error;
 
@@ -39,6 +40,10 @@ namespace hex::lang {
         [[nodiscard]] std::endian getCurrentEndian() const {
             return this->m_currEndian.value_or(this->m_defaultDataEndian);
         }
+
+        ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
+        ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op);
+        ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
         PatternData* evaluateStruct(ASTNodeStruct *node);

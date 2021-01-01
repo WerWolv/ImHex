@@ -505,6 +505,10 @@ namespace hex::lang {
             return "struct " + PatternData::getTypeName();
         }
 
+        const auto& getMembers() const {
+            return this->m_members;
+        }
+
     private:
         std::vector<PatternData*> m_members;
         std::vector<PatternData*> m_sortedMembers;
@@ -572,6 +576,10 @@ namespace hex::lang {
             return "union " + PatternData::getTypeName();;
         }
 
+        const auto& getMembers() const {
+            return this->m_members;
+        }
+
     private:
         std::vector<PatternData*> m_members;
         std::vector<PatternData*> m_sortedMembers;
@@ -628,6 +636,10 @@ namespace hex::lang {
 
         [[nodiscard]] std::string getFormattedName() const override {
             return "enum " + PatternData::getTypeName();
+        }
+
+        const auto& getEnumValues() const {
+            return this->m_enumValues;
         }
 
     private:
@@ -703,6 +715,10 @@ namespace hex::lang {
 
         [[nodiscard]] std::string getFormattedName() const override {
             return "bitfield " + PatternData::getTypeName();
+        }
+
+        const auto& getFields() const {
+            return this->m_fields;
         }
 
     private:

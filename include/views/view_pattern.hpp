@@ -9,6 +9,7 @@
 
 #include <cstring>
 #include <filesystem>
+#include <thread>
 
 #include "ImGuiFileBrowser.h"
 #include "TextEditor.h"

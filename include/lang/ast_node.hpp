@@ -21,7 +21,7 @@ namespace hex::lang {
         virtual ASTNode* clone() = 0;
 
     private:
-        u32 m_lineNumber = 0;
+        u32 m_lineNumber = 1;
     };
 
     class ASTNodeIntegerLiteral : public ASTNode {
@@ -73,81 +73,9 @@ namespace hex::lang {
         ASTNode *getRightOperand() { return this->m_right; }
         Token::Operator getOperator() { return this->m_operator; }
 
-        [[nodiscard]] ASTNodeIntegerLiteral* evaluate() {
-            ASTNodeIntegerLiteral *leftInteger, *rightInteger;
-
-            if (auto leftExprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(this->m_left); leftExprLiteral != nullptr)
-                leftInteger = leftExprLiteral;
-            else if (auto leftExprExpression = dynamic_cast<ASTNodeNumericExpression*>(this->m_left); leftExprExpression != nullptr)
-                leftInteger = leftExprExpression->evaluate();
-            else
-                return nullptr;
-
-            if (auto rightExprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(this->m_right); rightExprLiteral != nullptr)
-                rightInteger = rightExprLiteral;
-            else if (auto rightExprExpression = dynamic_cast<ASTNodeNumericExpression*>(this->m_right); rightExprExpression != nullptr)
-                rightInteger = rightExprExpression->evaluate();
-            else
-                return nullptr;
-
-            return this->evaluateOperator(leftInteger, rightInteger);
-        }
-
     private:
         ASTNode *m_left, *m_right;
         Token::Operator m_operator;
-
-        ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right) {
-            return std::visit([&](auto &&leftValue, auto &&rightValue) -> ASTNodeIntegerLiteral* {
-
-                auto newType = [&] {
-#define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
-#define DEFAULT_TYPE(type) return (type)
-
-                    CHECK_TYPE(Token::ValueType::Double);
-                    CHECK_TYPE(Token::ValueType::Float);
-                    CHECK_TYPE(Token::ValueType::Unsigned128Bit);
-                    CHECK_TYPE(Token::ValueType::Signed128Bit);
-                    CHECK_TYPE(Token::ValueType::Unsigned64Bit);
-                    CHECK_TYPE(Token::ValueType::Signed64Bit);
-                    CHECK_TYPE(Token::ValueType::Unsigned32Bit);
-                    CHECK_TYPE(Token::ValueType::Signed32Bit);
-                    CHECK_TYPE(Token::ValueType::Unsigned16Bit);
-                    CHECK_TYPE(Token::ValueType::Signed16Bit);
-                    CHECK_TYPE(Token::ValueType::Unsigned8Bit);
-                    CHECK_TYPE(Token::ValueType::Signed8Bit);
-                    CHECK_TYPE(Token::ValueType::Character);
-                    DEFAULT_TYPE(Token::ValueType::Signed32Bit);
-
-#undef CHECK_TYPE
-#undef DEFAULT_TYPE
-                }();
-
-                switch (this->m_operator) {
-                    case Token::Operator::Plus:
-                        return new ASTNodeIntegerLiteral(leftValue + rightValue, newType);
-                    case Token::Operator::Minus:
-                        return new ASTNodeIntegerLiteral(leftValue - rightValue, newType);
-                    case Token::Operator::Star:
-                        return new ASTNodeIntegerLiteral(leftValue * rightValue, newType);
-                    case Token::Operator::Slash:
-                        return new ASTNodeIntegerLiteral(leftValue / rightValue, newType);
-                    case Token::Operator::ShiftLeft:
-                        return new ASTNodeIntegerLiteral(leftValue << rightValue, newType);
-                    case Token::Operator::ShiftRight:
-                        return new ASTNodeIntegerLiteral(leftValue >> rightValue, newType);
-                    case Token::Operator::BitAnd:
-                        return new ASTNodeIntegerLiteral(leftValue & rightValue, newType);
-                    case Token::Operator::BitXor:
-                        return new ASTNodeIntegerLiteral(leftValue ^ rightValue, newType);
-                    case Token::Operator::BitOr:
-                        return new ASTNodeIntegerLiteral(leftValue | rightValue, newType);
-                    default: return nullptr;
-
-                }
-
-            }, left->getValue(), right->getValue());
-        }
     };
 
     class ASTNodeBuiltinType : public ASTNode {

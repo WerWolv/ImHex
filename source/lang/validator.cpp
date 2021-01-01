@@ -59,8 +59,10 @@ namespace hex::lang {
         indent += 2;
         for (const auto &node : ast) {
             if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
-                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(variableDeclNode->getPlacementOffset()); offset != nullptr)
-                    printf("%*c ASTNodeVariableDecl (%s) @ 0x%llx\n", INDENT_VALUE, variableDeclNode->getName().data(), (u64)std::get<s128>(offset->evaluate()->getValue()));
+                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(variableDeclNode->getPlacementOffset()); offset != nullptr) {
+                    printf("%*c ASTNodeVariableDecl (%s) @\n", INDENT_VALUE, variableDeclNode->getName().data());
+                    printAST({ offset });
+                }
                 else
                     printf("%*c ASTNodeVariableDecl (%s)\n", INDENT_VALUE, variableDeclNode->getName().data());
                 this->printAST({ variableDeclNode->getType() });
@@ -71,14 +73,15 @@ namespace hex::lang {
                     continue;
                 }
 
-                auto sizeValue = sizeExpr->evaluate();
-
-                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(arrayDeclNode->getPlacementOffset()); offset != nullptr)
-                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld]) @ 0x%llx\n", INDENT_VALUE, arrayDeclNode->getName().data(), (u64)std::get<s128>(sizeValue->getValue()), (u64)std::get<s128>(offset->evaluate()->getValue()));
-                else
-                    printf("%*c ASTNodeArrayVariableDecl (%s[%lld])\n", INDENT_VALUE, arrayDeclNode->getName().data(), (u64)std::get<s128>(sizeValue->getValue()));
-
-                delete sizeValue;
+                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(arrayDeclNode->getPlacementOffset()); offset != nullptr) {
+                    printf("%*c ASTNodeArrayVariableDecl (%s[]) @\n", INDENT_VALUE, arrayDeclNode->getName().data());
+                    printAST({ sizeExpr });
+                    printAST({ offset });
+                }
+                else {
+                    printf("%*c ASTNodeArrayVariableDecl (%s[])\n", INDENT_VALUE, arrayDeclNode->getName().data());
+                    printAST({ sizeExpr });
+                }
 
                 this->printAST({ arrayDeclNode->getType() });
                 this->printAST({ arrayDeclNode->getSize() });

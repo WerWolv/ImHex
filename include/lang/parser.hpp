@@ -109,7 +109,7 @@ namespace hex::lang {
         }
 
         bool sequence(Token::Type type, auto value, auto ... args) {
-            if (!matches(type, value)) {
+            if (!peek(type, value)) {
                 this->m_curr = this->m_originalPosition;
                 return false;
             }
@@ -125,8 +125,8 @@ namespace hex::lang {
         }
 
         bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {
-            if (!matches(type1, value1)) {
-                if (!matches(type2, value2)) {
+            if (!peek(type1, value1)) {
+                if (!peek(type2, value2)) {
                     this->m_curr = this->m_originalPosition;
                     return false;
                 }
@@ -138,7 +138,7 @@ namespace hex::lang {
         }
 
         bool optional(Token::Type type, auto value) {
-            if (matches(type, value)) {
+            if (peek(type, value)) {
                 this->m_matchedOptionals.push_back(this->m_curr);
                 this->m_curr++;
             }
@@ -146,14 +146,14 @@ namespace hex::lang {
             return true;
         }
 
-        bool matches(Token::Type type, auto value, s32 index = 0) {
+        bool peek(Token::Type type, auto value, s32 index = 0) {
             return this->m_curr[index].type == type && this->m_curr[index] == value;
         }
 
-        bool matchesOptional(Token::Type type, auto value, u32 index = 0) {
+        bool peekOptional(Token::Type type, auto value, u32 index = 0) {
             if (index >= this->m_matchedOptionals.size())
                 return false;
-            return matches(type, value, std::distance(this->m_curr, this->m_matchedOptionals[index]));
+            return peek(type, value, std::distance(this->m_curr, this->m_matchedOptionals[index]));
         }
 
     };
