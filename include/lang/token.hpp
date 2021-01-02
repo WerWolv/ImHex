@@ -88,19 +88,19 @@ namespace hex::lang {
 
         }
 
-        [[nodiscard]] constexpr static inline bool isUnsigned(const lang::Token::ValueType type) {
+        [[nodiscard]] constexpr static inline bool isUnsigned(const ValueType type) {
             return (static_cast<u32>(type) & 0x0F) == 0x00;
         }
 
-        [[nodiscard]] constexpr static inline bool isSigned(const lang::Token::ValueType type) {
+        [[nodiscard]] constexpr static inline bool isSigned(const ValueType type) {
             return (static_cast<u32>(type) & 0x0F) == 0x01;
         }
 
-        [[nodiscard]] constexpr static inline bool isFloatingPoint(const lang::Token::ValueType type) {
+        [[nodiscard]] constexpr static inline bool isFloatingPoint(const ValueType type) {
             return (static_cast<u32>(type) & 0x0F) == 0x02;
         }
 
-        [[nodiscard]] constexpr static inline u32 getTypeSize(const lang::Token::ValueType type) {
+        [[nodiscard]] constexpr static inline u32 getTypeSize(const ValueType type) {
             return static_cast<u32>(type) >> 4;
         }
 
@@ -160,21 +160,6 @@ namespace hex::lang {
         ValueTypes value;
         u32 lineNumber;
 
-        [[nodiscard]] constexpr static inline bool isUnsigned(const TypeToken::Type type) {
-            return (static_cast<u32>(type) & 0x0F) == 0x00;
-        }
-
-        [[nodiscard]] constexpr static inline bool isSigned(const TypeToken::Type type) {
-            return (static_cast<u32>(type) & 0x0F) == 0x01;
-        }
-
-        [[nodiscard]] constexpr static inline bool isFloatingPoint(const TypeToken::Type type) {
-            return (static_cast<u32>(type) & 0x0F) == 0x02;
-        }
-
-        [[nodiscard]] constexpr static inline u32 getTypeSize(const TypeToken::Type type) {
-            return static_cast<u32>(type) >> 4;
-        }
     };
 
 }

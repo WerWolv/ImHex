@@ -63,6 +63,9 @@ namespace hex {
 }
 #endif
 
+#define TOKEN_CONCAT_IMPL(x, y) x ## y
+#define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
+
 namespace hex {
 
     template<typename ... Args>
@@ -144,6 +147,7 @@ namespace hex {
 
     std::vector<u8> readFile(std::string_view path);
 
+    #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
     class ScopeExit {
     public:
         ScopeExit(std::function<void()> func) : m_func(func) {}
