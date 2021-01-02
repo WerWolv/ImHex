@@ -44,7 +44,7 @@ namespace hex::lang {
             auto value = std::get_if<T>(&this->m_curr[index].value);
 
             if (value == nullptr)
-                throwParseError("Failed to decode token. Invalid type.", getLineNumber(index));
+                throwParseError("failed to decode token. Invalid type.", getLineNumber(index));
 
             return *value;
         }

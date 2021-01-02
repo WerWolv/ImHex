@@ -203,7 +203,7 @@ namespace hex::lang {
                     offset += 1;
 
                     if (offset >= code.length() || code[offset] != '\'')
-                        throwLexerError("Missing terminating ' after character literal", lineNumber);
+                        throwLexerError("missing terminating ' after character literal", lineNumber);
 
                     tokens.emplace_back(VALUE_TOKEN(Integer, character));
                     offset += 1;
