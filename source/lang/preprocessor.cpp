@@ -140,6 +140,20 @@ namespace hex::lang {
                         this->m_pragmas.emplace(pragmaKey, pragmaValue);
                     } else
                         throwPreprocessorError("unknown preprocessor directive", lineNumber);
+                } else if (code.substr(offset, 2) == "//") {
+                    while (code[offset] != '\n' && offset < code.length())
+                        offset += 1;
+                } else if (code.substr(offset, 2) == "/*") {
+                    while (code.substr(offset, 2) != "*/" && offset < code.length()) {
+                        if (code[offset] == '\n')
+                            lineNumber++;
+
+                        offset += 1;
+                    }
+
+                    offset += 2;
+                    if (offset >= code.length())
+                        throwPreprocessorError("unterminated comment", lineNumber);
                 }
 
                 if (code[offset] == '\n')
