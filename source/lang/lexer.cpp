@@ -6,6 +6,9 @@
 
 namespace hex::lang {
 
+#define TOKEN(type, value) Token::Type::type, Token::type::value, lineNumber
+#define VALUE_TOKEN(type, value) Token::Type::type, value, lineNumber
+
     Lexer::Lexer() { }
 
     std::string matchTillInvalid(const char* characters, std::function<bool(char)> predicate) {
@@ -72,186 +75,192 @@ namespace hex::lang {
 
         u32 lineNumber = 1;
 
-        while (offset < code.length()) {
+        try {
 
-            // Handle comments
-            if (code[offset] == '/') {
-                offset++;
+            while (offset < code.length()) {
+                const char& c = code[offset];
 
-                if (offset < code.length() && code[offset] == '/') {
-                    offset++;
-                    while (offset < code.length()) {
-                        if (code[offset] == '\n' || code[offset] == '\r')
-                            break;
-                        offset++;
-                    }
-                } else if (offset < code.length() && code[offset] == '*') {
-                    offset++;
-                    while (offset < (code.length() - 1)) {
-                        if (code[offset] == '\n') lineNumber++;
+                if (c == 0x00)
+                    break;
 
-                        if (code[offset] == '*' && code[offset + 1] == '/')
-                            break;
-                        offset++;
-                    }
-
+                if (std::isblank(c) || std::isspace(c)) {
+                    if (code[offset] == '\n') lineNumber++;
+                    offset += 1;
+                } else if (c == ';') {
+                    tokens.emplace_back(TOKEN(Separator, EndOfExpression));
+                    offset += 1;
+                } else if (c == '(') {
+                    tokens.emplace_back(TOKEN(Separator, RoundBracketOpen));
+                    offset += 1;
+                } else if (c == ')') {
+                    tokens.emplace_back(TOKEN(Separator, RoundBracketClose));
+                    offset += 1;
+                } else if (c == '{') {
+                    tokens.emplace_back(TOKEN(Separator, CurlyBracketOpen));
+                    offset += 1;
+                } else if (c == '}') {
+                    tokens.emplace_back(TOKEN(Separator, CurlyBracketClose));
+                    offset += 1;
+                } else if (c == '[') {
+                    tokens.emplace_back(TOKEN(Separator, SquareBracketOpen));
+                    offset += 1;
+                } else if (c == ']') {
+                    tokens.emplace_back(TOKEN(Separator, SquareBracketClose));
+                    offset += 1;
+                } else if (c == ',') {
+                    tokens.emplace_back(TOKEN(Separator, Comma));
+                    offset += 1;
+                } else if (c == '.') {
+                    tokens.emplace_back(TOKEN(Separator, Dot));
+                    offset += 1;
+                } else if (c == '@') {
+                    tokens.emplace_back(TOKEN(Operator, AtDeclaration));
+                    offset += 1;
+                } else if (c == '=') {
+                    tokens.emplace_back(TOKEN(Operator, Assignment));
+                    offset += 1;
+                } else if (c == ':') {
+                    tokens.emplace_back(TOKEN(Operator, Inherit));
+                    offset += 1;
+                } else if (c == '+') {
+                    tokens.emplace_back(TOKEN(Operator, Plus));
+                    offset += 1;
+                } else if (c == '-') {
+                    tokens.emplace_back(TOKEN(Operator, Minus));
+                    offset += 1;
+                } else if (c == '*') {
+                    tokens.emplace_back(TOKEN(Operator, Star));
+                    offset += 1;
+                } else if (c == '/') {
+                    tokens.emplace_back(TOKEN(Operator, Slash));
+                    offset += 1;
+                } else if (offset + 1 <= code.length() && code[offset] == '<' && code[offset + 1] == '<') {
+                    tokens.emplace_back(TOKEN(Operator, ShiftLeft));
                     offset += 2;
-                } else offset--;
-            }
-
-            const char& c = code[offset];
-
-            if (c == 0x00)
-                break;
-
-            if (std::isblank(c) || std::isspace(c)) {
-                if (code[offset] == '\n') lineNumber++;
-                offset += 1;
-            } else if (c == ';') {
-                tokens.push_back({ .type = Token::Type::EndOfExpression, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == '{') {
-                tokens.push_back({ .type = Token::Type::ScopeOpen, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == '}') {
-                tokens.push_back({ .type = Token::Type::ScopeClose, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == '[') {
-                tokens.push_back({ .type = Token::Type::ArrayOpen, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == ']') {
-                tokens.push_back({.type = Token::Type::ArrayClose, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == ',') {
-                tokens.push_back({ .type = Token::Type::Separator, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == '@') {
-              tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::AtDeclaration }, .lineNumber = lineNumber });
-              offset += 1;
-            } else if (c == '=') {
-                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Assignment }, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == ':') {
-                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Inherit }, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == '*') {
-                tokens.push_back({ .type = Token::Type::Operator, .operatorToken = { .op = Token::OperatorToken::Operator::Star }, .lineNumber = lineNumber });
-                offset += 1;
-            } else if (c == '\'') {
-                offset += 1;
-
-                if (offset >= code.length()) {
-                    this->m_error = { lineNumber, "Invalid character literal" };
-                    return { };
-                }
-
-                char character = code[offset];
-
-                if (character == '\\') {
+                } else if (offset + 1 <= code.length() && code[offset] == '>' && code[offset + 1] == '>') {
+                    tokens.emplace_back(TOKEN(Operator, ShiftRight));
+                    offset += 2;
+                } else if (c == '|') {
+                    tokens.emplace_back(TOKEN(Operator, BitOr));
+                    offset += 1;
+                } else if (c == '&') {
+                    tokens.emplace_back(TOKEN(Operator, BitAnd));
+                    offset += 1;
+                } else if (c == '^') {
+                    tokens.emplace_back(TOKEN(Operator, BitXor));
+                    offset += 1;
+                } else if (c == '\'') {
                     offset += 1;
 
-                    if (offset >= code.length()) {
-                        this->m_error = { lineNumber, "Invalid character literal" };
-                        return { };
+                    if (offset >= code.length())
+                        throwLexerError("invalid character literal", lineNumber);
+
+                    char character = code[offset];
+
+                    if (character == '\\') {
+                        offset += 1;
+
+                        if (offset >= code.length())
+                            throwLexerError("invalid character literal", lineNumber);
+
+                        if (code[offset] != '\\' && code[offset] != '\'')
+                            throwLexerError("invalid escape sequence", lineNumber);
+
+
+                        character = code[offset];
+                    } else {
+                        if (code[offset] == '\\' || code[offset] == '\'' || character == '\n' || character == '\r')
+                            throwLexerError("invalid character literal", lineNumber);
+
                     }
 
-                    if (code[offset] != '\\' && code[offset] != '\'') {
-                        this->m_error = { lineNumber, "Invalid escape sequence" };
-                        return { };
-                    }
+                    offset += 1;
 
-                    character = code[offset];
-                } else {
-                    if (code[offset] == '\\' || code[offset] == '\'' || character == '\n' || character == '\r') {
-                        this->m_error = { lineNumber, "Invalid character literal" };
-                        return { };
-                    }
-                }
+                    if (offset >= code.length() || code[offset] != '\'')
+                        throwLexerError("missing terminating ' after character literal", lineNumber);
 
-                offset += 1;
+                    tokens.emplace_back(VALUE_TOKEN(Integer, character));
+                    offset += 1;
 
-                if (offset >= code.length() || code[offset] != '\'') {
-                    this->m_error = { lineNumber, "Missing terminating ' after character literal" };
-                    return { };
-                }
+                } else if (std::isalpha(c)) {
+                    std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 
-                tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = character }, .lineNumber = lineNumber });
-                offset += 1;
+                    // Check for reserved keywords
 
-            } else if (std::isalpha(c)) {
-                std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
+                    if (identifier == "struct")
+                        tokens.emplace_back(TOKEN(Keyword, Struct));
+                    else if (identifier == "union")
+                        tokens.emplace_back(TOKEN(Keyword, Union));
+                    else if (identifier == "using")
+                        tokens.emplace_back(TOKEN(Keyword, Using));
+                    else if (identifier == "enum")
+                        tokens.emplace_back(TOKEN(Keyword, Enum));
+                    else if (identifier == "bitfield")
+                        tokens.emplace_back(TOKEN(Keyword, Bitfield));
+                    else if (identifier == "be")
+                        tokens.emplace_back(TOKEN(Keyword, BigEndian));
+                    else if (identifier == "le")
+                        tokens.emplace_back(TOKEN(Keyword, LittleEndian));
 
-                // Check for reserved keywords
+                        // Check for built-in types
+                    else if (identifier == "u8")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned8Bit));
+                    else if (identifier == "s8")
+                        tokens.emplace_back(TOKEN(ValueType, Signed8Bit));
+                    else if (identifier == "u16")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned16Bit));
+                    else if (identifier == "s16")
+                        tokens.emplace_back(TOKEN(ValueType, Signed16Bit));
+                    else if (identifier == "u32")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned32Bit));
+                    else if (identifier == "s32")
+                        tokens.emplace_back(TOKEN(ValueType, Signed32Bit));
+                    else if (identifier == "u64")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned64Bit));
+                    else if (identifier == "s64")
+                        tokens.emplace_back(TOKEN(ValueType, Signed64Bit));
+                    else if (identifier == "u128")
+                        tokens.emplace_back(TOKEN(ValueType, Unsigned128Bit));
+                    else if (identifier == "s128")
+                        tokens.emplace_back(TOKEN(ValueType, Signed128Bit));
+                    else if (identifier == "float")
+                        tokens.emplace_back(TOKEN(ValueType, Float));
+                    else if (identifier == "double")
+                        tokens.emplace_back(TOKEN(ValueType, Double));
+                    else if (identifier == "char")
+                        tokens.emplace_back(TOKEN(ValueType, Character));
+                    else if (identifier == "padding")
+                        tokens.emplace_back(TOKEN(ValueType, Padding));
 
-                if (identifier == "struct")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Struct }, .lineNumber = lineNumber });
-                else if (identifier == "union")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Union }, .lineNumber = lineNumber });
-                else if (identifier == "using")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Using }, .lineNumber = lineNumber });
-                else if (identifier == "enum")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Enum }, .lineNumber = lineNumber });
-                else if (identifier == "bitfield")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::Bitfield }, .lineNumber = lineNumber });
-                else if (identifier == "be")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::BigEndian }, .lineNumber = lineNumber });
-                else if (identifier == "le")
-                    tokens.push_back({ .type = Token::Type::Keyword, .keywordToken = { .keyword = Token::KeywordToken::Keyword::LittleEndian }, .lineNumber = lineNumber });
+                    // If it's not a keyword and a builtin type, it has to be an identifier
 
-                    // Check for built-in types
-                else if (identifier == "u8")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned8Bit }, .lineNumber = lineNumber });
-                else if (identifier == "s8")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed8Bit }, .lineNumber = lineNumber });
-                else if (identifier == "u16")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned16Bit }, .lineNumber = lineNumber });
-                else if (identifier == "s16")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed16Bit }, .lineNumber = lineNumber });
-                else if (identifier == "u32")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned32Bit }, .lineNumber = lineNumber });
-                else if (identifier == "s32")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed32Bit }, .lineNumber = lineNumber });
-                else if (identifier == "u64")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned64Bit }, .lineNumber = lineNumber });
-                else if (identifier == "s64")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed64Bit }, .lineNumber = lineNumber });
-                else if (identifier == "u128")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Unsigned128Bit }, .lineNumber = lineNumber });
-                else if (identifier == "s128")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Signed128Bit }, .lineNumber = lineNumber });
-                else if (identifier == "float")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Float }, .lineNumber = lineNumber });
-                else if (identifier == "double")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Double }, .lineNumber = lineNumber });
-                else if (identifier == "padding")
-                    tokens.push_back({ .type = Token::Type::Type, .typeToken = { .type = Token::TypeToken::Type::Padding }, .lineNumber = lineNumber });
+                    else
+                        tokens.emplace_back(VALUE_TOKEN(Identifier, identifier));
 
-                // If it's not a keyword and a builtin type, it has to be an identifier
+                    offset += identifier.length();
+                } else if (std::isdigit(c)) {
+                    char *end = nullptr;
+                    std::strtoull(&code[offset], &end, 0);
 
-                else
-                    tokens.push_back({.type = Token::Type::Identifier, .identifierToken = { .identifier = identifier }, .lineNumber = lineNumber });
+                    auto integer = parseInt(std::string_view(&code[offset], end - &code[offset]));
 
-                offset += identifier.length();
-            } else if (std::isdigit(c)) {
-                char *end = nullptr;
-                std::strtoull(&code[offset], &end, 0);
+                    if (!integer.has_value())
+                        throwLexerError("invalid integer literal", lineNumber);
 
-                auto integer = parseInt(std::string_view(&code[offset], end - &code[offset]));
 
-                if (!integer.has_value()) {
-                    this->m_error = { lineNumber, "Invalid integer literal" };
-                    return { };
-                }
+                    tokens.emplace_back(VALUE_TOKEN(Integer, integer.value()));
+                    offset += (end - &code[offset]);
+                } else
+                    throwLexerError("unknown token", lineNumber);
 
-                tokens.push_back({ .type = Token::Type::Integer, .integerToken = { .integer = integer.value() }, .lineNumber = lineNumber });
-                offset += (end - &code[offset]);
-            } else {
-                this->m_error = { lineNumber, "Unknown token" };
-                return { };
             }
+
+            tokens.emplace_back(TOKEN(Separator, EndOfProgram));
+        } catch (LexerError &e) {
+            this->m_error = e;
+            return { };
         }
 
-        tokens.push_back({ .type = Token::Type::EndOfProgram, .lineNumber = lineNumber });
 
         return tokens;
     }

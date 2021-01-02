@@ -20,6 +20,12 @@ namespace hex::lang {
 
     private:
         std::pair<u32, std::string> m_error;
+
+        using LexerError = std::pair<u32, std::string>;
+
+        [[noreturn]] void throwLexerError(std::string_view error, u32 lineNumber) const {
+            throw LexerError(lineNumber, "Lexer: " + std::string(error));
+        }
     };
 
 }

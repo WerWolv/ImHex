@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hex.hpp>
-#include <string>
 
 #include "imgui.h"
 #include "imgui_memory_editor.h"
@@ -9,7 +8,9 @@
 #include "providers/provider.hpp"
 #include "helpers/utils.hpp"
 
+#include <cstring>
 #include <random>
+#include <string>
 
 namespace hex::lang {
 
@@ -33,11 +34,9 @@ namespace hex::lang {
 
     class PatternData {
     public:
-        enum class Type { Padding, Unsigned, Signed, Float, Character, String, Struct, Union, Array, Enum };
-
-        PatternData(Type type, u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
-        : m_type(type), m_offset(offset), m_size(size), m_name(name), m_endianess(endianess), m_color(color) {
-            constexpr u32 Palette[] = { 0x50b4771f, 0x500e7fff, 0x502ca02c, 0x502827d6, 0x50bd6794, 0x504b568c, 0x50c277e3, 0x507f7f7f, 0x5022bdbc, 0x50cfbe17 };
+        PatternData(u64 offset, size_t size, u32 color = 0)
+        : m_offset(offset), m_size(size), m_color(color) {
+            constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
                 return;
@@ -49,21 +48,25 @@ namespace hex::lang {
         }
         virtual ~PatternData() = default;
 
-        [[nodiscard]] Type getPatternType() const { return this->m_type; }
+        virtual PatternData* clone() = 0;
+
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
         [[nodiscard]] size_t getSize() const { return this->m_size; }
 
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
-        void setName(std::string name) { this->m_name = name; }
+        [[nodiscard]] const std::string& getVariableName() const { return this->m_variableName; }
+        void setVariableName(std::string name) { this->m_variableName = std::move(name); }
+
+        [[nodiscard]] const std::string& getTypeName() const { return this->m_typeName; }
+        void setTypeName(std::string name) { this->m_typeName = std::move(name); }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
         void setColor(u32 color) { this->m_color = color; }
 
-        [[nodiscard]] std::endian getEndianess() const { return this->m_endianess; }
-        void setEndianess(std::endian endianess) { this->m_endianess = endianess; }
+        [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
+        void setEndian(std::endian endian) { this->m_endian = endian; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
-        virtual std::string getTypeName() = 0;
+        [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
         virtual std::optional<u32> highlightBytes(size_t offset) {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
@@ -77,9 +80,9 @@ namespace hex::lang {
         static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, lang::PatternData* left, lang::PatternData* right) {
             if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                    return left->getName() > right->getName();
+                    return left->getVariableName() > right->getVariableName();
                 else
-                    return left->getName() < right->getName();
+                    return left->getVariableName() < right->getVariableName();
             }
             else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
@@ -100,9 +103,9 @@ namespace hex::lang {
                 provider->read(left->getOffset(), leftBuffer.data(), left->getSize());
                 provider->read(right->getOffset(), rightBuffer.data(), right->getSize());
 
-                if (left->m_endianess != std::endian::native)
+                if (left->m_endian != std::endian::native)
                     std::reverse(leftBuffer.begin(), leftBuffer.end());
-                if (right->m_endianess != std::endian::native)
+                if (right->m_endian != std::endian::native)
                     std::reverse(rightBuffer.begin(), rightBuffer.end());
 
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
@@ -129,38 +132,38 @@ namespace hex::lang {
         static void resetPalette() { PatternData::s_paletteOffset = 0; }
 
     protected:
-        void createDefaultEntry(std::string value) {
+        void createDefaultEntry(std::string_view value) const {
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
                 View::postEvent(Events::SelectionChangeRequest, &selectRegion);
             }
             ImGui::SameLine();
-            ImGui::Text("%s", this->getName().c_str());
+            ImGui::Text("%s", this->getVariableName().c_str());
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", value.c_str());
+            ImGui::Text("%s", value.data());
         }
 
     protected:
-        std::endian m_endianess = std::endian::native;
+        std::endian m_endian = std::endian::native;
 
     private:
-        Type m_type;
         u64 m_offset;
         size_t m_size;
 
         u32 m_color;
-        std::string m_name;
+        std::string m_variableName;
+        std::string m_typeName;
 
         static inline u8 s_paletteOffset = 0;
 
@@ -168,41 +171,49 @@ namespace hex::lang {
 
     class PatternDataPadding : public PatternData {
     public:
-        PatternDataPadding(u64 offset, size_t size) : PatternData(Type::Padding, offset, size, "", { }, 0x00FFFFFF) { }
+        PatternDataPadding(u64 offset, size_t size) : PatternData(offset, size, 0x00FFFFFF) { }
+
+        PatternData* clone() override {
+            return new PatternDataPadding(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "";
         }
     };
 
     class PatternDataPointer : public PatternData {
     public:
-        PatternDataPointer(u64 offset, size_t size, const std::string &name, PatternData *pointedAt, std::endian endianess, u32 color = 0)
-        : PatternData(Type::Unsigned, offset, size, name, endianess, color), m_pointedAt(pointedAt) {
-            this->m_pointedAt->setName("*" + this->m_pointedAt->getName());
+        PatternDataPointer(u64 offset, size_t size, PatternData *pointedAt, u32 color = 0)
+        : PatternData(offset, size, color), m_pointedAt(pointedAt) {
+            this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataPointer(*this);
         }
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), this->m_endianess);
+            data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s*", this->m_pointedAt->getFormattedName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("*(0x%0*llx)", this->getSize() * 2, data);
+            ImGui::Text("*(0x%llx)", data);
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
@@ -211,7 +222,7 @@ namespace hex::lang {
             }
         }
 
-        virtual std::optional<u32> highlightBytes(size_t offset) {
+        std::optional<u32> highlightBytes(size_t offset) override {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
                 return this->getColor();
             else if (auto color = this->m_pointedAt->highlightBytes(offset); color.has_value())
@@ -220,7 +231,7 @@ namespace hex::lang {
                 return { };
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "Pointer";
         }
 
@@ -230,18 +241,22 @@ namespace hex::lang {
 
     class PatternDataUnsigned : public PatternData {
     public:
-        PatternDataUnsigned(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
-            : PatternData(Type::Unsigned, offset, size, name, endianess, color) { }
+        PatternDataUnsigned(u64 offset, size_t size, u32 color = 0)
+            : PatternData(offset, size, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataUnsigned(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), this->m_endianess);
+            data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
             this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:     return "u8";
                 case 2:     return "u16";
@@ -255,20 +270,24 @@ namespace hex::lang {
 
     class PatternDataSigned : public PatternData {
     public:
-        PatternDataSigned(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
-            : PatternData(Type::Signed, offset, size, name, endianess, color) { }
+        PatternDataSigned(u64 offset, size_t size, u32 color = 0)
+            : PatternData(offset, size, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataSigned(*this);
+        }
 
        void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), this->m_endianess);
+            data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            s64 signedData = signedData = hex::signExtend(data, this->getSize(), 64);
+            s64 signedData = hex::signExtend(data, this->getSize(), 64);
 
            this->createDefaultEntry(hex::format("%ld (0x%0*lx)", signedData, this->getSize() * 2, data));
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:     return "s8";
                 case 2:     return "s16";
@@ -282,21 +301,25 @@ namespace hex::lang {
 
     class PatternDataFloat : public PatternData {
     public:
-        PatternDataFloat(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
-            : PatternData(Type::Float, offset, size, name, endianess, color) { }
+        PatternDataFloat(u64 offset, size_t size, u32 color = 0)
+            : PatternData(offset, size, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataFloat(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             double formatData = 0;
             if (this->getSize() == 4) {
                 float data = 0;
                 provider->read(this->getOffset(), &data, 4);
-                data = hex::changeEndianess(data, 4, this->m_endianess);
+                data = hex::changeEndianess(data, 4, this->getEndian());
 
                 formatData = data;
             } else if (this->getSize() == 8) {
                 double data = 0;
                 provider->read(this->getOffset(), &data, 8);
-                data = hex::changeEndianess(data, 8, this->m_endianess);
+                data = hex::changeEndianess(data, 8, this->getEndian());
 
                 formatData = data;
             }
@@ -304,7 +327,7 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("%f (0x%0*lx)", formatData, this->getSize() * 2, formatData));
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 4:     return "float";
                 case 8:     return "double";
@@ -315,8 +338,12 @@ namespace hex::lang {
 
     class PatternDataCharacter : public PatternData {
     public:
-        PatternDataCharacter(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
-            : PatternData(Type::Character, offset, size, name, endianess, color) { }
+        explicit PatternDataCharacter(u64 offset, u32 color = 0)
+            : PatternData(offset, 1, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataCharacter(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             char character;
@@ -325,15 +352,19 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("'%c'", character));
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return "Character";
         }
     };
 
     class PatternDataString : public PatternData {
     public:
-        PatternDataString(u64 offset, size_t size, const std::string &name, std::endian endianess, u32 color = 0)
-            : PatternData(Type::String, offset, size, name, endianess, color) { }
+        PatternDataString(u64 offset, size_t size, u32 color = 0)
+            : PatternData(offset, size, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataString(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> buffer(this->getSize() + 1, 0x00);
@@ -343,15 +374,24 @@ namespace hex::lang {
             this->createDefaultEntry(hex::format("\"%s\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
            return "String";
         }
     };
 
     class PatternDataArray : public PatternData {
     public:
-        PatternDataArray(u64 offset, size_t size, const std::string &name, std::endian endianess, const std::vector<PatternData*> & entries, u32 color = 0)
-            : PatternData(Type::Array, offset, size, name, endianess, color), m_entries(entries) { }
+        PatternDataArray(u64 offset, size_t size, std::vector<PatternData*> entries, u32 color = 0)
+            : PatternData(offset, size, color), m_entries(std::move(entries)) { }
+
+        PatternDataArray(const PatternDataArray &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            for (const auto &entry : other.m_entries)
+                this->m_entries.push_back(entry->clone());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataArray(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             if (this->m_entries.empty())
@@ -359,13 +399,13 @@ namespace hex::lang {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_entries[0]->getTypeName().c_str());
             ImGui::SameLine(0, 0);
@@ -396,7 +436,7 @@ namespace hex::lang {
             return { };
         }
 
-        std::string getTypeName() override {
+        [[nodiscard]] std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
 
@@ -406,20 +446,29 @@ namespace hex::lang {
 
     class PatternDataStruct : public PatternData {
     public:
-        PatternDataStruct(u64 offset, size_t size, const std::string &name, std::endian endianess, const std::string &structName, const std::vector<PatternData*> & members, u32 color = 0)
-                : PatternData(Type::Struct, offset, size, name, endianess, color), m_structName(structName), m_members(members), m_sortedMembers(members) { }
+        PatternDataStruct(u64 offset, size_t size, const std::vector<PatternData*> & members, u32 color = 0)
+                : PatternData(offset, size, color), m_members(members), m_sortedMembers(members) { }
+
+        PatternDataStruct(const PatternDataStruct &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            for (const auto &member : other.m_members)
+                this->m_members.push_back(member->clone());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataStruct(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->m_structName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("%s", "{ ... }");
 
@@ -452,32 +501,44 @@ namespace hex::lang {
                 member->sort(sortSpecs, provider);
         }
 
-        std::string getTypeName() override {
-            return "struct " + this->m_structName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "struct " + PatternData::getTypeName();
+        }
+
+        const auto& getMembers() const {
+            return this->m_members;
         }
 
     private:
-        std::string m_structName;
         std::vector<PatternData*> m_members;
         std::vector<PatternData*> m_sortedMembers;
     };
 
     class PatternDataUnion : public PatternData {
     public:
-        PatternDataUnion(u64 offset, size_t size, const std::string &name, const std::string &unionName, const std::vector<PatternData*> & members, std::endian endianess, u32 color = 0)
-                : PatternData(Type::Union, offset, size, name, endianess, color), m_unionName(unionName), m_members(members), m_sortedMembers(members) { }
+        PatternDataUnion(u64 offset, size_t size, const std::vector<PatternData*> & members, u32 color = 0)
+                : PatternData(offset, size, color), m_members(members), m_sortedMembers(members) { }
+
+        PatternDataUnion(const PatternDataUnion &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            for (const auto &member : other.m_members)
+                this->m_members.push_back(member->clone());
+        }
+
+        PatternData* clone() override {
+            return new PatternDataUnion(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", this->m_unionName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
 
             ImGui::TableNextColumn();
             ImGui::Text("%s", "{ ... }");
@@ -511,27 +572,34 @@ namespace hex::lang {
                 member->sort(sortSpecs, provider);
         }
 
-        std::string getTypeName() override {
-            return "union " + this->m_unionName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "union " + PatternData::getTypeName();;
+        }
+
+        const auto& getMembers() const {
+            return this->m_members;
         }
 
     private:
-        std::string m_unionName;
         std::vector<PatternData*> m_members;
         std::vector<PatternData*> m_sortedMembers;
     };
 
     class PatternDataEnum : public PatternData {
     public:
-        PatternDataEnum(u64 offset, size_t size, const std::string &name, const std::string &enumName, std::vector<std::pair<u64, std::string>> enumValues, std::endian endianess, u32 color = 0)
-            : PatternData(Type::Enum, offset, size, name, endianess, color), m_enumName(enumName), m_enumValues(enumValues) { }
+        PatternDataEnum(u64 offset, size_t size, std::vector<std::pair<u64, std::string>> enumValues, u32 color = 0)
+            : PatternData(offset, size, color), m_enumValues(std::move(enumValues)) { }
+
+        PatternData* clone() override {
+            return new PatternDataEnum(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
-            value = hex::changeEndianess(value, this->getSize(), this->m_endianess);
+            value = hex::changeEndianess(value, this->getSize(), this->getEndian());
 
-            std::string valueString = this->m_enumName + "::";
+            std::string valueString = PatternData::getTypeName() + "::";
 
             bool foundValue = false;
             for (auto &[entryValue, entryName] : this->m_enumValues) {
@@ -546,69 +614,84 @@ namespace hex::lang {
                 valueString += "???";
 
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
                 View::postEvent(Events::SelectionChangeRequest, &selectRegion);
             }
             ImGui::SameLine();
-            ImGui::Text("%s", this->getName().c_str());
+            ImGui::Text("%s", this->getVariableName().c_str());
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", this->m_enumName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("%s", hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value).c_str());
         }
 
-        std::string getTypeName() override {
-            return "enum " + this->m_enumName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "enum " + PatternData::getTypeName();
+        }
+
+        const auto& getEnumValues() const {
+            return this->m_enumValues;
         }
 
     private:
-        std::string m_enumName;
         std::vector<std::pair<u64, std::string>> m_enumValues;
     };
 
     class PatternDataBitfield : public PatternData {
     public:
-        PatternDataBitfield(u64 offset, size_t size, const std::string &name, const std::string &bitfieldName, std::vector<std::pair<std::string, size_t>> fields, std::endian endianess, u32 color = 0)
-                : PatternData(Type::Enum, offset, size, name, endianess, color), m_bitfieldName(bitfieldName), m_fields(fields) { }
+        PatternDataBitfield(u64 offset, size_t size, std::vector<std::pair<std::string, size_t>> fields, u32 color = 0)
+                : PatternData(offset, size, color), m_fields(std::move(fields)) { }
+
+        PatternData* clone() override {
+            return new PatternDataBitfield(*this);
+        }
 
         void createEntry(prv::Provider* &provider) override {
-            u64 value = 0;
-            provider->read(this->getOffset(), &value, this->getSize());
-            value = hex::changeEndianess(value, this->getSize(), this->m_endianess);
+            std::vector<u8> value(this->getSize(), 0);
+            provider->read(this->getOffset(), &value[0], value.size());
+
+            if (this->m_endian == std::endian::big)
+                std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08lx : 0x%08lx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04lx", this->getSize());
+            ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", this->m_bitfieldName.c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("{ %llx }", value);
+
+            std::string valueString = "{ ";
+            for (u64 i = 0; i < value.size(); i++)
+                valueString += hex::format("%02x ", value[i]);
+            valueString += "}";
+
+            ImGui::TextUnformatted(valueString.c_str());
 
             if (open) {
                 u16 bitOffset = 0;
                 for (auto &[entryName, entrySize] : this->m_fields) {
                     ImGui::TableNextRow();
-                    ImGui::TreeNodeEx(this->getName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+                    ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", entryName.c_str());
                     ImGui::TableNextColumn();
-                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                     ImGui::TableNextColumn();
-                    ImGui::Text("0x%08lx : 0x%08lx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3) - 1);
+                    ImGui::Text("0x%08llx : 0x%08llx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3));
                     ImGui::TableNextColumn();
                     if (entrySize == 1)
                         ImGui::Text("%llu bit", entrySize);
@@ -617,7 +700,11 @@ namespace hex::lang {
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", entryName.c_str());
                     ImGui::TableNextColumn();
-                    ImGui::Text("%llx", hex::extract((bitOffset + entrySize) - 1, bitOffset, value));
+                    {
+                        u128 fieldValue = 0;
+                        std::memcpy(&fieldValue, value.data() + (bitOffset / 8), (entrySize / 8) + 1);
+                        ImGui::Text("%llx", hex::extract((bitOffset + entrySize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
+                    }
                     bitOffset += entrySize;
                 }
 
@@ -626,12 +713,15 @@ namespace hex::lang {
 
         }
 
-        std::string getTypeName() override {
-            return "bitfield " + this->m_bitfieldName;
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "bitfield " + PatternData::getTypeName();
+        }
+
+        const auto& getFields() const {
+            return this->m_fields;
         }
 
     private:
-        std::string m_bitfieldName;
         std::vector<std::pair<std::string, size_t>> m_fields;
     };
 

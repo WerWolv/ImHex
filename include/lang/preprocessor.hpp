@@ -18,12 +18,18 @@ namespace hex::lang {
 
         std::optional<std::string> preprocess(const std::string& code, bool initialRun = true);
 
-        void addPragmaHandler(std::string pragmaType, std::function<bool(std::string)> function);
+        void addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string&)> &function);
         void addDefaultPragmaHandlers();
 
         const std::pair<u32, std::string>& getError() { return this->m_error; }
 
     private:
+        using PreprocessorError = std::pair<u32, std::string>;
+
+        [[noreturn]] void throwPreprocessorError(std::string_view error, u32 lineNumber) const {
+            throw PreprocessorError(lineNumber, "Preprocessor: " + std::string(error));
+        }
+
         std::unordered_map<std::string, std::function<bool(std::string)>> m_pragmaHandlers;
 
         std::set<std::pair<std::string, std::string>> m_defines;

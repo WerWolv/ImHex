@@ -26,7 +26,7 @@ namespace hex {
             static std::pair<const char* const, size_t> builtInTypes[] = {
                     { "u8", 1 }, { "u16", 2 }, { "u32", 4 }, { "u64", 8 }, { "u128", 16 },
                     { "s8", 1 }, { "s16", 2 }, { "s32", 4 }, { "s64", 8 }, { "s128", 16 },
-                    { "float", 4 }, { "double", 8 }, { "padding", 1 }
+                    { "float", 4 }, { "double", 8 }, { "char", 1 }, { "padding", 1 }
             };
             for (const auto &[name, size] : builtInTypes) {
                 TextEditor::Identifier id;
@@ -251,17 +251,6 @@ namespace hex {
         lang::PatternData::resetPalette();
     }
 
-    template<derived_from<lang::ASTNode> T>
-    static std::vector<T*> findNodes(const lang::ASTNode::Type type, const std::vector<lang::ASTNode*> &nodes) {
-        std::vector<T*> result;
-
-        for (const auto & node : nodes)
-            if (node->getType() == type)
-                result.push_back(static_cast<T*>(node));
-
-        return result;
-    }
-
     void ViewPattern::parsePattern(char *buffer) {
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
@@ -285,14 +274,14 @@ namespace hex {
         });
         preprocessor.addDefaultPragmaHandlers();
 
-        auto preprocesedCode = preprocessor.preprocess(buffer);
-        if (!preprocesedCode.has_value()) {
+        auto preprocessedCode = preprocessor.preprocess(buffer);
+        if (!preprocessedCode.has_value()) {
             this->m_textEditor.SetErrorMarkers({ preprocessor.getError() });
             return;
         }
 
         hex::lang::Lexer lexer;
-        auto tokens = lexer.lex(preprocesedCode.value());
+        auto tokens = lexer.lex(preprocessedCode.value());
         if (!tokens.has_value()) {
             this->m_textEditor.SetErrorMarkers({ lexer.getError() });
             return;
@@ -302,11 +291,10 @@ namespace hex {
         auto ast = parser.parse(tokens.value());
         if (!ast.has_value()) {
             this->m_textEditor.SetErrorMarkers({ parser.getError() });
-            printf("%d %s\n", parser.getError().first, parser.getError().second.c_str());
             return;
         }
 
-        hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast.value()) delete node; });
+        SCOPE_EXIT( for(auto &node : ast.value()) delete node; );
 
         hex::lang::Validator validator;
         auto validatorResult = validator.validate(ast.value());
@@ -322,8 +310,8 @@ namespace hex {
             this->m_textEditor.SetErrorMarkers({ evaluator.getError() });
             return;
         }
-        this->m_patternData = patternData.value();
 
+        this->m_patternData = patternData.value();
         this->postEvent(Events::PatternChanged);
     }
 
