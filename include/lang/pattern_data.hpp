@@ -36,7 +36,7 @@ namespace hex::lang {
     public:
         PatternData(u64 offset, size_t size, u32 color = 0)
         : m_offset(offset), m_size(size), m_color(color) {
-            constexpr u32 Palette[] = { 0x50b4771f, 0x500e7fff, 0x502ca02c, 0x502827d6, 0x50bd6794, 0x504b568c, 0x50c277e3, 0x507f7f7f, 0x5022bdbc, 0x50cfbe17 };
+            constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
                 return;
@@ -143,7 +143,7 @@ namespace hex::lang {
             ImGui::SameLine();
             ImGui::Text("%s", this->getVariableName().c_str());
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -205,7 +205,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -401,7 +401,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -623,7 +623,7 @@ namespace hex::lang {
             ImGui::SameLine();
             ImGui::Text("%s", this->getVariableName().c_str());
             ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
@@ -689,7 +689,7 @@ namespace hex::lang {
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", entryName.c_str());
                     ImGui::TableNextColumn();
-                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), 14));
+                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                     ImGui::TableNextColumn();
                     ImGui::Text("0x%08llx : 0x%08llx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3));
                     ImGui::TableNextColumn();

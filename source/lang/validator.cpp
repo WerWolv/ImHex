@@ -65,7 +65,16 @@ namespace hex::lang {
                 }
                 else
                     printf("%*c ASTNodeVariableDecl (%s)\n", INDENT_VALUE, variableDeclNode->getName().data());
-                this->printAST({ variableDeclNode->getType() });
+                printAST({ variableDeclNode->getType() });
+            } else if (auto pointerDeclNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); pointerDeclNode != nullptr) {
+                if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(pointerDeclNode->getPlacementOffset()); offset != nullptr) {
+                    printf("%*c ASTNodePointerVariableDecl (*%s) @\n", INDENT_VALUE, pointerDeclNode->getName().data());
+                    printAST({ offset });
+                }
+                else
+                    printf("%*c ASTNodePointerVariableDecl (*%s)\n", INDENT_VALUE, pointerDeclNode->getName().data());
+                printAST({ pointerDeclNode->getType() });
+                printAST({ pointerDeclNode->getSizeType() });
             } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
                 auto sizeExpr = dynamic_cast<ASTNodeNumericExpression*>(arrayDeclNode->getSize());
                 if (sizeExpr == nullptr) {
@@ -83,11 +92,11 @@ namespace hex::lang {
                     printAST({ sizeExpr });
                 }
 
-                this->printAST({ arrayDeclNode->getType() });
-                this->printAST({ arrayDeclNode->getSize() });
+                printAST({ arrayDeclNode->getType() });
+                printAST({ arrayDeclNode->getSize() });
             } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
                 printf("%*c ASTNodeTypeDecl (%s %s)\n", INDENT_VALUE, typeDeclNode->getEndian().value_or(std::endian::native) == std::endian::little ? "le" : "be", typeDeclNode->getName().empty() ? "<unnamed>" : typeDeclNode->getName().data());
-                this->printAST({ typeDeclNode->getType() });
+                printAST({ typeDeclNode->getType() });
             } else if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(node); builtinTypeNode != nullptr) {
                 std::string typeName = Token::getTypeName(builtinTypeNode->getType());
                 printf("%*c ASTNodeTypeDecl (%s)\n", INDENT_VALUE, typeName.c_str());
@@ -111,28 +120,28 @@ namespace hex::lang {
                 }
                 printf("%*c ASTNodeNumericExpression %s\n", INDENT_VALUE, op.c_str());
                 printf("%*c Left:\n", INDENT_VALUE);
-                this->printAST({ numericExpressionNode->getLeftOperand() });
+                printAST({ numericExpressionNode->getLeftOperand() });
                 printf("%*c Right:\n", INDENT_VALUE);
-                this->printAST({ numericExpressionNode->getRightOperand() });
+                printAST({ numericExpressionNode->getRightOperand() });
             } else if (auto structNode = dynamic_cast<ASTNodeStruct*>(node); structNode != nullptr) {
                 printf("%*c ASTNodeStruct\n", INDENT_VALUE);
-                this->printAST(structNode->getMembers());
+                printAST(structNode->getMembers());
             } else if (auto unionNode = dynamic_cast<ASTNodeUnion*>(node); unionNode != nullptr) {
                 printf("%*c ASTNodeUnion\n", INDENT_VALUE);
-                this->printAST(unionNode->getMembers());
+                printAST(unionNode->getMembers());
             } else if (auto enumNode = dynamic_cast<ASTNodeEnum*>(node); enumNode != nullptr) {
                 printf("%*c ASTNodeEnum\n", INDENT_VALUE);
 
                 for (const auto &[name, entry] : enumNode->getEntries()) {
                     printf("%*c ::%s\n", INDENT_VALUE, name.c_str());
-                    this->printAST({ entry });
+                    printAST({ entry });
                 }
             } else if (auto bitfieldNode = dynamic_cast<ASTNodeBitfield*>(node); bitfieldNode != nullptr) {
                 printf("%*c ASTNodeBitfield\n", INDENT_VALUE);
 
                 for (const auto &[name, entry] : bitfieldNode->getEntries()) {
                     printf("%*c %s : \n", INDENT_VALUE, name.c_str());
-                    this->printAST({ entry });
+                    printAST({ entry });
                 }
             } else if (auto rvalueNode = dynamic_cast<ASTNodeRValue*>(node); rvalueNode != nullptr) {
                 printf("%*c ASTNodeRValue\n", INDENT_VALUE);

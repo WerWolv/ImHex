@@ -68,12 +68,14 @@ namespace hex::lang {
         ASTNode* parsePadding();
         ASTNode* parseMemberVariable();
         ASTNode* parseMemberArrayVariable();
+        ASTNode* parseMemberPointerVariable();
         ASTNode* parseStruct();
         ASTNode* parseUnion();
         ASTNode* parseEnum();
         ASTNode* parseBitfield();
         ASTNode* parseVariablePlacement();
         ASTNode* parseArrayVariablePlacement();
+        ASTNode* parsePointerVariablePlacement();
         ASTNode* parseStatement();
 
         std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {

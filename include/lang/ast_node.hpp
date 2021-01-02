@@ -192,6 +192,42 @@ namespace hex::lang {
         ASTNode *m_placementOffset;
     };
 
+    class ASTNodePointerVariableDecl : public ASTNode {
+    public:
+        ASTNodePointerVariableDecl(std::string_view name, ASTNode *type, ASTNode *sizeType, ASTNode *placementOffset = nullptr)
+                : ASTNode(), m_name(name), m_type(type), m_sizeType(sizeType), m_placementOffset(placementOffset) { }
+
+        ASTNodePointerVariableDecl(const ASTNodePointerVariableDecl &other) : ASTNode(other) {
+            this->m_name = other.m_name;
+            this->m_type = other.m_type->clone();
+            this->m_sizeType = other.m_sizeType->clone();
+
+            if (other.m_placementOffset != nullptr)
+                this->m_placementOffset = other.m_placementOffset->clone();
+            else
+                this->m_placementOffset = nullptr;
+        }
+
+        ~ASTNodePointerVariableDecl() override {
+            delete this->m_type;
+        }
+
+        ASTNode* clone() override {
+            return new ASTNodePointerVariableDecl(*this);
+        }
+
+        [[nodiscard]] std::string_view getName() const { return this->m_name; }
+        [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
+        [[nodiscard]] constexpr ASTNode* getSizeType() const { return this->m_sizeType; }
+        [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
+
+    private:
+        std::string m_name;
+        ASTNode *m_type;
+        ASTNode *m_sizeType;
+        ASTNode *m_placementOffset;
+    };
+
     class ASTNodeStruct : public ASTNode {
     public:
         ASTNodeStruct() : ASTNode() { }

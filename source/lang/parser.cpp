@@ -197,6 +197,24 @@ namespace hex::lang {
         return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size);
     }
 
+    // (parseType) *Identifier : (parseType)
+    ASTNode* Parser::parseMemberPointerVariable() {
+        auto name = getValue<std::string>(-2);
+
+        auto temporaryPointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
+        if (temporaryPointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        SCOPE_EXIT( delete temporaryPointerType; );
+
+        if (!MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED)))
+            throwParseError("expected unsigned builtin type as size", -1);
+
+        auto temporarySizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
+        if (temporarySizeType == nullptr) throwParseError("invalid type used for pointer size", -1);
+        SCOPE_EXIT( delete temporarySizeType; );
+
+        return new ASTNodePointerVariableDecl(name, temporaryPointerType->getType()->clone(), temporarySizeType->getType()->clone());
+    }
+
     // struct Identifier { <(parseMember)...> }
     ASTNode* Parser::parseStruct() {
         const auto structNode = new ASTNodeStruct();
@@ -210,6 +228,8 @@ namespace hex::lang {
                 structNode->addMember(parseMemberArrayVariable());
             else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
                 structNode->addMember(parseMemberVariable());
+            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+                structNode->addMember(parseMemberPointerVariable());
             else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
                 throwParseError("unexpected end of program", -2);
             else
@@ -235,6 +255,8 @@ namespace hex::lang {
                 unionNode->addMember(parseMemberArrayVariable());
             else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
                 unionNode->addMember(parseMemberVariable());
+            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+                unionNode->addMember(parseMemberPointerVariable());
             else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
                 throwParseError("unexpected end of program", -2);
             else
@@ -329,14 +351,16 @@ namespace hex::lang {
     ASTNode* Parser::parseVariablePlacement() {
         auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
         if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        SCOPE_EXIT( delete temporaryType; );
 
-        return new ASTNodeVariableDecl(getValue<std::string>(-2), temporaryType, parseMathematicalExpression());
+        return new ASTNodeVariableDecl(getValue<std::string>(-2), temporaryType->getType()->clone(), parseMathematicalExpression());
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)] @ Integer
     ASTNode* Parser::parseArrayVariablePlacement() {
         auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
         if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        SCOPE_EXIT( delete temporaryType; );
 
         auto name = getValue<std::string>(-2);
         auto size = parseMathematicalExpression();
@@ -344,10 +368,31 @@ namespace hex::lang {
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
             throwParseError("expected closing ']' at end of array declaration", -1);
 
-        if (!MATCHES(sequence(OPERATOR_AT, INTEGER)))
+        if (!MATCHES(sequence(OPERATOR_AT)))
             throwParseError("expected placement instruction", -1);
 
-        return new ASTNodeArrayVariableDecl(name, temporaryType, size, parseMathematicalExpression());
+        return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size, parseMathematicalExpression());
+    }
+
+    // (parseType) *Identifier : (parseType) @ Integer
+    ASTNode* Parser::parsePointerVariablePlacement() {
+        auto name = getValue<std::string>(-2);
+
+        auto temporaryPointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
+        if (temporaryPointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        SCOPE_EXIT( delete temporaryPointerType; );
+
+        if (!MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED)))
+            throwParseError("expected unsigned builtin type as size", -1);
+
+        auto temporaryPointerSizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
+        if (temporaryPointerSizeType == nullptr) throwParseError("invalid size type used in pointer declaration", -1);
+        SCOPE_EXIT( delete temporaryPointerSizeType; );
+
+        if (!MATCHES(sequence(OPERATOR_AT)))
+            throwParseError("expected placement instruction", -1);
+
+        return new ASTNodePointerVariableDecl(name, temporaryPointerType->getType()->clone(), temporaryPointerSizeType->getType()->clone(), parseMathematicalExpression());
     }
 
 
@@ -364,6 +409,8 @@ namespace hex::lang {
             statement = parseArrayVariablePlacement();
         else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, OPERATOR_AT)))
             statement = parseVariablePlacement();
+        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+            statement = parsePointerVariablePlacement();
         else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseStruct();
         else if (MATCHES(sequence(KEYWORD_UNION, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))

@@ -279,7 +279,7 @@ namespace hex {
             this->m_textEditor.SetErrorMarkers({ preprocessor.getError() });
             return;
         }
-        
+
         hex::lang::Lexer lexer;
         auto tokens = lexer.lex(preprocessedCode.value());
         if (!tokens.has_value()) {

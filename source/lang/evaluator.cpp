@@ -164,6 +164,8 @@ namespace hex::lang {
                 memberPatterns.emplace_back(this->evaluateVariable(memberVariableNode));
             else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
                 memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
+            else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(member); memberPointerNode != nullptr)
+                memberPatterns.emplace_back(this->evaluatePointer(memberPointerNode));
             else
                 throwEvaluateError("invalid struct member", member->getLineNumber());
 
@@ -188,6 +190,8 @@ namespace hex::lang {
                 memberPatterns.emplace_back(this->evaluateVariable(memberVariableNode));
             else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
                 memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
+            else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(member); memberPointerNode != nullptr)
+                memberPatterns.emplace_back(this->evaluatePointer(memberPointerNode));
             else
                 throwEvaluateError("invalid union member", member->getLineNumber());
 
@@ -373,6 +377,37 @@ namespace hex::lang {
         return pattern;
     }
 
+    PatternData* Evaluator::evaluatePointer(ASTNodePointerVariableDecl *node) {
+        s128 pointerOffset;
+        if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
+            auto valueNode = evaluateMathematicalExpression(offset);
+            SCOPE_EXIT( delete valueNode; );
+
+            pointerOffset = std::get<s128>(valueNode->getValue());
+            this->m_currOffset = pointerOffset;
+        } else {
+            pointerOffset = this->m_currOffset;
+        }
+
+        PatternData *sizeType;
+        if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(node->getSizeType()); builtinTypeNode != nullptr) {
+            sizeType = evaluateBuiltinType(builtinTypeNode);
+        } else
+            throwEvaluateError("Pointer size is not a builtin type", node->getLineNumber());
+
+        size_t pointerSize = sizeType->getSize();
+        delete sizeType;
+
+        u128 pointedAtOffset = 0;
+        this->m_provider->read(pointerOffset, &pointedAtOffset, pointerSize);
+
+        this->m_currOffset = pointedAtOffset;
+        auto pointedAt = evaluateType(dynamic_cast<ASTNodeTypeDecl*>(node->getType()));
+        this->m_currOffset = pointerOffset + pointerSize;
+
+        return new PatternDataPointer(pointerOffset, pointerSize, pointedAt);
+    }
+
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
 
         std::vector<PatternData*> patterns;
@@ -385,6 +420,8 @@ namespace hex::lang {
                     patterns.push_back(this->evaluateVariable(variableDeclNode));
                 } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
                     patterns.push_back(this->evaluateArray(arrayDeclNode));
+                } else if (auto pointerDeclNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); pointerDeclNode != nullptr) {
+                    patterns.push_back(this->evaluatePointer(pointerDeclNode));
                 }
 
             }
