@@ -274,14 +274,14 @@ namespace hex {
         });
         preprocessor.addDefaultPragmaHandlers();
 
-        auto preprocesedCode = preprocessor.preprocess(buffer);
-        if (!preprocesedCode.has_value()) {
+        auto preprocessedCode = preprocessor.preprocess(buffer);
+        if (!preprocessedCode.has_value()) {
             this->m_textEditor.SetErrorMarkers({ preprocessor.getError() });
             return;
         }
-
+        
         hex::lang::Lexer lexer;
-        auto tokens = lexer.lex(preprocesedCode.value());
+        auto tokens = lexer.lex(preprocessedCode.value());
         if (!tokens.has_value()) {
             this->m_textEditor.SetErrorMarkers({ lexer.getError() });
             return;
@@ -294,10 +294,9 @@ namespace hex {
             return;
         }
 
-        hex::ScopeExit deleteAst([&ast]{ for(auto &node : ast.value()) delete node; });
+        SCOPE_EXIT( for(auto &node : ast.value()) delete node; );
 
         hex::lang::Validator validator;
-        validator.printAST(ast.value());
         auto validatorResult = validator.validate(ast.value());
         if (!validatorResult) {
             this->m_textEditor.SetErrorMarkers({ validator.getError() });
@@ -311,8 +310,8 @@ namespace hex {
             this->m_textEditor.SetErrorMarkers({ evaluator.getError() });
             return;
         }
-        this->m_patternData = patternData.value();
 
+        this->m_patternData = patternData.value();
         this->postEvent(Events::PatternChanged);
     }
 
