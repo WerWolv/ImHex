@@ -66,6 +66,13 @@ namespace hex {
 #define TOKEN_CONCAT_IMPL(x, y) x ## y
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
 
+template<>
+struct std::is_integral<u128> : public std::true_type { };
+template<>
+struct std::is_integral<s128> : public std::true_type { };
+template<>
+struct std::is_signed<s128> : public std::true_type { };
+
 namespace hex {
 
     template<typename ... Args>
