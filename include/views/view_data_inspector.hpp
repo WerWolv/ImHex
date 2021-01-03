@@ -49,6 +49,12 @@ namespace hex {
         size_t size;
     };
 
+    enum class NumberDisplayStyle {
+        Decimal,
+        Hexadecimal,
+        Octal
+    };
+
     class ViewDataInspector : public View {
     public:
         explicit ViewDataInspector();
@@ -60,7 +66,8 @@ namespace hex {
     private:
         bool m_shouldInvalidate = true;
 
-        std::endian m_endianess = std::endian::native;
+        std::endian m_endian = std::endian::native;
+        NumberDisplayStyle m_numberDisplayStyle = NumberDisplayStyle::Decimal;
 
         PreviewData m_previewData = { 0 };
         size_t m_validBytes = 0;
