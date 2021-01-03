@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <helpers/shared_data.hpp>
+
 namespace hex {
 
 
@@ -15,11 +17,11 @@ namespace hex {
     bool View::handleShortcut(int key, int mods) { return false; }
 
     std::vector<std::function<void()>>& View::getDeferedCalls() {
-        return View::s_deferedCalls;
+        return *SharedData::get().deferredCalls;
     }
 
     void View::postEvent(Events eventType, const void *userData) {
-        View::s_eventManager.post(eventType, userData);
+        EventManager::post(eventType, userData);
     }
 
     void View::drawCommonInterfaces() {
@@ -44,22 +46,6 @@ namespace hex {
         ImGui::OpenPopup("Error");
     }
 
-    void View::setWindowPosition(s32 x, s32 y) {
-        View::s_windowPos = ImVec2(x, y);
-    }
-
-    const ImVec2& View::getWindowPosition() {
-        return View::s_windowPos;
-    }
-
-    void View::setWindowSize(s32 width, s32 height) {
-        View::s_windowSize = ImVec2(width, height);
-    }
-
-    const ImVec2& View::getWindowSize() {
-        return View::s_windowSize;
-    }
-
     bool View::hasViewMenuItemEntry() {
         return true;
     }
@@ -82,15 +68,15 @@ namespace hex {
     }
 
     void View::subscribeEvent(Events eventType, std::function<void(const void*)> callback) {
-        View::s_eventManager.subscribe(eventType, this, callback);
+        EventManager::subscribe(eventType, this, callback);
     }
 
     void View::unsubscribeEvent(Events eventType) {
-        View::s_eventManager.unsubscribe(eventType, this);
+        EventManager::unsubscribe(eventType, this);
     }
 
     void View::doLater(std::function<void()> &&function) {
-        View::s_deferedCalls.push_back(function);
+        SharedData::get().deferredCalls->push_back(function);
     }
 
     void View::confirmButtons(const char *textLeft, const char *textRight, std::function<void()> leftButtonFn, std::function<void()> rightButtonFn) {

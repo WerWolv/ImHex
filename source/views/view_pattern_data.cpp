@@ -50,7 +50,7 @@ namespace hex {
 
     void ViewPatternData::drawContent() {
         if (ImGui::Begin("Pattern Data", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider != nullptr && provider->isReadable()) {
 
                 if (beginPatternDataTable(provider, this->m_patternData, this->m_sortedPatternData)) {

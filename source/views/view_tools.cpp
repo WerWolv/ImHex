@@ -42,7 +42,7 @@ namespace hex {
         this->m_mathEvaluator.setFunction("read", [this](auto args) -> std::optional<long double> {
             u8 value = 0;
 
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider == nullptr || !provider->isReadable() || args[0] >= provider->getActualSize())
                 return { };
 
@@ -52,7 +52,7 @@ namespace hex {
         }, 1, 1);
 
         this->m_mathEvaluator.setFunction("write", [this](auto args) -> std::optional<long double> {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider == nullptr || !provider->isWritable() || args[0] >= provider->getActualSize())
                 return { };
 

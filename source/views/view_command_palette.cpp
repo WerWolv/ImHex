@@ -19,8 +19,8 @@ namespace hex {
 
     void ViewCommandPalette::drawContent() {
 
-        auto windowPos = View::getWindowPosition();
-        auto windowSize = View::getWindowSize();
+        auto windowPos = *SharedData::get().windowPos;
+        auto windowSize = *SharedData::get().windowSize;
         auto paletteSize = this->getMinSize();
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + (windowSize.x - paletteSize.x) / 2.0F, windowPos.y), ImGuiCond_Always);
         if (ImGui::BeginPopup("Command Palette")) {

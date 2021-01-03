@@ -9,8 +9,8 @@ namespace hex {
     constexpr auto CreateViewSymbol         = "_ZN3hex6plugin10createViewEv";
     // hex::plugin::drawToolsEntry(void)
     constexpr auto DrawToolsEntrySymbol     = "_ZN3hex6plugin14drawToolsEntryEv";
-    // hex::plugin::internal::initializePlugin(ImGuiContext*, hex::prv::Provider**)
-    constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin8internal16initializePluginEP12ImGuiContextPPNS_3prv8ProviderE";
+    // hex::plugin::internal::initializePlugin(SharedData&)
+    constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin8internal16initializePluginER10SharedData";
 
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
@@ -28,9 +28,9 @@ namespace hex {
             dlclose(this->m_handle);
     }
 
-    void Plugin::initializePlugin(ImGuiContext *ctx, prv::Provider **provider) const {
+    void Plugin::initializePlugin(SharedData &sharedData) const {
         if (this->m_initializePluginFunction != nullptr)
-            this->m_initializePluginFunction(ctx, provider);
+            this->m_initializePluginFunction(sharedData);
     }
 
     View* Plugin::createView() const {

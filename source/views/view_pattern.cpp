@@ -109,7 +109,7 @@ namespace hex {
             if (error)
                 return;
 
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             if (provider == nullptr)
                 return;
@@ -182,7 +182,7 @@ namespace hex {
 
     void ViewPattern::drawContent() {
         if (ImGui::Begin("Pattern", &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {
                 this->m_textEditor.Render("Pattern");
@@ -303,7 +303,7 @@ namespace hex {
             return;
         }
 
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
         hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
         auto patternData = evaluator.evaluate(ast.value());
         if (!patternData.has_value()) {

@@ -41,7 +41,7 @@ namespace hex {
         if (ImGui::Begin("Hashing", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider != nullptr && provider->isAvailable()) {
 
                 ImGui::TextUnformatted("Region");

@@ -30,12 +30,9 @@ namespace hex {
 
     class EventManager {
     public:
-        void post(Events eventType, const void *userData);
-        void subscribe(Events eventType, void *owner, std::function<void(const void*)> callback);
-        void unsubscribe(Events eventType, void *sender);
-
-    private:
-        std::vector<EventHandler> m_eventHandlers;
+        static void post(Events eventType, const void *userData);
+        static void subscribe(Events eventType, void *owner, std::function<void(const void*)> callback);
+        static void unsubscribe(Events eventType, void *sender);
     };
 
 }

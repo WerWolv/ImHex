@@ -14,12 +14,12 @@ namespace hex {
         Plugin(std::string_view path);
         ~Plugin();
 
-        void initializePlugin(ImGuiContext *ctx, prv::Provider **provider) const;
+        void initializePlugin(SharedData &sharedData) const;
         View* createView() const;
         void drawToolsEntry() const;
 
     private:
-        using InitializePluginFunc = void(*)(ImGuiContext*, hex::prv::Provider**);
+        using InitializePluginFunc = void(*)(SharedData &sharedData);
         using CreateViewFunc = View*(*)();
         using DrawToolsEntryFunc = void(*)();
 

@@ -13,13 +13,13 @@ namespace hex {
 
     ViewPatches::ViewPatches() : View("Patches") {
         View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider != nullptr)
                 ProjectFile::setPatches(provider->getPatches());
         });
 
         View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider != nullptr)
                 provider->getPatches() = ProjectFile::getPatches();
         });
@@ -32,7 +32,7 @@ namespace hex {
 
     void ViewPatches::drawContent() {
         if (ImGui::Begin("Patches", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             if (provider != nullptr && provider->isReadable()) {
 

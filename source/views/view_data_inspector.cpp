@@ -13,7 +13,7 @@ namespace hex {
         View::subscribeEvent(Events::RegionSelected, [this](const void* userData){
             Region region = *static_cast<const Region*>(userData);
 
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             if (provider == nullptr) {
                 this->m_validBytes = 0;
@@ -137,7 +137,7 @@ namespace hex {
 
 
         if (ImGui::Begin("Data Inspector", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             if (provider != nullptr && provider->isReadable()) {
                 if (ImGui::BeginTable("##datainspector", 2,

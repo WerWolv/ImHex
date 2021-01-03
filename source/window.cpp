@@ -48,6 +48,8 @@ namespace hex {
     }
 
     Window::Window() {
+        SharedData::get().initializeData();
+
         this->initGLFW();
         this->initImGui();
         this->initPlugins();
@@ -282,21 +284,21 @@ namespace hex {
          {
              int x = 0, y = 0;
              glfwGetWindowPos(this->m_window, &x, &y);
-             View::setWindowPosition(x, y);
+             *SharedData::get().windowPos = ImVec2(x, y);
          }
 
          {
              int width = 0, height = 0;
              glfwGetWindowSize(this->m_window, &width, &height);
-             View::setWindowSize(width, height);
+             *SharedData::get().windowSize = ImVec2(width, height);
          }
 
          glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
-             View::setWindowPosition(x, y);
+             *SharedData::get().windowPos = ImVec2(x, y);
          });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
-            View::setWindowSize(width, height);
+            *SharedData::get().windowSize = ImVec2(width, height);
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -377,7 +379,7 @@ namespace hex {
         PluginHandler::load((std::filesystem::path(mainArgv[0]).parent_path() / "plugins").string());
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
-            plugin.initializePlugin(ImGui::GetCurrentContext(), &prv::Provider::getCurrentProvider());
+            plugin.initializePlugin(SharedData::get());
             if (auto view = plugin.createView(); view != nullptr)
                 this->m_pluginViews.push_back(view);
         }

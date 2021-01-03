@@ -19,7 +19,7 @@ namespace hex {
             : View("Hex Editor"), m_patternData(patternData) {
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (!provider->isAvailable() || !provider->isReadable())
                 return 0x00;
 
@@ -30,7 +30,7 @@ namespace hex {
         };
 
         this->m_memoryEditor.WriteFn = [](ImU8 *data, size_t off, ImU8 d) -> void {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (!provider->isAvailable() || !provider->isWritable())
                 return;
 
@@ -71,7 +71,7 @@ namespace hex {
         View::subscribeEvent(Events::SelectionChangeRequest, [this](const void *userData) {
             const Region &region = *reinterpret_cast<const Region*>(userData);
 
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             auto page = provider->getPageOfAddress(region.address);
             if (!page.has_value())
                 return;
@@ -110,7 +110,7 @@ namespace hex {
     }
 
     void ViewHexEditor::drawContent() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         size_t dataSize = (provider == nullptr || !provider->isReadable()) ? 0x00 : provider->getSize();
 
@@ -277,7 +277,7 @@ namespace hex {
     }
 
     void ViewHexEditor::drawMenu() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {
@@ -432,7 +432,7 @@ namespace hex {
 
     bool ViewHexEditor::handleShortcut(int key, int mods) {
         if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             for (const auto &[address, value] : provider->getPatches())
                 provider->writeRaw(address, &value, sizeof(u8));
             return true;
@@ -461,7 +461,7 @@ namespace hex {
 
 
     void ViewHexEditor::openFile(std::string path) {
-        auto& provider = prv::Provider::getCurrentProvider();
+        auto& provider = *SharedData::get().currentProvider;
 
         if (provider != nullptr)
             delete provider;
@@ -509,7 +509,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyBytes() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -528,7 +528,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyString() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -543,7 +543,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyLanguageArray(Language language) {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -645,7 +645,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyHexView() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -692,7 +692,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyHexViewHTML() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -825,7 +825,7 @@ R"(
     void ViewHexEditor::drawSearchPopup() {
         static auto InputCallback = [](ImGuiInputTextCallbackData* data) -> int {
             auto _this = static_cast<ViewHexEditor*>(data->UserData);
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             *_this->m_lastSearchBuffer = _this->m_searchFunction(provider, data->Buf);
             _this->m_lastSearchIndex = 0;
@@ -837,7 +837,7 @@ R"(
         };
 
         static auto Find = [this](char *buffer) {
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
 
             *this->m_lastSearchBuffer = this->m_searchFunction(provider, buffer);
             this->m_lastSearchIndex = 0;
@@ -915,7 +915,7 @@ R"(
     }
 
     void ViewHexEditor::drawGotoPopup() {
-        auto provider = prv::Provider::getCurrentProvider();
+        auto provider = *SharedData::get().currentProvider;
 
         if (ImGui::BeginPopup("Goto")) {
             ImGui::TextUnformatted("Goto");

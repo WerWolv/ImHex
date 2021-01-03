@@ -51,7 +51,7 @@ namespace hex {
 
             if (cs_open(Disassembler::toCapstoneArchictecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
 
-                auto provider = prv::Provider::getCurrentProvider();
+                auto provider = *SharedData::get().currentProvider;
                 std::vector<u8> buffer(2048, 0x00);
                 for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
                     size_t bufferSize = std::min(u64(2048), (this->m_codeRegion[1] - this->m_codeRegion[0] + 1) - address);
@@ -95,7 +95,7 @@ namespace hex {
 
         if (ImGui::Begin("Disassembler", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            auto provider = prv::Provider::getCurrentProvider();
+            auto provider = *SharedData::get().currentProvider;
             if (provider != nullptr && provider->isReadable()) {
                 ImGui::TextUnformatted("Position");
                 ImGui::Separator();

@@ -55,7 +55,7 @@ namespace hex {
 
                         {
                             u8 bytes[10] = { 0 };
-                            prv::Provider::getCurrentProvider()->read(region.address, bytes, std::min(region.size, size_t(10)));
+                            (*SharedData::get().currentProvider)->read(region.address, bytes, std::min(region.size, size_t(10)));
 
                             std::string bytesString;
                             for (u8 i = 0; i < std::min(region.size, size_t(10)); i++) {

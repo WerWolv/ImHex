@@ -6,13 +6,13 @@
 #include <hex.hpp>
 #include <views/view.hpp>
 #include <providers/provider.hpp>
+#include <helpers/shared_data.hpp>
 
-#define IMHEX_PLUGIN    namespace hex::plugin::internal {                                               \
-                            void initializePlugin(ImGuiContext *ctx, hex::prv::Provider **provider) {   \
-                                if (glGetString == NULL)                                                \
-                                    gladLoadGL();                                                       \
-                                ImGui::SetCurrentContext(ctx);                                          \
-                                hex::prv::Provider::setProviderStorage(*provider);                      \
-                            }                                                                           \
-                        }                                                                               \
+#define IMHEX_PLUGIN    namespace hex::plugin::internal {                     \
+                            void initializePlugin(SharedData &sharedData) {   \
+                                if (glGetString == NULL)                      \
+                                    gladLoadGL();                             \
+                                SharedData::get().initializeData(sharedData); \
+                            }                                                 \
+                        }                                                     \
                         namespace hex::plugin

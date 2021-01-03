@@ -31,8 +31,6 @@ int main(int argc, char **argv) {
 
     // Shared Data
     std::vector<hex::lang::PatternData*> patternData;
-    hex::prv::Provider *dataProvider = nullptr;
-    hex::prv::Provider::setProviderStorage(dataProvider);
 
     // Create views
     window.addView<hex::ViewHexEditor>(patternData);
