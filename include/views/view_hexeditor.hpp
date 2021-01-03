@@ -32,6 +32,7 @@ namespace hex {
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         std::vector<lang::PatternData*> &m_patternData;
+        std::map<u64, u32> m_highlightedBytes;
 
         char m_searchStringBuffer[0xFFFF] = { 0 };
         char m_searchHexBuffer[0xFFFF] = { 0 };

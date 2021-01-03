@@ -42,15 +42,19 @@ namespace hex {
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
             ViewHexEditor *_this = (ViewHexEditor *) data;
 
-            for (auto& pattern : _this->m_patternData) {
-                if (next && pattern->highlightBytes(off - 1) != pattern->highlightBytes(off)) {
-                    return false;
-                }
+            std::optional<u32> currColor, prevColor;
+            if (_this->m_highlightedBytes.contains(off))
+                currColor = _this->m_highlightedBytes[off];
+            if (_this->m_highlightedBytes.contains(off - 1))
+                prevColor = _this->m_highlightedBytes[off - 1];
 
-                if (auto color = pattern->highlightBytes(off); color.has_value()) {
-                    _this->m_memoryEditor.HighlightColor = color.value();
-                    return true;
-                }
+            if (next && prevColor != currColor) {
+                return false;
+            }
+
+            if (currColor.has_value()) {
+                _this->m_memoryEditor.HighlightColor = currColor.value();
+                return true;
             }
 
             _this->m_memoryEditor.HighlightColor = 0x60C08080;
@@ -91,6 +95,13 @@ namespace hex {
                 this->getWindowOpenState() = true;
                 View::doLater([] { ImGui::OpenPopup("Save Changes"); });
             }
+        });
+
+        View::subscribeEvent(Events::PatternChanged, [this](const void *userData) {
+           this->m_highlightedBytes.clear();
+
+           for (const auto &pattern : this->m_patternData)
+               this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
         });
     }
 

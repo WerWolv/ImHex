@@ -69,10 +69,20 @@ namespace hex::lang {
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
         virtual std::optional<u32> highlightBytes(size_t offset) {
-            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
+            auto currOffset = this->getOffset();
+            if (offset >= currOffset && offset < (currOffset + this->getSize()))
                 return this->getColor();
             else
                 return { };
+        }
+
+        virtual std::map<u64, u32> getHighlightedAddresses() {
+            if (this->m_highlightedAddresses.empty()) {
+                for (u64 i = 0; i < this->getSize(); i++)
+                    this->m_highlightedAddresses.insert({ this->getOffset() + i, this->getColor() });
+            }
+
+            return this->m_highlightedAddresses;
         }
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
@@ -156,6 +166,7 @@ namespace hex::lang {
 
     protected:
         std::endian m_endian = std::endian::native;
+        std::map<u64, u32> m_highlightedAddresses;
 
     private:
         u64 m_offset;
@@ -231,6 +242,17 @@ namespace hex::lang {
                 return { };
         }
 
+        std::map<u64, u32> getHighlightedAddresses() override {
+            if (this->m_highlightedAddresses.empty()) {
+                auto ownAddresses = PatternData::getHighlightedAddresses();
+                auto pointedToAddresses = this->m_pointedAt->getHighlightedAddresses();
+
+                ownAddresses.merge(pointedToAddresses);
+                this->m_highlightedAddresses = ownAddresses;
+            }
+
+            return this->m_highlightedAddresses;
+        }
         [[nodiscard]] std::string getFormattedName() const override {
             return "Pointer";
         }
@@ -436,6 +458,15 @@ namespace hex::lang {
             return { };
         }
 
+        std::map<u64, u32> getHighlightedAddresses() override {
+            if (this->m_highlightedAddresses.empty()) {
+                for (auto &entry : this->m_entries) {
+                    this->m_highlightedAddresses.merge(entry->getHighlightedAddresses());
+                }
+            }
+
+            return this->m_highlightedAddresses;
+        }
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
@@ -488,6 +519,16 @@ namespace hex::lang {
             }
 
             return { };
+        }
+
+        std::map<u64, u32> getHighlightedAddresses() override {
+            if (this->m_highlightedAddresses.empty()) {
+                for (auto &member : this->m_members) {
+                    this->m_highlightedAddresses.merge(member->getHighlightedAddresses());
+                }
+            }
+
+            return this->m_highlightedAddresses;
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
@@ -559,6 +600,16 @@ namespace hex::lang {
             }
 
             return { };
+        }
+
+        std::map<u64, u32> getHighlightedAddresses() override {
+            if (this->m_highlightedAddresses.empty()) {
+                for (auto &member : this->m_members) {
+                    this->m_highlightedAddresses.merge(member->getHighlightedAddresses());
+                }
+            }
+
+            return this->m_highlightedAddresses;
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
