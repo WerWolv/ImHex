@@ -4,46 +4,105 @@
 #include <cstdio>
 
 #include <sys/stat.h>
+#include <sys/fcntl.h>
 #include <time.h>
 
 #include "helpers/utils.hpp"
 #include "helpers/project_file_handler.hpp"
-
-
-#ifdef OS_MACOS
-    #define off64_t off_t
-    #define fopen64 fopen
-    #define fseeko64 fseek
-    #define ftello64 ftell
-#endif
 
 namespace hex::prv {
 
     FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
         this->m_fileStatsValid = stat(path.data(), &this->m_fileStats) == 0;
 
-        this->m_file = fopen64(path.data(), "r+b");
-
         this->m_readable = true;
         this->m_writable = true;
 
-        if (this->m_file == nullptr) {
-            this->m_file = fopen64(path.data(), "rb");
+        #if defined(OS_WINDOWS)
+        LARGE_INTEGER fileSize = { 0 };
+        OFSTRUCT ofStruct;
+        this->m_file = reinterpret_cast<HANDLE>(OpenFile(path.data(), &ofStruct, OF_READ));
+
+        GetFileSizeEx(this->m_file, &fileSize);
+        this->m_fileSize = fileSize.QuadPart;
+
+        this->m_file = reinterpret_cast<HANDLE>(OpenFile(path.data(), &ofStruct, OF_READWRITE));
+        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+            this->m_file = reinterpret_cast<HANDLE>(OpenFile(path.data(), &ofStruct, OF_READ));
             this->m_writable = false;
         }
 
-        if (this->m_file != nullptr)
-            ProjectFile::setFilePath(path);
+        ScopeExit fileCleanup([this]{
+            this->m_readable = false;
+            this->m_file = nullptr;
+            CloseHandle(this->m_file);
+        });
+        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+            return;
+        }
+
+        this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, path.data());
+        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+            return;
+        }
+
+        ScopeExit mappingCleanup([this]{
+            this->m_readable = false;
+            this->m_mapping = nullptr;
+            CloseHandle(this->m_mapping);
+        });
+
+        this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
+        if (this->m_mappedFile == nullptr) {
+            this->m_readable = false;
+            return;
+        }
+
+        fileCleanup.release();
+        mappingCleanup.release();
+
+        ProjectFile::setFilePath(path);
+
+        #else
+            this->m_file = open(path.data(), O_RDWR);
+            if (this->m_file == -1) {
+                this->m_file = open(path.data(), O_RDONLY);
+                this->m_writable = false;
+            }
+
+            if (this->m_file == -1) {
+                this->m_readable = false;
+                return;
+            }
+
+            this->m_fileSize = this->m_fileStats.st_size;
+
+            this->m_mappedFile = mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, this->m_file, 0);
+
+        #endif
     }
 
     FileProvider::~FileProvider() {
+        #if defined(OS_WINDOWS)
+        if (this->m_mappedFile != nullptr)
+            UnmapViewOfFile(this->m_mappedFile);
+        if (this->m_mapping != nullptr)
+            CloseHandle(this->m_mapping);
         if (this->m_file != nullptr)
-            fclose(this->m_file);
+            CloseHandle(this->m_file);
+        #else
+        munmap(this->m_mappedFile, this->m_fileSize);
+        close(this->m_file);
+        #endif
     }
 
 
     bool FileProvider::isAvailable() {
-        return this->m_file != nullptr;
+        #if defined(OS_WINDOWS)
+        return this->m_file != nullptr && this->m_mapping != nullptr && this->m_mappedFile != nullptr;
+        #else
+        return this->m_file != -1 && this->m_mappedFile != nullptr;
+        #endif
     }
 
     bool FileProvider::isReadable() {
@@ -59,12 +118,9 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
-        size_t readSize = fread(buffer, 1, size, this->m_file);
+        memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
 
-
-
-        for (u64 i = 0; i < readSize; i++)
+        for (u64 i = 0; i < size; i++)
             if (this->m_patches.back().contains(offset + i))
                 reinterpret_cast<u8*>(buffer)[i] = this->m_patches.back()[offset + i];
     }
@@ -83,20 +139,17 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        fseeko64(this->m_file, this->getCurrentPage() * PageSize + offset, SEEK_SET);
-        fread(buffer, 1, size, this->m_file);
+        memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if (buffer == nullptr || size == 0)
             return;
 
-        fseeko64(this->m_file, offset, SEEK_SET);
-        fwrite(buffer, 1, size, this->m_file);
+        memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + offset, buffer, size);
     }
     size_t FileProvider::getActualSize() {
-        fseeko64(this->m_file, 0, SEEK_END);
-        return ftello64(this->m_file);
+        return this->m_fileSize;
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {

@@ -1,10 +1,17 @@
 #pragma once
 
 #include "providers/provider.hpp"
+#include "helpers/utils.hpp"
 
 #include <string_view>
 
 #include <sys/stat.h>
+
+#if defined(OS_WINDOWS)
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
 
 namespace hex::prv {
 
@@ -27,8 +34,15 @@ namespace hex::prv {
         std::vector<std::pair<std::string, std::string>> getDataInformation() override;
 
     private:
-        FILE *m_file;
+        #if defined(OS_WINDOWS)
+        HANDLE m_file;
+        HANDLE m_mapping;
+        #else
+        int m_file;
+        #endif
         std::string m_path;
+        void *m_mappedFile;
+        size_t m_fileSize;
 
         bool m_fileStatsValid = false;
         struct stat m_fileStats = { 0 };
