@@ -23,6 +23,13 @@
     #define ftello64 ftell
 #endif
 
+template<>
+struct std::is_integral<u128> : public std::true_type { };
+template<>
+struct std::is_integral<s128> : public std::true_type { };
+template<>
+struct std::is_signed<s128>   : public std::true_type { };
+
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
 #if __has_include(<concepts>)
 // Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
@@ -65,13 +72,6 @@ namespace hex {
 
 #define TOKEN_CONCAT_IMPL(x, y) x ## y
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
-
-template<>
-struct std::is_integral<u128> : public std::true_type { };
-template<>
-struct std::is_integral<s128> : public std::true_type { };
-template<>
-struct std::is_signed<s128> : public std::true_type { };
 
 namespace hex {
 
