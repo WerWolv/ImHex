@@ -1,13 +1,8 @@
 #include "providers/file_provider.hpp"
 
-#undef __STRICT_ANSI__
-#include <cstdio>
-
-#include <sys/stat.h>
-#include <sys/fcntl.h>
 #include <time.h>
+#include <cstring>
 
-#include "helpers/utils.hpp"
 #include "helpers/project_file_handler.hpp"
 
 namespace hex::prv {
@@ -118,7 +113,7 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
 
         for (u64 i = 0; i < size; i++)
             if (this->m_patches.back().contains(offset + i))
@@ -139,14 +134,14 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if (buffer == nullptr || size == 0)
             return;
 
-        memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + offset, buffer, size);
+        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + offset, buffer, size);
     }
     size_t FileProvider::getActualSize() {
         return this->m_fileSize;

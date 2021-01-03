@@ -1,7 +1,6 @@
 #pragma once
 
 #include "providers/provider.hpp"
-#include "helpers/utils.hpp"
 
 #include <string_view>
 
@@ -11,6 +10,8 @@
 #include <windows.h>
 #else
 #include <sys/mman.h>
+#include <unistd.h>
+#include <sys/fcntl.h>
 #endif
 
 namespace hex::prv {
