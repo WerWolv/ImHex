@@ -16,7 +16,7 @@ namespace hex::lang {
 
     ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
 
-        const std::vector<PatternData*>* currMembers = this->m_currMembers;
+        const std::vector<PatternData*>* currMembers = this->m_currMembers.back();
 
         PatternData *currPattern = nullptr;
         for (const auto &identifier : node->getPath()) {
@@ -152,11 +152,8 @@ namespace hex::lang {
     PatternData* Evaluator::evaluateStruct(ASTNodeStruct *node) {
         std::vector<PatternData*> memberPatterns;
 
-        ScopeExit currMemberReset([this] { this->m_currMembers = nullptr; });
-        if (this->m_currMembers == nullptr)
-            this->m_currMembers = &memberPatterns;
-        else
-            currMemberReset.release();
+        this->m_currMembers.push_back(&memberPatterns);
+        SCOPE_EXIT( this->m_currMembers.pop_back(); );
 
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
@@ -178,11 +175,8 @@ namespace hex::lang {
     PatternData* Evaluator::evaluateUnion(ASTNodeUnion *node) {
         std::vector<PatternData*> memberPatterns;
 
-        ScopeExit currMemberReset([this] { this->m_currMembers = nullptr; });
-        if (this->m_currMembers == nullptr)
-            this->m_currMembers = &memberPatterns;
-        else
-            currMemberReset.release();
+        this->m_currMembers.push_back(&memberPatterns);
+        SCOPE_EXIT( this->m_currMembers.pop_back(); );
 
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {

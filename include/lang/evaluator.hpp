@@ -27,7 +27,7 @@ namespace hex::lang {
         std::endian m_defaultDataEndian;
         u64 m_currOffset = 0;
         std::optional<std::endian> m_currEndian;
-        std::vector<PatternData*> *m_currMembers = nullptr;
+        std::vector<std::vector<PatternData*>*> m_currMembers;
 
         std::pair<u32, std::string> m_error;
 
