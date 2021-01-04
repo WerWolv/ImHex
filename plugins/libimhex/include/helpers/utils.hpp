@@ -23,12 +23,6 @@
     #define ftello64 ftell
 #endif
 
-template<>
-struct std::is_integral<u128> : public std::true_type { };
-template<>
-struct std::is_integral<s128> : public std::true_type { };
-template<>
-struct std::is_signed<s128>   : public std::true_type { };
 
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
 #if __has_include(<concepts>)
