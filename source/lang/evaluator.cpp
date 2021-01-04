@@ -358,12 +358,10 @@ namespace hex::lang {
 
         this->m_currEndian.reset();
 
-        if (entries.empty())
-            throwEvaluateError("array size must be greater than zero", node->getLineNumber());
-
-
         PatternData *pattern;
-        if (dynamic_cast<PatternDataCharacter*>(entries[0]))
+        if (entries.empty())
+            pattern = new PatternDataPadding(startOffset, 0);
+        else if (dynamic_cast<PatternDataCharacter*>(entries[0]))
             pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
         else
             pattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), entries, color.value_or(0));
