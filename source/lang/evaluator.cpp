@@ -317,11 +317,13 @@ namespace hex::lang {
 
         auto startOffset = this->m_currOffset;
 
-        auto sizeNode = dynamic_cast<ASTNodeNumericExpression*>(node->getSize());
-        if (sizeNode == nullptr)
+        ASTNodeIntegerLiteral *valueNode;
+
+        if (auto sizeNumericExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getSize()); sizeNumericExpression != nullptr)
+            valueNode = evaluateMathematicalExpression(sizeNumericExpression);
+        else
             throwEvaluateError("array size not a numeric expression", node->getLineNumber());
 
-        auto valueNode = evaluateMathematicalExpression(sizeNode);
         SCOPE_EXIT( delete valueNode; );
 
         auto arraySize = std::get<s128>(valueNode->getValue());

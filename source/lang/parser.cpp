@@ -5,6 +5,8 @@
 
 #define MATCHES(x) (begin() && x)
 
+#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral(0, Token::ValueType::Signed128Bit), Token::Operator::Plus)
+
 // Definition syntax:
 // [A]          : Either A or no token
 // [A|B]        : Either A, B or no token
@@ -27,13 +29,13 @@ namespace hex::lang {
             else
                 throwParseError("expected member name", -1);
         } else
-            return new ASTNodeRValue(path);
+            return TO_NUMERIC_EXPRESSION(new ASTNodeRValue(path));
     }
 
     // <Integer|((parseMathematicalExpression))>
     ASTNode* Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
-            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral(getValue<s128>(-1), Token::ValueType::Signed128Bit), new ASTNodeIntegerLiteral(0, Token::ValueType::Signed128Bit), Token::Operator::Plus);
+            return TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(getValue<s128>(-1), Token::ValueType::Signed128Bit));
         else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto node = this->parseMathematicalExpression();
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
