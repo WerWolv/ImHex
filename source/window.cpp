@@ -376,7 +376,10 @@ namespace hex {
     }
 
     void Window::initPlugins() {
-        PluginHandler::load((std::filesystem::path(mainArgv[0]).parent_path() / "plugins").string());
+        try {
+            auto pluginFolderPath = std::filesystem::path(mainArgv[0]).parent_path() / "plugins";
+            PluginHandler::load(pluginFolderPath.string());
+        } catch (std::runtime_error &e) { return; }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
             plugin.initializePlugin(SharedData::get());
