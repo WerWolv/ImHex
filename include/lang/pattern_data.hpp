@@ -7,6 +7,7 @@
 
 #include "providers/provider.hpp"
 #include "helpers/utils.hpp"
+#include "lang/token.hpp"
 
 #include <cstring>
 #include <random>
@@ -638,7 +639,7 @@ namespace hex::lang {
 
     class PatternDataEnum : public PatternData {
     public:
-        PatternDataEnum(u64 offset, size_t size, std::vector<std::pair<u64, std::string>> enumValues, u32 color = 0)
+        PatternDataEnum(u64 offset, size_t size, std::vector<std::pair<Token::IntegerLiteral, std::string>> enumValues, u32 color = 0)
             : PatternData(offset, size, color), m_enumValues(std::move(enumValues)) { }
 
         PatternData* clone() override {
@@ -653,12 +654,18 @@ namespace hex::lang {
             std::string valueString = PatternData::getTypeName() + "::";
 
             bool foundValue = false;
-            for (auto &[entryValue, entryName] : this->m_enumValues) {
-                if (value == entryValue) {
-                    valueString += entryName;
-                    foundValue = true;
+            for (auto &[entryValueLiteral, entryName] : this->m_enumValues) {
+                bool matches = std::visit([&, name = entryName](auto &&entryValue) {
+                    if (value == entryValue) {
+                        valueString += name;
+                        foundValue = true;
+                        return true;
+                    }
+
+                    return false;
+                }, entryValueLiteral.second);
+                if (matches)
                     break;
-                }
             }
 
             if (!foundValue)
@@ -694,7 +701,7 @@ namespace hex::lang {
         }
 
     private:
-        std::vector<std::pair<u64, std::string>> m_enumValues;
+        std::vector<std::pair<Token::IntegerLiteral, std::string>> m_enumValues;
     };
 
     class PatternDataBitfield : public PatternData {

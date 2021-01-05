@@ -26,10 +26,8 @@ namespace hex::lang {
 
     class ASTNodeIntegerLiteral : public ASTNode {
     public:
-        ASTNodeIntegerLiteral(std::variant<u128, s128> value, Token::ValueType type)
-                : ASTNode(), m_value(value), m_type(type) {
+        ASTNodeIntegerLiteral(Token::IntegerLiteral literal) : ASTNode(), m_literal(literal) { }
 
-        }
         ASTNodeIntegerLiteral(const ASTNodeIntegerLiteral&) = default;
 
         ASTNode* clone() override {
@@ -37,16 +35,15 @@ namespace hex::lang {
         }
 
         [[nodiscard]] const auto& getValue() const {
-            return this->m_value;
+            return this->m_literal.second;
         }
 
         [[nodiscard]] Token::ValueType getType() const {
-            return this->m_type;
+            return this->m_literal.first;
         }
 
     private:
-        std::variant<u128, s128> m_value;
-        Token::ValueType m_type;
+        Token::IntegerLiteral m_literal;
     };
 
     class ASTNodeNumericExpression : public ASTNode {
@@ -341,6 +338,24 @@ namespace hex::lang {
 
         ASTNode* clone() override {
             return new ASTNodeRValue(*this);
+        }
+
+        const std::vector<std::string>& getPath() {
+            return this->m_path;
+        }
+
+    private:
+        std::vector<std::string> m_path;
+    };
+
+    class ASTNodeScopeResolution : public ASTNode {
+    public:
+        explicit ASTNodeScopeResolution(std::vector<std::string> path) : ASTNode(), m_path(std::move(path)) { }
+
+        ASTNodeScopeResolution(const ASTNodeScopeResolution&) = default;
+
+        ASTNode* clone() override {
+            return new ASTNodeScopeResolution(*this);
         }
 
         const std::vector<std::string>& getPath() {

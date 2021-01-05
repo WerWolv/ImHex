@@ -38,67 +38,116 @@ namespace hex::lang {
         }
 
         if (auto unsignedPattern = dynamic_cast<PatternDataUnsigned*>(currPattern); unsignedPattern != nullptr) {
-            s128 value = 0;
-            this->m_provider->read(unsignedPattern->getOffset(), &value, unsignedPattern->getSize());
-            return new ASTNodeIntegerLiteral(value, Token::ValueType::Signed128Bit);
+            u8 value[unsignedPattern->getSize()];
+            this->m_provider->read(unsignedPattern->getOffset(), value, unsignedPattern->getSize());
+
+            switch (unsignedPattern->getSize()) {
+                case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit,   *reinterpret_cast<u8*>(value) });
+                case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned16Bit,  *reinterpret_cast<u16*>(value) });
+                case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned32Bit,  *reinterpret_cast<u32*>(value) });
+                case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit,  *reinterpret_cast<u64*>(value) });
+                case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned128Bit, *reinterpret_cast<u128*>(value) });
+                default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
+            }
         } else if (auto signedPattern = dynamic_cast<PatternDataSigned*>(currPattern); signedPattern != nullptr) {
-            s128 value = 0;
-            this->m_provider->read(signedPattern->getOffset(), &value, signedPattern->getSize());
-            return new ASTNodeIntegerLiteral(signExtend(value, signedPattern->getSize() * 8, 128), Token::ValueType::Signed128Bit);
+            u8 value[unsignedPattern->getSize()];
+            this->m_provider->read(signedPattern->getOffset(), value, signedPattern->getSize());
+
+            switch (unsignedPattern->getSize()) {
+                case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed8Bit,   *reinterpret_cast<s8*>(value) });
+                case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed16Bit,  *reinterpret_cast<s16*>(value) });
+                case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  *reinterpret_cast<s32*>(value) });
+                case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  *reinterpret_cast<s64*>(value) });
+                case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, *reinterpret_cast<s128*>(value) });
+                default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
+            }
         } else
             throwEvaluateError("tried to use non-integer value in numeric expression", node->getLineNumber());
     }
 
+#define FLOAT_BIT_OPERATION(name) \
+    auto name(std::floating_point auto left, auto right) { throw std::runtime_error(""); return 0; } \
+    auto name(auto left, std::floating_point auto right) { throw std::runtime_error(""); return 0; } \
+    auto name(std::floating_point auto left, std::floating_point auto right) { throw std::runtime_error(""); return 0; } \
+    auto name(std::integral auto left, std::integral auto right)
+
+    namespace {
+
+        FLOAT_BIT_OPERATION(shiftLeft) {
+            return left << right;
+        }
+
+        FLOAT_BIT_OPERATION(shiftRight) {
+            return left >> right;
+        }
+
+        FLOAT_BIT_OPERATION(bitAnd) {
+            return left & right;
+        }
+
+        FLOAT_BIT_OPERATION(bitOr) {
+            return left | right;
+        }
+
+        FLOAT_BIT_OPERATION(bitXor) {
+            return left ^ right;
+        }
+
+    }
+
     ASTNodeIntegerLiteral* Evaluator::evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op) {
-        return std::visit([&](auto &&leftValue, auto &&rightValue) -> ASTNodeIntegerLiteral* {
+        auto newType = [&] {
+            #define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
+            #define DEFAULT_TYPE(type) return (type)
 
-            auto newType = [&] {
-                #define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
-                #define DEFAULT_TYPE(type) return (type)
+            CHECK_TYPE(Token::ValueType::Double);
+            CHECK_TYPE(Token::ValueType::Float);
+            CHECK_TYPE(Token::ValueType::Unsigned128Bit);
+            CHECK_TYPE(Token::ValueType::Signed128Bit);
+            CHECK_TYPE(Token::ValueType::Unsigned64Bit);
+            CHECK_TYPE(Token::ValueType::Signed64Bit);
+            CHECK_TYPE(Token::ValueType::Unsigned32Bit);
+            CHECK_TYPE(Token::ValueType::Signed32Bit);
+            CHECK_TYPE(Token::ValueType::Unsigned16Bit);
+            CHECK_TYPE(Token::ValueType::Signed16Bit);
+            CHECK_TYPE(Token::ValueType::Unsigned8Bit);
+            CHECK_TYPE(Token::ValueType::Signed8Bit);
+            CHECK_TYPE(Token::ValueType::Character);
+            DEFAULT_TYPE(Token::ValueType::Signed32Bit);
 
-                CHECK_TYPE(Token::ValueType::Double);
-                CHECK_TYPE(Token::ValueType::Float);
-                CHECK_TYPE(Token::ValueType::Unsigned128Bit);
-                CHECK_TYPE(Token::ValueType::Signed128Bit);
-                CHECK_TYPE(Token::ValueType::Unsigned64Bit);
-                CHECK_TYPE(Token::ValueType::Signed64Bit);
-                CHECK_TYPE(Token::ValueType::Unsigned32Bit);
-                CHECK_TYPE(Token::ValueType::Signed32Bit);
-                CHECK_TYPE(Token::ValueType::Unsigned16Bit);
-                CHECK_TYPE(Token::ValueType::Signed16Bit);
-                CHECK_TYPE(Token::ValueType::Unsigned8Bit);
-                CHECK_TYPE(Token::ValueType::Signed8Bit);
-                CHECK_TYPE(Token::ValueType::Character);
-                DEFAULT_TYPE(Token::ValueType::Signed32Bit);
+            #undef CHECK_TYPE
+            #undef DEFAULT_TYPE
+        }();
 
-                #undef CHECK_TYPE
-                #undef DEFAULT_TYPE
-            }();
+        try {
+            return std::visit([&](auto &&leftValue, auto &&rightValue) -> ASTNodeIntegerLiteral * {
+                switch (op) {
+                    case Token::Operator::Plus:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue + rightValue });
+                    case Token::Operator::Minus:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue - rightValue });
+                    case Token::Operator::Star:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue * rightValue });
+                    case Token::Operator::Slash:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue / rightValue });
+                    case Token::Operator::ShiftLeft:
+                        return new ASTNodeIntegerLiteral({ newType, shiftLeft(leftValue, rightValue) });
+                    case Token::Operator::ShiftRight:
+                        return new ASTNodeIntegerLiteral({ newType, shiftRight(leftValue, rightValue) });
+                    case Token::Operator::BitAnd:
+                        return new ASTNodeIntegerLiteral({ newType, bitAnd(leftValue, rightValue) });
+                    case Token::Operator::BitXor:
+                        return new ASTNodeIntegerLiteral({ newType, bitXor(leftValue, rightValue) });
+                    case Token::Operator::BitOr:
+                        return new ASTNodeIntegerLiteral({ newType, bitOr(leftValue, rightValue) });
+                    default:
+                        throwEvaluateError("invalid operator used in mathematical expression", left->getLineNumber());
+                }
 
-            switch (op) {
-                case Token::Operator::Plus:
-                    return new ASTNodeIntegerLiteral(leftValue + rightValue, newType);
-                case Token::Operator::Minus:
-                    return new ASTNodeIntegerLiteral(leftValue - rightValue, newType);
-                case Token::Operator::Star:
-                    return new ASTNodeIntegerLiteral(leftValue * rightValue, newType);
-                case Token::Operator::Slash:
-                    return new ASTNodeIntegerLiteral(leftValue / rightValue, newType);
-                case Token::Operator::ShiftLeft:
-                    return new ASTNodeIntegerLiteral(leftValue << rightValue, newType);
-                case Token::Operator::ShiftRight:
-                    return new ASTNodeIntegerLiteral(leftValue >> rightValue, newType);
-                case Token::Operator::BitAnd:
-                    return new ASTNodeIntegerLiteral(leftValue & rightValue, newType);
-                case Token::Operator::BitXor:
-                    return new ASTNodeIntegerLiteral(leftValue ^ rightValue, newType);
-                case Token::Operator::BitOr:
-                    return new ASTNodeIntegerLiteral(leftValue | rightValue, newType);
-                default: throwEvaluateError("invalid operator used in mathematical expression", left->getLineNumber());
-
-            }
-
-        }, left->getValue(), right->getValue());
+            }, left->getValue(), right->getValue());
+        } catch (std::runtime_error &e) {
+            throwEvaluateError("bitwise operations on floating point numbers are forbidden", left->getLineNumber());
+        }
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateMathematicalExpression(ASTNodeNumericExpression *node) {
@@ -197,7 +246,7 @@ namespace hex::lang {
     }
 
     PatternData* Evaluator::evaluateEnum(ASTNodeEnum *node) {
-        std::vector<std::pair<u64, std::string>> entryPatterns;
+        std::vector<std::pair<Token::IntegerLiteral, std::string>> entryPatterns;
 
         auto startOffset = this->m_currOffset;
         for (auto &[name, value] : node->getEntries()) {
@@ -208,7 +257,7 @@ namespace hex::lang {
             auto valueNode = evaluateMathematicalExpression(expression);
             SCOPE_EXIT( delete valueNode; );
 
-            entryPatterns.emplace_back( std::get<s128>(valueNode->getValue()), name );
+            entryPatterns.push_back({{ valueNode->getType(), valueNode->getValue() }, name });
         }
 
         size_t size;
@@ -233,9 +282,14 @@ namespace hex::lang {
             auto valueNode = evaluateMathematicalExpression(expression);
             SCOPE_EXIT( delete valueNode; );
 
-            auto fieldBits = std::get<s128>(valueNode->getValue());
-            if (fieldBits > 64)
-                throwEvaluateError("bitfield entry must at most occupy 64 bits", value->getLineNumber());
+            auto fieldBits = std::visit([node, type = valueNode->getType()] (auto &&value) {
+                if (Token::isFloatingPoint(type))
+                    throwEvaluateError("bitfield entry size must be an integer value", node->getLineNumber());
+                return static_cast<s128>(value);
+            }, valueNode->getValue());
+
+            if (fieldBits > 64 || fieldBits <= 0)
+                throwEvaluateError("bitfield entry must occupy between 1 and 64 bits", value->getLineNumber());
 
             bits += fieldBits;
 
@@ -280,7 +334,11 @@ namespace hex::lang {
             auto valueNode = evaluateMathematicalExpression(offset);
             SCOPE_EXIT( delete valueNode; );
 
-            this->m_currOffset = std::get<s128>(valueNode->getValue());
+            this->m_currOffset = std::visit([node, type = valueNode->getType()] (auto &&value) {
+                if (Token::isFloatingPoint(type))
+                    throwEvaluateError("placement offset must be an integer value", node->getLineNumber());
+                return static_cast<u64>(value);
+            }, valueNode->getValue());
         }
         if (this->m_currOffset >= this->m_provider->getActualSize())
             throwEvaluateError("array exceeds size of file", node->getLineNumber());
@@ -306,7 +364,11 @@ namespace hex::lang {
             auto valueNode = evaluateMathematicalExpression(offset);
             SCOPE_EXIT( delete valueNode; );
 
-            this->m_currOffset = std::get<s128>(valueNode->getValue());
+            this->m_currOffset = std::visit([node, type = valueNode->getType()] (auto &&value) {
+                if (Token::isFloatingPoint(type))
+                    throwEvaluateError("placement offset must be an integer value", node->getLineNumber());
+                return static_cast<u64>(value);
+            }, valueNode->getValue());
         }
 
         auto startOffset = this->m_currOffset;
@@ -320,7 +382,11 @@ namespace hex::lang {
 
         SCOPE_EXIT( delete valueNode; );
 
-        auto arraySize = std::get<s128>(valueNode->getValue());
+        auto arraySize = std::visit([node, type = valueNode->getType()] (auto &&value) {
+            if (Token::isFloatingPoint(type))
+                throwEvaluateError("array size must be an integer value", node->getLineNumber());
+            return static_cast<u64>(value);
+        }, valueNode->getValue());
 
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
             if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
@@ -377,7 +443,11 @@ namespace hex::lang {
             auto valueNode = evaluateMathematicalExpression(offset);
             SCOPE_EXIT( delete valueNode; );
 
-            pointerOffset = std::get<s128>(valueNode->getValue());
+            pointerOffset = std::visit([node, type = valueNode->getType()] (auto &&value) {
+                if (Token::isFloatingPoint(type))
+                    throwEvaluateError("pointer offset must be an integer value", node->getLineNumber());
+                return static_cast<s128>(value);
+            }, valueNode->getValue());
             this->m_currOffset = pointerOffset;
         } else {
             pointerOffset = this->m_currOffset;

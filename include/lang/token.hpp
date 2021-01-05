@@ -78,11 +78,13 @@ namespace hex::lang {
             SquareBracketClose,
             Comma,
             Dot,
+            ScopeResolution,
             EndOfExpression,
             EndOfProgram
         };
 
-        using ValueTypes = std::variant<Keyword, std::string, Operator, s128, ValueType, Separator>;
+        using IntegerLiteral = std::pair<ValueType, std::variant<u8, s8, u16, s16, u32, s32, u64, s64, u128, s128, float, double>>;
+        using ValueTypes = std::variant<Keyword, std::string, Operator, IntegerLiteral, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
 
@@ -174,7 +176,7 @@ namespace hex::lang {
 #define KEYWORD_LE                      COMPONENT(Keyword, LittleEndian)
 #define KEYWORD_BE                      COMPONENT(Keyword, BigEndian)
 
-#define INTEGER                         hex::lang::Token::Type::Integer, 0xFFFF'FFFF'FFFF'FFFF
+#define INTEGER                         hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral({ hex::lang::Token::ValueType::Any, 0xFFFF'FFFF'FFFF'FFFF })
 #define IDENTIFIER                      hex::lang::Token::Type::Identifier, ""
 
 #define OPERATOR_AT                     COMPONENT(Operator, AtDeclaration)
@@ -206,5 +208,6 @@ namespace hex::lang {
 #define SEPARATOR_SQUAREBRACKETCLOSE    COMPONENT(Separator, SquareBracketClose)
 #define SEPARATOR_COMMA                 COMPONENT(Separator, Comma)
 #define SEPARATOR_DOT                   COMPONENT(Separator, Dot)
+#define SEPARATOR_SCOPE_RESOLUTION      COMPONENT(Separator, ScopeResolution)
 #define SEPARATOR_ENDOFEXPRESSION       COMPONENT(Separator, EndOfExpression)
 #define SEPARATOR_ENDOFPROGRAM          COMPONENT(Separator, EndOfProgram)

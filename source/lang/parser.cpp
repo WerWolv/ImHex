@@ -5,7 +5,7 @@
 
 #define MATCHES(x) (begin() && x)
 
-#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral(0, Token::ValueType::Signed128Bit), Token::Operator::Plus)
+#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(0) }), Token::Operator::Plus)
 
 // Definition syntax:
 // [A]          : Either A or no token
@@ -17,6 +17,20 @@
 namespace hex::lang {
 
     /* Mathematical expressions */
+
+    // Identifier::<Identifier[::]...>
+    ASTNode* Parser::parseScopeResolution(std::vector<std::string> &path) {
+        if (peek(IDENTIFIER, -1))
+            path.push_back(getValue<std::string>(-1));
+
+        if (MATCHES(sequence(SEPARATOR_SCOPE_RESOLUTION))) {
+            if (MATCHES(sequence(IDENTIFIER)))
+                return this->parseScopeResolution(path);
+            else
+                throwParseError("expected member name", -1);
+        } else
+            return TO_NUMERIC_EXPRESSION(new ASTNodeScopeResolution(path));
+    }
 
     // <Identifier[.]...>
     ASTNode* Parser::parseRValue(std::vector<std::string> &path) {
@@ -35,13 +49,17 @@ namespace hex::lang {
     // <Integer|((parseMathematicalExpression))>
     ASTNode* Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
-            return TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(getValue<s128>(-1), Token::ValueType::Signed128Bit));
+            return TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(getValue<Token::IntegerLiteral>(-1)));
         else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto node = this->parseMathematicalExpression();
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                 throwParseError("expected closing parenthesis");
             return node;
-        } else if (MATCHES(sequence(IDENTIFIER))) {
+        } else if (MATCHES(sequence(IDENTIFIER) && peek(SEPARATOR_SCOPE_RESOLUTION))) {
+            std::vector<std::string> path;
+            return this->parseScopeResolution(path);
+        }
+        else if (MATCHES(sequence(IDENTIFIER))) {
             std::vector<std::string> path;
             return this->parseRValue(path);
         }
@@ -297,10 +315,46 @@ namespace hex::lang {
             else if (MATCHES(sequence(IDENTIFIER))) {
                 ASTNode *valueExpr;
                 auto name = getValue<std::string>(-1);
-                if (enumNode->getEntries().empty())
-                    valueExpr = new ASTNodeIntegerLiteral(0, underlyingType->getType());
+                if (enumNode->getEntries().empty()) {
+                    auto type = underlyingType->getType();
+
+                    switch (type) {
+                        case Token::ValueType::Signed8Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, s8(0) });
+                            break;
+                        case Token::ValueType::Unsigned8Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, u8(0) });
+                            break;
+                        case Token::ValueType::Signed16Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, s16(0) });
+                            break;
+                        case Token::ValueType::Unsigned16Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, u16(0) });
+                            break;
+                        case Token::ValueType::Signed32Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, s32(0) });
+                            break;
+                        case Token::ValueType::Unsigned32Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, u32(0) });
+                            break;
+                        case Token::ValueType::Signed64Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, s64(0) });
+                            break;
+                        case Token::ValueType::Unsigned64Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, u64(0) });
+                            break;
+                        case Token::ValueType::Signed128Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, s128(0) });
+                            break;
+                        case Token::ValueType::Unsigned128Bit:
+                            valueExpr = new ASTNodeIntegerLiteral({ type, u128(0) });
+                            break;
+                        default:
+                            throwParseError("invalid enum underlying type", -1);
+                    }
+                }
                 else
-                    valueExpr = new ASTNodeNumericExpression(enumNode->getEntries().back().second, new ASTNodeIntegerLiteral(1, Token::ValueType::Signed128Bit), Token::Operator::Plus);
+                    valueExpr = new ASTNodeNumericExpression(enumNode->getEntries().back().second, new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(1) }), Token::Operator::Plus);
 
                 enumNode->addEntry(name, valueExpr);
             }

@@ -53,6 +53,7 @@ namespace hex::lang {
             return this->m_curr[index].type;
         }
 
+        ASTNode* parseScopeResolution(std::vector<std::string> &path);
         ASTNode* parseRValue(std::vector<std::string> &path);
         ASTNode* parseFactor();
         ASTNode* parseMultiplicativeExpression();
