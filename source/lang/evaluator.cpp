@@ -123,6 +123,10 @@ namespace hex::lang {
             return left ^ right;
         }
 
+        FLOAT_BIT_OPERATION(bitNot) {
+            return ~right;
+        }
+
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op) {
@@ -170,6 +174,8 @@ namespace hex::lang {
                         return new ASTNodeIntegerLiteral({ newType, bitXor(leftValue, rightValue) });
                     case Token::Operator::BitOr:
                         return new ASTNodeIntegerLiteral({ newType, bitOr(leftValue, rightValue) });
+                    case Token::Operator::BitNot:
+                        return new ASTNodeIntegerLiteral({ newType, bitNot(leftValue, rightValue) });
                     case Token::Operator::BoolEquals:
                         return new ASTNodeIntegerLiteral({ newType, leftValue == rightValue });
                     case Token::Operator::BoolNotEquals:
@@ -188,6 +194,8 @@ namespace hex::lang {
                         return new ASTNodeIntegerLiteral({ newType, leftValue && !rightValue || !leftValue && rightValue });
                     case Token::Operator::BoolOr:
                         return new ASTNodeIntegerLiteral({ newType, leftValue || rightValue });
+                    case Token::Operator::BoolNot:
+                        return new ASTNodeIntegerLiteral({ newType, !rightValue });
                     default:
                         throwEvaluateError("invalid operator used in mathematical expression", left->getLineNumber());
                 }

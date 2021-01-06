@@ -45,6 +45,7 @@ namespace hex::lang {
             BitOr,
             BitAnd,
             BitXor,
+            BitNot,
             BoolEquals,
             BoolNotEquals,
             BoolGreaterThan,
@@ -53,7 +54,8 @@ namespace hex::lang {
             BoolLessThanOrEquals,
             BoolAnd,
             BoolOr,
-            BoolXor
+            BoolXor,
+            BoolNot
         };
 
         enum class ValueType {
@@ -204,6 +206,7 @@ namespace hex::lang {
 #define OPERATOR_BITOR                      COMPONENT(Operator, BitOr)
 #define OPERATOR_BITAND                     COMPONENT(Operator, BitAnd)
 #define OPERATOR_BITXOR                     COMPONENT(Operator, BitXor)
+#define OPERATOR_BITNOT                     COMPONENT(Operator, BitNot)
 #define OPERATOR_BOOLEQUALS                 COMPONENT(Operator, BoolEquals)
 #define OPERATOR_BOOLNOTEQUALS              COMPONENT(Operator, BoolNotEquals)
 #define OPERATOR_BOOLGREATERTHAN            COMPONENT(Operator, BoolGreaterThan)
@@ -213,6 +216,7 @@ namespace hex::lang {
 #define OPERATOR_BOOLAND                    COMPONENT(Operator, BoolAnd)
 #define OPERATOR_BOOLOR                     COMPONENT(Operator, BoolOr)
 #define OPERATOR_BOOLXOR                    COMPONENT(Operator, BoolXor)
+#define OPERATOR_BOOLNOT                    COMPONENT(Operator, BoolNot)
 
 #define VALUETYPE_CUSTOMTYPE                COMPONENT(ValueType, CustomType)
 #define VALUETYPE_PADDING                   COMPONENT(ValueType, Padding)

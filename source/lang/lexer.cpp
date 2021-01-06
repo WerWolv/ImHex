@@ -242,6 +242,9 @@ namespace hex::lang {
                 } else if (c == '<') {
                     tokens.emplace_back(TOKEN(Operator, BoolLessThan));
                     offset += 1;
+                } else if (c == '!') {
+                    tokens.emplace_back(TOKEN(Operator, BoolNot));
+                    offset += 1;
                 } else if (c == '|') {
                     tokens.emplace_back(TOKEN(Operator, BitOr));
                     offset += 1;
@@ -250,6 +253,9 @@ namespace hex::lang {
                     offset += 1;
                 } else if (c == '^') {
                     tokens.emplace_back(TOKEN(Operator, BitXor));
+                    offset += 1;
+                } else if (c == '~') {
+                    tokens.emplace_back(TOKEN(Operator, BitNot));
                     offset += 1;
                 } else if (c == '\'') {
                     offset += 1;

@@ -68,13 +68,24 @@ namespace hex::lang {
             throwParseError("expected integer or parenthesis");
     }
 
-    // (parseFactor) <*|/> (parseFactor)
+    // <+|-|!|~> (parseFactor)
+    ASTNode* Parser::parseUnaryExpression() {
+        if (MATCHES(sequence(OPERATOR_PLUS) || sequence(OPERATOR_MINUS) || sequence(OPERATOR_BOOLNOT) || sequence(OPERATOR_BITNOT))) {
+            auto op = getValue<Token::Operator>(-1);
+
+            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, 0}), this->parseFactor(), op);
+        }
+
+        return this->parseFactor();
+    }
+
+    // (parseUnaryExpression) <*|/> (parseUnaryExpression)
     ASTNode* Parser::parseMultiplicativeExpression() {
-        auto node = this->parseFactor();
+        auto node = this->parseUnaryExpression();
 
         while (MATCHES(variant(OPERATOR_STAR, OPERATOR_SLASH))) {
             auto op = getValue<Token::Operator>(-1);
-            node = new ASTNodeNumericExpression(node, this->parseFactor(), op);
+            node = new ASTNodeNumericExpression(node, this->parseUnaryExpression(), op);
         }
 
         return node;

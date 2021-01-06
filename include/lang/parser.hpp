@@ -56,6 +56,7 @@ namespace hex::lang {
         ASTNode* parseScopeResolution(std::vector<std::string> &path);
         ASTNode* parseRValue(std::vector<std::string> &path);
         ASTNode* parseFactor();
+        ASTNode* parseUnaryExpression();
         ASTNode* parseMultiplicativeExpression();
         ASTNode* parseAdditiveExpression();
         ASTNode* parseShiftExpression();
