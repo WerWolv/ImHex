@@ -28,8 +28,4 @@ target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_
 
 target_link_directories(imgui PUBLIC ${GLM_INCLUDE_DIRS} ${GLFW_LIBRARY_DIRS})
 
-if (WIN32)
-    target_link_libraries(imgui Freetype::Freetype glad libglfw3.a)
-elseif (UNIX)
-    target_link_libraries(imgui Freetype::Freetype glad glfw)
-endif()
+target_link_libraries(imgui Freetype::Freetype glad glfw3)
