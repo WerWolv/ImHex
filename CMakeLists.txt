@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(imhex VERSION 1.5.0)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 option (CREATE_PACKAGE "Create a package with CPack" OFF)
