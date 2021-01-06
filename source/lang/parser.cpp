@@ -55,8 +55,9 @@ namespace hex::lang {
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                 throwParseError("expected closing parenthesis");
             return node;
-        } else if (MATCHES(sequence(IDENTIFIER) && peek(SEPARATOR_SCOPE_RESOLUTION))) {
+        } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SCOPE_RESOLUTION))) {
             std::vector<std::string> path;
+            this->m_curr--;
             return this->parseScopeResolution(path);
         }
         else if (MATCHES(sequence(IDENTIFIER))) {
@@ -72,10 +73,8 @@ namespace hex::lang {
         auto node = this->parseFactor();
 
         while (MATCHES(variant(OPERATOR_STAR, OPERATOR_SLASH))) {
-            if (peek(OPERATOR_STAR, -1))
-                node = new ASTNodeNumericExpression(node, this->parseFactor(), Token::Operator::Star);
-            else
-                node = new ASTNodeNumericExpression(node, this->parseFactor(), Token::Operator::Slash);
+            auto op = getValue<Token::Operator>(-1);
+            node = new ASTNodeNumericExpression(node, this->parseFactor(), op);
         }
 
         return node;
@@ -86,35 +85,55 @@ namespace hex::lang {
         auto node = this->parseMultiplicativeExpression();
 
         while (MATCHES(variant(OPERATOR_PLUS, OPERATOR_MINUS))) {
-            if (peek(OPERATOR_PLUS, -1))
-                node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), Token::Operator::Plus);
-            else
-                node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), Token::Operator::Minus);
+            auto op = getValue<Token::Operator>(-1);
+            node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), op);
         }
 
         return node;
     }
 
-    // (parseAdditiveExpression) <>>|<<> (parseAdditiveExpression)
+    // (parseAdditiveExpression) < >>|<< > (parseAdditiveExpression)
     ASTNode* Parser::parseShiftExpression() {
         auto node = this->parseAdditiveExpression();
 
         while (MATCHES(variant(OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT))) {
-            if (peek(OPERATOR_SHIFTLEFT, -1))
-                node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), Token::Operator::ShiftLeft);
-            else
-                node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), Token::Operator::ShiftRight);
+            auto op = getValue<Token::Operator>(-1);
+            node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), op);
         }
 
         return node;
     }
 
-    // (parseShiftExpression) & (parseShiftExpression)
-    ASTNode* Parser::parseBinaryAndExpression() {
+    // (parseAdditiveExpression) < >=|<=|>|< > (parseAdditiveExpression)
+    ASTNode* Parser::parseRelationExpression() {
         auto node = this->parseShiftExpression();
 
+        while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
+            auto op = getValue<Token::Operator>(-1);
+            node = new ASTNodeNumericExpression(node, this->parseShiftExpression(), op);
+        }
+
+        return node;
+    }
+
+    // (parseRelationExpression) <==|!=> (parseRelationExpression)
+    ASTNode* Parser::parseEqualityExpression() {
+        auto node = this->parseRelationExpression();
+
+        while (MATCHES(sequence(OPERATOR_BOOLEQUALS) || sequence(OPERATOR_BOOLNOTEQUALS))) {
+            auto op = getValue<Token::Operator>(-1);
+            node = new ASTNodeNumericExpression(node, this->parseRelationExpression(), op);
+        }
+
+        return node;
+    }
+
+    // (parseEqualityExpression) & (parseEqualityExpression)
+    ASTNode* Parser::parseBinaryAndExpression() {
+        auto node = this->parseEqualityExpression();
+
         while (MATCHES(sequence(OPERATOR_BITAND))) {
-            node = new ASTNodeNumericExpression(node, this->parseShiftExpression(), Token::Operator::BitAnd);
+            node = new ASTNodeNumericExpression(node, this->parseEqualityExpression(), Token::Operator::BitAnd);
         }
 
         return node;
@@ -142,9 +161,80 @@ namespace hex::lang {
         return node;
     }
 
+    // (parseBinaryOrExpression) && (parseBinaryOrExpression)
+    ASTNode* Parser::parseBooleanAnd() {
+        auto node = this->parseBinaryOrExpression();
+
+        while (MATCHES(sequence(OPERATOR_BOOLAND))) {
+            node = new ASTNodeNumericExpression(node, this->parseBinaryOrExpression(), Token::Operator::BitOr);
+        }
+
+        return node;
+    }
+
+    // (parseBooleanAnd) ^^ (parseBooleanAnd)
+    ASTNode* Parser::parseBooleanXor() {
+        auto node = this->parseBooleanAnd();
+
+        while (MATCHES(sequence(OPERATOR_BOOLXOR))) {
+            node = new ASTNodeNumericExpression(node, this->parseBooleanAnd(), Token::Operator::BitOr);
+        }
+
+        return node;
+    }
+
+    // (parseBooleanXor) || (parseBooleanXor)
+    ASTNode* Parser::parseBooleanOr() {
+        auto node = this->parseBooleanXor();
+
+        while (MATCHES(sequence(OPERATOR_BOOLOR))) {
+            node = new ASTNodeNumericExpression(node, this->parseBooleanXor(), Token::Operator::BitOr);
+        }
+
+        return node;
+    }
+
     // (parseBinaryOrExpression)
     ASTNode* Parser::parseMathematicalExpression() {
-        return this->parseBinaryOrExpression();
+        return this->parseBooleanOr();
+    }
+
+
+    /* Control flow */
+
+    // if ((parseMathematicalExpression)) { (parseMember) }
+    ASTNode* Parser::parseConditional() {
+        auto condition = parseMathematicalExpression();
+        std::vector<ASTNode*> trueBody, falseBody;
+
+        ScopeExit cleanup([&]{
+            delete condition;
+            for (auto &statement : trueBody)
+                delete statement;
+            for (auto &statement : falseBody)
+                delete statement;
+        });
+
+        if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE, SEPARATOR_CURLYBRACKETOPEN))) {
+            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+                trueBody.push_back(parseMember());
+            }
+        } else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+            trueBody.push_back(parseMember());
+        } else
+            throwParseError("expected body of conditional statement");
+
+        if (MATCHES(sequence(KEYWORD_ELSE, SEPARATOR_CURLYBRACKETOPEN))) {
+            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+                falseBody.push_back(parseMember());
+            }
+        } else if (MATCHES(sequence(KEYWORD_ELSE))) {
+            falseBody.push_back(parseMember());
+        }
+
+        cleanup.release();
+
+        return new ASTNodeConditionalStatement(condition, trueBody, falseBody);
     }
 
     /* Type declarations */
@@ -235,6 +325,31 @@ namespace hex::lang {
         return new ASTNodePointerVariableDecl(name, temporaryPointerType->getType()->clone(), temporarySizeType->getType()->clone());
     }
 
+    // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
+    ASTNode* Parser::parseMember() {
+        ASTNode *member;
+
+        if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
+            member = parsePadding();
+        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
+            member = parseMemberArrayVariable();
+        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
+            member = parseMemberVariable();
+        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+            member = parseMemberPointerVariable();
+        else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN)))
+            return parseConditional();
+        else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
+            throwParseError("unexpected end of program", -2);
+        else
+            throwParseError("invalid struct member", 0);
+
+        if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
+            throwParseError("missing ';' at end of expression", -1);
+
+        return member;
+    }
+
     // struct Identifier { <(parseMember)...> }
     ASTNode* Parser::parseStruct() {
         const auto structNode = new ASTNodeStruct();
@@ -242,21 +357,7 @@ namespace hex::lang {
         ScopeExit structGuard([&]{ delete structNode; });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
-            if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
-                structNode->addMember(parsePadding());
-            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
-                structNode->addMember(parseMemberArrayVariable());
-            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
-                structNode->addMember(parseMemberVariable());
-            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
-                structNode->addMember(parseMemberPointerVariable());
-            else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
-                throwParseError("unexpected end of program", -2);
-            else
-                throwParseError("invalid struct member", 0);
-
-            if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
-                throwParseError("missing ';' at end of expression", -1);
+            structNode->addMember(parseMember());
         }
 
         structGuard.release();
@@ -271,19 +372,7 @@ namespace hex::lang {
         ScopeExit unionGuard([&]{ delete unionNode; });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
-            if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
-                unionNode->addMember(parseMemberArrayVariable());
-            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
-                unionNode->addMember(parseMemberVariable());
-            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
-                unionNode->addMember(parseMemberPointerVariable());
-            else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
-                throwParseError("unexpected end of program", -2);
-            else
-                throwParseError("invalid union member", 0);
-
-            if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
-                throwParseError("missing ';' at end of expression", -1);
+            unionNode->addMember(parseMember());
         }
 
         unionGuard.release();

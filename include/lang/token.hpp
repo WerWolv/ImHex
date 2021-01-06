@@ -28,6 +28,8 @@ namespace hex::lang {
             Bitfield,
             LittleEndian,
             BigEndian,
+            If,
+            Else
         };
 
         enum class Operator {
@@ -42,7 +44,16 @@ namespace hex::lang {
             ShiftRight,
             BitOr,
             BitAnd,
-            BitXor
+            BitXor,
+            BoolEquals,
+            BoolNotEquals,
+            BoolGreaterThan,
+            BoolLessThan,
+            BoolGreaterThanOrEquals,
+            BoolLessThanOrEquals,
+            BoolAnd,
+            BoolOr,
+            BoolXor
         };
 
         enum class ValueType {
@@ -168,46 +179,57 @@ namespace hex::lang {
 
 #define COMPONENT(type, value) hex::lang::Token::Type::type, hex::lang::Token::type::value
 
-#define KEYWORD_STRUCT                  COMPONENT(Keyword, Struct)
-#define KEYWORD_UNION                   COMPONENT(Keyword, Union)
-#define KEYWORD_USING                   COMPONENT(Keyword, Using)
-#define KEYWORD_ENUM                    COMPONENT(Keyword, Enum)
-#define KEYWORD_BITFIELD                COMPONENT(Keyword, Bitfield)
-#define KEYWORD_LE                      COMPONENT(Keyword, LittleEndian)
-#define KEYWORD_BE                      COMPONENT(Keyword, BigEndian)
+#define KEYWORD_STRUCT                      COMPONENT(Keyword, Struct)
+#define KEYWORD_UNION                       COMPONENT(Keyword, Union)
+#define KEYWORD_USING                       COMPONENT(Keyword, Using)
+#define KEYWORD_ENUM                        COMPONENT(Keyword, Enum)
+#define KEYWORD_BITFIELD                    COMPONENT(Keyword, Bitfield)
+#define KEYWORD_LE                          COMPONENT(Keyword, LittleEndian)
+#define KEYWORD_BE                          COMPONENT(Keyword, BigEndian)
+#define KEYWORD_IF                          COMPONENT(Keyword, If)
+#define KEYWORD_ELSE                        COMPONENT(Keyword, Else)
 
-#define INTEGER                         hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral({ hex::lang::Token::ValueType::Any, 0xFFFF'FFFF'FFFF'FFFF })
-#define IDENTIFIER                      hex::lang::Token::Type::Identifier, ""
+#define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral({ hex::lang::Token::ValueType::Any, 0xFFFF'FFFF'FFFF'FFFF })
+#define IDENTIFIER                          hex::lang::Token::Type::Identifier, ""
 
-#define OPERATOR_AT                     COMPONENT(Operator, AtDeclaration)
-#define OPERATOR_ASSIGNMENT             COMPONENT(Operator, Assignment)
-#define OPERATOR_INHERIT                COMPONENT(Operator, Inherit)
-#define OPERATOR_PLUS                   COMPONENT(Operator, Plus)
-#define OPERATOR_MINUS                  COMPONENT(Operator, Minus)
-#define OPERATOR_STAR                   COMPONENT(Operator, Star)
-#define OPERATOR_SLASH                  COMPONENT(Operator, Slash)
-#define OPERATOR_SHIFTLEFT              COMPONENT(Operator, ShiftLeft)
-#define OPERATOR_SHIFTRIGHT             COMPONENT(Operator, ShiftRight)
-#define OPERATOR_BITOR                  COMPONENT(Operator, BitOr)
-#define OPERATOR_BITAND                 COMPONENT(Operator, BitAnd)
-#define OPERATOR_BITXOR                 COMPONENT(Operator, BitXor)
+#define OPERATOR_AT                         COMPONENT(Operator, AtDeclaration)
+#define OPERATOR_ASSIGNMENT                 COMPONENT(Operator, Assignment)
+#define OPERATOR_INHERIT                    COMPONENT(Operator, Inherit)
+#define OPERATOR_PLUS                       COMPONENT(Operator, Plus)
+#define OPERATOR_MINUS                      COMPONENT(Operator, Minus)
+#define OPERATOR_STAR                       COMPONENT(Operator, Star)
+#define OPERATOR_SLASH                      COMPONENT(Operator, Slash)
+#define OPERATOR_SHIFTLEFT                  COMPONENT(Operator, ShiftLeft)
+#define OPERATOR_SHIFTRIGHT                 COMPONENT(Operator, ShiftRight)
+#define OPERATOR_BITOR                      COMPONENT(Operator, BitOr)
+#define OPERATOR_BITAND                     COMPONENT(Operator, BitAnd)
+#define OPERATOR_BITXOR                     COMPONENT(Operator, BitXor)
+#define OPERATOR_BOOLEQUALS                 COMPONENT(Operator, BoolEquals)
+#define OPERATOR_BOOLNOTEQUALS              COMPONENT(Operator, BoolNotEquals)
+#define OPERATOR_BOOLGREATERTHAN            COMPONENT(Operator, BoolGreaterThan)
+#define OPERATOR_BOOLLESSTHAN               COMPONENT(Operator, BoolLessThan)
+#define OPERATOR_BOOLGREATERTHANOREQUALS    COMPONENT(Operator, BoolGreaterThanOrEquals)
+#define OPERATOR_BOOLLESSTHANOREQUALS       COMPONENT(Operator, BoolLessThanOrEquals)
+#define OPERATOR_BOOLAND                    COMPONENT(Operator, BoolAnd)
+#define OPERATOR_BOOLOR                     COMPONENT(Operator, BoolOr)
+#define OPERATOR_BOOLXOR                    COMPONENT(Operator, BoolXor)
 
-#define VALUETYPE_CUSTOMTYPE            COMPONENT(ValueType, CustomType)
-#define VALUETYPE_PADDING               COMPONENT(ValueType, Padding)
-#define VALUETYPE_UNSIGNED              COMPONENT(ValueType, Unsigned)
-#define VALUETYPE_SIGNED                COMPONENT(ValueType, Signed)
-#define VALUETYPE_FLOATINGPOINT         COMPONENT(ValueType, FloatingPoint)
-#define VALUETYPE_INTEGER               COMPONENT(ValueType, Integer)
-#define VALUETYPE_ANY                   COMPONENT(ValueType, Any)
+#define VALUETYPE_CUSTOMTYPE                COMPONENT(ValueType, CustomType)
+#define VALUETYPE_PADDING                   COMPONENT(ValueType, Padding)
+#define VALUETYPE_UNSIGNED                  COMPONENT(ValueType, Unsigned)
+#define VALUETYPE_SIGNED                    COMPONENT(ValueType, Signed)
+#define VALUETYPE_FLOATINGPOINT             COMPONENT(ValueType, FloatingPoint)
+#define VALUETYPE_INTEGER                   COMPONENT(ValueType, Integer)
+#define VALUETYPE_ANY                       COMPONENT(ValueType, Any)
 
-#define SEPARATOR_ROUNDBRACKETOPEN      COMPONENT(Separator, RoundBracketOpen)
-#define SEPARATOR_ROUNDBRACKETCLOSE     COMPONENT(Separator, RoundBracketClose)
-#define SEPARATOR_CURLYBRACKETOPEN      COMPONENT(Separator, CurlyBracketOpen)
-#define SEPARATOR_CURLYBRACKETCLOSE     COMPONENT(Separator, CurlyBracketClose)
-#define SEPARATOR_SQUAREBRACKETOPEN     COMPONENT(Separator, SquareBracketOpen)
-#define SEPARATOR_SQUAREBRACKETCLOSE    COMPONENT(Separator, SquareBracketClose)
-#define SEPARATOR_COMMA                 COMPONENT(Separator, Comma)
-#define SEPARATOR_DOT                   COMPONENT(Separator, Dot)
-#define SEPARATOR_SCOPE_RESOLUTION      COMPONENT(Separator, ScopeResolution)
-#define SEPARATOR_ENDOFEXPRESSION       COMPONENT(Separator, EndOfExpression)
-#define SEPARATOR_ENDOFPROGRAM          COMPONENT(Separator, EndOfProgram)
+#define SEPARATOR_ROUNDBRACKETOPEN          COMPONENT(Separator, RoundBracketOpen)
+#define SEPARATOR_ROUNDBRACKETCLOSE         COMPONENT(Separator, RoundBracketClose)
+#define SEPARATOR_CURLYBRACKETOPEN          COMPONENT(Separator, CurlyBracketOpen)
+#define SEPARATOR_CURLYBRACKETCLOSE         COMPONENT(Separator, CurlyBracketClose)
+#define SEPARATOR_SQUAREBRACKETOPEN         COMPONENT(Separator, SquareBracketOpen)
+#define SEPARATOR_SQUAREBRACKETCLOSE        COMPONENT(Separator, SquareBracketClose)
+#define SEPARATOR_COMMA                     COMPONENT(Separator, Comma)
+#define SEPARATOR_DOT                       COMPONENT(Separator, Dot)
+#define SEPARATOR_SCOPE_RESOLUTION          COMPONENT(Separator, ScopeResolution)
+#define SEPARATOR_ENDOFEXPRESSION           COMPONENT(Separator, EndOfExpression)
+#define SEPARATOR_ENDOFPROGRAM              COMPONENT(Separator, EndOfProgram)

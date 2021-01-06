@@ -59,17 +59,24 @@ namespace hex::lang {
         ASTNode* parseMultiplicativeExpression();
         ASTNode* parseAdditiveExpression();
         ASTNode* parseShiftExpression();
+        ASTNode* parseRelationExpression();
+        ASTNode* parseEqualityExpression();
         ASTNode* parseBinaryAndExpression();
         ASTNode* parseBinaryXorExpression();
         ASTNode* parseBinaryOrExpression();
+        ASTNode* parseBooleanAnd();
+        ASTNode* parseBooleanXor();
+        ASTNode* parseBooleanOr();
         ASTNode* parseMathematicalExpression();
 
+        ASTNode* parseConditional();
         ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
         ASTNode* parsePadding();
         ASTNode* parseMemberVariable();
         ASTNode* parseMemberArrayVariable();
         ASTNode* parseMemberPointerVariable();
+        ASTNode* parseMember();
         ASTNode* parseStruct();
         ASTNode* parseUnion();
         ASTNode* parseEnum();

@@ -79,6 +79,18 @@ namespace hex::lang {
                 case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, *reinterpret_cast<s128*>(value) });
                 default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
             }
+        } else if (auto enumPattern = dynamic_cast<PatternDataEnum*>(currPattern); enumPattern != nullptr) {
+            u8 value[enumPattern->getSize()];
+            this->m_provider->read(enumPattern->getOffset(), value, enumPattern->getSize());
+
+            switch (enumPattern->getSize()) {
+                case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed8Bit,   *reinterpret_cast<s8*>(value) });
+                case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed16Bit,  *reinterpret_cast<s16*>(value) });
+                case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  *reinterpret_cast<s32*>(value) });
+                case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  *reinterpret_cast<s64*>(value) });
+                case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, *reinterpret_cast<s128*>(value) });
+                default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
+            }
         } else
             throwEvaluateError("tried to use non-integer value in numeric expression", node->getLineNumber());
     }
@@ -158,6 +170,24 @@ namespace hex::lang {
                         return new ASTNodeIntegerLiteral({ newType, bitXor(leftValue, rightValue) });
                     case Token::Operator::BitOr:
                         return new ASTNodeIntegerLiteral({ newType, bitOr(leftValue, rightValue) });
+                    case Token::Operator::BoolEquals:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue == rightValue });
+                    case Token::Operator::BoolNotEquals:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue != rightValue });
+                    case Token::Operator::BoolGreaterThan:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue > rightValue });
+                    case Token::Operator::BoolLessThan:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue < rightValue });
+                    case Token::Operator::BoolGreaterThanOrEquals:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue >= rightValue });
+                    case Token::Operator::BoolLessThanOrEquals:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue <= rightValue });
+                    case Token::Operator::BoolAnd:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue && rightValue });
+                    case Token::Operator::BoolXor:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue && !rightValue || !leftValue && rightValue });
+                    case Token::Operator::BoolOr:
+                        return new ASTNodeIntegerLiteral({ newType, leftValue || rightValue });
                     default:
                         throwEvaluateError("invalid operator used in mathematical expression", left->getLineNumber());
                 }
@@ -220,6 +250,39 @@ namespace hex::lang {
         return pattern;
     }
 
+    std::vector<PatternData*> Evaluator::evaluateMember(ASTNode *node) {
+        this->m_currEndian.reset();
+
+        if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(node); memberVariableNode != nullptr)
+            return { this->evaluateVariable(memberVariableNode) };
+        else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); memberArrayNode != nullptr)
+            return { this->evaluateArray(memberArrayNode) };
+        else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); memberPointerNode != nullptr)
+            return { this->evaluatePointer(memberPointerNode) };
+        else if (auto conditionalNode = dynamic_cast<ASTNodeConditionalStatement*>(node); conditionalNode != nullptr) {
+            auto condition = this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(conditionalNode->getCondition()));
+
+            std::vector<PatternData*> patterns;
+            if (std::visit([](auto &&value) { return value != 0; }, condition->getValue())) {
+                for (auto &statement : conditionalNode->getTrueBody()) {
+                    auto statementPatterns = this->evaluateMember(statement);
+                    std::copy(statementPatterns.begin(), statementPatterns.end(), std::back_inserter(patterns));
+                }
+            } else {
+                for (auto &statement : conditionalNode->getFalseBody()) {
+                    auto statementPatterns = this->evaluateMember(statement);
+                    std::copy(statementPatterns.begin(), statementPatterns.end(), std::back_inserter(patterns));
+                }
+            }
+
+            delete condition;
+
+            return patterns;
+        }
+        else
+            throwEvaluateError("invalid struct member", node->getLineNumber());
+    }
+
     PatternData* Evaluator::evaluateStruct(ASTNodeStruct *node) {
         std::vector<PatternData*> memberPatterns;
 
@@ -228,16 +291,8 @@ namespace hex::lang {
 
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
-            if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(member); memberVariableNode != nullptr)
-                memberPatterns.emplace_back(this->evaluateVariable(memberVariableNode));
-            else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
-                memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
-            else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(member); memberPointerNode != nullptr)
-                memberPatterns.emplace_back(this->evaluatePointer(memberPointerNode));
-            else
-                throwEvaluateError("invalid struct member", member->getLineNumber());
-
-            this->m_currEndian.reset();
+            auto newMembers = this->evaluateMember(member);
+            std::copy(newMembers.begin(), newMembers.end(), std::back_inserter(memberPatterns));
         }
 
         return new PatternDataStruct(startOffset, this->m_currOffset - startOffset, memberPatterns);
@@ -251,17 +306,10 @@ namespace hex::lang {
 
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
-            if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(member); memberVariableNode != nullptr)
-                memberPatterns.emplace_back(this->evaluateVariable(memberVariableNode));
-            else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(member); memberArrayNode != nullptr)
-                memberPatterns.emplace_back(this->evaluateArray(memberArrayNode));
-            else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(member); memberPointerNode != nullptr)
-                memberPatterns.emplace_back(this->evaluatePointer(memberPointerNode));
-            else
-                throwEvaluateError("invalid union member", member->getLineNumber());
+            auto newMembers = this->evaluateMember(member);
+            std::copy(newMembers.begin(), newMembers.end(), std::back_inserter(memberPatterns));
 
             this->m_currOffset = startOffset;
-            this->m_currEndian.reset();
         }
 
         return new PatternDataUnion(startOffset, this->m_currOffset - startOffset, memberPatterns);

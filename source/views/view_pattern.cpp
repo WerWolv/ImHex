@@ -18,7 +18,7 @@ namespace hex {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             static const char* const keywords[] = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else"
             };
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);

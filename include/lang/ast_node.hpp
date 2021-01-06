@@ -366,4 +366,48 @@ namespace hex::lang {
         std::vector<std::string> m_path;
     };
 
+    class ASTNodeConditionalStatement : public ASTNode {
+    public:
+        explicit ASTNodeConditionalStatement(ASTNode *condition, std::vector<ASTNode*> trueBody, std::vector<ASTNode*> falseBody)
+            : ASTNode(), m_condition(condition), m_trueBody(std::move(trueBody)), m_falseBody(std::move(falseBody)) { }
+
+        ~ASTNodeConditionalStatement() override {
+            delete this->m_condition;
+
+            for (auto &statement : this->m_trueBody)
+                delete statement;
+            for (auto &statement : this->m_falseBody)
+                delete statement;
+        }
+
+        ASTNodeConditionalStatement(const ASTNodeConditionalStatement &other) : ASTNode(other) {
+            this->m_condition = other.m_condition->clone();
+
+            for (auto &statement : other.m_trueBody)
+                this->m_trueBody.push_back(statement->clone());
+            for (auto &statement : other.m_falseBody)
+                this->m_falseBody.push_back(statement->clone());
+        }
+
+        ASTNode* clone() const override {
+            return new ASTNodeConditionalStatement(*this);
+        }
+
+        [[nodiscard]] ASTNode* getCondition() {
+            return this->m_condition;
+        }
+
+        [[nodiscard]] const std::vector<ASTNode*>& getTrueBody() const {
+            return this->m_trueBody;
+        }
+
+        [[nodiscard]] const std::vector<ASTNode*>& getFalseBody() const {
+            return this->m_falseBody;
+        }
+
+    private:
+        ASTNode *m_condition;
+        std::vector<ASTNode*> m_trueBody, m_falseBody;
+    };
+
 }

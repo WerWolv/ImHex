@@ -188,6 +188,27 @@ namespace hex::lang {
                 } else if (c == '@') {
                     tokens.emplace_back(TOKEN(Operator, AtDeclaration));
                     offset += 1;
+                } else if (code.substr(offset, 2) == "==") {
+                    tokens.emplace_back(TOKEN(Operator, BoolEquals));
+                    offset += 2;
+                } else if (code.substr(offset, 2) == "!=") {
+                    tokens.emplace_back(TOKEN(Operator, BoolNotEquals));
+                    offset += 2;
+                } else if (code.substr(offset, 2) == ">=") {
+                    tokens.emplace_back(TOKEN(Operator, BoolGreaterThanOrEquals));
+                    offset += 2;
+                } else if (code.substr(offset, 2) == "<=") {
+                    tokens.emplace_back(TOKEN(Operator, BoolLessThanOrEquals));
+                    offset += 2;
+                } else if (code.substr(offset, 2) == "&&") {
+                    tokens.emplace_back(TOKEN(Operator, BoolAnd));
+                    offset += 2;
+                } else if (code.substr(offset, 2) == "||") {
+                    tokens.emplace_back(TOKEN(Operator, BoolOr));
+                    offset += 2;
+                } else if (code.substr(offset, 2) == "^^") {
+                    tokens.emplace_back(TOKEN(Operator, BoolXor));
+                    offset += 2;
                 } else if (c == '=') {
                     tokens.emplace_back(TOKEN(Operator, Assignment));
                     offset += 1;
@@ -215,6 +236,12 @@ namespace hex::lang {
                 } else if (code.substr(offset, 2) == ">>") {
                     tokens.emplace_back(TOKEN(Operator, ShiftRight));
                     offset += 2;
+                } else if (c == '>') {
+                    tokens.emplace_back(TOKEN(Operator, BoolGreaterThan));
+                    offset += 1;
+                } else if (c == '<') {
+                    tokens.emplace_back(TOKEN(Operator, BoolLessThan));
+                    offset += 1;
                 } else if (c == '|') {
                     tokens.emplace_back(TOKEN(Operator, BitOr));
                     offset += 1;
@@ -276,6 +303,10 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(Keyword, BigEndian));
                     else if (identifier == "le")
                         tokens.emplace_back(TOKEN(Keyword, LittleEndian));
+                    else if (identifier == "if")
+                        tokens.emplace_back(TOKEN(Keyword, If));
+                    else if (identifier == "else")
+                        tokens.emplace_back(TOKEN(Keyword, Else));
 
                         // Check for built-in types
                     else if (identifier == "u8")
