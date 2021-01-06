@@ -5,6 +5,11 @@
 
 #include "helpers/project_file_handler.hpp"
 
+#if defined(OS_WINDOWS)
+#include <locale>
+#include <codecvt>
+#endif
+
 namespace hex::prv {
 
     FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
@@ -14,16 +19,27 @@ namespace hex::prv {
         this->m_writable = true;
 
         #if defined(OS_WINDOWS)
+        std::wstring widePath;
+        {
+            int len;
+            int slength = (int)path.length() + 1;
+            len = MultiByteToWideChar(CP_UTF8, 0, path.data(), slength, 0, 0);
+            wchar_t* buf = new wchar_t[len];
+            MultiByteToWideChar(CP_UTF8, 0, path.data(), slength, buf, len);
+            widePath = buf;
+            delete[] buf;
+        }
+
         LARGE_INTEGER fileSize = { 0 };
-        OFSTRUCT ofStruct;
-        this->m_file = reinterpret_cast<HANDLE>(OpenFile(path.data(), &ofStruct, OF_READ));
+        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
         GetFileSizeEx(this->m_file, &fileSize);
         this->m_fileSize = fileSize.QuadPart;
+        CloseHandle(this->m_file);
 
-        this->m_file = reinterpret_cast<HANDLE>(OpenFile(path.data(), &ofStruct, OF_READWRITE));
+        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            this->m_file = reinterpret_cast<HANDLE>(OpenFile(path.data(), &ofStruct, OF_READ));
+            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
             this->m_writable = false;
         }
 
@@ -36,8 +52,8 @@ namespace hex::prv {
             return;
         }
 
-        this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, path.data());
-        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+        this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, nullptr);
+        if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
             return;
         }
 
