@@ -19,13 +19,13 @@ set(Python_FIND_FRAMEWORK NEVER)
 
 # Find packages
 find_package(PkgConfig REQUIRED)
-pkg_search_module(CRYPTO REQUIRED crypto)
+pkg_search_module(CRYPTO REQUIRED libcrypto)
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(Python COMPONENTS Development)
 
-add_subdirectory(external/llvm/Demangle)
+add_subdirectory(external/llvm)
 add_subdirectory(plugins/libimhex)
 
 
@@ -50,8 +50,8 @@ list(JOIN PYTHON_VERSION_MAJOR_MINOR "." PYTHON_VERSION_MAJOR_MINOR)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
 
 # Detect current OS / System
-if (MSYS OR MINGW)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_WINDOWS")
+if (WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_WINDOWS -static-libstdc++ -static-libgcc -Wl,--allow-multiple-definition -static")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wl,-subsystem,windows")
 elseif(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_MACOS")
@@ -155,7 +155,11 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
-target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
+if (WIN32)
+    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
+elseif (UNIX)
+    target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
+endif()
 
 if (CREATE_BUNDLE)
     include(PostprocessBundle)

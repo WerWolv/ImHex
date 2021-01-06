@@ -5,7 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURRENT_BINARY_DIR}/external/ImGui)
 
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
+if (WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
+endif()
 
 add_library(libimhex STATIC
         source/helpers/event.cpp
