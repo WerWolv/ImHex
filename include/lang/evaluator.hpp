@@ -22,7 +22,7 @@ namespace hex::lang {
         const std::pair<u32, std::string>& getError() { return this->m_error; }
 
     private:
-        std::unordered_map<std::string, ASTNode*> m_types;
+        std::map<std::string, ASTNode*> m_types;
         prv::Provider* &m_provider;
         std::endian m_defaultDataEndian;
         u64 m_currOffset = 0;
@@ -41,6 +41,7 @@ namespace hex::lang {
             return this->m_currEndian.value_or(this->m_defaultDataEndian);
         }
 
+        ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
         ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);

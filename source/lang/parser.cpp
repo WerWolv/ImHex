@@ -307,6 +307,7 @@ namespace hex::lang {
         const auto enumNode = new ASTNodeEnum(underlyingType);
         ScopeExit enumGuard([&]{ delete enumNode; });
 
+        ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT))) {
                 auto name = getValue<std::string>(-2);
@@ -352,9 +353,11 @@ namespace hex::lang {
                         default:
                             throwParseError("invalid enum underlying type", -1);
                     }
+
+                    lastEntry = valueExpr;
                 }
                 else
-                    valueExpr = new ASTNodeNumericExpression(enumNode->getEntries().back().second, new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(1) }), Token::Operator::Plus);
+                    valueExpr = new ASTNodeNumericExpression(lastEntry, new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(1) }), Token::Operator::Plus);
 
                 enumNode->addEntry(name, valueExpr);
             }

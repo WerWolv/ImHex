@@ -18,7 +18,7 @@ namespace hex::lang {
         [[nodiscard]] constexpr u32 getLineNumber() const { return this->m_lineNumber; }
         constexpr void setLineNumber(u32 lineNumber) { this->m_lineNumber = lineNumber; }
 
-        virtual ASTNode* clone() = 0;
+        virtual ASTNode* clone() const = 0;
 
     private:
         u32 m_lineNumber = 1;
@@ -30,7 +30,7 @@ namespace hex::lang {
 
         ASTNodeIntegerLiteral(const ASTNodeIntegerLiteral&) = default;
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeIntegerLiteral(*this);
         }
 
@@ -62,7 +62,7 @@ namespace hex::lang {
             this->m_right = other.m_right->clone();
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeNumericExpression(*this);
         }
 
@@ -82,7 +82,7 @@ namespace hex::lang {
 
         [[nodiscard]] constexpr const auto& getType() const { return this->m_type; }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeBuiltinType(*this);
         }
 
@@ -105,7 +105,7 @@ namespace hex::lang {
             delete this->m_type;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeTypeDecl(*this);
         }
 
@@ -138,7 +138,7 @@ namespace hex::lang {
             delete this->m_type;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeVariableDecl(*this);
         }
 
@@ -173,7 +173,7 @@ namespace hex::lang {
             delete this->m_size;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeArrayVariableDecl(*this);
         }
 
@@ -209,7 +209,7 @@ namespace hex::lang {
             delete this->m_type;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodePointerVariableDecl(*this);
         }
 
@@ -239,7 +239,7 @@ namespace hex::lang {
                 delete member;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeStruct(*this);
         }
 
@@ -264,7 +264,7 @@ namespace hex::lang {
                 delete member;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeUnion(*this);
         }
 
@@ -281,7 +281,7 @@ namespace hex::lang {
 
         ASTNodeEnum(const ASTNodeEnum &other) : ASTNode(other) {
             for (const auto &[name, entry] : other.getEntries())
-                this->m_entries.emplace_back(name, entry->clone());
+                this->m_entries.insert({ name, entry->clone() });
             this->m_underlyingType = other.m_underlyingType->clone();
         }
 
@@ -291,17 +291,17 @@ namespace hex::lang {
             delete this->m_underlyingType;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeEnum(*this);
         }
 
-        [[nodiscard]] const std::vector<std::pair<std::string, ASTNode*>>& getEntries() const { return this->m_entries; }
-        void addEntry(const std::string &name, ASTNode* expression) { this->m_entries.emplace_back(name, expression); }
+        [[nodiscard]] const std::unordered_map<std::string, ASTNode*>& getEntries() const { return this->m_entries; }
+        void addEntry(const std::string &name, ASTNode* expression) { this->m_entries.insert({ name, expression }); }
 
         [[nodiscard]] const ASTNode *getUnderlyingType() const { return this->m_underlyingType; }
 
     private:
-        std::vector<std::pair<std::string, ASTNode*>> m_entries;
+        std::unordered_map<std::string, ASTNode*> m_entries;
         ASTNode *m_underlyingType;
     };
 
@@ -319,7 +319,7 @@ namespace hex::lang {
                 delete expr;
         }
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeBitfield(*this);
         }
 
@@ -336,7 +336,7 @@ namespace hex::lang {
 
         ASTNodeRValue(const ASTNodeRValue&) = default;
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeRValue(*this);
         }
 
@@ -354,7 +354,7 @@ namespace hex::lang {
 
         ASTNodeScopeResolution(const ASTNodeScopeResolution&) = default;
 
-        ASTNode* clone() override {
+        ASTNode* clone() const override {
             return new ASTNodeScopeResolution(*this);
         }
 

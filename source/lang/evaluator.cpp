@@ -4,7 +4,6 @@
 
 #include <bit>
 #include <algorithm>
-#include <ranges>
 
 #include <unistd.h>
 
@@ -12,6 +11,25 @@ namespace hex::lang {
 
     Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
         : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
+        ASTNode *currScope = nullptr;
+        for (const auto &identifier : node->getPath()) {
+            if (currScope == nullptr) {
+                if (!this->m_types.contains(identifier))
+                    break;
+
+                currScope = this->m_types[identifier.data()];
+            } else if (auto enumNode = dynamic_cast<ASTNodeEnum*>(currScope); enumNode != nullptr) {
+                if (!enumNode->getEntries().contains(identifier))
+                    break;
+                else
+                    return evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(enumNode->getEntries().at(identifier)));
+            }
+        }
+
+        throwEvaluateError("failed to find identifier", node->getLineNumber());
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
@@ -159,6 +177,8 @@ namespace hex::lang {
             leftInteger = evaluateMathematicalExpression(leftExprExpression);
         else if (auto leftExprRvalue = dynamic_cast<ASTNodeRValue*>(node->getLeftOperand()); leftExprRvalue != nullptr)
             leftInteger = evaluateRValue(leftExprRvalue);
+        else if (auto leftExprScopeResolution = dynamic_cast<ASTNodeScopeResolution*>(node->getLeftOperand()); leftExprScopeResolution != nullptr)
+            leftInteger = evaluateScopeResolution(leftExprScopeResolution);
         else
             throwEvaluateError("invalid expression. Expected integer literal", node->getLineNumber());
 
@@ -168,6 +188,8 @@ namespace hex::lang {
             rightInteger = evaluateMathematicalExpression(rightExprExpression);
         else if (auto rightExprRvalue = dynamic_cast<ASTNodeRValue*>(node->getRightOperand()); rightExprRvalue != nullptr)
             rightInteger = evaluateRValue(rightExprRvalue);
+        else if (auto rightExprScopeResolution = dynamic_cast<ASTNodeScopeResolution*>(node->getRightOperand()); rightExprScopeResolution != nullptr)
+            rightInteger = evaluateScopeResolution(rightExprScopeResolution);
         else
             throwEvaluateError("invalid expression. Expected integer literal", node->getLineNumber());
 
@@ -486,6 +508,8 @@ namespace hex::lang {
                     patterns.push_back(this->evaluateArray(arrayDeclNode));
                 } else if (auto pointerDeclNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); pointerDeclNode != nullptr) {
                     patterns.push_back(this->evaluatePointer(pointerDeclNode));
+                } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
+                    this->m_types[typeDeclNode->getName().data()] = typeDeclNode->getType();
                 }
 
             }
