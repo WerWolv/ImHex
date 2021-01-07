@@ -292,7 +292,7 @@ namespace hex::lang {
                     if (offset >= code.length() || code[offset] != '\'')
                         throwLexerError("missing terminating ' after character literal", lineNumber);
 
-                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral({ Token::ValueType::Character, character }) ));
+                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Character, character) ));
                     offset += 1;
 
                 } else if (std::isalpha(c)) {
@@ -319,9 +319,9 @@ namespace hex::lang {
                     else if (identifier == "else")
                         tokens.emplace_back(TOKEN(Keyword, Else));
                     else if (identifier == "false")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) })));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Unsigned8Bit, u8(0))));
                     else if (identifier == "true")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(1) })));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Unsigned8Bit, u8(1))));
 
                         // Check for built-in types
                     else if (identifier == "u8")
