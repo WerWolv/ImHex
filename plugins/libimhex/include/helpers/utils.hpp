@@ -18,18 +18,18 @@
 #endif
 
 #ifdef __APPLE__
-#define off64_t off_t
+    #define off64_t off_t
     #define fopen64 fopen
     #define fseeko64 fseek
     #define ftello64 ftell
+#else
+    template<>
+    struct std::is_integral<u128> : public std::true_type { };
+    template<>
+    struct std::is_integral<s128> : public std::true_type { };
+    template<>
+    struct std::is_signed<s128>   : public std::true_type { };
 #endif
-
-template<>
-struct std::is_integral<u128> : public std::true_type { };
-template<>
-struct std::is_integral<s128> : public std::true_type { };
-template<>
-struct std::is_signed<s128>   : public std::true_type { };
 
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
 #if __has_include(<concepts>)
