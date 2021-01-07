@@ -135,6 +135,7 @@ add_executable(imhex ${application_type}
         source/lang/parser.cpp
         source/lang/validator.cpp
         source/lang/evaluator.cpp
+        source/lang/builtin_functions.cpp
 
         source/providers/file_provider.cpp
 

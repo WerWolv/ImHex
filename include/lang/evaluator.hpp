@@ -21,6 +21,17 @@ namespace hex::lang {
 
         const std::pair<u32, std::string>& getError() { return this->m_error; }
 
+
+        struct Function {
+            constexpr static u32 UnlimitedParameters   = 0xFFFF'FFFF;
+            constexpr static u32 MoreParametersThan    = 0x8000'0000;
+            constexpr static u32 LessParametersThan    = 0x4000'0000;
+            constexpr static u32 NoParameters          = 0x0000'0000;
+
+            u32 parameterCount;
+            std::function<ASTNodeIntegerLiteral*(std::vector<ASTNodeIntegerLiteral*>)> func;
+        };
+
     private:
         std::map<std::string, ASTNode*> m_types;
         prv::Provider* &m_provider;
@@ -28,6 +39,7 @@ namespace hex::lang {
         u64 m_currOffset = 0;
         std::optional<std::endian> m_currEndian;
         std::vector<std::vector<PatternData*>*> m_currMembers;
+        std::map<std::string, Function> m_functions;
 
         std::pair<u32, std::string> m_error;
 
@@ -41,8 +53,16 @@ namespace hex::lang {
             return this->m_currEndian.value_or(this->m_defaultDataEndian);
         }
 
+        void addFunction(std::string_view name, u32 parameterCount, std::function<ASTNodeIntegerLiteral*(std::vector<ASTNodeIntegerLiteral*>)> func) {
+            if (this->m_functions.contains(name.data()))
+                throwEvaluateError(hex::format("redefinition of function '%s'", name.data()), 1);
+
+            this->m_functions[name.data()] = { parameterCount, func };
+        }
+
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
+        ASTNodeIntegerLiteral* evaluateFunctionCall(ASTNodeFunctionCall *node);
         ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op);
         ASTNodeIntegerLiteral* evaluateOperand(ASTNode *node);
         ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
@@ -59,6 +79,14 @@ namespace hex::lang {
         PatternData* evaluateArray(ASTNodeArrayVariableDecl *node);
         PatternData* evaluatePointer(ASTNodePointerVariableDecl *node);
 
+
+        #define BUILTIN_FUNCTION(name) ASTNodeIntegerLiteral* name(std::vector<ASTNodeIntegerLiteral*> params)
+
+        BUILTIN_FUNCTION(findSequence);
+        BUILTIN_FUNCTION(readUnsigned);
+        BUILTIN_FUNCTION(readSigned);
+
+        #undef BUILTIN_FUNCTION
     };
 
 }

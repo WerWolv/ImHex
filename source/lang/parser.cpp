@@ -18,6 +18,32 @@ namespace hex::lang {
 
     /* Mathematical expressions */
 
+    // Identifier([(parseMathematicalExpression)|<(parseMathematicalExpression),...>(parseMathematicalExpression)]
+    ASTNode* Parser::parseFunctionCall() {
+        auto functionName = getValue<std::string>(-2);
+        std::vector<ASTNode*> params;
+        ScopeExit paramCleanup([&]{
+            for (auto &param : params)
+                delete param;
+        });
+
+        while (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+            params.push_back(parseMathematicalExpression());
+
+            if (MATCHES(sequence(SEPARATOR_COMMA, SEPARATOR_ROUNDBRACKETCLOSE)))
+                throwParseError("unexpected ',' at end of function parameter list", -1);
+            else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+                break;
+            else if (!MATCHES(sequence(SEPARATOR_COMMA)))
+                throwParseError("missing ',' between parameters", -1);
+
+        }
+
+        paramCleanup.release();
+
+        return TO_NUMERIC_EXPRESSION(new ASTNodeFunctionCall(functionName, params));
+    }
+
     // Identifier::<Identifier[::]...>
     ASTNode* Parser::parseScopeResolution(std::vector<std::string> &path) {
         if (peek(IDENTIFIER, -1))
@@ -59,12 +85,12 @@ namespace hex::lang {
             std::vector<std::string> path;
             this->m_curr--;
             return this->parseScopeResolution(path);
-        }
-        else if (MATCHES(sequence(IDENTIFIER))) {
+        } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN))) {
+            return this->parseFunctionCall();
+        } else if (MATCHES(sequence(IDENTIFIER))) {
             std::vector<std::string> path;
             return this->parseRValue(path);
-        }
-        else
+        } else
             throwParseError("expected integer or parenthesis");
     }
 

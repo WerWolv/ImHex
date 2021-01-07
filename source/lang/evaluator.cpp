@@ -12,6 +12,18 @@ namespace hex::lang {
 
     Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
         : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
+
+        this->addFunction("findSequence", Function::MoreParametersThan | 1, [this](auto params) {
+            return this->findSequence(params);
+        });
+
+        this->addFunction("readUnsigned", 2, [this](auto params) {
+            return this->readUnsigned(params);
+        });
+
+        this->addFunction("readSigned", 2, [this](auto params) {
+            return this->readSigned(params);
+        });
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
@@ -84,8 +96,6 @@ namespace hex::lang {
             u8 value[enumPattern->getSize()];
             this->m_provider->read(enumPattern->getOffset(), value, enumPattern->getSize());
 
-
-
             switch (enumPattern->getSize()) {
                 case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit,   hex::changeEndianess(*reinterpret_cast<u8*>(value), 1, this->getCurrentEndian()) });
                 case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned16Bit,  hex::changeEndianess(*reinterpret_cast<u16*>(value), 2, this->getCurrentEndian()) });
@@ -96,6 +106,37 @@ namespace hex::lang {
             }
         } else
             throwEvaluateError("tried to use non-integer value in numeric expression", node->getLineNumber());
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateFunctionCall(ASTNodeFunctionCall *node) {
+        std::vector<ASTNodeIntegerLiteral*> evaluatedParams;
+        ScopeExit paramCleanup([&] {
+           for (auto &param : evaluatedParams)
+               delete param;
+        });
+
+        for (auto &param : node->getParams())
+            evaluatedParams.push_back(this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(param)));
+
+        if (!this->m_functions.contains(node->getFunctionName().data()))
+            throwEvaluateError(hex::format("no function named '%s' found", node->getFunctionName().data()), node->getLineNumber());
+
+        auto &function = this->m_functions[node->getFunctionName().data()];
+
+        if (function.parameterCount == Function::UnlimitedParameters) {
+            ; // Don't check parameter count
+        }
+        else if (function.parameterCount & Function::LessParametersThan) {
+            if (evaluatedParams.size() >= (function.parameterCount & ~Function::LessParametersThan))
+                throwEvaluateError(hex::format("too many parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::LessParametersThan), node->getLineNumber());
+        } else if (function.parameterCount & Function::MoreParametersThan) {
+            if (evaluatedParams.size() <= (function.parameterCount & ~Function::MoreParametersThan))
+                throwEvaluateError(hex::format("too few parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::MoreParametersThan), node->getLineNumber());
+        } else if (function.parameterCount != evaluatedParams.size()) {
+            throwEvaluateError(hex::format("invalid number of parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount), node->getLineNumber());
+        }
+
+        return function.func(evaluatedParams);
     }
 
 #define FLOAT_BIT_OPERATION(name) \
@@ -220,6 +261,8 @@ namespace hex::lang {
             return evaluateScopeResolution(exprScopeResolution);
         else if (auto exprTernary = dynamic_cast<ASTNodeTernaryExpression*>(node); exprTernary != nullptr)
             return evaluateTernaryExpression(exprTernary);
+        else if (auto exprFunctionCall = dynamic_cast<ASTNodeFunctionCall*>(node); exprFunctionCall != nullptr)
+            return evaluateFunctionCall(exprFunctionCall);
         else
             throwEvaluateError("invalid operand", node->getLineNumber());
     }

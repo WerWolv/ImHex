@@ -442,4 +442,39 @@ namespace hex::lang {
         std::vector<ASTNode*> m_trueBody, m_falseBody;
     };
 
+    class ASTNodeFunctionCall : public ASTNode {
+    public:
+        explicit ASTNodeFunctionCall(std::string_view functionName, std::vector<ASTNode*> params)
+                : ASTNode(), m_functionName(functionName), m_params(std::move(params)) { }
+
+        ~ASTNodeFunctionCall() override {
+            for (auto &param : this->m_params)
+                delete param;
+        }
+
+        ASTNodeFunctionCall(const ASTNodeFunctionCall &other) : ASTNode(other) {
+            this->m_functionName = other.m_functionName;
+
+            for (auto &param : other.m_params)
+                this->m_params.push_back(param->clone());
+        }
+
+        ASTNode* clone() const override {
+            return new ASTNodeFunctionCall(*this);
+        }
+
+        [[nodiscard]] std::string_view getFunctionName() {
+            return this->m_functionName;
+        }
+
+        [[nodiscard]] const std::vector<ASTNode*>& getParams() const {
+            return this->m_params;
+        }
+
+    private:
+        std::string m_functionName;
+        std::vector<ASTNode*> m_params;
+    };
+
+
 }

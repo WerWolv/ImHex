@@ -54,12 +54,14 @@ namespace hex::lang {
         } else if (numberData.ends_with("LL")) {
             type = Token::ValueType::Signed128Bit;
             numberData.remove_suffix(2);
-        } else if (numberData.ends_with('F')) {
-            type = Token::ValueType::Float;
-            numberData.remove_suffix(1);
-        } else if (numberData.ends_with('D')) {
-            type = Token::ValueType::Double;
-            numberData.remove_suffix(1);
+        } else if (!numberData.starts_with("0x") && !numberData.starts_with("0b")) {
+            if (numberData.ends_with('F')) {
+                type = Token::ValueType::Float;
+                numberData.remove_suffix(1);
+            } else if (numberData.ends_with('D')) {
+                type = Token::ValueType::Double;
+                numberData.remove_suffix(1);
+            }
         }
 
         if (numberData.starts_with("0x")) {
