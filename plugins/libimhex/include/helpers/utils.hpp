@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <array>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -137,7 +138,7 @@ namespace hex {
             return __builtin_bswap64(value);
         else if (size == 16) {
             u64 parts[2];
-            memcpy(parts, &value, size);
+            std::memcpy(parts, &value, size);
             return u128(parts[1]) << 64 | u128(parts[0]);
         }
         else
