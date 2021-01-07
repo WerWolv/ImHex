@@ -135,6 +135,11 @@ namespace hex {
             return __builtin_bswap32(value);
         else if (size == 8)
             return __builtin_bswap64(value);
+        else if (size == 16) {
+            u64 parts[2];
+            memcpy(parts, &value, size);
+            return u128(parts[1]) << 64 | u128(parts[0]);
+        }
         else
             throw std::invalid_argument("Invalid value size!");
     }
