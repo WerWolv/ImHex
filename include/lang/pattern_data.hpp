@@ -28,6 +28,9 @@ namespace hex::lang {
                     result += *c;
             }
 
+            if (*(data + size - 1) == '\x00')
+                result.pop_back();
+
             return result;
         }
 

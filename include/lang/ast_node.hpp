@@ -192,7 +192,10 @@ namespace hex::lang {
         ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) : ASTNode(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type->clone();
-            this->m_size = other.m_size->clone();
+            if (other.m_size != nullptr)
+                this->m_size = other.m_size->clone();
+            else
+                this->m_size = nullptr;
 
             if (other.m_placementOffset != nullptr)
                 this->m_placementOffset = other.m_placementOffset->clone();

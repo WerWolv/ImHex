@@ -512,27 +512,39 @@ namespace hex::lang {
         auto startOffset = this->m_currOffset;
 
         ASTNodeIntegerLiteral *valueNode;
+        u64 arraySize = 0;
 
-        if (auto sizeNumericExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getSize()); sizeNumericExpression != nullptr)
-            valueNode = evaluateMathematicalExpression(sizeNumericExpression);
-        else
-            throwEvaluateError("array size not a numeric expression", node->getLineNumber());
+        if (node->getSize() != nullptr) {
+            if (auto sizeNumericExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getSize()); sizeNumericExpression != nullptr)
+                valueNode = evaluateMathematicalExpression(sizeNumericExpression);
+            else
+                throwEvaluateError("array size not a numeric expression", node->getLineNumber());
 
-        SCOPE_EXIT( delete valueNode; );
+            SCOPE_EXIT( delete valueNode; );
 
-        auto arraySize = std::visit([node, type = valueNode->getType()] (auto &&value) {
-            if (Token::isFloatingPoint(type))
-                throwEvaluateError("array size must be an integer value", node->getLineNumber());
-            return static_cast<u64>(value);
-        }, valueNode->getValue());
+            arraySize = std::visit([node, type = valueNode->getType()] (auto &&value) {
+                if (Token::isFloatingPoint(type))
+                    throwEvaluateError("array size must be an integer value", node->getLineNumber());
+                return static_cast<u64>(value);
+            }, valueNode->getValue());
 
-        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
-            if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
-                if (builtinType->getType() == Token::ValueType::Padding) {
-                    this->m_currOffset += arraySize;
-                    return new PatternDataPadding(startOffset, arraySize);
+            if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
+                if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
+                    if (builtinType->getType() == Token::ValueType::Padding) {
+                        this->m_currOffset += arraySize;
+                        return new PatternDataPadding(startOffset, arraySize);
+                    }
                 }
             }
+        } else {
+            u8 currByte = 0x00;
+            u64 offset = startOffset;
+
+            do {
+                this->m_provider->read(offset, &currByte, sizeof(u8));
+                offset += sizeof(u8);
+                arraySize += sizeof(u8);
+            } while (currByte != 0x00 && offset < this->m_provider->getSize());
         }
 
         std::vector<PatternData*> entries;
@@ -563,12 +575,16 @@ namespace hex::lang {
         this->m_currEndian.reset();
 
         PatternData *pattern;
-        if (entries.empty())
+        if (entries.empty()) {
             pattern = new PatternDataPadding(startOffset, 0);
+        }
         else if (dynamic_cast<PatternDataCharacter*>(entries[0]))
             pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
-        else
+        else {
+            if (node->getSize() == nullptr)
+                throwEvaluateError("no bounds provided for array", node->getLineNumber());
             pattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), entries, color.value_or(0));
+        }
 
         pattern->setVariableName(node->getName().data());
 

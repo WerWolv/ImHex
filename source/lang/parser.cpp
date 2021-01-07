@@ -353,10 +353,18 @@ namespace hex::lang {
         SCOPE_EXIT( delete temporaryType; );
 
         auto name = getValue<std::string>(-2);
-        auto size = parseMathematicalExpression();
 
-        if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
-            throwParseError("expected closing ']' at end of array declaration", -1);
+        ASTNode *size = nullptr;
+        ScopeExit sizeCleanup([&]{ delete size; });
+
+        if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
+            size = parseMathematicalExpression();
+
+            if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
+                throwParseError("expected closing ']' at end of array declaration", -1);
+        }
+
+        sizeCleanup.release();
 
         return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size);
     }
@@ -558,20 +566,28 @@ namespace hex::lang {
         return new ASTNodeVariableDecl(getValue<std::string>(-2), temporaryType->getType()->clone(), parseMathematicalExpression());
     }
 
-    // (parseType) Identifier[(parseMathematicalExpression)] @ Integer
+    // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer
     ASTNode* Parser::parseArrayVariablePlacement() {
         auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
         if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
         SCOPE_EXIT( delete temporaryType; );
 
         auto name = getValue<std::string>(-2);
-        auto size = parseMathematicalExpression();
 
-        if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
-            throwParseError("expected closing ']' at end of array declaration", -1);
+        ASTNode *size = nullptr;
+        ScopeExit sizeCleanup([&]{ delete size; });
+
+        if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
+            size = parseMathematicalExpression();
+
+            if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
+                throwParseError("expected closing ']' at end of array declaration", -1);
+        }
 
         if (!MATCHES(sequence(OPERATOR_AT)))
             throwParseError("expected placement instruction", -1);
+
+        sizeCleanup.release();
 
         return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size, parseMathematicalExpression());
     }
