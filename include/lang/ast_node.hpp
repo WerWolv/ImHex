@@ -4,7 +4,7 @@
 
 #include <bit>
 #include <optional>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace hex::lang {
