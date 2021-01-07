@@ -68,6 +68,7 @@ namespace hex::lang {
         ASTNode* parseBooleanAnd();
         ASTNode* parseBooleanXor();
         ASTNode* parseBooleanOr();
+        ASTNode* parseTernaryConditional();
         ASTNode* parseMathematicalExpression();
 
         ASTNode* parseConditional();

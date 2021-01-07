@@ -44,6 +44,8 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
         ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op);
+        ASTNodeIntegerLiteral* evaluateOperand(ASTNode *node);
+        ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);

@@ -75,6 +75,38 @@ namespace hex::lang {
         Token::Operator m_operator;
     };
 
+    class ASTNodeTernaryExpression : public ASTNode {
+    public:
+        ASTNodeTernaryExpression(ASTNode *first, ASTNode *second, ASTNode *third, Token::Operator op)
+                : ASTNode(), m_first(first), m_second(second), m_third(third), m_operator(op) { }
+
+        ~ASTNodeTernaryExpression() override {
+            delete this->m_first;
+            delete this->m_second;
+            delete this->m_third;
+        }
+
+        ASTNodeTernaryExpression(const ASTNodeTernaryExpression &other) : ASTNode(other) {
+            this->m_operator = other.m_operator;
+            this->m_first = other.m_first->clone();
+            this->m_second = other.m_second->clone();
+            this->m_third = other.m_third->clone();
+        }
+
+        ASTNode* clone() const override {
+            return new ASTNodeTernaryExpression(*this);
+        }
+
+        ASTNode *getFirstOperand() { return this->m_first; }
+        ASTNode *getSecondOperand() { return this->m_second; }
+        ASTNode *getThirdOperand() { return this->m_third; }
+        Token::Operator getOperator() { return this->m_operator; }
+
+    private:
+        ASTNode *m_first, *m_second, *m_third;
+        Token::Operator m_operator;
+    };
+
     class ASTNodeBuiltinType : public ASTNode {
     public:
         constexpr explicit ASTNodeBuiltinType(Token::ValueType type)

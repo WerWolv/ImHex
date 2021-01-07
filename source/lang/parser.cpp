@@ -205,9 +205,26 @@ namespace hex::lang {
         return node;
     }
 
-    // (parseBinaryOrExpression)
+    // (parseBooleanOr) ? (parseBooleanOr) : (parseBooleanOr)
+    ASTNode* Parser::parseTernaryConditional() {
+        auto node = this->parseBooleanXor();
+
+        while (MATCHES(sequence(OPERATOR_TERNARYCONDITIONAL))) {
+            auto second = this->parseBooleanXor();
+
+            if (!MATCHES(sequence(OPERATOR_INHERIT)))
+                throwParseError("expected ':' in ternary expression");
+
+            auto third = this->parseBooleanXor();
+            node = new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional);
+        }
+
+        return node;
+    }
+
+    // (parseTernaryConditional)
     ASTNode* Parser::parseMathematicalExpression() {
-        return this->parseBooleanOr();
+        return this->parseTernaryConditional();
     }
 
 

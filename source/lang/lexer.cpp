@@ -257,6 +257,9 @@ namespace hex::lang {
                 } else if (c == '~') {
                     tokens.emplace_back(TOKEN(Operator, BitNot));
                     offset += 1;
+                } else if (c == '?') {
+                    tokens.emplace_back(TOKEN(Operator, TernaryConditional));
+                    offset += 1;
                 } else if (c == '\'') {
                     offset += 1;
 

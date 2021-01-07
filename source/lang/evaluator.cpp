@@ -206,30 +206,40 @@ namespace hex::lang {
         }
     }
 
+    ASTNodeIntegerLiteral* Evaluator::evaluateOperand(ASTNode *node) {
+        if (auto exprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(node); exprLiteral != nullptr)
+            return exprLiteral;
+        else if (auto exprExpression = dynamic_cast<ASTNodeNumericExpression*>(node); exprExpression != nullptr)
+            return evaluateMathematicalExpression(exprExpression);
+        else if (auto exprRvalue = dynamic_cast<ASTNodeRValue*>(node); exprRvalue != nullptr)
+            return evaluateRValue(exprRvalue);
+        else if (auto exprScopeResolution = dynamic_cast<ASTNodeScopeResolution*>(node); exprScopeResolution != nullptr)
+            return evaluateScopeResolution(exprScopeResolution);
+        else if (auto exprTernary = dynamic_cast<ASTNodeTernaryExpression*>(node); exprTernary != nullptr)
+            return evaluateTernaryExpression(exprTernary);
+        else
+            throwEvaluateError("invalid operand", node->getLineNumber());
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateTernaryExpression(ASTNodeTernaryExpression *node) {
+        switch (node->getOperator()) {
+            case Token::Operator::TernaryConditional: {
+                auto condition = this->evaluateOperand(node->getFirstOperand());
+                SCOPE_EXIT( delete condition; );
+
+                if (std::visit([](auto &&value){ return value != 0; }, condition->getValue()))
+                    return this->evaluateOperand(node->getSecondOperand());
+                else
+                    return this->evaluateOperand(node->getThirdOperand());
+            }
+            default:
+                throwEvaluateError("invalid operator used in ternary expression", node->getLineNumber());
+        }
+    }
+
     ASTNodeIntegerLiteral* Evaluator::evaluateMathematicalExpression(ASTNodeNumericExpression *node) {
-        ASTNodeIntegerLiteral *leftInteger, *rightInteger;
-
-        if (auto leftExprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(node->getLeftOperand()); leftExprLiteral != nullptr)
-            leftInteger = leftExprLiteral;
-        else if (auto leftExprExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getLeftOperand()); leftExprExpression != nullptr)
-            leftInteger = evaluateMathematicalExpression(leftExprExpression);
-        else if (auto leftExprRvalue = dynamic_cast<ASTNodeRValue*>(node->getLeftOperand()); leftExprRvalue != nullptr)
-            leftInteger = evaluateRValue(leftExprRvalue);
-        else if (auto leftExprScopeResolution = dynamic_cast<ASTNodeScopeResolution*>(node->getLeftOperand()); leftExprScopeResolution != nullptr)
-            leftInteger = evaluateScopeResolution(leftExprScopeResolution);
-        else
-            throwEvaluateError("invalid expression. Expected integer literal", node->getLineNumber());
-
-        if (auto rightExprLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(node->getRightOperand()); rightExprLiteral != nullptr)
-            rightInteger = rightExprLiteral;
-        else if (auto rightExprExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getRightOperand()); rightExprExpression != nullptr)
-            rightInteger = evaluateMathematicalExpression(rightExprExpression);
-        else if (auto rightExprRvalue = dynamic_cast<ASTNodeRValue*>(node->getRightOperand()); rightExprRvalue != nullptr)
-            rightInteger = evaluateRValue(rightExprRvalue);
-        else if (auto rightExprScopeResolution = dynamic_cast<ASTNodeScopeResolution*>(node->getRightOperand()); rightExprScopeResolution != nullptr)
-            rightInteger = evaluateScopeResolution(rightExprScopeResolution);
-        else
-            throwEvaluateError("invalid expression. Expected integer literal", node->getLineNumber());
+        auto leftInteger  = this->evaluateOperand(node->getLeftOperand());
+        auto rightInteger = this->evaluateOperand(node->getRightOperand());
 
         return evaluateOperator(leftInteger, rightInteger, node->getOperator());
     }
