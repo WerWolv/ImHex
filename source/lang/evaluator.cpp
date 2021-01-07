@@ -142,10 +142,10 @@ namespace hex::lang {
     }
 
 #define FLOAT_BIT_OPERATION(name) \
-    auto name(std::floating_point auto left, auto right) { throw std::runtime_error(""); return 0; } \
-    auto name(auto left, std::floating_point auto right) { throw std::runtime_error(""); return 0; } \
-    auto name(std::floating_point auto left, std::floating_point auto right) { throw std::runtime_error(""); return 0; } \
-    auto name(std::integral auto left, std::integral auto right)
+    auto name(hex::floating_point auto left, auto right) { throw std::runtime_error(""); return 0; } \
+    auto name(auto left, hex::floating_point auto right) { throw std::runtime_error(""); return 0; } \
+    auto name(hex::floating_point auto left, hex::floating_point auto right) { throw std::runtime_error(""); return 0; } \
+    auto name(hex::integral auto left, hex::integral auto right)
 
     namespace {
 
