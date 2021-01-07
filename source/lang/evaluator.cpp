@@ -46,6 +46,8 @@ namespace hex::lang {
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
+        if (this->m_currMembers.empty())
+            throwEvaluateError("no variables available", node->getLineNumber());
 
         const std::vector<PatternData*>* currMembers = this->m_currMembers.back();
 
@@ -298,6 +300,8 @@ namespace hex::lang {
 
         if (type == Token::ValueType::Character)
             pattern = new PatternDataCharacter(this->m_currOffset);
+        else if (type == Token::ValueType::Boolean)
+            pattern = new PatternDataBoolean(this->m_currOffset);
         else if (Token::isUnsigned(type))
             pattern = new PatternDataUnsigned(this->m_currOffset, typeSize);
         else if (Token::isSigned(type))

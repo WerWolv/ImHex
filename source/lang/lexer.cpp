@@ -318,6 +318,10 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(Keyword, If));
                     else if (identifier == "else")
                         tokens.emplace_back(TOKEN(Keyword, Else));
+                    else if (identifier == "false")
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) })));
+                    else if (identifier == "true")
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(1) })));
 
                         // Check for built-in types
                     else if (identifier == "u8")
@@ -346,6 +350,8 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(ValueType, Double));
                     else if (identifier == "char")
                         tokens.emplace_back(TOKEN(ValueType, Character));
+                    else if (identifier == "bool")
+                        tokens.emplace_back(TOKEN(ValueType, Boolean));
                     else if (identifier == "padding")
                         tokens.emplace_back(TOKEN(ValueType, Padding));
 

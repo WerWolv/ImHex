@@ -71,6 +71,7 @@ namespace hex::lang {
             Unsigned128Bit      = 0x100,
             Signed128Bit        = 0x101,
             Character           = 0x13,
+            Boolean             = 0x14,
             Float               = 0x42,
             Double              = 0x82,
             CustomType          = 0x00,
