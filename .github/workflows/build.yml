@@ -87,6 +87,9 @@ jobs:
           mingw-w64-${{ matrix.arch }}-dlfcn
           mingw-w64-${{ matrix.arch }}-freetype
 
+    - name: Debugging with tmate
+      uses: mxschmitt/action-tmate@v3.1
+      
     - name: ✋ Build
       run: |
         mkdir build
