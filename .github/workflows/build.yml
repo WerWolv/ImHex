@@ -91,6 +91,8 @@ jobs:
       run: |
         mkdir build
         cd build
+        ls -1 D:/a/_temp/msys/msys64/mingw64/bin/libpython3*.dll | xargs -L1 -I{} cp {} .
+        ls -1 D:/a/_temp/msys/msys64/mingw64/bin/libwinpthread-?.dll | xargs -L1 -I{} cp {} .
         cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         mingw32-make -j 4
     - name: 📦 Uploading artifact
@@ -99,8 +101,8 @@ jobs:
         name: Windows EXE
         path: |
           build/*.exe
-          D:/a/_temp/msys/msys64/mingw64/bin/libpython3*.dll
-          D:/a/_temp/msys/msys64/mingw64/bin/libwinpthread-?.dll
+          build/libpython3*.dll
+          build/libwinpthread-?.dll
 
 
   macos-build:
