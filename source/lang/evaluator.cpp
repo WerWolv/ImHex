@@ -461,6 +461,8 @@ namespace hex::lang {
         if (!node->getName().empty())
             pattern->setTypeName(node->getName().data());
 
+        pattern->setEndian(this->getCurrentEndian());
+
         this->m_endianStack.pop_back();
 
         return pattern;
@@ -490,7 +492,6 @@ namespace hex::lang {
             throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
 
         pattern->setVariableName(node->getName().data());
-        pattern->setEndian(this->getCurrentEndian());
 
         return pattern;
     }
@@ -605,18 +606,24 @@ namespace hex::lang {
         }
 
         PatternData *sizeType;
-        if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(node->getSizeType()); builtinTypeNode != nullptr) {
+
+        auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(node->getSizeType());
+        if (underlyingType == nullptr)
+            throwEvaluateError("underlying type is not ASTNodeTypeDecl. This is a bug", node->getLineNumber());
+
+        if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(underlyingType->getType()); builtinTypeNode != nullptr) {
             sizeType = evaluateBuiltinType(builtinTypeNode);
         } else
-            throwEvaluateError("Pointer size is not a builtin type", node->getLineNumber());
+            throwEvaluateError("pointer size is not a builtin type", node->getLineNumber());
 
         size_t pointerSize = sizeType->getSize();
-        delete sizeType;
 
         u128 pointedAtOffset = 0;
         this->m_provider->read(pointerOffset, &pointedAtOffset, pointerSize);
+        this->m_currOffset = hex::changeEndianess(pointedAtOffset, pointerSize, underlyingType->getEndian().value_or(this->m_defaultDataEndian));
 
-        this->m_currOffset = hex::changeEndianess(pointedAtOffset, 1, this->getCurrentEndian());
+        delete sizeType;
+
 
         if (this->m_currOffset > this->m_provider->getActualSize())
             throwEvaluateError("pointer points past the end of the data", 1);

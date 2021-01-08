@@ -315,14 +315,13 @@ namespace hex::lang {
 
     // using Identifier = (parseType)
     ASTNode* Parser::parseUsingDeclaration() {
-        auto *temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
-        if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
+        auto *type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
+        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
         if (peekOptional(KEYWORD_BE) || peekOptional(KEYWORD_LE))
-            return new ASTNodeTypeDecl(getValue<std::string>(-4), temporaryType->getType()->clone(), temporaryType->getEndian());
+            return new ASTNodeTypeDecl(getValue<std::string>(-4), type, type->getEndian());
         else
-            return new ASTNodeTypeDecl(getValue<std::string>(-3), temporaryType->getType()->clone(), temporaryType->getEndian());
+            return new ASTNodeTypeDecl(getValue<std::string>(-3), type, type->getEndian());
     }
 
     // padding[(parseMathematicalExpression)]
@@ -339,18 +338,16 @@ namespace hex::lang {
 
     // (parseType) Identifier
     ASTNode* Parser::parseMemberVariable() {
-        auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-2));
-        if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
+        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-2));
+        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
-        return new ASTNodeVariableDecl(getValue<std::string>(-1), temporaryType->getType()->clone());
+        return new ASTNodeVariableDecl(getValue<std::string>(-1), type);
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]
     ASTNode* Parser::parseMemberArrayVariable() {
-        auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
-        if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
+        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
+        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
         auto name = getValue<std::string>(-2);
 
@@ -366,25 +363,23 @@ namespace hex::lang {
 
         sizeCleanup.release();
 
-        return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size);
+        return new ASTNodeArrayVariableDecl(name, type, size);
     }
 
     // (parseType) *Identifier : (parseType)
     ASTNode* Parser::parseMemberPointerVariable() {
         auto name = getValue<std::string>(-2);
 
-        auto temporaryPointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
-        if (temporaryPointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryPointerType; );
+        auto pointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
+        if (pointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
         if (!MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED)))
             throwParseError("expected unsigned builtin type as size", -1);
 
-        auto temporarySizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
-        if (temporarySizeType == nullptr) throwParseError("invalid type used for pointer size", -1);
-        SCOPE_EXIT( delete temporarySizeType; );
+        auto sizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
+        if (sizeType == nullptr) throwParseError("invalid type used for pointer size", -1);
 
-        return new ASTNodePointerVariableDecl(name, temporaryPointerType->getType()->clone(), temporarySizeType->getType()->clone());
+        return new ASTNodePointerVariableDecl(name, pointerType, sizeType);
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
@@ -450,10 +445,8 @@ namespace hex::lang {
         else
             typeName = getValue<std::string>(-4);
 
-        auto temporaryTypeDecl = dynamic_cast<ASTNodeTypeDecl*>(parseType(-2));
-        if (temporaryTypeDecl == nullptr) throwParseError("failed to parse type", -2);
-        auto underlyingType = dynamic_cast<ASTNodeBuiltinType*>(temporaryTypeDecl->getType());
-        if (underlyingType == nullptr) throwParseError("underlying type is not a built-in type", -2);
+        auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(parseType(-2));
+        if (underlyingType == nullptr) throwParseError("failed to parse type", -2);
 
         const auto enumNode = new ASTNodeEnum(underlyingType);
         ScopeExit enumGuard([&]{ delete enumNode; });
@@ -524,18 +517,16 @@ namespace hex::lang {
 
     // (parseType) Identifier @ Integer
     ASTNode* Parser::parseVariablePlacement() {
-        auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
-        if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
+        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
+        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
-        return new ASTNodeVariableDecl(getValue<std::string>(-2), temporaryType->getType()->clone(), parseMathematicalExpression());
+        return new ASTNodeVariableDecl(getValue<std::string>(-2), type, parseMathematicalExpression());
     }
 
     // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer
     ASTNode* Parser::parseArrayVariablePlacement() {
-        auto temporaryType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
-        if (temporaryType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryType; );
+        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
+        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
         auto name = getValue<std::string>(-2);
 
@@ -554,7 +545,7 @@ namespace hex::lang {
 
         sizeCleanup.release();
 
-        return new ASTNodeArrayVariableDecl(name, temporaryType->getType()->clone(), size, parseMathematicalExpression());
+        return new ASTNodeArrayVariableDecl(name, type, size, parseMathematicalExpression());
     }
 
     // (parseType) *Identifier : (parseType) @ Integer
@@ -563,19 +554,17 @@ namespace hex::lang {
 
         auto temporaryPointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
         if (temporaryPointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
-        SCOPE_EXIT( delete temporaryPointerType; );
 
         if (!MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED)))
             throwParseError("expected unsigned builtin type as size", -1);
 
         auto temporaryPointerSizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
         if (temporaryPointerSizeType == nullptr) throwParseError("invalid size type used in pointer declaration", -1);
-        SCOPE_EXIT( delete temporaryPointerSizeType; );
 
         if (!MATCHES(sequence(OPERATOR_AT)))
             throwParseError("expected placement instruction", -1);
 
-        return new ASTNodePointerVariableDecl(name, temporaryPointerType->getType()->clone(), temporaryPointerSizeType->getType()->clone(), parseMathematicalExpression());
+        return new ASTNodePointerVariableDecl(name, temporaryPointerType, temporaryPointerSizeType, parseMathematicalExpression());
     }
 
 
