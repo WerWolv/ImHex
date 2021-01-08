@@ -276,20 +276,24 @@ struct MemoryEditor
         size_t data_preview_addr_backup = DataPreviewAddr;
         size_t data_editing_addr_next = (size_t)-1;
         size_t data_preview_addr_next = (size_t)-1;
-        if (DataEditingAddr != (size_t)-1)
-        {
-            // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataEditingAddr >= (size_t)Cols)          { data_editing_addr_next = DataEditingAddr - Cols; DataEditingTakeFocus = true; }
-            else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataEditingAddr < mem_size - Cols) { data_editing_addr_next = DataEditingAddr + Cols; DataEditingTakeFocus = true; }
-            else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataEditingAddr > 0)               { data_editing_addr_next = DataEditingAddr - 1; DataEditingTakeFocus = true; }
-            else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataEditingAddr < mem_size - 1)   { data_editing_addr_next = DataEditingAddr + 1; DataEditingTakeFocus = true; }
-        } else if (DataPreviewAddr != -1) {
-            // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataPreviewAddr >= (size_t)Cols)          { data_preview_addr_next = DataPreviewAddr - Cols; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
-            else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataPreviewAddr < mem_size - Cols) { data_preview_addr_next = DataPreviewAddr + Cols; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
-            else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataPreviewAddr > 0)               { data_preview_addr_next = DataPreviewAddr - 1; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
-            else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataPreviewAddr < mem_size - 1)   { data_preview_addr_next = DataPreviewAddr + 1; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+
+        if (ImGui::IsWindowFocused()) {
+            if (DataEditingAddr != (size_t)-1)
+            {
+                // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataEditingAddr >= (size_t)Cols)          { data_editing_addr_next = DataEditingAddr - Cols; DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataEditingAddr < mem_size - Cols) { data_editing_addr_next = DataEditingAddr + Cols; DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataEditingAddr > 0)               { data_editing_addr_next = DataEditingAddr - 1; DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataEditingAddr < mem_size - 1)   { data_editing_addr_next = DataEditingAddr + 1; DataEditingTakeFocus = true; }
+            } else if (DataPreviewAddr != -1) {
+                // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataPreviewAddr >= (size_t)Cols)          { data_preview_addr_next = DataPreviewAddr - Cols; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataPreviewAddr < mem_size - Cols) { data_preview_addr_next = DataPreviewAddr + Cols; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataPreviewAddr > 0)               { data_preview_addr_next = DataPreviewAddr - 1; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataPreviewAddr < mem_size - 1)   { data_preview_addr_next = DataPreviewAddr + 1; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+            }
         }
+
         if (data_preview_addr_next != (size_t)-1 && (data_preview_addr_next / Cols) != (data_preview_addr_backup / Cols))
         {
             // Track cursor movements

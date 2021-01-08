@@ -43,6 +43,12 @@ namespace hex {
         if (ImGui::Begin("Bookmarks", &this->getWindowOpenState())) {
             if (ImGui::BeginChild("##scrolling")) {
 
+                if (this->m_bookmarks.empty()) {
+                    ImGui::NewLine();
+                    ImGui::Indent(30);
+                    ImGui::TextWrapped("No bookmarks created yet. Add one with Edit -> Add Bookmark");
+                }
+
                 u32 id = 1;
                 std::list<Bookmark>::const_iterator bookmarkToRemove = this->m_bookmarks.end();
                 for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {

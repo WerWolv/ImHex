@@ -165,7 +165,7 @@ namespace hex {
                         ImGui::TextUnformatted("RGBA Color");
                         ImGui::TableNextColumn();
                         ImGui::ColorButton("##nolabel", ImColor(hex::changeEndianess(this->m_previewData.unsigned32, this->m_endian)),
-                                           ImGuiColorEditFlags_None, ImVec2(ImGui::GetColumnWidth(), 15));
+                                           ImGuiColorEditFlags_None, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                     }
 
                     ImGui::EndTable();
