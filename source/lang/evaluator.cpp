@@ -57,11 +57,18 @@ namespace hex::lang {
             std::copy(this->m_globalMembers.begin(), this->m_globalMembers.end(), std::back_inserter(currMembers));
 
         PatternData *currPattern = nullptr;
-        for (const auto &identifier : node->getPath()) {
+        for (u32 i = 0; i < node->getPath().size(); i++) {
+            const auto &identifier = node->getPath()[i];
+
             if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
                 currMembers = structPattern->getMembers();
             else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
                 currMembers = unionPattern->getMembers();
+            else if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr) {
+                currPattern = pointerPattern->getPointedAtPattern();
+                i--;
+                continue;
+            }
             else if (currPattern != nullptr)
                 throwEvaluateError("tried to access member of a non-struct/union type", node->getLineNumber());
 
@@ -74,6 +81,9 @@ namespace hex::lang {
             else
                 throwEvaluateError(hex::format("could not find identifier '%s'", identifier.c_str()), node->getLineNumber());
         }
+
+        if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr)
+            currPattern = pointerPattern->getPointedAtPattern();
 
         if (auto unsignedPattern = dynamic_cast<PatternDataUnsigned*>(currPattern); unsignedPattern != nullptr) {
             u8 value[unsignedPattern->getSize()];

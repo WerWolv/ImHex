@@ -261,6 +261,10 @@ namespace hex::lang {
             return "Pointer";
         }
 
+        [[nodiscard]] PatternData* getPointedAtPattern() {
+            return this->m_pointedAt;
+        }
+
     private:
         PatternData *m_pointedAt;
     };
