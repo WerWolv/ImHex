@@ -314,13 +314,12 @@ namespace hex::lang {
         this->m_currOffset += typeSize;
 
         pattern->setTypeName(Token::getTypeName(type));
+        pattern->setEndian(this->getCurrentEndian());
 
         return pattern;
     }
 
     std::vector<PatternData*> Evaluator::evaluateMember(ASTNode *node) {
-        this->m_currEndian.reset();
-
         if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(node); memberVariableNode != nullptr)
             return { this->evaluateVariable(memberVariableNode) };
         else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); memberArrayNode != nullptr)
@@ -440,8 +439,7 @@ namespace hex::lang {
     PatternData* Evaluator::evaluateType(ASTNodeTypeDecl *node) {
         auto type = node->getType();
 
-        if (!this->m_currEndian.has_value())
-            this->m_currEndian = node->getEndian();
+        this->m_endianStack.push_back(node->getEndian().value_or(this->m_defaultDataEndian));
 
         PatternData *pattern;
 
@@ -462,6 +460,8 @@ namespace hex::lang {
 
         if (!node->getName().empty())
             pattern->setTypeName(node->getName().data());
+
+        this->m_endianStack.pop_back();
 
         return pattern;
     }
@@ -491,7 +491,6 @@ namespace hex::lang {
 
         pattern->setVariableName(node->getName().data());
         pattern->setEndian(this->getCurrentEndian());
-        this->m_currEndian.reset();
 
         return pattern;
     }
@@ -572,8 +571,6 @@ namespace hex::lang {
                 throwEvaluateError("array exceeds size of file", node->getLineNumber());
         }
 
-        this->m_currEndian.reset();
-
         PatternData *pattern;
         if (entries.empty()) {
             pattern = new PatternDataPadding(startOffset, 0);
@@ -619,11 +616,27 @@ namespace hex::lang {
         u128 pointedAtOffset = 0;
         this->m_provider->read(pointerOffset, &pointedAtOffset, pointerSize);
 
-        this->m_currOffset = pointedAtOffset;
-        auto pointedAt = evaluateType(dynamic_cast<ASTNodeTypeDecl*>(node->getType()));
+        this->m_currOffset = hex::changeEndianess(pointedAtOffset, 1, this->getCurrentEndian());
+
+        if (this->m_currOffset > this->m_provider->getActualSize())
+            throwEvaluateError("pointer points past the end of the data", 1);
+
+        PatternData *pointedAt;
+        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
+            pointedAt = this->evaluateType(typeDecl);
+        else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
+            pointedAt = this->evaluateBuiltinType(builtinTypeDecl);
+        else
+            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+
         this->m_currOffset = pointerOffset + pointerSize;
 
-        return new PatternDataPointer(pointerOffset, pointerSize, pointedAt);
+        auto pattern = new PatternDataPointer(pointerOffset, pointerSize, pointedAt);
+
+        pattern->setVariableName(node->getName().data());
+        pattern->setEndian(this->getCurrentEndian());
+
+        return pattern;
     }
 
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
@@ -632,7 +645,7 @@ namespace hex::lang {
 
         try {
             for (const auto& node : ast) {
-                this->m_currEndian.reset();
+                this->m_endianStack.push_back(this->m_defaultDataEndian);
 
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
                     patterns.push_back(this->evaluateVariable(variableDeclNode));
@@ -644,12 +657,16 @@ namespace hex::lang {
                     this->m_types[typeDeclNode->getName().data()] = typeDeclNode->getType();
                 }
 
+                this->m_endianStack.pop_back();
             }
         } catch (EvaluateError &e) {
             this->m_error = e;
+            this->m_endianStack.clear();
+
             return { };
         }
 
+        this->m_endianStack.clear();
 
         return patterns;
     }

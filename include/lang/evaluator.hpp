@@ -37,7 +37,7 @@ namespace hex::lang {
         prv::Provider* &m_provider;
         std::endian m_defaultDataEndian;
         u64 m_currOffset = 0;
-        std::optional<std::endian> m_currEndian;
+        std::vector<std::endian> m_endianStack;
         std::vector<std::vector<PatternData*>*> m_currMembers;
         std::map<std::string, Function> m_functions;
 
@@ -50,7 +50,7 @@ namespace hex::lang {
         }
 
         [[nodiscard]] std::endian getCurrentEndian() const {
-            return this->m_currEndian.value_or(this->m_defaultDataEndian);
+            return this->m_endianStack.back();
         }
 
         void addFunction(std::string_view name, u32 parameterCount, std::function<ASTNodeIntegerLiteral*(std::vector<ASTNodeIntegerLiteral*>)> func) {
