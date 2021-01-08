@@ -66,7 +66,12 @@ namespace hex::lang {
                         if (!preprocessedInclude.has_value())
                             throw this->m_error;
 
-                        output += preprocessedInclude.value();
+                        auto content = preprocessedInclude.value();
+
+                        std::replace(content.begin(), content.end(), '\n', ' ');
+                        std::replace(content.begin(), content.end(), '\r', ' ');
+
+                        output += content;
 
                         delete[] buffer;
 
@@ -145,15 +150,17 @@ namespace hex::lang {
                         offset += 1;
                 } else if (code.substr(offset, 2) == "/*") {
                     while (code.substr(offset, 2) != "*/" && offset < code.length()) {
-                        if (code[offset] == '\n')
+                        if (code[offset] == '\n') {
+                            output += '\n';
                             lineNumber++;
+                        }
 
                         offset += 1;
                     }
 
                     offset += 2;
                     if (offset >= code.length())
-                        throwPreprocessorError("unterminated comment", lineNumber);
+                        throwPreprocessorError("unterminated comment", lineNumber - 1);
                 }
 
                 if (code[offset] == '\n')
