@@ -33,7 +33,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Goto from start, end and current cursor position
 - Custom C++-like pattern language for parsing highlighting a file's content
   - Automatic loading based on MIME type
-  - arrays, pointers, structs, unions, enums, bitfields, using declarations, little and big endian support
+  - arrays, pointers, structs, unions, enums, bitfields, using declarations, little and big endian support, conditionals and much more!
   - Useful error messages, syntax highlighting and error marking
 - Data importing
   - Base64 files
@@ -84,6 +84,10 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 ![](https://i.imgur.com/xH7xJ4g.png)
 ![](https://i.imgur.com/fhVJYEa.png)
+
+## Pattern Language
+
+The custom C-like Pattern Language developed and used by ImHex is easy to read, understand and learn. A guide with all features of the langauge can be found [in the wiki](https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide) or a simpler version in ImHex under `Help -> Pattern Language Cheat Sheet`
 
 ## Additional Files
 
