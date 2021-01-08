@@ -335,22 +335,19 @@ namespace hex::lang {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            double formatData = 0;
             if (this->getSize() == 4) {
                 float data = 0;
                 provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
 
-                formatData = data;
+                this->createDefaultEntry(hex::format("%e (0x%0*lX)", data, this->getSize() * 2, *reinterpret_cast<u32*>(&data)));
             } else if (this->getSize() == 8) {
                 double data = 0;
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
-                formatData = data;
+                this->createDefaultEntry(hex::format("%e (0x%0*lX)", data, this->getSize() * 2, *reinterpret_cast<u64*>(&data)));
             }
-
-            this->createDefaultEntry(hex::format("%f (0x%0*lx)", formatData, this->getSize() * 2, formatData));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
