@@ -462,53 +462,18 @@ namespace hex::lang {
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT))) {
                 auto name = getValue<std::string>(-2);
-                enumNode->addEntry(name, parseMathematicalExpression());
+                auto value = parseMathematicalExpression();
+
+                enumNode->addEntry(name, value);
+                lastEntry = value;
             }
             else if (MATCHES(sequence(IDENTIFIER))) {
                 ASTNode *valueExpr;
                 auto name = getValue<std::string>(-1);
-                if (enumNode->getEntries().empty()) {
-                    auto type = underlyingType->getType();
-
-                    switch (type) {
-                        case Token::ValueType::Signed8Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, s8(0) });
-                            break;
-                        case Token::ValueType::Unsigned8Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, u8(0) });
-                            break;
-                        case Token::ValueType::Signed16Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, s16(0) });
-                            break;
-                        case Token::ValueType::Unsigned16Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, u16(0) });
-                            break;
-                        case Token::ValueType::Signed32Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, s32(0) });
-                            break;
-                        case Token::ValueType::Unsigned32Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, u32(0) });
-                            break;
-                        case Token::ValueType::Signed64Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, s64(0) });
-                            break;
-                        case Token::ValueType::Unsigned64Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, u64(0) });
-                            break;
-                        case Token::ValueType::Signed128Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, s128(0) });
-                            break;
-                        case Token::ValueType::Unsigned128Bit:
-                            valueExpr = new ASTNodeIntegerLiteral({ type, u128(0) });
-                            break;
-                        default:
-                            throwParseError("invalid enum underlying type", -1);
-                    }
-
-                    lastEntry = valueExpr;
-                }
+                if (enumNode->getEntries().empty())
+                    lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) }));
                 else
-                    valueExpr = new ASTNodeNumericExpression(lastEntry, new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(1) }), Token::Operator::Plus);
+                    valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(1) }), Token::Operator::Plus);
 
                 enumNode->addEntry(name, valueExpr);
             }
