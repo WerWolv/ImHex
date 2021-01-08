@@ -45,6 +45,12 @@ jobs:
         CC=gcc-10 CXX=g++-10 cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         make -j 4
 
+    - name: 📦 Uploading artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux ELF
+        path: build/imhex
+
 
   win-manual:
     runs-on: windows-latest
@@ -91,9 +97,18 @@ jobs:
       run: |
         mkdir build
         cd build
+        ls -1 C:/hostedtoolcache/windows/Python/3.9.1/x64/python39.dll | xargs -L1 -I{} cp {} .
+        ls -1 D:/a/_temp/msys/msys64/mingw64/bin/libwinpthread-?.dll | xargs -L1 -I{} cp {} .
         cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         mingw32-make -j 4
-
+    - name: 📦 Uploading artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows EXE
+        path: |
+          build/*.exe
+          build/python39.dll
+          build/libwinpthread-?.dll
 
   macos-build:
     runs-on: macos-11.0
