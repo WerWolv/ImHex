@@ -93,6 +93,14 @@ jobs:
         cd build
         cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         mingw32-make -j 4
+    - name: 📦 Uploading artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows EXE
+        path: |
+          build/*.exe
+          /bin/libpython3.?.dll
+          /bin/libwinpthread-*.dll
 
 
   macos-build:
