@@ -476,6 +476,7 @@ namespace hex {
 
         View::postEvent(Events::FileLoaded);
         View::postEvent(Events::DataChanged);
+        View::postEvent(Events::PatternChanged);
         ProjectFile::markDirty();
     }
 
