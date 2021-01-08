@@ -46,25 +46,30 @@ namespace hex::lang {
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
-        if (this->m_currMembers.empty())
+        if (this->m_currMembers.empty() && this->m_globalMembers.empty())
             throwEvaluateError("no variables available", node->getLineNumber());
 
-        const std::vector<PatternData*>* currMembers = this->m_currMembers.back();
+        std::vector<PatternData*> currMembers;
+
+        if (!this->m_currMembers.empty())
+            std::copy(this->m_currMembers.back()->begin(), this->m_currMembers.back()->end(), std::back_inserter(currMembers));
+        if (!this->m_globalMembers.empty())
+            std::copy(this->m_globalMembers.begin(), this->m_globalMembers.end(), std::back_inserter(currMembers));
 
         PatternData *currPattern = nullptr;
         for (const auto &identifier : node->getPath()) {
             if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
-                currMembers = &structPattern->getMembers();
+                currMembers = structPattern->getMembers();
             else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
-                currMembers = &unionPattern->getMembers();
+                currMembers = unionPattern->getMembers();
             else if (currPattern != nullptr)
                 throwEvaluateError("tried to access member of a non-struct/union type", node->getLineNumber());
 
-            auto candidate = std::find_if(currMembers->begin(), currMembers->end(), [&](auto member) {
+            auto candidate = std::find_if(currMembers.begin(), currMembers.end(), [&](auto member) {
                 return member->getVariableName() == identifier;
             });
 
-            if (candidate != currMembers->end())
+            if (candidate != currMembers.end())
                 currPattern = *candidate;
             else
                 throwEvaluateError(hex::format("could not find identifier '%s'", identifier.c_str()), node->getLineNumber());
@@ -481,7 +486,7 @@ namespace hex::lang {
             }, valueNode->getValue());
         }
         if (this->m_currOffset >= this->m_provider->getActualSize())
-            throwEvaluateError("array exceeds size of file", node->getLineNumber());
+            throwEvaluateError("variable placed out of range", node->getLineNumber());
 
         PatternData *pattern;
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
@@ -648,18 +653,16 @@ namespace hex::lang {
 
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
 
-        std::vector<PatternData*> patterns;
-
         try {
             for (const auto& node : ast) {
                 this->m_endianStack.push_back(this->m_defaultDataEndian);
 
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
-                    patterns.push_back(this->evaluateVariable(variableDeclNode));
+                    this->m_globalMembers.push_back(this->evaluateVariable(variableDeclNode));
                 } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
-                    patterns.push_back(this->evaluateArray(arrayDeclNode));
+                    this->m_globalMembers.push_back(this->evaluateArray(arrayDeclNode));
                 } else if (auto pointerDeclNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); pointerDeclNode != nullptr) {
-                    patterns.push_back(this->evaluatePointer(pointerDeclNode));
+                    this->m_globalMembers.push_back(this->evaluatePointer(pointerDeclNode));
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
                     this->m_types[typeDeclNode->getName().data()] = typeDeclNode->getType();
                 }
@@ -675,7 +678,7 @@ namespace hex::lang {
 
         this->m_endianStack.clear();
 
-        return patterns;
+        return this->m_globalMembers;
     }
 
 }

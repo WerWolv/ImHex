@@ -38,6 +38,7 @@ namespace hex::lang {
         std::endian m_defaultDataEndian;
         u64 m_currOffset = 0;
         std::vector<std::endian> m_endianStack;
+        std::vector<PatternData*> m_globalMembers;
         std::vector<std::vector<PatternData*>*> m_currMembers;
         std::map<std::string, Function> m_functions;
 
