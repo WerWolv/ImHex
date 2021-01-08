@@ -45,6 +45,12 @@ jobs:
         CC=gcc-10 CXX=g++-10 cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         make -j 4
 
+    - name: 📦 Uploading artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux ELF
+        path: build/imhex
+
 
   win-manual:
     runs-on: windows-latest
@@ -103,7 +109,6 @@ jobs:
           build/*.exe
           build/python39.dll
           build/libwinpthread-?.dll
-
 
   macos-build:
     runs-on: macos-11.0
