@@ -99,8 +99,8 @@ jobs:
         name: Windows EXE
         path: |
           build/*.exe
-          C:/msys64/bin/libpython3*.dll
-          C:/msys64/bin/libwinpthread-?.dll
+          D:/a/_temp/msys/msys64/mingw64/bin/libpython3*.dll
+          D:/a/_temp/msys/msys64/mingw64/bin/libwinpthread-?.dll
 
 
   macos-build:
