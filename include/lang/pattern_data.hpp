@@ -336,17 +336,17 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             if (this->getSize() == 4) {
-                float data = 0;
+                u32 data = 0;
                 provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
 
-                this->createDefaultEntry(hex::format("%e (0x%0*lX)", data, this->getSize() * 2, *reinterpret_cast<u32*>(&data)));
+                this->createDefaultEntry(hex::format("%e (0x%0*lX)", *reinterpret_cast<float*>(&data), this->getSize() * 2, data));
             } else if (this->getSize() == 8) {
-                double data = 0;
+                u64 data = 0;
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
-                this->createDefaultEntry(hex::format("%e (0x%0*lX)", data, this->getSize() * 2, *reinterpret_cast<u64*>(&data)));
+                this->createDefaultEntry(hex::format("%e (0x%0*lX)", *reinterpret_cast<double*>(&data), this->getSize() * 2, data));
             }
         }
 
