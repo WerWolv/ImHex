@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(imhex VERSION 1.5.0)
+project(imhex VERSION 1.6.0)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE FORCE)
