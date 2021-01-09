@@ -102,10 +102,12 @@ jobs:
         echo Python_LIBRARY: $PYTHON_LIB_PATH
         cmake -G "MinGW Makefiles" \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCMAKE_INSTALL_PREFIX=$PWD/install \
           -DCREATE_PACKAGE=ON \
           -DPython_LIBRARY="$PYTHON_LIB_PATH" \
           ..
         mingw32-make -j4
+        mingw32-make install
         cpack
 
     - name: 📦 Uploading portable zip
@@ -113,9 +115,7 @@ jobs:
       with:
         name: Windows Portable ZIP
         path: |
-          build/*.exe
-          build/libpython*.dll
-          build/libwinpthread-?.dll
+          build/install/*
 
     - name: 📦 Uploading Windows Installer
       uses: actions/upload-artifact@v2
