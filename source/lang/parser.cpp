@@ -5,7 +5,7 @@
 
 #define MATCHES(x) (begin() && x)
 
-#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(0) }), Token::Operator::Plus)
+#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral({ Token::ValueType::Any, s32(0) }), Token::Operator::Plus)
 
 // Definition syntax:
 // [A]          : Either A or no token
@@ -106,7 +106,7 @@ namespace hex::lang {
         if (MATCHES(sequence(OPERATOR_PLUS) || sequence(OPERATOR_MINUS) || sequence(OPERATOR_BOOLNOT) || sequence(OPERATOR_BITNOT))) {
             auto op = getValue<Token::Operator>(-1);
 
-            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, 0}), this->parseFactor(), op);
+            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral({ Token::ValueType::Any, 0 }), this->parseFactor(), op);
         }
 
         return this->parseFactor();
@@ -473,7 +473,7 @@ namespace hex::lang {
                 if (enumNode->getEntries().empty())
                     lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) }));
                 else
-                    valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit, s32(1) }), Token::Operator::Plus);
+                    valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral({ Token::ValueType::Any, s32(1) }), Token::Operator::Plus);
 
                 enumNode->addEntry(name, valueExpr);
             }

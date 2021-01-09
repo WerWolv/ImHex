@@ -211,6 +211,11 @@ namespace hex::lang {
             #define CHECK_TYPE(type) if (left->getType() == (type) || right->getType() == (type)) return (type)
             #define DEFAULT_TYPE(type) return (type)
 
+            if (left->getType() == Token::ValueType::Any && right->getType() != Token::ValueType::Any)
+                return right->getType();
+            if (left->getType() != Token::ValueType::Any && right->getType() == Token::ValueType::Any)
+                return left->getType();
+
             CHECK_TYPE(Token::ValueType::Double);
             CHECK_TYPE(Token::ValueType::Float);
             CHECK_TYPE(Token::ValueType::Unsigned128Bit);
@@ -224,6 +229,7 @@ namespace hex::lang {
             CHECK_TYPE(Token::ValueType::Unsigned8Bit);
             CHECK_TYPE(Token::ValueType::Signed8Bit);
             CHECK_TYPE(Token::ValueType::Character);
+            CHECK_TYPE(Token::ValueType::Boolean);
             DEFAULT_TYPE(Token::ValueType::Signed32Bit);
 
             #undef CHECK_TYPE

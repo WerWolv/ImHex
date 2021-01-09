@@ -403,9 +403,9 @@ namespace hex::lang {
                     else if (identifier == "else")
                         tokens.emplace_back(TOKEN(Keyword, Else));
                     else if (identifier == "false")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Unsigned8Bit, u8(0))));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(0))));
                     else if (identifier == "true")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Unsigned8Bit, u8(1))));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(1))));
 
                         // Check for built-in types
                     else if (identifier == "u8")

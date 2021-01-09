@@ -121,11 +121,11 @@ namespace hex::lang {
                     case Token::ValueType::Signed32Bit:     message += std::to_string(std::get<s32>(integerLiteral->getValue())); break;
                     case Token::ValueType::Unsigned64Bit:   message += std::to_string(std::get<u64>(integerLiteral->getValue())); break;
                     case Token::ValueType::Signed64Bit:     message += std::to_string(std::get<s64>(integerLiteral->getValue())); break;
-                    //case Token::ValueType::Unsigned128Bit:  message += std::to_string(std::get<u128>(integerLiteral->getValue())); break;
-                    //case Token::ValueType::Signed128Bit:    message += std::to_string(std::get<s128>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Unsigned128Bit:  message += "A lot"; break; // TODO: Implement u128 to_string
+                    case Token::ValueType::Signed128Bit:    message += "A lot"; break; // TODO: Implement s128 to_string
                     case Token::ValueType::Float:           message += std::to_string(std::get<float>(integerLiteral->getValue())); break;
                     case Token::ValueType::Double:          message += std::to_string(std::get<double>(integerLiteral->getValue())); break;
-                    case Token::ValueType::Boolean:         message += std::get<u8>(integerLiteral->getValue()) ? "true" : "false"; break;
+                    case Token::ValueType::Boolean:         message += std::get<s32>(integerLiteral->getValue()) ? "true" : "false"; break;
                     case Token::ValueType::CustomType:      message += "< Custom Type >"; break;
                 }
             }
