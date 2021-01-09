@@ -185,7 +185,21 @@ namespace hex {
             auto provider = *SharedData::get().currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {
-                this->m_textEditor.Render("Pattern");
+                auto textEditorSize = ImGui::GetContentRegionAvail();
+                textEditorSize.y *= 4.0/5.0;
+                this->m_textEditor.Render("Pattern", textEditorSize, true);
+
+                auto consoleSize = ImGui::GetContentRegionAvail();
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0, 0.0, 0.0, 1.0));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0));
+
+                if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+                    for (auto &line : this->m_console)
+                        ImGui::TextUnformatted(line.c_str());
+                }
+                ImGui::EndChild();
+
+                ImGui::PopStyleColor(2);
 
                 if (this->m_textEditor.IsTextChanged()) {
                     this->parsePattern(this->m_textEditor.GetText().data());
@@ -254,6 +268,7 @@ namespace hex {
     void ViewPattern::parsePattern(char *buffer) {
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
+        this->m_console.clear();
         this->postEvent(Events::PatternChanged);
 
         hex::lang::Preprocessor preprocessor;
@@ -307,7 +322,7 @@ namespace hex {
         hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
         auto patternData = evaluator.evaluate(ast.value());
         if (!patternData.has_value()) {
-            this->m_textEditor.SetErrorMarkers({ evaluator.getError() });
+            this->m_console.push_back(evaluator.getError().second);
             return;
         }
 

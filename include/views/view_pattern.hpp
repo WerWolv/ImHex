@@ -29,6 +29,7 @@ namespace hex {
         std::filesystem::path m_possiblePatternFile;
 
         TextEditor m_textEditor;
+        std::vector<std::string> m_console;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         void loadPatternFile(std::string path);
