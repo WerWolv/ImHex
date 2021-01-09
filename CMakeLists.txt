@@ -97,6 +97,18 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\
 if (WIN32)
     set(application_type WIN32)
     set(imhex_icon resource.rc)
+
+    if (CREATE_PACKAGE)
+        set(CPACK_GENERATOR "WIX")
+        set(CPACK_PACKAGE_NAME "ImHex")
+        set(CPACK_WIX_UPGRADE_GUID "05000E99-9659-42FD-A1CF-05C554B39285")
+        set(CPACK_WIX_PRODUCT_ICON "${PROJECT_SOURCE_DIR}/res/icon.ico")
+        set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
+        set_property(INSTALL "$<TARGET_FILE_NAME:imhex>"
+            PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
+        )
+        set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/res/LICENSE.rtf")
+    endif()
 elseif (APPLE)
     set (imhex_icon "${PROJECT_SOURCE_DIR}/res/mac/AppIcon.icns")
 
@@ -164,6 +176,42 @@ if (WIN32)
     target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json)
 elseif (UNIX)
     target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json::nlohmann_json dl)
+endif()
+
+if (WIN32)
+    # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
+    set(CMAKE_INSTALL_BINDIR ".")
+
+    # Grab all dynamically linked dependencies.
+    INSTALL(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
+    INSTALL(CODE "get_filename_component(PY_PARENT ${Python_LIBRARIES} DIRECTORY)")
+    INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
+    install(CODE [[
+        file(GET_RUNTIME_DEPENDENCIES
+            EXECUTABLES $<TARGET_FILE:imhex>
+            RESOLVED_DEPENDENCIES_VAR _r_deps
+            UNRESOLVED_DEPENDENCIES_VAR _u_deps
+            CONFLICTING_DEPENDENCIES_PREFIX _c_deps
+            DIRECTORIES ${DEP_FOLDERS}
+            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
+        )
+
+        if(_u_deps)
+            message(WARNING "There were unresolved dependencies for binary $<TARGET_FILE:imhex>: \"${_u_deps}\"!")
+        endif()
+        if(_c_deps_FILENAMES)
+            message(WARNING "There were conflicting dependencies for library $<TARGET_FILE:imhex>: \"${_c_deps}\"!")
+        endif()
+
+        foreach(_file ${_r_deps})
+            file(INSTALL
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
+                TYPE SHARED_LIBRARY
+                FOLLOW_SYMLINK_CHAIN
+                FILES "${_file}"
+                )
+        endforeach()
+    ]])
 endif()
 
 if (CREATE_BUNDLE)
