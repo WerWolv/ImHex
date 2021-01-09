@@ -51,7 +51,7 @@ jobs:
         name: Linux ELF
         path: build/imhex
 
-  win-msi:
+  win:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -59,7 +59,7 @@ jobs:
         include:
           - { msystem: MINGW64, arch: x86_64 }
           #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }} · MSI
+    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }}
     defaults:
       run:
         shell: msys2 {0}
@@ -108,70 +108,21 @@ jobs:
         mingw32-make -j4
         cpack
 
-    - name: 📦 Uploading artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: Windows Installer
-        path: |
-          build/*.msi
-
-  win-portable-zip:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { msystem: MINGW64, arch: x86_64 }
-          #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }} · Portable
-    defaults:
-      run:
-        shell: msys2 {0}
-    env:
-      MINGW_INSTALLS: ${{ matrix.msystem }}
-    steps:
-
-    - name: 🧰 Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: ⬇️ Install dependencies
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: ${{ matrix.msystem }}
-        update: true
-        install: >
-          mingw-w64-${{ matrix.arch }}-gcc
-          mingw-w64-${{ matrix.arch }}-cmake
-          mingw-w64-${{ matrix.arch }}-make
-          mingw-w64-${{ matrix.arch }}-capstone
-          mingw-w64-${{ matrix.arch }}-glfw
-          mingw-w64-${{ matrix.arch }}-glm
-          mingw-w64-${{ matrix.arch }}-file
-          mingw-w64-${{ matrix.arch }}-nlohmann-json
-          mingw-w64-${{ matrix.arch }}-openssl
-          mingw-w64-${{ matrix.arch }}-polly
-          mingw-w64-${{ matrix.arch }}-python
-          mingw-w64-${{ matrix.arch }}-dlfcn
-          mingw-w64-${{ matrix.arch }}-freetype
-
-    - name: ✋ Build
-      run: |
-        mkdir build
-        cd build
-        ls -1 C:/hostedtoolcache/windows/Python/3.9.1/x64/python39.dll | xargs -L1 -I{} cp {} .
-        ls -1 D:/a/_temp/msys/msys64/mingw64/bin/libwinpthread-?.dll | xargs -L1 -I{} cp {} .
-        cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-        mingw32-make -j 4
-    - name: 📦 Uploading artifact
+    - name: 📦 Uploading portable zip
       uses: actions/upload-artifact@v2
       with:
         name: Windows Portable ZIP
         path: |
           build/*.exe
-          build/python39.dll
+          build/libpython*.dll
           build/libwinpthread-?.dll
+
+    - name: 📦 Uploading Windows Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows Installer
+        path: |
+          build/*.msi
 
   macos-build:
     runs-on: macos-11.0
