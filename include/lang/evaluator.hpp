@@ -16,12 +16,12 @@ namespace hex::lang {
 
     class Evaluator {
     public:
-        Evaluator(prv::Provider* &provider, std::endian defaultDataEndian);
-
-        std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
-
-        const std::pair<u32, std::string>& getError() { return this->m_error; }
-
+        enum ConsoleLogLevel {
+            Debug,
+            Info,
+            Warning,
+            Error
+        };
 
         struct Function {
             constexpr static u32 UnlimitedParameters   = 0xFFFF'FFFF;
@@ -33,6 +33,11 @@ namespace hex::lang {
             std::function<ASTNodeIntegerLiteral*(std::vector<ASTNode*>)> func;
         };
 
+        Evaluator(prv::Provider* &provider, std::endian defaultDataEndian);
+
+        std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
+        const auto& getConsoleLog() { return this->m_consoleLog; }
+
     private:
         std::map<std::string, ASTNode*> m_types;
         prv::Provider* &m_provider;
@@ -43,12 +48,24 @@ namespace hex::lang {
         std::vector<std::vector<PatternData*>*> m_currMembers;
         std::map<std::string, Function> m_functions;
 
-        std::pair<u32, std::string> m_error;
+        std::vector<std::pair<ConsoleLogLevel, std::string>> m_consoleLog;
 
-        using EvaluateError = std::pair<u32, std::string>;
+        using EvaluateError = std::string;
 
-        [[noreturn]] static void throwEvaluateError(std::string_view error, u32 lineNumber) {
-            throw EvaluateError(lineNumber, "Evaluator: " + std::string(error));
+        void emmitDebugInfo(std::string_view message) {
+            this->m_consoleLog.emplace_back(ConsoleLogLevel::Debug, "[-] " + std::string(message));
+        }
+
+        void emmitInfo(std::string_view message) {
+            this->m_consoleLog.emplace_back(ConsoleLogLevel::Info, "[i] " + std::string(message));
+        }
+
+        void emmitWaring(std::string_view message) {
+            this->m_consoleLog.emplace_back(ConsoleLogLevel::Warning, "[*] " + std::string(message));
+        }
+
+        [[noreturn]] static void throwEvaluateError(std::string_view message) {
+            throw EvaluateError("[!] " + std::string(message));
         }
 
         [[nodiscard]] std::endian getCurrentEndian() const {
@@ -57,7 +74,7 @@ namespace hex::lang {
 
         void addFunction(std::string_view name, u32 parameterCount, std::function<ASTNodeIntegerLiteral*(std::vector<ASTNode*>)> func) {
             if (this->m_functions.contains(name.data()))
-                throwEvaluateError(hex::format("redefinition of function '%s'", name.data()), 1);
+                throwEvaluateError(hex::format("redefinition of function '%s'", name.data()));
 
             this->m_functions[name.data()] = { parameterCount, func };
         }
@@ -87,7 +104,7 @@ namespace hex::lang {
             if (auto evaluatedParam = dynamic_cast<T*>(param); evaluatedParam != nullptr)
                 return evaluatedParam;
             else
-                throwEvaluateError("function got wrong type of parameter", 1);
+                throwEvaluateError("function got wrong type of parameter");
         }
 
 
@@ -99,6 +116,8 @@ namespace hex::lang {
         BUILTIN_FUNCTION(readSigned);
 
         BUILTIN_FUNCTION(assert);
+        BUILTIN_FUNCTION(warnAssert);
+        BUILTIN_FUNCTION(print);
 
         #undef BUILTIN_FUNCTION
     };

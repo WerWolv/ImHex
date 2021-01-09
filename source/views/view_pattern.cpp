@@ -28,6 +28,7 @@ namespace hex {
                     { "s8", 1 }, { "s16", 2 }, { "s32", 4 }, { "s64", 8 }, { "s128", 16 },
                     { "float", 4 }, { "double", 8 }, { "char", 1 }, { "bool", 1 }, { "padding", 1 }
             };
+
             for (const auto &[name, size] : builtInTypes) {
                 TextEditor::Identifier id;
                 id.mDeclaration = std::to_string(size);
@@ -52,6 +53,8 @@ namespace hex {
                     paletteIndex = TextEditor::PaletteIndex::Number;
                 else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd))
                     paletteIndex = TextEditor::PaletteIndex::CharLiteral;
+                else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd))
+                    paletteIndex = TextEditor::PaletteIndex::String;
 
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
@@ -191,15 +194,33 @@ namespace hex {
 
                 auto consoleSize = ImGui::GetContentRegionAvail();
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0, 0.0, 0.0, 1.0));
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0));
 
                 if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-                    for (auto &line : this->m_console)
-                        ImGui::TextUnformatted(line.c_str());
+                    for (auto &[level, message] : this->m_console) {
+                        switch (level) {
+                            case lang::Evaluator::ConsoleLogLevel::Debug:
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0x1F, 0xA9, 0x49, 0xFF).Value);
+                                break;
+                            case lang::Evaluator::ConsoleLogLevel::Info:
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0x00, 0x70, 0xB4, 0xFF).Value);
+                                break;
+                            case lang::Evaluator::ConsoleLogLevel::Warning:
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xFF, 0xC8, 0x01, 0xFF).Value);
+                                break;
+                            case lang::Evaluator::ConsoleLogLevel::Error:
+                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xAE, 0x0C, 0x00, 0xFF).Value);
+                                break;
+                            default: continue;
+                        }
+
+                        ImGui::TextUnformatted(message.c_str());
+
+                        ImGui::PopStyleColor();
+                    }
                 }
                 ImGui::EndChild();
 
-                ImGui::PopStyleColor(2);
+                ImGui::PopStyleColor(1);
 
                 if (this->m_textEditor.IsTextChanged()) {
                     this->parsePattern(this->m_textEditor.GetText().data());
@@ -320,11 +341,11 @@ namespace hex {
 
         auto provider = *SharedData::get().currentProvider;
         hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
+
         auto patternData = evaluator.evaluate(ast.value());
-        if (!patternData.has_value()) {
-            this->m_console.push_back(evaluator.getError().second);
+        this->m_console = evaluator.getConsoleLog();
+        if (!patternData.has_value())
             return;
-        }
 
         this->m_patternData = patternData.value();
         this->postEvent(Events::PatternChanged);

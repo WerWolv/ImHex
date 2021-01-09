@@ -14,7 +14,7 @@ namespace hex::lang {
                 if (value <= 0xFF)
                     return value;
                 else
-                    throwEvaluateError("sequence bytes need to fit into 1 byte", 1);
+                    throwEvaluateError("sequence bytes need to fit into 1 byte");
             }, asType<ASTNodeIntegerLiteral>(params[i])->getValue()));
         }
 
@@ -33,7 +33,7 @@ namespace hex::lang {
             }
         }
 
-        throwEvaluateError("failed to find sequence", 1);
+        throwEvaluateError("failed to find sequence");
     }
 
     BUILTIN_FUNCTION(readUnsigned) {
@@ -41,11 +41,11 @@ namespace hex::lang {
         auto size = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
 
         if (LITERAL_COMPARE(address, address >= this->m_provider->getActualSize()))
-            throwEvaluateError("address out of range", 1);
+            throwEvaluateError("address out of range");
 
         return std::visit([this](auto &&address, auto &&size) {
             if (size <= 0 || size > 16)
-                throwEvaluateError("invalid read size", 1);
+                throwEvaluateError("invalid read size");
 
             u8 value[(u8)size];
             this->m_provider->read(address, value, size);
@@ -56,7 +56,7 @@ namespace hex::lang {
                 case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned32Bit,  hex::changeEndianess(*reinterpret_cast<u32*>(value), 4, this->getCurrentEndian()) });
                 case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit,  hex::changeEndianess(*reinterpret_cast<u64*>(value), 8, this->getCurrentEndian()) });
                 case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned128Bit, hex::changeEndianess(*reinterpret_cast<u128*>(value), 16, this->getCurrentEndian()) });
-                default: throwEvaluateError("invalid read size", 1);
+                default: throwEvaluateError("invalid read size");
             }
         }, address, size);
     }
@@ -66,11 +66,11 @@ namespace hex::lang {
         auto size = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
 
         if (LITERAL_COMPARE(address, address >= this->m_provider->getActualSize()))
-            throwEvaluateError("address out of range", 1);
+            throwEvaluateError("address out of range");
 
         return std::visit([this](auto &&address, auto &&size) {
             if (size <= 0 || size > 16)
-                throwEvaluateError("invalid read size", 1);
+                throwEvaluateError("invalid read size");
 
             u8 value[(u8)size];
             this->m_provider->read(address, value, size);
@@ -81,17 +81,59 @@ namespace hex::lang {
                 case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  hex::changeEndianess(*reinterpret_cast<s32*>(value), 4, this->getCurrentEndian()) });
                 case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  hex::changeEndianess(*reinterpret_cast<s64*>(value), 8, this->getCurrentEndian()) });
                 case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, hex::changeEndianess(*reinterpret_cast<s128*>(value), 16, this->getCurrentEndian()) });
-                default: throwEvaluateError("invalid read size", 1);
+                default: throwEvaluateError("invalid read size");
             }
         }, address, size);
     }
 
     BUILTIN_FUNCTION(assert) {
         auto condition = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
-        auto error = asType<ASTNodeStringLiteral>(params[1])->getString();
+        auto message = asType<ASTNodeStringLiteral>(params[1])->getString();
 
         if (LITERAL_COMPARE(condition, condition == 0))
-            throwEvaluateError(hex::format("assertion failed: '%s'", error.data()), 1);
+            throwEvaluateError(hex::format("assert failed \"%s\"", message.data()));
+
+        return nullptr;
+    }
+
+    BUILTIN_FUNCTION(warnAssert) {
+        auto condition = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
+        auto message = asType<ASTNodeStringLiteral>(params[1])->getString();
+
+        if (LITERAL_COMPARE(condition, condition == 0))
+            this->emmitWaring(hex::format("assert failed \"%s\"", message.data()));
+
+        return nullptr;
+    }
+
+    BUILTIN_FUNCTION(print) {
+
+        std::string message;
+        for (auto& param : params) {
+            if (auto integerLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(param); integerLiteral != nullptr) {
+                switch (integerLiteral->getType()) {
+                    case Token::ValueType::Character:       message += std::get<s8>(integerLiteral->getValue()); break;
+                    case Token::ValueType::Unsigned8Bit:    message += std::to_string(std::get<u8>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Signed8Bit:      message += std::to_string(std::get<s8>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Unsigned16Bit:   message += std::to_string(std::get<u16>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Signed16Bit:     message += std::to_string(std::get<s16>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Unsigned32Bit:   message += std::to_string(std::get<u32>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Signed32Bit:     message += std::to_string(std::get<s32>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Unsigned64Bit:   message += std::to_string(std::get<u64>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Signed64Bit:     message += std::to_string(std::get<s64>(integerLiteral->getValue())); break;
+                    //case Token::ValueType::Unsigned128Bit:  message += std::to_string(std::get<u128>(integerLiteral->getValue())); break;
+                    //case Token::ValueType::Signed128Bit:    message += std::to_string(std::get<s128>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Float:           message += std::to_string(std::get<float>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Double:          message += std::to_string(std::get<double>(integerLiteral->getValue())); break;
+                    case Token::ValueType::Boolean:         message += std::get<u8>(integerLiteral->getValue()) ? "true" : "false"; break;
+                    case Token::ValueType::CustomType:      message += "< Custom Type >"; break;
+                }
+            }
+            else if (auto stringLiteral = dynamic_cast<ASTNodeStringLiteral*>(param); stringLiteral != nullptr)
+                message += stringLiteral->getString();
+        }
+
+        this->emmitInfo(message);
 
         return nullptr;
     }

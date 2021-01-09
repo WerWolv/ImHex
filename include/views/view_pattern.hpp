@@ -1,9 +1,8 @@
 #pragma once
 
-#include "lang/ast_node.hpp"
-
 #include "views/view.hpp"
 #include "lang/pattern_data.hpp"
+#include "lang/evaluator.hpp"
 
 #include "providers/provider.hpp"
 
@@ -29,7 +28,7 @@ namespace hex {
         std::filesystem::path m_possiblePatternFile;
 
         TextEditor m_textEditor;
-        std::vector<std::string> m_console;
+        std::vector<std::pair<lang::Evaluator::ConsoleLogLevel, std::string>> m_console;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         void loadPatternFile(std::string path);

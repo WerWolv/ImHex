@@ -28,6 +28,14 @@ namespace hex::lang {
         this->addFunction("assert", 2, [this](auto params) {
             return this->builtin_assert(params);
         });
+
+        this->addFunction("warnAssert", 2, [this](auto params) {
+            return this->builtin_warnAssert(params);
+        });
+
+        this->addFunction("print", Function::MoreParametersThan | 0, [this](auto params) {
+            return this->builtin_print(params);
+        });
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
@@ -46,12 +54,12 @@ namespace hex::lang {
             }
         }
 
-        throwEvaluateError("failed to find identifier", node->getLineNumber());
+        throwEvaluateError("failed to find identifier");
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
         if (this->m_currMembers.empty() && this->m_globalMembers.empty())
-            throwEvaluateError("no variables available", node->getLineNumber());
+            throwEvaluateError("no variables available");
 
         std::vector<PatternData*> currMembers;
 
@@ -74,7 +82,7 @@ namespace hex::lang {
                 continue;
             }
             else if (currPattern != nullptr)
-                throwEvaluateError("tried to access member of a non-struct/union type", node->getLineNumber());
+                throwEvaluateError("tried to access member of a non-struct/union type");
 
             auto candidate = std::find_if(currMembers.begin(), currMembers.end(), [&](auto member) {
                 return member->getVariableName() == identifier;
@@ -83,7 +91,7 @@ namespace hex::lang {
             if (candidate != currMembers.end())
                 currPattern = *candidate;
             else
-                throwEvaluateError(hex::format("could not find identifier '%s'", identifier.c_str()), node->getLineNumber());
+                throwEvaluateError(hex::format("could not find identifier '%s'", identifier.c_str()));
         }
 
         if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr)
@@ -99,7 +107,7 @@ namespace hex::lang {
                 case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned32Bit,  hex::changeEndianess(*reinterpret_cast<u32*>(value), 4, this->getCurrentEndian()) });
                 case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit,  hex::changeEndianess(*reinterpret_cast<u64*>(value), 8, this->getCurrentEndian()) });
                 case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned128Bit, hex::changeEndianess(*reinterpret_cast<u128*>(value), 16, this->getCurrentEndian()) });
-                default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
+                default: throwEvaluateError("invalid rvalue size");
             }
         } else if (auto signedPattern = dynamic_cast<PatternDataSigned*>(currPattern); signedPattern != nullptr) {
             u8 value[unsignedPattern->getSize()];
@@ -111,7 +119,7 @@ namespace hex::lang {
                 case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  hex::changeEndianess(*reinterpret_cast<s32*>(value), 4, this->getCurrentEndian()) });
                 case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  hex::changeEndianess(*reinterpret_cast<s64*>(value), 8, this->getCurrentEndian()) });
                 case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, hex::changeEndianess(*reinterpret_cast<s128*>(value), 16, this->getCurrentEndian()) });
-                default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
+                default: throwEvaluateError("invalid rvalue size");
             }
         } else if (auto enumPattern = dynamic_cast<PatternDataEnum*>(currPattern); enumPattern != nullptr) {
             u8 value[enumPattern->getSize()];
@@ -123,10 +131,10 @@ namespace hex::lang {
                 case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned32Bit,  hex::changeEndianess(*reinterpret_cast<u32*>(value), 4, this->getCurrentEndian()) });
                 case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit,  hex::changeEndianess(*reinterpret_cast<u64*>(value), 8, this->getCurrentEndian()) });
                 case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned128Bit, hex::changeEndianess(*reinterpret_cast<u128*>(value), 16, this->getCurrentEndian()) });
-                default: throwEvaluateError("invalid rvalue size", node->getLineNumber());
+                default: throwEvaluateError("invalid rvalue size");
             }
         } else
-            throwEvaluateError("tried to use non-integer value in numeric expression", node->getLineNumber());
+            throwEvaluateError("tried to use non-integer value in numeric expression");
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateFunctionCall(ASTNodeFunctionCall *node) {
@@ -144,7 +152,7 @@ namespace hex::lang {
         }
 
         if (!this->m_functions.contains(node->getFunctionName().data()))
-            throwEvaluateError(hex::format("no function named '%s' found", node->getFunctionName().data()), node->getLineNumber());
+            throwEvaluateError(hex::format("no function named '%s' found", node->getFunctionName().data()));
 
         auto &function = this->m_functions[node->getFunctionName().data()];
 
@@ -153,12 +161,12 @@ namespace hex::lang {
         }
         else if (function.parameterCount & Function::LessParametersThan) {
             if (evaluatedParams.size() >= (function.parameterCount & ~Function::LessParametersThan))
-                throwEvaluateError(hex::format("too many parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::LessParametersThan), node->getLineNumber());
+                throwEvaluateError(hex::format("too many parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::LessParametersThan));
         } else if (function.parameterCount & Function::MoreParametersThan) {
             if (evaluatedParams.size() <= (function.parameterCount & ~Function::MoreParametersThan))
-                throwEvaluateError(hex::format("too few parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::MoreParametersThan), node->getLineNumber());
+                throwEvaluateError(hex::format("too few parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::MoreParametersThan));
         } else if (function.parameterCount != evaluatedParams.size()) {
-            throwEvaluateError(hex::format("invalid number of parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount), node->getLineNumber());
+            throwEvaluateError(hex::format("invalid number of parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount));
         }
 
         return function.func(evaluatedParams);
@@ -266,12 +274,12 @@ namespace hex::lang {
                     case Token::Operator::BoolNot:
                         return new ASTNodeIntegerLiteral({ newType, !rightValue });
                     default:
-                        throwEvaluateError("invalid operator used in mathematical expression", left->getLineNumber());
+                        throwEvaluateError("invalid operator used in mathematical expression");
                 }
 
             }, left->getValue(), right->getValue());
         } catch (std::runtime_error &e) {
-            throwEvaluateError("bitwise operations on floating point numbers are forbidden", left->getLineNumber());
+            throwEvaluateError("bitwise operations on floating point numbers are forbidden");
         }
     }
 
@@ -290,12 +298,12 @@ namespace hex::lang {
             auto returnValue = evaluateFunctionCall(exprFunctionCall);
 
             if (returnValue == nullptr)
-                throwEvaluateError("function returning void used in expression", node->getLineNumber());
+                throwEvaluateError("function returning void used in expression");
             else
                 return returnValue;
         }
         else
-            throwEvaluateError("invalid operand", node->getLineNumber());
+            throwEvaluateError("invalid operand");
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateTernaryExpression(ASTNodeTernaryExpression *node) {
@@ -310,7 +318,7 @@ namespace hex::lang {
                     return this->evaluateOperand(node->getThirdOperand());
             }
             default:
-                throwEvaluateError("invalid operator used in ternary expression", node->getLineNumber());
+                throwEvaluateError("invalid operator used in ternary expression");
         }
     }
 
@@ -338,7 +346,7 @@ namespace hex::lang {
         else if (Token::isFloatingPoint(type))
             pattern = new PatternDataFloat(this->m_currOffset, typeSize);
         else
-            throwEvaluateError("invalid builtin type", node->getLineNumber());
+            throwEvaluateError("invalid builtin type");
 
         this->m_currOffset += typeSize;
 
@@ -376,7 +384,7 @@ namespace hex::lang {
             return patterns;
         }
         else
-            throwEvaluateError("invalid struct member", node->getLineNumber());
+            throwEvaluateError("invalid struct member");
     }
 
     PatternData* Evaluator::evaluateStruct(ASTNodeStruct *node) {
@@ -418,7 +426,7 @@ namespace hex::lang {
         for (auto &[name, value] : node->getEntries()) {
             auto expression = dynamic_cast<ASTNodeNumericExpression*>(value);
             if (expression == nullptr)
-                throwEvaluateError("invalid expression in enum value", value->getLineNumber());
+                throwEvaluateError("invalid expression in enum value");
 
             auto valueNode = evaluateMathematicalExpression(expression);
             SCOPE_EXIT( delete valueNode; );
@@ -430,7 +438,7 @@ namespace hex::lang {
         if (auto underlyingType = dynamic_cast<const ASTNodeBuiltinType*>(node->getUnderlyingType()); underlyingType != nullptr)
             size = Token::getTypeSize(underlyingType->getType());
         else
-            throwEvaluateError("invalid enum underlying type", node->getLineNumber());
+            throwEvaluateError("invalid enum underlying type");
 
         return new PatternDataEnum(startOffset, size, entryPatterns);
     }
@@ -443,19 +451,19 @@ namespace hex::lang {
         for (auto &[name, value] : node->getEntries()) {
             auto expression = dynamic_cast<ASTNodeNumericExpression*>(value);
             if (expression == nullptr)
-                throwEvaluateError("invalid expression in bitfield field size", value->getLineNumber());
+                throwEvaluateError("invalid expression in bitfield field size");
 
             auto valueNode = evaluateMathematicalExpression(expression);
             SCOPE_EXIT( delete valueNode; );
 
             auto fieldBits = std::visit([node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
-                    throwEvaluateError("bitfield entry size must be an integer value", node->getLineNumber());
+                    throwEvaluateError("bitfield entry size must be an integer value");
                 return static_cast<s128>(value);
             }, valueNode->getValue());
 
             if (fieldBits > 64 || fieldBits <= 0)
-                throwEvaluateError("bitfield entry must occupy between 1 and 64 bits", value->getLineNumber());
+                throwEvaluateError("bitfield entry must occupy between 1 and 64 bits");
 
             bits += fieldBits;
 
@@ -485,7 +493,7 @@ namespace hex::lang {
         else if (auto bitfieldNode = dynamic_cast<ASTNodeBitfield*>(type); bitfieldNode != nullptr)
             pattern = this->evaluateBitfield(bitfieldNode);
         else
-            throwEvaluateError("type could not be evaluated", node->getLineNumber());
+            throwEvaluateError("type could not be evaluated");
 
         if (!node->getName().empty())
             pattern->setTypeName(node->getName().data());
@@ -505,12 +513,12 @@ namespace hex::lang {
 
             this->m_currOffset = std::visit([node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
-                    throwEvaluateError("placement offset must be an integer value", node->getLineNumber());
+                    throwEvaluateError("placement offset must be an integer value");
                 return static_cast<u64>(value);
             }, valueNode->getValue());
         }
         if (this->m_currOffset >= this->m_provider->getActualSize())
-            throwEvaluateError("variable placed out of range", node->getLineNumber());
+            throwEvaluateError("variable placed out of range");
 
         PatternData *pattern;
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
@@ -518,7 +526,7 @@ namespace hex::lang {
         else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
             pattern = this->evaluateBuiltinType(builtinTypeDecl);
         else
-            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!");
 
         pattern->setVariableName(node->getName().data());
 
@@ -533,7 +541,7 @@ namespace hex::lang {
 
             this->m_currOffset = std::visit([node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
-                    throwEvaluateError("placement offset must be an integer value", node->getLineNumber());
+                    throwEvaluateError("placement offset must be an integer value");
                 return static_cast<u64>(value);
             }, valueNode->getValue());
         }
@@ -547,13 +555,13 @@ namespace hex::lang {
             if (auto sizeNumericExpression = dynamic_cast<ASTNodeNumericExpression*>(node->getSize()); sizeNumericExpression != nullptr)
                 valueNode = evaluateMathematicalExpression(sizeNumericExpression);
             else
-                throwEvaluateError("array size not a numeric expression", node->getLineNumber());
+                throwEvaluateError("array size not a numeric expression");
 
             SCOPE_EXIT( delete valueNode; );
 
             arraySize = std::visit([node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
-                    throwEvaluateError("array size must be an integer value", node->getLineNumber());
+                    throwEvaluateError("array size must be an integer value");
                 return static_cast<u64>(value);
             }, valueNode->getValue());
 
@@ -586,7 +594,7 @@ namespace hex::lang {
                 entry = this->evaluateBuiltinType(builtinTypeDecl);
             }
             else
-                throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+                throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!");
 
             entry->setVariableName(hex::format("[%llu]", (u64)i));
             entry->setEndian(this->getCurrentEndian());
@@ -598,7 +606,7 @@ namespace hex::lang {
             entries.push_back(entry);
 
             if (this->m_currOffset >= this->m_provider->getActualSize())
-                throwEvaluateError("array exceeds size of file", node->getLineNumber());
+                throwEvaluateError("array exceeds size of file");
         }
 
         PatternData *pattern;
@@ -609,7 +617,7 @@ namespace hex::lang {
             pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
         else {
             if (node->getSize() == nullptr)
-                throwEvaluateError("no bounds provided for array", node->getLineNumber());
+                throwEvaluateError("no bounds provided for array");
             pattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), entries, color.value_or(0));
         }
 
@@ -626,7 +634,7 @@ namespace hex::lang {
 
             pointerOffset = std::visit([node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
-                    throwEvaluateError("pointer offset must be an integer value", node->getLineNumber());
+                    throwEvaluateError("pointer offset must be an integer value");
                 return static_cast<s128>(value);
             }, valueNode->getValue());
             this->m_currOffset = pointerOffset;
@@ -638,12 +646,12 @@ namespace hex::lang {
 
         auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(node->getSizeType());
         if (underlyingType == nullptr)
-            throwEvaluateError("underlying type is not ASTNodeTypeDecl. This is a bug", node->getLineNumber());
+            throwEvaluateError("underlying type is not ASTNodeTypeDecl. This is a bug");
 
         if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(underlyingType->getType()); builtinTypeNode != nullptr) {
             sizeType = evaluateBuiltinType(builtinTypeNode);
         } else
-            throwEvaluateError("pointer size is not a builtin type", node->getLineNumber());
+            throwEvaluateError("pointer size is not a builtin type");
 
         size_t pointerSize = sizeType->getSize();
 
@@ -655,7 +663,7 @@ namespace hex::lang {
 
 
         if (this->m_currOffset > this->m_provider->getActualSize())
-            throwEvaluateError("pointer points past the end of the data", 1);
+            throwEvaluateError("pointer points past the end of the data");
 
         PatternData *pointedAt;
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
@@ -663,7 +671,7 @@ namespace hex::lang {
         else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
             pointedAt = this->evaluateBuiltinType(builtinTypeDecl);
         else
-            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!", 1);
+            throwEvaluateError("ASTNodeVariableDecl had an invalid type. This is a bug!");
 
         this->m_currOffset = pointerOffset + pointerSize;
 
@@ -697,7 +705,7 @@ namespace hex::lang {
                 this->m_endianStack.pop_back();
             }
         } catch (EvaluateError &e) {
-            this->m_error = e;
+            this->m_consoleLog.emplace_back(ConsoleLogLevel::Error, e);
             this->m_endianStack.clear();
 
             return { };
