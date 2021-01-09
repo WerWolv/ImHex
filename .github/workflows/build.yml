@@ -51,8 +51,7 @@ jobs:
         name: Linux ELF
         path: build/imhex
 
-
-  win-manual:
+  win-msi:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -60,7 +59,71 @@ jobs:
         include:
           - { msystem: MINGW64, arch: x86_64 }
           #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }}
+    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }} · MSI
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      MINGW_INSTALLS: ${{ matrix.msystem }}
+    steps:
+
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: ⬇️ Install dependencies
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        update: true
+        install: >
+          mingw-w64-${{ matrix.arch }}-gcc
+          mingw-w64-${{ matrix.arch }}-cmake
+          mingw-w64-${{ matrix.arch }}-make
+          mingw-w64-${{ matrix.arch }}-capstone
+          mingw-w64-${{ matrix.arch }}-glfw
+          mingw-w64-${{ matrix.arch }}-glm
+          mingw-w64-${{ matrix.arch }}-file
+          mingw-w64-${{ matrix.arch }}-nlohmann-json
+          mingw-w64-${{ matrix.arch }}-openssl
+          mingw-w64-${{ matrix.arch }}-polly
+          mingw-w64-${{ matrix.arch }}-python
+          mingw-w64-${{ matrix.arch }}-dlfcn
+          mingw-w64-${{ matrix.arch }}-freetype
+
+    - name: ✋ Build
+      run: |
+        mkdir build
+        cd build
+        # Get path to mingw python library
+        PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//')
+        PYTHON_LIB_PATH=$(cygpath -m $(which lib${PYTHON_LIB_NAME}.dll))
+        echo Python_LIBRARY: $PYTHON_LIB_PATH
+        cmake -G "MinGW Makefiles" \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCREATE_PACKAGE=ON \
+          -DPython_LIBRARY="$PYTHON_LIB_PATH" \
+          ..
+        mingw32-make -j4
+        cpack
+
+    - name: 📦 Uploading artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows Installer
+        path: |
+          build/*.msi
+
+  win-portable-zip:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { msystem: MINGW64, arch: x86_64 }
+          #- { msystem: MINGW32, arch: i686   } # currently fail
+    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }} · Portable
     defaults:
       run:
         shell: msys2 {0}
@@ -104,7 +167,7 @@ jobs:
     - name: 📦 Uploading artifact
       uses: actions/upload-artifact@v2
       with:
-        name: Windows EXE
+        name: Windows Portable ZIP
         path: |
           build/*.exe
           build/python39.dll
