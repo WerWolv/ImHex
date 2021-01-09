@@ -98,6 +98,8 @@ namespace hex::lang {
         BUILTIN_FUNCTION(readUnsigned);
         BUILTIN_FUNCTION(readSigned);
 
+        BUILTIN_FUNCTION(assert);
+
         #undef BUILTIN_FUNCTION
     };
 

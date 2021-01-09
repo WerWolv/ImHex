@@ -86,6 +86,16 @@ namespace hex::lang {
         }, address, size);
     }
 
+    BUILTIN_FUNCTION(assert) {
+        auto condition = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
+        auto error = asType<ASTNodeStringLiteral>(params[1])->getString();
+
+        if (LITERAL_COMPARE(condition, condition == 0))
+            throwEvaluateError(hex::format("assertion failed: '%s'", error.data()), 1);
+
+        return nullptr;
+    }
+
 
     #undef BUILTIN_FUNCTION
 

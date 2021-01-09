@@ -24,6 +24,10 @@ namespace hex::lang {
         this->addFunction("readSigned", 2, [this](auto params) {
             return this->builtin_readSigned(params);
         });
+
+        this->addFunction("assert", 2, [this](auto params) {
+            return this->builtin_assert(params);
+        });
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
