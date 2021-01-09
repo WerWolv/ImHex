@@ -14,15 +14,15 @@ namespace hex::lang {
         : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
 
         this->addFunction("findSequence", Function::MoreParametersThan | 1, [this](auto params) {
-            return this->findSequence(params);
+            return this->builtin_findSequence(params);
         });
 
         this->addFunction("readUnsigned", 2, [this](auto params) {
-            return this->readUnsigned(params);
+            return this->builtin_readUnsigned(params);
         });
 
         this->addFunction("readSigned", 2, [this](auto params) {
-            return this->readSigned(params);
+            return this->builtin_readSigned(params);
         });
     }
 
@@ -126,14 +126,18 @@ namespace hex::lang {
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateFunctionCall(ASTNodeFunctionCall *node) {
-        std::vector<ASTNodeIntegerLiteral*> evaluatedParams;
+        std::vector<ASTNode*> evaluatedParams;
         ScopeExit paramCleanup([&] {
            for (auto &param : evaluatedParams)
                delete param;
         });
 
-        for (auto &param : node->getParams())
-            evaluatedParams.push_back(this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(param)));
+        for (auto &param : node->getParams()) {
+            if (auto numericExpression = dynamic_cast<ASTNodeNumericExpression*>(param); numericExpression != nullptr)
+                evaluatedParams.push_back(this->evaluateMathematicalExpression(numericExpression));
+            else if (auto stringLiteral = dynamic_cast<ASTNodeStringLiteral*>(param); stringLiteral != nullptr)
+                evaluatedParams.push_back(stringLiteral->clone());
+        }
 
         if (!this->m_functions.contains(node->getFunctionName().data()))
             throwEvaluateError(hex::format("no function named '%s' found", node->getFunctionName().data()), node->getLineNumber());
@@ -278,8 +282,14 @@ namespace hex::lang {
             return evaluateScopeResolution(exprScopeResolution);
         else if (auto exprTernary = dynamic_cast<ASTNodeTernaryExpression*>(node); exprTernary != nullptr)
             return evaluateTernaryExpression(exprTernary);
-        else if (auto exprFunctionCall = dynamic_cast<ASTNodeFunctionCall*>(node); exprFunctionCall != nullptr)
-            return evaluateFunctionCall(exprFunctionCall);
+        else if (auto exprFunctionCall = dynamic_cast<ASTNodeFunctionCall*>(node); exprFunctionCall != nullptr) {
+            auto returnValue = evaluateFunctionCall(exprFunctionCall);
+
+            if (returnValue == nullptr)
+                throwEvaluateError("function returning void used in expression", node->getLineNumber());
+            else
+                return returnValue;
+        }
         else
             throwEvaluateError("invalid operand", node->getLineNumber());
     }
@@ -675,6 +685,9 @@ namespace hex::lang {
                     this->m_globalMembers.push_back(this->evaluatePointer(pointerDeclNode));
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
                     this->m_types[typeDeclNode->getName().data()] = typeDeclNode->getType();
+                } else if (auto functionCallNode = dynamic_cast<ASTNodeFunctionCall*>(node); functionCallNode != nullptr) {
+                    auto result = this->evaluateFunctionCall(functionCallNode);
+                    delete result;
                 }
 
                 this->m_endianStack.pop_back();

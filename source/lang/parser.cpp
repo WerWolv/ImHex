@@ -28,7 +28,10 @@ namespace hex::lang {
         });
 
         while (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
-            params.push_back(parseMathematicalExpression());
+            if (MATCHES(sequence(STRING)))
+                params.push_back(parseStringLiteral());
+            else
+                params.push_back(parseMathematicalExpression());
 
             if (MATCHES(sequence(SEPARATOR_COMMA, SEPARATOR_ROUNDBRACKETCLOSE)))
                 throwParseError("unexpected ',' at end of function parameter list", -1);
@@ -41,7 +44,11 @@ namespace hex::lang {
 
         paramCleanup.release();
 
-        return TO_NUMERIC_EXPRESSION(new ASTNodeFunctionCall(functionName, params));
+        return new ASTNodeFunctionCall(functionName, params);
+    }
+
+    ASTNode* Parser::parseStringLiteral() {
+        return new ASTNodeStringLiteral(getValue<std::string>(-1));
     }
 
     // Identifier::<Identifier[::]...>
@@ -86,7 +93,7 @@ namespace hex::lang {
             this->m_curr--;
             return this->parseScopeResolution(path);
         } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN))) {
-            return this->parseFunctionCall();
+            return TO_NUMERIC_EXPRESSION(this->parseFunctionCall());
         } else if (MATCHES(sequence(IDENTIFIER))) {
             std::vector<std::string> path;
             return this->parseRValue(path);
@@ -591,6 +598,8 @@ namespace hex::lang {
             statement = parseEnum();
         else if (MATCHES(sequence(KEYWORD_BITFIELD, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseBitfield();
+        else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
+            statement = parseFunctionCall();
         else throwParseError("invalid sequence", 0);
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))

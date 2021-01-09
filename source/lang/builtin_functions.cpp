@@ -2,12 +2,12 @@
 
 namespace hex::lang {
 
-    #define BUILTIN_FUNCTION(name) ASTNodeIntegerLiteral* Evaluator::name(std::vector<ASTNodeIntegerLiteral*> params)
+    #define BUILTIN_FUNCTION(name) ASTNodeIntegerLiteral* Evaluator::TOKEN_CONCAT(builtin_, name)(std::vector<ASTNode*> params)
 
     #define LITERAL_COMPARE(literal, cond) std::visit([&, this](auto &&literal) { return (cond) != 0; }, literal)
 
     BUILTIN_FUNCTION(findSequence) {
-        auto& occurrenceIndex = params[0]->getValue();
+        auto& occurrenceIndex = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
         std::vector<u8> sequence;
         for (u32 i = 1; i < params.size(); i++) {
             sequence.push_back(std::visit([](auto &&value) -> u8 {
@@ -15,7 +15,7 @@ namespace hex::lang {
                     return value;
                 else
                     throwEvaluateError("sequence bytes need to fit into 1 byte", 1);
-            }, params[i]->getValue()));
+            }, asType<ASTNodeIntegerLiteral>(params[i])->getValue()));
         }
 
         std::vector<u8> bytes(sequence.size(), 0x00);
@@ -37,8 +37,8 @@ namespace hex::lang {
     }
 
     BUILTIN_FUNCTION(readUnsigned) {
-        auto address = params[0]->getValue();
-        auto size = params[1]->getValue();
+        auto address = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
+        auto size = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
 
         if (LITERAL_COMPARE(address, address >= this->m_provider->getActualSize()))
             throwEvaluateError("address out of range", 1);
@@ -62,8 +62,8 @@ namespace hex::lang {
     }
 
     BUILTIN_FUNCTION(readSigned) {
-        auto address = params[0]->getValue();
-        auto size = params[1]->getValue();
+        auto address = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
+        auto size = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
 
         if (LITERAL_COMPARE(address, address >= this->m_provider->getActualSize()))
             throwEvaluateError("address out of range", 1);
@@ -76,13 +76,13 @@ namespace hex::lang {
             this->m_provider->read(address, value, size);
 
             switch ((u8)size) {
-            case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed8Bit,   hex::changeEndianess(*reinterpret_cast<s8*>(value), 1, this->getCurrentEndian()) });
-            case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed16Bit,  hex::changeEndianess(*reinterpret_cast<s16*>(value), 2, this->getCurrentEndian()) });
-            case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  hex::changeEndianess(*reinterpret_cast<s32*>(value), 4, this->getCurrentEndian()) });
-            case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  hex::changeEndianess(*reinterpret_cast<s64*>(value), 8, this->getCurrentEndian()) });
-            case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, hex::changeEndianess(*reinterpret_cast<s128*>(value), 16, this->getCurrentEndian()) });
-            default: throwEvaluateError("invalid read size", 1);
-        }
+                case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed8Bit,   hex::changeEndianess(*reinterpret_cast<s8*>(value), 1, this->getCurrentEndian()) });
+                case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed16Bit,  hex::changeEndianess(*reinterpret_cast<s16*>(value), 2, this->getCurrentEndian()) });
+                case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  hex::changeEndianess(*reinterpret_cast<s32*>(value), 4, this->getCurrentEndian()) });
+                case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  hex::changeEndianess(*reinterpret_cast<s64*>(value), 8, this->getCurrentEndian()) });
+                case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, hex::changeEndianess(*reinterpret_cast<s128*>(value), 16, this->getCurrentEndian()) });
+                default: throwEvaluateError("invalid read size", 1);
+            }
         }, address, size);
     }
 

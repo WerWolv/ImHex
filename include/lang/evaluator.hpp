@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include "providers/provider.hpp"
+#include "helpers/utils.hpp"
 #include "lang/pattern_data.hpp"
 #include "ast_node.hpp"
 
@@ -29,7 +30,7 @@ namespace hex::lang {
             constexpr static u32 NoParameters          = 0x0000'0000;
 
             u32 parameterCount;
-            std::function<ASTNodeIntegerLiteral*(std::vector<ASTNodeIntegerLiteral*>)> func;
+            std::function<ASTNodeIntegerLiteral*(std::vector<ASTNode*>)> func;
         };
 
     private:
@@ -54,7 +55,7 @@ namespace hex::lang {
             return this->m_endianStack.back();
         }
 
-        void addFunction(std::string_view name, u32 parameterCount, std::function<ASTNodeIntegerLiteral*(std::vector<ASTNodeIntegerLiteral*>)> func) {
+        void addFunction(std::string_view name, u32 parameterCount, std::function<ASTNodeIntegerLiteral*(std::vector<ASTNode*>)> func) {
             if (this->m_functions.contains(name.data()))
                 throwEvaluateError(hex::format("redefinition of function '%s'", name.data()), 1);
 
@@ -81,7 +82,17 @@ namespace hex::lang {
         PatternData* evaluatePointer(ASTNodePointerVariableDecl *node);
 
 
-        #define BUILTIN_FUNCTION(name) ASTNodeIntegerLiteral* name(std::vector<ASTNodeIntegerLiteral*> params)
+        template<typename T>
+        T* asType(ASTNode *param) {
+            if (auto evaluatedParam = dynamic_cast<T*>(param); evaluatedParam != nullptr)
+                return evaluatedParam;
+            else
+                throwEvaluateError("function got wrong type of parameter", 1);
+        }
+
+
+
+        #define BUILTIN_FUNCTION(name) ASTNodeIntegerLiteral* TOKEN_CONCAT(builtin_, name)(std::vector<ASTNode*> params)
 
         BUILTIN_FUNCTION(findSequence);
         BUILTIN_FUNCTION(readUnsigned);

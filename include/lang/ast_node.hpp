@@ -479,5 +479,27 @@ namespace hex::lang {
         std::vector<ASTNode*> m_params;
     };
 
+    class ASTNodeStringLiteral : public ASTNode {
+    public:
+        explicit ASTNodeStringLiteral(std::string_view string) : ASTNode(), m_string(string) { }
+
+        ~ASTNodeStringLiteral() override { }
+
+        ASTNodeStringLiteral(const ASTNodeStringLiteral &other) : ASTNode(other) {
+            this->m_string = other.m_string;
+        }
+
+        ASTNode* clone() const override {
+            return new ASTNodeStringLiteral(*this);
+        }
+
+        [[nodiscard]] std::string_view getString() {
+            return this->m_string;
+        }
+
+    private:
+        std::string m_string;
+    };
+
 
 }
