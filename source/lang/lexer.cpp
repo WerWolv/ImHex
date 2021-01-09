@@ -143,6 +143,103 @@ namespace hex::lang {
         return { };
     }
 
+    std::optional<std::pair<char, size_t>> getCharacter(std::string_view string) {
+
+        if (string.length() < 1)
+            return { };
+
+        // Escape sequences
+        if (string[0] == '\\') {
+
+            if (string.length() < 2)
+                return { };
+
+            // Handle simple escape sequences
+            switch (string[1]) {
+                case 'a':  return {{ '\a', 2 }};
+                case 'b':  return {{ '\b', 2 }};
+                case 'f':  return {{ '\f', 2 }};
+                case 'n':  return {{ '\n', 2 }};
+                case 'r':  return {{ '\r', 2 }};
+                case 't':  return {{ '\t', 2 }};
+                case 'v':  return {{ '\v', 2 }};
+                case '\\': return {{ '\\', 2 }};
+                case '\'': return {{ '\'', 2 }};
+                case '\"': return {{ '\"', 2 }};
+            }
+
+            // Hexadecimal number
+            if (string[1] == 'x') {
+                if (string.length() != 4)
+                    return { };
+
+                if (!isxdigit(string[2]) || !isxdigit(string[3]))
+                    return { };
+
+                return {{ std::strtoul(&string[2], nullptr, 16), 4 }};
+            }
+
+            // Octal number
+            if (string[1] == 'o') {
+                if (string.length() != 5)
+                    return { };
+
+                if (string[2] < '0' || string[2] > '7' || string[3] < '0' || string[3] > '7' || string[4] < '0' || string[4] > '7')
+                    return { };
+
+                return {{ std::strtoul(&string[2], nullptr, 8), 5 }};
+            }
+
+            return { };
+        } else return {{ string[0], 1 }};
+    }
+
+    std::optional<std::pair<std::string, size_t>> getStringLiteral(std::string_view string) {
+        if (!string.starts_with('\"'))
+            return { };
+
+        size_t size = 1;
+
+        std::string result;
+        while (string[size] != '\"') {
+            auto character = getCharacter(string.substr(size));
+
+            if (!character.has_value())
+                return { };
+
+            auto &[c, charSize] = character.value();
+
+            result += c;
+            size += charSize;
+
+            if (size >= string.length())
+                return { };
+        }
+
+        return {{ result, size + 1 }};
+    }
+
+    std::optional<std::pair<char, size_t>> getCharacterLiteral(std::string_view string) {
+        if (string.empty())
+            return { };
+
+        if (!string[0] != '\'')
+            return { };
+
+
+        auto character = getCharacter(string.substr(1));
+
+        if (!character.has_value())
+            return { };
+
+        auto &[c, charSize] = character.value();
+
+        if (string.length() >= charSize || string[charSize] != '\'')
+            return { };
+
+        return {{ c, charSize + 2 }};
+    }
+
     std::optional<std::vector<Token>> Lexer::lex(const std::string& code) {
         std::vector<Token> tokens;
         u32 offset = 0;
@@ -263,38 +360,25 @@ namespace hex::lang {
                     tokens.emplace_back(TOKEN(Operator, TernaryConditional));
                     offset += 1;
                 } else if (c == '\'') {
-                    offset += 1;
+                    auto character = getCharacterLiteral(code.substr(offset));
 
-                    if (offset >= code.length())
+                    if (!character.has_value())
                         throwLexerError("invalid character literal", lineNumber);
 
-                    char character = code[offset];
+                    auto [c, charSize] = character.value();
 
-                    if (character == '\\') {
-                        offset += 1;
+                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Character, c) ));
+                    offset += charSize;
+                } else if (c == '\"') {
+                    auto string = getStringLiteral(code.substr(offset));
 
-                        if (offset >= code.length())
-                            throwLexerError("invalid character literal", lineNumber);
+                    if (!string.has_value())
+                        throwLexerError("invalid string literal", lineNumber);
 
-                        if (code[offset] != '\\' && code[offset] != '\'')
-                            throwLexerError("invalid escape sequence", lineNumber);
+                    auto [s, stringSize] = string.value();
 
-
-                        character = code[offset];
-                    } else {
-                        if (code[offset] == '\\' || code[offset] == '\'' || character == '\n' || character == '\r')
-                            throwLexerError("invalid character literal", lineNumber);
-
-                    }
-
-                    offset += 1;
-
-                    if (offset >= code.length() || code[offset] != '\'')
-                        throwLexerError("missing terminating ' after character literal", lineNumber);
-
-                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Character, character) ));
-                    offset += 1;
-
+                    tokens.emplace_back(VALUE_TOKEN(String, s));
+                    offset += stringSize;
                 } else if (std::isalpha(c)) {
                     std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 

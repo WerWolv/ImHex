@@ -17,6 +17,7 @@ namespace hex::lang {
             ValueType,
             Operator,
             Integer,
+            String,
             Identifier,
             Separator
         };
@@ -142,7 +143,7 @@ namespace hex::lang {
         }
 
         bool operator==(const ValueTypes &other) const {
-            if (this->type == Type::Integer || this->type == Type::Identifier)
+            if (this->type == Type::Integer || this->type == Type::Identifier || this->type == Type::String)
                 return true;
             else if (this->type == Type::ValueType) {
                 auto otherValueType =   std::get_if<ValueType>(&other);
@@ -196,6 +197,7 @@ namespace hex::lang {
 
 #define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral(hex::lang::Token::ValueType::Any, u64(0))
 #define IDENTIFIER                          hex::lang::Token::Type::Identifier, ""
+#define STRING                              hex::lang::Token::Type::String, ""
 
 #define OPERATOR_AT                         COMPONENT(Operator, AtDeclaration)
 #define OPERATOR_ASSIGNMENT                 COMPONENT(Operator, Assignment)
