@@ -24,7 +24,7 @@ namespace hex::lang {
             this->m_provider->read(offset, bytes.data(), bytes.size());
 
             if (bytes == sequence) {
-                if (LITERAL_COMPARE(occurrenceIndex, occurrenceIndex < occurrences)) {
+                if (LITERAL_COMPARE(occurrenceIndex, occurrences < occurrenceIndex)) {
                     occurrences++;
                     continue;
                 }
