@@ -423,6 +423,8 @@ namespace hex::lang {
         for (const auto &pattern : memberPatterns)
             size = std::max(size, pattern->getSize());
 
+        this->m_currOffset += size;
+
         return new PatternDataUnion(startOffset, size, memberPatterns);
     }
 
