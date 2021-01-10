@@ -88,7 +88,7 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
-        std::vector<PatternData*> evaluateMember(ASTNode *node);
+        void evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset);
         PatternData* evaluateStruct(ASTNodeStruct *node);
         PatternData* evaluateUnion(ASTNodeUnion *node);
         PatternData* evaluateEnum(ASTNodeEnum *node);

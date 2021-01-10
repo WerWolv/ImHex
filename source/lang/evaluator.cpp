@@ -362,35 +362,35 @@ namespace hex::lang {
         return pattern;
     }
 
-    std::vector<PatternData*> Evaluator::evaluateMember(ASTNode *node) {
+    void Evaluator::evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset) {
+        auto startOffset = this->m_currOffset;
+
         if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(node); memberVariableNode != nullptr)
-            return { this->evaluateVariable(memberVariableNode) };
+            currMembers.push_back(this->evaluateVariable(memberVariableNode));
         else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); memberArrayNode != nullptr)
-            return { this->evaluateArray(memberArrayNode) };
+            currMembers.push_back(this->evaluateArray(memberArrayNode));
         else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); memberPointerNode != nullptr)
-            return { this->evaluatePointer(memberPointerNode) };
+            currMembers.push_back(this->evaluatePointer(memberPointerNode));
         else if (auto conditionalNode = dynamic_cast<ASTNodeConditionalStatement*>(node); conditionalNode != nullptr) {
             auto condition = this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(conditionalNode->getCondition()));
 
-            std::vector<PatternData*> patterns;
             if (std::visit([](auto &&value) { return value != 0; }, condition->getValue())) {
                 for (auto &statement : conditionalNode->getTrueBody()) {
-                    auto statementPatterns = this->evaluateMember(statement);
-                    std::copy(statementPatterns.begin(), statementPatterns.end(), std::back_inserter(patterns));
+                    this->evaluateMember(statement, currMembers, increaseOffset);
                 }
             } else {
                 for (auto &statement : conditionalNode->getFalseBody()) {
-                    auto statementPatterns = this->evaluateMember(statement);
-                    std::copy(statementPatterns.begin(), statementPatterns.end(), std::back_inserter(patterns));
+                    this->evaluateMember(statement, currMembers, increaseOffset);
                 }
             }
 
             delete condition;
-
-            return patterns;
         }
         else
             throwEvaluateError("invalid struct member");
+
+        if (!increaseOffset)
+            this->m_currOffset = startOffset;
     }
 
     PatternData* Evaluator::evaluateStruct(ASTNodeStruct *node) {
@@ -401,8 +401,7 @@ namespace hex::lang {
 
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
-            auto newMembers = this->evaluateMember(member);
-            std::copy(newMembers.begin(), newMembers.end(), std::back_inserter(memberPatterns));
+            this->evaluateMember(member, memberPatterns, true);
         }
 
         return new PatternDataStruct(startOffset, this->m_currOffset - startOffset, memberPatterns);
@@ -415,14 +414,16 @@ namespace hex::lang {
         SCOPE_EXIT( this->m_currMembers.pop_back(); );
 
         auto startOffset = this->m_currOffset;
-        for (auto &member : node->getMembers()) {
-            auto newMembers = this->evaluateMember(member);
-            std::copy(newMembers.begin(), newMembers.end(), std::back_inserter(memberPatterns));
 
-            this->m_currOffset = startOffset;
+        for (auto &member : node->getMembers()) {
+            this->evaluateMember(member, memberPatterns, false);
         }
 
-        return new PatternDataUnion(startOffset, this->m_currOffset - startOffset, memberPatterns);
+        size_t size = 0;
+        for (const auto &pattern : memberPatterns)
+            size = std::max(size, pattern->getSize());
+
+        return new PatternDataUnion(startOffset, size, memberPatterns);
     }
 
     PatternData* Evaluator::evaluateEnum(ASTNodeEnum *node) {
