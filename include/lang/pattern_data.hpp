@@ -526,7 +526,7 @@ namespace hex::lang {
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
@@ -606,7 +606,7 @@ namespace hex::lang {
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llx", this->getSize());
             ImGui::TableNextColumn();
