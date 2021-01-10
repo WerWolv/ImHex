@@ -87,7 +87,11 @@ namespace hex {
                 u8 codepointSize = ImTextCharFromUtf8(&codepoint, buffer, buffer + 4);
 
                 std::memcpy(codepointString, &codepoint, std::min(codepointSize, u8(4)));
-                this->m_cachedData.emplace_back("UTF-8 code point",  hex::format("'%s' (U+%04lx)", codepoint == 0xFFFD ? "Invalid" : codepointString, codepoint), sizeof(char8_t));
+                this->m_cachedData.emplace_back("UTF-8 code point",  hex::format("'%s' (U+%04lx)",
+                    codepoint == 0xFFFD ? "Invalid" :
+                    codepoint < 0xFF ? makePrintable(codepoint).c_str() :
+                    codepointString
+                    , codepoint), sizeof(char8_t));
             }
 
             this->m_cachedData.emplace_back("float (32 bit)", hex::format("%e", hex::changeEndianess(this->m_previewData.float32, this->m_endian)), sizeof(float));
