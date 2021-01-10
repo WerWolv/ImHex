@@ -786,7 +786,7 @@ namespace hex::lang {
                     else
                         ImGui::Text("%llu bits", entrySize);
                     ImGui::TableNextColumn();
-                    ImGui::Text("%s", entryName.c_str());
+                    ImGui::TextColored(ImColor(0xFF9BC64D), "bits");
                     ImGui::TableNextColumn();
                     {
                         u128 fieldValue = 0;
