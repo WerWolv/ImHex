@@ -195,7 +195,7 @@ namespace hex {
             else
                 ImGui::NewLine();
 
-            enum class MathDisplayType { Standard, Scientific, Programmer } mathDisplayType;
+            enum class MathDisplayType { Standard, Scientific, Engineering, Programmer } mathDisplayType;
             if (ImGui::BeginTabBar("##mathFormatTabBar")) {
                 if (ImGui::BeginTabItem("Standard")) {
                     mathDisplayType = MathDisplayType::Standard;
@@ -203,6 +203,10 @@ namespace hex {
                 }
                 if (ImGui::BeginTabItem("Scientific")) {
                     mathDisplayType = MathDisplayType::Scientific;
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("Engineering")) {
+                    mathDisplayType = MathDisplayType::Engineering;
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("Programmer")) {
@@ -242,6 +246,9 @@ namespace hex {
                                 case MathDisplayType::Scientific:
                                     ImGui::Text("%.6Le", this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]);
                                     break;
+                                case MathDisplayType::Engineering:
+                                    ImGui::Text("%s", hex::toEngineeringString(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]).c_str());
+                                    break;
                                 case MathDisplayType::Programmer:
                                     ImGui::Text("0x%llX (%llu)",
                                                 u64(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]),
@@ -278,6 +285,9 @@ namespace hex {
                                 break;
                             case MathDisplayType::Scientific:
                                 ImGui::Text("%.6Le", value);
+                                break;
+                            case MathDisplayType::Engineering:
+                                ImGui::Text("%s", hex::toEngineeringString(value).c_str());
                                 break;
                             case MathDisplayType::Programmer:
                                 ImGui::Text("0x%llX (%llu)", u64(value),  u64(value));

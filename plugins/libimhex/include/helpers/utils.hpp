@@ -158,6 +158,24 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
+    std::string toEngineeringString(double value) {
+        constexpr std::array prefixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
+
+        int8_t prefixIndex = 6;
+
+        while (prefixIndex != 0 && prefixIndex != 12 && (value >= 1000 || value < 1) && value != 0) {
+            if (value >= 1000) {
+                value /= 1000;
+                prefixIndex++;
+            } else if (value < 1) {
+                value *= 1000;
+                prefixIndex--;
+            }
+        }
+
+        return std::to_string(value).substr(0, 5) + prefixes[prefixIndex];
+    }
+
     std::vector<u8> readFile(std::string_view path);
 
     #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
