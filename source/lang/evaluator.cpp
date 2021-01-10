@@ -621,7 +621,7 @@ namespace hex::lang {
 
             entries.push_back(entry);
 
-            if (this->m_currOffset >= this->m_provider->getActualSize())
+            if (this->m_currOffset > this->m_provider->getActualSize())
                 throwEvaluateError("array exceeds size of file");
         }
 
