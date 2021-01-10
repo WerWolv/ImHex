@@ -45,7 +45,7 @@ jobs:
         CC=gcc-10 CXX=g++-10 cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
         make -j 4
 
-    - name: 📦 Uploading artifact
+    - name: 📦 Upload ELF
       uses: actions/upload-artifact@v2
       with:
         name: Linux ELF
@@ -117,14 +117,14 @@ jobs:
         mingw32-make install
         cpack
 
-    - name: 📦 Uploading portable zip
+    - name: 📦 Upload Portable ZIP
       uses: actions/upload-artifact@v2
       with:
         name: Windows Portable ZIP
         path: |
           build/install/*
 
-    - name: 📦 Uploading Windows Installer
+    - name: 📦 Upload Windows Installer
       uses: actions/upload-artifact@v2
       with:
         name: Windows Installer
@@ -152,7 +152,7 @@ jobs:
         CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCREATE_BUNDLE=ON -DCREATE_PACKAGE=ON ..
         make -j 4 package
 
-    - name: 📦 Uploading artifact
+    - name: 📦 Upload DMG
       uses: actions/upload-artifact@v2
       with:
         name: macOS DMG
