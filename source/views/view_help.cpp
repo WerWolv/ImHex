@@ -30,7 +30,9 @@ namespace hex {
     void ViewHelp::drawAboutPopup() {
         if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("ImHex Hex Editor v%s by WerWolv", IMHEX_VERSION);
+            #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
             ImGui::Text("%s@%s", GIT_BRANCH, GIT_COMMIT_HASH);
+            #endif
             ImGui::NewLine();
             ImGui::Text("Source code available on GitHub:"); ImGui::SameLine();
             ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), "WerWolv/ImHex   ");
