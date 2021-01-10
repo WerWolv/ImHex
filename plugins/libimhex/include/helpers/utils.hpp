@@ -158,7 +158,7 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
-    std::string toEngineeringString(double value) {
+    inline std::string toEngineeringString(double value) {
         constexpr std::array prefixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
 
         int8_t prefixIndex = 6;
