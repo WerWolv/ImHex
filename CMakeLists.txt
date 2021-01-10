@@ -23,10 +23,9 @@ set(Python_FIND_FRAMEWORK NEVER)
 
 # Find packages
 find_package(PkgConfig REQUIRED)
-if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+pkg_search_module(CRYPTO libcrypto)
+if(NOT CRYPTO_FOUND)
     find_library(CRYPTO crypto REQUIRED)
-else()
-    pkg_search_module(CRYPTO REQUIRED libcrypto)
 endif()
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
