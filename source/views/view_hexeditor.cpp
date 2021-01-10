@@ -13,10 +13,6 @@
 #undef __STRICT_ANSI__
 #include <cstdio>
 
-#if defined(__FreeBSD__)
-    #define ftello64 ftell
-#endif
-
 namespace hex {
 
     ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
