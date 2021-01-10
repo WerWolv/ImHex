@@ -240,15 +240,15 @@ namespace hex::lang {
 
     // (parseBooleanOr) ? (parseBooleanOr) : (parseBooleanOr)
     ASTNode* Parser::parseTernaryConditional() {
-        auto node = this->parseBooleanXor();
+        auto node = this->parseBooleanOr();
 
         while (MATCHES(sequence(OPERATOR_TERNARYCONDITIONAL))) {
-            auto second = this->parseBooleanXor();
+            auto second = this->parseBooleanOr();
 
             if (!MATCHES(sequence(OPERATOR_INHERIT)))
                 throwParseError("expected ':' in ternary expression");
 
-            auto third = this->parseBooleanXor();
+            auto third = this->parseBooleanOr();
             node = new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional);
         }
 
