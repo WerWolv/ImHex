@@ -99,12 +99,19 @@ jobs:
         # Get path to mingw python library
         PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//')
         PYTHON_LIB_PATH=$(cygpath -m $(which lib${PYTHON_LIB_NAME}.dll))
+
+        # Get path to magic db
+        MAGICDB_PATH=$(cygpath -m $(file --version | grep -oP "(?<=magic file from ).+"))
+
         echo Python_LIBRARY: $PYTHON_LIB_PATH
+        echo MagicDB Path: $MAGICDB_PATH
+
         cmake -G "MinGW Makefiles" \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-          -DCMAKE_INSTALL_PREFIX=$PWD/install \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCREATE_PACKAGE=ON \
           -DPython_LIBRARY="$PYTHON_LIB_PATH" \
+          -DEXTRA_MAGICDBS="$MAGICDB_PATH" \
           ..
         mingw32-make -j4
         mingw32-make install

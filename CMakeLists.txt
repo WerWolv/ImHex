@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 
 project(imhex VERSION 1.6.0)
 
+if (WIN32)
+    set(EXTRA_MAGICDBS "" CACHE STRING "List of compiled magicdb files separated with a ;")
+else()
+    set(EXTRA_MAGICDBS "" CACHE STRING "List of compiled magicdb files separated with a :")
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
@@ -213,6 +219,18 @@ if (WIN32)
         endforeach()
     ]])
 endif()
+
+# Compile the imhex-specific magicdb
+add_custom_target(magic_dbs ALL
+    SOURCES magic_dbs/nintendo_magic
+    )
+add_custom_command(TARGET magic_dbs
+    COMMAND file -C -m ${CMAKE_SOURCE_DIR}/magic_dbs
+    )
+
+# Install the magicdb files.
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION magic/ RENAME imhex.mgc)
+install(FILES ${EXTRA_MAGICDBS} DESTINATION magic/)
 
 if (CREATE_BUNDLE)
     include(PostprocessBundle)
