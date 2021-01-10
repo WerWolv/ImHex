@@ -29,7 +29,10 @@ set(Python_FIND_FRAMEWORK NEVER)
 
 # Find packages
 find_package(PkgConfig REQUIRED)
-pkg_search_module(CRYPTO REQUIRED libcrypto)
+pkg_search_module(CRYPTO libcrypto)
+if(NOT CRYPTO_FOUND)
+    find_library(CRYPTO crypto REQUIRED)
+endif()
 pkg_search_module(CAPSTONE REQUIRED capstone)
 find_package(OpenGL REQUIRED)
 find_package(nlohmann_json REQUIRED)

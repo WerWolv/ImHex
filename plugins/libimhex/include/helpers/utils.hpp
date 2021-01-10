@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__FreeBSD__)
     #define off64_t off_t
     #define fopen64 fopen
     #define fseeko64 fseek
