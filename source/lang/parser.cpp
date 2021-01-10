@@ -454,6 +454,7 @@ namespace hex::lang {
 
         auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(parseType(-2));
         if (underlyingType == nullptr) throwParseError("failed to parse type", -2);
+        if (underlyingType->getEndian().has_value()) throwParseError("underlying type may not have an endian specification", -2);
 
         const auto enumNode = new ASTNodeEnum(underlyingType);
         ScopeExit enumGuard([&]{ delete enumNode; });
@@ -471,7 +472,7 @@ namespace hex::lang {
                 ASTNode *valueExpr;
                 auto name = getValue<std::string>(-1);
                 if (enumNode->getEntries().empty())
-                    lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) }));
+                    valueExpr = lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) }));
                 else
                     valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral({ Token::ValueType::Any, s32(1) }), Token::Operator::Plus);
 
@@ -480,13 +481,13 @@ namespace hex::lang {
             else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
                 throwParseError("unexpected end of program", -2);
             else
-                throwParseError("invalid union member", 0);
+                throwParseError("invalid enum entry", -1);
 
             if (!MATCHES(sequence(SEPARATOR_COMMA))) {
                 if (MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE)))
                     break;
                 else
-                    throwParseError("missing ',' between enum entries", 0);
+                    throwParseError("missing ',' between enum entries", -1);
             }
         }
 

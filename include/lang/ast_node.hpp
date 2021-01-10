@@ -333,7 +333,7 @@ namespace hex::lang {
         [[nodiscard]] const std::unordered_map<std::string, ASTNode*>& getEntries() const { return this->m_entries; }
         void addEntry(const std::string &name, ASTNode* expression) { this->m_entries.insert({ name, expression }); }
 
-        [[nodiscard]] const ASTNode *getUnderlyingType() const { return this->m_underlyingType; }
+        [[nodiscard]] ASTNode *getUnderlyingType() { return this->m_underlyingType; }
 
     private:
         std::unordered_map<std::string, ASTNode*> m_entries;

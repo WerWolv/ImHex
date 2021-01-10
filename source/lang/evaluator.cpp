@@ -440,13 +440,17 @@ namespace hex::lang {
             entryPatterns.push_back({{ valueNode->getType(), valueNode->getValue() }, name });
         }
 
+        auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(node->getUnderlyingType());
+        if (underlyingType == nullptr)
+            throwEvaluateError("enum underlying type was not ASTNodeTypeDecl. This is a bug");
+
         size_t size;
-        if (auto underlyingType = dynamic_cast<const ASTNodeBuiltinType*>(node->getUnderlyingType()); underlyingType != nullptr)
-            size = Token::getTypeSize(underlyingType->getType());
+        if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(underlyingType->getType()); builtinType != nullptr)
+            size = Token::getTypeSize(builtinType->getType());
         else
             throwEvaluateError("invalid enum underlying type");
 
-        return new PatternDataEnum(startOffset, size, entryPatterns);
+        return new PatternDataEnum(startOffset, size, entryPatterns);;
     }
 
     PatternData* Evaluator::evaluateBitfield(ASTNodeBitfield *node) {
@@ -711,7 +715,7 @@ namespace hex::lang {
                     delete result;
                 }
 
-                this->m_endianStack.pop_back();
+                this->m_endianStack.clear();
             }
         } catch (EvaluateError &e) {
             this->m_consoleLog.emplace_back(ConsoleLogLevel::Error, e);
