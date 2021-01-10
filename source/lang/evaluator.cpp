@@ -476,7 +476,10 @@ namespace hex::lang {
             entryPatterns.emplace_back(name, fieldBits);
         }
 
-        return new PatternDataBitfield(startOffset, (bits / 8) + 1, entryPatterns);
+        size_t size = (bits + 7) / 8;
+        this->m_currOffset += size;
+
+        return new PatternDataBitfield(startOffset, size, entryPatterns);
     }
 
     PatternData* Evaluator::evaluateType(ASTNodeTypeDecl *node) {

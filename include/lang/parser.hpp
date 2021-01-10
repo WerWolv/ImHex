@@ -16,18 +16,16 @@ namespace hex::lang {
 
     class Parser {
     public:
+        using TokenIter = std::vector<Token>::const_iterator;
+        using ParseError = std::pair<u32, std::string>;
+
         Parser() = default;
         ~Parser() = default;
 
-        using TokenIter = std::vector<Token>::const_iterator;
-
         std::optional<std::vector<ASTNode*>> parse(const std::vector<Token> &tokens);
-
-        const std::pair<u32, std::string>& getError() { return this->m_error; }
+        const ParseError& getError() { return this->m_error; }
 
     private:
-        using ParseError = std::pair<u32, std::string>;
-
         ParseError m_error;
         TokenIter m_curr;
         TokenIter m_originalPosition;
