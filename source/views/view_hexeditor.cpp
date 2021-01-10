@@ -117,29 +117,38 @@ namespace hex {
         this->m_memoryEditor.DrawWindow("Hex Editor", &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
 
         if (dataSize != 0x00) {
-            ImGui::Begin("Hex Editor");
-            ImGui::SameLine();
-            ImGui::Spacing();
-            ImGui::SameLine();
-            ImGui::Text("Page %d / %d", provider->getCurrentPage() + 1, provider->getPageCount());
-            ImGui::SameLine();
+            if (ImGui::Begin("Hex Editor")) {
 
-            if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
-                provider->setCurrentPage(provider->getCurrentPage() - 1);
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
+                    ImGui::OpenPopup("Edit");
 
-                Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                View::postEvent(Events::RegionSelected, &dataPreview);
+                if (ImGui::BeginPopup("Edit")) {
+                    this->drawEditPopup();
+                    ImGui::EndPopup();
+                }
+
+                ImGui::SameLine();
+                ImGui::Spacing();
+                ImGui::SameLine();
+                ImGui::Text("Page %d / %d", provider->getCurrentPage() + 1, provider->getPageCount());
+                ImGui::SameLine();
+
+                if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
+                    provider->setCurrentPage(provider->getCurrentPage() - 1);
+
+                    Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
+                    View::postEvent(Events::RegionSelected, &dataPreview);
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
+                    provider->setCurrentPage(provider->getCurrentPage() + 1);
+
+                    Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
+                    View::postEvent(Events::RegionSelected, &dataPreview);
+                }
             }
-
-            ImGui::SameLine();
-
-            if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
-                provider->setCurrentPage(provider->getCurrentPage() + 1);
-
-                Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                View::postEvent(Events::RegionSelected, &dataPreview);
-            }
-
             ImGui::End();
 
             this->drawSearchPopup();
@@ -385,47 +394,7 @@ namespace hex {
         }
 
         if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::BeginMenu("Copy as...", this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-                if (ImGui::MenuItem("Bytes", "CTRL + ALT + C"))
-                    this->copyBytes();
-                if (ImGui::MenuItem("Hex String", "CTRL + SHIFT + C"))
-                    this->copyString();
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("C Array"))
-                    this->copyLanguageArray(Language::C);
-                if (ImGui::MenuItem("C++ Array"))
-                    this->copyLanguageArray(Language::Cpp);
-                if (ImGui::MenuItem("C# Array"))
-                    this->copyLanguageArray(Language::CSharp);
-                if (ImGui::MenuItem("Rust Array"))
-                    this->copyLanguageArray(Language::Rust);
-                if (ImGui::MenuItem("Python Array"))
-                    this->copyLanguageArray(Language::Python);
-                if (ImGui::MenuItem("Java Array"))
-                    this->copyLanguageArray(Language::Java);
-                if (ImGui::MenuItem("JavaScript Array"))
-                    this->copyLanguageArray(Language::JavaScript);
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("Editor View"))
-                    this->copyHexView();
-                if (ImGui::MenuItem("HTML"))
-                    this->copyHexViewHTML();
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::MenuItem("Create bookmark", nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-                size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-                size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-                Bookmark bookmark = { start, end - start + 1, { }, { } };
-
-                View::postEvent(Events::AddBookmark, &bookmark);
-            }
-
+            this->drawEditPopup();
             ImGui::EndMenu();
         }
     }
@@ -975,6 +944,49 @@ R"(
             }
 
             ImGui::EndPopup();
+        }
+    }
+
+    void ViewHexEditor::drawEditPopup() {
+        if (ImGui::BeginMenu("Copy as...", this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
+            if (ImGui::MenuItem("Bytes", "CTRL + ALT + C"))
+                this->copyBytes();
+            if (ImGui::MenuItem("Hex String", "CTRL + SHIFT + C"))
+                this->copyString();
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("C Array"))
+                this->copyLanguageArray(Language::C);
+            if (ImGui::MenuItem("C++ Array"))
+                this->copyLanguageArray(Language::Cpp);
+            if (ImGui::MenuItem("C# Array"))
+                this->copyLanguageArray(Language::CSharp);
+            if (ImGui::MenuItem("Rust Array"))
+                this->copyLanguageArray(Language::Rust);
+            if (ImGui::MenuItem("Python Array"))
+                this->copyLanguageArray(Language::Python);
+            if (ImGui::MenuItem("Java Array"))
+                this->copyLanguageArray(Language::Java);
+            if (ImGui::MenuItem("JavaScript Array"))
+                this->copyLanguageArray(Language::JavaScript);
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Editor View"))
+                this->copyHexView();
+            if (ImGui::MenuItem("HTML"))
+                this->copyHexViewHTML();
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::MenuItem("Create bookmark", nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
+            size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+            size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+            Bookmark bookmark = { start, end - start + 1, { }, { } };
+
+            View::postEvent(Events::AddBookmark, &bookmark);
         }
     }
 

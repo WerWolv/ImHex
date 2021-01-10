@@ -52,6 +52,7 @@ namespace hex {
 
         void drawSearchPopup();
         void drawGotoPopup();
+        void drawEditPopup();
 
         void openFile(std::string path);
         bool saveToFile(std::string path, const std::vector<u8>& data);
