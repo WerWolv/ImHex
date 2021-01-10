@@ -450,6 +450,8 @@ namespace hex::lang {
         else
             throwEvaluateError("invalid enum underlying type");
 
+        this->m_currOffset += size;
+
         return new PatternDataEnum(startOffset, size, entryPatterns);;
     }
 
