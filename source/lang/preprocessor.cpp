@@ -172,7 +172,13 @@ namespace hex::lang {
 
             if (initialRun) {
                 // Apply defines
-                for (const auto &[define, value] : this->m_defines) {
+                std::vector<std::pair<std::string, std::string>> sortedDefines;
+                std::copy(this->m_defines.begin(), this->m_defines.end(), std::back_inserter(sortedDefines));
+                std::sort(sortedDefines.begin(), sortedDefines.end(), [](const auto &left, const auto &right) {
+                   return left.first.size() > right.first.size();
+                });
+
+                for (const auto &[define, value] : sortedDefines) {
                     s32 index = 0;
                     while((index = output.find(define, index)) != std::string::npos) {
                         output.replace(index, define.length(), value);
