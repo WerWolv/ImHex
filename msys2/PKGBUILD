@@ -11,6 +11,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-python")
 makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
              "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-make"
+             "${MINGW_PACKAGE_PREFIX}-dlsym"
              "${MINGW_PACKAGE_PREFIX}-capstone"
              "${MINGW_PACKAGE_PREFIX}-glfw"
              "${MINGW_PACKAGE_PREFIX}-glm"
