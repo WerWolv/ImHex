@@ -10,6 +10,27 @@ namespace hex {
         this->getWindowOpenState() = true;
 
         this->m_commandBuffer.resize(1024, 0x00);
+
+        ContentRegistry::CommandPaletteCommands::add(
+            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+            "#", "Calculator",
+            [](std::string input) {
+                        MathEvaluator evaluator;
+                        evaluator.registerStandardVariables();
+                        evaluator.registerStandardFunctions();
+
+                        std::optional<long double> result;
+
+                        try {
+                            result = evaluator.evaluate(input);
+                        } catch (std::runtime_error &e) {}
+
+                        if (result.has_value())
+                            return hex::format("#%s = %Lf", input.data(), result.value());
+                        else
+                            return hex::format("#%s = ???", input.data());
+                    });
+
         this->m_lastResults = this->getCommandResults("");
     }
 
@@ -77,7 +98,7 @@ namespace hex {
         PerfectMatch
     };
 
-    std::vector<std::string> ViewCommandPalette::getCommandResults(std::string_view command) {
+    std::vector<std::string> ViewCommandPalette::getCommandResults(std::string_view input) {
         constexpr auto matchCommand = [](std::string_view currCommand, std::string_view commandToMatch) -> std::pair<MatchType, std::string_view> {
             if (currCommand.empty()) {
                 return { MatchType::InfoMatch, "" };
@@ -98,31 +119,24 @@ namespace hex {
 
         std::vector<std::string> results;
 
-        if (auto [match, value] = matchCommand(command, "#"); match != MatchType::NoMatch) {
-            if (match != MatchType::PerfectMatch)
-                results.emplace_back("# (Calculator)");
-            else {
-                MathEvaluator evaluator;
-                evaluator.registerStandardVariables();
-                evaluator.registerStandardFunctions();
+        for (const auto &[type, command, description, callback] : ContentRegistry::CommandPaletteCommands::getEntries()) {
 
-                auto result = evaluator.evaluate(std::string(value));
+            if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+                if (auto [match, value] = matchCommand(input, command); match != MatchType::NoMatch) {
+                    if (match != MatchType::PerfectMatch)
+                        results.emplace_back(command + " (" + description + ")");
+                    else
+                        results.emplace_back(callback(input.substr(command.length()).data()));
+                }
+            } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+                if (auto [match, value] = matchCommand(input, command + " "); match != MatchType::NoMatch) {
+                    if (match != MatchType::PerfectMatch)
+                        results.emplace_back(command + " (" + description + ")");
+                    else
+                        results.emplace_back(callback(input.substr(command.length() + 1).data()));
+                }
+            }
 
-                if (result.has_value())
-                    results.emplace_back(hex::format("#%s = %Lf", value.data(), result.value()));
-                else
-                    results.emplace_back(hex::format("#%s = ???", value.data()));
-            }
-        }
-        if (auto [match, value] = matchCommand(command, "/find "); match != MatchType::NoMatch) {
-            if (match != MatchType::PerfectMatch)
-                results.emplace_back("/find (Find Command)");
-            else {
-                results.emplace_back(hex::format("Command: Find \"%s\"", value.data()));
-            }
-        }
-        if (auto [match, value] = matchCommand(command, ">"); match != MatchType::NoMatch) {
-            results.emplace_back("> (Command)");
         }
 
         return results;

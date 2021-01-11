@@ -62,4 +62,15 @@ namespace hex {
         return customEvents[name.data()];
     }
 
+
+    /* Command Palette Commands */
+
+    void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &callback) {
+        SharedData::get().commandPaletteCommands->push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command.data(), description.data(), callback });
+    }
+
+    std::vector<ContentRegistry::CommandPaletteCommands::Entry> ContentRegistry::CommandPaletteCommands::getEntries() {
+        return *SharedData::get().commandPaletteCommands;
+    }
+
 }

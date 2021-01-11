@@ -58,34 +58,35 @@ namespace hex {
             static nlohmann::json settingsJsonStorage;
             static std::map<std::string, Events> customEventsStorage;
             static u32 customEventsLastIdStorage = u32(Events::Events_BuiltinEnd) + 1;
+            static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommandsStorage;
 
-            this->imguiContext          = ImGui::GetCurrentContext();
-            this->eventHandlers         = &eventHandlersStorage;
-            this->deferredCalls         = &deferredCallsStorage;
-            this->currentProvider       = &currentProviderStorage;
-            this->settingsEntries       = &settingsEntriesStorage;
-            this->sharedVariables       = &sharedVariablesStorage;
-            this->settingsJson          = &settingsJsonStorage;
-            this->customEvents          = &customEventsStorage;
-            this->customEventsLastId    = &customEventsLastIdStorage;
-
-            this->windowPos             = &windowPosStorage;
-            this->windowSize            = &windowSizeStorage;
+            this->imguiContext              = ImGui::GetCurrentContext();
+            this->eventHandlers             = &eventHandlersStorage;
+            this->deferredCalls             = &deferredCallsStorage;
+            this->currentProvider           = &currentProviderStorage;
+            this->settingsEntries           = &settingsEntriesStorage;
+            this->sharedVariables           = &sharedVariablesStorage;
+            this->windowPos                 = &windowPosStorage;
+            this->windowSize                = &windowSizeStorage;
+            this->settingsJson              = &settingsJsonStorage;
+            this->customEvents              = &customEventsStorage;
+            this->customEventsLastId        = &customEventsLastIdStorage;
+            this->commandPaletteCommands    = &commandPaletteCommandsStorage;
         }
 
         void initializeData(const SharedData &other) {
-            this->imguiContext          = other.imguiContext;
-            this->eventHandlers         = other.eventHandlers;
-            this->deferredCalls         = other.deferredCalls;
-            this->currentProvider       = other.currentProvider;
-            this->settingsEntries       = other.settingsEntries;
-            this->sharedVariables       = other.sharedVariables;
-            this->settingsJson          = other.settingsJson;
-            this->customEvents          = other.customEvents;
-            this->customEventsLastId    = other.customEventsLastId;
-
-            this->windowPos             = other.windowPos;
-            this->windowSize            = other.windowSize;
+            this->imguiContext              = other.imguiContext;
+            this->eventHandlers             = other.eventHandlers;
+            this->deferredCalls             = other.deferredCalls;
+            this->currentProvider           = other.currentProvider;
+            this->settingsEntries           = other.settingsEntries;
+            this->sharedVariables           = other.sharedVariables;
+            this->windowPos                 = other.windowPos;
+            this->windowSize                = other.windowSize;
+            this->settingsJson              = other.settingsJson;
+            this->customEvents              = other.customEvents;
+            this->customEventsLastId        = other.customEventsLastId;
+            this->commandPaletteCommands    = other.commandPaletteCommands;
         }
 
     public:
@@ -97,6 +98,7 @@ namespace hex {
         nlohmann::json *settingsJson;
         std::map<std::string, Events> *customEvents;
         u32 *customEventsLastId;
+        std::vector<ContentRegistry::CommandPaletteCommands::Entry> *commandPaletteCommands;
 
         ImVec2 *windowPos;
         ImVec2 *windowSize;

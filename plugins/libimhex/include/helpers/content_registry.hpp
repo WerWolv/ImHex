@@ -39,6 +39,25 @@ namespace hex {
 
             static auto get(std::string_view name);
         };
+
+        struct CommandPaletteCommands {
+            CommandPaletteCommands() = delete;
+
+            enum class Type : u32 {
+                SymbolCommand,
+                KeywordCommand
+            };
+
+            struct Entry {
+                Type type;
+                std::string command;
+                std::string description;
+                std::function<std::string(std::string)> callback;
+            };
+
+            static void add(Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &callback);
+            static std::vector<Entry> getEntries();
+        };
     };
 
 }
