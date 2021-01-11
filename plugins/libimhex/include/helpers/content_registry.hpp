@@ -35,6 +35,8 @@ namespace hex {
         };
 
         struct Events {
+            Events() = delete;
+
             static auto get(std::string_view name);
         };
     };

@@ -7,7 +7,6 @@ pacman -S --needed \
   file \
   openssl \
   capstone \
-  nlohmann-json \
   glm \
   python3 \
   freetype2

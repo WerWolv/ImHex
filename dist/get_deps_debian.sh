@@ -14,7 +14,6 @@ apt install \
   cmake \
   g++-10 \
   ${PKGCONF:-} \
-  nlohmann-json3-dev \
   libcapstone-dev \
   libmagic-dev \
   libglfw3-dev \

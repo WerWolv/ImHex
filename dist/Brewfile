@@ -1,7 +1,6 @@
 brew "glfw3"
 brew "openssl@1.1"
 brew "capstone"
-brew "nlohmann-json"
 brew "glm"
 brew "cmake"
 brew "python3"

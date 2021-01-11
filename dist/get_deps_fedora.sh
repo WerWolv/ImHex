@@ -7,7 +7,6 @@ dnf install \
   file-devel \
   glfw-devel \
   glm-devel \
-  json-devel \
   mesa-libGL-devel \
   openssl-devel \
   python-devel \
