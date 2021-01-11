@@ -153,13 +153,6 @@ add_executable(imhex ${application_type}
         source/helpers/loader_script_handler.cpp
         source/helpers/plugin_handler.cpp
 
-        source/lang/preprocessor.cpp
-        source/lang/lexer.cpp
-        source/lang/parser.cpp
-        source/lang/validator.cpp
-        source/lang/evaluator.cpp
-        source/lang/builtin_functions.cpp
-
         source/providers/file_provider.cpp
 
         source/views/view_hexeditor.cpp

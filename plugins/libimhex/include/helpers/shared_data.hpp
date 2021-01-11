@@ -59,6 +59,7 @@ namespace hex {
             static std::map<std::string, Events> customEventsStorage;
             static u32 customEventsLastIdStorage = u32(Events::Events_BuiltinEnd) + 1;
             static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommandsStorage;
+            static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctionsStorage;
 
             this->imguiContext              = ImGui::GetCurrentContext();
             this->eventHandlers             = &eventHandlersStorage;
@@ -72,6 +73,7 @@ namespace hex {
             this->customEvents              = &customEventsStorage;
             this->customEventsLastId        = &customEventsLastIdStorage;
             this->commandPaletteCommands    = &commandPaletteCommandsStorage;
+            this->patternLanguageFunctions  = &patternLanguageFunctionsStorage;
         }
 
         void initializeData(const SharedData &other) {
@@ -87,6 +89,7 @@ namespace hex {
             this->customEvents              = other.customEvents;
             this->customEventsLastId        = other.customEventsLastId;
             this->commandPaletteCommands    = other.commandPaletteCommands;
+            this->patternLanguageFunctions  = other.patternLanguageFunctions;
         }
 
     public:
@@ -99,6 +102,7 @@ namespace hex {
         std::map<std::string, Events> *customEvents;
         u32 *customEventsLastId;
         std::vector<ContentRegistry::CommandPaletteCommands::Entry> *commandPaletteCommands;
+        std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> *patternLanguageFunctions;
 
         ImVec2 *windowPos;
         ImVec2 *windowSize;

@@ -12,6 +12,8 @@
 
 namespace hex {
 
+    namespace lang { class ASTNode; }
+
     class ContentRegistry {
     public:
         ContentRegistry() = delete;
@@ -57,6 +59,23 @@ namespace hex {
 
             static void add(Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &callback);
             static std::vector<Entry> getEntries();
+        };
+
+        struct PatternLanguageFunctions {
+            PatternLanguageFunctions() = delete;
+
+            constexpr static u32 UnlimitedParameters   = 0xFFFF'FFFF;
+            constexpr static u32 MoreParametersThan    = 0x8000'0000;
+            constexpr static u32 LessParametersThan    = 0x4000'0000;
+            constexpr static u32 NoParameters          = 0x0000'0000;
+
+            struct Function {
+                u32 parameterCount;
+                std::function<hex::lang::ASTNode*(std::vector<hex::lang::ASTNode*>)> func;
+            };
+
+            static void add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(std::vector<hex::lang::ASTNode*>)> &func);
+            static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> getEntries();
         };
     };
 

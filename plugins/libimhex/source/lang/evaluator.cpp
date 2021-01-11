@@ -2,6 +2,7 @@
 
 #include "lang/token.hpp"
 #include "helpers/utils.hpp"
+#include "helpers/content_registry.hpp"
 
 #include <bit>
 #include <algorithm>
@@ -13,29 +14,7 @@ namespace hex::lang {
     Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
         : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
 
-        this->addFunction("findSequence", Function::MoreParametersThan | 1, [this](auto params) {
-            return this->builtin_findSequence(params);
-        });
-
-        this->addFunction("readUnsigned", 2, [this](auto params) {
-            return this->builtin_readUnsigned(params);
-        });
-
-        this->addFunction("readSigned", 2, [this](auto params) {
-            return this->builtin_readSigned(params);
-        });
-
-        this->addFunction("assert", 2, [this](auto params) {
-            return this->builtin_assert(params);
-        });
-
-        this->addFunction("warnAssert", 2, [this](auto params) {
-            return this->builtin_warnAssert(params);
-        });
-
-        this->addFunction("print", Function::MoreParametersThan | 0, [this](auto params) {
-            return this->builtin_print(params);
-        });
+        this->registerBuiltinFunctions();
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
@@ -137,7 +116,7 @@ namespace hex::lang {
             throwEvaluateError("tried to use non-integer value in numeric expression");
     }
 
-    ASTNodeIntegerLiteral* Evaluator::evaluateFunctionCall(ASTNodeFunctionCall *node) {
+    ASTNode* Evaluator::evaluateFunctionCall(ASTNodeFunctionCall *node) {
         std::vector<ASTNode*> evaluatedParams;
         ScopeExit paramCleanup([&] {
            for (auto &param : evaluatedParams)
@@ -151,20 +130,20 @@ namespace hex::lang {
                 evaluatedParams.push_back(stringLiteral->clone());
         }
 
-        if (!this->m_functions.contains(node->getFunctionName().data()))
+        if (!ContentRegistry::PatternLanguageFunctions::getEntries().contains(node->getFunctionName().data()))
             throwEvaluateError(hex::format("no function named '%s' found", node->getFunctionName().data()));
 
-        auto &function = this->m_functions[node->getFunctionName().data()];
+        auto &function = ContentRegistry::PatternLanguageFunctions::getEntries()[node->getFunctionName().data()];
 
-        if (function.parameterCount == Function::UnlimitedParameters) {
+        if (function.parameterCount == ContentRegistry::PatternLanguageFunctions::UnlimitedParameters) {
             ; // Don't check parameter count
         }
-        else if (function.parameterCount & Function::LessParametersThan) {
-            if (evaluatedParams.size() >= (function.parameterCount & ~Function::LessParametersThan))
-                throwEvaluateError(hex::format("too many parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::LessParametersThan));
-        } else if (function.parameterCount & Function::MoreParametersThan) {
-            if (evaluatedParams.size() <= (function.parameterCount & ~Function::MoreParametersThan))
-                throwEvaluateError(hex::format("too few parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~Function::MoreParametersThan));
+        else if (function.parameterCount & ContentRegistry::PatternLanguageFunctions::LessParametersThan) {
+            if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan))
+                throwEvaluateError(hex::format("too many parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan));
+        } else if (function.parameterCount & ContentRegistry::PatternLanguageFunctions::MoreParametersThan) {
+            if (evaluatedParams.size() <= (function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan))
+                throwEvaluateError(hex::format("too few parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan));
         } else if (function.parameterCount != evaluatedParams.size()) {
             throwEvaluateError(hex::format("invalid number of parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount));
         }
@@ -305,8 +284,10 @@ namespace hex::lang {
 
             if (returnValue == nullptr)
                 throwEvaluateError("function returning void used in expression");
+            else if (auto integerNode = dynamic_cast<ASTNodeIntegerLiteral*>(returnValue); integerNode != nullptr)
+                return integerNode;
             else
-                return returnValue;
+                throwEvaluateError("function not returning a numeric value used in expression");
         }
         else
             throwEvaluateError("invalid operand");

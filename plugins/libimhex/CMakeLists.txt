@@ -16,6 +16,13 @@ add_library(libimhex STATIC
         source/helpers/utils.cpp
         source/helpers/content_registry.cpp
 
+        source/lang/preprocessor.cpp
+        source/lang/lexer.cpp
+        source/lang/parser.cpp
+        source/lang/validator.cpp
+        source/lang/evaluator.cpp
+        source/lang/builtin_functions.cpp
+
         source/providers/provider.cpp
 
         source/views/view.cpp

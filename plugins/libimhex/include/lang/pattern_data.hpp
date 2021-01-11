@@ -2,12 +2,12 @@
 
 #include <hex.hpp>
 
-#include "imgui.h"
-#include "imgui_memory_editor.h"
+#include <imgui.h>
 
 #include "providers/provider.hpp"
 #include "helpers/utils.hpp"
 #include "lang/token.hpp"
+#include "views/view.hpp"
 
 #include <cstring>
 #include <random>
