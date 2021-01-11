@@ -54,8 +54,8 @@ namespace hex {
             if (provider != nullptr && provider->isReadable()) {
 
                 if (beginPatternDataTable(provider, this->m_patternData, this->m_sortedPatternData)) {
+                    ImGui::TableHeadersRow();
                     if (this->m_sortedPatternData.size() > 0) {
-                        ImGui::TableHeadersRow();
 
                         for (auto &patternData : this->m_sortedPatternData)
                             patternData->createEntry(provider);
