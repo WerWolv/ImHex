@@ -167,6 +167,45 @@ namespace hex {
                 }
             }
         });
+
+        /* Settings */
+        {
+
+            constexpr auto SettingsCategoryInterface    = "Interface";
+
+            constexpr auto SettingColorTheme            = "Color theme";
+
+            ContentRegistry::Settings::add(SettingsCategoryInterface, SettingColorTheme, 0, [](nlohmann::json &setting) {
+                static int selection = setting;
+                if (ImGui::Combo("##nolabel", &selection, "Dark\0Light\0Classic\0")) {
+                    setting = selection;
+                    return true;
+                }
+
+                return false;
+            });
+
+            View::subscribeEvent(Events::SettingsChanged, [this](const void*) {
+                int theme = ContentRegistry::Settings::getSettingsData()[SettingsCategoryInterface][SettingColorTheme];
+
+                switch (theme) {
+                    default:
+                    case 0: /* Dark theme */
+                        ImGui::StyleColorsDark();
+                        this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
+                        break;
+                    case 1: /* Light theme */
+                        ImGui::StyleColorsLight();
+                        this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
+                        break;
+                    case 2: /* Classic theme */
+                        ImGui::StyleColorsClassic();
+                        this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
+                        break;
+                }
+            });
+
+        }
     }
 
     ViewPattern::~ViewPattern() {
@@ -193,22 +232,22 @@ namespace hex {
                 this->m_textEditor.Render("Pattern", textEditorSize, true);
 
                 auto consoleSize = ImGui::GetContentRegionAvail();
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.0, 0.0, 0.0, 1.0));
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
 
                 if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                     for (auto &[level, message] : this->m_console) {
                         switch (level) {
                             case lang::Evaluator::ConsoleLogLevel::Debug:
-                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0x1F, 0xA9, 0x49, 0xFF).Value);
+                                ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
                                 break;
                             case lang::Evaluator::ConsoleLogLevel::Info:
-                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0x00, 0x70, 0xB4, 0xFF).Value);
+                                ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
                                 break;
                             case lang::Evaluator::ConsoleLogLevel::Warning:
-                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xFF, 0xC8, 0x01, 0xFF).Value);
+                                ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
                                 break;
                             case lang::Evaluator::ConsoleLogLevel::Error:
-                                ImGui::PushStyleColor(ImGuiCol_Text, ImColor(0xAE, 0x0C, 0x00, 0xFF).Value);
+                                ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                                 break;
                             default: continue;
                         }
