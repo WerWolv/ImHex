@@ -39,7 +39,6 @@ find_package(OpenGL REQUIRED)
 find_package(Python COMPONENTS Development)
 
 add_subdirectory(external/llvm)
-add_subdirectory(external/nlohmann_json)
 add_subdirectory(plugins/libimhex)
 
 
@@ -186,9 +185,9 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json)
+    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES})
 elseif (UNIX)
-    target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} nlohmann_json dl)
+    target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} dl)
 endif()
 
 if (WIN32)

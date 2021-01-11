@@ -4,6 +4,8 @@ project(libimhex)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURRENT_BINARY_DIR}/external/ImGui)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json)
+
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
@@ -20,4 +22,4 @@ add_library(libimhex STATIC
         )
 
 target_include_directories(libimhex PUBLIC include)
-target_link_libraries(libimhex PUBLIC imgui)
+target_link_libraries(libimhex PUBLIC imgui nlohmann_json)
