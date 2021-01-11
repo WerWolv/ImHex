@@ -108,7 +108,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\
 
 if (WIN32)
     set(application_type WIN32)
-    set(imhex_icon resource.rc)
+    set(imhex_icon "${PROJECT_SOURCE_DIR}/res/resource.rc")
 
     if (CREATE_PACKAGE)
         set(CPACK_GENERATOR "WIX")
