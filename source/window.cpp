@@ -161,13 +161,15 @@ namespace hex {
                             ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
                     }
 
-                    if (ImGui::BeginMenu("Plugin Views")) {
-                        for (auto &view : this->m_pluginViews) {
-                            if (view->hasViewMenuItemEntry())
-                                ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
-                        }
+                    if (!this->m_pluginViews.empty()) {
+                        if (ImGui::BeginMenu("Plugin Views")) {
+                            for (auto &view : this->m_pluginViews) {
+                                if (view->hasViewMenuItemEntry())
+                                    ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
+                            }
 
-                        ImGui::EndMenu();
+                            ImGui::EndMenu();
+                        }
                     }
 
                     ImGui::EndMenu();
