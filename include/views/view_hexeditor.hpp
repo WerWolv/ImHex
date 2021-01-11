@@ -45,6 +45,8 @@ namespace hex {
 
         s64 m_gotoAddress = 0;
 
+        char m_baseAddressBuffer[0x20] = { 0 };
+
         std::vector<u8> m_dataToSave;
 
         std::string m_loaderScriptScriptPath;

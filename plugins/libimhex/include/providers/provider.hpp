@@ -36,7 +36,8 @@ namespace hex::prv {
         u32 getCurrentPage() const;
         void setCurrentPage(u32 page);
 
-        virtual size_t getBaseAddress();
+        virtual void setBaseAddress(u64 address);
+        virtual u64 getBaseAddress();
         virtual size_t getSize();
         virtual std::optional<u32> getPageOfAddress(u64 address);
 
@@ -44,6 +45,7 @@ namespace hex::prv {
 
     protected:
         u32 m_currPage = 0;
+        u64 m_baseAddress = 0;
 
         std::vector<std::map<u64, u8>> m_patches;
     };

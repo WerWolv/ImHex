@@ -46,8 +46,12 @@ namespace hex::prv {
     }
 
 
-    size_t Provider::getBaseAddress() {
-        return PageSize * this->m_currPage;
+    void Provider::setBaseAddress(u64 address) {
+        this->m_baseAddress = address;
+    }
+
+    u64 Provider::getBaseAddress() {
+        return this->m_baseAddress + PageSize * this->m_currPage;
     }
 
     size_t Provider::getSize() {

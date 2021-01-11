@@ -21,13 +21,12 @@ namespace hex::prv {
         #if defined(OS_WINDOWS)
         std::wstring widePath;
         {
-            int len;
-            int slength = (int)path.length() + 1;
-            len = MultiByteToWideChar(CP_UTF8, 0, path.data(), slength, 0, 0);
-            wchar_t* buf = new wchar_t[len];
-            MultiByteToWideChar(CP_UTF8, 0, path.data(), slength, buf, len);
-            widePath = buf;
-            delete[] buf;
+            auto length = path.length() + 1;
+            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, path.data(), length, 0, 0);
+            wchar_t* buffer = new wchar_t[wideLength];
+            MultiByteToWideChar(CP_UTF8, 0, path.data(), length, buffer, wideLength);
+            widePath = buffer;
+            delete[] buffer;
         }
 
         LARGE_INTEGER fileSize = { 0 };
@@ -129,35 +128,35 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
 
         for (u64 i = 0; i < size; i++)
             if (this->m_patches.back().contains(offset + i))
-                reinterpret_cast<u8*>(buffer)[i] = this->m_patches.back()[offset + i];
+                reinterpret_cast<u8*>(buffer)[i] = this->m_patches.back()[offset + PageSize * this->m_currPage + i];
     }
 
     void FileProvider::write(u64 offset, const void *buffer, size_t size) {
-        if (buffer == nullptr || size == 0)
+        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
         this->m_patches.push_back(this->m_patches.back());
 
         for (u64 i = 0; i < size; i++)
-            this->m_patches.back()[offset + i] = reinterpret_cast<const u8*>(buffer)[i];
+            this->m_patches.back()[offset + this->getBaseAddress() + i] = reinterpret_cast<const u8*>(buffer)[i];
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        if (buffer == nullptr || size == 0)
+        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + offset, buffer, size);
+        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, buffer, size);
     }
     size_t FileProvider::getActualSize() {
         return this->m_fileSize;

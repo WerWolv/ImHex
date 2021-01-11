@@ -210,6 +210,20 @@ namespace hex {
 
         }
 
+        if (ImGui::BeginPopupModal("Set base address", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::InputText("Address", this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::NewLine();
+
+            if (ImGui::Button("Set"))
+                provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
+            ImGui::SameLine();
+
+            if (ImGui::Button("Cancel"))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
 
         if (this->m_fileBrowser.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
             this->openFile(this->m_fileBrowser.selected_path);
@@ -987,6 +1001,12 @@ R"(
             Bookmark bookmark = { start, end - start + 1, { }, { } };
 
             View::postEvent(Events::AddBookmark, &bookmark);
+        }
+
+        auto provider = *SharedData::get().currentProvider;
+        if (ImGui::MenuItem("Set base address", nullptr, false, provider != nullptr && provider->isReadable())) {
+            std::memset(this->m_baseAddressBuffer, sizeof(this->m_baseAddressBuffer), 0x00);
+            View::doLater([]{ ImGui::OpenPopup("Set base address"); });
         }
     }
 

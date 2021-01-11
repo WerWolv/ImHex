@@ -580,7 +580,7 @@ struct MemoryEditor
             auto selectionEnd = std::max(DataPreviewAddr, DataPreviewAddrEnd);
 
             size_t regionSize = (selectionEnd - selectionStart) + 1;
-            ImGui::Text(format_selection, s.AddrDigitsCount, selectionStart, s.AddrDigitsCount, selectionEnd, regionSize, regionSize == 1 ? "byte" : "bytes");
+            ImGui::Text(format_selection, s.AddrDigitsCount, base_display_addr + selectionStart, s.AddrDigitsCount, base_display_addr + selectionEnd, regionSize, regionSize == 1 ? "byte" : "bytes");
         }
 
         if (GotoAddr != (size_t)-1)
