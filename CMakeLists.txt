@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(imhex VERSION 1.6.0)
+project(imhex VERSION 1.6.1)
 
 if (WIN32)
     set(EXTRA_MAGICDBS "" CACHE STRING "List of compiled magicdb files separated with a ;")
