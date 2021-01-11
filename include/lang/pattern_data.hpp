@@ -159,9 +159,9 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
             ImGui::TableNextColumn();
@@ -222,13 +222,13 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "%s*", this->m_pointedAt->getFormattedName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("*(0x%llx)", data);
+            ImGui::Text("*(0x%llX)", data);
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
@@ -283,7 +283,7 @@ namespace hex::lang {
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            this->createDefaultEntry(hex::format("%lu (0x%0*lx)", data, this->getSize() * 2, data));
+            this->createDefaultEntry(hex::format("%llu (0x%0*llX)", data, this->getSize() * 2, data));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -314,7 +314,7 @@ namespace hex::lang {
 
             s64 signedData = hex::signExtend(data, this->getSize(), 64);
 
-           this->createDefaultEntry(hex::format("%ld (0x%0*lx)", signedData, this->getSize() * 2, data));
+           this->createDefaultEntry(hex::format("%lld (0x%0*llX)", signedData, this->getSize() * 2, data));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -350,7 +350,7 @@ namespace hex::lang {
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
-                this->createDefaultEntry(hex::format("%e (0x%0*lX)", *reinterpret_cast<double*>(&data), this->getSize() * 2, data));
+                this->createDefaultEntry(hex::format("%e (0x%0*llX)", *reinterpret_cast<double*>(&data), this->getSize() * 2, data));
             }
         }
 
@@ -456,9 +456,9 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_entries[0]->getTypeName().c_str());
             ImGui::SameLine(0, 0);
@@ -526,9 +526,9 @@ namespace hex::lang {
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->getTypeName().c_str());
             ImGui::TableNextColumn();
@@ -606,9 +606,9 @@ namespace hex::lang {
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
 
@@ -713,13 +713,13 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", hex::format("%s (0x%0*lx)", valueString.c_str(), this->getSize() * 2, value).c_str());
+            ImGui::Text("%s", hex::format("%s (0x%0*llX)", valueString.c_str(), this->getSize() * 2, value).c_str());
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -755,9 +755,9 @@ namespace hex::lang {
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llx : 0x%08llx", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llx", this->getSize());
+            ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
@@ -779,7 +779,7 @@ namespace hex::lang {
                     ImGui::TableNextColumn();
                     ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                     ImGui::TableNextColumn();
-                    ImGui::Text("0x%08llx : 0x%08llx", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3));
+                    ImGui::Text("0x%08llX : 0x%08llX", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3));
                     ImGui::TableNextColumn();
                     if (entrySize == 1)
                         ImGui::Text("%llu bit", entrySize);
@@ -791,7 +791,7 @@ namespace hex::lang {
                     {
                         u128 fieldValue = 0;
                         std::memcpy(&fieldValue, value.data() + (bitOffset / 8), (entrySize / 8) + 1);
-                        ImGui::Text("%llx", hex::extract((bitOffset + entrySize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
+                        ImGui::Text("%llX", hex::extract((bitOffset + entrySize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
                     }
                     bitOffset += entrySize;
                 }
