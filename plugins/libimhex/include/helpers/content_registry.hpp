@@ -33,6 +33,10 @@ namespace hex {
             static std::map<std::string, std::vector<Entry>>& getEntries();
             static nlohmann::json& getSettingsData();
         };
+
+        struct Events {
+            static auto get(std::string_view name);
+        };
     };
 
 }

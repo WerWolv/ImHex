@@ -47,4 +47,19 @@ namespace hex {
         return *SharedData::get().settingsJson;
     }
 
+
+    /* Events */
+
+    auto ContentRegistry::Events::get(std::string_view name) {
+        auto &customEvents = *SharedData::get().customEvents;
+        auto &lastId = *SharedData::get().customEventsLastId;
+
+        if (!customEvents.contains(name.data())) {
+            customEvents[name.data()] = static_cast<hex::Events>(lastId);
+            lastId++;
+        }
+
+        return customEvents[name.data()];
+    }
+
 }

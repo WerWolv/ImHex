@@ -1,11 +1,13 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <vector>
 #include <functional>
 
 namespace hex {
 
-    enum class Events {
+    enum class Events : u32 {
         FileLoaded,
         DataChanged,
         PatternChanged,
@@ -21,7 +23,11 @@ namespace hex {
         ProjectFileStore,
         ProjectFileLoad,
 
-        SettingsChanged
+        SettingsChanged,
+
+
+        /* This is not a real event but a flag to show all events after this one are plugin ones */
+        Events_BuiltinEnd
     };
 
     struct EventHandler {

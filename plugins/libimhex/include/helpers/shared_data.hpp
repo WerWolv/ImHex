@@ -3,6 +3,7 @@
 #include <any>
 #include <functional>
 #include <vector>
+#include <map>
 
 #include <helpers/event.hpp>
 #include <helpers/content_registry.hpp>
@@ -55,30 +56,36 @@ namespace hex {
             static std::map<std::string, std::any> sharedVariablesStorage;
             static ImVec2 windowPosStorage, windowSizeStorage;
             static nlohmann::json settingsJsonStorage;
+            static std::map<std::string, Events> customEventsStorage;
+            static u32 customEventsLastIdStorage = u32(Events::Events_BuiltinEnd) + 1;
 
-            this->imguiContext      = ImGui::GetCurrentContext();
-            this->eventHandlers     = &eventHandlersStorage;
-            this->deferredCalls     = &deferredCallsStorage;
-            this->currentProvider   = &currentProviderStorage;
-            this->settingsEntries   = &settingsEntriesStorage;
-            this->sharedVariables   = &sharedVariablesStorage;
-            this->settingsJson      = &settingsJsonStorage;
+            this->imguiContext          = ImGui::GetCurrentContext();
+            this->eventHandlers         = &eventHandlersStorage;
+            this->deferredCalls         = &deferredCallsStorage;
+            this->currentProvider       = &currentProviderStorage;
+            this->settingsEntries       = &settingsEntriesStorage;
+            this->sharedVariables       = &sharedVariablesStorage;
+            this->settingsJson          = &settingsJsonStorage;
+            this->customEvents          = &customEventsStorage;
+            this->customEventsLastId    = &customEventsLastIdStorage;
 
-            this->windowPos         = &windowPosStorage;
-            this->windowSize        = &windowSizeStorage;
+            this->windowPos             = &windowPosStorage;
+            this->windowSize            = &windowSizeStorage;
         }
 
         void initializeData(const SharedData &other) {
-            this->imguiContext      = other.imguiContext;
-            this->eventHandlers     = other.eventHandlers;
-            this->deferredCalls     = other.deferredCalls;
-            this->currentProvider   = other.currentProvider;
-            this->settingsEntries   = other.settingsEntries;
-            this->sharedVariables   = other.sharedVariables;
-            this->settingsJson      = other.settingsJson;
+            this->imguiContext          = other.imguiContext;
+            this->eventHandlers         = other.eventHandlers;
+            this->deferredCalls         = other.deferredCalls;
+            this->currentProvider       = other.currentProvider;
+            this->settingsEntries       = other.settingsEntries;
+            this->sharedVariables       = other.sharedVariables;
+            this->settingsJson          = other.settingsJson;
+            this->customEvents          = other.customEvents;
+            this->customEventsLastId    = other.customEventsLastId;
 
-            this->windowPos         = other.windowPos;
-            this->windowSize        = other.windowSize;
+            this->windowPos             = other.windowPos;
+            this->windowSize            = other.windowSize;
         }
 
     public:
@@ -88,6 +95,8 @@ namespace hex {
         prv::Provider **currentProvider;
         std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> *settingsEntries;
         nlohmann::json *settingsJson;
+        std::map<std::string, Events> *customEvents;
+        u32 *customEventsLastId;
 
         ImVec2 *windowPos;
         ImVec2 *windowSize;
