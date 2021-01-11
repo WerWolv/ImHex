@@ -15,6 +15,7 @@
 #include "views/view_bookmarks.hpp"
 #include "views/view_patches.hpp"
 #include "views/view_command_palette.hpp"
+#include "views/view_settings.hpp"
 
 #include "providers/provider.hpp"
 
@@ -46,6 +47,7 @@ int main(int argc, char **argv) {
     window.addView<hex::ViewTools>();
     window.addView<hex::ViewCommandPalette>();
     window.addView<hex::ViewHelp>();
+    window.addView<hex::ViewSettings>();
 
     if (argc > 1)
         hex::View::postEvent(hex::Events::FileDropped, argv[1]);

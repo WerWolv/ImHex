@@ -19,7 +19,9 @@ namespace hex {
         AppendPatternLanguageCode,
 
         ProjectFileStore,
-        ProjectFileLoad
+        ProjectFileLoad,
+
+        SettingsChanged
     };
 
     struct EventHandler {

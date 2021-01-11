@@ -12,6 +12,7 @@
 #include "imgui_freetype.h"
 
 #include "helpers/plugin_handler.hpp"
+#include "helpers/content_registry.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -49,6 +50,8 @@ namespace hex {
 
     Window::Window() {
         SharedData::get().initializeData();
+        ContentRegistry::Settings::load();
+        View::postEvent(Events::SettingsChanged, nullptr);
 
         this->initGLFW();
         this->initImGui();
@@ -59,6 +62,7 @@ namespace hex {
         this->deinitImGui();
         this->deinitGLFW();
         this->deinitPlugins();
+        ContentRegistry::Settings::store();
 
         for (auto &view : this->m_views)
             delete view;

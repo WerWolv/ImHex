@@ -12,6 +12,7 @@ endif()
 add_library(libimhex STATIC
         source/helpers/event.cpp
         source/helpers/utils.cpp
+        source/helpers/content_registry.cpp
 
         source/providers/provider.cpp
 

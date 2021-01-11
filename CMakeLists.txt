@@ -176,6 +176,7 @@ add_executable(imhex ${application_type}
         source/views/view_bookmarks.cpp
         source/views/view_patches.cpp
         source/views/view_command_palette.cpp
+        source/views/view_settings.cpp
 
         ${imhex_icon}
         )
