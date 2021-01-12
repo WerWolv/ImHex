@@ -3,7 +3,9 @@ project(example)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libimhex ${CMAKE_CURRENT_BINARY_DIR}/plugins/libimhex)
+if (NOT TARGET libimhex)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libimhex ${CMAKE_CURRENT_BINARY_DIR}/plugins/libimhex)
+endif()
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "plugin")
 

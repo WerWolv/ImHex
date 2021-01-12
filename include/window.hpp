@@ -14,17 +14,10 @@ namespace hex {
 
     class Window {
     public:
-        Window();
+        Window(int &argc, char **&argv);
         ~Window();
 
         void loop();
-
-        template<derived_from<View> T, typename ... Args>
-        T* addView(Args&& ... args) {
-            this->m_views.emplace_back(new T(std::forward<Args>(args)...));
-
-            return static_cast<T*>(this->m_views.back());
-        }
 
         friend void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *);
         friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
@@ -33,20 +26,18 @@ namespace hex {
 
         bool setFont(const std::filesystem::path &font_path);
 
+        void initPlugins();
+        void deinitPlugins();
     private:
         void frameBegin();
         void frameEnd();
 
         void initGLFW();
         void initImGui();
-        void initPlugins();
         void deinitGLFW();
         void deinitImGui();
-        void deinitPlugins();
 
         GLFWwindow* m_window;
-        std::vector<View*> m_views;
-        std::vector<View*> m_pluginViews;
 
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;

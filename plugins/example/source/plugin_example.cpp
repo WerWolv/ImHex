@@ -15,17 +15,9 @@ public:
     }
 };
 
-IMHEX_PLUGIN {
+IMHEX_PLUGIN_SETUP {
 
-    View* createView() {
-        return new ViewExample();
-    }
-
-    void drawToolsEntry() {
-        if (ImGui::CollapsingHeader("Example Tool")) {
-            ImGui::Text("Custom Plugin tool");
-        }
-    }
+    ContentRegistry::Views::add<ViewExample>();
 
 }
 

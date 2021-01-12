@@ -313,8 +313,8 @@ namespace hex {
             this->drawMathEvaluator();
             this->drawColorPicker();
 
-            for (const auto& plugin : PluginHandler::getPlugins())
-                plugin.drawToolsEntry();
+            for (const auto& entries : ContentRegistry::Tools::getEntries())
+                entries();
 
         }
         ImGui::End();

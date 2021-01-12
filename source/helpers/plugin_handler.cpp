@@ -5,12 +5,8 @@
 
 namespace hex {
 
-    // hex::plugin::createView(void)
-    constexpr auto CreateViewSymbol         = "_ZN3hex6plugin10createViewEv";
-    // hex::plugin::drawToolsEntry(void)
-    constexpr auto DrawToolsEntrySymbol     = "_ZN3hex6plugin14drawToolsEntryEv";
     // hex::plugin::internal::initializePlugin(SharedData&)
-    constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin8internal16initializePluginER10SharedData";
+    constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin8internal16initializePluginERNS_10SharedDataE";
 
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
@@ -18,8 +14,6 @@ namespace hex {
         if (this->m_handle == nullptr)
             return;
 
-        this->m_createViewFunction = reinterpret_cast<CreateViewFunc>(dlsym(this->m_handle, CreateViewSymbol));
-        this->m_drawToolsEntryFunction = reinterpret_cast<DrawToolsEntryFunc>(dlsym(this->m_handle, DrawToolsEntrySymbol));
         this->m_initializePluginFunction = reinterpret_cast<InitializePluginFunc>(dlsym(this->m_handle, InitializePluginSymbol));
     }
 
@@ -33,19 +27,6 @@ namespace hex {
             this->m_initializePluginFunction(sharedData);
     }
 
-    View* Plugin::createView() const {
-        if (this->m_createViewFunction != nullptr)
-            return this->m_createViewFunction();
-
-        return nullptr;
-    }
-
-    void Plugin::drawToolsEntry() const {
-        if (this->m_drawToolsEntryFunction != nullptr)
-            this->m_drawToolsEntryFunction();
-    }
-
-
     void PluginHandler::load(std::string_view pluginFolder) {
         PluginHandler::unload();
 
@@ -54,8 +35,10 @@ namespace hex {
 
         PluginHandler::s_pluginFolder = pluginFolder;
 
-        for (auto& pluginPath : std::filesystem::directory_iterator(pluginFolder))
-            PluginHandler::s_plugins.emplace_back(pluginPath.path().string());
+        for (auto& pluginPath : std::filesystem::directory_iterator(pluginFolder)) {
+            if (pluginPath.is_regular_file())
+                PluginHandler::s_plugins.emplace_back(pluginPath.path().string());
+        }
     }
 
     void PluginHandler::unload() {

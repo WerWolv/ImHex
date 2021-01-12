@@ -26,46 +26,45 @@ namespace hex {
     }
 
     void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
-        auto *window = reinterpret_cast<Window *>(handler->UserData);
-
-        for (auto &view : window->m_views) {
+        for (auto &view : ContentRegistry::Views::getEntries()) {
             std::string format = view->getName() + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
     }
 
     void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
-        auto *window = reinterpret_cast<Window *>(handler->UserData);
-
         buf->reserve(buf->size() + 0x20); // Ballpark reserve
 
         buf->appendf("[%s][General]\n", handler->TypeName);
 
-        for (auto &view : window->m_views) {
+        for (auto &view : ContentRegistry::Views::getEntries()) {
             buf->appendf("%s=%d\n", view->getName().c_str(), view->getWindowOpenState());
         }
 
         buf->append("\n");
     }
 
-    Window::Window() {
+    Window::Window(int &argc, char **&argv) {
         SharedData::get().initializeData();
+
+        hex::SharedData::get().mainArgc = &argc;
+        hex::SharedData::get().mainArgv = &argv;
+
         ContentRegistry::Settings::load();
         View::postEvent(Events::SettingsChanged, nullptr);
 
         this->initGLFW();
         this->initImGui();
-        this->initPlugins();
     }
 
     Window::~Window() {
         this->deinitImGui();
         this->deinitGLFW();
-        this->deinitPlugins();
         ContentRegistry::Settings::store();
 
-        for (auto &view : this->m_views)
+        for (auto &view : ContentRegistry::Views::getEntries())
             delete view;
+        ContentRegistry::Views::getEntries().clear();
     }
 
     void Window::loop() {
@@ -76,15 +75,7 @@ namespace hex {
                 call();
             View::getDeferedCalls().clear();
 
-            for (auto &view : this->m_views) {
-                if (!view->getWindowOpenState())
-                    continue;
-
-                ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
-                view->drawContent();
-            }
-
-            for (auto &view : this->m_pluginViews) {
+            for (auto &view : ContentRegistry::Views::getEntries()) {
                 if (!view->getWindowOpenState())
                     continue;
 
@@ -160,30 +151,14 @@ namespace hex {
                     if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
 
                 if (ImGui::BeginMenu("View")) {
-                    for (auto &view : this->m_views) {
+                    for (auto &view : ContentRegistry::Views::getEntries()) {
                         if (view->hasViewMenuItemEntry())
                             ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
                     }
-
-                    if (!this->m_pluginViews.empty()) {
-                        if (ImGui::BeginMenu("Plugin Views")) {
-                            for (auto &view : this->m_pluginViews) {
-                                if (view->hasViewMenuItemEntry())
-                                    ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
-                            }
-
-                            ImGui::EndMenu();
-                        }
-                    }
-
                     ImGui::EndMenu();
                 }
 
-                for (auto &view : this->m_views) {
-                    view->drawMenu();
-                }
-
-                for (auto &view : this->m_pluginViews) {
+                for (auto &view : ContentRegistry::Views::getEntries()) {
                     view->drawMenu();
                 }
 
@@ -208,22 +183,10 @@ namespace hex {
             }
 
             if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
-                bool shortcutHandled = false;
-                for (auto &view : this->m_pluginViews) {
+                for (auto &view : ContentRegistry::Views::getEntries()) {
                     if (view->getWindowOpenState()) {
-                        if (view->handleShortcut(key, mods)) {
-                            shortcutHandled = true;
+                        if (view->handleShortcut(key, mods))
                             break;
-                        }
-                    }
-                }
-
-                if (!shortcutHandled) {
-                    for (auto &view : this->m_views) {
-                        if (view->getWindowOpenState()) {
-                            if (view->handleShortcut(key, mods))
-                                break;
-                        }
                     }
                 }
 
@@ -232,7 +195,6 @@ namespace hex {
 
         }
         ImGui::End();
-
     }
 
     void Window::frameEnd() {
@@ -343,7 +305,7 @@ namespace hex {
             style.ScaleAllSizes(this->m_globalScale);
 
 #ifdef __MINGW32__
-        std::filesystem::path resourcePath = std::filesystem::path(mainArgv[0]).parent_path();
+        std::filesystem::path resourcePath = std::filesystem::path((*SharedData::get().mainArgv)[0]).parent_path();
 #elif defined(__linux__)
         std::filesystem::path resourcePath = "/usr/share/ImHex";
 #else
@@ -382,15 +344,15 @@ namespace hex {
     }
 
     void Window::initPlugins() {
+        (*SharedData::get().imguiContext) = ImGui::GetCurrentContext();
+
         try {
-            auto pluginFolderPath = std::filesystem::path(mainArgv[0]).parent_path() / "plugins";
+            auto pluginFolderPath = std::filesystem::path((*SharedData::get().mainArgv)[0]).parent_path() / "plugins";
             PluginHandler::load(pluginFolderPath.string());
         } catch (std::runtime_error &e) { return; }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
             plugin.initializePlugin(SharedData::get());
-            if (auto view = plugin.createView(); view != nullptr)
-                this->m_pluginViews.push_back(view);
         }
     }
 
@@ -407,9 +369,6 @@ namespace hex {
 
     void Window::deinitPlugins() {
         PluginHandler::unload();
-
-        for (auto &view : this->m_pluginViews)
-            delete view;
     }
 
 }

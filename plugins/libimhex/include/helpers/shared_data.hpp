@@ -5,8 +5,9 @@
 #include <vector>
 #include <map>
 
-#include <helpers/event.hpp>
 #include <helpers/content_registry.hpp>
+#include <helpers/event.hpp>
+#include <views/view.hpp>
 
 #include <imgui.h>
 #include <nlohmann/json.hpp>
@@ -49,6 +50,9 @@ namespace hex {
     private:
 
         void initializeData() {
+            static int mainArgcStorage;
+            static char **mainArgvStorage;
+            static ImGuiContext *imGuiContextStorage;
             static std::vector<EventHandler> eventHandlersStorage;
             static std::vector<std::function<void()>> deferredCallsStorage;
             static prv::Provider *currentProviderStorage;
@@ -60,8 +64,10 @@ namespace hex {
             static u32 customEventsLastIdStorage = u32(Events::Events_BuiltinEnd) + 1;
             static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommandsStorage;
             static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctionsStorage;
+            static std::vector<View*> viewsStorage;
+            static std::vector<std::function<void()>> toolsStorage;
 
-            this->imguiContext              = ImGui::GetCurrentContext();
+            this->imguiContext              = &imGuiContextStorage;
             this->eventHandlers             = &eventHandlersStorage;
             this->deferredCalls             = &deferredCallsStorage;
             this->currentProvider           = &currentProviderStorage;
@@ -74,6 +80,10 @@ namespace hex {
             this->customEventsLastId        = &customEventsLastIdStorage;
             this->commandPaletteCommands    = &commandPaletteCommandsStorage;
             this->patternLanguageFunctions  = &patternLanguageFunctionsStorage;
+            this->views                     = &viewsStorage;
+            this->tools                     = &toolsStorage;
+            this->mainArgc                  = &mainArgcStorage;
+            this->mainArgv                  = &mainArgvStorage;
         }
 
         void initializeData(const SharedData &other) {
@@ -90,10 +100,14 @@ namespace hex {
             this->customEventsLastId        = other.customEventsLastId;
             this->commandPaletteCommands    = other.commandPaletteCommands;
             this->patternLanguageFunctions  = other.patternLanguageFunctions;
+            this->views                     = other.views;
+            this->tools                     = other.tools;
+            this->mainArgc                  = other.mainArgc;
+            this->mainArgv                  = other.mainArgv;
         }
 
     public:
-        ImGuiContext *imguiContext;
+        ImGuiContext **imguiContext;
         std::vector<EventHandler> *eventHandlers;
         std::vector<std::function<void()>> *deferredCalls;
         prv::Provider **currentProvider;
@@ -103,6 +117,11 @@ namespace hex {
         u32 *customEventsLastId;
         std::vector<ContentRegistry::CommandPaletteCommands::Entry> *commandPaletteCommands;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> *patternLanguageFunctions;
+        std::vector<View*> *views;
+        std::vector<std::function<void()>> *tools;
+
+        int *mainArgc;
+        char ***mainArgv;
 
         ImVec2 *windowPos;
         ImVec2 *windowSize;

@@ -39,7 +39,11 @@ find_package(OpenGL REQUIRED)
 find_package(Python COMPONENTS Development)
 
 add_subdirectory(external/llvm)
+
+# Plugins
 add_subdirectory(plugins/libimhex)
+
+add_subdirectory(plugins/example)
 
 
 if(Python_VERSION LESS 3)

@@ -1,6 +1,9 @@
 #include "helpers/utils.hpp"
 #include "window.hpp"
 
+#include <helpers/content_registry.hpp>
+#include <providers/provider.hpp>
+
 #include "lang/pattern_data.hpp"
 #include "views/view_hexeditor.hpp"
 #include "views/view_pattern.hpp"
@@ -17,42 +20,39 @@
 #include "views/view_command_palette.hpp"
 #include "views/view_settings.hpp"
 
-#include "providers/provider.hpp"
 
 #include <vector>
 
-int mainArgc;
-char **mainArgv;
-
 int main(int argc, char **argv) {
-    mainArgc = argc;
-    mainArgv = argv;
-
-    hex::Window window;
+    hex::Window window(argc, argv);
 
     // Shared Data
     std::vector<hex::lang::PatternData*> patternData;
 
     // Create views
-    window.addView<hex::ViewHexEditor>(patternData);
-    window.addView<hex::ViewPattern>(patternData);
-    window.addView<hex::ViewPatternData>(patternData);
-    window.addView<hex::ViewDataInspector>();
-    window.addView<hex::ViewHashes>();
-    window.addView<hex::ViewInformation>();
-    window.addView<hex::ViewStrings>();
-    window.addView<hex::ViewDisassembler>();
-    window.addView<hex::ViewBookmarks>();
-    window.addView<hex::ViewPatches>();
-    window.addView<hex::ViewTools>();
-    window.addView<hex::ViewCommandPalette>();
-    window.addView<hex::ViewHelp>();
-    window.addView<hex::ViewSettings>();
+    hex::ContentRegistry::Views::add<hex::ViewHexEditor>(patternData);
+    hex::ContentRegistry::Views::add<hex::ViewPattern>(patternData);
+    hex::ContentRegistry::Views::add<hex::ViewPatternData>(patternData);
+    hex::ContentRegistry::Views::add<hex::ViewDataInspector>();
+    hex::ContentRegistry::Views::add<hex::ViewHashes>();
+    hex::ContentRegistry::Views::add<hex::ViewInformation>();
+    hex::ContentRegistry::Views::add<hex::ViewStrings>();
+    hex::ContentRegistry::Views::add<hex::ViewDisassembler>();
+    hex::ContentRegistry::Views::add<hex::ViewBookmarks>();
+    hex::ContentRegistry::Views::add<hex::ViewPatches>();
+    hex::ContentRegistry::Views::add<hex::ViewTools>();
+    hex::ContentRegistry::Views::add<hex::ViewCommandPalette>();
+    hex::ContentRegistry::Views::add<hex::ViewHelp>();
+    hex::ContentRegistry::Views::add<hex::ViewSettings>();
 
     if (argc > 1)
         hex::View::postEvent(hex::Events::FileDropped, argv[1]);
 
+    window.initPlugins();
+
     window.loop();
 
-    return 0;
+    window.deinitPlugins();
+
+    return EXIT_SUCCESS;
 }

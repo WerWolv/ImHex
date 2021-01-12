@@ -15,20 +15,13 @@ namespace hex {
         ~Plugin();
 
         void initializePlugin(SharedData &sharedData) const;
-        View* createView() const;
-        void drawToolsEntry() const;
 
     private:
         using InitializePluginFunc = void(*)(SharedData &sharedData);
-        using CreateViewFunc = View*(*)();
-        using DrawToolsEntryFunc = void(*)();
 
         void *m_handle = nullptr;
 
         InitializePluginFunc m_initializePluginFunction = nullptr;
-        CreateViewFunc m_createViewFunction = nullptr;
-        DrawToolsEntryFunc m_drawToolsEntryFunction = nullptr;
-
     };
 
     class PluginHandler {

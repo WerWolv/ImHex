@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 
+#include <concepts>
 #include <functional>
 #include <map>
 #include <string>
@@ -12,12 +13,19 @@
 
 namespace hex {
 
+    class View;
     namespace lang { class ASTNode; }
 
+    /*
+        The Content Registry is the heart of all features in ImHex that are in some way extendable by Plugins.
+        It allows you to add/register new content that will be picked up and used by the ImHex core or by other
+        plugins when needed.
+    */
     class ContentRegistry {
     public:
         ContentRegistry() = delete;
 
+        /* Settings Registry. Allows adding of new entries into the ImHex preferences window. */
         struct Settings {
             Settings() = delete;
 
@@ -36,12 +44,14 @@ namespace hex {
             static nlohmann::json& getSettingsData();
         };
 
+        /* Events Registry. Allows to define new events that can be used by other plugins later on subscribe to */
         struct Events {
             Events() = delete;
 
             static auto get(std::string_view name);
         };
 
+        /* Command Palette Command Registry. Allows adding of new commands to the command palette */
         struct CommandPaletteCommands {
             CommandPaletteCommands() = delete;
 
@@ -58,9 +68,10 @@ namespace hex {
             };
 
             static void add(Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &callback);
-            static std::vector<Entry> getEntries();
+            static std::vector<Entry>& getEntries();
         };
 
+        /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         struct PatternLanguageFunctions {
             PatternLanguageFunctions() = delete;
 
@@ -75,7 +86,31 @@ namespace hex {
             };
 
             static void add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(std::vector<hex::lang::ASTNode*>)> &func);
-            static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> getEntries();
+            static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
+        };
+
+        /* View Registry. Allows adding of new windows */
+        struct Views {
+            Views() = delete;
+
+            template<std::derived_from<View> T, typename ... Args>
+            static T* add(Args&& ... args) {
+                return static_cast<T*>(add(new T(std::forward<Args>(args)...)));
+            }
+
+            static std::vector<View*>& getEntries();
+
+        private:
+            static View* add(View *view);
+
+
+        };
+
+        /* Tools Registry. Allows adding new entries to the tools window */
+        struct Tools {
+            static void add(const std::function<void()> &function);
+
+            static std::vector<std::function<void()>>& getEntries();
         };
     };
 

@@ -15,9 +15,6 @@ using s32   = std::int32_t;
 using s64   = std::int64_t;
 using s128  = __int128_t;
 
-extern int mainArgc;
-extern char **mainArgv;
-
 #ifdef OS_WINDOWS
 #define MAGIC_PATH_SEPARATOR	";"
 #else
