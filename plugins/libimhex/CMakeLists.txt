@@ -8,13 +8,16 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAK
 
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc")
 endif()
 
-add_library(libimhex STATIC
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+add_library(libimhex SHARED
         source/helpers/event.cpp
         source/helpers/utils.cpp
         source/helpers/content_registry.cpp
+        source/helpers/shared_data.cpp
 
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp

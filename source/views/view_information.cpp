@@ -49,7 +49,7 @@ namespace hex {
         if (ImGui::Begin("Data Information", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
-            auto provider = *SharedData::get().currentProvider;
+            auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isReadable()) {
                 if (this->m_shouldInvalidate) {
@@ -135,7 +135,7 @@ namespace hex {
 
                 if (this->m_dataValid) {
 
-                    for (auto &[name, value] : (*SharedData::get().currentProvider)->getDataInformation()) {
+                    for (auto &[name, value] : (SharedData::currentProvider)->getDataInformation()) {
                         ImGui::LabelText(name.c_str(), "%s", value.c_str());
                     }
 

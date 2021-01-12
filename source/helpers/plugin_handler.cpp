@@ -5,8 +5,8 @@
 
 namespace hex {
 
-    // hex::plugin::internal::initializePlugin(SharedData&)
-    constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin8internal16initializePluginERNS_10SharedDataE";
+    // hex::plugin::internal::initializePlugin()
+    constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin8internal16initializePluginEv";
 
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
@@ -22,9 +22,9 @@ namespace hex {
             dlclose(this->m_handle);
     }
 
-    void Plugin::initializePlugin(SharedData &sharedData) const {
+    void Plugin::initializePlugin() const {
         if (this->m_initializePluginFunction != nullptr)
-            this->m_initializePluginFunction(sharedData);
+            this->m_initializePluginFunction();
     }
 
     void PluginHandler::load(std::string_view pluginFolder) {

@@ -14,10 +14,10 @@ namespace hex {
         Plugin(std::string_view path);
         ~Plugin();
 
-        void initializePlugin(SharedData &sharedData) const;
+        void initializePlugin() const;
 
     private:
-        using InitializePluginFunc = void(*)(SharedData &sharedData);
+        using InitializePluginFunc = void(*)();
 
         void *m_handle = nullptr;
 

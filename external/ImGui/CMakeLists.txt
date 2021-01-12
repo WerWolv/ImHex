@@ -8,6 +8,8 @@ find_package(Freetype REQUIRED)
 pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(GLFW REQUIRED glfw3)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
 add_library(imgui
     source/imgui.cpp
     source/imgui_demo.cpp

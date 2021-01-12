@@ -182,10 +182,15 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle imgui libimhex ${Python_LIBRARIES})
+    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle libimhex ${Python_LIBRARIES})
 elseif (UNIX)
-    target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle imgui libimhex ${Python_LIBRARIES} dl)
+    target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl)
 endif()
+
+add_custom_command(TARGET imhex POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:libimhex>
+        $<TARGET_FILE_DIR:imhex>)
 
 if (WIN32)
     # Install binaries directly in the prefix, usually C:\Program Files\ImHex.

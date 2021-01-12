@@ -17,7 +17,7 @@ namespace hex {
     bool View::handleShortcut(int key, int mods) { return false; }
 
     std::vector<std::function<void()>>& View::getDeferedCalls() {
-        return *SharedData::get().deferredCalls;
+        return SharedData::deferredCalls;
     }
 
     void View::postEvent(Events eventType, const void *userData) {
@@ -76,7 +76,7 @@ namespace hex {
     }
 
     void View::doLater(std::function<void()> &&function) {
-        SharedData::get().deferredCalls->push_back(function);
+        SharedData::deferredCalls.push_back(function);
     }
 
     void View::confirmButtons(const char *textLeft, const char *textRight, std::function<void()> leftButtonFn, std::function<void()> rightButtonFn) {

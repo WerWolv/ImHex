@@ -45,10 +45,8 @@ namespace hex {
     }
 
     Window::Window(int &argc, char **&argv) {
-        SharedData::get().initializeData();
-
-        hex::SharedData::get().mainArgc = &argc;
-        hex::SharedData::get().mainArgv = &argv;
+        hex::SharedData::mainArgc = argc;
+        hex::SharedData::mainArgv = argv;
 
         ContentRegistry::Settings::load();
         View::postEvent(Events::SettingsChanged, nullptr);
@@ -254,21 +252,21 @@ namespace hex {
          {
              int x = 0, y = 0;
              glfwGetWindowPos(this->m_window, &x, &y);
-             *SharedData::get().windowPos = ImVec2(x, y);
+             SharedData::windowPos = ImVec2(x, y);
          }
 
          {
              int width = 0, height = 0;
              glfwGetWindowSize(this->m_window, &width, &height);
-             *SharedData::get().windowSize = ImVec2(width, height);
+             SharedData::windowSize = ImVec2(width, height);
          }
 
          glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
-             *SharedData::get().windowPos = ImVec2(x, y);
+             SharedData::windowPos = ImVec2(x, y);
          });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
-            *SharedData::get().windowSize = ImVec2(width, height);
+            SharedData::windowSize = ImVec2(width, height);
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -297,6 +295,8 @@ namespace hex {
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
         auto *ctx = ImGui::CreateContext();
+        GImGui = ctx;
+
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
 
@@ -307,7 +307,7 @@ namespace hex {
             style.ScaleAllSizes(this->m_globalScale);
 
 #ifdef __MINGW32__
-        std::filesystem::path resourcePath = std::filesystem::path((*SharedData::get().mainArgv)[0]).parent_path();
+        std::filesystem::path resourcePath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path();
 #elif defined(__linux__)
         std::filesystem::path resourcePath = "/usr/share/ImHex";
 #else
@@ -346,15 +346,13 @@ namespace hex {
     }
 
     void Window::initPlugins() {
-        (*SharedData::get().imguiContext) = ImGui::GetCurrentContext();
-
         try {
-            auto pluginFolderPath = std::filesystem::path((*SharedData::get().mainArgv)[0]).parent_path() / "plugins";
+            auto pluginFolderPath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "plugins";
             PluginHandler::load(pluginFolderPath.string());
         } catch (std::runtime_error &e) { return; }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
-            plugin.initializePlugin(SharedData::get());
+            plugin.initializePlugin();
         }
     }
 

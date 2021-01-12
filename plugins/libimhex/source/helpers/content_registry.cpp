@@ -10,14 +10,14 @@ namespace hex {
     /* Settings */
 
     void ContentRegistry::Settings::load() {
-        std::ifstream settingsFile(std::filesystem::path((*SharedData::get().mainArgv)[0]).parent_path() / "settings.json");
+        std::ifstream settingsFile(std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "settings.json");
 
         if (settingsFile.good())
             settingsFile >> getSettingsData();
     }
 
     void ContentRegistry::Settings::store() {
-        std::ofstream settingsFile(std::filesystem::path((*SharedData::get().mainArgv)[0]).parent_path() / "settings.json", std::ios::trunc);
+        std::ofstream settingsFile(std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "settings.json", std::ios::trunc);
         settingsFile << getSettingsData();
     }
 
@@ -40,19 +40,19 @@ namespace hex {
     }
 
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>>& ContentRegistry::Settings::getEntries() {
-        return *SharedData::get().settingsEntries;
+        return SharedData::settingsEntries;
     }
 
     nlohmann::json& ContentRegistry::Settings::getSettingsData() {
-        return *SharedData::get().settingsJson;
+        return SharedData::settingsJson;
     }
 
 
     /* Events */
 
     auto ContentRegistry::Events::get(std::string_view name) {
-        auto &customEvents = *SharedData::get().customEvents;
-        auto &lastId = *SharedData::get().customEventsLastId;
+        auto &customEvents = SharedData::customEvents;
+        auto &lastId = SharedData::customEventsLastId;
 
         if (!customEvents.contains(name.data())) {
             customEvents[name.data()] = static_cast<hex::Events>(lastId);
@@ -70,7 +70,7 @@ namespace hex {
     }
 
     std::vector<ContentRegistry::CommandPaletteCommands::Entry>& ContentRegistry::CommandPaletteCommands::getEntries() {
-        return *SharedData::get().commandPaletteCommands;
+        return SharedData::commandPaletteCommands;
     }
 
 
@@ -81,7 +81,7 @@ namespace hex {
     }
 
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& ContentRegistry::PatternLanguageFunctions::getEntries() {
-        return *SharedData::get().patternLanguageFunctions;
+        return SharedData::patternLanguageFunctions;
     }
 
 
@@ -96,7 +96,7 @@ namespace hex {
     }
 
     std::vector<View*>& ContentRegistry::Views::getEntries() {
-        return *SharedData::get().views;
+        return SharedData::views;
     }
 
 
@@ -107,7 +107,7 @@ namespace hex {
     }
 
     std::vector<std::function<void()>>& ContentRegistry::Tools::getEntries() {
-        return *SharedData::get().tools;
+        return SharedData::tools;
     }
 
 }

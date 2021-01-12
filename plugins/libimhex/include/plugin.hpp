@@ -11,13 +11,8 @@
 
 #define IMHEX_PLUGIN_SETUP      namespace hex::plugin { void setup(); }                             \
                                 namespace hex::plugin::internal {                                   \
-                                    void initializePlugin(SharedData &sharedData) {                 \
-                                        if (glGetString == NULL)                                    \
-                                            gladLoadGL();                                           \
-                                        SharedData::get().initializeData(sharedData);               \
-                                        ImGui::SetCurrentContext(*sharedData.imguiContext);         \
+                                    void initializePlugin() {                                       \
                                         hex::plugin::setup();                                       \
-                                                                                                    \
                                     }                                                               \
                                 }                                                                   \
                                 void hex::plugin::setup()

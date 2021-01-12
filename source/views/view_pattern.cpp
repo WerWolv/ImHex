@@ -112,7 +112,7 @@ namespace hex {
             if (error)
                 return;
 
-            auto provider = *SharedData::get().currentProvider;
+            auto provider = SharedData::currentProvider;
 
             if (provider == nullptr)
                 return;
@@ -224,7 +224,7 @@ namespace hex {
 
     void ViewPattern::drawContent() {
         if (ImGui::Begin("Pattern", &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
-            auto provider = *SharedData::get().currentProvider;
+            auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
@@ -378,7 +378,7 @@ namespace hex {
             return;
         }
 
-        auto provider = *SharedData::get().currentProvider;
+        auto provider = SharedData::currentProvider;
         hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
 
         auto patternData = evaluator.evaluate(ast.value());

@@ -47,7 +47,7 @@ namespace hex {
 
 
     void ViewStrings::drawContent() {
-        auto provider = *SharedData::get().currentProvider;
+        auto provider = SharedData::currentProvider;
 
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
