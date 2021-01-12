@@ -49,10 +49,8 @@ int main(int argc, char **argv) {
         hex::View::postEvent(hex::Events::FileDropped, argv[1]);
 
     window.initPlugins();
-
     window.loop();
 
-    window.deinitPlugins();
 
     return EXIT_SUCCESS;
 }

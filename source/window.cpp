@@ -65,6 +65,8 @@ namespace hex {
         for (auto &view : ContentRegistry::Views::getEntries())
             delete view;
         ContentRegistry::Views::getEntries().clear();
+
+        this->deinitPlugins();
     }
 
     void Window::loop() {
