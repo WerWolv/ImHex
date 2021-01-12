@@ -50,31 +50,34 @@ namespace hex {
                 this->m_cachedData.emplace_back("Binary (8 bit)", binary, sizeof(u8));
             }
 
-            std::string unsignedFormat, signedFormat;
+            std::string unsignedFormat, shortSignedFormat, signedFormat;
 
             switch (this->m_numberDisplayStyle) {
                 case NumberDisplayStyle::Decimal:
                     unsignedFormat = "%llu";
+                    shortSignedFormat = "%d";
                     signedFormat = "%lld";
                     break;
                 case NumberDisplayStyle::Hexadecimal:
                     unsignedFormat = "0x%llX";
+                    shortSignedFormat = "0x%llX";
                     signedFormat = "0x%llX";
                     break;
                 case NumberDisplayStyle::Octal:
                     unsignedFormat = "0o%llo";
+                    shortSignedFormat = "0x%llo";
                     signedFormat = "0o%llo";
                     break;
             }
 
-            this->m_cachedData.emplace_back("uint8_t",  hex::format(unsignedFormat.c_str(), hex::changeEndianess(this->m_previewData.unsigned8,  this->m_endian)), sizeof(u8));
-            this->m_cachedData.emplace_back("int8_t",   hex::format(signedFormat.c_str(),   hex::changeEndianess(this->m_previewData.signed8,    this->m_endian)), sizeof(s8));
-            this->m_cachedData.emplace_back("uint16_t", hex::format(unsignedFormat.c_str(), hex::changeEndianess(this->m_previewData.unsigned16, this->m_endian)), sizeof(u16));
-            this->m_cachedData.emplace_back("int16_t",  hex::format(signedFormat.c_str(),   hex::changeEndianess(this->m_previewData.signed16,   this->m_endian)), sizeof(s16));
-            this->m_cachedData.emplace_back("uint32_t", hex::format(unsignedFormat.c_str(), hex::changeEndianess(this->m_previewData.unsigned32, this->m_endian)), sizeof(u32));
-            this->m_cachedData.emplace_back("int32_t",  hex::format(signedFormat.c_str(),   hex::changeEndianess(this->m_previewData.signed32,   this->m_endian)), sizeof(s32));
-            this->m_cachedData.emplace_back("uint64_t", hex::format(unsignedFormat.c_str(), hex::changeEndianess(this->m_previewData.unsigned64, this->m_endian)), sizeof(u64));
-            this->m_cachedData.emplace_back("int64_t",  hex::format(signedFormat.c_str(),   hex::changeEndianess(this->m_previewData.signed64,   this->m_endian)), sizeof(s64));
+            this->m_cachedData.emplace_back("uint8_t",  hex::format(unsignedFormat.c_str(),     hex::changeEndianess(this->m_previewData.unsigned8,  this->m_endian)), sizeof(u8));
+            this->m_cachedData.emplace_back("int8_t",   hex::format(shortSignedFormat.c_str(),  hex::changeEndianess(this->m_previewData.signed8,    this->m_endian)), sizeof(s8));
+            this->m_cachedData.emplace_back("uint16_t", hex::format(unsignedFormat.c_str(),     hex::changeEndianess(this->m_previewData.unsigned16, this->m_endian)), sizeof(u16));
+            this->m_cachedData.emplace_back("int16_t",  hex::format(shortSignedFormat.c_str(),  hex::changeEndianess(this->m_previewData.signed16,   this->m_endian)), sizeof(s16));
+            this->m_cachedData.emplace_back("uint32_t", hex::format(unsignedFormat.c_str(),     hex::changeEndianess(this->m_previewData.unsigned32, this->m_endian)), sizeof(u32));
+            this->m_cachedData.emplace_back("int32_t",  hex::format(shortSignedFormat.c_str(),  hex::changeEndianess(this->m_previewData.signed32,   this->m_endian)), sizeof(s32));
+            this->m_cachedData.emplace_back("uint64_t", hex::format(unsignedFormat.c_str(),     hex::changeEndianess(this->m_previewData.unsigned64, this->m_endian)), sizeof(u64));
+            this->m_cachedData.emplace_back("int64_t",  hex::format(signedFormat.c_str(),       hex::changeEndianess(this->m_previewData.signed64,   this->m_endian)), sizeof(s64));
 
             this->m_cachedData.emplace_back("ASCII Character", hex::format("'%s'", makePrintable(this->m_previewData.ansiChar).c_str()), sizeof(char));
             this->m_cachedData.emplace_back("Wide Character",  hex::format("'%lc'", this->m_previewData.wideChar == 0 ? '\x01' : hex::changeEndianess(this->m_previewData.wideChar, this->m_endian)), sizeof(wchar_t));
