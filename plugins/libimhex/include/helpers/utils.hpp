@@ -202,5 +202,6 @@ namespace hex {
 
         std::vector<char> name;
         std::vector<char> comment;
+        u32 color;
     };
 }

@@ -15,8 +15,8 @@
 
 namespace hex {
 
-    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
-            : View("Hex Editor"), m_patternData(patternData) {
+    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData, const std::list<Bookmark> &bookmarks)
+            : View("Hex Editor"), m_patternData(patternData), m_bookmarks(bookmarks) {
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
             auto provider = SharedData::currentProvider;
@@ -43,6 +43,14 @@ namespace hex {
             ViewHexEditor *_this = (ViewHexEditor *) data;
 
             std::optional<u32> currColor, prevColor;
+
+            for (const auto &[region, name, comment, color] : _this->m_bookmarks) {
+                if (off >= region.address && off < (region.address + region.size))
+                    currColor = (color & 0x00FFFFFF) | 0x40000000;
+                if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
+                    prevColor = (color & 0x00FFFFFF) | 0x40000000;;
+            }
+
             if (_this->m_highlightedBytes.contains(off))
                 currColor = _this->m_highlightedBytes[off];
             if (_this->m_highlightedBytes.contains(off - 1))

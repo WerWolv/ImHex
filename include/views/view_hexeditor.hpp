@@ -6,6 +6,7 @@
 #include "imgui_memory_editor.h"
 #include "ImGuiFileBrowser.h"
 
+#include <list>
 #include <tuple>
 #include <random>
 #include <vector>
@@ -20,7 +21,7 @@ namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(std::vector<lang::PatternData*> &patternData);
+        ViewHexEditor(std::vector<lang::PatternData*> &patternData, const std::list<Bookmark> &bookmarks);
         ~ViewHexEditor() override;
 
         void drawContent() override;
@@ -32,6 +33,8 @@ namespace hex {
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         std::vector<lang::PatternData*> &m_patternData;
+        const std::list<Bookmark> &m_bookmarks;
+
         std::map<u64, u32> m_highlightedBytes;
 
         char m_searchStringBuffer[0xFFFF] = { 0 };

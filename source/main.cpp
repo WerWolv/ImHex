@@ -28,9 +28,10 @@ int main(int argc, char **argv) {
 
     // Shared Data
     std::vector<hex::lang::PatternData*> patternData;
+    std::list<hex::Bookmark> bookmarks;
 
     // Create views
-    hex::ContentRegistry::Views::add<hex::ViewHexEditor>(patternData);
+    hex::ContentRegistry::Views::add<hex::ViewHexEditor>(patternData, bookmarks);
     hex::ContentRegistry::Views::add<hex::ViewPattern>(patternData);
     hex::ContentRegistry::Views::add<hex::ViewPatternData>(patternData);
     hex::ContentRegistry::Views::add<hex::ViewDataInspector>();
@@ -38,7 +39,7 @@ int main(int argc, char **argv) {
     hex::ContentRegistry::Views::add<hex::ViewInformation>();
     hex::ContentRegistry::Views::add<hex::ViewStrings>();
     hex::ContentRegistry::Views::add<hex::ViewDisassembler>();
-    hex::ContentRegistry::Views::add<hex::ViewBookmarks>();
+    hex::ContentRegistry::Views::add<hex::ViewBookmarks>(bookmarks);
     hex::ContentRegistry::Views::add<hex::ViewPatches>();
     hex::ContentRegistry::Views::add<hex::ViewTools>();
     hex::ContentRegistry::Views::add<hex::ViewCommandPalette>();

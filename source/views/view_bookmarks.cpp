@@ -7,7 +7,7 @@
 
 namespace hex {
 
-    ViewBookmarks::ViewBookmarks() : View("Bookmarks") {
+    ViewBookmarks::ViewBookmarks(std::list<Bookmark> &bookmarks) : View("Bookmarks"), m_bookmarks(bookmarks) {
         View::subscribeEvent(Events::AddBookmark, [this](const void *userData) {
             Bookmark bookmark = *reinterpret_cast<const Bookmark*>(userData);
             bookmark.name.resize(64);
@@ -20,6 +20,8 @@ namespace hex {
 
             if (bookmark.comment.empty())
                 std::memset(bookmark.comment.data(), 0x00, 0xF'FFFF);
+
+            bookmark.color = ImGui::GetColorU32(ImGuiCol_Header);
 
             this->m_bookmarks.push_back(bookmark);
             ProjectFile::markDirty();
@@ -52,8 +54,15 @@ namespace hex {
                 u32 id = 1;
                 std::list<Bookmark>::const_iterator bookmarkToRemove = this->m_bookmarks.end();
                 for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
-                    auto &[region, name, comment] = *iter;
+                    auto &[region, name, comment, color] = *iter;
 
+                    auto headerColor = ImColor(color);
+                    auto hoverColor = ImColor(color);
+                    hoverColor.Value.w *= 1.3F;
+
+                    ImGui::PushStyleColor(ImGuiCol_Header, color);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
                     if (ImGui::CollapsingHeader((std::string(name.data()) + "###" + std::to_string((u64)comment.data())).c_str())) {
                         ImGui::TextUnformatted("Information");
                         ImGui::Separator();
@@ -90,16 +99,22 @@ namespace hex {
                         ImGui::PushID(id);
                         ImGui::InputText("##nolabel", name.data(), 64);
                         ImGui::PopID();
+                        ImGui::SameLine();
+                        ImGui::PushID(id + 1);
+                        ImGui::ColorEdit4("Color", (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
+                        color = headerColor;
+                        ImGui::PopID();
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Comment");
                         ImGui::Separator();
-                        ImGui::PushID(id + 1);
+                        ImGui::PushID(id + 2);
                         ImGui::InputTextMultiline("##nolabel", comment.data(), 0xF'FFFF);
                         ImGui::PopID();
                         ImGui::NewLine();
 
-                        id += 2;
+                        id += 3;
                     }
+                    ImGui::PopStyleColor(3);
                 }
 
                 if (bookmarkToRemove != this->m_bookmarks.end()) {
