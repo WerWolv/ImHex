@@ -60,6 +60,7 @@ namespace hex {
                     auto hoverColor = ImColor(color);
                     hoverColor.Value.w *= 1.3F;
 
+                    ImGui::PushID(id);
                     ImGui::PushStyleColor(ImGuiCol_Header, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
@@ -84,39 +85,30 @@ namespace hex {
 
                             ImGui::TextColored(ImColor(0xFF9BC64D), bytesString.c_str());
                         }
-                        ImGui::PushID(id);
                         if (ImGui::Button("Jump to"))
                             View::postEvent(Events::SelectionChangeRequest, &region);
-                        ImGui::PopID();
                         ImGui::SameLine(0, 15);
 
-                        ImGui::PushID(id + 1);
                         if (ImGui::Button("Remove"))
                             bookmarkToRemove = iter;
-                        ImGui::PopID();
 
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Name");
                         ImGui::Separator();
-                        ImGui::PushID(id + 2);
-                        ImGui::InputText("##nolabel", name.data(), 64);
-                        ImGui::PopID();
+                        ImGui::InputText("##nameInput", name.data(), 64);
                         ImGui::SameLine();
-                        ImGui::PushID(id + 3);
                         ImGui::ColorEdit4("Color", (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
                         color = headerColor;
-                        ImGui::PopID();
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Comment");
                         ImGui::Separator();
-                        ImGui::PushID(id + 4);
-                        ImGui::InputTextMultiline("##nolabel", comment.data(), 0xF'FFFF);
-                        ImGui::PopID();
+                        ImGui::InputTextMultiline("##colorInput", comment.data(), 0xF'FFFF);
                         ImGui::NewLine();
 
-                        id += 5;
                     }
+                    ImGui::PopID();
                     ImGui::PopStyleColor(3);
+                    id++;
                 }
 
                 if (bookmarkToRemove != this->m_bookmarks.end()) {
