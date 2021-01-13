@@ -89,6 +89,7 @@ struct MemoryEditor
     ImU8            (*ReadFn)(const ImU8* data, size_t off);    // = 0      // optional handler to read bytes.
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off, bool next);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
+    void            (*HoverFn)(const ImU8 *data, size_t off);
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -121,6 +122,7 @@ struct MemoryEditor
         ReadFn = NULL;
         WriteFn = NULL;
         HighlightFn = NULL;
+        HoverFn = NULL;
 
         // State/Internals
         ContentsWidthChanged = false;
@@ -324,6 +326,7 @@ struct MemoryEditor
         const char* format_byte = OptUpperCaseHex ? "%02X" : "%02x";
         const char* format_byte_space = OptUpperCaseHex ? "%02X " : "%02x ";
 
+        bool tooltipShown = false;
         for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible lines
         {
             size_t addr = (size_t)(line_i * Cols);
@@ -457,6 +460,12 @@ struct MemoryEditor
                     }
                     if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
                         DataPreviewAddrEnd = addr;
+                    }
+                    if (ImGui::IsItemHovered() && !tooltipShown) {
+                        if (HoverFn) {
+                            HoverFn(mem_data, addr);
+                            tooltipShown = true;
+                        }
                     }
                 }
             }

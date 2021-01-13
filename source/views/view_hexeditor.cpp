@@ -69,6 +69,27 @@ namespace hex {
             return false;
         };
 
+        this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t addr) {
+            ViewHexEditor *_this = (ViewHexEditor *) data;
+
+            bool tooltipShown = false;
+
+            for (const auto &[region, name, comment, color] : _this->m_bookmarks) {
+                if (addr >= region.address && addr < (region.address + region.size)) {
+                    if (!tooltipShown) {
+                        ImGui::BeginTooltip();
+                        tooltipShown = true;
+                    }
+                    ImGui::ColorButton(name.data(), ImColor(color).Value);
+                    ImGui::SameLine(0, 10);
+                    ImGui::TextUnformatted(name.data());
+                }
+            }
+
+            if (tooltipShown)
+                ImGui::EndTooltip();
+        };
+
         View::subscribeEvent(Events::FileDropped, [this](const void *userData) {
             auto filePath = static_cast<const char*>(userData);
 

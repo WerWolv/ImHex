@@ -84,35 +84,37 @@ namespace hex {
 
                             ImGui::TextColored(ImColor(0xFF9BC64D), bytesString.c_str());
                         }
-
+                        ImGui::PushID(id);
                         if (ImGui::Button("Jump to"))
                             View::postEvent(Events::SelectionChangeRequest, &region);
-
+                        ImGui::PopID();
                         ImGui::SameLine(0, 15);
 
+                        ImGui::PushID(id + 1);
                         if (ImGui::Button("Remove"))
                             bookmarkToRemove = iter;
+                        ImGui::PopID();
 
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Name");
                         ImGui::Separator();
-                        ImGui::PushID(id);
+                        ImGui::PushID(id + 2);
                         ImGui::InputText("##nolabel", name.data(), 64);
                         ImGui::PopID();
                         ImGui::SameLine();
-                        ImGui::PushID(id + 1);
+                        ImGui::PushID(id + 3);
                         ImGui::ColorEdit4("Color", (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
                         color = headerColor;
                         ImGui::PopID();
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Comment");
                         ImGui::Separator();
-                        ImGui::PushID(id + 2);
+                        ImGui::PushID(id + 4);
                         ImGui::InputTextMultiline("##nolabel", comment.data(), 0xF'FFFF);
                         ImGui::PopID();
                         ImGui::NewLine();
 
-                        id += 3;
+                        id += 5;
                     }
                     ImGui::PopStyleColor(3);
                 }
