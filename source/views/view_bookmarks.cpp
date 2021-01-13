@@ -13,10 +13,10 @@ namespace hex {
             bookmark.name.resize(64);
             bookmark.comment.resize(0xF'FFFF);
 
-            if (bookmark.name.empty()) {
-                std::memset(bookmark.name.data(), 0x00, 64);
-                std::strcpy(bookmark.name.data(), ("Bookmark " + std::to_string(this->m_bookmarks.size() + 1)).c_str());
-            }
+            std::memset(bookmark.name.data(), 0x00, 64);
+            std::strcpy(bookmark.name.data(), hex::format("Bookmark [0x%lX - 0x%lX]",
+                                                          bookmark.region.address,
+                                                          bookmark.region.address + bookmark.region.size - 1).c_str());
 
             if (bookmark.comment.empty())
                 std::memset(bookmark.comment.data(), 0x00, 0xF'FFFF);
