@@ -2,7 +2,8 @@
 
 #include <hex.hpp>
 
-#include <concepts>
+#include <hex/helpers/utils.hpp>
+
 #include <functional>
 #include <map>
 #include <string>
@@ -93,7 +94,7 @@ namespace hex {
         struct Views {
             Views() = delete;
 
-            template<std::derived_from<View> T, typename ... Args>
+            template<hex::derived_from<View> T, typename ... Args>
             static T* add(Args&& ... args) {
                 return static_cast<T*>(add(new T(std::forward<Args>(args)...)));
             }
