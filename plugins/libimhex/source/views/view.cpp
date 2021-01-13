@@ -28,8 +28,8 @@ namespace hex {
         if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_NoResize)) {
             ImGui::NewLine();
             if (ImGui::BeginChild("##scrolling", ImVec2(300, 100))) {
-                ImGui::SetCursorPosX((300 - ImGui::CalcTextSize(View::s_errorMessage.c_str(), nullptr, false).x) / 2.0F);
-                ImGui::TextWrapped("%s", View::s_errorMessage.c_str());
+                ImGui::SetCursorPosX((300 - ImGui::CalcTextSize(SharedData::errorPopupMessage.c_str(), nullptr, false).x) / 2.0F);
+                ImGui::TextWrapped("%s", SharedData::errorPopupMessage.c_str());
                 ImGui::EndChild();
             }
             ImGui::NewLine();
@@ -41,7 +41,7 @@ namespace hex {
     }
 
     void View::showErrorPopup(std::string_view errorMessage) {
-        View::s_errorMessage = errorMessage;
+        SharedData::errorPopupMessage = errorMessage;
 
         ImGui::OpenPopup("Error");
     }

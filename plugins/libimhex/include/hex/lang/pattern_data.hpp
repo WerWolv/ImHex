@@ -45,10 +45,10 @@ namespace hex::lang {
             if (color != 0)
                 return;
 
-            this->m_color = Palette[PatternData::s_paletteOffset++];
+            this->m_color = Palette[SharedData::patternPaletteOffset++];
 
-            if (PatternData::s_paletteOffset >= (sizeof(Palette) / sizeof(u32)))
-                PatternData::s_paletteOffset = 0;
+            if (SharedData::patternPaletteOffset >= (sizeof(Palette) / sizeof(u32)))
+                SharedData::patternPaletteOffset = 0;
         }
         virtual ~PatternData() = default;
 
@@ -143,7 +143,7 @@ namespace hex::lang {
             return false;
         }
 
-        static void resetPalette() { PatternData::s_paletteOffset = 0; }
+        static void resetPalette() { SharedData::patternPaletteOffset = 0; }
 
     protected:
         void createDefaultEntry(std::string_view value) const {
@@ -179,9 +179,6 @@ namespace hex::lang {
         u32 m_color;
         std::string m_variableName;
         std::string m_typeName;
-
-        static inline u8 s_paletteOffset = 0;
-
     };
 
     class PatternDataPadding : public PatternData {

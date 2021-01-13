@@ -51,8 +51,6 @@ namespace hex {
     private:
         std::string m_viewName;
         bool m_windowOpen = false;
-
-        static inline std::string s_errorMessage;
     };
 
 }

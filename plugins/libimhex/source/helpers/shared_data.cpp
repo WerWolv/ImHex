@@ -14,6 +14,8 @@ namespace hex {
     std::vector<View*> SharedData::views;
     std::vector<ContentRegistry::Tools::Entry> SharedData::toolsEntries;
     std::vector<ContentRegistry::DataInspector::Entry> SharedData::dataInspectorEntries;
+    u32 SharedData::patternPaletteOffset;
+    std::string SharedData::errorPopupMessage;
 
     int SharedData::mainArgc;
     char **SharedData::mainArgv;

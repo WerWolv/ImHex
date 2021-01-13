@@ -53,6 +53,8 @@ namespace hex {
         static std::vector<View*> views;
         static std::vector<ContentRegistry::Tools::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::Entry> dataInspectorEntries;
+        static u32 patternPaletteOffset;
+        static std::string errorPopupMessage;
 
         static int mainArgc;
         static char **mainArgv;
