@@ -345,7 +345,10 @@ struct MemoryEditor
                 {
                     ImVec2 pos = ImGui::GetCursorScreenPos();
                     float highlight_width = s.GlyphWidth * 2;
-                    bool is_next_byte_highlighted =  (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1, true)));
+                    bool is_next_byte_highlighted = (addr + 1 < mem_size) &&
+                                                    ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) ||
+                                                    (HighlightFn && HighlightFn(mem_data, addr + 1, true)) ||
+                                                    ((addr + 1) >= DataPreviewAddr && (addr + 1) <= DataPreviewAddrEnd) || ((addr + 1) >= DataPreviewAddrEnd && (addr + 1) <= DataPreviewAddr));
                     if (is_next_byte_highlighted)
                     {
                         highlight_width = s.HexCellWidth;
