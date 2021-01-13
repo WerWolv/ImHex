@@ -12,7 +12,7 @@ namespace hex {
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> SharedData::patternLanguageFunctions;
     std::vector<View*> SharedData::views;
-    std::vector<std::function<void()>> SharedData::toolsEntries;
+    std::vector<ContentRegistry::Tools::Entry> SharedData::toolsEntries;
     std::vector<ContentRegistry::DataInspector::Entry> SharedData::dataInspectorEntries;
 
     int SharedData::mainArgc;

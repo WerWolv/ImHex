@@ -110,9 +110,14 @@ namespace hex {
         struct Tools {
             Tools() = delete;
 
-            static void add(const std::function<void()> &function);
+            struct Entry {
+                std::string name;
+                std::function<void()> function;
+            };
 
-            static std::vector<std::function<void()>>& getEntries();
+            static void add(std::string_view name, const std::function<void()> &function);
+
+            static std::vector<Entry>& getEntries();
         };
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */

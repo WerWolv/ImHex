@@ -64,6 +64,12 @@ namespace hex {
 
             return { };
         }, 2, 2);
+
+        ContentRegistry::Tools::add("Itanium/MSVC demangler", [this]{ this->drawDemangler(); });
+        ContentRegistry::Tools::add("ASCII table", [this]{ this->drawASCIITable(); });
+        ContentRegistry::Tools::add("Regex replacer", [this]{ this->drawRegexReplacer(); });
+        ContentRegistry::Tools::add("Color picker", [this]{ this->drawColorPicker(); });
+        ContentRegistry::Tools::add("Calculator", [this]{ this->drawMathEvaluator(); });
     }
 
     ViewTools::~ViewTools() {
@@ -77,245 +83,227 @@ namespace hex {
     }
 
     void ViewTools::drawDemangler() {
-        if (ImGui::CollapsingHeader("Itanium/MSVC demangler")) {
-            if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xF'FFFF)) {
-                this->m_demangledName = llvm::demangle(this->m_mangledBuffer);
-            }
-
-            ImGui::InputText("Demangled name", this->m_demangledName.data(), this->m_demangledName.size(), ImGuiInputTextFlags_ReadOnly);
-            ImGui::NewLine();
+        if (ImGui::InputText("Mangled name", this->m_mangledBuffer, 0xF'FFFF)) {
+            this->m_demangledName = llvm::demangle(this->m_mangledBuffer);
         }
+
+        ImGui::InputText("Demangled name", this->m_demangledName.data(), this->m_demangledName.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::NewLine();
     }
 
     void ViewTools::drawASCIITable() {
-        if (ImGui::CollapsingHeader("ASCII table")) {
-            ImGui::BeginTable("##asciitable", 4);
-            ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("");
+        ImGui::BeginTable("##asciitable", 4);
+        ImGui::TableSetupColumn("");
+        ImGui::TableSetupColumn("");
+        ImGui::TableSetupColumn("");
+        ImGui::TableSetupColumn("");
 
-            ImGui::TableNextColumn();
+        ImGui::TableNextColumn();
 
-            for (u8 tablePart = 0; tablePart < 4; tablePart++) {
-                ImGui::BeginTable("##asciitablepart", this->m_asciiTableShowOctal ? 4 : 3, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg);
-                ImGui::TableSetupColumn("dec");
-                if (this->m_asciiTableShowOctal)
-                    ImGui::TableSetupColumn("oct");
-                ImGui::TableSetupColumn("hex");
-                ImGui::TableSetupColumn("char");
+        for (u8 tablePart = 0; tablePart < 4; tablePart++) {
+            ImGui::BeginTable("##asciitablepart", this->m_asciiTableShowOctal ? 4 : 3, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg);
+            ImGui::TableSetupColumn("dec");
+            if (this->m_asciiTableShowOctal)
+                ImGui::TableSetupColumn("oct");
+            ImGui::TableSetupColumn("hex");
+            ImGui::TableSetupColumn("char");
 
-                ImGui::TableHeadersRow();
+            ImGui::TableHeadersRow();
 
-                u32 rowCount = 0;
-                for (u8 i = 0; i < 0x80 / 4; i++) {
-                    ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            u32 rowCount = 0;
+            for (u8 i = 0; i < 0x80 / 4; i++) {
+                ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 
+                ImGui::TableNextColumn();
+                ImGui::Text("%02d", i + 32 * tablePart);
+
+                if (this->m_asciiTableShowOctal) {
                     ImGui::TableNextColumn();
-                    ImGui::Text("%02d", i + 32 * tablePart);
-
-                    if (this->m_asciiTableShowOctal) {
-                        ImGui::TableNextColumn();
-                        ImGui::Text("0o%02o", i + 32 * tablePart);
-                    }
-
-                    ImGui::TableNextColumn();
-                    ImGui::Text("0x%02x", i + 32 * tablePart);
-
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%s", makePrintable(i + 32 * tablePart).c_str());
-
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-
-                    rowCount++;
+                    ImGui::Text("0o%02o", i + 32 * tablePart);
                 }
 
-                ImGui::EndTable();
                 ImGui::TableNextColumn();
-            }
-            ImGui::EndTable();
+                ImGui::Text("0x%02x", i + 32 * tablePart);
 
-            ImGui::Checkbox("Show octal", &this->m_asciiTableShowOctal);
-            ImGui::NewLine();
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", makePrintable(i + 32 * tablePart).c_str());
+
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
+
+                rowCount++;
+            }
+
+            ImGui::EndTable();
+            ImGui::TableNextColumn();
         }
+        ImGui::EndTable();
+
+        ImGui::Checkbox("Show octal", &this->m_asciiTableShowOctal);
+        ImGui::NewLine();
     }
 
     void ViewTools::drawRegexReplacer() {
-        if (ImGui::CollapsingHeader("Regex replacer")) {
-            bool shouldInvalidate;
+        bool shouldInvalidate;
 
-            shouldInvalidate = ImGui::InputText("Regex pattern", this->m_regexPattern, 0xF'FFFF);
-            shouldInvalidate = ImGui::InputText("Replace pattern", this->m_replacePattern, 0xF'FFFF) || shouldInvalidate;
-            shouldInvalidate = ImGui::InputTextMultiline("Input", this->m_regexInput, 0xF'FFFF)  || shouldInvalidate;
+        shouldInvalidate = ImGui::InputText("Regex pattern", this->m_regexPattern, 0xF'FFFF);
+        shouldInvalidate = ImGui::InputText("Replace pattern", this->m_replacePattern, 0xF'FFFF) || shouldInvalidate;
+        shouldInvalidate = ImGui::InputTextMultiline("Input", this->m_regexInput, 0xF'FFFF)  || shouldInvalidate;
 
-            if (shouldInvalidate) {
-                try {
-                    this->m_regexOutput = std::regex_replace(this->m_regexInput, std::regex(this->m_regexPattern), this->m_replacePattern);
-                } catch (std::regex_error&) {}
-            }
-
-            ImGui::InputTextMultiline("Output", this->m_regexOutput.data(), this->m_regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
-            ImGui::NewLine();
-
-
+        if (shouldInvalidate) {
+            try {
+                this->m_regexOutput = std::regex_replace(this->m_regexInput, std::regex(this->m_regexPattern), this->m_replacePattern);
+            } catch (std::regex_error&) {}
         }
+
+        ImGui::InputTextMultiline("Output", this->m_regexOutput.data(), this->m_regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+        ImGui::NewLine();
     }
 
     void ViewTools::drawColorPicker() {
-        if (ImGui::CollapsingHeader("Color picker")) {
-            ImGui::SetNextItemWidth(300.0F);
-            ImGui::ColorPicker4("Color Picker", this->m_pickedColor.data(),
-            ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHex);
-            ImGui::NewLine();
-        }
+        ImGui::SetNextItemWidth(300.0F);
+        ImGui::ColorPicker4("Color Picker", this->m_pickedColor.data(),
+        ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHex);
+        ImGui::NewLine();
     }
 
     void ViewTools::drawMathEvaluator() {
-        if (ImGui::CollapsingHeader("Calculator")) {
-            if (ImGui::InputText("Input", this->m_mathInput, 0xFFFF, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-                ImGui::SetKeyboardFocusHere();
-                std::optional<long double> result;
+        if (ImGui::InputText("Input", this->m_mathInput, 0xFFFF, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+            ImGui::SetKeyboardFocusHere();
+            std::optional<long double> result;
 
-                try {
-                    result = this->m_mathEvaluator.evaluate(this->m_mathInput);
-                } catch (std::invalid_argument &e) {
-                    this->m_lastMathError = e.what();
-                }
-
-                if (result.has_value()) {
-                    this->m_mathHistory.push_back(result.value());
-                    std::memset(this->m_mathInput, 0x00, 0xFFFF);
-                    this->m_lastMathError.clear();
-                }
-
+            try {
+                result = this->m_mathEvaluator.evaluate(this->m_mathInput);
+            } catch (std::invalid_argument &e) {
+                this->m_lastMathError = e.what();
             }
 
-            if (!this->m_lastMathError.empty())
-                ImGui::TextColored(ImColor(0xA00040FF), "Last Error: %s", this->m_lastMathError.c_str());
-            else
-                ImGui::NewLine();
-
-            enum class MathDisplayType { Standard, Scientific, Engineering, Programmer } mathDisplayType;
-            if (ImGui::BeginTabBar("##mathFormatTabBar")) {
-                if (ImGui::BeginTabItem("Standard")) {
-                    mathDisplayType = MathDisplayType::Standard;
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("Scientific")) {
-                    mathDisplayType = MathDisplayType::Scientific;
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("Engineering")) {
-                    mathDisplayType = MathDisplayType::Engineering;
-                    ImGui::EndTabItem();
-                }
-                if (ImGui::BeginTabItem("Programmer")) {
-                    mathDisplayType = MathDisplayType::Programmer;
-                    ImGui::EndTabItem();
-                }
-
-                ImGui::EndTabBar();
+            if (result.has_value()) {
+                this->m_mathHistory.push_back(result.value());
+                std::memset(this->m_mathInput, 0x00, 0xFFFF);
+                this->m_lastMathError.clear();
             }
 
-            if (ImGui::BeginTable("##mathWrapper", 2)) {
-                ImGui::TableSetupColumn("##results");
-                ImGui::TableSetupColumn("##variables", ImGuiTableColumnFlags_WidthStretch, 0.7);
+        }
 
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                if (ImGui::BeginTable("##mathHistory", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("History");
+        if (!this->m_lastMathError.empty())
+            ImGui::TextColored(ImColor(0xA00040FF), "Last Error: %s", this->m_lastMathError.c_str());
+        else
+            ImGui::NewLine();
 
-                    ImGuiListClipper clipper;
-                    clipper.Begin(this->m_mathHistory.size());
+        enum class MathDisplayType { Standard, Scientific, Engineering, Programmer } mathDisplayType;
+        if (ImGui::BeginTabBar("##mathFormatTabBar")) {
+            if (ImGui::BeginTabItem("Standard")) {
+                mathDisplayType = MathDisplayType::Standard;
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Scientific")) {
+                mathDisplayType = MathDisplayType::Scientific;
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Engineering")) {
+                mathDisplayType = MathDisplayType::Engineering;
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Programmer")) {
+                mathDisplayType = MathDisplayType::Programmer;
+                ImGui::EndTabItem();
+            }
 
-                    ImGui::TableHeadersRow();
-                    while (clipper.Step()) {
-                        for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            if (i == 0)
-                                ImGui::PushStyleColor(ImGuiCol_Text, ImU32(ImColor(0xA5, 0x45, 0x45)));
+            ImGui::EndTabBar();
+        }
 
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
+        if (ImGui::BeginTable("##mathWrapper", 2)) {
+            ImGui::TableSetupColumn("##results");
+            ImGui::TableSetupColumn("##variables", ImGuiTableColumnFlags_WidthStretch, 0.7);
 
-                            switch (mathDisplayType) {
-                                case MathDisplayType::Standard:
-                                    ImGui::Text("%.3Lf", this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]);
-                                    break;
-                                case MathDisplayType::Scientific:
-                                    ImGui::Text("%.6Le", this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]);
-                                    break;
-                                case MathDisplayType::Engineering:
-                                    ImGui::Text("%s", hex::toEngineeringString(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]).c_str());
-                                    break;
-                                case MathDisplayType::Programmer:
-                                    ImGui::Text("0x%llX (%llu)",
-                                                u64(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]),
-                                                u64(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]));
-                                    break;
-                            }
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            if (ImGui::BeginTable("##mathHistory", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("History");
 
-                            if (i == 0)
-                                ImGui::PopStyleColor();
-                        }
-                    }
+                ImGuiListClipper clipper;
+                clipper.Begin(this->m_mathHistory.size());
 
-                    clipper.End();
+                ImGui::TableHeadersRow();
+                while (clipper.Step()) {
+                    for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        if (i == 0)
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImU32(ImColor(0xA5, 0x45, 0x45)));
 
-                    ImGui::EndTable();
-                }
-
-                ImGui::TableNextColumn();
-                if (ImGui::BeginTable("##mathVariables", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Name");
-                    ImGui::TableSetupColumn("Value");
-
-                    ImGui::TableHeadersRow();
-                    for (const auto &[name, value] : this->m_mathEvaluator.getVariables()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(name.c_str());
 
-                        ImGui::TableNextColumn();
                         switch (mathDisplayType) {
                             case MathDisplayType::Standard:
-                                ImGui::Text("%.3Lf", value);
+                                ImGui::Text("%.3Lf", this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]);
                                 break;
                             case MathDisplayType::Scientific:
-                                ImGui::Text("%.6Le", value);
+                                ImGui::Text("%.6Le", this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]);
                                 break;
                             case MathDisplayType::Engineering:
-                                ImGui::Text("%s", hex::toEngineeringString(value).c_str());
+                                ImGui::Text("%s", hex::toEngineeringString(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]).c_str());
                                 break;
                             case MathDisplayType::Programmer:
-                                ImGui::Text("0x%llX (%llu)", u64(value),  u64(value));
+                                ImGui::Text("0x%llX (%llu)",
+                                            u64(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]),
+                                            u64(this->m_mathHistory[(this->m_mathHistory.size() - 1) - i]));
                                 break;
                         }
-                    }
 
-                    ImGui::EndTable();
+                        if (i == 0)
+                            ImGui::PopStyleColor();
+                    }
+                }
+
+                clipper.End();
+
+                ImGui::EndTable();
+            }
+
+            ImGui::TableNextColumn();
+            if (ImGui::BeginTable("##mathVariables", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("Name");
+                ImGui::TableSetupColumn("Value");
+
+                ImGui::TableHeadersRow();
+                for (const auto &[name, value] : this->m_mathEvaluator.getVariables()) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(name.c_str());
+
+                    ImGui::TableNextColumn();
+                    switch (mathDisplayType) {
+                        case MathDisplayType::Standard:
+                            ImGui::Text("%.3Lf", value);
+                            break;
+                        case MathDisplayType::Scientific:
+                            ImGui::Text("%.6Le", value);
+                            break;
+                        case MathDisplayType::Engineering:
+                            ImGui::Text("%s", hex::toEngineeringString(value).c_str());
+                            break;
+                        case MathDisplayType::Programmer:
+                            ImGui::Text("0x%llX (%llu)", u64(value),  u64(value));
+                            break;
+                    }
                 }
 
                 ImGui::EndTable();
             }
 
+            ImGui::EndTable();
         }
     }
 
     void ViewTools::drawContent() {
         if (ImGui::Begin("Tools", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-
-            this->drawDemangler();
-            this->drawASCIITable();
-            this->drawRegexReplacer();
-            this->drawMathEvaluator();
-            this->drawColorPicker();
-
-            for (const auto& entries : ContentRegistry::Tools::getEntries())
-                entries();
-
+            for (const auto& [name, function] : ContentRegistry::Tools::getEntries()) {
+                if (ImGui::CollapsingHeader(name.c_str())) {
+                    function();
+                }
+            }
         }
         ImGui::End();
     }

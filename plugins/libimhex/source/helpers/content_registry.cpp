@@ -102,11 +102,11 @@ namespace hex {
 
     /* Tools */
 
-    void ContentRegistry::Tools::add(const std::function<void()> &function) {
-        getEntries().push_back(function);
+    void ContentRegistry::Tools::add(std::string_view name, const std::function<void()> &function) {
+        getEntries().emplace_back(Entry{ name.data(), function });
     }
 
-    std::vector<std::function<void()>>& ContentRegistry::Tools::getEntries() {
+    std::vector<ContentRegistry::Tools::Entry>& ContentRegistry::Tools::getEntries() {
         return SharedData::toolsEntries;
     }
 
