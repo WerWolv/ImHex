@@ -1,13 +1,13 @@
 #include "views/view_pattern.hpp"
 
-#include "lang/preprocessor.hpp"
-#include "lang/parser.hpp"
-#include "lang/lexer.hpp"
-#include "lang/validator.hpp"
-#include "lang/evaluator.hpp"
+#include <hex/lang/preprocessor.hpp>
+#include <hex/lang/parser.hpp>
+#include <hex/lang/lexer.hpp>
+#include <hex/lang/validator.hpp>
+#include <hex/lang/evaluator.hpp>
 
 #include "helpers/project_file_handler.hpp"
-#include "helpers/utils.hpp"
+#include <hex/helpers/utils.hpp>
 
 #include <magic.h>
 

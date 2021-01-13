@@ -46,9 +46,9 @@
 
 #include <stdio.h>      // sprintf, scanf
 #include <stdint.h>     // uint8_t, etc.
-#include "helpers/utils.hpp"
+#include <hex/helpers/utils.hpp>
 
-#include "views/view.hpp"
+#include <hex/views/view.hpp>
 
 #ifdef _MSC_VER
 #define _PRISizeT   "I"

@@ -16,9 +16,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 add_library(libimhex SHARED
-        source/helpers/event.cpp
+        source/api/event.cpp
+        source/api/content_registry.cpp
         source/helpers/utils.cpp
-        source/helpers/content_registry.cpp
         source/helpers/shared_data.cpp
 
         source/lang/preprocessor.cpp

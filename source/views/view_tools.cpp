@@ -4,9 +4,10 @@
 #include <regex>
 #include <optional>
 
-#include "providers/provider.hpp"
+#include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
+
 #include "helpers/plugin_handler.hpp"
-#include "helpers/utils.hpp"
 
 #include <llvm/Demangle/Demangle.h>
 

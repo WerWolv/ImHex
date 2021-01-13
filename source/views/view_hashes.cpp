@@ -1,12 +1,12 @@
 #include "views/view_hashes.hpp"
 
-#include "providers/provider.hpp"
+#include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include "helpers/crypto.hpp"
 
 #include <vector>
 
-#include "helpers/utils.hpp"
 
 namespace hex {
 

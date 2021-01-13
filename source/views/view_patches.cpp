@@ -1,8 +1,8 @@
 #include "views/view_patches.hpp"
 
-#include "providers/provider.hpp"
+#include <hex/providers/provider.hpp>
 
-#include "helpers/utils.hpp"
+#include <hex/helpers/utils.hpp>
 #include "helpers/project_file_handler.hpp"
 
 #include <string>

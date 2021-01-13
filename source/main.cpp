@@ -1,10 +1,10 @@
-#include "helpers/utils.hpp"
 #include "window.hpp"
 
-#include <helpers/content_registry.hpp>
-#include <providers/provider.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/providers/provider.hpp>
+#include <hex/lang/pattern_data.hpp>
+#include <hex/helpers/utils.hpp>
 
-#include "lang/pattern_data.hpp"
 #include "views/view_hexeditor.hpp"
 #include "views/view_pattern.hpp"
 #include "views/view_pattern_data.hpp"
@@ -20,34 +20,35 @@
 #include "views/view_command_palette.hpp"
 #include "views/view_settings.hpp"
 
-
 #include <vector>
 
 int main(int argc, char **argv) {
-    hex::Window window(argc, argv);
+    using namespace hex;
+
+    Window window(argc, argv);
 
     // Shared Data
-    std::vector<hex::lang::PatternData*> patternData;
-    std::list<hex::Bookmark> bookmarks;
+    std::vector<lang::PatternData*> patternData;
+    std::list<Bookmark> bookmarks;
 
     // Create views
-    hex::ContentRegistry::Views::add<hex::ViewHexEditor>(patternData, bookmarks);
-    hex::ContentRegistry::Views::add<hex::ViewPattern>(patternData);
-    hex::ContentRegistry::Views::add<hex::ViewPatternData>(patternData);
-    hex::ContentRegistry::Views::add<hex::ViewDataInspector>();
-    hex::ContentRegistry::Views::add<hex::ViewHashes>();
-    hex::ContentRegistry::Views::add<hex::ViewInformation>();
-    hex::ContentRegistry::Views::add<hex::ViewStrings>();
-    hex::ContentRegistry::Views::add<hex::ViewDisassembler>();
-    hex::ContentRegistry::Views::add<hex::ViewBookmarks>(bookmarks);
-    hex::ContentRegistry::Views::add<hex::ViewPatches>();
-    hex::ContentRegistry::Views::add<hex::ViewTools>();
-    hex::ContentRegistry::Views::add<hex::ViewCommandPalette>();
-    hex::ContentRegistry::Views::add<hex::ViewHelp>();
-    hex::ContentRegistry::Views::add<hex::ViewSettings>();
+    ContentRegistry::Views::add<ViewHexEditor>(patternData, bookmarks);
+    ContentRegistry::Views::add<ViewPattern>(patternData);
+    ContentRegistry::Views::add<ViewPatternData>(patternData);
+    ContentRegistry::Views::add<ViewDataInspector>();
+    ContentRegistry::Views::add<ViewHashes>();
+    ContentRegistry::Views::add<ViewInformation>();
+    ContentRegistry::Views::add<ViewStrings>();
+    ContentRegistry::Views::add<ViewDisassembler>();
+    ContentRegistry::Views::add<ViewBookmarks>(bookmarks);
+    ContentRegistry::Views::add<ViewPatches>();
+    ContentRegistry::Views::add<ViewTools>();
+    ContentRegistry::Views::add<ViewCommandPalette>();
+    ContentRegistry::Views::add<ViewHelp>();
+    ContentRegistry::Views::add<ViewSettings>();
 
     if (argc > 1)
-        hex::View::postEvent(hex::Events::FileDropped, argv[1]);
+        View::postEvent(Events::FileDropped, argv[1]);
 
     window.initPlugins();
     window.loop();

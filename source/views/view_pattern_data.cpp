@@ -1,7 +1,7 @@
 #include "views/view_pattern_data.hpp"
 
-#include "providers/provider.hpp"
-#include "lang/pattern_data.hpp"
+#include <hex/providers/provider.hpp>
+#include <hex/lang/pattern_data.hpp>
 
 namespace hex {
 

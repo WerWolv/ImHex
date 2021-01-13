@@ -1,6 +1,6 @@
 #include "views/view_settings.hpp"
 
-#include "helpers/content_registry.hpp"
+#include <hex/api/content_registry.hpp>
 
 namespace hex {
 

@@ -2,8 +2,8 @@
 
 #include <hex.hpp>
 
-#include "imgui.h"
-#include "views/view.hpp"
+#include <imgui.h>
+#include <hex/views/view.hpp>
 #include "helpers/math_evaluator.hpp"
 
 #include <array>

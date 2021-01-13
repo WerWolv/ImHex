@@ -1,11 +1,11 @@
 #pragma once
 
-#include "views/view.hpp"
+#include <hex/views/view.hpp>
 
 #include <vector>
 #include <list>
 
-#include "helpers/utils.hpp"
+#include <hex/helpers/utils.hpp>
 
 namespace hex {
 

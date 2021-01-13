@@ -1,8 +1,8 @@
 #pragma once
 
-#include "views/view.hpp"
+#include <hex/views/view.hpp>
 
-#include <helpers/content_registry.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <bit>
 #include <cstdio>

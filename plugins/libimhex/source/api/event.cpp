@@ -1,6 +1,6 @@
-#include "helpers/event.hpp"
+#include <hex/api/event.hpp>
 
-#include <helpers/shared_data.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 namespace hex {
 

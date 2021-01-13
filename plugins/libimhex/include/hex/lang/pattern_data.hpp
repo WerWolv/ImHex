@@ -4,10 +4,10 @@
 
 #include <imgui.h>
 
-#include "providers/provider.hpp"
-#include "helpers/utils.hpp"
-#include "lang/token.hpp"
-#include "views/view.hpp"
+#include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/lang/token.hpp>
+#include <hex/views/view.hpp>
 
 #include <cstring>
 #include <random>

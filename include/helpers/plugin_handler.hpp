@@ -2,8 +2,8 @@
 
 #include <hex.hpp>
 
-#include "views/view.hpp"
-#include "providers/provider.hpp"
+#include <hex/views/view.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <string_view>
 

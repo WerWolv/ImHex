@@ -1,6 +1,6 @@
-#include <plugin.hpp>
+#include <hex/plugin.hpp>
 
-#include <views/view.hpp>
+#include <hex/views/view.hpp>
 
 class ViewExample : public hex::View {
 public:

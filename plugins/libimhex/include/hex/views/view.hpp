@@ -2,9 +2,9 @@
 
 #include <hex.hpp>
 
-#include "imgui.h"
+#include <imgui.h>
 
-#include "helpers/event.hpp"
+#include <hex/api/event.hpp>
 
 #include <functional>
 #include <string>

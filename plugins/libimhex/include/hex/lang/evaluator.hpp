@@ -2,10 +2,10 @@
 
 #include <hex.hpp>
 
-#include "providers/provider.hpp"
-#include "helpers/utils.hpp"
-#include "lang/pattern_data.hpp"
-#include "ast_node.hpp"
+#include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/lang/pattern_data.hpp>
+#include <hex/lang/ast_node.hpp>
 
 #include <bit>
 #include <string>

@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "helpers/utils.hpp"
-#include "views/view.hpp"
+#include <hex/helpers/utils.hpp>
+#include <hex/views/view.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;

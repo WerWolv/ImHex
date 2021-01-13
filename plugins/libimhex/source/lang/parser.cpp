@@ -1,4 +1,4 @@
-#include "lang/parser.hpp"
+#include <hex/lang/parser.hpp>
 
 #include <optional>
 #include <variant>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "views/view.hpp"
+#include <hex/views/view.hpp>
 
 #include <cstdio>
 #include <string>

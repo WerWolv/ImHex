@@ -1,17 +1,17 @@
 #pragma once
 
-#include "helpers/utils.hpp"
-#include "views/view.hpp"
+#include <hex/helpers/utils.hpp>
+#include <hex/views/view.hpp>
 
-#include "imgui_memory_editor.h"
-#include "ImGuiFileBrowser.h"
+#include <imgui_memory_editor.h>
+#include <ImGuiFileBrowser.h>
 
 #include <list>
 #include <tuple>
 #include <random>
 #include <vector>
 
-#include "lang/pattern_data.hpp"
+#include <hex/lang/pattern_data.hpp>
 
 namespace hex {
 

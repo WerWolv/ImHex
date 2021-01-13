@@ -1,6 +1,6 @@
-#include <helpers/content_registry.hpp>
+#include <hex/api/content_registry.hpp>
 
-#include <helpers/shared_data.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #include <filesystem>
 #include <fstream>

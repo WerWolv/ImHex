@@ -1,7 +1,7 @@
 #include "views/view_strings.hpp"
 
-#include "providers/provider.hpp"
-#include "helpers/utils.hpp"
+#include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <cstring>
 

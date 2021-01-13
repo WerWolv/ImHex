@@ -1,12 +1,12 @@
-#include "views/view.hpp"
+#include <hex/views/view.hpp>
 
-#include "imgui.h"
+#include <imgui.h>
 
 #include <functional>
 #include <string>
 #include <vector>
 
-#include <helpers/shared_data.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 namespace hex {
 

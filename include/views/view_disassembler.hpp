@@ -1,7 +1,8 @@
 #pragma once
 
+#include <hex/views/view.hpp>
+
 #include "helpers/disassembler.hpp"
-#include "views/view.hpp"
 
 #include <capstone/capstone.h>
 

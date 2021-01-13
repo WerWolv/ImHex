@@ -1,6 +1,6 @@
 #pragma once
 
-#include "providers/provider.hpp"
+#include <hex/providers/provider.hpp>
 
 #include <string_view>
 

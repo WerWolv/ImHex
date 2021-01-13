@@ -5,7 +5,7 @@
 #include "token.hpp"
 #include "ast_node.hpp"
 
-#include "helpers/utils.hpp"
+#include <hex/helpers/utils.hpp>
 
 #include <unordered_map>
 #include <stdexcept>

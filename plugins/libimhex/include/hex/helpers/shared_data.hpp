@@ -5,9 +5,9 @@
 #include <vector>
 #include <map>
 
-#include <helpers/content_registry.hpp>
-#include <helpers/event.hpp>
-#include <views/view.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/api/event.hpp>
+#include <hex/views/view.hpp>
 
 #include <imgui.h>
 #include <nlohmann/json.hpp>

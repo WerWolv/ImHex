@@ -2,9 +2,9 @@
 
 #include <hex.hpp>
 
-#include "imgui.h"
-#include "views/view.hpp"
-#include "lang/pattern_data.hpp"
+#include <imgui.h>
+#include <hex/views/view.hpp>
+#include <hex/lang/pattern_data.hpp>
 
 #include <vector>
 #include <tuple>

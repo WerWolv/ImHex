@@ -1,17 +1,17 @@
 #pragma once
 
-#include "views/view.hpp"
-#include "lang/pattern_data.hpp"
-#include "lang/evaluator.hpp"
+#include <hex/views/view.hpp>
+#include <hex/lang/pattern_data.hpp>
+#include <hex/lang/evaluator.hpp>
 
-#include "providers/provider.hpp"
+#include <hex/providers/provider.hpp>
 
 #include <cstring>
 #include <filesystem>
 #include <thread>
 
-#include "ImGuiFileBrowser.h"
-#include "TextEditor.h"
+#include <ImGuiFileBrowser.h>
+#include <TextEditor.h>
 
 namespace hex {
 

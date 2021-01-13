@@ -1,4 +1,4 @@
-#include "lang/lexer.hpp"
+#include <hex/lang/lexer.hpp>
 
 #include <algorithm>
 #include <functional>

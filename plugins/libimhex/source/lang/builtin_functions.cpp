@@ -1,5 +1,5 @@
-#include "lang/evaluator.hpp"
-#include "helpers/content_registry.hpp"
+#include <hex/lang/evaluator.hpp>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::lang {
 

@@ -1,8 +1,8 @@
 #include "helpers/loader_script_handler.hpp"
 
-#include "views/view.hpp"
-#include "helpers/utils.hpp"
-#include "providers/provider.hpp"
+#include <hex/views/view.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/providers/provider.hpp>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>

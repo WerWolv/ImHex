@@ -1,6 +1,6 @@
 #include "views/view_hexeditor.hpp"
 
-#include "providers/provider.hpp"
+#include <hex/providers/provider.hpp>
 #include "providers/file_provider.hpp"
 
 #include <GLFW/glfw3.h>
