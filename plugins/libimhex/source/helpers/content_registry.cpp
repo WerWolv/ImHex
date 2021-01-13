@@ -107,7 +107,17 @@ namespace hex {
     }
 
     std::vector<std::function<void()>>& ContentRegistry::Tools::getEntries() {
-        return SharedData::tools;
+        return SharedData::toolsEntries;
     }
 
+
+    /* Data Inspector */
+
+    void ContentRegistry::DataInspector::add(std::string_view name, size_t requiredSize, ContentRegistry::DataInspector::GeneratorFunction function) {
+        getEntries().push_back(Entry{ name.data(), requiredSize, function });
+    }
+
+    std::vector<ContentRegistry::DataInspector::Entry>& ContentRegistry::DataInspector::getEntries() {
+        return SharedData::dataInspectorEntries;
+    }
 }

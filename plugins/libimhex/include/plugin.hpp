@@ -9,10 +9,7 @@
 #include <helpers/shared_data.hpp>
 #include <helpers/content_registry.hpp>
 
-#define IMHEX_PLUGIN_SETUP      namespace hex::plugin { void setup(); }                             \
-                                namespace hex::plugin::internal {                                   \
-                                    void initializePlugin() {                                       \
-                                        hex::plugin::setup();                                       \
-                                    }                                                               \
-                                }                                                                   \
-                                void hex::plugin::setup()
+#define IMHEX_PLUGIN_SETUP      namespace hex::plugin::internal {               \
+                                    void initializePlugin();                    \
+                                }                                               \
+                                void hex::plugin::internal::initializePlugin()

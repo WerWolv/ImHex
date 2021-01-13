@@ -108,9 +108,35 @@ namespace hex {
 
         /* Tools Registry. Allows adding new entries to the tools window */
         struct Tools {
+            Tools() = delete;
+
             static void add(const std::function<void()> &function);
 
             static std::vector<std::function<void()>>& getEntries();
+        };
+
+        /* Data Inspector Registry. Allows adding of new types to the data inspector */
+        struct DataInspector {
+            DataInspector() = delete;
+
+            enum class NumberDisplayStyle {
+                Decimal,
+                Hexadecimal,
+                Octal
+            };
+
+            using DisplayFunction = std::function<void()>;
+            using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8>&, std::endian, NumberDisplayStyle)>;
+
+            struct Entry {
+                std::string name;
+                size_t requiredSize;
+                GeneratorFunction generatorFunction;
+            };
+
+            static void add(std::string_view name, size_t requiredSize, GeneratorFunction function);
+
+            static std::vector<Entry>& getEntries();
         };
     };
 
