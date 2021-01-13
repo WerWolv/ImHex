@@ -243,8 +243,10 @@ namespace hex {
             ImGui::InputText("Address", this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
-            if (ImGui::Button("Set"))
+            if (ImGui::Button("Set")) {
                 provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
+                ImGui::CloseCurrentPopup();
+            }
             ImGui::SameLine();
 
             if (ImGui::Button("Cancel"))
