@@ -10,13 +10,15 @@ namespace hex {
     ViewBookmarks::ViewBookmarks(std::list<Bookmark> &bookmarks) : View("Bookmarks"), m_bookmarks(bookmarks) {
         View::subscribeEvent(Events::AddBookmark, [this](const void *userData) {
             Bookmark bookmark = *reinterpret_cast<const Bookmark*>(userData);
-            bookmark.name.resize(64);
             bookmark.comment.resize(0xF'FFFF);
 
-            std::memset(bookmark.name.data(), 0x00, 64);
-            std::strcpy(bookmark.name.data(), hex::format("Bookmark [0x%lX - 0x%lX]",
-                                                          bookmark.region.address,
-                                                          bookmark.region.address + bookmark.region.size - 1).c_str());
+            if (bookmark.name.empty()) {
+                bookmark.name.resize(64);
+                std::memset(bookmark.name.data(), 0x00, 64);
+                std::strcpy(bookmark.name.data(), hex::format("Bookmark [0x%lX - 0x%lX]",
+                                                              bookmark.region.address,
+                                                              bookmark.region.address + bookmark.region.size - 1).c_str());
+            }
 
             if (bookmark.comment.empty())
                 std::memset(bookmark.comment.data(), 0x00, 0xF'FFFF);

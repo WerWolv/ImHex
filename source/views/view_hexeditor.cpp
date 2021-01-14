@@ -192,6 +192,10 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("Yes", "No", [] { std::exit(0); }, [] { ImGui::CloseCurrentPopup(); });
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
             ImGui::EndPopup();
         }
 
@@ -210,6 +214,8 @@ namespace hex {
             if (ImGui::Button("File"))
                 ImGui::OpenPopup("Loader Script: Open File");
 
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
 
             if (this->m_fileBrowser.showFileDialog("Loader Script: Open Script", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".py")) {
                 this->m_loaderScriptScriptPath = this->m_fileBrowser.selected_path;
@@ -243,13 +249,15 @@ namespace hex {
             ImGui::InputText("Address", this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
-            if (ImGui::Button("Set")) {
+            confirmButtons("Set", "Cancel",
+            [this, &provider]{
                 provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
                 ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
+            }, []{
+                ImGui::CloseCurrentPopup();
+            });
 
-            if (ImGui::Button("Cancel"))
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
             ImGui::EndPopup();

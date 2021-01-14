@@ -25,7 +25,7 @@ namespace hex {
     }
 
     void View::drawCommonInterfaces() {
-        if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_NoResize)) {
+        if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
             if (ImGui::BeginChild("##scrolling", ImVec2(300, 100))) {
                 ImGui::SetCursorPosX((300 - ImGui::CalcTextSize(SharedData::errorPopupMessage.c_str(), nullptr, false).x) / 2.0F);
@@ -34,7 +34,7 @@ namespace hex {
             }
             ImGui::NewLine();
             ImGui::SetCursorPosX(75);
-            if (ImGui::Button("Okay", ImVec2(150, 20)))
+            if (ImGui::Button("Okay", ImVec2(150, 20)) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
         }

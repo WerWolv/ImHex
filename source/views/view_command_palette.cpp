@@ -14,7 +14,7 @@ namespace hex {
         ContentRegistry::CommandPaletteCommands::add(
             ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
             "#", "Calculator",
-            [](std::string input) {
+            [](auto input) {
                         MathEvaluator evaluator;
                         evaluator.registerStandardVariables();
                         evaluator.registerStandardFunctions();
@@ -30,6 +30,18 @@ namespace hex {
                         else
                             return hex::format("#%s = ???", input.data());
                     });
+
+        ContentRegistry::CommandPaletteCommands::add(
+            ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
+            "/bm", "Create Bookmark",
+            [](auto input) {
+                Bookmark bookmark;
+                bookmark.name.resize(64);
+                std::strncpy(bookmark.name.data(), input.c_str(), bookmark.name.size());
+
+                View::postEvent(Events::AddBookmark, &bookmark);
+                return "";
+            });
 
         this->m_lastResults = this->getCommandResults("");
     }

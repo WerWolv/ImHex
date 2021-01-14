@@ -56,6 +56,10 @@ namespace hex {
             ImGui::BulletText("FreeType");
 
             ImGui::PopStyleColor();
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
             ImGui::EndPopup();
         }
     }

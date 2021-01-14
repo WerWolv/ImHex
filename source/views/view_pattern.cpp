@@ -279,14 +279,15 @@ namespace hex {
             ImGui::Text("Do you want to load it?");
             ImGui::NewLine();
 
-            if (ImGui::Button("Yes", ImVec2(40, 20))) {
+            confirmButtons("Yes", "No", [this]{
                 this->loadPatternFile(this->m_possiblePatternFile.string());
                 ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("No", ImVec2(40, 20))) {
+            }, []{
                 ImGui::CloseCurrentPopup();
-            }
+            });
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
 
             ImGui::EndPopup();
         }
