@@ -36,10 +36,7 @@ namespace hex::lang {
         throwEvaluateError("failed to find identifier");
     }
 
-    ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
-        if (this->m_currMembers.empty() && this->m_globalMembers.empty())
-            throwEvaluateError("no variables available");
-
+    PatternData* Evaluator::patternFromName(const std::vector<std::string> &path) {
         std::vector<PatternData*> currMembers;
 
         if (!this->m_currMembers.empty())
@@ -48,8 +45,8 @@ namespace hex::lang {
             std::copy(this->m_globalMembers.begin(), this->m_globalMembers.end(), std::back_inserter(currMembers));
 
         PatternData *currPattern = nullptr;
-        for (u32 i = 0; i < node->getPath().size(); i++) {
-            const auto &identifier = node->getPath()[i];
+        for (u32 i = 0; i < path.size(); i++) {
+            const auto &identifier = path[i];
 
             if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
                 currMembers = structPattern->getMembers();
@@ -75,6 +72,18 @@ namespace hex::lang {
 
         if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr)
             currPattern = pointerPattern->getPointedAtPattern();
+
+        return currPattern;
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
+        if (this->m_currMembers.empty() && this->m_globalMembers.empty())
+            throwEvaluateError("no variables available");
+
+        if (node->getPath().size() == 1 && node->getPath()[0] == "$")
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, this->m_currOffset });
+
+        auto currPattern = this->patternFromName(node->getPath());
 
         if (auto unsignedPattern = dynamic_cast<PatternDataUnsigned*>(currPattern); unsignedPattern != nullptr) {
             u8 value[unsignedPattern->getSize()];

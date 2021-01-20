@@ -158,6 +158,21 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
+    inline std::vector<std::string> splitString(std::string_view string, std::string_view delimiter) {
+        size_t start = 0, end;
+        std::string token;
+        std::vector<std::string> res;
+
+        while ((end = string.find (delimiter, start)) != std::string::npos) {
+            token = string.substr(start, end - start);
+            start = end + delimiter.length();
+            res.push_back(token);
+        }
+
+        res.push_back(std::string(string.substr(start)));
+        return res;
+    }
+
     inline std::string toEngineeringString(double value) {
         constexpr std::array prefixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
 

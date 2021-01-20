@@ -138,6 +138,33 @@ namespace hex::lang {
 
             return nullptr;
         });
+
+        ContentRegistry::PatternLanguageFunctions::add("addressof", 1, [this](auto params) -> ASTNode* {
+            auto name = asType<ASTNodeStringLiteral>(params[0])->getString();
+
+            std::vector<std::string> path = splitString(name, ".");
+            auto pattern = this->patternFromName(path);
+
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() });
+        });
+
+        ContentRegistry::PatternLanguageFunctions::add("sizeof", 1, [this](auto params) -> ASTNode* {
+            auto name = asType<ASTNodeStringLiteral>(params[0])->getString();
+
+            std::vector<std::string> path = splitString(name, ".");
+            auto pattern = this->patternFromName(path);
+
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getSize() });
+        });
+
+        ContentRegistry::PatternLanguageFunctions::add("nextAfter", 1, [this](auto params) -> ASTNode* {
+            auto name = asType<ASTNodeStringLiteral>(params[0])->getString();
+
+            std::vector<std::string> path = splitString(name, ".");
+            auto pattern = this->patternFromName(path);
+
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() + pattern->getSize() });
+        });
     }
 
 }
