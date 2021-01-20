@@ -103,7 +103,7 @@ namespace hex::lang {
 
     // <+|-|!|~> (parseFactor)
     ASTNode* Parser::parseUnaryExpression() {
-        if (MATCHES(sequence(OPERATOR_PLUS) || sequence(OPERATOR_MINUS) || sequence(OPERATOR_BOOLNOT) || sequence(OPERATOR_BITNOT))) {
+        if (MATCHES(oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_BOOLNOT, OPERATOR_BITNOT))) {
             auto op = getValue<Token::Operator>(-1);
 
             return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral({ Token::ValueType::Any, 0 }), this->parseFactor(), op);
@@ -112,11 +112,11 @@ namespace hex::lang {
         return this->parseFactor();
     }
 
-    // (parseUnaryExpression) <*|/> (parseUnaryExpression)
+    // (parseUnaryExpression) <*|/|%> (parseUnaryExpression)
     ASTNode* Parser::parseMultiplicativeExpression() {
         auto node = this->parseUnaryExpression();
 
-        while (MATCHES(variant(OPERATOR_STAR, OPERATOR_SLASH))) {
+        while (MATCHES(oneOf(OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT))) {
             auto op = getValue<Token::Operator>(-1);
             node = new ASTNodeNumericExpression(node, this->parseUnaryExpression(), op);
         }

@@ -329,6 +329,9 @@ namespace hex::lang {
                 } else if (c == '/') {
                     tokens.emplace_back(TOKEN(Operator, Slash));
                     offset += 1;
+                } else if (c == '%') {
+                    tokens.emplace_back(TOKEN(Operator, Percent));
+                    offset += 1;
                 } else if (code.substr(offset, 2) == "<<") {
                     tokens.emplace_back(TOKEN(Operator, ShiftLeft));
                     offset += 2;

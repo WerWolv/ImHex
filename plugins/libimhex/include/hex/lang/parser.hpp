@@ -136,6 +136,14 @@ namespace hex::lang {
             return true;
         }
 
+        bool oneOf() {
+            return false;
+        }
+
+        bool oneOf(Token::Type type, auto value, auto ... args) {
+            return sequence(type, value) || oneOf(args...);
+        }
+
         bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {
             if (!peek(type1, value1)) {
                 if (!peek(type2, value2)) {

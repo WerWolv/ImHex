@@ -42,6 +42,7 @@ namespace hex::lang {
             Minus,
             Star,
             Slash,
+            Percent,
             ShiftLeft,
             ShiftRight,
             BitOr,
@@ -206,6 +207,7 @@ namespace hex::lang {
 #define OPERATOR_MINUS                      COMPONENT(Operator, Minus)
 #define OPERATOR_STAR                       COMPONENT(Operator, Star)
 #define OPERATOR_SLASH                      COMPONENT(Operator, Slash)
+#define OPERATOR_PERCENT                    COMPONENT(Operator, Percent)
 #define OPERATOR_SHIFTLEFT                  COMPONENT(Operator, ShiftLeft)
 #define OPERATOR_SHIFTRIGHT                 COMPONENT(Operator, ShiftRight)
 #define OPERATOR_BITOR                      COMPONENT(Operator, BitOr)

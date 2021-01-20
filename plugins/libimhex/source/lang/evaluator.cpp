@@ -192,6 +192,10 @@ namespace hex::lang {
             return ~right;
         }
 
+        FLOAT_BIT_OPERATION(modulus) {
+            return left % right;
+        }
+
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op) {
@@ -235,6 +239,8 @@ namespace hex::lang {
                         return new ASTNodeIntegerLiteral({ newType, leftValue * rightValue });
                     case Token::Operator::Slash:
                         return new ASTNodeIntegerLiteral({ newType, leftValue / rightValue });
+                    case Token::Operator::Percent:
+                        return new ASTNodeIntegerLiteral({ newType, modulus(leftValue, rightValue) });
                     case Token::Operator::ShiftLeft:
                         return new ASTNodeIntegerLiteral({ newType, shiftLeft(leftValue, rightValue) });
                     case Token::Operator::ShiftRight:
