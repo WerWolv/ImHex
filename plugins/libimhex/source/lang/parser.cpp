@@ -97,6 +97,8 @@ namespace hex::lang {
         } else if (MATCHES(sequence(IDENTIFIER))) {
             std::vector<std::string> path;
             return this->parseRValue(path);
+        } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
+            return new ASTNodeRValue({ "$" });
         } else
             throwParseError("expected integer or parenthesis");
     }

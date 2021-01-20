@@ -362,6 +362,9 @@ namespace hex::lang {
                 } else if (c == '?') {
                     tokens.emplace_back(TOKEN(Operator, TernaryConditional));
                     offset += 1;
+                } else if (c == '$') {
+                    tokens.emplace_back(TOKEN(Operator, Dollar));
+                    offset += 1;
                 } else if (c == '\'') {
                     auto character = getCharacterLiteral(code.substr(offset));
 
