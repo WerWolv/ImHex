@@ -5,7 +5,7 @@
 #include <string_view>
 
 #include "patches.hpp"
-#include <hex/helpers/utils.hpp>
+#include <hex/api/imhex_api.hpp>
 
 namespace hex {
 
@@ -30,8 +30,8 @@ namespace hex {
         [[nodiscard]] static const Patches& getPatches()    { return ProjectFile::s_patches; }
         static void setPatches(const Patches &patches)      { ProjectFile::s_hasUnsavedChanged = true; ProjectFile::s_patches = patches; }
 
-        [[nodiscard]] static const std::list<Bookmark>& getBookmarks()  { return ProjectFile::s_bookmarks; }
-        static void setBookmarks(const std::list<Bookmark> &bookmarks)  { ProjectFile::s_hasUnsavedChanged = true; ProjectFile::s_bookmarks = bookmarks; }
+        [[nodiscard]] static const std::list<ImHexApi::Bookmarks::Entry>& getBookmarks()  { return ProjectFile::s_bookmarks; }
+        static void setBookmarks(const std::list<ImHexApi::Bookmarks::Entry> &bookmarks)  { ProjectFile::s_hasUnsavedChanged = true; ProjectFile::s_bookmarks = bookmarks; }
 
     private:
         static inline std::string s_currProjectFilePath;
@@ -40,7 +40,7 @@ namespace hex {
         static inline std::string s_filePath;
         static inline std::string s_pattern;
         static inline Patches s_patches;
-        static inline std::list<Bookmark> s_bookmarks;
+        static inline std::list<ImHexApi::Bookmarks::Entry> s_bookmarks;
     };
 
 }

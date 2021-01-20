@@ -16,6 +16,7 @@ namespace hex {
     std::vector<ContentRegistry::DataInspector::Entry> SharedData::dataInspectorEntries;
     u32 SharedData::patternPaletteOffset;
     std::string SharedData::errorPopupMessage;
+    std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
 
     int SharedData::mainArgc;
     char **SharedData::mainArgv;

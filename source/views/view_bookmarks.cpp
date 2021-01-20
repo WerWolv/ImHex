@@ -7,9 +7,9 @@
 
 namespace hex {
 
-    ViewBookmarks::ViewBookmarks(std::list<Bookmark> &bookmarks) : View("Bookmarks"), m_bookmarks(bookmarks) {
+    ViewBookmarks::ViewBookmarks() : View("Bookmarks") {
         View::subscribeEvent(Events::AddBookmark, [this](const void *userData) {
-            Bookmark bookmark = *reinterpret_cast<const Bookmark*>(userData);
+            auto bookmark = *reinterpret_cast<const ImHexApi::Bookmarks::Entry*>(userData);
             bookmark.comment.resize(0xF'FFFF);
 
             if (bookmark.name.empty()) {
@@ -25,15 +25,15 @@ namespace hex {
 
             bookmark.color = ImGui::GetColorU32(ImGuiCol_Header);
 
-            this->m_bookmarks.push_back(bookmark);
+            SharedData::bookmarkEntries.push_back(bookmark);
             ProjectFile::markDirty();
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
-            this->m_bookmarks = ProjectFile::getBookmarks();
+        View::subscribeEvent(Events::ProjectFileLoad, [](const void*) {
+            SharedData::bookmarkEntries = ProjectFile::getBookmarks();
         });
-        View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
-            ProjectFile::setBookmarks(this->m_bookmarks);
+        View::subscribeEvent(Events::ProjectFileStore, [](const void*) {
+            ProjectFile::setBookmarks(SharedData::bookmarkEntries);
         });
     }
 
@@ -47,15 +47,17 @@ namespace hex {
         if (ImGui::Begin("Bookmarks", &this->getWindowOpenState())) {
             if (ImGui::BeginChild("##scrolling")) {
 
-                if (this->m_bookmarks.empty()) {
+                auto &bookmarks = ImHexApi::Bookmarks::getEntries();
+
+                if (bookmarks.empty()) {
                     ImGui::NewLine();
                     ImGui::Indent(30);
                     ImGui::TextWrapped("No bookmarks created yet. Add one with Edit -> Add Bookmark");
                 }
 
                 u32 id = 1;
-                std::list<Bookmark>::const_iterator bookmarkToRemove = this->m_bookmarks.end();
-                for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
+                auto bookmarkToRemove = bookmarks.end();
+                for (auto iter = bookmarks.begin(); iter != bookmarks.end(); iter++) {
                     auto &[region, name, comment, color] = *iter;
 
                     auto headerColor = ImColor(color);
@@ -97,14 +99,14 @@ namespace hex {
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Name");
                         ImGui::Separator();
-                        ImGui::InputText("##nameInput", name.data(), 64);
+                        ImGui::InputText("##nameInput", std::string(name.data()).data(), 64);
                         ImGui::SameLine();
                         ImGui::ColorEdit4("Color", (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
                         color = headerColor;
                         ImGui::NewLine();
                         ImGui::TextUnformatted("Comment");
                         ImGui::Separator();
-                        ImGui::InputTextMultiline("##colorInput", comment.data(), 0xF'FFFF);
+                        ImGui::InputTextMultiline("##colorInput", std::string(comment.data()).data(), 0xF'FFFF);
                         ImGui::NewLine();
 
                     }
@@ -113,8 +115,8 @@ namespace hex {
                     id++;
                 }
 
-                if (bookmarkToRemove != this->m_bookmarks.end()) {
-                    this->m_bookmarks.erase(bookmarkToRemove);
+                if (bookmarkToRemove != bookmarks.end()) {
+                    bookmarks.erase(bookmarkToRemove);
                     ProjectFile::markDirty();
                 }
 

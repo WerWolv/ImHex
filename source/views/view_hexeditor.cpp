@@ -1,6 +1,7 @@
 #include "views/view_hexeditor.hpp"
 
 #include <hex/providers/provider.hpp>
+#include <hex/api/imhex_api.hpp>
 #include "providers/file_provider.hpp"
 
 #include <GLFW/glfw3.h>
@@ -15,8 +16,8 @@
 
 namespace hex {
 
-    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData, const std::list<Bookmark> &bookmarks)
-            : View("Hex Editor"), m_patternData(patternData), m_bookmarks(bookmarks) {
+    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
+            : View("Hex Editor"), m_patternData(patternData) {
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
             auto provider = SharedData::currentProvider;
@@ -44,7 +45,7 @@ namespace hex {
 
             std::optional<u32> currColor, prevColor;
 
-            for (const auto &[region, name, comment, color] : _this->m_bookmarks) {
+            for (const auto &[region, name, comment, color] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size))
                     currColor = (color & 0x00FFFFFF) | 0x80000000;
                 if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
@@ -74,11 +75,9 @@ namespace hex {
         };
 
         this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t addr) {
-            ViewHexEditor *_this = (ViewHexEditor *) data;
-
             bool tooltipShown = false;
 
-            for (const auto &[region, name, comment, color] : _this->m_bookmarks) {
+            for (const auto &[region, name, comment, color] : ImHexApi::Bookmarks::getEntries()) {
                 if (addr >= region.address && addr < (region.address + region.size)) {
                     if (!tooltipShown) {
                         ImGui::BeginTooltip();
@@ -1041,14 +1040,13 @@ R"(
         if (ImGui::MenuItem("Create bookmark", nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
             size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
             size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-            Bookmark bookmark = { start, end - start + 1, { }, { } };
 
-            View::postEvent(Events::AddBookmark, &bookmark);
+            ImHexApi::Bookmarks::add(start, end - start + 1, { }, { });
         }
 
         auto provider = SharedData::currentProvider;
         if (ImGui::MenuItem("Set base address", nullptr, false, provider != nullptr && provider->isReadable())) {
-            std::memset(this->m_baseAddressBuffer, sizeof(this->m_baseAddressBuffer), 0x00);
+            std::memset(this->m_baseAddressBuffer, 0x00, sizeof(this->m_baseAddressBuffer));
             View::doLater([]{ ImGui::OpenPopup("Set base address"); });
         }
     }

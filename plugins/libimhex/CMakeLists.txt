@@ -17,6 +17,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 add_library(libimhex SHARED
         source/api/event.cpp
+        source/api/imhex_api.cpp
         source/api/content_registry.cpp
         source/helpers/utils.cpp
         source/helpers/shared_data.cpp

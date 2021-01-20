@@ -22,8 +22,7 @@ namespace hex {
         It allows you to add/register new content that will be picked up and used by the ImHex core or by other
         plugins when needed.
     */
-    class ContentRegistry {
-    public:
+    struct ContentRegistry {
         ContentRegistry() = delete;
 
         /* Settings Registry. Allows adding of new entries into the ImHex preferences window. */

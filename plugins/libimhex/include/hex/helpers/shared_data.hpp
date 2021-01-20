@@ -2,10 +2,12 @@
 
 #include <any>
 #include <functional>
-#include <vector>
+#include <list>
 #include <map>
+#include <vector>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
 #include <hex/views/view.hpp>
 
@@ -55,6 +57,7 @@ namespace hex {
         static std::vector<ContentRegistry::DataInspector::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;
         static std::string errorPopupMessage;
+        static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
 
         static int mainArgc;
         static char **mainArgv;

@@ -29,10 +29,9 @@ int main(int argc, char **argv) {
 
     // Shared Data
     std::vector<lang::PatternData*> patternData;
-    std::list<Bookmark> bookmarks;
 
     // Create views
-    ContentRegistry::Views::add<ViewHexEditor>(patternData, bookmarks);
+    ContentRegistry::Views::add<ViewHexEditor>(patternData);
     ContentRegistry::Views::add<ViewPattern>(patternData);
     ContentRegistry::Views::add<ViewPatternData>(patternData);
     ContentRegistry::Views::add<ViewDataInspector>();
@@ -40,7 +39,7 @@ int main(int argc, char **argv) {
     ContentRegistry::Views::add<ViewInformation>();
     ContentRegistry::Views::add<ViewStrings>();
     ContentRegistry::Views::add<ViewDisassembler>();
-    ContentRegistry::Views::add<ViewBookmarks>(bookmarks);
+    ContentRegistry::Views::add<ViewBookmarks>();
     ContentRegistry::Views::add<ViewPatches>();
     ContentRegistry::Views::add<ViewTools>();
     ContentRegistry::Views::add<ViewCommandPalette>();

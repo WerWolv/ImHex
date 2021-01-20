@@ -21,7 +21,7 @@ namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(std::vector<lang::PatternData*> &patternData, const std::list<Bookmark> &bookmarks);
+        ViewHexEditor(std::vector<lang::PatternData*> &patternData);
         ~ViewHexEditor() override;
 
         void drawContent() override;
@@ -33,7 +33,6 @@ namespace hex {
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         std::vector<lang::PatternData*> &m_patternData;
-        const std::list<Bookmark> &m_bookmarks;
 
         std::map<u64, u32> m_highlightedBytes;
 

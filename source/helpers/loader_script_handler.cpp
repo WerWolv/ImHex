@@ -45,12 +45,13 @@ namespace hex {
     }
 
     PyObject* LoaderScript::Py_addBookmark(PyObject *self, PyObject *args) {
-        Bookmark bookmark;
+        u64 address;
+        size_t size;
 
         char *name = nullptr;
         char *comment = nullptr;
 
-        if (!PyArg_ParseTuple(args, "K|n|s|s", &bookmark.region.address, &bookmark.region.size, &name, &comment)) {
+        if (!PyArg_ParseTuple(args, "K|n|s|s", &address, &size, &name, &comment)) {
             PyErr_BadArgument();
             return nullptr;
         }
@@ -60,10 +61,7 @@ namespace hex {
             return nullptr;
         }
 
-        std::copy(name, name + std::strlen(name), std::back_inserter(bookmark.name));
-        std::copy(comment, comment + std::strlen(comment), std::back_inserter(bookmark.comment));
-
-        View::postEvent(Events::AddBookmark, &bookmark);
+        ImHexApi::Bookmarks::add(address, size, name, comment);
 
         Py_RETURN_NONE;
     }
