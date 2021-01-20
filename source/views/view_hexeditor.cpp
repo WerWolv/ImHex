@@ -46,22 +46,26 @@ namespace hex {
 
             for (const auto &[region, name, comment, color] : _this->m_bookmarks) {
                 if (off >= region.address && off < (region.address + region.size))
-                    currColor = (color & 0x00FFFFFF) | 0x40000000;
+                    currColor = (color & 0x00FFFFFF) | 0x80000000;
                 if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
-                    prevColor = (color & 0x00FFFFFF) | 0x40000000;;
+                    prevColor = (color & 0x00FFFFFF) | 0x80000000;
             }
 
-            if (_this->m_highlightedBytes.contains(off))
-                currColor = _this->m_highlightedBytes[off];
-            if (_this->m_highlightedBytes.contains(off - 1))
-                prevColor = _this->m_highlightedBytes[off - 1];
+            if (_this->m_highlightedBytes.contains(off)) {
+                auto color = (_this->m_highlightedBytes[off] & 0x00FFFFFF) | 0x80000000;
+                currColor = currColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
+            }
+            if (_this->m_highlightedBytes.contains(off - 1)) {
+                auto color = (_this->m_highlightedBytes[off - 1] & 0x00FFFFFF) | 0x80000000;
+                prevColor = prevColor.has_value() ? ImAlphaBlendColors(color, prevColor.value()) : color;
+            }
 
             if (next && prevColor != currColor) {
                 return false;
             }
 
-            if (currColor.has_value()) {
-                _this->m_memoryEditor.HighlightColor = currColor.value();
+            if (currColor.has_value() && (currColor.value() & 0x00FFFFFF) != 0x00) {
+                _this->m_memoryEditor.HighlightColor = (currColor.value() & 0x00FFFFFF) | 0x40000000;
                 return true;
             }
 

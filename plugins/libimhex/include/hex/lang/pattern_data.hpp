@@ -183,7 +183,7 @@ namespace hex::lang {
 
     class PatternDataPadding : public PatternData {
     public:
-        PatternDataPadding(u64 offset, size_t size) : PatternData(offset, size, 0x00FFFFFF) { }
+        PatternDataPadding(u64 offset, size_t size) : PatternData(offset, size, 0xFF000000) { }
 
         PatternData* clone() override {
             return new PatternDataPadding(*this);
