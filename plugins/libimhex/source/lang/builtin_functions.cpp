@@ -165,6 +165,18 @@ namespace hex::lang {
 
             return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() + pattern->getSize() });
         });
+
+        ContentRegistry::PatternLanguageFunctions::add("alignTo", 2, [this](auto &console, auto params) -> ASTNode* {
+            auto alignment = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
+            auto value = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
+
+            auto result = std::visit([](auto &&alignment, auto &&value) {
+                u64 remainder = u64(value) % u64(alignment);
+                return remainder != 0 ? u64(value) + (u64(alignment) - remainder) : u64(value);
+            }, alignment, value);
+
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, result });
+        });
     }
 
 }
