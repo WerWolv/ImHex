@@ -32,7 +32,7 @@ build() {
   MSYS2_ARG_CONV_EXCL=- cmake \
     -G "MinGW Makefiles" \
     -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
-    ../
+    ../../
   mingw32-make
 }
 
