@@ -262,6 +262,29 @@ namespace hex::lang {
         return this->parseTernaryConditional();
     }
 
+    // [[ <Identifier[( (parseStringLiteral) )], ...> ]]
+    void Parser::parseAttribute(Attributable *currNode) {
+        if (currNode == nullptr)
+            throwParseError("tried to apply attribute to invalid statement");
+
+        do {
+            if (!MATCHES(sequence(IDENTIFIER)))
+                throwParseError("expected attribute expression");
+
+            auto attribute = this->getValue<std::string>(-1);
+
+            if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN, STRING, SEPARATOR_ROUNDBRACKETCLOSE))) {
+                auto value = this->getValue<std::string>(-2);
+                currNode->addAttribute(new ASTNodeAttribute(attribute, value));
+            }
+            else
+                currNode->addAttribute(new ASTNodeAttribute(attribute));
+
+        } while (MATCHES(sequence(SEPARATOR_COMMA)));
+
+        if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE, SEPARATOR_SQUAREBRACKETCLOSE)))
+            throwParseError("unfinished attribute. Expected ']]'");
+    }
 
     /* Control flow */
 
@@ -409,6 +432,9 @@ namespace hex::lang {
             throwParseError("unexpected end of program", -2);
         else
             throwParseError("invalid struct member", 0);
+
+        if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
+            parseAttribute(dynamic_cast<Attributable *>(member));
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
             throwParseError("missing ';' at end of expression", -1);
@@ -604,6 +630,9 @@ namespace hex::lang {
         else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
             statement = parseFunctionCall();
         else throwParseError("invalid sequence", 0);
+
+        if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
+            parseAttribute(dynamic_cast<Attributable *>(statement));
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
             throwParseError("missing ';' at end of expression", -1);

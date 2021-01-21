@@ -37,7 +37,7 @@ namespace hex::lang {
             }
         }
 
-        [[noreturn]] static void abortEvaluation(std::string_view message) {
+        [[noreturn]] void abortEvaluation(std::string_view message) {
             throw EvaluateError(message);
         }
 
@@ -51,7 +51,7 @@ namespace hex::lang {
 
         std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
-        auto& getConsole() { return this->m_console; }
+        LogConsole& getConsole() { return this->m_console; }
 
     private:
         std::map<std::string, ASTNode*> m_types;
@@ -76,6 +76,7 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
         PatternData* patternFromName(const std::vector<std::string> &name);
+        PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
         void evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset);
         PatternData* evaluateStruct(ASTNodeStruct *node);
