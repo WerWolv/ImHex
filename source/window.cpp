@@ -141,6 +141,8 @@ namespace hex {
                                      | ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoResize
                                      | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
             ImGui::PopStyleVar(2);
             ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);

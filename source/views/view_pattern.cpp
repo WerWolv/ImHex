@@ -265,6 +265,9 @@ namespace hex {
                     this->parsePattern(this->m_textEditor.GetText().data());
                 }
             }
+
+            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+                ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
         }
         ImGui::End();
 
