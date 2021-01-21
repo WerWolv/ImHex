@@ -76,6 +76,38 @@ namespace hex {
 
 namespace hex {
 
+    std::string to_string(u128 value) {
+        char data[45] = { 0 };
+
+        u8 index = sizeof(data) - 2;
+        while (value != 0 && index != 0) {
+            data[index] = '0' + value % 10;
+            value /= 10;
+            index--;
+        }
+
+        return std::string(data + index + 1);
+    }
+
+    std::string to_string(s128 value) {
+        char data[45] = { 0 };
+
+        u128 unsignedValue = value < 0 ? -value : value;
+
+        u8 index = sizeof(data) - 2;
+        while (unsignedValue != 0 && index != 0) {
+            data[index] = '0' + unsignedValue % 10;
+            unsignedValue /= 10;
+            index--;
+        }
+
+        if (value < 0) {
+            data[index] = '-';
+            return std::string(data + index);
+        } else
+            return std::string(data + index + 1);
+    }
+
     template<typename ... Args>
     inline std::string format(const char *format, Args ... args) {
         ssize_t size = snprintf( nullptr, 0, format, args ... );
