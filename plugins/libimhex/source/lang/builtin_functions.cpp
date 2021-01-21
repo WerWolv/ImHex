@@ -145,7 +145,7 @@ namespace hex::lang {
             std::vector<std::string> path = splitString(name, ".");
             auto pattern = this->patternFromName(path);
 
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() });
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(pattern->getOffset()) });
         });
 
         ContentRegistry::PatternLanguageFunctions::add("sizeof", 1, [this](auto &console, auto params) -> ASTNode* {
@@ -154,7 +154,7 @@ namespace hex::lang {
             std::vector<std::string> path = splitString(name, ".");
             auto pattern = this->patternFromName(path);
 
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getSize() });
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(pattern->getSize()) });
         });
 
         ContentRegistry::PatternLanguageFunctions::add("nextAfter", 1, [this](auto &console, auto params) -> ASTNode* {
@@ -163,7 +163,7 @@ namespace hex::lang {
             std::vector<std::string> path = splitString(name, ".");
             auto pattern = this->patternFromName(path);
 
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() + pattern->getSize() });
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(pattern->getOffset() + pattern->getSize()) });
         });
 
         ContentRegistry::PatternLanguageFunctions::add("alignTo", 2, [this](auto &console, auto params) -> ASTNode* {
@@ -175,7 +175,7 @@ namespace hex::lang {
                 return remainder != 0 ? u64(value) + (u64(alignment) - remainder) : u64(value);
             }, alignment, value);
 
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, result });
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(result) });
         });
     }
 
