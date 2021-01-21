@@ -28,7 +28,7 @@ namespace hex {
         std::filesystem::path m_possiblePatternFile;
 
         TextEditor m_textEditor;
-        std::vector<std::pair<lang::Evaluator::ConsoleLogLevel, std::string>> m_console;
+        std::vector<std::pair<lang::LogConsole::Level, std::string>> m_console;
         imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         void loadPatternFile(std::string path);

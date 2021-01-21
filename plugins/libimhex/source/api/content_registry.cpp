@@ -76,7 +76,7 @@ namespace hex {
 
     /* Pattern Language Functions */
 
-    void ContentRegistry::PatternLanguageFunctions::add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(std::vector<hex::lang::ASTNode*>)> &func) {
+    void ContentRegistry::PatternLanguageFunctions::add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::LogConsole&, std::vector<hex::lang::ASTNode*>)> &func) {
         getEntries()[name.data()] = Function{ parameterCount, func };
     }
 

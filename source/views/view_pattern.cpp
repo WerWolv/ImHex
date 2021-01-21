@@ -237,16 +237,16 @@ namespace hex {
                 if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                     for (auto &[level, message] : this->m_console) {
                         switch (level) {
-                            case lang::Evaluator::ConsoleLogLevel::Debug:
+                            case lang::LogConsole::Level::Debug:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
                                 break;
-                            case lang::Evaluator::ConsoleLogLevel::Info:
+                            case lang::LogConsole::Level::Info:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
                                 break;
-                            case lang::Evaluator::ConsoleLogLevel::Warning:
+                            case lang::LogConsole::Level::Warning:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
                                 break;
-                            case lang::Evaluator::ConsoleLogLevel::Error:
+                            case lang::LogConsole::Level::Error:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                                 break;
                             default: continue;
@@ -383,12 +383,12 @@ namespace hex {
         hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
 
         auto patternData = evaluator.evaluate(ast.value());
-        this->m_console = evaluator.getConsoleLog();
+        this->m_console = evaluator.getConsole().getLog();
         if (!patternData.has_value())
             return;
 
         this->m_patternData = patternData.value();
-        this->postEvent(Events::PatternChanged);
+        View::postEvent(Events::PatternChanged);
     }
 
 }

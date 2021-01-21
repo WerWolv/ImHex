@@ -7,15 +7,15 @@ namespace hex::lang {
 
     void Evaluator::registerBuiltinFunctions() {
         /* findSequence */
-        ContentRegistry::PatternLanguageFunctions::add("findSequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [this](auto params) {
+        ContentRegistry::PatternLanguageFunctions::add("findSequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [this](auto &console, auto params) {
             auto& occurrenceIndex = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
             std::vector<u8> sequence;
             for (u32 i = 1; i < params.size(); i++) {
-                sequence.push_back(std::visit([](auto &&value) -> u8 {
+                sequence.push_back(std::visit([&](auto &&value) -> u8 {
                     if (value <= 0xFF)
                         return value;
                     else
-                        throwEvaluateError("sequence bytes need to fit into 1 byte");
+                        console.abortEvaluation("sequence bytes need to fit into 1 byte");
                 }, asType<ASTNodeIntegerLiteral>(params[i])->getValue()));
             }
 
@@ -34,20 +34,20 @@ namespace hex::lang {
                 }
             }
 
-            throwEvaluateError("failed to find sequence");
+            console.abortEvaluation("failed to find sequence");
         });
 
         /* assert */
-        ContentRegistry::PatternLanguageFunctions::add("readUnsigned", 2, [this](auto params) {
+        ContentRegistry::PatternLanguageFunctions::add("readUnsigned", 2, [this](auto &console, auto params) {
             auto address = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
             auto size = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
 
             if (LITERAL_COMPARE(address, address >= this->m_provider->getActualSize()))
-                throwEvaluateError("address out of range");
+                console.abortEvaluation("address out of range");
 
-            return std::visit([this](auto &&address, auto &&size) {
+            return std::visit([&, this](auto &&address, auto &&size) {
                 if (size <= 0 || size > 16)
-                    throwEvaluateError("invalid read size");
+                    console.abortEvaluation("invalid read size");
 
                 u8 value[(u8)size];
                 this->m_provider->read(address, value, size);
@@ -58,21 +58,21 @@ namespace hex::lang {
                     case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned32Bit,  hex::changeEndianess(*reinterpret_cast<u32*>(value), 4, this->getCurrentEndian()) });
                     case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit,  hex::changeEndianess(*reinterpret_cast<u64*>(value), 8, this->getCurrentEndian()) });
                     case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned128Bit, hex::changeEndianess(*reinterpret_cast<u128*>(value), 16, this->getCurrentEndian()) });
-                    default: throwEvaluateError("invalid read size");
+                    default: console.abortEvaluation("invalid read size");
                 }
             }, address, size);
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("readSigned", 2, [this](auto params) {
+        ContentRegistry::PatternLanguageFunctions::add("readSigned", 2, [this](auto &console, auto params) {
             auto address = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
             auto size = asType<ASTNodeIntegerLiteral>(params[1])->getValue();
 
             if (LITERAL_COMPARE(address, address >= this->m_provider->getActualSize()))
-                throwEvaluateError("address out of range");
+                console.abortEvaluation("address out of range");
 
-            return std::visit([this](auto &&address, auto &&size) {
+            return std::visit([&, this](auto &&address, auto &&size) {
                 if (size <= 0 || size > 16)
-                    throwEvaluateError("invalid read size");
+                    console.abortEvaluation("invalid read size");
 
                 u8 value[(u8)size];
                 this->m_provider->read(address, value, size);
@@ -83,32 +83,32 @@ namespace hex::lang {
                     case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  hex::changeEndianess(*reinterpret_cast<s32*>(value), 4, this->getCurrentEndian()) });
                     case 8:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed64Bit,  hex::changeEndianess(*reinterpret_cast<s64*>(value), 8, this->getCurrentEndian()) });
                     case 16: return new ASTNodeIntegerLiteral({ Token::ValueType::Signed128Bit, hex::changeEndianess(*reinterpret_cast<s128*>(value), 16, this->getCurrentEndian()) });
-                    default: throwEvaluateError("invalid read size");
+                    default: console.abortEvaluation("invalid read size");
                 }
             }, address, size);
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("assert", 2, [this](auto params) {
+        ContentRegistry::PatternLanguageFunctions::add("assert", 2, [this](auto &console, auto params) {
             auto condition = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
             auto message = asType<ASTNodeStringLiteral>(params[1])->getString();
 
             if (LITERAL_COMPARE(condition, condition == 0))
-                throwEvaluateError(hex::format("assert failed \"%s\"", message.data()));
+                console.abortEvaluation(hex::format("assert failed \"%s\"", message.data()));
 
             return nullptr;
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("warnAssert", 2, [this](auto params) {
+        ContentRegistry::PatternLanguageFunctions::add("warnAssert", 2, [this](auto console, auto params) {
             auto condition = asType<ASTNodeIntegerLiteral>(params[0])->getValue();
             auto message = asType<ASTNodeStringLiteral>(params[1])->getString();
 
             if (LITERAL_COMPARE(condition, condition == 0))
-                this->emmitWaring(hex::format("assert failed \"%s\"", message.data()));
+                console.log(LogConsole::Level::Warning, hex::format("assert failed \"%s\"", message.data()));
 
             return nullptr;
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [this](auto params) {
+        ContentRegistry::PatternLanguageFunctions::add("print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](auto &console, auto params) {
             std::string message;
             for (auto& param : params) {
                 if (auto integerLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(param); integerLiteral != nullptr) {
@@ -134,12 +134,12 @@ namespace hex::lang {
                     message += stringLiteral->getString();
             }
 
-            this->emmitInfo(message);
+            console.log(LogConsole::Level::Info, message);
 
             return nullptr;
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("addressof", 1, [this](auto params) -> ASTNode* {
+        ContentRegistry::PatternLanguageFunctions::add("addressof", 1, [this](auto &console, auto params) -> ASTNode* {
             auto name = asType<ASTNodeStringLiteral>(params[0])->getString();
 
             std::vector<std::string> path = splitString(name, ".");
@@ -148,7 +148,7 @@ namespace hex::lang {
             return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() });
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("sizeof", 1, [this](auto params) -> ASTNode* {
+        ContentRegistry::PatternLanguageFunctions::add("sizeof", 1, [this](auto &console, auto params) -> ASTNode* {
             auto name = asType<ASTNodeStringLiteral>(params[0])->getString();
 
             std::vector<std::string> path = splitString(name, ".");
@@ -157,7 +157,7 @@ namespace hex::lang {
             return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getSize() });
         });
 
-        ContentRegistry::PatternLanguageFunctions::add("nextAfter", 1, [this](auto params) -> ASTNode* {
+        ContentRegistry::PatternLanguageFunctions::add("nextAfter", 1, [this](auto &console, auto params) -> ASTNode* {
             auto name = asType<ASTNodeStringLiteral>(params[0])->getString();
 
             std::vector<std::string> path = splitString(name, ".");
