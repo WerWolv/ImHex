@@ -27,7 +27,7 @@ namespace hex {
 
 
     void ViewStrings::createStringContextMenu(const FoundString &foundString) {
-        if (ImGui::TableGetHoveredColumn() == 2  && ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
+        if (ImGui::TableGetColumnFlags(2) == ImGuiTableColumnFlags_IsHovered && ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
             ImGui::OpenPopup("StringContextMenu");
             this->m_selectedString = foundString.string;
         }

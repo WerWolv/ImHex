@@ -1,4 +1,4 @@
-// dear imgui, v1.80 WIP
+// dear imgui, v1.80
 // (headers)
 
 // Help:
@@ -19,28 +19,25 @@
 /*
 
 Index of this file:
-// Header mess
-// Forward declarations and basic types
-// ImGui API (Dear ImGui end-user API)
-// Flags & Enumerations
-// Memory allocations macros
-// ImVector<>
-// ImGuiStyle
-// ImGuiIO
-// Misc data structures (ImGuiInputTextCallbackData, ImGuiSizeCallbackData, ImGuiWindowClass, ImGuiPayload)
-// Obsolete functions
-// Helpers (ImGuiOnceUponAFrame, ImGuiTextFilter, ImGuiTextBuffer, ImGuiStorage, ImGuiListClipper, ImColor)
-// Draw List API (ImDrawCallback, ImDrawCmd, ImDrawIdx, ImDrawVert, ImDrawChannel, ImDrawListSplitter, ImDrawListFlags, ImDrawList, ImDrawData)
-// Font API (ImFontConfig, ImFontGlyph, ImFontGlyphRangesBuilder, ImFontAtlasFlags, ImFontAtlas, ImFont)
-// Platform interface for multi-viewport support (ImGuiPlatformIO, ImGuiPlatformMonitor, ImGuiViewportFlags, ImGuiViewport)
-
-// FIXME-TABLE: Add ImGuiTableSortSpecsColumn and ImGuiTableSortSpecs in "Misc data structures" section above (we don't do it right now to facilitate merging various branches)
+// [SECTION] Header mess
+// [SECTION] Forward declarations and basic types
+// [SECTION] Dear ImGui end-user API functions
+// [SECTION] Flags & Enumerations
+// [SECTION] Helpers: Memory allocations macros, ImVector<>
+// [SECTION] ImGuiStyle
+// [SECTION] ImGuiIO
+// [SECTION] Misc data structures (ImGuiInputTextCallbackData, ImGuiSizeCallbackData, ImGuiWindowClass, ImGuiPayload, ImGuiTableSortSpecs, ImGuiTableColumnSortSpecs)
+// [SECTION] Obsolete functions
+// [SECTION] Helpers (ImGuiOnceUponAFrame, ImGuiTextFilter, ImGuiTextBuffer, ImGuiStorage, ImGuiListClipper, ImColor)
+// [SECTION] Drawing API (ImDrawCallback, ImDrawCmd, ImDrawIdx, ImDrawVert, ImDrawChannel, ImDrawListSplitter, ImDrawListFlags, ImDrawList, ImDrawData)
+// [SECTION] Font API (ImFontConfig, ImFontGlyph, ImFontGlyphRangesBuilder, ImFontAtlasFlags, ImFontAtlas, ImFont)
+// [SECTION] Platform interface for multi-viewport support (ImGuiPlatformIO, ImGuiPlatformMonitor, ImGuiViewportFlags, ImGuiViewport)
 
 */
 
 #pragma once
 
-// Configuration file with compile-time options (edit imconfig.h or #define IMGUI_USER_CONFIG to your own filename)
+// Configuration file with compile-time options (edit imconfig.h or '#define IMGUI_USER_CONFIG "myfilename.h" from your build system')
 #ifdef IMGUI_USER_CONFIG
 #include IMGUI_USER_CONFIG
 #endif
@@ -51,7 +48,7 @@ Index of this file:
 #ifndef IMGUI_DISABLE
 
 //-----------------------------------------------------------------------------
-// Header mess
+// [SECTION] Header mess
 //-----------------------------------------------------------------------------
 
 // Includes
@@ -62,11 +59,12 @@ Index of this file:
 
 // Version
 // (Integer encoded as XYYZZ for use in #if preprocessor conditionals. Work in progress versions typically starts at XYY99 then bounce up to XYY00, XYY01 etc. when release tagging happens)
-#define IMGUI_VERSION               "1.80 WIP"
-#define IMGUI_VERSION_NUM           17906
+#define IMGUI_VERSION               "1.80"
+#define IMGUI_VERSION_NUM           18000
 #define IMGUI_CHECKVERSION()        ImGui::DebugCheckVersionAndDataLayout(IMGUI_VERSION, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(ImDrawIdx))
-#define IMGUI_HAS_VIEWPORT          1 // Viewport WIP branch
-#define IMGUI_HAS_DOCK              1 // Docking WIP branch
+#define IMGUI_HAS_TABLE
+#define IMGUI_HAS_VIEWPORT          // Viewport WIP branch
+#define IMGUI_HAS_DOCK              // Docking WIP branch
 
 // Define attributes of all API symbols declarations (e.g. for DLL under Windows)
 // IMGUI_API is used for core imgui functions, IMGUI_IMPL_API is used for the default backends files (imgui_impl_xxx.h)
@@ -85,16 +83,18 @@ Index of this file:
 #endif
 #define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR))))     // Size of a static C-style array. Don't use on pointers!
 #define IM_UNUSED(_VAR)             ((void)(_VAR))                              // Used to silence "unused variable warnings". Often useful as asserts may be stripped out from final builds.
-#if (__cplusplus >= 201100)
+#if (__cplusplus >= 201100) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201100)
 #define IM_OFFSETOF(_TYPE,_MEMBER)  offsetof(_TYPE, _MEMBER)                    // Offset of _MEMBER within _TYPE. Standardized as offsetof() in C++11
 #else
 #define IM_OFFSETOF(_TYPE,_MEMBER)  ((size_t)&(((_TYPE*)0)->_MEMBER))           // Offset of _MEMBER within _TYPE. Old style macro.
 #endif
+
+// Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__clang__)
-#define IM_FMTARGS(FMT)             __attribute__((format(printf, FMT, FMT+1)))     // Apply printf-style warnings to our formatting functions.
+#define IM_FMTARGS(FMT)             __attribute__((format(printf, FMT, FMT+1)))
 #define IM_FMTLIST(FMT)             __attribute__((format(printf, FMT, 0)))
 #elif !defined(IMGUI_USE_STB_SPRINTF) && defined(__GNUC__) && defined(__MINGW32__)
-#define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1))) // Apply printf-style warnings to our formatting functions.
+#define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
 #define IM_FMTLIST(FMT)             __attribute__((format(gnu_printf, FMT, 0)))
 #else
 #define IM_FMTARGS(FMT)
@@ -110,12 +110,12 @@ Index of this file:
 #endif
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"                  // warning: unknown option after '#pragma GCC diagnostic' kind
-#pragma GCC diagnostic ignored "-Wclass-memaccess"          // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx' with no trivial copy-assignment; use assignment or value-initialization instead
+#pragma GCC diagnostic ignored "-Wpragmas"          // warning: unknown option after '#pragma GCC diagnostic' kind
+#pragma GCC diagnostic ignored "-Wclass-memaccess"  // [__GNUC__ >= 8] warning: 'memset/memcpy' clearing/writing an object of type 'xxxx' with no trivial copy-assignment; use assignment or value-initialization instead
 #endif
 
 //-----------------------------------------------------------------------------
-// Forward declarations and basic types
+// [SECTION] Forward declarations and basic types
 //-----------------------------------------------------------------------------
 
 // Forward declarations
@@ -144,7 +144,7 @@ struct ImGuiSizeCallbackData;       // Callback data when using SetNextWindowSiz
 struct ImGuiStorage;                // Helper for key->value storage
 struct ImGuiStyle;                  // Runtime data for styling/colors
 struct ImGuiTableSortSpecs;         // Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
-struct ImGuiTableSortSpecsColumn;   // Sorting specification for one column of a table
+struct ImGuiTableColumnSortSpecs;   // Sorting specification for one column of a table
 struct ImGuiTextBuffer;             // Helper to hold and append into a text buffer (~string builder)
 struct ImGuiTextFilter;             // Helper to parse and apply text filters (e.g. "aaaaa[,bbbbb][,ccccc]")
 struct ImGuiViewport;               // Viewport (generally ~1 per window to output to at the OS level. Need per-platform support to use multiple viewports)
@@ -196,10 +196,10 @@ typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: f
 typedef void* ImTextureID;          // User data for rendering backend to identify a texture. This is whatever to you want it to be! read the FAQ about ImTextureID for details.
 #endif
 typedef unsigned int ImGuiID;       // A unique ID used by widgets, typically hashed from a stack of string.
-typedef int (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);
-typedef void (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);
+typedef int (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for ImGui::InputText()
+typedef void (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);             // Callback function for ImGui::SetNextWindowSizeConstraints()
 
-// Decoded character types
+// Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
 typedef unsigned short ImWchar16;   // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 typedef unsigned int ImWchar32;     // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
@@ -244,8 +244,8 @@ struct ImVec2
 // 4D vector (often used to store floating-point colors)
 struct ImVec4
 {
-    float                                   x, y, z, w;
-    ImVec4()                                { x = y = z = w = 0.0f; }
+    float                                           x, y, z, w;
+    ImVec4()                                        { x = y = z = w = 0.0f; }
     ImVec4(float _x, float _y, float _z, float _w)  { x = _x; y = _y; z = _z; w = _w; }
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
@@ -253,8 +253,8 @@ struct ImVec4
 };
 
 //-----------------------------------------------------------------------------
-// ImGui: Dear ImGui end-user API
-// (This is a namespace. You can add extra ImGui:: functions in your own separate file. Please don't modify imgui source files!)
+// [SECTION] Dear ImGui end-user API functions
+// (Note that ImGui:: being a namespace, you can add extra ImGui:: functions in your own separate file. Please don't modify imgui source files!)
 //-----------------------------------------------------------------------------
 
 namespace ImGui
@@ -276,19 +276,19 @@ namespace ImGui
     IMGUI_API ImDrawData*   GetDrawData();                              // valid after Render() and until the next call to NewFrame(). this is what you have to render.
 
     // Demo, Debug, Information
-    IMGUI_API void          ShowDemoWindow(bool* p_open = NULL);        // create Demo window (previously called ShowTestWindow). demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
-    IMGUI_API void          ShowAboutWindow(bool* p_open = NULL);       // create About window. display Dear ImGui version, credits and build/system information.
+    IMGUI_API void          ShowDemoWindow(bool* p_open = NULL);        // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
     IMGUI_API void          ShowMetricsWindow(bool* p_open = NULL);     // create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
+    IMGUI_API void          ShowAboutWindow(bool* p_open = NULL);       // create About window. display Dear ImGui version, credits and build/system information.
     IMGUI_API void          ShowStyleEditor(ImGuiStyle* ref = NULL);    // add style editor block (not a window). you can pass in a reference ImGuiStyle structure to compare to, revert to and save to (else it uses the default style)
     IMGUI_API bool          ShowStyleSelector(const char* label);       // add style selector block (not a window), essentially a combo listing the default styles.
     IMGUI_API void          ShowFontSelector(const char* label);        // add font selector block (not a window), essentially a combo listing the loaded fonts.
     IMGUI_API void          ShowUserGuide();                            // add basic help/info block (not a window): how to manipulate ImGui as a end-user (mouse/keyboard controls).
-    IMGUI_API const char*   GetVersion();                               // get the compiled version string e.g. "1.23" (essentially the compiled value for IMGUI_VERSION)
+    IMGUI_API const char*   GetVersion();                               // get the compiled version string e.g. "1.80 WIP" (essentially the value for IMGUI_VERSION from the compiled version of imgui.cpp)
 
     // Styles
     IMGUI_API void          StyleColorsDark(ImGuiStyle* dst = NULL);    // new, recommended style (default)
-    IMGUI_API void          StyleColorsClassic(ImGuiStyle* dst = NULL); // classic imgui style
     IMGUI_API void          StyleColorsLight(ImGuiStyle* dst = NULL);   // best used with borders and a custom, thicker font
+    IMGUI_API void          StyleColorsClassic(ImGuiStyle* dst = NULL); // classic imgui style
 
     // Windows
     // - Begin() = push window to the stack and start appending to it. End() = pop window from the stack.
@@ -351,20 +351,21 @@ namespace ImGui
     IMGUI_API void          SetWindowFocus(const char* name);                                           // set named window to be focused / top-most. use NULL to remove focus.
 
     // Content region
-    // - Those functions are bound to be redesigned soon (they are confusing, incomplete and return values in local window coordinates which increases confusion)
-    IMGUI_API ImVec2        GetContentRegionMax();                                          // current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
+    // - Retrieve available space from a given point. GetContentRegionAvail() is frequently useful.
+    // - Those functions are bound to be redesigned (they are confusing, incomplete and the Min/Max return values are in local window coordinates which increases confusion)
     IMGUI_API ImVec2        GetContentRegionAvail();                                        // == GetContentRegionMax() - GetCursorPos()
+    IMGUI_API ImVec2        GetContentRegionMax();                                          // current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
     IMGUI_API ImVec2        GetWindowContentRegionMin();                                    // content boundaries min (roughly (0,0)-Scroll), in window coordinates
     IMGUI_API ImVec2        GetWindowContentRegionMax();                                    // content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
     IMGUI_API float         GetWindowContentRegionWidth();                                  //
 
     // Windows Scrolling
-    IMGUI_API float         GetScrollX();                                                   // get scrolling amount [0..GetScrollMaxX()]
-    IMGUI_API float         GetScrollY();                                                   // get scrolling amount [0..GetScrollMaxY()]
-    IMGUI_API float         GetScrollMaxX();                                                // get maximum scrolling amount ~~ ContentSize.x - WindowSize.x
-    IMGUI_API float         GetScrollMaxY();                                                // get maximum scrolling amount ~~ ContentSize.y - WindowSize.y
-    IMGUI_API void          SetScrollX(float scroll_x);                                     // set scrolling amount [0..GetScrollMaxX()]
-    IMGUI_API void          SetScrollY(float scroll_y);                                     // set scrolling amount [0..GetScrollMaxY()]
+    IMGUI_API float         GetScrollX();                                                   // get scrolling amount [0 .. GetScrollMaxX()]
+    IMGUI_API float         GetScrollY();                                                   // get scrolling amount [0 .. GetScrollMaxY()]
+    IMGUI_API void          SetScrollX(float scroll_x);                                     // set scrolling amount [0 .. GetScrollMaxX()]
+    IMGUI_API void          SetScrollY(float scroll_y);                                     // set scrolling amount [0 .. GetScrollMaxY()]
+    IMGUI_API float         GetScrollMaxX();                                                // get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
+    IMGUI_API float         GetScrollMaxY();                                                // get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
     IMGUI_API void          SetScrollHereX(float center_x_ratio = 0.5f);                    // adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
     IMGUI_API void          SetScrollHereY(float center_y_ratio = 0.5f);                    // adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
     IMGUI_API void          SetScrollFromPosX(float local_x, float center_x_ratio = 0.5f);  // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
@@ -373,31 +374,33 @@ namespace ImGui
     // Parameters stacks (shared)
     IMGUI_API void          PushFont(ImFont* font);                                         // use NULL as a shortcut to push default font
     IMGUI_API void          PopFont();
-    IMGUI_API void          PushStyleColor(ImGuiCol idx, ImU32 col);
+    IMGUI_API void          PushStyleColor(ImGuiCol idx, ImU32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
     IMGUI_API void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
     IMGUI_API void          PopStyleColor(int count = 1);
-    IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, float val);
-    IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, const ImVec2& val);
+    IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, float val);                     // modify a style float variable. always use this if you modify the style after NewFrame().
+    IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, const ImVec2& val);             // modify a style ImVec2 variable. always use this if you modify the style after NewFrame().
     IMGUI_API void          PopStyleVar(int count = 1);
     IMGUI_API void          PushAllowKeyboardFocus(bool allow_keyboard_focus);              // allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
     IMGUI_API void          PopAllowKeyboardFocus();
     IMGUI_API void          PushButtonRepeat(bool repeat);                                  // in 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.
     IMGUI_API void          PopButtonRepeat();
-    IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
-    IMGUI_API ImFont*       GetFont();                                                      // get current font
-    IMGUI_API float         GetFontSize();                                                  // get current font size (= height in pixels) of current font with current scale applied
-    IMGUI_API ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
-    IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1.0f);              // retrieve given style color with style alpha applied and optional extra alpha multiplier
-    IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied
-    IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied
 
     // Parameters stacks (current window)
-    IMGUI_API void          PushItemWidth(float item_width);                                // push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -1.0f always align width to the right side). 0.0f = default to ~2/3 of windows width,
+    IMGUI_API void          PushItemWidth(float item_width);                                // push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0f = default to ~2/3 of windows width,
     IMGUI_API void          PopItemWidth();
-    IMGUI_API void          SetNextItemWidth(float item_width);                             // set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -1.0f always align width to the right side)
+    IMGUI_API void          SetNextItemWidth(float item_width);                             // set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
     IMGUI_API float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
     IMGUI_API void          PushTextWrapPos(float wrap_local_pos_x = 0.0f);                 // push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space
     IMGUI_API void          PopTextWrapPos();
+
+    // Style read access
+    IMGUI_API ImFont*       GetFont();                                                      // get current font
+    IMGUI_API float         GetFontSize();                                                  // get current font size (= height in pixels) of current font with current scale applied
+    IMGUI_API ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
+    IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1.0f);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
+    IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+    IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
+    IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
 
     // Cursor / Layout
     // - By "cursor" we mean the current output position.
@@ -475,7 +478,7 @@ namespace ImGui
     IMGUI_API bool          CheckboxFlags(const char* label, unsigned int* flags, unsigned int flags_value);
     IMGUI_API bool          RadioButton(const char* label, bool active);                    // use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; }
     IMGUI_API bool          RadioButton(const char* label, int* v, int v_button);           // shortcut to handle the above pattern when value is an integer
-    IMGUI_API void          ProgressBar(float fraction, const ImVec2& size_arg = ImVec2(-1, 0), const char* overlay = NULL);
+    IMGUI_API void          ProgressBar(float fraction, const ImVec2& size_arg = ImVec2(-FLT_MIN, 0), const char* overlay = NULL);
     IMGUI_API void          Bullet();                                                       // draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
 
     // Widgets: Combo Box
@@ -577,7 +580,7 @@ namespace ImGui
     IMGUI_API void          TreePop();                                                          // ~ Unindent()+PopId()
     IMGUI_API float         GetTreeNodeToLabelSpacing();                                        // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
     IMGUI_API bool          CollapsingHeader(const char* label, ImGuiTreeNodeFlags flags = 0);  // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
-    IMGUI_API bool          CollapsingHeader(const char* label, bool* p_open, ImGuiTreeNodeFlags flags = 0); // when 'p_open' isn't NULL, display an additional small close button on upper right of the header
+    IMGUI_API bool          CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags = 0); // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if '*p_visible==false' don't display the header.
     IMGUI_API void          SetNextItemOpen(bool is_open, ImGuiCond cond = 0);                  // set next TreeNode/CollapsingHeader open state.
 
     // Widgets: Selectables
@@ -621,7 +624,7 @@ namespace ImGui
     IMGUI_API bool          MenuItem(const char* label, const char* shortcut, bool* p_selected, bool enabled = true);              // return true when activated + toggle (*p_selected) if p_selected != NULL
 
     // Tooltips
-    // - Tooltip are windows following the mouse which do not take focus away.
+    // - Tooltip are windows following the mouse. They do not take focus away.
     IMGUI_API void          BeginTooltip();                                                     // begin/append a tooltip window. to create full-featured tooltip (with any kind of items).
     IMGUI_API void          EndTooltip();
     IMGUI_API void          SetTooltip(const char* fmt, ...) IM_FMTARGS(1);                     // set a text-only tooltip, typically use with ImGui::IsItemHovered(). override any previous call to SetTooltip().
@@ -665,62 +668,62 @@ namespace ImGui
     IMGUI_API bool          IsPopupOpen(const char* str_id, ImGuiPopupFlags flags = 0);                         // return true if the popup is open.
 
     // Tables
-    // [ALPHA API] API may evolve!
+    // [BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
     // - Full-featured replacement for old Columns API.
-    // - See Demo->Tables for details.
+    // - See Demo->Tables for demo code.
+    // - See top of imgui_tables.cpp for general commentary.
     // - See ImGuiTableFlags_ and ImGuiTableColumnFlags_ enums for a description of available flags.
     // The typical call flow is:
-    // - 1. Call BeginTable()
-    // - 2. Optionally call TableSetupColumn() to submit column name/flags/defaults
-    // - 3. Optionally call TableSetupScrollFreeze() to request scroll freezing of columns/rows
-    // - 4. Optionally call TableHeadersRow() to submit a header row (names will be pulled from data submitted to TableSetupColumns)
-    // - 5. Populate contents
-    //    - In most situations you can use TableNextRow() + TableSetColumnIndex(xx) to start appending into a column.
+    // - 1. Call BeginTable().
+    // - 2. Optionally call TableSetupColumn() to submit column name/flags/defaults.
+    // - 3. Optionally call TableSetupScrollFreeze() to request scroll freezing of columns/rows.
+    // - 4. Optionally call TableHeadersRow() to submit a header row. Names are pulled from TableSetupColumn() data.
+    // - 5. Populate contents:
+    //    - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
     //    - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
     //      you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
     //      TableNextColumn() will automatically wrap-around into the next row if needed.
     //    - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
-    //    - Both TableSetColumnIndex() and TableNextColumn() return false when the column is not visible, so you can
-    //      skip submitting the contents of a cell but only if you know the contents is not going to alter row height.
     //    - Summary of possible call flow:
-    //      ----------------------------------------------------------------------------------------------------------
-    //       TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
-    //       TableNextRow() -> TableNextColumn()         Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
-    //                         TableNextColumn()         Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
-    //       TableNextRow()                              Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
-    //      ----------------------------------------------------------------------------------------------------------
+    //        --------------------------------------------------------------------------------------------------------
+    //        TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
+    //        TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
+    //                          TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
+    //        TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
+    //        --------------------------------------------------------------------------------------------------------
     // - 5. Call EndTable()
-    #define IMGUI_HAS_TABLE 1
-    IMGUI_API bool          BeginTable(const char* str_id, int columns_count, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0, 0), float inner_width = 0.0f);
+    IMGUI_API bool          BeginTable(const char* str_id, int column, ImGuiTableFlags flags = 0, const ImVec2& outer_size = ImVec2(0.0f, 0.0f), float inner_width = 0.0f);
     IMGUI_API void          EndTable();                                 // only call EndTable() if BeginTable() returns true!
     IMGUI_API void          TableNextRow(ImGuiTableRowFlags row_flags = 0, float min_row_height = 0.0f); // append into the first cell of a new row.
-    IMGUI_API bool          TableNextColumn();                          // append into the next column (or first column of next row if currently in last column). Return false when column is not visible.
-    IMGUI_API bool          TableSetColumnIndex(int column_n);          // append into the specified column. Return false when column is not visible.
-    IMGUI_API int           TableGetColumnIndex();                      // return current column index.
+    IMGUI_API bool          TableNextColumn();                          // append into the next column (or first column of next row if currently in last column). Return true when column is visible.
+    IMGUI_API bool          TableSetColumnIndex(int column_n);          // append into the specified column. Return true when column is visible.
     // Tables: Headers & Columns declaration
     // - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
-    //   Important: this will not display anything! The name passed to TableSetupColumn() is used by TableHeadersRow() and context-menus.
-    // - Use TableHeadersRow() to create a row and automatically submit a TableHeader() for each column.
-    //   Headers are required to perform: reordering, sorting, and opening the context menu (but context menu can also be available in columns body using ImGuiTableFlags_ContextMenuInBody).
-    // - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in some advanced cases (e.g. adding custom widgets in header row).
-    // - Use TableSetupScrollFreeze() to lock columns (from the right) or rows (from the top) so they stay visible when scrolled.
-    IMGUI_API void          TableSetupColumn(const char* label, ImGuiTableColumnFlags flags = 0, float init_width_or_weight = -1.0f, ImU32 user_id = 0);
+    // - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
+    //   Headers are required to perform: reordering, sorting, and opening the context menu.
+    //   The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
+    // - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
+    //   some advanced use cases (e.g. adding custom widgets in header row).
+    // - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+    IMGUI_API void          TableSetupColumn(const char* label, ImGuiTableColumnFlags flags = 0, float init_width_or_weight = 0.0f, ImU32 user_id = 0);
     IMGUI_API void          TableSetupScrollFreeze(int cols, int rows); // lock columns/rows so they stay visible when scrolled.
     IMGUI_API void          TableHeadersRow();                          // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
     IMGUI_API void          TableHeader(const char* label);             // submit one header cell manually (rarely used)
+    // Tables: Sorting
+    // - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
+    // - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
+    //   since last call, or the first time. Make sure to set 'SpecsDirty = false' after sorting, else you may
+    //   wastefully sort your data every frame!
+    // - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
+    IMGUI_API ImGuiTableSortSpecs* TableGetSortSpecs();                        // get latest sort specs for the table (NULL if not sorting).
     // Tables: Miscellaneous functions
-    // - Most functions taking 'int column_n' treat the default value of -1 as the same as passing the current column index
-    // - Sorting: call TableGetSortSpecs() to retrieve latest sort specs for the table. Return value will be NULL if no sorting.
-    //   When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed since last call, or the first time.
-    //   Make sure to set 'SpecsDirty = false' after sorting, else you may wastefully sort your data every frame!
-    //   Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
-    IMGUI_API int           TableGetColumnCount();                      // return number of columns (value passed to BeginTable)
-    IMGUI_API const char*   TableGetColumnName(int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
-    IMGUI_API bool          TableGetColumnIsVisible(int column_n = -1); // return true if column is visible. Same value is also returned by TableNextColumn() and TableSetColumnIndex(). Pass -1 to use current column.
-    IMGUI_API bool          TableGetColumnIsSorted(int column_n = -1);  // return true if column is included in the sort specs. Rarely used, can be useful to tell if a data change should trigger resort. Equivalent to test ImGuiTableSortSpecs's ->ColumnsMask & (1 << column_n). Pass -1 to use current column.
-    IMGUI_API int           TableGetHoveredColumn();                    // return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
-    IMGUI_API ImGuiTableSortSpecs* TableGetSortSpecs();                 // get latest sort specs for the table (NULL if not sorting).
-    IMGUI_API void          TableSetBgColor(ImGuiTableBgTarget bg_target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+    // - Functions args 'int column_n' treat the default value of -1 as the same as passing the current column index.
+    IMGUI_API int                   TableGetColumnCount();                      // return number of columns (value passed to BeginTable)
+    IMGUI_API int                   TableGetColumnIndex();                      // return current column index.
+    IMGUI_API int                   TableGetRowIndex();                         // return current row index.
+    IMGUI_API const char*           TableGetColumnName(int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
+    IMGUI_API ImGuiTableColumnFlags TableGetColumnFlags(int column_n = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
+    IMGUI_API void                  TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 
     // Legacy Columns API (2020: prefer using Tables!)
     // - You can also use SameLine(pos_x) to mimic simplified columns.
@@ -767,7 +770,6 @@ namespace ImGui
     IMGUI_API void          LogText(const char* fmt, ...) IM_FMTARGS(1);                        // pass text data straight to log (without being displayed)
 
     // Drag and Drop
-    // - [BETA API] API may evolve!
     // - If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement)
     IMGUI_API bool          BeginDragDropSource(ImGuiDragDropFlags flags = 0);                                      // call when the current item is active. If this return true, you can call SetDragDropPayload() + EndDragDropSource()
     IMGUI_API bool          SetDragDropPayload(const char* type, const void* data, size_t sz, ImGuiCond cond = 0);  // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
@@ -778,6 +780,7 @@ namespace ImGui
     IMGUI_API const ImGuiPayload*   GetDragDropPayload();                                                           // peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.
 
     // Clipping
+    // - Mouse hovering is affected by ImGui::PushClipRect() calls, unlike direct calls to ImDrawList::PushClipRect() which are render only.
     IMGUI_API void          PushClipRect(const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect);
     IMGUI_API void          PopClipRect();
 
@@ -900,7 +903,7 @@ namespace ImGui
 } // namespace ImGui
 
 //-----------------------------------------------------------------------------
-// Flags & Enumerations
+// [SECTION] Flags & Enumerations
 //-----------------------------------------------------------------------------
 
 // Flags for ImGui::Begin()
@@ -1076,93 +1079,122 @@ enum ImGuiTabItemFlags_
 };
 
 // Flags for ImGui::BeginTable()
-// - Important! Sizing policies have particularly complex and subtle side effects, more so than you would expect.
+// [BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
+// - Important! Sizing policies have complex and subtle side effects, more so than you would expect.
 //   Read comments/demos carefully + experiment with live demos to get acquainted with them.
-// - The default sizing policy for columns depends on whether the ScrollX flag is set on the table:
-//   When ScrollX is off:
-//    - Table defaults to ImGuiTableFlags_SizingPolicyStretchX -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch.
-//    - Columns sizing policy allowed: Fixed/Auto or Stretch.
-//    - Stretch Columns will share the width available in table.
-//    - Fixed Columns will generally obtain their requested width unless the Table cannot fit them all.
-//   When ScrollX is on:
-//    - Table defaults to ImGuiTableFlags_SizingPolicyFixedX -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed.
-//    - Columns sizing policy allowed: Fixed/Auto mostly! Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+// - The DEFAULT sizing policies are:
+//    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
+//    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
+// - When ScrollX is off:
+//    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
+//    - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
+//    - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
+//    - Stretch Columns will share the remaining width.
+//    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
+//      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
+//      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
+// - When ScrollX is on:
+//    - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
+//    - Columns sizing policy allowed: Fixed/Auto mostly.
 //    - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
-//    - Stretch Columns, if any, will calculate their width using inner_width, assuming no scrolling (it really doesn't make sense to do otherwise).
-// - Mixing up columns with different sizing policy is possible BUT can be tricky and has some side-effects and restrictions.
-//   (their visible order and the scrolling state have subtle but necessary effects on how they can be manually resized).
-//   The typical use of mixing sizing policies is to have ScrollX disabled, one or two Stretch Column and many Fixed Columns.
+//    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
+//    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+//      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
+// - Read on documentation at the top of imgui_tables.cpp for details.
 enum ImGuiTableFlags_
 {
     // Features
-    ImGuiTableFlags_None                            = 0,
-    ImGuiTableFlags_Resizable                       = 1 << 0,   // Allow resizing columns.
-    ImGuiTableFlags_Reorderable                     = 1 << 1,   // Allow reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
-    ImGuiTableFlags_Hideable                        = 1 << 2,   // Allow hiding columns in context menu.
-    ImGuiTableFlags_Sortable                        = 1 << 3,   // Allow sorting on one column (sort_specs_count will always be == 1). Call TableGetSortSpecs() to obtain sort specs.
-    ImGuiTableFlags_MultiSortable                   = 1 << 4,   // Allow sorting on multiple columns by holding Shift (sort_specs_count may be > 1). Call TableGetSortSpecs() to obtain sort specs.
-    ImGuiTableFlags_NoSavedSettings                 = 1 << 5,   // Disable persisting columns order, width and sort settings in the .ini file.
-    ImGuiTableFlags_ContextMenuInBody               = 1 << 6,   // Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
-    // Decoration
-    ImGuiTableFlags_RowBg                           = 1 << 7,   // Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent to calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
-    ImGuiTableFlags_BordersInnerH                   = 1 << 8,   // Draw horizontal borders between rows.
-    ImGuiTableFlags_BordersOuterH                   = 1 << 9,   // Draw horizontal borders at the top and bottom.
-    ImGuiTableFlags_BordersInnerV                   = 1 << 10,  // Draw vertical borders between columns.
-    ImGuiTableFlags_BordersOuterV                   = 1 << 11,  // Draw vertical borders on the left and right sides.
-    ImGuiTableFlags_BordersH                        = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH, // Draw horizontal borders.
-    ImGuiTableFlags_BordersV                        = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuterV, // Draw vertical borders.
-    ImGuiTableFlags_BordersInner                    = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH, // Draw inner borders.
-    ImGuiTableFlags_BordersOuter                    = ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersOuterH, // Draw outer borders.
-    ImGuiTableFlags_Borders                         = ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter,   // Draw all borders.
-    ImGuiTableFlags_NoBordersInBody                 = 1 << 12,  // Disable vertical borders in columns Body (borders will always appears in Headers).
-    ImGuiTableFlags_NoBordersInBodyUntilResize      = 1 << 13,  // Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers).
-    // Sizing
-    ImGuiTableFlags_SizingPolicyFixedX              = 1 << 14,  // Default if ScrollX is on. Columns will default to use _WidthFixed or _WidthAlwaysAutoResize policy. Read description above for more details.
-    ImGuiTableFlags_SizingPolicyStretchX            = 1 << 15,  // Default if ScrollX is off. Columns will default to use _WidthStretch policy. Read description above for more details.
-    ImGuiTableFlags_NoHeadersWidth                  = 1 << 16,  // Disable header width contribution to automatic width calculation.
-    ImGuiTableFlags_NoHostExtendY                   = 1 << 17,  // (FIXME-TABLE: Reword as SizingPolicy?) Disable extending past the limit set by outer_size.y, only meaningful when neither of ScrollX|ScrollY are set (data below the limit will be clipped and not visible)
-    ImGuiTableFlags_NoKeepColumnsVisible            = 1 << 18,  // Disable keeping column always minimally visible when table width gets too small and ScrllX is off.
-    ImGuiTableFlags_PreciseStretchWidths            = 1 << 19,  // Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.
-    ImGuiTableFlags_NoClip                          = 1 << 20,  // Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with TableSetupScrollFreeze().
+    ImGuiTableFlags_None                       = 0,
+    ImGuiTableFlags_Resizable                  = 1 << 0,   // Enable resizing columns.
+    ImGuiTableFlags_Reorderable                = 1 << 1,   // Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
+    ImGuiTableFlags_Hideable                   = 1 << 2,   // Enable hiding/disabling columns in context menu.
+    ImGuiTableFlags_Sortable                   = 1 << 3,   // Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
+    ImGuiTableFlags_NoSavedSettings            = 1 << 4,   // Disable persisting columns order, width and sort settings in the .ini file.
+    ImGuiTableFlags_ContextMenuInBody          = 1 << 5,   // Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
+    // Decorations
+    ImGuiTableFlags_RowBg                      = 1 << 6,   // Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
+    ImGuiTableFlags_BordersInnerH              = 1 << 7,   // Draw horizontal borders between rows.
+    ImGuiTableFlags_BordersOuterH              = 1 << 8,   // Draw horizontal borders at the top and bottom.
+    ImGuiTableFlags_BordersInnerV              = 1 << 9,   // Draw vertical borders between columns.
+    ImGuiTableFlags_BordersOuterV              = 1 << 10,  // Draw vertical borders on the left and right sides.
+    ImGuiTableFlags_BordersH                   = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH, // Draw horizontal borders.
+    ImGuiTableFlags_BordersV                   = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuterV, // Draw vertical borders.
+    ImGuiTableFlags_BordersInner               = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH, // Draw inner borders.
+    ImGuiTableFlags_BordersOuter               = ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersOuterH, // Draw outer borders.
+    ImGuiTableFlags_Borders                    = ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter,   // Draw all borders.
+    ImGuiTableFlags_NoBordersInBody            = 1 << 11,  // [ALPHA] Disable vertical borders in columns Body (borders will always appears in Headers). -> May move to style
+    ImGuiTableFlags_NoBordersInBodyUntilResize = 1 << 12,  // [ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers). -> May move to style
+    // Sizing Policy (read above for defaults)
+    ImGuiTableFlags_SizingFixedFit             = 1 << 13,  // Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching contents width.
+    ImGuiTableFlags_SizingFixedSame            = 2 << 13,  // Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching the maximum contents width of all columns. Implicitly enable ImGuiTableFlags_NoKeepColumnsVisible.
+    ImGuiTableFlags_SizingStretchProp          = 3 << 13,  // Columns default to _WidthStretch with default weights proportional to each columns contents widths.
+    ImGuiTableFlags_SizingStretchSame          = 4 << 13,  // Columns default to _WidthStretch with default weights all equal, unless overriden by TableSetupColumn().
+    // Sizing Extra Options
+    ImGuiTableFlags_NoHostExtendX              = 1 << 16,  // Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
+    ImGuiTableFlags_NoHostExtendY              = 1 << 17,  // Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.
+    ImGuiTableFlags_NoKeepColumnsVisible       = 1 << 18,  // Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
+    ImGuiTableFlags_PreciseWidths              = 1 << 19,  // Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.
+    // Clipping
+    ImGuiTableFlags_NoClip                     = 1 << 20,  // Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with TableSetupScrollFreeze().
     // Padding
-    ImGuiTableFlags_PadOuterX                       = 1 << 21,  // Default if BordersOuterV is on. Enable outer-most padding.
-    ImGuiTableFlags_NoPadOuterX                     = 1 << 22,  // Default if BordersOuterV is off. Disable outer-most padding.
-    ImGuiTableFlags_NoPadInnerX                     = 1 << 23,  // Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
+    ImGuiTableFlags_PadOuterX                  = 1 << 21,  // Default if BordersOuterV is on. Enable outer-most padding. Generally desirable if you have headers.
+    ImGuiTableFlags_NoPadOuterX                = 1 << 22,  // Default if BordersOuterV is off. Disable outer-most padding.
+    ImGuiTableFlags_NoPadInnerX                = 1 << 23,  // Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
     // Scrolling
-    ImGuiTableFlags_ScrollX                         = 1 << 24,  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.
-    ImGuiTableFlags_ScrollY                         = 1 << 25,  // Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
+    ImGuiTableFlags_ScrollX                    = 1 << 24,  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.
+    ImGuiTableFlags_ScrollY                    = 1 << 25,  // Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
+    // Sorting
+    ImGuiTableFlags_SortMulti                  = 1 << 26,  // Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).
+    ImGuiTableFlags_SortTristate               = 1 << 27,  // Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
 
     // [Internal] Combinations and masks
-    ImGuiTableFlags_SizingPolicyMaskX_              = ImGuiTableFlags_SizingPolicyStretchX | ImGuiTableFlags_SizingPolicyFixedX
+    ImGuiTableFlags_SizingMask_                = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_SizingStretchSame
+
+    // Obsolete names (will be removed soon)
+#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    //, ImGuiTableFlags_ColumnsWidthFixed = ImGuiTableFlags_SizingFixedFit, ImGuiTableFlags_ColumnsWidthStretch = ImGuiTableFlags_SizingStretchSame   // WIP Tables 2020/12
+    //, ImGuiTableFlags_SizingPolicyFixed = ImGuiTableFlags_SizingFixedFit, ImGuiTableFlags_SizingPolicyStretch = ImGuiTableFlags_SizingStretchSame   // WIP Tables 2021/01
+#endif
 };
 
 // Flags for ImGui::TableSetupColumn()
-// FIXME-TABLE: Rename to ImGuiColumns_*, stick old columns api flags in there under an obsolete api block
 enum ImGuiTableColumnFlags_
 {
-    ImGuiTableColumnFlags_None                      = 0,
-    ImGuiTableColumnFlags_DefaultHide               = 1 << 0,   // Default as a hidden column.
-    ImGuiTableColumnFlags_DefaultSort               = 1 << 1,   // Default as a sorting column.
-    ImGuiTableColumnFlags_WidthFixed                = 1 << 2,   // Column will keep a fixed size, preferable with horizontal scrolling enabled (default if table sizing policy is SizingPolicyFixedX and table is resizable).
-    ImGuiTableColumnFlags_WidthStretch              = 1 << 3,   // Column will stretch, preferable with horizontal scrolling disabled (default if table sizing policy is SizingPolicyStretchX).
-    ImGuiTableColumnFlags_WidthAlwaysAutoResize     = 1 << 4,   // Column will keep resizing based on submitted contents (with a one frame delay) == Fixed with auto resize (default if table sizing policy is SizingPolicyFixedX and table is not resizable).
-    ImGuiTableColumnFlags_NoResize                  = 1 << 5,   // Disable manual resizing.
-    ImGuiTableColumnFlags_NoClipX                   = 1 << 6,   // Disable clipping for this column (all NoClipX columns will render in a same draw command).
-    ImGuiTableColumnFlags_NoSort                    = 1 << 7,   // Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).
-    ImGuiTableColumnFlags_NoSortAscending           = 1 << 8,   // Disable ability to sort in the ascending direction.
-    ImGuiTableColumnFlags_NoSortDescending          = 1 << 9,   // Disable ability to sort in the descending direction.
-    ImGuiTableColumnFlags_NoHide                    = 1 << 10,  // Disable hiding this column.
-    ImGuiTableColumnFlags_NoHeaderWidth             = 1 << 11,  // Header width don't contribute to automatic column width.
-    ImGuiTableColumnFlags_PreferSortAscending       = 1 << 12,  // Make the initial sort direction Ascending when first sorting on this column (default).
-    ImGuiTableColumnFlags_PreferSortDescending      = 1 << 13,  // Make the initial sort direction Descending when first sorting on this column.
-    ImGuiTableColumnFlags_IndentEnable              = 1 << 14,  // Use current Indent value when entering cell (default for 1st column).
-    ImGuiTableColumnFlags_IndentDisable             = 1 << 15,  // Ignore current Indent value when entering cell (default for columns after the 1st one). Indentation changes _within_ the cell will still be honored.
-    ImGuiTableColumnFlags_NoReorder                 = 1 << 16,  // Disable reordering this column, this will also prevent other columns from crossing over this column.
+    // Input configuration flags
+    ImGuiTableColumnFlags_None                  = 0,
+    ImGuiTableColumnFlags_DefaultHide           = 1 << 0,   // Default as a hidden/disabled column.
+    ImGuiTableColumnFlags_DefaultSort           = 1 << 1,   // Default as a sorting column.
+    ImGuiTableColumnFlags_WidthStretch          = 1 << 2,   // Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).
+    ImGuiTableColumnFlags_WidthFixed            = 1 << 3,   // Column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).
+    ImGuiTableColumnFlags_NoResize              = 1 << 4,   // Disable manual resizing.
+    ImGuiTableColumnFlags_NoReorder             = 1 << 5,   // Disable manual reordering this column, this will also prevent other columns from crossing over this column.
+    ImGuiTableColumnFlags_NoHide                = 1 << 6,   // Disable ability to hide/disable this column.
+    ImGuiTableColumnFlags_NoClip                = 1 << 7,   // Disable clipping for this column (all NoClip columns will render in a same draw command).
+    ImGuiTableColumnFlags_NoSort                = 1 << 8,   // Disable ability to sort on this field (even if ImGuiTableFlags_Sortable is set on the table).
+    ImGuiTableColumnFlags_NoSortAscending       = 1 << 9,   // Disable ability to sort in the ascending direction.
+    ImGuiTableColumnFlags_NoSortDescending      = 1 << 10,  // Disable ability to sort in the descending direction.
+    ImGuiTableColumnFlags_NoHeaderWidth         = 1 << 11,  // Disable header text width contribution to automatic column width.
+    ImGuiTableColumnFlags_PreferSortAscending   = 1 << 12,  // Make the initial sort direction Ascending when first sorting on this column (default).
+    ImGuiTableColumnFlags_PreferSortDescending  = 1 << 13,  // Make the initial sort direction Descending when first sorting on this column.
+    ImGuiTableColumnFlags_IndentEnable          = 1 << 14,  // Use current Indent value when entering cell (default for column 0).
+    ImGuiTableColumnFlags_IndentDisable         = 1 << 15,  // Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
+
+    // Output status flags, read-only via TableGetColumnFlags()
+    ImGuiTableColumnFlags_IsEnabled             = 1 << 20,  // Status: is enabled == not hidden by user/api (referred to as "Hide" in _DefaultHide and _NoHide) flags.
+    ImGuiTableColumnFlags_IsVisible             = 1 << 21,  // Status: is visible == is enabled AND not clipped by scrolling.
+    ImGuiTableColumnFlags_IsSorted              = 1 << 22,  // Status: is currently part of the sort specs
+    ImGuiTableColumnFlags_IsHovered             = 1 << 23,  // Status: is hovered by mouse
 
     // [Internal] Combinations and masks
-    ImGuiTableColumnFlags_WidthMask_                = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_WidthAlwaysAutoResize,
-    ImGuiTableColumnFlags_IndentMask_               = ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_IndentDisable,
-    ImGuiTableColumnFlags_NoDirectResize_           = 1 << 20   // [Internal] Disable user resizing this column directly (it may however we resized indirectly from its left edge)
+    ImGuiTableColumnFlags_WidthMask_            = ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_WidthFixed,
+    ImGuiTableColumnFlags_IndentMask_           = ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_IndentDisable,
+    ImGuiTableColumnFlags_StatusMask_           = ImGuiTableColumnFlags_IsEnabled | ImGuiTableColumnFlags_IsVisible | ImGuiTableColumnFlags_IsSorted | ImGuiTableColumnFlags_IsHovered,
+    ImGuiTableColumnFlags_NoDirectResize_       = 1 << 30   // [Internal] Disable user resizing this column directly (it may however we resized indirectly from its left edge)
+
+    // Obsolete names (will be removed soon)
+#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    //ImGuiTableColumnFlags_WidthAuto           = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, // Column will not stretch and keep resizing based on submitted contents.
+#endif
 };
 
 // Flags for ImGui::TableNextRow()
@@ -1184,11 +1216,9 @@ enum ImGuiTableRowFlags_
 enum ImGuiTableBgTarget_
 {
     ImGuiTableBgTarget_None                         = 0,
-    //ImGuiTableBgTarget_ColumnBg0                  = 1,        // FIXME-TABLE: Todo. Set column background color 0 (generally used for background
-    //ImGuiTableBgTarget_ColumnBg1                  = 2,        // FIXME-TABLE: Todo. Set column background color 1 (generally used for selection marking)
-    ImGuiTableBgTarget_RowBg0                       = 3,        // Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)
-    ImGuiTableBgTarget_RowBg1                       = 4,        // Set row background color 1 (generally used for selection marking)
-    ImGuiTableBgTarget_CellBg                       = 5         // Set cell background color (top-most color)
+    ImGuiTableBgTarget_RowBg0                       = 1,        // Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)
+    ImGuiTableBgTarget_RowBg1                       = 2,        // Set row background color 1 (generally used for selection marking)
+    ImGuiTableBgTarget_CellBg                       = 3         // Set cell background color (top-most color)
 };
 
 // Flags for ImGui::IsWindowFocused()
@@ -1332,7 +1362,7 @@ enum ImGuiKeyModFlags_
 // Gamepad/Keyboard navigation
 // Keyboard: Set io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard to enable. NewFrame() will automatically fill io.NavInputs[] based on your io.KeysDown[] + io.KeyMap[] arrays.
 // Gamepad:  Set io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad to enable. Backend: set ImGuiBackendFlags_HasGamepad and fill the io.NavInputs[] fields before calling NewFrame(). Note that io.NavInputs[] is cleared by EndFrame().
-// Read instructions in imgui.cpp for more details. Download PNG/PSD at http://goo.gl/9LgVZW.
+// Read instructions in imgui.cpp for more details. Download PNG/PSD at http://dearimgui.org/controls_sheets.
 enum ImGuiNavInput_
 {
     // Gamepad Mapping
@@ -1463,11 +1493,6 @@ enum ImGuiCol_
     ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
     ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
     ImGuiCol_COUNT
-
-    // Obsolete names (will be removed)
-#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    , ImGuiCol_ModalWindowDarkening = ImGuiCol_ModalWindowDimBg                      // [renamed in 1.63]
-#endif
 };
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
@@ -1623,7 +1648,10 @@ enum ImGuiCond_
 };
 
 //-----------------------------------------------------------------------------
-// Helpers: Memory allocations macros
+// [SECTION] Helpers: Memory allocations macros, ImVector<>
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 // IM_MALLOC(), IM_FREE(), IM_NEW(), IM_PLACEMENT_NEW(), IM_DELETE()
 // We call C++ constructor on own allocated memory via the placement "new(ptr) Type()" syntax.
 // Defining a custom placement new() with a custom parameter allows us to bypass including <new> which on some platforms complains when user has disabled exceptions.
@@ -1639,7 +1667,7 @@ inline void  operator delete(void*, ImNewWrapper, void*)   {} // This is only re
 template<typename T> void IM_DELETE(T* p)   { if (p) { p->~T(); ImGui::MemFree(p); } }
 
 //-----------------------------------------------------------------------------
-// Helper: ImVector<>
+// ImVector<>
 // Lightweight std::vector<>-like class to avoid dragging dependencies (also, some implementations of STL with debug enabled are absurdly slow, we bypass it so our code runs fast in debug).
 //-----------------------------------------------------------------------------
 // - You generally do NOT need to care or use this ever. But we need to make it available in imgui.h because some of our public structures are relying on it.
@@ -1709,7 +1737,8 @@ struct ImVector
 };
 
 //-----------------------------------------------------------------------------
-// ImGuiStyle
+// [SECTION] ImGuiStyle
+//-----------------------------------------------------------------------------
 // You may modify the ImGui::GetStyle() main instance during initialization and before NewFrame().
 // During the frame, use ImGui::PushStyleVar(ImGuiStyleVar_XXXX)/PopStyleVar() to alter the main style values,
 // and ImGui::PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
@@ -1763,7 +1792,8 @@ struct ImGuiStyle
 };
 
 //-----------------------------------------------------------------------------
-// ImGuiIO
+// [SECTION] ImGuiIO
+//-----------------------------------------------------------------------------
 // Communicate most settings and inputs/outputs to Dear ImGui using this structure.
 // Access via ImGui::GetIO(). Read 'Programmer guide' section in .cpp file for general usage.
 //-----------------------------------------------------------------------------
@@ -1804,16 +1834,17 @@ struct ImGuiIO
     // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
     bool        ConfigViewportsNoAutoMerge;     // = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport.
     bool        ConfigViewportsNoTaskBarIcon;   // = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImGuiViewportFlags_NoTaskBarIcon will be set on it.
-    bool        ConfigViewportsNoDecoration;    // = true           // [BETA] Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
+    bool        ConfigViewportsNoDecoration;    // = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
     bool        ConfigViewportsNoDefaultParent; // = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
 
     // Miscellaneous options
     bool        MouseDrawCursor;                // = false          // Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor). Cannot be easily renamed to 'io.ConfigXXX' because this is frequently used by backend implementations.
-    bool        ConfigMacOSXBehaviors;          // = defined(__APPLE__) // OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl (was called io.OptMacOSXBehaviors prior to 1.63)
-    bool        ConfigInputTextCursorBlink;     // = true           // Set to false to disable blinking cursor, for users who consider it distracting. (was called: io.OptCursorBlink prior to 1.63)
+    bool        ConfigMacOSXBehaviors;          // = defined(__APPLE__) // OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.
+    bool        ConfigInputTextCursorBlink;     // = true           // Enable blinking cursor (optional as some users consider it to be distracting).
+    bool        ConfigDragClickToInputText;     // = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
     bool        ConfigWindowsResizeFromEdges;   // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
-    bool        ConfigWindowsMoveFromTitleBarOnly; // = false       // [BETA] Set to true to only allow moving windows when clicked+dragged from the title bar. Windows without a title bar are not affected.
-    float       ConfigMemoryCompactTimer;       // = 60.0f          // [BETA] Free transient windows/tables memory buffers when unused for given amount of time. Set to -1.0f to disable.
+    bool        ConfigWindowsMoveFromTitleBarOnly; // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
+    float       ConfigMemoryCompactTimer;       // = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
 
     //------------------------------------------------------------------
     // Platform Functions
@@ -1905,7 +1936,7 @@ struct ImGuiIO
 };
 
 //-----------------------------------------------------------------------------
-// Misc data structures
+// [SECTION] Misc data structures
 //-----------------------------------------------------------------------------
 
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
@@ -1969,12 +2000,13 @@ struct ImGuiWindowClass
     ImGuiID             ParentViewportId;           // Hint for the platform backend. If non-zero, the platform backend can create a parent<>child relationship between the platform windows. Not conforming backends are free to e.g. parent every viewport to the main viewport or not.
     ImGuiViewportFlags  ViewportFlagsOverrideSet;   // Viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
     ImGuiViewportFlags  ViewportFlagsOverrideClear; // Viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
+    ImGuiTabItemFlags   TabItemFlagsOverrideSet;    // [EXPERIMENTAL] TabItem flags to set when a window of this class gets submitted into a dock node tab bar. May use with ImGuiTabItemFlags_Leading or ImGuiTabItemFlags_Trailing.
     ImGuiDockNodeFlags  DockNodeFlagsOverrideSet;   // [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
     ImGuiDockNodeFlags  DockNodeFlagsOverrideClear; // [EXPERIMENTAL]
     bool                DockingAlwaysTabBar;        // Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)
     bool                DockingAllowUnclassed;      // Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
 
-    ImGuiWindowClass() { ClassId = 0; ParentViewportId = 0; ViewportFlagsOverrideSet = ViewportFlagsOverrideClear = 0x00; DockNodeFlagsOverrideSet = DockNodeFlagsOverrideClear = 0x00; DockingAlwaysTabBar = false; DockingAllowUnclassed = true; }
+    ImGuiWindowClass() { memset(this, 0, sizeof(*this)); DockingAllowUnclassed = true; }
 };
 
 // Data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
@@ -1999,15 +2031,15 @@ struct ImGuiPayload
     bool IsDelivery() const                 { return Delivery; }
 };
 
-// Sorting specification for one column of a table (sizeof == 8 bytes)
-struct ImGuiTableSortSpecsColumn
+// Sorting specification for one column of a table (sizeof == 12 bytes)
+struct ImGuiTableColumnSortSpecs
 {
     ImGuiID                     ColumnUserID;       // User id of the column (if specified by a TableSetupColumn() call)
-    ImU8                        ColumnIndex;        // Index of the column
-    ImU8                        SortOrder;          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+    ImS16                       ColumnIndex;        // Index of the column
+    ImS16                       SortOrder;          // Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
     ImGuiSortDirection          SortDirection : 8;  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
 
-    ImGuiTableSortSpecsColumn() { ColumnUserID = 0; ColumnIndex = 0; SortOrder = 0; SortDirection = ImGuiSortDirection_Ascending; }
+    ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }
 };
 
 // Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
@@ -2016,16 +2048,16 @@ struct ImGuiTableSortSpecsColumn
 // Make sure to set 'SpecsDirty = false' after sorting, else you may wastefully sort your data every frame!
 struct ImGuiTableSortSpecs
 {
-    const ImGuiTableSortSpecsColumn* Specs;     // Pointer to sort spec array.
-    int                         SpecsCount;     // Sort spec count. Most often 1 unless e.g. ImGuiTableFlags_MultiSortable is enabled.
+    const ImGuiTableColumnSortSpecs* Specs;     // Pointer to sort spec array.
+    int                         SpecsCount;     // Sort spec count. Most often 1. May be > 1 when ImGuiTableFlags_SortMulti is enabled. May be == 0 when ImGuiTableFlags_SortTristate is enabled.
     bool                        SpecsDirty;     // Set to true when specs have changed since last time! Use this to sort again, then clear the flag.
-    ImU64                       ColumnsMask;    // Set to the mask of column indexes included in the Specs array. e.g. (1 << N) when column N is sorted.
 
-    ImGuiTableSortSpecs()       { Specs = NULL; SpecsCount = 0; SpecsDirty = false; ColumnsMask = 0x00; }
+    ImGuiTableSortSpecs()       { memset(this, 0, sizeof(*this)); }
 };
 
 //-----------------------------------------------------------------------------
-// Obsolete functions (Will be removed! Read 'API BREAKING CHANGES' section in imgui.cpp for details)
+// [SECTION] Obsolete functions
+// (Will be removed! Read 'API BREAKING CHANGES' section in imgui.cpp for details)
 // Please keep your copy of dear imgui up to date! Occasionally set '#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS' in imconfig.h to stay ahead.
 //-----------------------------------------------------------------------------
 
@@ -2061,15 +2093,11 @@ namespace ImGui
     static inline ImDrawList* GetOverlayDrawList()            { return GetForegroundDrawList(); }
     // OBSOLETED in 1.66 (from Sep 2018)
     static inline void  SetScrollHere(float center_ratio=0.5f){ SetScrollHereY(center_ratio); }
-    // OBSOLETED in 1.63 (between Aug 2018 and Sept 2018)
-    static inline bool  IsItemDeactivatedAfterChange()        { return IsItemDeactivatedAfterEdit(); }
 }
-typedef ImGuiInputTextCallback      ImGuiTextEditCallback;    // OBSOLETED in 1.63 (from Aug 2018): made the names consistent
-typedef ImGuiInputTextCallbackData  ImGuiTextEditCallbackData;
 #endif
 
 //-----------------------------------------------------------------------------
-// Helpers
+// [SECTION] Helpers (ImGuiOnceUponAFrame, ImGuiTextFilter, ImGuiTextBuffer, ImGuiStorage, ImGuiListClipper, ImColor)
 //-----------------------------------------------------------------------------
 
 // Helper: Unicode defines
@@ -2271,7 +2299,7 @@ struct ImColor
 };
 
 //-----------------------------------------------------------------------------
-// Draw List API (ImDrawCmd, ImDrawIdx, ImDrawVert, ImDrawChannel, ImDrawListSplitter, ImDrawListFlags, ImDrawList, ImDrawData)
+// [SECTION] Drawing API (ImDrawCmd, ImDrawIdx, ImDrawVert, ImDrawChannel, ImDrawListSplitter, ImDrawListFlags, ImDrawList, ImDrawData)
 // Hold a series of drawing commands. The user provides a renderer for ImDrawData which essentially contains an array of ImDrawList.
 //-----------------------------------------------------------------------------
 
@@ -2423,6 +2451,7 @@ struct ImDrawList
     ImVector<ImVec2>        _Path;              // [Internal] current path building
     ImDrawCmdHeader         _CmdHeader;         // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
     ImDrawListSplitter      _Splitter;          // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
+    float                   _FringeScale;       // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
 
     // If you want to create ImDrawList instances, pass them ImGui::GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
     ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
@@ -2458,7 +2487,8 @@ struct ImDrawList
     IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL);
     IMGUI_API void  AddPolyline(const ImVec2* points, int num_points, ImU32 col, bool closed, float thickness);
     IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col); // Note: Anti-aliased filling requires points to be in clockwise order.
-    IMGUI_API void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0);
+    IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
+    IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
 
     // Image primitives
     // - Read FAQ to understand what ImTextureID is.
@@ -2475,8 +2505,9 @@ struct ImDrawList
     inline    void  PathFillConvex(ImU32 col)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }  // Note: Anti-aliased filling requires points to be in clockwise order.
     inline    void  PathStroke(ImU32 col, bool closed, float thickness = 1.0f)  { AddPolyline(_Path.Data, _Path.Size, col, closed, thickness); _Path.Size = 0; }
     IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 10);
-    IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                                            // Use precomputed angles for a 12 steps circle
-    IMGUI_API void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0);
+    IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);            // Use precomputed angles for a 12 steps circle
+    IMGUI_API void  PathBezierCubicCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0);  // Cubic Bezier (4 control points)
+    IMGUI_API void  PathBezierQuadraticCurveTo(const ImVec2& p2, const ImVec2& p3, int num_segments = 0);                // Quadratic Bezier (3 control points)
     IMGUI_API void  PathRect(const ImVec2& rect_min, const ImVec2& rect_max, float rounding = 0.0f, ImDrawCornerFlags rounding_corners = ImDrawCornerFlags_All);
 
     // Advanced
@@ -2505,6 +2536,11 @@ struct ImDrawList
     inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
     inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr++; }
     inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
+
+#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    inline    void  AddBezierCurve(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0) { AddBezierCubic(p1, p2, p3, p4, col, thickness, num_segments); }
+    inline    void  PathBezierCurveTo(const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, int num_segments = 0) { PathBezierCubicCurveTo(p2, p3, p4, num_segments); }
+#endif
 
     // [Internal helpers]
     IMGUI_API void  _ResetForNewFrame();
@@ -2539,7 +2575,7 @@ struct ImDrawData
 };
 
 //-----------------------------------------------------------------------------
-// Font API (ImFontConfig, ImFontGlyph, ImFontAtlasFlags, ImFontAtlas, ImFontGlyphRangesBuilder, ImFont)
+// [SECTION] Font API (ImFontConfig, ImFontGlyph, ImFontAtlasFlags, ImFontAtlas, ImFontGlyphRangesBuilder, ImFont)
 //-----------------------------------------------------------------------------
 
 struct ImFontConfig
@@ -2670,7 +2706,7 @@ struct ImFontAtlas
     // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
     IMGUI_API const ImWchar*    GetGlyphRangesDefault();                // Basic Latin, Extended Latin
     IMGUI_API const ImWchar*    GetGlyphRangesKorean();                 // Default + Korean characters
-    IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 1946 Ideographs
+    IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
     IMGUI_API const ImWchar*    GetGlyphRangesChineseFull();            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
     IMGUI_API const ImWchar*    GetGlyphRangesChineseSimplifiedCommon();// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
     IMGUI_API const ImWchar*    GetGlyphRangesCyrillic();               // Default + about 400 Cyrillic characters
@@ -2782,9 +2818,9 @@ struct ImFont
 };
 
 //-----------------------------------------------------------------------------
-// [BETA] Platform interface for multi-viewport support
+// [SECTION] Platform interface for multi-viewport support
 //-----------------------------------------------------------------------------
-// (Optional) This is completely optional, for advanced users!
+// [BETA] (Optional) This is completely optional, for advanced users!
 // If you are new to Dear ImGui and trying to integrate it into your engine, you can probably ignore this for now.
 //
 // This feature allows you to seamlessly drag Dear ImGui windows outside of your application viewport.

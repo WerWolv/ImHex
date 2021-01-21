@@ -17,6 +17,7 @@ add_library(imgui
     source/imgui_freetype.cpp
     source/imgui_impl_glfw.cpp
     source/imgui_impl_opengl3.cpp
+    source/imgui_tables.cpp
     source/imgui_widgets.cpp
     source/ImGuiFileBrowser.cpp
     source/TextEditor.cpp

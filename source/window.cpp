@@ -79,7 +79,11 @@ namespace hex {
                 if (!view->getWindowOpenState())
                     continue;
 
-                ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
+                auto minSize = view->getMinSize();
+                minSize.x *= this->m_globalScale;
+                minSize.y *= this->m_globalScale;
+
+                ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
                 view->drawContent();
             }
 
@@ -145,7 +149,7 @@ namespace hex {
 
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
             ImGui::PopStyleVar(2);
-            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, 0.0f));
 
             if (ImGui::BeginMenuBar()) {
 
