@@ -339,7 +339,7 @@ namespace hex::lang {
         auto handleVariableAttributes = [this, &currPattern](auto attribute, auto value) {
 
             if (attribute == "color")
-                currPattern->setColor(strtoul(value.data(), nullptr, 0));
+                currPattern->setColor(hex::changeEndianess(u32(strtoul(value.data(), nullptr, 0)) << 8, std::endian::big));
             else if (attribute == "name")
                 currPattern->setVariableName(value.data());
             else
