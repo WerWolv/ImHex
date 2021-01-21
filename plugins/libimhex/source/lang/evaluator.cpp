@@ -338,16 +338,21 @@ namespace hex::lang {
 
         auto handleVariableAttributes = [this, &currPattern](auto attribute, auto value) {
 
-            if (attribute == "color")
-                currPattern->setColor(hex::changeEndianess(u32(strtoul(value.data(), nullptr, 0)) << 8, std::endian::big));
-            else if (attribute == "name")
-                currPattern->setVariableName(value.data());
+            if (attribute == "color" && value.has_value())
+                currPattern->setColor(hex::changeEndianess(u32(strtoul(value->data(), nullptr, 0)) << 8, std::endian::big));
+            else if (attribute == "name" && value.has_value())
+                currPattern->setVariableName(value->data());
+            else if (attribute == "comment" && value.has_value())
+                currPattern->setComment(value->data());
             else
                 this->getConsole().abortEvaluation("unknown or invalid attribute");
 
         };
 
         auto &attributes = attributableNode->getAttributes();
+
+        if (attributes.empty())
+            return currPattern;
 
         if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(currNode); variableDeclNode != nullptr) {
             for (auto &attribute : attributes)

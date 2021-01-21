@@ -541,12 +541,13 @@ namespace hex::lang {
             return this->m_attribute;
         }
 
-        [[nodiscard]] std::string_view getValue() const {
+        [[nodiscard]] const std::optional<std::string>& getValue() const {
             return this->m_value;
         }
 
     private:
-        std::string m_attribute, m_value;
+        std::string m_attribute;
+        std::optional<std::string> m_value;
     };
 
 }

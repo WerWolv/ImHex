@@ -117,6 +117,15 @@ namespace hex::lang {
             return true;
         }
 
+        bool none(bool result) {
+            if (result) {
+                this->m_curr = this->m_originalPosition;
+                return false;
+            }
+
+            return true;
+        }
+
         bool sequence() {
             return true;
         }

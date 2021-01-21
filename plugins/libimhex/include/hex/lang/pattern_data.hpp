@@ -60,6 +60,9 @@ namespace hex::lang {
         [[nodiscard]] const std::string& getVariableName() const { return this->m_variableName; }
         void setVariableName(std::string name) { this->m_variableName = std::move(name); }
 
+        [[nodiscard]] const std::optional<std::string>& getComment() const { return this->m_comment; }
+        void setComment(std::string comment) { this->m_comment = std::move(comment); }
+
         [[nodiscard]] const std::string& getTypeName() const { return this->m_typeName; }
         void setTypeName(std::string name) { this->m_typeName = std::move(name); }
 
@@ -154,6 +157,7 @@ namespace hex::lang {
                 Region selectRegion = { this->getOffset(), this->getSize() };
                 View::postEvent(Events::SelectionChangeRequest, selectRegion);
             }
+            this->drawCommentTooltip();
             ImGui::SameLine();
             ImGui::Text("%s", this->getVariableName().c_str());
             ImGui::TableNextColumn();
@@ -168,6 +172,14 @@ namespace hex::lang {
             ImGui::Text("%s", value.data());
         }
 
+        void drawCommentTooltip() const {
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && this->getComment().has_value()) {
+                ImGui::BeginTooltip();
+                ImGui::TextUnformatted(this->getComment()->c_str());
+                ImGui::EndTooltip();
+            }
+        }
+
     protected:
         std::endian m_endian = std::endian::native;
         std::map<u64, u32> m_highlightedAddresses;
@@ -178,6 +190,7 @@ namespace hex::lang {
 
         u32 m_color;
         std::string m_variableName;
+        std::optional<std::string> m_comment;
         std::string m_typeName;
     };
 
@@ -215,7 +228,8 @@ namespace hex::lang {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
@@ -449,7 +463,8 @@ namespace hex::lang {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
@@ -521,6 +536,7 @@ namespace hex::lang {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
@@ -600,7 +616,8 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
@@ -699,7 +716,8 @@ namespace hex::lang {
                 valueString += "???";
 
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->drawCommentTooltip();
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
@@ -749,7 +767,8 @@ namespace hex::lang {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
             ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
@@ -770,7 +789,7 @@ namespace hex::lang {
                 u16 bitOffset = 0;
                 for (auto &[entryName, entrySize] : this->m_fields) {
                     ImGui::TableNextRow();
-                    ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+                    ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", entryName.c_str());
                     ImGui::TableNextColumn();
