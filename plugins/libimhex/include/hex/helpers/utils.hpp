@@ -151,8 +151,10 @@ namespace hex {
             return __builtin_bswap32(value);
         else if constexpr (sizeof(T) == 8)
             return __builtin_bswap64(value);
+        else if constexpr (sizeof(T) == 16)
+            return T(__builtin_bswap64(value & 0xFFFF'FFFF'FFFF'FFFF)) << 64 | __builtin_bswap64(value >> 64);
         else
-                static_assert(always_false<T>::value, "Invalid type provided!");
+            static_assert(always_false<T>::value, "Invalid type provided!");
     }
 
     template<typename T>
@@ -168,11 +170,8 @@ namespace hex {
             return __builtin_bswap32(value);
         else if (size == 8)
             return __builtin_bswap64(value);
-        else if (size == 16) {
-            u64 parts[2];
-            std::memcpy(parts, &value, size);
-            return u128(parts[1]) << 64 | u128(parts[0]);
-        }
+        else if (size == 16)
+            return u128(__builtin_bswap64(u128(value) & 0xFFFF'FFFF'FFFF'FFFF)) << 64 | __builtin_bswap64(u128(value) >> 64);
         else
             throw std::invalid_argument("Invalid value size!");
     }
