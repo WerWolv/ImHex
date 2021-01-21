@@ -76,7 +76,7 @@ namespace hex {
 
 namespace hex {
 
-    std::string to_string(u128 value) {
+    inline std::string to_string(u128 value) {
         char data[45] = { 0 };
 
         u8 index = sizeof(data) - 2;
@@ -89,7 +89,7 @@ namespace hex {
         return std::string(data + index + 1);
     }
 
-    std::string to_string(s128 value) {
+    inline std::string to_string(s128 value) {
         char data[45] = { 0 };
 
         u128 unsignedValue = value < 0 ? -value : value;
