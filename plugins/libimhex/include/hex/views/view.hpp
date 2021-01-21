@@ -15,16 +15,17 @@ namespace hex {
 
     class View {
     public:
-        View(std::string viewName);
+        explicit View(std::string viewName);
         virtual ~View() = default;
 
         virtual void drawContent() = 0;
         virtual void drawMenu();
         virtual bool handleShortcut(int key, int mods);
 
+        static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
 
-        static void postEvent(Events eventType, const void *userData = nullptr);
+        static std::vector<std::any> postEvent(Events eventType, const std::any &userData = { });
 
         static void drawCommonInterfaces();
 
@@ -36,17 +37,17 @@ namespace hex {
 
         bool& getWindowOpenState();
 
-        const std::string getName() const;
+        std::string_view getName() const;
 
     protected:
-        void subscribeEvent(Events eventType, std::function<void(const void*)> callback);
+        void subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback);
+        void subscribeEvent(Events eventType, const std::function<void(const std::any&)> &callback);
 
         void unsubscribeEvent(Events eventType);
 
-        void doLater(std::function<void()> &&function);
 
     protected:
-        void confirmButtons(const char *textLeft, const char *textRight, std::function<void()> leftButtonFn, std::function<void()> rightButtonFn);
+        void confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
 
     private:
         std::string m_viewName;

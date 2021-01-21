@@ -4,13 +4,16 @@
 
 namespace hex {
 
-    void EventManager::post(Events eventType, const void *userData) {
+    std::vector<std::any> EventManager::post(Events eventType, const std::any &userData) {
+        std::vector<std::any> results;
         for (auto &handler : SharedData::eventHandlers)
             if (eventType == handler.eventType)
-                handler.callback(userData);
+                results.push_back(handler.callback(userData));
+
+        return results;
     }
 
-    void EventManager::subscribe(Events eventType, void *owner, std::function<void(const void*)> callback) {
+    void EventManager::subscribe(Events eventType, void *owner, std::function<std::any(const std::any&)> callback) {
         for (auto &handler : SharedData::eventHandlers)
             if (eventType == handler.eventType && owner == handler.owner)
                 return;

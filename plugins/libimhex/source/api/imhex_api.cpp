@@ -17,7 +17,7 @@ namespace hex {
 
         entry.color = color;
 
-        EventManager::post(Events::AddBookmark, &entry);
+        EventManager::post(Events::AddBookmark, entry);
     }
 
     void ImHexApi::Bookmarks::add(u64 addr, size_t size, std::string_view name, std::string_view comment, u32 color) {

@@ -152,7 +152,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
-                View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+                View::postEvent(Events::SelectionChangeRequest, selectRegion);
             }
             ImGui::SameLine();
             ImGui::Text("%s", this->getVariableName().c_str());
@@ -703,7 +703,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                 Region selectRegion = { this->getOffset(), this->getSize() };
-                View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+                View::postEvent(Events::SelectionChangeRequest, selectRegion);
             }
             ImGui::SameLine();
             ImGui::Text("%s", this->getVariableName().c_str());

@@ -193,7 +193,7 @@ struct MemoryEditor
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
                 hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
-                hex::View::postEvent(hex::Events::RegionSelected, &selectionRegion);
+                hex::View::postEvent(hex::Events::RegionSelected, selectionRegion);
             }
 
             DataPreviewAddrOld = DataPreviewAddr;

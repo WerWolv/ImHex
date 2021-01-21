@@ -11,12 +11,12 @@
 namespace hex {
 
     ViewHashes::ViewHashes() : View("Hashes") {
-        View::subscribeEvent(Events::DataChanged, [this](const void*){
+        View::subscribeEvent(Events::DataChanged, [this](auto) {
             this->m_shouldInvalidate = true;
         });
 
-        View::subscribeEvent(Events::RegionSelected, [this](const void *userData) {
-            Region region = *static_cast<const Region*>(userData);
+        View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
+            auto region = std::any_cast<const Region>(userData);
 
             if (this->m_shouldMatchSelection) {
                 this->m_hashRegion[0] = region.address;

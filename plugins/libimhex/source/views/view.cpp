@@ -20,8 +20,8 @@ namespace hex {
         return SharedData::deferredCalls;
     }
 
-    void View::postEvent(Events eventType, const void *userData) {
-        EventManager::post(eventType, userData);
+    std::vector<std::any> View::postEvent(Events eventType, const std::any &userData) {
+        return EventManager::post(eventType, userData);
     }
 
     void View::drawCommonInterfaces() {
@@ -63,12 +63,16 @@ namespace hex {
         return this->m_windowOpen;
     }
 
-    const std::string View::getName() const {
+    std::string_view View::getName() const {
         return this->m_viewName;
     }
 
-    void View::subscribeEvent(Events eventType, std::function<void(const void*)> callback) {
+    void View::subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback) {
         EventManager::subscribe(eventType, this, callback);
+    }
+
+    void View::subscribeEvent(Events eventType, const std::function<void(const std::any&)> &callback) {
+        EventManager::subscribe(eventType, this, [callback](auto userData) -> std::any { callback(userData); return { }; });
     }
 
     void View::unsubscribeEvent(Events eventType) {
@@ -79,7 +83,7 @@ namespace hex {
         SharedData::deferredCalls.push_back(function);
     }
 
-    void View::confirmButtons(const char *textLeft, const char *textRight, std::function<void()> leftButtonFn, std::function<void()> rightButtonFn) {
+    void View::confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn) {
         auto width = ImGui::GetWindowWidth();
         ImGui::SetCursorPosX(width / 9);
         if (ImGui::Button(textLeft, ImVec2(width / 3, 0)))

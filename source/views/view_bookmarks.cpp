@@ -8,8 +8,8 @@
 namespace hex {
 
     ViewBookmarks::ViewBookmarks() : View("Bookmarks") {
-        View::subscribeEvent(Events::AddBookmark, [this](const void *userData) {
-            auto bookmark = *reinterpret_cast<const ImHexApi::Bookmarks::Entry*>(userData);
+        View::subscribeEvent(Events::AddBookmark, [](auto userData) {
+            auto bookmark = std::any_cast<ImHexApi::Bookmarks::Entry>(userData);
             bookmark.comment.resize(0xF'FFFF);
 
             if (bookmark.name.empty()) {
@@ -29,10 +29,10 @@ namespace hex {
             ProjectFile::markDirty();
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [](const void*) {
+        View::subscribeEvent(Events::ProjectFileLoad, [](auto) {
             SharedData::bookmarkEntries = ProjectFile::getBookmarks();
         });
-        View::subscribeEvent(Events::ProjectFileStore, [](const void*) {
+        View::subscribeEvent(Events::ProjectFileStore, [](auto) {
             ProjectFile::setBookmarks(SharedData::bookmarkEntries);
         });
     }
@@ -90,7 +90,7 @@ namespace hex {
                             ImGui::TextColored(ImColor(0xFF9BC64D), bytesString.c_str());
                         }
                         if (ImGui::Button("Jump to"))
-                            View::postEvent(Events::SelectionChangeRequest, &region);
+                            View::postEvent(Events::SelectionChangeRequest, region);
                         ImGui::SameLine(0, 15);
 
                         if (ImGui::Button("Remove"))

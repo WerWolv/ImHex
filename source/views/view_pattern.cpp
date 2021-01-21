@@ -80,23 +80,23 @@ namespace hex {
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
-        View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
+        View::subscribeEvent(Events::ProjectFileStore, [this](auto) {
             ProjectFile::setPattern(this->m_textEditor.GetText());
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
+        View::subscribeEvent(Events::ProjectFileLoad, [this](auto) {
             this->m_textEditor.SetText(ProjectFile::getPattern());
             this->parsePattern(this->m_textEditor.GetText().data());
         });
 
-        View::subscribeEvent(Events::AppendPatternLanguageCode, [this](const void *userData) {
-             const char *code = static_cast<const char*>(userData);
+        View::subscribeEvent(Events::AppendPatternLanguageCode, [this](auto userData) {
+             auto code = std::any_cast<const char*>(userData);
 
              this->m_textEditor.InsertText("\n");
              this->m_textEditor.InsertText(code);
         });
 
-        View::subscribeEvent(Events::FileLoaded, [this](const void* userData) {
+        View::subscribeEvent(Events::FileLoaded, [this](auto) {
             if (this->m_textEditor.GetText().find_first_not_of(" \f\n\r\t\v") != std::string::npos)
                 return;
 
@@ -185,7 +185,7 @@ namespace hex {
                 return false;
             });
 
-            View::subscribeEvent(Events::SettingsChanged, [this](const void*) {
+            View::subscribeEvent(Events::SettingsChanged, [this](auto) {
                 int theme = ContentRegistry::Settings::getSettingsData()[SettingsCategoryInterface][SettingColorTheme];
 
                 switch (theme) {

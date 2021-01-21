@@ -10,12 +10,12 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewDisassembler::ViewDisassembler() : View("Disassembler") {
-        View::subscribeEvent(Events::DataChanged, [this](const void*){
+        View::subscribeEvent(Events::DataChanged, [this](auto){
             this->m_shouldInvalidate = true;
         });
 
-        View::subscribeEvent(Events::RegionSelected, [this](const void *userData) {
-            Region region = *static_cast<const Region*>(userData);
+        View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
+            auto region = std::any_cast<Region>(userData);
 
             if (this->m_shouldMatchSelection) {
                 this->m_codeRegion[0] = region.address;
@@ -260,7 +260,7 @@ namespace hex {
                             ImGui::TableNextColumn();
                             if (ImGui::Selectable(("##DisassemblyLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                                 Region selectRegion = { this->m_disassembly[i].offset, this->m_disassembly[i].size };
-                                View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+                                View::postEvent(Events::SelectionChangeRequest, selectRegion);
                             }
                             ImGui::SameLine();
                             ImGui::Text("0x%llx", this->m_disassembly[i].address);

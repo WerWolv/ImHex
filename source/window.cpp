@@ -27,7 +27,7 @@ namespace hex {
 
     void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            std::string format = view->getName() + "=%d";
+            std::string format = std::string(view->getName()) + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
     }
@@ -38,7 +38,7 @@ namespace hex {
         buf->appendf("[%s][General]\n", handler->TypeName);
 
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            buf->appendf("%s=%d\n", view->getName().c_str(), view->getWindowOpenState());
+            buf->appendf("%s=%d\n", view->getName().data(), view->getWindowOpenState());
         }
 
         buf->append("\n");
@@ -49,7 +49,7 @@ namespace hex {
         hex::SharedData::mainArgv = argv;
 
         ContentRegistry::Settings::load();
-        View::postEvent(Events::SettingsChanged, nullptr);
+        View::postEvent(Events::SettingsChanged);
 
         this->initGLFW();
         this->initImGui();
@@ -153,7 +153,7 @@ namespace hex {
                 if (ImGui::BeginMenu("View")) {
                     for (auto &view : ContentRegistry::Views::getEntries()) {
                         if (view->hasViewMenuItemEntry())
-                            ImGui::MenuItem((view->getName() + " View").c_str(), "", &view->getWindowOpenState());
+                            ImGui::MenuItem((std::string(view->getName()) + " View").c_str(), "", &view->getWindowOpenState());
                     }
                     ImGui::EndMenu();
                 }

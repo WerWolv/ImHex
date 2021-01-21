@@ -2,8 +2,9 @@
 
 #include <hex.hpp>
 
-#include <vector>
+#include <any>
 #include <functional>
+#include <vector>
 
 namespace hex {
 
@@ -33,13 +34,13 @@ namespace hex {
     struct EventHandler {
         void *owner;
         Events eventType;
-        std::function<void(const void*)> callback;
+        std::function<std::any(const std::any&)> callback;
     };
 
     class EventManager {
     public:
-        static void post(Events eventType, const void *userData);
-        static void subscribe(Events eventType, void *owner, std::function<void(const void*)> callback);
+        static std::vector<std::any> post(Events eventType, const std::any &userData);
+        static void subscribe(Events eventType, void *owner, std::function<std::any(const std::any&)> callback);
         static void unsubscribe(Events eventType, void *sender);
     };
 

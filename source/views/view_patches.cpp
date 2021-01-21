@@ -12,13 +12,13 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewPatches::ViewPatches() : View("Patches") {
-        View::subscribeEvent(Events::ProjectFileStore, [this](const void*) {
+        View::subscribeEvent(Events::ProjectFileStore, [](auto) {
             auto provider = SharedData::currentProvider;
             if (provider != nullptr)
                 ProjectFile::setPatches(provider->getPatches());
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](const void*) {
+        View::subscribeEvent(Events::ProjectFileLoad, [](auto) {
             auto provider = SharedData::currentProvider;
             if (provider != nullptr)
                 provider->getPatches() = ProjectFile::getPatches();
@@ -53,7 +53,7 @@ namespace hex {
                         ImGui::TableNextColumn();
                         if (ImGui::Selectable(("##patchLine" + std::to_string(index)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                             Region selectRegion = { address, 1 };
-                            View::postEvent(Events::SelectionChangeRequest, &selectRegion);
+                            View::postEvent(Events::SelectionChangeRequest, selectRegion);
                         }
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup("PatchContextMenu");

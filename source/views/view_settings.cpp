@@ -24,7 +24,7 @@ namespace hex {
                     ImGui::TextUnformatted(name.c_str());
                     ImGui::SameLine();
                     if (callback(ContentRegistry::Settings::getSettingsData()[category][name]))
-                        View::postEvent(Events::SettingsChanged, nullptr);
+                        View::postEvent(Events::SettingsChanged);
                     ImGui::NewLine();
                 }
                 ImGui::NewLine();

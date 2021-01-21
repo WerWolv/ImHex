@@ -93,15 +93,15 @@ namespace hex {
                 ImGui::EndTooltip();
         };
 
-        View::subscribeEvent(Events::FileDropped, [this](const void *userData) {
-            auto filePath = static_cast<const char*>(userData);
+        View::subscribeEvent(Events::FileDropped, [this](auto userData) {
+            auto filePath = std::any_cast<const char*>(userData);
 
             if (filePath != nullptr)
                 this->openFile(filePath);
         });
 
-        View::subscribeEvent(Events::SelectionChangeRequest, [this](const void *userData) {
-            const Region &region = *reinterpret_cast<const Region*>(userData);
+        View::subscribeEvent(Events::SelectionChangeRequest, [this](auto userData) {
+            const Region &region = std::any_cast<Region>(userData);
 
             auto provider = SharedData::currentProvider;
             auto page = provider->getPageOfAddress(region.address);
@@ -112,15 +112,15 @@ namespace hex {
             this->m_memoryEditor.GotoAddr = region.address;
             this->m_memoryEditor.DataPreviewAddr = region.address;
             this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
-            View::postEvent(Events::RegionSelected, &region);
+            View::postEvent(Events::RegionSelected, region);
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](const void *userData) {
+        View::subscribeEvent(Events::ProjectFileLoad, [this](auto) {
             this->openFile(ProjectFile::getFilePath());
         });
 
-        View::subscribeEvent(Events::WindowClosing, [this](const void *userData) {
-            auto window = const_cast<GLFWwindow*>(static_cast<const GLFWwindow*>(userData));
+        View::subscribeEvent(Events::WindowClosing, [this](auto userData) {
+            auto window = std::any_cast<GLFWwindow*>(userData);
 
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
@@ -129,7 +129,7 @@ namespace hex {
             }
         });
 
-        View::subscribeEvent(Events::PatternChanged, [this](const void *userData) {
+        View::subscribeEvent(Events::PatternChanged, [this](auto) {
            this->m_highlightedBytes.clear();
 
            for (const auto &pattern : this->m_patternData)
@@ -169,7 +169,7 @@ namespace hex {
                     provider->setCurrentPage(provider->getCurrentPage() - 1);
 
                     Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                    View::postEvent(Events::RegionSelected, &dataPreview);
+                    View::postEvent(Events::RegionSelected, dataPreview);
                 }
 
                 ImGui::SameLine();
@@ -178,7 +178,7 @@ namespace hex {
                     provider->setCurrentPage(provider->getCurrentPage() + 1);
 
                     Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                    View::postEvent(Events::RegionSelected, &dataPreview);
+                    View::postEvent(Events::RegionSelected, dataPreview);
                 }
             }
             ImGui::End();

@@ -14,7 +14,7 @@
 namespace hex {
 
     ViewInformation::ViewInformation() : View("Information") {
-        View::subscribeEvent(Events::DataChanged, [this](const void*) {
+        View::subscribeEvent(Events::DataChanged, [this](auto) {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
             this->m_blockEntropy.clear();
