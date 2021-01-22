@@ -6,19 +6,11 @@
 
 #include <bit>
 #include <cstdio>
-#include <ctime>
 #include <string>
 
 namespace hex {
 
     namespace prv { class Provider; }
-
-    struct GUID {
-        u32 data1;
-        u16 data2;
-        u16 data3;
-        u8  data4[8];
-    };
 
     class ViewDataInspector : public View {
     public:

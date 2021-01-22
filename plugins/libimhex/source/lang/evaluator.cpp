@@ -13,8 +13,6 @@ namespace hex::lang {
 
     Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
         : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
-
-        this->registerBuiltinFunctions();
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
@@ -157,7 +155,7 @@ namespace hex::lang {
             this->getConsole().abortEvaluation(hex::format("invalid number of parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount));
         }
 
-        return function.func(this->getConsole(), evaluatedParams);
+        return function.func(*this, evaluatedParams);
     }
 
 #define FLOAT_BIT_OPERATION(name) \

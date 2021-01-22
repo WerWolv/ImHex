@@ -2,35 +2,12 @@
 
 #include <GLFW/glfw3.h>
 
-#include "helpers/math_evaluator.hpp"
-
 namespace hex {
 
     ViewCommandPalette::ViewCommandPalette() : View("Command Palette") {
         this->getWindowOpenState() = true;
 
         this->m_commandBuffer.resize(1024, 0x00);
-
-        ContentRegistry::CommandPaletteCommands::add(
-            ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
-            "#", "Calculator",
-            [](auto input) {
-                        MathEvaluator evaluator;
-                        evaluator.registerStandardVariables();
-                        evaluator.registerStandardFunctions();
-
-                        std::optional<long double> result;
-
-                        try {
-                            result = evaluator.evaluate(input);
-                        } catch (std::runtime_error &e) {}
-
-                        if (result.has_value())
-                            return hex::format("#%s = %Lf", input.data(), result.value());
-                        else
-                            return hex::format("#%s = ???", input.data());
-                    });
-
         this->m_lastResults = this->getCommandResults("");
     }
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <hex/views/view.hpp>
-#include <hex/lang/pattern_data.hpp>
 #include <hex/lang/evaluator.hpp>
+#include <hex/lang/pattern_language.hpp>
 
 #include <hex/providers/provider.hpp>
 
@@ -24,6 +24,7 @@ namespace hex {
         void drawContent() override;
 
     private:
+        lang::PatternLanguage *m_patternLanguageRuntime;
         std::vector<lang::PatternData*> &m_patternData;
         std::filesystem::path m_possiblePatternFile;
 

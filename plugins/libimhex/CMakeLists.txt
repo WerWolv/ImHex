@@ -22,6 +22,7 @@ add_library(libimhex SHARED
         source/helpers/utils.cpp
         source/helpers/shared_data.cpp
 
+        source/lang/pattern_language.cpp
         source/lang/preprocessor.cpp
         source/lang/lexer.cpp
         source/lang/parser.cpp

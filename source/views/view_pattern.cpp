@@ -1,13 +1,8 @@
 #include "views/view_pattern.hpp"
 
-#include <hex/lang/preprocessor.hpp>
-#include <hex/lang/parser.hpp>
-#include <hex/lang/lexer.hpp>
-#include <hex/lang/validator.hpp>
-#include <hex/lang/evaluator.hpp>
-
 #include "helpers/project_file_handler.hpp"
 #include <hex/helpers/utils.hpp>
+#include <hex/lang/preprocessor.hpp>
 
 #include <magic.h>
 
@@ -47,8 +42,12 @@ namespace hex {
                     outEnd = inEnd;
                     paletteIndex = TextEditor::PaletteIndex::Default;
                 }
-                else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd))
-                    paletteIndex = TextEditor::PaletteIndex::Identifier;
+                else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
+                    if (SharedData::patternLanguageFunctions.contains(std::string(outBegin, outEnd - outBegin)))
+                        paletteIndex = TextEditor::PaletteIndex::LineNumber;
+                    else
+                        paletteIndex = TextEditor::PaletteIndex::Identifier;
+                }
                 else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
                     paletteIndex = TextEditor::PaletteIndex::Number;
                 else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd))
@@ -76,6 +75,7 @@ namespace hex {
 
 
     ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("Pattern"), m_patternData(patternData) {
+        this->m_patternLanguageRuntime = new lang::PatternLanguage(SharedData::currentProvider);
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
@@ -335,62 +335,15 @@ namespace hex {
         this->m_console.clear();
         this->postEvent(Events::PatternChanged);
 
-        hex::lang::Preprocessor preprocessor;
-        std::endian defaultDataEndianess = std::endian::native;
+        auto result = this->m_patternLanguageRuntime->executeString(buffer);
 
-        preprocessor.addPragmaHandler("endian", [&defaultDataEndianess](std::string value) {
-           if (value == "big") {
-               defaultDataEndianess = std::endian::big;
-               return true;
-           } else if (value == "little") {
-               defaultDataEndianess = std::endian::little;
-               return true;
-           } else if (value == "native") {
-               defaultDataEndianess = std::endian::native;
-               return true;
-           } else
-               return false;
-        });
-        preprocessor.addDefaultPragmaHandlers();
-
-        auto preprocessedCode = preprocessor.preprocess(buffer);
-        if (!preprocessedCode.has_value()) {
-            this->m_textEditor.SetErrorMarkers({ preprocessor.getError() });
-            return;
+        if (!result.has_value()) {
+            this->m_textEditor.SetErrorMarkers({ this->m_patternLanguageRuntime->getError().value() });
         }
 
-        hex::lang::Lexer lexer;
-        auto tokens = lexer.lex(preprocessedCode.value());
-        if (!tokens.has_value()) {
-            this->m_textEditor.SetErrorMarkers({ lexer.getError() });
-            return;
-        }
+        this->m_console = this->m_patternLanguageRuntime->getConsoleLog();
 
-        hex::lang::Parser parser;
-        auto ast = parser.parse(tokens.value());
-        if (!ast.has_value()) {
-            this->m_textEditor.SetErrorMarkers({ parser.getError() });
-            return;
-        }
-
-        SCOPE_EXIT( for(auto &node : ast.value()) delete node; );
-
-        hex::lang::Validator validator;
-        auto validatorResult = validator.validate(ast.value());
-        if (!validatorResult) {
-            this->m_textEditor.SetErrorMarkers({ validator.getError() });
-            return;
-        }
-
-        auto provider = SharedData::currentProvider;
-        hex::lang::Evaluator evaluator(provider, defaultDataEndianess);
-
-        auto patternData = evaluator.evaluate(ast.value());
-        this->m_console = evaluator.getConsole().getLog();
-        if (!patternData.has_value())
-            return;
-
-        this->m_patternData = patternData.value();
+        this->m_patternData = result.value();
         View::postEvent(Events::PatternChanged);
     }
 

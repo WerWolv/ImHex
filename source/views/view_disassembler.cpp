@@ -235,7 +235,7 @@ namespace hex {
                 }
                 ImGui::EndChild();
 
-                ImGui::SetCursorPosX((ImGui::GetContentRegionAvailWidth() - 300) / 2);
+                ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - 300) / 2);
                 if (ImGui::Button("Disassemble", ImVec2(300, 20)))
                     this->m_shouldInvalidate = true;
                 ImGui::NewLine();

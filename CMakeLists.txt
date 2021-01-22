@@ -42,6 +42,7 @@ add_subdirectory(external/llvm)
 
 # Plugins
 add_subdirectory(plugins/libimhex)
+add_subdirectory(plugins/builtin)
 
 add_subdirectory(plugins/example)
 
@@ -152,7 +153,6 @@ add_executable(imhex ${application_type}
 
         source/helpers/crypto.cpp
         source/helpers/patches.cpp
-        source/helpers/math_evaluator.cpp
         source/helpers/project_file_handler.cpp
         source/helpers/loader_script_handler.cpp
         source/helpers/plugin_handler.cpp
@@ -191,6 +191,12 @@ add_custom_command(TARGET imhex POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:libimhex>
         $<TARGET_FILE_DIR:imhex>)
+
+file(MAKE_DIRECTORY "plugins")
+add_custom_command(TARGET imhex POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:builtin>
+        $<TARGET_FILE_DIR:imhex>/plugins)
 
 if (WIN32)
     # Install binaries directly in the prefix, usually C:\Program Files\ImHex.

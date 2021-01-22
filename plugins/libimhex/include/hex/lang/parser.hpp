@@ -110,6 +110,10 @@ namespace hex::lang {
 
         /* Token consuming */
 
+        enum class Setting{ };
+        constexpr static auto Normal = static_cast<Setting>(0);
+        constexpr static auto Not = static_cast<Setting>(1);
+
         bool begin() {
             this->m_originalPosition = this->m_curr;
             this->m_matchedOptionals.clear();
@@ -117,41 +121,65 @@ namespace hex::lang {
             return true;
         }
 
-        bool none(bool result) {
-            if (result) {
-                this->m_curr = this->m_originalPosition;
-                return false;
-            }
-
-            return true;
-        }
-
+        template<Setting S = Normal>
         bool sequence() {
-            return true;
+            if constexpr (S == Normal)
+                return true;
+            else if constexpr (S == Not)
+                return false;
+            else
+                __builtin_unreachable();
         }
 
+        template<Setting S = Normal>
         bool sequence(Token::Type type, auto value, auto ... args) {
-            if (!peek(type, value)) {
+            if constexpr (S == Normal) {
+                if (!peek(type, value)) {
+                    this->m_curr = this->m_originalPosition;
+                    return false;
+                }
+
+                this->m_curr++;
+
+                if (!sequence<Normal>(args...)) {
+                    this->m_curr = this->m_originalPosition;
+                    return false;
+                }
+
+                return true;
+            } else if constexpr (S == Not) {
+                if (!peek(type, value))
+                    return true;
+
+                this->m_curr++;
+
+                if (!sequence<Normal>(args...))
+                    return true;
+
                 this->m_curr = this->m_originalPosition;
                 return false;
-            }
-
-            this->m_curr++;
-
-            if (!sequence(args...)) {
-                this->m_curr = this->m_originalPosition;
-                return false;
-            }
-
-            return true;
+            } else
+                __builtin_unreachable();
         }
 
+        template<Setting S = Normal>
         bool oneOf() {
-            return false;
+            if constexpr (S == Normal)
+                return false;
+            else if constexpr (S == Not)
+                return true;
+            else
+                __builtin_unreachable();
         }
 
+        template<Setting S = Normal>
         bool oneOf(Token::Type type, auto value, auto ... args) {
-            return sequence(type, value) || oneOf(args...);
+            if constexpr (S == Normal)
+                return sequence<Normal>(type, value) || oneOf(args...);
+            else if constexpr (S == Not)
+                return sequence<Not>(type, value) && oneOf(args...);
+            else
+                __builtin_unreachable();
         }
 
         bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {

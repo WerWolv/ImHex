@@ -6,6 +6,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/lang/pattern_data.hpp>
 #include <hex/lang/ast_node.hpp>
+#include <hex/lang/log_console.hpp>
 
 #include <bit>
 #include <string>
@@ -14,44 +15,26 @@
 
 namespace hex::lang {
 
-    class LogConsole {
-    public:
-        enum Level {
-            Debug,
-            Info,
-            Warning,
-            Error
-        };
-
-        const auto& getLog() { return this->m_consoleLog; }
-
-        using EvaluateError = std::string;
-
-        void log(Level level, std::string_view message) {
-            switch (level) {
-                default:
-                case Level::Debug:   this->m_consoleLog.emplace_back(level, "[-] " + std::string(message)); break;
-                case Level::Info:    this->m_consoleLog.emplace_back(level, "[i] " + std::string(message)); break;
-                case Level::Warning: this->m_consoleLog.emplace_back(level, "[*] " + std::string(message)); break;
-                case Level::Error:   this->m_consoleLog.emplace_back(level, "[!] " + std::string(message)); break;
-            }
-        }
-
-        [[noreturn]] void abortEvaluation(std::string_view message) {
-            throw EvaluateError(message);
-        }
-
-    private:
-        std::vector<std::pair<Level, std::string>> m_consoleLog;
-    };
-
     class Evaluator {
     public:
-        Evaluator(prv::Provider* &provider, std::endian defaultDataEndian);
+        Evaluator(prv::Provider* &provider, std::endian defaultDataEndian = std::endian::native);
 
         std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
         LogConsole& getConsole() { return this->m_console; }
+
+        void setDefaultEndian(std::endian endian) { this->m_defaultDataEndian = endian; }
+        [[nodiscard]] std::endian getCurrentEndian() const { return this->m_endianStack.back(); }
+
+        PatternData* patternFromName(const std::vector<std::string> &name);
+
+        template<typename T>
+        T* asType(ASTNode *param) {
+            if (auto evaluatedParam = dynamic_cast<T*>(param); evaluatedParam != nullptr)
+                return evaluatedParam;
+            else
+                this->getConsole().abortEvaluation("function got wrong type of parameter");
+        }
 
     private:
         std::map<std::string, ASTNode*> m_types;
@@ -63,9 +46,7 @@ namespace hex::lang {
         std::vector<std::vector<PatternData*>*> m_currMembers;
         LogConsole m_console;
 
-        [[nodiscard]] std::endian getCurrentEndian() const {
-            return this->m_endianStack.back();
-        }
+
 
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
@@ -75,7 +56,6 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
-        PatternData* patternFromName(const std::vector<std::string> &name);
         PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
         void evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset);
@@ -87,28 +67,6 @@ namespace hex::lang {
         PatternData* evaluateVariable(ASTNodeVariableDecl *node);
         PatternData* evaluateArray(ASTNodeArrayVariableDecl *node);
         PatternData* evaluatePointer(ASTNodePointerVariableDecl *node);
-
-        template<typename T>
-        T* asType(ASTNode *param) {
-            if (auto evaluatedParam = dynamic_cast<T*>(param); evaluatedParam != nullptr)
-                return evaluatedParam;
-            else
-                this->m_console.abortEvaluation("function got wrong type of parameter");
-        }
-
-        void registerBuiltinFunctions();
-
-        #define BUILTIN_FUNCTION(name) ASTNodeIntegerLiteral* TOKEN_CONCAT(builtin_, name)(LogConsole &console, std::vector<ASTNode*> params)
-
-        BUILTIN_FUNCTION(findSequence);
-        BUILTIN_FUNCTION(readUnsigned);
-        BUILTIN_FUNCTION(readSigned);
-
-        BUILTIN_FUNCTION(assert);
-        BUILTIN_FUNCTION(warnAssert);
-        BUILTIN_FUNCTION(print);
-
-        #undef BUILTIN_FUNCTION
     };
 
 }
