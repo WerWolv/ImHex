@@ -39,12 +39,11 @@ find_package(OpenGL REQUIRED)
 find_package(Python COMPONENTS Development)
 
 add_subdirectory(external/llvm)
+add_subdirectory(plugins/libimhex)
 
 # Plugins
-add_subdirectory(plugins/libimhex)
-add_subdirectory(plugins/builtin)
 
-add_subdirectory(plugins/example)
+set(PLUGINS example ; builtin)
 
 
 if(Python_VERSION LESS 3)
@@ -69,7 +68,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -DPYTHON_VERSION_MAJOR_
 
 # Detect current OS / System
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_WINDOWS -static-libstdc++ -static-libgcc -Wl,--allow-multiple-definition -static")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_WINDOWS -static-libstdc++ -static-libgcc -Wl,--allow-multiple-definition -static -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wl,-subsystem,windows")
 elseif(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_MACOS")
@@ -182,21 +181,24 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CRYPTO_LIBRARY_DIRS} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libwinpthread.a libcapstone.a LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32)
+    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcrypto.a libcapstone.a LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32)
 elseif (UNIX)
     target_link_libraries(imhex magic crypto ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl)
 endif()
 
+file(MAKE_DIRECTORY "plugins")
+foreach (plugin IN LISTS PLUGINS)
+    add_subdirectory("plugins/${plugin}")
+    add_custom_command(TARGET imhex POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:${plugin}>
+            $<TARGET_FILE_DIR:imhex>/plugins)
+endforeach()
 add_custom_command(TARGET imhex POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:libimhex>
         $<TARGET_FILE_DIR:imhex>)
 
-file(MAKE_DIRECTORY "plugins")
-add_custom_command(TARGET imhex POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:builtin>
-        $<TARGET_FILE_DIR:imhex>/plugins)
 
 if (WIN32)
     # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
