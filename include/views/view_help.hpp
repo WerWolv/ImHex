@@ -24,6 +24,10 @@ namespace hex {
 
         bool hasViewMenuItemEntry() override { return false; }
 
+        ImVec2 getMinSize() override {
+            return ImVec2(400, 300);
+        }
+
     private:
         bool m_aboutWindowOpen = false;
         bool m_patternHelpWindowOpen = false;

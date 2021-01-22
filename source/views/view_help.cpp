@@ -29,13 +29,32 @@ namespace hex {
 
     void ViewHelp::drawAboutPopup() {
         if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("ImHex Hex Editor v%s by WerWolv", IMHEX_VERSION);
+            ImGui::Text("ImHex Hex Editor v%s by WerWolv -", IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
-            ImGui::Text("%s@%s", GIT_BRANCH, GIT_COMMIT_HASH);
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.4F, 0.8F, 0.4F, 1.0F), "%s@%s", GIT_BRANCH, GIT_COMMIT_HASH);
             #endif
-            ImGui::NewLine();
-            ImGui::Text("Source code available on GitHub:"); ImGui::SameLine();
+
+
+            ImGui::TextUnformatted("Source code available on GitHub:"); ImGui::SameLine();
             ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), "WerWolv/ImHex   ");
+            ImGui::NewLine();
+
+            ImGui::Text("Donations");
+            ImGui::Separator();
+
+            constexpr const char* Links[] = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
+
+            ImGui::TextWrapped("If you like my work, please consider donating to keep the project going. Thanks a lot <3");
+
+            ImGui::NewLine();
+
+            for (auto &link : Links) {
+                ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), link); ImGui::SameLine();
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGui::CalcTextSize("  Copy  ").x);
+                if (ImGui::Button((std::string("Copy##") + link).c_str()))
+                    ImGui::SetClipboardText(link);
+            }
             ImGui::NewLine();
 
             ImGui::Text("Libraries used");
