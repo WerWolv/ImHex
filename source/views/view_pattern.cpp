@@ -159,12 +159,13 @@ namespace hex {
 
                 preprocessor.preprocess(buffer.data());
 
-                if (foundCorrectType) {
-                    this->m_possiblePatternFile = entry.path();
-                    View::doLater([] { ImGui::OpenPopup("Accept Pattern"); });
-                    ImGui::SetNextWindowSize(ImVec2(200, 100));
-                    break;
-                }
+                if (foundCorrectType)
+                    this->m_possiblePatternFiles.push_back(entry.path().filename().string());
+            }
+
+            if (!this->m_possiblePatternFiles.empty()) {
+                this->m_selectedPatternFile = 0;
+                View::doLater([] { ImGui::OpenPopup("Accept Pattern"); });
             }
         });
 
@@ -275,15 +276,22 @@ namespace hex {
             this->loadPatternFile(this->m_fileBrowser.selected_path);
         }
 
-        if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_NoResize)) {
-            ImGui::TextUnformatted("A pattern compatible with this data type has been found:");
-            ImGui::Text("%ls", this->m_possiblePatternFile.filename().c_str());
+        if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextWrapped("One or more patterns compatible with this data type has been found");
+
+            char *entries[this->m_possiblePatternFiles.size()];
+
+            for (u32 i = 0; i < this->m_possiblePatternFiles.size(); i++) {
+                entries[i] = this->m_possiblePatternFiles[i].data();
+            }
+
+            ImGui::ListBox("Patterns", &this->m_selectedPatternFile, entries, IM_ARRAYSIZE(entries), 4);
+
             ImGui::NewLine();
             ImGui::Text("Do you want to load it?");
-            ImGui::NewLine();
 
             confirmButtons("Yes", "No", [this]{
-                this->loadPatternFile(this->m_possiblePatternFile.string());
+                this->loadPatternFile("patterns/" + this->m_possiblePatternFiles[this->m_selectedPatternFile]);
                 ImGui::CloseCurrentPopup();
             }, []{
                 ImGui::CloseCurrentPopup();
