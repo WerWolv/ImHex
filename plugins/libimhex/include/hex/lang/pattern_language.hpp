@@ -23,14 +23,14 @@ namespace hex::lang {
 
     class PatternLanguage {
     public:
-        PatternLanguage(prv::Provider *provider);
+        PatternLanguage();
         ~PatternLanguage();
 
-        std::optional<std::vector<PatternData*>> executeString(std::string_view string);
-        std::optional<std::vector<PatternData*>> executeFile(std::string_view path);
+        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, std::string_view string);
+        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, std::string_view path);
 
-        std::vector<std::pair<LogConsole::Level, std::string>> getConsoleLog();
-        std::optional<std::pair<u32, std::string>> getError();
+        const std::vector<std::pair<LogConsole::Level, std::string>>& getConsoleLog();
+        const std::optional<std::pair<u32, std::string>>& getError();
 
     private:
         Preprocessor *m_preprocessor;

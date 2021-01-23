@@ -17,13 +17,14 @@ namespace hex::lang {
 
     class Evaluator {
     public:
-        Evaluator(prv::Provider* &provider, std::endian defaultDataEndian = std::endian::native);
+        Evaluator() = default;
 
         std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
 
         LogConsole& getConsole() { return this->m_console; }
 
         void setDefaultEndian(std::endian endian) { this->m_defaultDataEndian = endian; }
+        void setProvider(prv::Provider *provider) { this->m_provider = provider; }
         [[nodiscard]] std::endian getCurrentEndian() const { return this->m_endianStack.back(); }
 
         PatternData* patternFromName(const std::vector<std::string> &name);
@@ -38,8 +39,8 @@ namespace hex::lang {
 
     private:
         std::map<std::string, ASTNode*> m_types;
-        prv::Provider* &m_provider;
-        std::endian m_defaultDataEndian;
+        prv::Provider* m_provider = nullptr;
+        std::endian m_defaultDataEndian = std::endian::native;
         u64 m_currOffset = 0;
         std::vector<std::endian> m_endianStack;
         std::vector<PatternData*> m_globalMembers;

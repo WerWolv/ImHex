@@ -13,12 +13,27 @@
 
 namespace hex::lang {
 
-    PatternLanguage::PatternLanguage(prv::Provider *provider) : m_provider(provider) {
+    PatternLanguage::PatternLanguage() {
         this->m_preprocessor = new Preprocessor();
         this->m_lexer = new Lexer();
         this->m_parser = new Parser();
         this->m_validator = new Validator();
-        this->m_evaluator = new Evaluator(provider);
+        this->m_evaluator = new Evaluator();
+
+        this->m_preprocessor->addPragmaHandler("endian", [this](std::string value) {
+            if (value == "big") {
+                this->m_defaultEndian = std::endian::big;
+                return true;
+            } else if (value == "little") {
+                this->m_defaultEndian = std::endian::little;
+                return true;
+            } else if (value == "native") {
+                this->m_defaultEndian = std::endian::native;
+                return true;
+            } else
+                return false;
+        });
+        this->m_preprocessor->addDefaultPragmaHandlers();
     }
 
     PatternLanguage::~PatternLanguage() {
@@ -30,68 +45,45 @@ namespace hex::lang {
     }
 
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(std::string_view string) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, std::string_view string) {
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
+        this->m_evaluator->setProvider(provider);
 
-        hex::lang::Preprocessor preprocessor;
-
-        std::endian defaultEndian;
-        preprocessor.addPragmaHandler("endian", [&defaultEndian](std::string value) {
-            if (value == "big") {
-                defaultEndian = std::endian::big;
-                return true;
-            } else if (value == "little") {
-                defaultEndian = std::endian::little;
-                return true;
-            } else if (value == "native") {
-                defaultEndian = std::endian::native;
-                return true;
-            } else
-                return false;
-        });
-        preprocessor.addDefaultPragmaHandlers();
-
-        auto preprocessedCode = preprocessor.preprocess(string.data());
+        auto preprocessedCode = this->m_preprocessor->preprocess(string.data());
         if (!preprocessedCode.has_value()) {
-            this->m_currError = preprocessor.getError();
+            this->m_currError = this->m_preprocessor->getError();
             return { };
         }
 
-        hex::lang::Lexer lexer;
-        auto tokens = lexer.lex(preprocessedCode.value());
+        auto tokens = this->m_lexer->lex(preprocessedCode.value());
         if (!tokens.has_value()) {
-            this->m_currError = lexer.getError();
+            this->m_currError = this->m_lexer->getError();
             return { };
         }
 
-        hex::lang::Parser parser;
-        auto ast = parser.parse(tokens.value());
+        auto ast = this->m_parser->parse(tokens.value());
         if (!ast.has_value()) {
-            this->m_currError = parser.getError();
+            this->m_currError = this->m_parser->getError();
             return { };
         }
 
         SCOPE_EXIT( for(auto &node : ast.value()) delete node; );
 
-        hex::lang::Validator validator;
-        auto validatorResult = validator.validate(ast.value());
+        auto validatorResult = this->m_validator->validate(ast.value());
         if (!validatorResult) {
-            this->m_currError = validator.getError();
+            this->m_currError = this->m_validator->getError();
             return { };
         }
 
-        auto provider = SharedData::currentProvider;
-        hex::lang::Evaluator evaluator(provider, defaultEndian);
-
-        auto patternData = evaluator.evaluate(ast.value());
+        auto patternData = this->m_evaluator->evaluate(ast.value());
         if (!patternData.has_value())
             return { };
 
         return patternData.value();
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(std::string_view path) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, std::string_view path) {
         FILE *file = fopen(path.data(), "r");
         if (file == nullptr)
             return { };
@@ -105,15 +97,15 @@ namespace hex::lang {
 
         fclose(file);
 
-        return this->executeString(code);
+        return this->executeString(provider, code);
     }
 
 
-    std::vector<std::pair<LogConsole::Level, std::string>> PatternLanguage::getConsoleLog() {
+    const std::vector<std::pair<LogConsole::Level, std::string>>& PatternLanguage::getConsoleLog() {
         return this->m_evaluator->getConsole().getLog();
     }
 
-    std::optional<std::pair<u32, std::string>> PatternLanguage::getError() {
+    const std::optional<std::pair<u32, std::string>>& PatternLanguage::getError() {
         return this->m_currError;
     }
 

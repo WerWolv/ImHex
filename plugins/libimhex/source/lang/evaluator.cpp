@@ -11,10 +11,6 @@
 
 namespace hex::lang {
 
-    Evaluator::Evaluator(prv::Provider* &provider, std::endian defaultDataEndian)
-        : m_provider(provider), m_defaultDataEndian(defaultDataEndian) {
-    }
-
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
         ASTNode *currScope = nullptr;
         for (const auto &identifier : node->getPath()) {
@@ -743,6 +739,12 @@ namespace hex::lang {
 
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
 
+        this->m_globalMembers.clear();
+        this->m_currMembers.clear();
+        this->m_types.clear();
+        this->m_endianStack.clear();
+        this->m_currOffset = 0;
+
         try {
             for (const auto& node : ast) {
                 this->m_endianStack.push_back(this->m_defaultDataEndian);
@@ -764,12 +766,9 @@ namespace hex::lang {
             }
         } catch (LogConsole::EvaluateError &e) {
             this->getConsole().log(LogConsole::Level::Error, e);
-            this->m_endianStack.clear();
 
             return { };
         }
-
-        this->m_endianStack.clear();
 
         return this->m_globalMembers;
     }
