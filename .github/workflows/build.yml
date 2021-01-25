@@ -129,29 +129,29 @@ jobs:
         path: |
           build/*.msi
 
-# macos-build:
-#   runs-on: macos-11.0
-#   name: 🍎 macOS 11.0
-#   steps:
+  macos-build:
+    runs-on: macos-11.0
+    name: 🍎 macOS 11.0
+    steps:
 
-#   - name: 🧰 Checkout
-#     uses: actions/checkout@v2
-#     with:
-#       fetch-depth: 0
+    - name: 🧰 Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
-#   - name: ⬇️ Install dependencies
-#     run: |
-#       brew bundle --no-lock --file dist/Brewfile
+    - name: ⬇️ Install dependencies
+      run: |
+        brew bundle --no-lock --file dist/Brewfile
 
-#   - name: ✋ Build
-#     run: |
-#       mkdir build
-#       cd build
-#       CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCREATE_BUNDLE=ON -DCREATE_PACKAGE=ON ..
-#       make -j 4 package
+    - name: ✋ Build
+      run: |
+        mkdir build
+        cd build
+        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCREATE_BUNDLE=ON -DCREATE_PACKAGE=ON ..
+        make -j 4 package
 
-#   - name: 📦 Upload DMG
-#     uses: actions/upload-artifact@v2
-#     with:
-#       name: macOS DMG
-#       path: build/*.dmg
+    - name: 📦 Upload DMG
+      uses: actions/upload-artifact@v2
+      with:
+        name: macOS DMG
+        path: build/*.dmg

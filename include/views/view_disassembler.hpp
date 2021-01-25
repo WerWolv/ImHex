@@ -4,8 +4,6 @@
 
 #include "helpers/disassembler.hpp"
 
-#include <capstone/capstone.h>
-
 #include <cstdio>
 #include <string>
 #include <vector>

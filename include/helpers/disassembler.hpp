@@ -1,6 +1,10 @@
 #pragma once
 
+#if __has_include(<capstone/capstone.h>)
 #include <capstone/capstone.h>
+#else
+#include <capstone.h>
+#endif
 #include <hex.hpp>
 
 namespace hex {
