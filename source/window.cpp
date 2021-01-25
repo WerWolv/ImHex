@@ -17,6 +17,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#endif
+
 namespace hex {
 
     constexpr auto MenuBarItems = { "File", "Edit", "View", "Help" };
@@ -47,6 +51,21 @@ namespace hex {
     Window::Window(int &argc, char **&argv) {
         hex::SharedData::mainArgc = argc;
         hex::SharedData::mainArgv = argv;
+
+        // Try to attach to a currently open console on Windows if available
+        #if defined(OS_WINDOWS)
+            if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+                HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+                if (hStdOut != INVALID_HANDLE_VALUE) {
+                    freopen("CONOUT$", "w", stdout);
+                    freopen("CONERR$", "w", stderr);
+                    setvbuf(stdout, nullptr, _IONBF, 0);
+                    setvbuf(stderr, nullptr, _IONBF, 0);
+                }
+            }
+        #endif
+
+        printf("Hello\n");
 
         ContentRegistry::Settings::load();
         View::postEvent(Events::SettingsChanged);
