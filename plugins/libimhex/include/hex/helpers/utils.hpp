@@ -116,7 +116,9 @@ namespace hex {
             return "";
 
         std::vector<char> buffer(size + 1, 0x00);
-        snprintf(buffer.data(), size + 1, format, args ...);
+        if (snprintf(buffer.data(), size, format, args ...) <= 0)
+            return "";
+
 
         return std::string(buffer.data(), buffer.data() + size);
     }
