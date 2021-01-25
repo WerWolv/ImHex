@@ -37,10 +37,12 @@ macro(findLibraries)
     find_package(PkgConfig REQUIRED)
 
     pkg_search_module(CRYPTO libcrypto)
-
     if(NOT CRYPTO_FOUND)
         find_library(CRYPTO crypto REQUIRED)
+    else()
+        set(CRYPTO_INCLUDE_DIRS ${CRYPTO_INCLUDEDIR})
     endif()
+
     pkg_search_module(CAPSTONE REQUIRED capstone)
 
     find_package(OpenGL REQUIRED)
@@ -60,6 +62,8 @@ macro(findLibraries)
     pkg_search_module(MAGIC libmagic)
     if(NOT MAGIC_FOUND)
         find_library(MAGIC magic REQUIRED)
+    else()
+        set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
     endif()
 endmacro()
 
