@@ -95,9 +95,15 @@ For format patterns, includable libraries and magic files, check out the [ImHex-
 
 ## Nightly builds
 
-See latest nightly builds on the artifacts result of the Build action [here](https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild).
+Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild).
 
-NOTE: **We currently only provide nightly builds for macOS (x86_64)**
+- Windows • __x86_64__
+  - [MSI Installer](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Installer.zip)
+  - [Portable ZIP](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Portable%20ZIP.zip)
+- MacOS • __x86_64__
+  - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
+- Linux • __x86_64__
+  - [ELF](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20ELF.zip)
 
 ## Compiling
 
