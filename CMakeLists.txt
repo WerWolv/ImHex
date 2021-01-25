@@ -16,8 +16,9 @@ set(PLUGINS
 
 # List extra magic databases to compile here
 set(MAGICDBS
-
+        nintendo_magic
         )
+createMagicDbList()
 
 findLibraries()
 
