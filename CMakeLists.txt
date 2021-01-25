@@ -29,8 +29,6 @@ add_subdirectory(plugins/libimhex)
 # Add include directories
 include_directories(include ${CRYPTO_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
 
-message(${CAPSTONE_INCLUDE_DIRS})
-
 detectOS()
 detectArch()
 
