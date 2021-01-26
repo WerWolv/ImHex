@@ -12,6 +12,8 @@
 #include <hex/views/view.hpp>
 
 #include <imgui.h>
+#include <ImGuiFileBrowser.h>
+
 #include <nlohmann/json.hpp>
 
 namespace hex { class SharedData; }
@@ -58,6 +60,12 @@ namespace hex {
         static u32 patternPaletteOffset;
         static std::string errorPopupMessage;
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
+
+        static imgui_addons::ImGuiFileBrowser fileBrowser;
+        static imgui_addons::ImGuiFileBrowser::DialogMode fileBrowserDialogMode;
+        static std::string fileBrowserTitle;
+        static std::string fileBrowserValidExtensions;
+        static std::function<void(std::string)> fileBrowserCallback;
 
         static int mainArgc;
         static char **mainArgv;

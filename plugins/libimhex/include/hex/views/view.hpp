@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <imgui.h>
+#include <ImGuiFileBrowser.h>
 
 #include <hex/api/event.hpp>
 
@@ -22,6 +23,7 @@ namespace hex {
         virtual void drawMenu();
         virtual bool handleShortcut(int key, int mods);
 
+        static void openFileBrowser(std::string title, imgui_addons::ImGuiFileBrowser::DialogMode mode, std::string validExtensions, const std::function<void(std::string)> &callback);
         static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
 

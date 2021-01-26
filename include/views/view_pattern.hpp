@@ -32,7 +32,6 @@ namespace hex {
 
         TextEditor m_textEditor;
         std::vector<std::pair<lang::LogConsole::Level, std::string>> m_console;
-        imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         void loadPatternFile(std::string path);
         void clearPatternData();

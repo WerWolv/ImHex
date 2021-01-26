@@ -18,6 +18,12 @@ namespace hex {
     std::string SharedData::errorPopupMessage;
     std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
 
+    imgui_addons::ImGuiFileBrowser SharedData::fileBrowser;
+    imgui_addons::ImGuiFileBrowser::DialogMode SharedData::fileBrowserDialogMode;
+    std::string SharedData::fileBrowserTitle;
+    std::string SharedData::fileBrowserValidExtensions;
+    std::function<void(std::string)> SharedData::fileBrowserCallback;
+
     int SharedData::mainArgc;
     char **SharedData::mainArgv;
 

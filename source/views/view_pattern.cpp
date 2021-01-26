@@ -217,7 +217,9 @@ namespace hex {
     void ViewPattern::drawMenu() {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Load pattern...")) {
-                View::doLater([]{ ImGui::OpenPopup("Open Hex Pattern"); });
+                View::openFileBrowser("Open Hex Pattern", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexpat", [this](auto path) {
+                    this->loadPatternFile(path);
+                });
             }
             ImGui::EndMenu();
         }
@@ -272,9 +274,7 @@ namespace hex {
         }
         ImGui::End();
 
-        if (this->m_fileBrowser.showFileDialog("Open Hex Pattern", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".hexpat")) {
-            this->loadPatternFile(this->m_fileBrowser.selected_path);
-        }
+
 
         if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("One or more patterns compatible with this data type has been found");

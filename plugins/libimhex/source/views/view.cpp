@@ -24,6 +24,17 @@ namespace hex {
         return EventManager::post(eventType, userData);
     }
 
+    void View::openFileBrowser(std::string title, imgui_addons::ImGuiFileBrowser::DialogMode mode, std::string validExtensions, const std::function<void(std::string)> &callback) {
+        SharedData::fileBrowserTitle = title;
+        SharedData::fileBrowserDialogMode = mode;
+        SharedData::fileBrowserValidExtensions = std::move(validExtensions);
+        SharedData::fileBrowserCallback = callback;
+
+        View::doLater([title]{
+           ImGui::OpenPopup(title.c_str());
+        });
+    }
+
     void View::drawCommonInterfaces() {
         if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
@@ -37,6 +48,11 @@ namespace hex {
             if (ImGui::Button("Okay", ImVec2(150, 20)) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
+        }
+
+        if (SharedData::fileBrowser.showFileDialog(SharedData::fileBrowserTitle, SharedData::fileBrowserDialogMode, ImVec2(0, 0), SharedData::fileBrowserValidExtensions)) {
+            SharedData::fileBrowserCallback(SharedData::fileBrowser.selected_path);
+            SharedData::fileBrowserTitle = "";
         }
     }
 

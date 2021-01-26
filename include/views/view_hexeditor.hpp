@@ -30,7 +30,6 @@ namespace hex {
 
     private:
         MemoryEditor m_memoryEditor;
-        imgui_addons::ImGuiFileBrowser m_fileBrowser;
 
         std::vector<lang::PatternData*> &m_patternData;
 

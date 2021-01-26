@@ -124,7 +124,6 @@ namespace hex {
 
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                this->getWindowOpenState() = true;
                 View::doLater([] { ImGui::OpenPopup("Save Changes"); });
             }
         });
@@ -210,22 +209,20 @@ namespace hex {
             ImGui::NewLine();
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
-            if (ImGui::Button("Script"))
-                ImGui::OpenPopup("Loader Script: Open Script");
+            if (ImGui::Button("Script")) {
+                View::openFileBrowser("Loader Script: Open Script", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".py", [this](auto path) {
+                    this->m_loaderScriptScriptPath = path;
+                });
+            }
             ImGui::InputText("##nolabel", this->m_loaderScriptFilePath.data(), this->m_loaderScriptFilePath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
-            if (ImGui::Button("File"))
-                ImGui::OpenPopup("Loader Script: Open File");
-
+            if (ImGui::Button("File")) {
+                View::openFileBrowser("Loader Script: Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                    this->m_loaderScriptFilePath = path;
+                });
+            }
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
-
-            if (this->m_fileBrowser.showFileDialog("Loader Script: Open Script", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".py")) {
-                this->m_loaderScriptScriptPath = this->m_fileBrowser.selected_path;
-            }
-            if (this->m_fileBrowser.showFileDialog("Loader Script: Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
-                this->m_loaderScriptFilePath = this->m_fileBrowser.selected_path;
-            }
 
             ImGui::NewLine();
 
@@ -265,62 +262,17 @@ namespace hex {
 
             ImGui::EndPopup();
         }
+    }
 
+    static void save() {
+        auto provider = SharedData::currentProvider;
+        for (const auto &[address, value] : provider->getPatches())
+            provider->writeRaw(address, &value, sizeof(u8));
+    }
 
-        if (this->m_fileBrowser.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
-            this->openFile(this->m_fileBrowser.selected_path);
-        }
-
-        if (this->m_fileBrowser.showFileDialog("Open Base64 File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
-            std::vector<u8> base64;
-            this->loadFromFile(this->m_fileBrowser.selected_path, base64);
-
-            if (!base64.empty()) {
-                this->m_dataToSave = decode64(base64);
-
-                if (this->m_dataToSave.empty())
-                    View::showErrorPopup("File is not in a valid Base64 format!");
-                else
-                    ImGui::OpenPopup("Save Data");
-            } else View::showErrorPopup("Failed to open file!");
-
-        }
-
-
-        if (this->m_fileBrowser.showFileDialog("Open Project", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".hexproj")) {
-            ProjectFile::load(this->m_fileBrowser.selected_path);
-            View::postEvent(Events::ProjectFileLoad);
-        }
-
-        if (this->m_fileBrowser.showFileDialog("Save Project", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".hexproj")) {
-            ProjectFile::store(this->m_fileBrowser.selected_path);
-        }
-
-
-        if (this->m_fileBrowser.showFileDialog("Export File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
-            this->saveToFile(this->m_fileBrowser.selected_path, this->m_dataToSave);
-        }
-
-        if (this->m_fileBrowser.showFileDialog("Apply IPS Patch", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
-            auto patchData = hex::readFile(this->m_fileBrowser.selected_path);
-            auto patch = hex::loadIPSPatch(patchData);
-
-            for (auto &[address, value] : patch) {
-                provider->write(address, &value, 1);
-            }
-        }
-
-        if (this->m_fileBrowser.showFileDialog("Apply IPS32 Patch", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN)) {
-            auto patchData = hex::readFile(this->m_fileBrowser.selected_path);
-            auto patch = hex::loadIPS32Patch(patchData);
-
-            for (auto &[address, value] : patch) {
-                provider->write(address, &value, 1);
-            }
-        }
-
-        if (this->m_fileBrowser.showFileDialog("Save As", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE)) {
-            FILE *file = fopen(this->m_fileBrowser.selected_path.c_str(), "wb");
+    static void saveAs() {
+        View::openFileBrowser("Save As", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [](auto path) {
+            FILE *file = fopen(path.c_str(), "wb");
 
             if (file != nullptr) {
                 std::vector<u8> buffer(0xFF'FFFF, 0x00);
@@ -328,6 +280,7 @@ namespace hex {
 
                 fseek(file, 0, SEEK_SET);
 
+                auto provider = SharedData::currentProvider;
                 for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
                     if (bufferSize > provider->getActualSize() - offset)
                         bufferSize = provider->getActualSize() - offset;
@@ -338,39 +291,47 @@ namespace hex {
 
                 fclose(file);
             }
-        }
-    }
+        });
+    };
 
     void ViewHexEditor::drawMenu() {
         auto provider = SharedData::currentProvider;
 
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...", "CTRL + O")) {
-                this->getWindowOpenState() = true;
-                View::doLater([]{ ImGui::OpenPopup("Open File"); });
+
+                View::openFileBrowser("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                    this->openFile(path);
+                    this->getWindowOpenState() = true;
+                });
             }
 
             if (ImGui::MenuItem("Save", "CTRL + S", false, provider != nullptr && provider->isWritable())) {
-                for (const auto &[address, value] : provider->getPatches())
-                    provider->writeRaw(address, &value, sizeof(u8));
+                save();
             }
 
             if (ImGui::MenuItem("Save As...", "CTRL + SHIFT + S", false, provider != nullptr && provider->isWritable())) {
-                View::doLater([]{ ImGui::OpenPopup("Save As"); });
+                saveAs();
             }
 
             ImGui::Separator();
 
             if (ImGui::MenuItem("Open Project", "")) {
-                this->getWindowOpenState() = true;
-                View::doLater([]{ ImGui::OpenPopup("Open Project"); });
+                View::openFileBrowser("Open Project", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexproj", [this](auto path) {
+                    ProjectFile::load(path);
+                    View::postEvent(Events::ProjectFileLoad);
+                    this->getWindowOpenState() = true;
+                });
             }
 
             if (ImGui::MenuItem("Save Project", "", false, provider != nullptr && provider->isWritable())) {
                 View::postEvent(Events::ProjectFileStore);
 
-                if (ProjectFile::getProjectFilePath() == "")
-                    View::doLater([] { ImGui::OpenPopup("Save Project"); });
+                if (ProjectFile::getProjectFilePath() == "") {
+                    View::openFileBrowser("Save Project", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ".hexproj", [](auto path) {
+                        ProjectFile::store(path);
+                    });
+                }
                 else
                     ProjectFile::store();
             }
@@ -379,24 +340,53 @@ namespace hex {
 
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("Base64 File")) {
-                    this->getWindowOpenState() = true;
-                    View::doLater([]{ ImGui::OpenPopup("Open Base64 File"); });
+
+                    View::openFileBrowser("Open Base64 File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                        std::vector<u8> base64;
+                        this->loadFromFile(path, base64);
+
+                        if (!base64.empty()) {
+                            this->m_dataToSave = decode64(base64);
+
+                            if (this->m_dataToSave.empty())
+                                View::showErrorPopup("File is not in a valid Base64 format!");
+                            else
+                                ImGui::OpenPopup("Save Data");
+                            this->getWindowOpenState() = true;
+                        } else View::showErrorPopup("Failed to open file!");
+                    });
                 }
 
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("IPS Patch")) {
-                    this->getWindowOpenState() = true;
-                    View::doLater([]{ ImGui::OpenPopup("Apply IPS Patch"); });
+
+                   View::openFileBrowser("Apply IPS Patch", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                        auto patchData = hex::readFile(path);
+                        auto patch = hex::loadIPSPatch(patchData);
+
+                        for (auto &[address, value] : patch) {
+                            SharedData::currentProvider->write(address, &value, 1);
+                        }
+                       this->getWindowOpenState() = true;
+                   });
+
+
                 }
 
                 if (ImGui::MenuItem("IPS32 Patch")) {
-                    this->getWindowOpenState() = true;
-                    View::doLater([]{ ImGui::OpenPopup("Apply IPS32 Patch"); });
+                    View::openFileBrowser("Apply IPS32 Patch", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                        auto patchData = hex::readFile(path);
+                        auto patch = hex::loadIPS32Patch(patchData);
+
+                        for (auto &[address, value] : patch) {
+                            SharedData::currentProvider->write(address, &value, 1);
+                        }
+                        this->getWindowOpenState() = true;
+                    });
                 }
 
                 if (ImGui::MenuItem("File with Loader Script")) {
-                    this->getWindowOpenState() = true;
                     this->m_loaderScriptFilePath.clear();
                     this->m_loaderScriptScriptPath.clear();
                     View::doLater([]{ ImGui::OpenPopup("Load File with Loader Script"); });
@@ -415,7 +405,9 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPSPatch(patches);
-                    View::doLater([]{ ImGui::OpenPopup("Export File"); });
+                    View::openFileBrowser("Export File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [this](auto path) {
+                        this->saveToFile(path, this->m_dataToSave);
+                    });
                 }
                 if (ImGui::MenuItem("IPS32 Patch")) {
                     Patches patches = provider->getPatches();
@@ -426,7 +418,9 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPS32Patch(patches);
-                    View::doLater([]{ ImGui::OpenPopup("Export File"); });
+                    View::openFileBrowser("Export File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [this](auto path) {
+                        this->saveToFile(path, this->m_dataToSave);
+                    });
                 }
 
                 ImGui::EndMenu();
@@ -457,12 +451,10 @@ namespace hex {
 
     bool ViewHexEditor::handleShortcut(int key, int mods) {
         if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S) {
-            auto provider = SharedData::currentProvider;
-            for (const auto &[address, value] : provider->getPatches())
-                provider->writeRaw(address, &value, sizeof(u8));
+            save();
             return true;
         } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_S) {
-            ImGui::OpenPopup("Save As");
+            saveAs();
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
             ImGui::OpenPopup("Search");
