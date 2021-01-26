@@ -1,5 +1,7 @@
 #include "views/view_help.hpp"
 
+#include <imgui_imhex_extensions.h>
+
 namespace hex {
 
     ViewHelp::ViewHelp() : View("Help") {
@@ -31,13 +33,15 @@ namespace hex {
         if (ImGui::BeginPopupModal("About", &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("ImHex Hex Editor v%s by WerWolv -", IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
-            ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.4F, 0.8F, 0.4F, 1.0F), "%s@%s", GIT_BRANCH, GIT_COMMIT_HASH);
+                ImGui::SameLine();
+                if (ImGui::Hyperlink(hex::format("%s@%s", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
+                    hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH);
             #endif
 
 
             ImGui::TextUnformatted("Source code available on GitHub:"); ImGui::SameLine();
-            ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), "WerWolv/ImHex   ");
+            if (ImGui::Hyperlink("WerWolv/ImHex"))
+                hex::openWebpage("https://github.com/WerWolv/ImHex");
             ImGui::NewLine();
 
             ImGui::Text("Donations");
@@ -50,10 +54,8 @@ namespace hex {
             ImGui::NewLine();
 
             for (auto &link : Links) {
-                ImGui::TextColored(ImVec4(0.4F, 0.4F, 0.8F, 1.0F), link); ImGui::SameLine();
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGui::CalcTextSize("  Copy  ").x);
-                if (ImGui::Button((std::string("Copy##") + link).c_str()))
-                    ImGui::SetClipboardText(link);
+                if (ImGui::Hyperlink(link))
+                    hex::openWebpage(link);
             }
             ImGui::NewLine();
 

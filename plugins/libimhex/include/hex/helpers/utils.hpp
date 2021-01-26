@@ -76,37 +76,13 @@ namespace hex {
 
 namespace hex {
 
-    inline std::string to_string(u128 value) {
-        char data[45] = { 0 };
+    std::string to_string(u128 value);
+    std::string to_string(s128 value);
 
-        u8 index = sizeof(data) - 2;
-        while (value != 0 && index != 0) {
-            data[index] = '0' + value % 10;
-            value /= 10;
-            index--;
-        }
+    std::string toByteString(u64 bytes);
+    std::string makePrintable(char c);
 
-        return std::string(data + index + 1);
-    }
-
-    inline std::string to_string(s128 value) {
-        char data[45] = { 0 };
-
-        u128 unsignedValue = value < 0 ? -value : value;
-
-        u8 index = sizeof(data) - 2;
-        while (unsignedValue != 0 && index != 0) {
-            data[index] = '0' + unsignedValue % 10;
-            unsignedValue /= 10;
-            index--;
-        }
-
-        if (value < 0) {
-            data[index] = '-';
-            return std::string(data + index);
-        } else
-            return std::string(data + index + 1);
-    }
+    void openWebpage(std::string_view url);
 
     template<typename ... Args>
     inline std::string format(const char *format, Args ... args) {
@@ -116,7 +92,7 @@ namespace hex {
             return "";
 
         std::vector<char> buffer(size + 1, 0x00);
-        if (snprintf(buffer.data(), size, format, args ...) <= 0)
+        if (snprintf(buffer.data(), size + 1, format, args ...) <= 0)
             return "";
 
 
@@ -124,7 +100,9 @@ namespace hex {
     }
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
-        std::remove_cvref_t<decltype(value)> mask = (std::numeric_limits<std::remove_cvref_t<decltype(value)>>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
+        using ValueType = std::remove_cvref_t<decltype(value)>;
+        ValueType mask = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
+
         return (value & mask) >> to;
     }
 
@@ -133,9 +111,6 @@ namespace hex {
         T mask = 1LLU << (currWidth - 1);
         return (((value ^ mask) - mask) << ((sizeof(T) * 8) - targetWidth)) >> ((sizeof(T) * 8) - targetWidth);
     }
-
-    std::string toByteString(u64 bytes);
-    std::string makePrintable(char c);
 
     template<typename T>
     struct always_false : std::false_type {};
@@ -191,38 +166,9 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
-    inline std::vector<std::string> splitString(std::string_view string, std::string_view delimiter) {
-        size_t start = 0, end;
-        std::string token;
-        std::vector<std::string> res;
+    std::vector<std::string> splitString(std::string_view string, std::string_view delimiter);
 
-        while ((end = string.find (delimiter, start)) != std::string::npos) {
-            token = string.substr(start, end - start);
-            start = end + delimiter.length();
-            res.push_back(token);
-        }
-
-        res.push_back(std::string(string.substr(start)));
-        return res;
-    }
-
-    inline std::string toEngineeringString(double value) {
-        constexpr std::array prefixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
-
-        int8_t prefixIndex = 6;
-
-        while (prefixIndex != 0 && prefixIndex != 12 && (value >= 1000 || value < 1) && value != 0) {
-            if (value >= 1000) {
-                value /= 1000;
-                prefixIndex++;
-            } else if (value < 1) {
-                value *= 1000;
-                prefixIndex--;
-            }
-        }
-
-        return std::to_string(value).substr(0, 5) + prefixes[prefixIndex];
-    }
+    std::string toEngineeringString(double value);
 
     std::vector<u8> readFile(std::string_view path);
 

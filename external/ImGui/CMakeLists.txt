@@ -21,6 +21,7 @@ add_library(imgui
     source/imgui_widgets.cpp
     source/ImGuiFileBrowser.cpp
     source/TextEditor.cpp
+    source/imgui_imhex_extensions.cpp
 )
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
