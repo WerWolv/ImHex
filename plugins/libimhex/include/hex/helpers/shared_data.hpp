@@ -9,7 +9,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
-#include <hex/views/view.hpp>
 
 #include <imgui.h>
 #include <ImGuiFileBrowser.h>
@@ -25,6 +24,7 @@ namespace hex::plugin::internal {
 namespace hex {
 
     namespace prv { class Provider; }
+    class View;
 
     class SharedData {
         SharedData() = default;

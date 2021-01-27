@@ -5,8 +5,6 @@
 namespace hex {
 
     ViewCommandPalette::ViewCommandPalette() : View("Command Palette") {
-        this->getWindowOpenState() = true;
-
         this->m_commandBuffer.resize(1024, 0x00);
         this->m_lastResults = this->getCommandResults("");
     }
@@ -16,6 +14,8 @@ namespace hex {
     }
 
     void ViewCommandPalette::drawContent() {
+
+        if (!this->getWindowOpenState()) return;
 
         auto windowPos = SharedData::windowPos;
         auto windowSize = SharedData::windowSize;
@@ -49,7 +49,10 @@ namespace hex {
             }
 
             ImGui::EndPopup();
+        } else {
+            this->getWindowOpenState() = false;
         }
+
     }
 
     void ViewCommandPalette::drawMenu() {
@@ -61,6 +64,7 @@ namespace hex {
             View::doLater([this] {
                 this->m_justOpened = true;
                 ImGui::OpenPopup("Command Palette");
+                this->getWindowOpenState() = true;
             });
             return true;
         }

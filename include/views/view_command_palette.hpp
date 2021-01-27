@@ -21,6 +21,7 @@ namespace hex {
 
         void drawContent() override;
         void drawMenu() override;
+        bool isAvailable() override { return true; }
 
         bool handleShortcut(int key, int mods) override;
 

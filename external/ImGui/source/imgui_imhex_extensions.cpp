@@ -36,7 +36,7 @@ namespace ImGui {
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
         TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText); // Skip formatting
-        GetOverlayDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
+        GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
         PopStyleColor();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
@@ -70,7 +70,7 @@ namespace ImGui {
         PushStyleColor(ImGuiCol_Text, ImU32(col));
         RenderBullet(window->DrawList, bb.Min + ImVec2(style.FramePadding.x + g.FontSize * 0.5f, g.FontSize * 0.5f), col);
         RenderText(bb.Min + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f), label, nullptr, false);
-        GetOverlayDrawList()->AddLine(bb.Min + ImVec2(style.FramePadding.x, size.y), pos + size + ImVec2(g.FontSize * 2, 0), ImU32(col));
+        GetWindowDrawList()->AddLine(bb.Min + ImVec2(style.FramePadding.x, size.y), pos + size + ImVec2(g.FontSize * 2, 0), ImU32(col));
         ImGui::NewLine();
         PopStyleColor();
 
@@ -137,7 +137,7 @@ namespace ImGui {
 
         PushStyleColor(ImGuiCol_Text, ImU32(color));
         TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText); // Skip formatting
-        GetOverlayDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(color));
+        GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(color));
         PopStyleColor();
     }
 

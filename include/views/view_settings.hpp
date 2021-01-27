@@ -14,10 +14,9 @@ namespace hex {
 
         void drawContent() override;
         void drawMenu() override;
+        bool isAvailable() override { return true; }
 
         bool hasViewMenuItemEntry() override { return false; }
-    private:
-        bool m_settingsWindowOpen = false;
     };
 
 }

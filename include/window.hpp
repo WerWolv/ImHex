@@ -39,7 +39,7 @@ namespace hex {
         void deinitGLFW();
         void deinitImGui();
 
-        GLFWwindow* m_window;
+        GLFWwindow* m_window = nullptr;
 
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;

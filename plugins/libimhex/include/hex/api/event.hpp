@@ -26,6 +26,7 @@ namespace hex {
 
         SettingsChanged,
 
+        OpenWindow,
 
         /* This is not a real event but a flag to show all events after this one are plugin ones */
         Events_BuiltinEnd

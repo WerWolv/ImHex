@@ -5,18 +5,23 @@
 namespace hex {
 
     ViewSettings::ViewSettings() : View("Settings") {
-        this->getWindowOpenState() = true;
+        View::subscribeEvent(Events::OpenWindow, [this](auto name) {
+            if (std::any_cast<const char*>(name) == std::string("Preferences")) {
+                View::doLater([]{ ImGui::OpenPopup("Preferences"); });
+                this->getWindowOpenState() = true;
+            }
+        });
     }
 
     ViewSettings::~ViewSettings() {
-
+        View::unsubscribeEvent(Events::OpenWindow);
     }
 
     void ViewSettings::drawContent() {
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX));
 
-        if (ImGui::BeginPopupModal("Preferences", &this->m_settingsWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("Preferences", &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
             for (auto &[category, entries] : ContentRegistry::Settings::getEntries()) {
                 ImGui::TextUnformatted(category.c_str());
                 ImGui::Separator();
@@ -30,7 +35,8 @@ namespace hex {
                 ImGui::NewLine();
             }
             ImGui::EndPopup();
-        }
+        } else
+            this->getWindowOpenState() = false;
 
     }
 
@@ -38,7 +44,7 @@ namespace hex {
         if (ImGui::BeginMenu("Help")) {
             if (ImGui::MenuItem("Preferences")) {
                 View::doLater([]{ ImGui::OpenPopup("Preferences"); });
-                this->m_settingsWindowOpen = true;
+                this->getWindowOpenState() = true;
             }
             ImGui::EndMenu();
         }

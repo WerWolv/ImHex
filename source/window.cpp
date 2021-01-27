@@ -93,18 +93,16 @@ namespace hex {
                 call();
             View::getDeferedCalls().clear();
 
-            if (SharedData::currentProvider != nullptr) {
-                for (auto &view : ContentRegistry::Views::getEntries()) {
-                    if (!view->getWindowOpenState())
-                        continue;
+            for (auto &view : ContentRegistry::Views::getEntries()) {
+                if (!view->isAvailable() || !view->getWindowOpenState())
+                    continue;
 
-                    auto minSize = view->getMinSize();
-                    minSize.x *= this->m_globalScale;
-                    minSize.y *= this->m_globalScale;
+                auto minSize = view->getMinSize();
+                minSize.x *= this->m_globalScale;
+                minSize.y *= this->m_globalScale;
 
-                    ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
-                    view->drawContent();
-                }
+                ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
+                view->drawContent();
             }
 
             View::drawCommonInterfaces();
@@ -178,7 +176,7 @@ namespace hex {
 
                 if (ImGui::BeginMenu("View")) {
                     for (auto &view : ContentRegistry::Views::getEntries()) {
-                        if (view->hasViewMenuItemEntry())
+                        if (view->isAvailable() && view->hasViewMenuItemEntry())
                             ImGui::MenuItem((std::string(view->getName()) + " View").c_str(), "", &view->getWindowOpenState());
                     }
                     ImGui::EndMenu();
@@ -219,12 +217,16 @@ namespace hex {
                 Window::s_currShortcut = { -1, -1 };
             }
 
-            if (SharedData::currentProvider == nullptr) {
+            bool anyViewOpen = false;
+            for (auto &view : ContentRegistry::Views::getEntries())
+                anyViewOpen = anyViewOpen || (view->getWindowOpenState() && view->isAvailable());
+
+            if (!anyViewOpen) {
                 char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * this->m_globalScale, 10 * this->m_globalScale));
-                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoDecoration)) {
+                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoDecoration)) {
                         this->drawWelcomeScreen();
                     }
                     ImGui::EndChild();
@@ -268,7 +270,8 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::Text("Start");
             {
-                ImGui::BulletHyperlink("Open file");
+                if (ImGui::BulletHyperlink("Open File"))
+                    EventManager::post(Events::OpenWindow, "Open File");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();
@@ -292,7 +295,8 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::Text("Customize");
             {
-                ImGui::DescriptionButton("Settings", "Change preferences of ImHex", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0));
+                if (ImGui::DescriptionButton("Settings", "Change preferences of ImHex", ImVec2(ImGui::GetContentRegionAvail().x * 0.8f, 0)))
+                    EventManager::post(Events::OpenWindow, "Preferences");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();

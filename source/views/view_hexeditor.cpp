@@ -129,10 +129,19 @@ namespace hex {
         });
 
         View::subscribeEvent(Events::PatternChanged, [this](auto) {
-           this->m_highlightedBytes.clear();
+            this->m_highlightedBytes.clear();
 
-           for (const auto &pattern : this->m_patternData)
-               this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
+            for (const auto &pattern : this->m_patternData)
+                this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
+        });
+
+        View::subscribeEvent(Events::OpenWindow, [this](auto name) {
+            if (std::any_cast<const char*>(name) == std::string("Open File")) {
+                View::openFileBrowser("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                    this->openFile(path);
+                    this->getWindowOpenState() = true;
+                });
+            }
         });
     }
 
