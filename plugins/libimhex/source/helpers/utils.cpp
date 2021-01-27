@@ -160,9 +160,9 @@ namespace hex {
         #if defined(OS_WINDOWS)
             system(hex::format("start %s", url.data()).c_str());
         #elif defined(OS_MACOS)
-            system(hex::format("open %s", url.data()).c_str())
+            system(hex::format("open %s", url.data()).c_str());
         #elif defined(OS_LINUX)
-            system(hex::format("xdg-open %s", url.data()).c_str())
+            system(hex::format("xdg-open %s", url.data()).c_str());
         #else
             #warning "Unknown OS, can't open webpages"
         #endif
