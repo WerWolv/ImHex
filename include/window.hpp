@@ -32,6 +32,8 @@ namespace hex {
         void frameBegin();
         void frameEnd();
 
+        void drawWelcomeScreen();
+
         void initGLFW();
         void initImGui();
         void deinitGLFW();

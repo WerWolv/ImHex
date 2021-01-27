@@ -94,16 +94,18 @@ namespace hex {
                 call();
             View::getDeferedCalls().clear();
 
-            for (auto &view : ContentRegistry::Views::getEntries()) {
-                if (!view->getWindowOpenState())
-                    continue;
+            if (SharedData::currentProvider != nullptr) {
+                for (auto &view : ContentRegistry::Views::getEntries()) {
+                    if (!view->getWindowOpenState())
+                        continue;
 
-                auto minSize = view->getMinSize();
-                minSize.x *= this->m_globalScale;
-                minSize.y *= this->m_globalScale;
+                    auto minSize = view->getMinSize();
+                    minSize.x *= this->m_globalScale;
+                    minSize.y *= this->m_globalScale;
 
-                ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
-                view->drawContent();
+                    ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
+                    view->drawContent();
+                }
             }
 
             View::drawCommonInterfaces();
@@ -218,6 +220,21 @@ namespace hex {
                 Window::s_currShortcut = { -1, -1 };
             }
 
+            ImGui::GetWindowDockID()
+            if (SharedData::currentProvider == nullptr) {
+                char title[256];
+                ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
+                if (ImGui::Begin(title)) {
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * this->m_globalScale, 10 * this->m_globalScale));
+                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoDecoration)) {
+                        this->drawWelcomeScreen();
+                    }
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar();
+                }
+                ImGui::End();
+            }
+
         }
         ImGui::End();
     }
@@ -238,6 +255,10 @@ namespace hex {
         glfwMakeContextCurrent(backup_current_context);
 
         glfwSwapBuffers(this->m_window);
+    }
+
+    void Window::drawWelcomeScreen() {
+        ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive), "Welcome to ImHex!");
     }
 
      void Window::initGLFW() {
