@@ -220,7 +220,6 @@ namespace hex {
                 Window::s_currShortcut = { -1, -1 };
             }
 
-            ImGui::GetWindowDockID()
             if (SharedData::currentProvider == nullptr) {
                 char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
