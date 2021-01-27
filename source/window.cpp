@@ -11,6 +11,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_freetype.h>
+#include <imgui_imhex_extensions.h>
 
 #include "helpers/plugin_handler.hpp"
 
@@ -64,8 +65,6 @@ namespace hex {
                 }
             }
         #endif
-
-        printf("Hello\n");
 
         ContentRegistry::Settings::load();
         View::postEvent(Events::SettingsChanged);
@@ -257,7 +256,56 @@ namespace hex {
     }
 
     void Window::drawWelcomeScreen() {
-        ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive), "Welcome to ImHex!");
+        ImGui::UnderlinedText("Welcome to ImHex!", ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
+
+        ImGui::NewLine();
+
+        auto availableSpace = ImGui::GetContentRegionAvail();
+
+        ImGui::Indent();
+        if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextColumn();
+            ImGui::Text("Start");
+            {
+                ImGui::BulletHyperlink("Open file");
+            }
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextColumn();
+            ImGui::Text("Recent");
+            {
+
+            }
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextColumn();
+            ImGui::Text("Help");
+            {
+                if (ImGui::BulletHyperlink("GitHub Repository")) hex::openWebpage("https://github.com/WerWolv/ImHex");
+                if (ImGui::BulletHyperlink("Get help")) hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/get-help");
+            }
+
+            ImGui::EndTable();
+        }
+        ImGui::SameLine();
+        if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextColumn();
+            ImGui::Text("Customize");
+            {
+                ImGui::DescriptionButton("Settings", "Change preferences of ImHex", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0));
+            }
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextColumn();
+            ImGui::Text("Learn");
+            {
+                if (ImGui::DescriptionButton("Pattern Language Documentation", "Learn how to write ImHex patterns with our extensive documentation", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                    hex::openWebpage("https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide");
+                if (ImGui::DescriptionButton("Plugins API", "Extend ImHex with additional features using plugins", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                    hex::openWebpage("https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide");
+            }
+
+            ImGui::EndTable();
+        }
     }
 
      void Window::initGLFW() {
@@ -386,17 +434,18 @@ namespace hex {
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
 
-#ifdef __MINGW32__
-        std::filesystem::path resourcePath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path();
-#elif defined(__linux__)
-        std::filesystem::path resourcePath = "/usr/share/ImHex";
-#else
-        std::filesystem::path resourcePath = "";
-#   warning "Unsupported OS for custom font support"
-#endif
+        #if defined(OS_WINDOWS)
+            std::filesystem::path resourcePath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path();
+        #elif defined(OS_LINUX) || defined(OS_MACOS)
+            std::filesystem::path resourcePath = "/usr/share/ImHex";
+        #else
+            std::filesystem::path resourcePath = "";
+            #warning "Unsupported OS for custom font support"
+        #endif
 
-        if (!resourcePath.empty() && this->setFont(resourcePath / "font.ttf"))
-            ;
+        if (!resourcePath.empty() && this->setFont(resourcePath / "font.ttf")) {
+
+        }
         else if ((this->m_fontScale != 0.0f) && (this->m_fontScale != 1.0f)) {
             io.Fonts->Clear();
 
