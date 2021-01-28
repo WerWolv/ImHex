@@ -50,7 +50,7 @@ namespace hex {
 
         void unsubscribeEvent(Events eventType);
 
-
+        void discardNavigationRequests();
     protected:
         void confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
 

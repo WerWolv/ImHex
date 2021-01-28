@@ -95,6 +95,11 @@ namespace hex {
         EventManager::unsubscribe(eventType, this);
     }
 
+    void View::discardNavigationRequests() {
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+            ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+    }
+
     void View::doLater(std::function<void()> &&function) {
         SharedData::deferredCalls.push_back(function);
     }

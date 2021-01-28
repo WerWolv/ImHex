@@ -189,7 +189,7 @@ struct MemoryEditor
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
 
-        if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse))
+        if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs))
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
                 hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
@@ -264,6 +264,7 @@ struct MemoryEditor
         clipper.Step();
         const size_t visible_start_addr = clipper.DisplayStart * Cols;
         const size_t visible_end_addr = clipper.DisplayEnd * Cols;
+        const size_t visible_count = visible_end_addr - visible_start_addr;
 
         bool data_next = false;
 
@@ -287,12 +288,20 @@ struct MemoryEditor
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataEditingAddr < mem_size - Cols) { data_editing_addr_next = DataEditingAddr + Cols; DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataEditingAddr > 0)               { data_editing_addr_next = DataEditingAddr - 1; DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataEditingAddr < mem_size - 1)   { data_editing_addr_next = DataEditingAddr + 1; DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)) && DataEditingAddr > 0)                  { data_editing_addr_next = std::max(s64(0), s64(DataEditingAddr) - s64(visible_count)); DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)) && DataEditingAddr < mem_size - 1)     { data_editing_addr_next = std::min(s64(mem_size - 1), s64(DataEditingAddr) + s64(visible_count)); DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)) && DataEditingAddr > 0)                    { data_editing_addr_next = 0; DataEditingTakeFocus = true; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)) && DataEditingAddr < mem_size - 1)          { data_editing_addr_next = mem_size - 1; DataEditingTakeFocus = true; }
             } else if (DataPreviewAddr != -1) {
                 // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
-                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataPreviewAddr >= (size_t)Cols)          { data_preview_addr_next = DataPreviewAddr - Cols; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
-                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataPreviewAddr < mem_size - Cols) { data_preview_addr_next = DataPreviewAddr + Cols; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
-                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataPreviewAddr > 0)               { data_preview_addr_next = DataPreviewAddr - 1; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
-                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataPreviewAddr < mem_size - 1)   { data_preview_addr_next = DataPreviewAddr + 1; DataPreviewAddr = data_preview_addr_next; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataPreviewAddr >= (size_t)Cols)          { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr - Cols; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataPreviewAddr < mem_size - Cols) { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr + Cols; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataPreviewAddr > 0)               { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr - 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)) && DataPreviewAddr < mem_size - 1)   { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr + 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)) && DataPreviewAddr > 0)                  { DataPreviewAddr = data_preview_addr_next = std::max(s64(0), s64(DataPreviewAddr) - s64(visible_count)); if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)) && DataPreviewAddr < mem_size - 1)     { DataPreviewAddr = data_preview_addr_next = std::min(s64(mem_size - 1), s64(DataPreviewAddr) + s64(visible_count)); if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)) && DataPreviewAddr > 0)                    { DataPreviewAddr = data_preview_addr_next = 0; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
+                else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)) && DataPreviewAddr < mem_size - 1)          { DataPreviewAddr = data_preview_addr_next = mem_size - 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
             }
         }
 

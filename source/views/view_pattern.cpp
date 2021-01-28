@@ -269,8 +269,7 @@ namespace hex {
                 }
             }
 
-            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
-                ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+            View::discardNavigationRequests();
         }
         ImGui::End();
 
