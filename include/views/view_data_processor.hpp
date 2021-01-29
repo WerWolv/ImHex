@@ -18,15 +18,22 @@ namespace hex {
             In, Out
         };
 
-        Attribute(Type type, std::string_view name) : m_id(Attribute::s_idCounter++), m_type(type), m_name(name) { }
+        Attribute(Type type, std::string_view name) : m_id(Attribute::s_idCounter++), m_type(type), m_name(name) {
+
+        }
+
+        ~Attribute() {
+            for (auto &[linkId, attr] : this->getConnectedAttributes())
+                attr->removeConnectedAttribute(linkId);
+        }
 
         [[nodiscard]] u32 getID() const { return this->m_id; }
         [[nodiscard]] Type getType() const { return this->m_type; }
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
 
-        void setConnectedAttribute(u32 linkId, Attribute *to) { this->m_linkId = linkId; this->m_connectedAttribute = to; }
-        [[nodiscard]] Attribute* getConnectedAttribute() const { return this->m_connectedAttribute; }
-        [[nodiscard]] u32 getConnectedLinkID() const { return this->m_linkId; }
+        void addConnectedAttribute(u32 linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
+        void removeConnectedAttribute(u32 linkId) { this->m_connectedAttributes.erase(linkId); }
+        [[nodiscard]] std::map<u32, Attribute*>& getConnectedAttributes() { return this->m_connectedAttributes; }
 
         [[nodiscard]] Node* getParentNode() { return this->m_parentNode; }
     private:
@@ -34,8 +41,7 @@ namespace hex {
         u32 m_id;
         Type m_type;
         std::string m_name;
-        Attribute *m_connectedAttribute = nullptr;
-        u32 m_linkId;
+        std::map<u32, Attribute*> m_connectedAttributes;
         Node *m_parentNode;
 
         friend class Node;
@@ -64,6 +70,8 @@ namespace hex {
                 attr.setParentNode(this);
         }
 
+        virtual ~Node() = default;
+
         [[nodiscard]] u32 getID() const { return this->m_id; }
         [[nodiscard]] std::string_view getTitle() const { return this->m_title; }
         [[nodiscard]] std::vector<Attribute>& getAttributes() { return this->m_attributes; }
@@ -78,6 +86,16 @@ namespace hex {
         std::string m_title;
         std::vector<Attribute> m_attributes;
         bool m_endNode;
+
+    protected:
+        Node* getConnectedInputNode(u32 attributeId) {
+            auto &connectedAttribute = this->getAttributes()[attributeId].getConnectedAttributes();
+
+            if (connectedAttribute.empty())
+                return nullptr;
+
+            return connectedAttribute.begin()->second->getParentNode();
+        }
     };
 
     class NodeInteger : public Node {
@@ -108,13 +126,13 @@ namespace hex {
         NodeReadData() : Node("Read Data", { Attribute(Attribute::Type::In, "Address"), Attribute(Attribute::Type::In, "Size"), Attribute(Attribute::Type::Out, "Data") }) {}
 
         [[nodiscard]] std::vector<u8> process() override {
-            auto connectedInputAddress = this->getAttributes()[0].getConnectedAttribute();
-            auto connectedInputSize = this->getAttributes()[1].getConnectedAttribute();
+            auto connectedInputAddress = this->getConnectedInputNode(0);
+            auto connectedInputSize = this->getConnectedInputNode(1);
             if (connectedInputAddress == nullptr || connectedInputSize == nullptr)
                 return {};
 
-            auto address = *reinterpret_cast<u64*>(connectedInputAddress->getParentNode()->process().data());
-            auto size = *reinterpret_cast<u64*>(connectedInputSize->getParentNode()->process().data());
+            auto address = *reinterpret_cast<u64*>(connectedInputAddress->process().data());
+            auto size = *reinterpret_cast<u64*>(connectedInputSize->process().data());
 
             std::vector<u8> data;
             data.resize(size);
@@ -131,11 +149,11 @@ namespace hex {
         NodeInvert() : Node("Invert", { Attribute(Attribute::Type::In, "Input"), Attribute(Attribute::Type::Out, "Output") }) {}
 
         [[nodiscard]] std::vector<u8> process() override {
-            auto connectedInput = this->getAttributes()[0].getConnectedAttribute();
+            auto connectedInput = this->getConnectedInputNode(0);
             if (connectedInput == nullptr)
                 return {};
 
-            std::vector<u8> output = connectedInput->getParentNode()->process();
+            std::vector<u8> output = connectedInput->process();
 
             for (auto &byte : output)
                 byte = ~byte;
@@ -149,13 +167,13 @@ namespace hex {
         NodeWriteData() : Node("Write Data", { Attribute(Attribute::Type::In, "Address"), Attribute(Attribute::Type::In, "Data") }, true) {}
 
         [[nodiscard]] std::vector<u8> process() override {
-            auto connectedInputAddress = this->getAttributes()[0].getConnectedAttribute();
-            auto connectedInputData = this->getAttributes()[1].getConnectedAttribute();
+            auto connectedInputAddress = this->getConnectedInputNode(0);
+            auto connectedInputData = this->getConnectedInputNode(1);
             if (connectedInputAddress == nullptr || connectedInputData == nullptr)
                 return {};
 
-            auto address = *reinterpret_cast<u64*>(connectedInputAddress->getParentNode()->process().data());
-            auto data = connectedInputData->getParentNode()->process();
+            auto address = *reinterpret_cast<u64*>(connectedInputAddress->process().data());
+            auto data = connectedInputData->process();
 
             SharedData::currentProvider->write(address, data.data(), data.size());
             return data;

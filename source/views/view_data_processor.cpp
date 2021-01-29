@@ -17,10 +17,15 @@ namespace hex {
 
     auto ViewDataProcessor::eraseLink(u32 id) {
         auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link){ return link.getID() == id; });
+
+        if (link == this->m_links.end())
+            return;
+
         for (auto &node : this->m_nodes) {
             for (auto &attribute : node->getAttributes()) {
-                if (attribute.getID() == link->getFromID() || attribute.getID() == link->getToID())
-                    attribute.setConnectedAttribute(0, nullptr);
+                if (attribute.getID() == link->getFromID() || attribute.getID() == link->getToID()) {
+                    attribute.removeConnectedAttribute(attribute.getID());
+                }
             }
         }
 
@@ -110,16 +115,8 @@ namespace hex {
                     if (fromAttr == nullptr || toAttr == nullptr)
                         throw std::runtime_error("Invalid node link");
 
-                    fromAttr->setConnectedAttribute(newLink.getID(), toAttr);
-                    toAttr->setConnectedAttribute(newLink.getID(), fromAttr);
-                }
-            }
-
-
-            {
-                int id;
-                if (imnodes::IsLinkDestroyed(&id)) {
-                    eraseLink(id);
+                    fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
+                    toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
                 }
             }
 
@@ -145,8 +142,17 @@ namespace hex {
                         auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
 
                         for (auto &attr : (*node)->getAttributes()) {
-                            eraseLink(attr.getConnectedLinkID());
+                            std::vector<u32> linksToRemove;
+                            for (auto &[linkId, connectedAttr] : attr.getConnectedAttributes())
+                                linksToRemove.push_back(linkId);
+
+                            for (auto linkId : linksToRemove)
+                                eraseLink(linkId);
                         }
+                    }
+
+                    for (const int id :selectedNodes) {
+                        auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
 
                         if ((*node)->isEndNode()) {
                             std::erase_if(this->m_endNodes, [&id](auto node){ return node->getID() == id; });
