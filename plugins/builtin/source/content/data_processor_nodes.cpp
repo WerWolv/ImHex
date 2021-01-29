@@ -9,10 +9,10 @@ namespace hex::plugin::builtin {
         NodeInteger() : Node("Integer", { dp::Attribute(dp::Attribute::Type::Out, "Value") }) {}
 
         void drawNode() override {
-            if (ImGui::BeginChild(this->getID(), ImVec2(100, ImGui::GetTextLineHeight()))) {
-                ImGui::InputScalar("##integerValue", ImGuiDataType_U64, &this->m_value, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
-            }
-            ImGui::EndChild();
+            ImGui::TextUnformatted("0x"); ImGui::SameLine(0, 0);
+            ImGui::PushItemWidth(100);
+            ImGui::InputScalar("##integerValue", ImGuiDataType_U64, &this->m_value, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::PopItemWidth();
         }
 
         [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
 
     class NodeInvert : public dp::Node {
     public:
-        NodeInvert() : Node("Invert", { dp::Attribute(dp::Attribute::Type::In, "Input"), dp::Attribute(dp::Attribute::Type::Out, "Output") }) {}
+        NodeInvert() : Node("Bitwise NOT", { dp::Attribute(dp::Attribute::Type::In, "Input"), dp::Attribute(dp::Attribute::Type::Out, "Output") }) {}
 
         [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             auto connectedInput = this->getConnectedInputNode(0);
