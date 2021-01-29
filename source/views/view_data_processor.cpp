@@ -33,22 +33,25 @@ namespace hex {
     }
 
     void ViewDataProcessor::processNodes() {
-        for (auto overlay : this->m_dataOverlays)
-            SharedData::currentProvider->deleteOverlay(overlay);
-        this->m_dataOverlays.clear();
+        if (this->m_dataOverlays.size() != this->m_endNodes.size()) {
+            for (auto overlay : this->m_dataOverlays)
+                SharedData::currentProvider->deleteOverlay(overlay);
+            this->m_dataOverlays.clear();
 
+            for (u32 i = 0; i < this->m_endNodes.size(); i++)
+                this->m_dataOverlays.push_back(SharedData::currentProvider->newOverlay());
+        }
+
+        u32 overlayIndex = 0;
         for (auto &endNode : this->m_endNodes) {
-            auto overlay = SharedData::currentProvider->newOverlay();
-            (void)endNode->process(overlay);
-            this->m_dataOverlays.push_back(overlay);
+            (void)endNode->process(this->m_dataOverlays[overlayIndex]);
+            overlayIndex++;
         }
     }
 
     void ViewDataProcessor::drawContent() {
         if (ImGui::Begin("Data Processor", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ImGui::OpenPopup("Add Node");
-
-            bool nodesChanged = false;
 
             if (ImGui::BeginPopup("Add Node")) {
                 dp::Node *node = nullptr;
@@ -64,8 +67,6 @@ namespace hex {
 
                     if (node->isEndNode())
                         this->m_endNodes.push_back(node);
-
-                    nodesChanged = true;
                 }
 
                 ImGui::EndPopup();
@@ -106,7 +107,6 @@ namespace hex {
                 int from, to;
                 if (imnodes::IsLinkCreated(&from, &to)) {
                     auto newLink = this->m_links.emplace_back(from, to);
-                    nodesChanged = true;
 
                     dp::Attribute *fromAttr, *toAttr;
                     for (auto &node : this->m_nodes) {
@@ -137,7 +137,6 @@ namespace hex {
                         eraseLink(id);
                     }
 
-                    nodesChanged = true;
                 }
             }
 
@@ -172,12 +171,10 @@ namespace hex {
                         this->m_nodes.erase(node);
                     }
 
-                    nodesChanged = true;
                 }
             }
 
-            if (nodesChanged)
-                this->processNodes();
+            this->processNodes();
 
         }
         ImGui::End();
