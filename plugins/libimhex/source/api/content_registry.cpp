@@ -120,4 +120,14 @@ namespace hex {
     std::vector<ContentRegistry::DataInspector::Entry>& ContentRegistry::DataInspector::getEntries() {
         return SharedData::dataInspectorEntries;
     }
+
+    /* Data Processor Nodes */
+
+    void ContentRegistry::DataProcessorNode::add(std::string_view name, const std::function<dp::Node*()> &creatorFunction) {
+        SharedData::dataProcessorNodes.emplace(name, creatorFunction);
+    }
+
+    std::map<std::string, std::function<dp::Node*()>>& ContentRegistry::DataProcessorNode::getEntries() {
+        return SharedData::dataProcessorNodes;
+    }
 }

@@ -42,18 +42,12 @@ namespace hex {
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ImGui::OpenPopup("Add Node");
 
             if (ImGui::BeginPopup("Add Node")) {
-                Node *node = nullptr;
-                if (ImGui::MenuItem("Integer Node")) {
-                    node = new NodeInteger();
-                }
-                if (ImGui::MenuItem("Read Data Node")) {
-                    node = new NodeReadData();
-                }
-                if (ImGui::MenuItem("Invert Data Node")) {
-                    node = new NodeInvert();
-                }
-                if (ImGui::MenuItem("Write Data Node")) {
-                    node = new NodeWriteData();
+                dp::Node *node = nullptr;
+
+                for (const auto &[name, function] : ContentRegistry::DataProcessorNode::getEntries()) {
+                    if (ImGui::MenuItem(name.c_str())) {
+                        node = function();
+                    }
                 }
 
                 if (node != nullptr) {
@@ -78,11 +72,11 @@ namespace hex {
                 node->drawNode();
 
                 for (auto& attribute : node->getAttributes()) {
-                    if (attribute.getType() == Attribute::Type::In) {
+                    if (attribute.getType() == dp::Attribute::Type::In) {
                         imnodes::BeginInputAttribute(attribute.getID());
                         ImGui::TextUnformatted(attribute.getName().data());
                         imnodes::EndInputAttribute();
-                    } else if (attribute.getType() == Attribute::Type::Out) {
+                    } else if (attribute.getType() == dp::Attribute::Type::Out) {
                         imnodes::BeginOutputAttribute(attribute.getID());
                         ImGui::TextUnformatted(attribute.getName().data());
                         imnodes::EndOutputAttribute();
@@ -102,7 +96,7 @@ namespace hex {
                 if (imnodes::IsLinkCreated(&from, &to)) {
                     auto newLink = this->m_links.emplace_back(from, to);
 
-                    Attribute *fromAttr, *toAttr;
+                    dp::Attribute *fromAttr, *toAttr;
                     for (auto &node : this->m_nodes) {
                         for (auto &attribute : node->getAttributes()) {
                             if (attribute.getID() == from)

@@ -17,6 +17,7 @@ namespace hex {
     class View;
     namespace lang { class ASTNode; }
     namespace lang { class Evaluator; }
+    namespace dp { class Node; }
 
     /*
         The Content Registry is the heart of all features in ImHex that are in some way extendable by Plugins.
@@ -143,6 +144,17 @@ namespace hex {
             static void add(std::string_view name, size_t requiredSize, GeneratorFunction function);
 
             static std::vector<Entry>& getEntries();
+        };
+
+        struct DataProcessorNode {
+            template<hex::derived_from<dp::Node> T, typename ... Args>
+            static void add(std::string_view name, Args&& ... args) {
+                add(name, [args...]{ return new T(std::forward<Args>(args)...); });
+            }
+
+            static std::map<std::string, std::function<dp::Node*()>>& getEntries();
+        private:
+            static void add(std::string_view name, const std::function<dp::Node*()> &creatorFunction);
         };
     };
 
