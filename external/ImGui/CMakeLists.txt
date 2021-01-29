@@ -11,17 +11,18 @@ pkg_search_module(GLFW REQUIRED glfw3)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 add_library(imgui
-    source/imgui.cpp
-    source/imgui_demo.cpp
-    source/imgui_draw.cpp
-    source/imgui_freetype.cpp
-    source/imgui_impl_glfw.cpp
-    source/imgui_impl_opengl3.cpp
-    source/imgui_tables.cpp
-    source/imgui_widgets.cpp
-    source/ImGuiFileBrowser.cpp
-    source/TextEditor.cpp
-    source/imgui_imhex_extensions.cpp
+        source/imgui.cpp
+        source/imgui_demo.cpp
+        source/imgui_draw.cpp
+        source/imgui_freetype.cpp
+        source/imgui_impl_glfw.cpp
+        source/imgui_impl_opengl3.cpp
+        source/imgui_tables.cpp
+        source/imgui_widgets.cpp
+        source/ImGuiFileBrowser.cpp
+        source/TextEditor.cpp
+        source/imgui_imhex_extensions.cpp
+        source/imnodes.cpp
 )
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
