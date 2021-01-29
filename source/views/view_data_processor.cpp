@@ -8,6 +8,25 @@ namespace hex {
 
     ViewDataProcessor::ViewDataProcessor() : View("Data Processor") {
         imnodes::Initialize();
+
+        View::subscribeEvent(Events::SettingsChanged, [this](auto) {
+            int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
+
+            switch (theme) {
+                default:
+                case 0: /* Dark theme */
+                    imnodes::StyleColorsDark();
+                    break;
+                case 1: /* Light theme */
+                    imnodes::StyleColorsLight();
+                    break;
+                case 2: /* Classic theme */
+                    imnodes::StyleColorsClassic();
+                    break;
+            }
+
+            imnodes::GetStyle().flags = imnodes::StyleFlags(imnodes::StyleFlags_NodeOutline | imnodes::StyleFlags_GridLines);
+        });
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
