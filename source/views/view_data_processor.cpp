@@ -33,13 +33,22 @@ namespace hex {
     }
 
     void ViewDataProcessor::processNodes() {
-        for (auto &endNode : this->m_endNodes)
-            endNode->process();
+        for (auto overlay : this->m_dataOverlays)
+            SharedData::currentProvider->deleteOverlay(overlay);
+        this->m_dataOverlays.clear();
+
+        for (auto &endNode : this->m_endNodes) {
+            auto overlay = SharedData::currentProvider->newOverlay();
+            (void)endNode->process(overlay);
+            this->m_dataOverlays.push_back(overlay);
+        }
     }
 
     void ViewDataProcessor::drawContent() {
         if (ImGui::Begin("Data Processor", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ImGui::OpenPopup("Add Node");
+
+            bool nodesChanged = false;
 
             if (ImGui::BeginPopup("Add Node")) {
                 dp::Node *node = nullptr;
@@ -55,6 +64,8 @@ namespace hex {
 
                     if (node->isEndNode())
                         this->m_endNodes.push_back(node);
+
+                    nodesChanged = true;
                 }
 
                 ImGui::EndPopup();
@@ -95,6 +106,7 @@ namespace hex {
                 int from, to;
                 if (imnodes::IsLinkCreated(&from, &to)) {
                     auto newLink = this->m_links.emplace_back(from, to);
+                    nodesChanged = true;
 
                     dp::Attribute *fromAttr, *toAttr;
                     for (auto &node : this->m_nodes) {
@@ -120,9 +132,12 @@ namespace hex {
                     static std::vector<int> selectedLinks;
                     selectedLinks.resize(static_cast<size_t>(selectedLinkCount));
                     imnodes::GetSelectedLinks(selectedLinks.data());
+
                     for (const int id : selectedLinks) {
                         eraseLink(id);
                     }
+
+                    nodesChanged = true;
                 }
             }
 
@@ -156,10 +171,13 @@ namespace hex {
 
                         this->m_nodes.erase(node);
                     }
+
+                    nodesChanged = true;
                 }
             }
 
-            this->processNodes();
+            if (nodesChanged)
+                this->processNodes();
 
         }
         ImGui::End();

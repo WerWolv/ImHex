@@ -27,6 +27,8 @@ namespace hex {
         std::list<dp::Node*> m_nodes;
         std::list<dp::Link>  m_links;
 
+        std::vector<prv::Overlay*> m_dataOverlays;
+
         auto eraseLink(u32 id);
         void processNodes();
     };

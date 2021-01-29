@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
             ImGui::EndChild();
         }
 
-        [[nodiscard]] std::vector<u8> process() override {
+        [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             std::vector<u8> data;
             data.resize(sizeof(this->m_value));
 
@@ -34,14 +34,14 @@ namespace hex::plugin::builtin {
                                                           dp::Attribute(dp::Attribute::Type::Out, "Data")
                                                         }) { }
 
-        [[nodiscard]] std::vector<u8> process() override {
+        [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             auto connectedInputAddress = this->getConnectedInputNode(0);
             auto connectedInputSize = this->getConnectedInputNode(1);
             if (connectedInputAddress == nullptr || connectedInputSize == nullptr)
                 return {};
 
-            auto address = *reinterpret_cast<u64*>(connectedInputAddress->process().data());
-            auto size = *reinterpret_cast<u64*>(connectedInputSize->process().data());
+            auto address = *reinterpret_cast<u64*>(connectedInputAddress->process(dataOverlay).data());
+            auto size = *reinterpret_cast<u64*>(connectedInputSize->process(dataOverlay).data());
 
             std::vector<u8> data;
             data.resize(size);
@@ -57,12 +57,12 @@ namespace hex::plugin::builtin {
     public:
         NodeInvert() : Node("Invert", { dp::Attribute(dp::Attribute::Type::In, "Input"), dp::Attribute(dp::Attribute::Type::Out, "Output") }) {}
 
-        [[nodiscard]] std::vector<u8> process() override {
+        [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             auto connectedInput = this->getConnectedInputNode(0);
             if (connectedInput == nullptr)
                 return {};
 
-            std::vector<u8> output = connectedInput->process();
+            std::vector<u8> output = connectedInput->process(dataOverlay);
 
             for (auto &byte : output)
                 byte = ~byte;
@@ -75,16 +75,18 @@ namespace hex::plugin::builtin {
     public:
         NodeWriteData() : Node("Write Data", { dp::Attribute(dp::Attribute::Type::In, "Address"), dp::Attribute(dp::Attribute::Type::In, "Data") }, true) {}
 
-        [[nodiscard]] std::vector<u8> process() override {
+        [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             auto connectedInputAddress = this->getConnectedInputNode(0);
             auto connectedInputData = this->getConnectedInputNode(1);
             if (connectedInputAddress == nullptr || connectedInputData == nullptr)
                 return {};
 
-            auto address = *reinterpret_cast<u64*>(connectedInputAddress->process().data());
-            auto data = connectedInputData->process();
+            auto address = *reinterpret_cast<u64*>(connectedInputAddress->process(dataOverlay).data());
+            auto data = connectedInputData->process(dataOverlay);
 
-            SharedData::currentProvider->write(address, data.data(), data.size());
+            dataOverlay->setAddress(address);
+            dataOverlay->getData() = data;
+
             return data;
         }
     };

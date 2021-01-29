@@ -27,6 +27,12 @@ namespace hex {
             ImU8 byte;
             provider->read(off, &byte, sizeof(ImU8));
 
+            for (auto &overlay : SharedData::currentProvider->getOverlays()) {
+                auto overlayAddress = overlay->getAddress();
+                if (off >= overlayAddress && off < overlayAddress + overlay->getSize())
+                    byte = overlay->getData()[off - overlayAddress];
+            }
+
             return byte;
         };
 

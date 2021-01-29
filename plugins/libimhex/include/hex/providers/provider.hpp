@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <hex/helpers/shared_data.hpp>
+#include <hex/providers/overlay.hpp>
 
 namespace hex::prv {
 
@@ -32,6 +33,10 @@ namespace hex::prv {
         std::map<u64, u8>& getPatches();
         void applyPatches();
 
+        [[nodiscard]] Overlay* newOverlay();
+        void deleteOverlay(Overlay *overlay);
+        [[nodiscard]] const std::list<Overlay*>& getOverlays();
+
         u32 getPageCount();
         u32 getCurrentPage() const;
         void setCurrentPage(u32 page);
@@ -48,6 +53,7 @@ namespace hex::prv {
         u64 m_baseAddress = 0;
 
         std::vector<std::map<u64, u8>> m_patches;
+        std::list<Overlay*> m_overlays;
     };
 
 }

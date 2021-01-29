@@ -19,7 +19,7 @@ namespace hex::dp {
         [[nodiscard]] bool isEndNode() const { return this->m_endNode; }
 
         virtual void drawNode() { }
-        [[nodiscard]] virtual std::vector<u8> process() = 0;
+        [[nodiscard]] virtual std::vector<u8> process(prv::Overlay *dataOverlay) = 0;
     private:
         u32 m_id;
         std::string m_title;
