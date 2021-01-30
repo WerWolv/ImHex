@@ -30,6 +30,9 @@ namespace hex {
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
+        for (auto &node : this->m_nodes)
+            delete node;
+
         imnodes::Shutdown();
     }
 
@@ -97,7 +100,10 @@ namespace hex {
 
     void ViewDataProcessor::drawContent() {
         if (ImGui::Begin("Data Processor", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                this->m_rightClickedCoords = ImGui::GetMousePos();
+
                 if (imnodes::IsNodeHovered(&this->m_rightClickedId))
                     ImGui::OpenPopup("Node Menu");
                 else if (imnodes::IsLinkHovered(&this->m_rightClickedId))
@@ -149,6 +155,8 @@ namespace hex {
 
                     if (node->isEndNode())
                         this->m_endNodes.push_back(node);
+
+                    imnodes::SetNodeScreenSpacePos(node->getID(), this->m_rightClickedCoords);
                 }
 
                 ImGui::EndPopup();
