@@ -165,7 +165,7 @@ namespace hex {
         if (dataSize != 0x00) {
             if (ImGui::Begin("Hex Editor")) {
 
-                if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
+                if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
                     ImGui::OpenPopup("Edit");
 
                 if (ImGui::BeginPopup("Edit")) {
