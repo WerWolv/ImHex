@@ -6,7 +6,7 @@ namespace hex::plugin::builtin {
 
     class NodeInteger : public dp::Node {
     public:
-        NodeInteger() : Node("Integer", { dp::Attribute(dp::Attribute::Type::Out, "Value") }) {}
+        NodeInteger() : Node("Integer", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Value") }) {}
 
         void drawNode() override {
             ImGui::TextUnformatted("0x"); ImGui::SameLine(0, 0);
@@ -29,9 +29,9 @@ namespace hex::plugin::builtin {
 
     class NodeReadData : public dp::Node {
     public:
-        NodeReadData() : Node("Read Data", { dp::Attribute(dp::Attribute::Type::In, "Address"),
-                                                          dp::Attribute(dp::Attribute::Type::In, "Size"),
-                                                          dp::Attribute(dp::Attribute::Type::Out, "Data")
+        NodeReadData() : Node("Read Data", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Address"),
+                                                          dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Size"),
+                                                          dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Data")
                                                         }) { }
 
         [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
 
     class NodeInvert : public dp::Node {
     public:
-        NodeInvert() : Node("Bitwise NOT", { dp::Attribute(dp::Attribute::Type::In, "Input"), dp::Attribute(dp::Attribute::Type::Out, "Output") }) {}
+        NodeInvert() : Node("Bitwise NOT", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
 
         [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             auto connectedInput = this->getConnectedInputNode(0);
@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
 
     class NodeWriteData : public dp::Node {
     public:
-        NodeWriteData() : Node("Write Data", { dp::Attribute(dp::Attribute::Type::In, "Address"), dp::Attribute(dp::Attribute::Type::In, "Data") }, true) {}
+        NodeWriteData() : Node("Write Data", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Data") }, true) {}
 
         [[nodiscard]] std::vector<u8> process(prv::Overlay *dataOverlay) override {
             auto connectedInputAddress = this->getConnectedInputNode(0);

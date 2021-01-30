@@ -7,10 +7,16 @@ namespace hex::dp {
     class Attribute {
     public:
         enum class Type {
+            Integer,
+            Float,
+            Buffer
+        };
+
+        enum class IOType {
             In, Out
         };
 
-        Attribute(Type type, std::string_view name) : m_id(SharedData::dataProcessorNodeIdCounter++), m_type(type), m_name(name) {
+        Attribute(IOType ioType, Type type, std::string_view name) : m_id(SharedData::dataProcessorNodeIdCounter++), m_ioType(ioType), m_type(type), m_name(name) {
 
         }
 
@@ -20,6 +26,7 @@ namespace hex::dp {
         }
 
         [[nodiscard]] u32 getID() const { return this->m_id; }
+        [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
 
@@ -30,6 +37,7 @@ namespace hex::dp {
         [[nodiscard]] Node* getParentNode() { return this->m_parentNode; }
     private:
         u32 m_id;
+        IOType m_ioType;
         Type m_type;
         std::string m_name;
         std::map<u32, Attribute*> m_connectedAttributes;

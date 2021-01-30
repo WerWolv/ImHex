@@ -188,12 +188,20 @@ namespace hex {
                 node->drawNode();
 
                 for (auto& attribute : node->getAttributes()) {
-                    if (attribute.getType() == dp::Attribute::Type::In) {
-                        imnodes::BeginInputAttribute(attribute.getID());
+                    imnodes::PinShape pinShape;
+
+                    switch (attribute.getType()) {
+                        case dp::Attribute::Type::Integer: pinShape = imnodes::PinShape_Circle; break;
+                        case dp::Attribute::Type::Float: pinShape = imnodes::PinShape_Triangle; break;
+                        case dp::Attribute::Type::Buffer: pinShape = imnodes::PinShape_Quad; break;
+                    }
+
+                    if (attribute.getIOType() == dp::Attribute::IOType::In) {
+                        imnodes::BeginInputAttribute(attribute.getID(), pinShape);
                         ImGui::TextUnformatted(attribute.getName().data());
                         imnodes::EndInputAttribute();
-                    } else if (attribute.getType() == dp::Attribute::Type::Out) {
-                        imnodes::BeginOutputAttribute(attribute.getID());
+                    } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
+                        imnodes::BeginOutputAttribute(attribute.getID(), imnodes::PinShape(pinShape + 1));
                         ImGui::TextUnformatted(attribute.getName().data());
                         imnodes::EndOutputAttribute();
                     }
@@ -210,23 +218,30 @@ namespace hex {
             {
                 int from, to;
                 if (imnodes::IsLinkCreated(&from, &to)) {
-                    auto newLink = this->m_links.emplace_back(from, to);
 
-                    dp::Attribute *fromAttr, *toAttr;
-                    for (auto &node : this->m_nodes) {
-                        for (auto &attribute : node->getAttributes()) {
-                            if (attribute.getID() == from)
-                                fromAttr = &attribute;
-                            else if (attribute.getID() == to)
-                                toAttr = &attribute;
+                    do {
+                        dp::Attribute *fromAttr, *toAttr;
+                        for (auto &node : this->m_nodes) {
+                            for (auto &attribute : node->getAttributes()) {
+                                if (attribute.getID() == from)
+                                    fromAttr = &attribute;
+                                else if (attribute.getID() == to)
+                                    toAttr = &attribute;
+                            }
                         }
-                    }
 
-                    if (fromAttr == nullptr || toAttr == nullptr)
-                        throw std::runtime_error("Invalid node link");
+                        if (fromAttr == nullptr || toAttr == nullptr)
+                            break;
 
-                    fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
-                    toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
+                        if (fromAttr->getType() != toAttr->getType())
+                            break;
+
+                        auto newLink = this->m_links.emplace_back(from, to);
+
+                        fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
+                        toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
+                    } while (0);
+
                 }
             }
 
