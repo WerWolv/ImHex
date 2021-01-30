@@ -68,7 +68,7 @@ namespace hex {
         static std::string fileBrowserValidExtensions;
         static std::function<void(std::string)> fileBrowserCallback;
 
-        static std::map<std::string, std::function<dp::Node*()>> dataProcessorNodes;
+        static std::vector<ContentRegistry::DataProcessorNode::Entry> dataProcessorNodes;
         static u32 dataProcessorNodeIdCounter;
 
         static int mainArgc;

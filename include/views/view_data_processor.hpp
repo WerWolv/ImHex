@@ -29,7 +29,10 @@ namespace hex {
 
         std::vector<prv::Overlay*> m_dataOverlays;
 
-        auto eraseLink(u32 id);
+        int m_rightClickedId = -1;
+
+        void eraseLink(u32 id);
+        void eraseNodes(const std::vector<int> &ids);
         void processNodes();
     };
 

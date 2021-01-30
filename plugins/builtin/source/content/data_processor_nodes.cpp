@@ -92,10 +92,10 @@ namespace hex::plugin::builtin {
     };
 
     void registerDataProcessorNodes() {
-        ContentRegistry::DataProcessorNode::add<NodeInteger>("Integer Node");
-        ContentRegistry::DataProcessorNode::add<NodeReadData>("Read Data Node");
-        ContentRegistry::DataProcessorNode::add<NodeWriteData>("Write Data Node");
-        ContentRegistry::DataProcessorNode::add<NodeInvert>("Bitwise NOT Node");
+        ContentRegistry::DataProcessorNode::add<NodeInteger>("Constants", "Integer");
+        ContentRegistry::DataProcessorNode::add<NodeReadData>("Data Access", "Read");
+        ContentRegistry::DataProcessorNode::add<NodeWriteData>("Data Access", "Write");
+        ContentRegistry::DataProcessorNode::add<NodeInvert>("Bitwise Operations", "NOT");
     }
 
 }

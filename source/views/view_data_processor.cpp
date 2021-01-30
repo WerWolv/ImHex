@@ -34,7 +34,7 @@ namespace hex {
     }
 
 
-    auto ViewDataProcessor::eraseLink(u32 id) {
+    void ViewDataProcessor::eraseLink(u32 id) {
         auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link){ return link.getID() == id; });
 
         if (link == this->m_links.end())
@@ -49,6 +49,33 @@ namespace hex {
         }
 
         this->m_links.erase(link);
+    }
+
+    void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
+        for (const int id : ids) {
+            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
+
+            for (auto &attr : (*node)->getAttributes()) {
+                std::vector<u32> linksToRemove;
+                for (auto &[linkId, connectedAttr] : attr.getConnectedAttributes())
+                    linksToRemove.push_back(linkId);
+
+                for (auto linkId : linksToRemove)
+                    eraseLink(linkId);
+            }
+        }
+
+        for (const int id : ids) {
+            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
+
+            if ((*node)->isEndNode()) {
+                std::erase_if(this->m_endNodes, [&id](auto node){ return node->getID() == id; });
+            }
+
+            delete *node;
+
+            this->m_nodes.erase(node);
+        }
     }
 
     void ViewDataProcessor::processNodes() {
@@ -70,14 +97,50 @@ namespace hex {
 
     void ViewDataProcessor::drawContent() {
         if (ImGui::Begin("Data Processor", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) ImGui::OpenPopup("Add Node");
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right)) {
+                if (imnodes::IsNodeHovered(&this->m_rightClickedId))
+                    ImGui::OpenPopup("Node Menu");
+                else if (imnodes::IsLinkHovered(&this->m_rightClickedId))
+                    ImGui::OpenPopup("Link Menu");
+                else
+                    ImGui::OpenPopup("Context Menu");
+            }
 
-            if (ImGui::BeginPopup("Add Node")) {
+            if (ImGui::BeginPopup("Context Menu")) {
                 dp::Node *node = nullptr;
 
-                for (const auto &[name, function] : ContentRegistry::DataProcessorNode::getEntries()) {
-                    if (ImGui::MenuItem(name.c_str())) {
-                        node = function();
+                if (imnodes::NumSelectedNodes() > 0 || imnodes::NumSelectedLinks() > 0) {
+                    if (ImGui::MenuItem("Remove selected")) {
+                        std::vector<int> ids;
+                        ids.resize(imnodes::NumSelectedNodes());
+                        imnodes::GetSelectedNodes(ids.data());
+
+                        this->eraseNodes(ids);
+                        imnodes::ClearNodeSelection();
+
+                        ids.resize(imnodes::NumSelectedLinks());
+                        imnodes::GetSelectedLinks(ids.data());
+
+                        for (auto id : ids)
+                            this->eraseLink(id);
+                        imnodes::ClearLinkSelection();
+                    }
+                }
+
+                for (const auto &[category, name, function] : ContentRegistry::DataProcessorNode::getEntries()) {
+                    if (category.empty() && name.empty()) {
+                        ImGui::Separator();
+                    } else if (category.empty()) {
+                        if (ImGui::MenuItem(name.c_str())) {
+                            node = function();
+                        }
+                    } else {
+                        if (ImGui::BeginMenu(category.c_str())) {
+                            if (ImGui::MenuItem(name.c_str())) {
+                                node = function();
+                            }
+                            ImGui::EndMenu();
+                        }
                     }
                 }
 
@@ -87,6 +150,20 @@ namespace hex {
                     if (node->isEndNode())
                         this->m_endNodes.push_back(node);
                 }
+
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::BeginPopup("Node Menu")) {
+                if (ImGui::MenuItem("Remove Node"))
+                    this->eraseNodes({ this->m_rightClickedId });
+
+                ImGui::EndPopup();
+            }
+
+            if (ImGui::BeginPopup("Link Menu")) {
+                if (ImGui::MenuItem("Remove Link"))
+                    this->eraseLink(this->m_rightClickedId);
 
                 ImGui::EndPopup();
             }
@@ -165,30 +242,8 @@ namespace hex {
                     static std::vector<int> selectedNodes;
                     selectedNodes.resize(static_cast<size_t>(selectedNodeCount));
                     imnodes::GetSelectedNodes(selectedNodes.data());
-                    for (const int id : selectedNodes) {
-                        auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
 
-                        for (auto &attr : (*node)->getAttributes()) {
-                            std::vector<u32> linksToRemove;
-                            for (auto &[linkId, connectedAttr] : attr.getConnectedAttributes())
-                                linksToRemove.push_back(linkId);
-
-                            for (auto linkId : linksToRemove)
-                                eraseLink(linkId);
-                        }
-                    }
-
-                    for (const int id :selectedNodes) {
-                        auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
-
-                        if ((*node)->isEndNode()) {
-                            std::erase_if(this->m_endNodes, [&id](auto node){ return node->getID() == id; });
-                        }
-
-                        delete *node;
-
-                        this->m_nodes.erase(node);
-                    }
+                    this->eraseNodes(selectedNodes);
 
                 }
             }

@@ -147,14 +147,23 @@ namespace hex {
         };
 
         struct DataProcessorNode {
+            using CreatorFunction = std::function<dp::Node*()>;
+            struct Entry {
+                std::string category;
+                std::string name;
+                CreatorFunction creatorFunction;
+            };
+
             template<hex::derived_from<dp::Node> T, typename ... Args>
-            static void add(std::string_view name, Args&& ... args) {
-                add(name, [args...]{ return new T(std::forward<Args>(args)...); });
+            static void add(std::string_view category, std::string_view name, Args&& ... args) {
+                add(Entry{ category.data(), name.data(), [args...]{ return new T(std::forward<Args>(args)...); } });
             }
 
-            static std::map<std::string, std::function<dp::Node*()>>& getEntries();
+            static void addSeparator();
+
+            static std::vector<Entry>& getEntries();
         private:
-            static void add(std::string_view name, const std::function<dp::Node*()> &creatorFunction);
+            static void add(const Entry &entry);
         };
     };
 

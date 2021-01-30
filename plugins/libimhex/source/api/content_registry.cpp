@@ -88,11 +88,7 @@ namespace hex {
     /* Views */
 
     View* ContentRegistry::Views::add(View *view) {
-        auto &views = getEntries();
-
-        views.push_back(view);
-
-        return views.back();
+        return getEntries().emplace_back(view);
     }
 
     std::vector<View*>& ContentRegistry::Views::getEntries() {
@@ -114,7 +110,7 @@ namespace hex {
     /* Data Inspector */
 
     void ContentRegistry::DataInspector::add(std::string_view name, size_t requiredSize, ContentRegistry::DataInspector::GeneratorFunction function) {
-        getEntries().push_back(Entry{ name.data(), requiredSize, function });
+        getEntries().push_back({ name.data(), requiredSize, std::move(function) });
     }
 
     std::vector<ContentRegistry::DataInspector::Entry>& ContentRegistry::DataInspector::getEntries() {
@@ -123,11 +119,15 @@ namespace hex {
 
     /* Data Processor Nodes */
 
-    void ContentRegistry::DataProcessorNode::add(std::string_view name, const std::function<dp::Node*()> &creatorFunction) {
-        SharedData::dataProcessorNodes.emplace(name, creatorFunction);
+    void ContentRegistry::DataProcessorNode::add(const Entry &entry) {
+        getEntries().push_back(entry);
     }
 
-    std::map<std::string, std::function<dp::Node*()>>& ContentRegistry::DataProcessorNode::getEntries() {
+    void ContentRegistry::DataProcessorNode::addSeparator() {
+        getEntries().push_back({ "", "", []{ return nullptr; } });
+    }
+
+    std::vector<ContentRegistry::DataProcessorNode::Entry>& ContentRegistry::DataProcessorNode::getEntries() {
         return SharedData::dataProcessorNodes;
     }
 }
