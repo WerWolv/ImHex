@@ -69,10 +69,19 @@ namespace hex {
         this->initGLFW();
         this->initImGui();
 
+        ContentRegistry::Settings::add("Interface", "Color theme", 0, [](nlohmann::json &setting) {
+            static int selection = setting;
+            if (ImGui::Combo("##nolabel", &selection, "Dark\0Light\0Classic\0")) {
+                setting = selection;
+                return true;
+            }
+
+            return false;
+        });
+
         ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
         EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
             int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
-
             switch (theme) {
                 default:
                 case 0: /* Dark theme */
@@ -85,7 +94,6 @@ namespace hex {
                     ImGui::StyleColorsClassic();
                     break;
             }
-
             ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
 
             return { };
@@ -200,7 +208,7 @@ namespace hex {
 
                 if (ImGui::BeginMenu("View")) {
                     for (auto &view : ContentRegistry::Views::getEntries()) {
-                        if (view->isAvailable() && view->hasViewMenuItemEntry())
+                        if (view->hasViewMenuItemEntry())
                             ImGui::MenuItem((std::string(view->getName()) + " View").c_str(), "", &view->getWindowOpenState());
                     }
                     ImGui::EndMenu();
@@ -328,6 +336,8 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::Text("Learn");
             {
+                if (ImGui::DescriptionButton("Latest Release", "Get the latest version of ImHex or read the current changelog", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                    hex::openWebpage("https://github.com/WerWolv/ImHex/releases/latest");
                 if (ImGui::DescriptionButton("Pattern Language Documentation", "Learn how to write ImHex patterns with our extensive documentation", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
                     hex::openWebpage("https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide");
                 if (ImGui::DescriptionButton("Plugins API", "Extend ImHex with additional features using plugins", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
