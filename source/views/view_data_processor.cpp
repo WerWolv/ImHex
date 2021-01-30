@@ -45,9 +45,7 @@ namespace hex {
 
         for (auto &node : this->m_nodes) {
             for (auto &attribute : node->getAttributes()) {
-                if (attribute.getID() == link->getFromID() || attribute.getID() == link->getToID()) {
-                    attribute.removeConnectedAttribute(attribute.getID());
-                }
+                attribute.removeConnectedAttribute(id);
             }
         }
 
@@ -240,11 +238,17 @@ namespace hex {
                         if (fromAttr->getType() != toAttr->getType())
                             break;
 
+                        if (fromAttr->getIOType() == toAttr->getIOType())
+                            break;
+
+                        if (!toAttr->getConnectedAttributes().empty())
+                            break;
+
                         auto newLink = this->m_links.emplace_back(from, to);
 
                         fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
                         toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
-                    } while (0);
+                    } while (false);
 
                 }
             }

@@ -18,20 +18,20 @@ namespace hex::dp {
         [[nodiscard]] std::vector<Attribute>& getAttributes() { return this->m_attributes; }
 
         virtual void drawNode() { }
-        [[nodiscard]] virtual std::vector<u8> process(prv::Overlay *dataOverlay) = 0;
+        virtual void process(prv::Overlay *dataOverlay) = 0;
     private:
         u32 m_id;
         std::string m_title;
         std::vector<Attribute> m_attributes;
 
     protected:
-        Node* getConnectedInputNode(u32 attributeId) {
+        Attribute* getConnectedInputAttribute(u32 attributeId) {
             auto &connectedAttribute = this->getAttributes()[attributeId].getConnectedAttributes();
 
             if (connectedAttribute.empty())
                 return nullptr;
 
-            return connectedAttribute.begin()->second->getParentNode();
+            return connectedAttribute.begin()->second;
         }
     };
 

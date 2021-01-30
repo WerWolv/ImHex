@@ -31,10 +31,12 @@ namespace hex::dp {
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
 
         void addConnectedAttribute(u32 linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
-        void removeConnectedAttribute(u32 linkId) { this->m_connectedAttributes.erase(linkId); }
+        void removeConnectedAttribute(u32 linkId) { printf("%d\n", this->m_connectedAttributes.erase(linkId)); }
         [[nodiscard]] std::map<u32, Attribute*>& getConnectedAttributes() { return this->m_connectedAttributes; }
 
         [[nodiscard]] Node* getParentNode() { return this->m_parentNode; }
+
+        [[nodiscard]] std::vector<u8>& getOutputData() { return this->m_outputData; }
     private:
         u32 m_id;
         IOType m_ioType;
@@ -42,6 +44,8 @@ namespace hex::dp {
         std::string m_name;
         std::map<u32, Attribute*> m_connectedAttributes;
         Node *m_parentNode;
+
+        std::vector<u8> m_outputData;
 
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }
