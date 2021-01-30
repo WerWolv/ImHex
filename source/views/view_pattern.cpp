@@ -172,11 +172,7 @@ namespace hex {
         /* Settings */
         {
 
-            constexpr auto SettingsCategoryInterface    = "Interface";
-
-            constexpr auto SettingColorTheme            = "Color theme";
-
-            ContentRegistry::Settings::add(SettingsCategoryInterface, SettingColorTheme, 0, [](nlohmann::json &setting) {
+            ContentRegistry::Settings::add("Interface", "Color theme", 0, [](nlohmann::json &setting) {
                 static int selection = setting;
                 if (ImGui::Combo("##nolabel", &selection, "Dark\0Light\0Classic\0")) {
                     setting = selection;
@@ -187,7 +183,7 @@ namespace hex {
             });
 
             View::subscribeEvent(Events::SettingsChanged, [this](auto) {
-                int theme = ContentRegistry::Settings::getSettingsData()[SettingsCategoryInterface][SettingColorTheme];
+                int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
 
                 switch (theme) {
                     default:

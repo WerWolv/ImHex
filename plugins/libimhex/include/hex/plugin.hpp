@@ -9,6 +9,7 @@
 #include <hex/views/view.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/shared_data.hpp>
+#include <hex/data_processor/node.hpp>
 
 #define IMHEX_PLUGIN_SETUP      namespace hex::plugin::internal {               \
                                     void initializePlugin();                    \

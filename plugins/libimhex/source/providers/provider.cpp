@@ -32,6 +32,21 @@ namespace hex::prv {
             this->writeRaw(patchAddress, &patch, 1);
     }
 
+
+    Overlay* Provider::newOverlay() {
+        return this->m_overlays.emplace_back(new Overlay());
+    }
+
+    void Provider::deleteOverlay(Overlay *overlay) {
+        this->m_overlays.erase(std::find(this->m_overlays.begin(), this->m_overlays.end(), overlay));
+        delete overlay;
+    }
+
+    const std::list<Overlay*>& Provider::getOverlays() {
+        return this->m_overlays;
+    }
+
+
     u32 Provider::getPageCount() {
         return std::ceil(this->getActualSize() / double(PageSize));
     }

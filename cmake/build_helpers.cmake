@@ -139,13 +139,15 @@ endmacro()
 
 macro(createPackage)
     file(MAKE_DIRECTORY "plugins")
+
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
         add_custom_command(TARGET imhex POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                COMMAND ${CMAKE_COMMAND} -E copy
                 $<TARGET_FILE:${plugin}>
-                $<TARGET_FILE_DIR:imhex>/plugins)
+                $<TARGET_FILE_DIR:imhex>/plugins/$<TARGET_FILE_NAME:${plugin}>)
     endforeach()
+
     add_custom_command(TARGET imhex POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:libimhex>

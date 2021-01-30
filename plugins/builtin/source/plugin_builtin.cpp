@@ -7,6 +7,7 @@ namespace hex::plugin::builtin {
     void registerPatternLanguageFunctions();
     void registerCommandPaletteCommands();
     void registerSettings();
+    void registerDataProcessorNodes();
 
 }
 
@@ -19,6 +20,7 @@ IMHEX_PLUGIN_SETUP {
     registerPatternLanguageFunctions();
     registerCommandPaletteCommands();
     registerSettings();
+    registerDataProcessorNodes();
 
 }
 

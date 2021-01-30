@@ -24,6 +24,9 @@ namespace hex {
     std::string SharedData::fileBrowserValidExtensions;
     std::function<void(std::string)> SharedData::fileBrowserCallback;
 
+    std::vector<ContentRegistry::DataProcessorNode::Entry> SharedData::dataProcessorNodes;
+    u32 SharedData::dataProcessorNodeIdCounter = 1;
+
     int SharedData::mainArgc;
     char **SharedData::mainArgv;
 
