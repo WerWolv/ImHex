@@ -71,9 +71,7 @@ namespace hex {
         for (const int id : ids) {
             auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
 
-            if ((*node)->isEndNode()) {
-                std::erase_if(this->m_endNodes, [&id](auto node){ return node->getID() == id; });
-            }
+            std::erase_if(this->m_endNodes, [&id](auto node){ return node->getID() == id; });
 
             delete *node;
 
@@ -153,7 +151,13 @@ namespace hex {
                 if (node != nullptr) {
                     this->m_nodes.push_back(node);
 
-                    if (node->isEndNode())
+                    bool hasOutput = false;
+                    for (auto &attr : node->getAttributes()) {
+                        if (attr.getIOType() == dp::Attribute::IOType::Out)
+                            hasOutput = true;
+                    }
+
+                    if (!hasOutput)
                         this->m_endNodes.push_back(node);
 
                     imnodes::SetNodeScreenSpacePos(node->getID(), this->m_rightClickedCoords);
