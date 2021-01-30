@@ -31,7 +31,7 @@ namespace hex::dp {
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
 
         void addConnectedAttribute(u32 linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
-        void removeConnectedAttribute(u32 linkId) { printf("%d\n", this->m_connectedAttributes.erase(linkId)); }
+        void removeConnectedAttribute(u32 linkId) { this->m_connectedAttributes.erase(linkId); }
         [[nodiscard]] std::map<u32, Attribute*>& getConnectedAttributes() { return this->m_connectedAttributes; }
 
         [[nodiscard]] Node* getParentNode() { return this->m_parentNode; }

@@ -147,6 +147,12 @@ namespace hex {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
                 });
+            } else if (std::any_cast<const char*>(name) == std::string("Open Project")) {
+                View::openFileBrowser("Open Project", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexproj", [this](auto path) {
+                    ProjectFile::load(path);
+                    View::postEvent(Events::ProjectFileLoad);
+                    this->getWindowOpenState() = true;
+                });
             }
         });
     }

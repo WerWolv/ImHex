@@ -66,11 +66,33 @@ namespace hex {
             }
         #endif
 
-        ContentRegistry::Settings::load();
-        View::postEvent(Events::SettingsChanged);
-
         this->initGLFW();
         this->initImGui();
+
+        ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+        EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
+            int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
+
+            switch (theme) {
+                default:
+                case 0: /* Dark theme */
+                    ImGui::StyleColorsDark();
+                    break;
+                case 1: /* Light theme */
+                    ImGui::StyleColorsLight();
+                    break;
+                case 2: /* Classic theme */
+                    ImGui::StyleColorsClassic();
+                    break;
+            }
+
+            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+
+            return { };
+        });
+
+        ContentRegistry::Settings::load();
+        View::postEvent(Events::SettingsChanged);
     }
 
     Window::~Window() {
@@ -83,6 +105,8 @@ namespace hex {
         ContentRegistry::Views::getEntries().clear();
 
         this->deinitPlugins();
+
+        EventManager::unsubscribe(Events::SettingsChanged, this);
     }
 
     void Window::loop() {
@@ -272,6 +296,8 @@ namespace hex {
             {
                 if (ImGui::BulletHyperlink("Open File"))
                     EventManager::post(Events::OpenWindow, "Open File");
+                if (ImGui::BulletHyperlink("Open Project"))
+                    EventManager::post(Events::OpenWindow, "Open Project");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();

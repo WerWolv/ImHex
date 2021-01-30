@@ -54,7 +54,7 @@ namespace ImGui {
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
         ImVec2 pos = window->DC.CursorPos;
-        ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
+        ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y) + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f);
 
         const ImRect bb(pos, pos + size);
         if (!ItemAdd(bb, id))
@@ -70,7 +70,7 @@ namespace ImGui {
         PushStyleColor(ImGuiCol_Text, ImU32(col));
         RenderBullet(window->DrawList, bb.Min + ImVec2(style.FramePadding.x + g.FontSize * 0.5f, g.FontSize * 0.5f), col);
         RenderText(bb.Min + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f), label, nullptr, false);
-        GetWindowDrawList()->AddLine(bb.Min + ImVec2(style.FramePadding.x, size.y), pos + size + ImVec2(g.FontSize * 2, 0), ImU32(col));
+        GetWindowDrawList()->AddLine(bb.Min + ImVec2(style.FramePadding.x, size.y), pos + size, ImU32(col));
         ImGui::NewLine();
         PopStyleColor();
 

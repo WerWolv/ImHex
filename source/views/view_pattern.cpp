@@ -188,15 +188,12 @@ namespace hex {
                 switch (theme) {
                     default:
                     case 0: /* Dark theme */
-                        ImGui::StyleColorsDark();
                         this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
                         break;
                     case 1: /* Light theme */
-                        ImGui::StyleColorsLight();
                         this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
                         break;
                     case 2: /* Classic theme */
-                        ImGui::StyleColorsClassic();
                         this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
                         break;
                 }
