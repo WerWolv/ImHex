@@ -505,17 +505,25 @@ namespace hex {
             delete provider;
 
         provider = new prv::FileProvider(path);
-        this->m_memoryEditor.ReadOnly = !provider->isWritable();
+        if (!provider->isWritable()) {
+            this->m_memoryEditor.ReadOnly = true;
+            View::showErrorPopup("Couldn't get write access. File opened in read-only mode.");
+        } else {
+            this->m_memoryEditor.ReadOnly = false;
+        }
 
-        if (provider->isAvailable())
-            ProjectFile::setFilePath(path);
+        if (!provider->isAvailable()) {
+            View::showErrorPopup("Failed to open file!");
+            return;
+        }
+
+        ProjectFile::setFilePath(path);
 
         this->getWindowOpenState() = true;
 
         View::postEvent(Events::FileLoaded);
         View::postEvent(Events::DataChanged);
         View::postEvent(Events::PatternChanged);
-        ProjectFile::markDirty();
     }
 
     bool ViewHexEditor::saveToFile(std::string path, const std::vector<u8>& data) {

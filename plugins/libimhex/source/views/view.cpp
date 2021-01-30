@@ -36,19 +36,17 @@ namespace hex {
     }
 
     void View::drawCommonInterfaces() {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 10));
         if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
             ImGui::NewLine();
-            if (ImGui::BeginChild("##scrolling", ImVec2(300, 100))) {
-                ImGui::SetCursorPosX((300 - ImGui::CalcTextSize(SharedData::errorPopupMessage.c_str(), nullptr, false).x) / 2.0F);
-                ImGui::TextWrapped("%s", SharedData::errorPopupMessage.c_str());
-                ImGui::EndChild();
-            }
-            ImGui::NewLine();
-            ImGui::SetCursorPosX(75);
-            if (ImGui::Button("Okay", ImVec2(150, 20)) || ImGui::IsKeyDown(ImGuiKey_Escape))
+            ImGui::Separator();
+            if (ImGui::Button("Okay") || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
+
             ImGui::EndPopup();
         }
+        ImGui::PopStyleVar();
 
         if (SharedData::fileBrowser.showFileDialog(SharedData::fileBrowserTitle, SharedData::fileBrowserDialogMode, ImVec2(0, 0), SharedData::fileBrowserValidExtensions)) {
             SharedData::fileBrowserCallback(SharedData::fileBrowser.selected_path);
