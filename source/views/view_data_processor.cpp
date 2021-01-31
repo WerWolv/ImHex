@@ -8,8 +8,16 @@ namespace hex {
 
     ViewDataProcessor::ViewDataProcessor() : View("Data Processor") {
         imnodes::Initialize();
+        imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
+        imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkCreationOnSnap);
 
-        View::subscribeEvent(Events::SettingsChanged, [this](auto) {
+        {
+            static bool always = true;
+            imnodes::IO& io = imnodes::GetIO();
+            io.link_detach_with_modifier_click.modifier = &always;
+        }
+
+        View::subscribeEvent(Events::SettingsChanged, [](auto) {
             int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
 
             switch (theme) {
@@ -33,6 +41,8 @@ namespace hex {
         for (auto &node : this->m_nodes)
             delete node;
 
+        imnodes::PopAttributeFlag();
+        imnodes::PopAttributeFlag();
         imnodes::Shutdown();
     }
 
@@ -216,6 +226,13 @@ namespace hex {
                 imnodes::Link(link.getID(), link.getFromID(), link.getToID());
 
             imnodes::EndNodeEditor();
+
+            {
+                int linkId;
+                if (imnodes::IsLinkDestroyed(&linkId)) {
+                    this->eraseLink(linkId);
+                }
+            }
 
             {
                 int from, to;
