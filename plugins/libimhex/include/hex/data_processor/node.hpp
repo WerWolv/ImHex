@@ -51,7 +51,7 @@ namespace hex::dp {
 
             attribute->getParentNode()->process();
 
-            auto outputData = attribute->getOutputData();
+            auto &outputData = attribute->getOutputData();
 
             if (outputData.empty())
                 return { };
@@ -67,7 +67,7 @@ namespace hex::dp {
 
             attribute->getParentNode()->process();
 
-            auto outputData = attribute->getOutputData();
+            auto &outputData = attribute->getOutputData();
 
             if (outputData.empty() || outputData.size() < sizeof(u64))
                 return { };
@@ -83,7 +83,7 @@ namespace hex::dp {
 
             attribute->getParentNode()->process();
 
-            auto outputData = attribute->getOutputData();
+            auto &outputData = attribute->getOutputData();
 
             if (outputData.empty() || outputData.size() < sizeof(float))
                 return { };
@@ -95,19 +95,19 @@ namespace hex::dp {
             if (index >= this->getAttributes().size())
                 throw std::runtime_error("Attribute index out of bounds!");
 
-            auto attribute = this->getAttributes()[index];
+            auto &attribute = this->getAttributes()[index];
 
             if (attribute.getIOType() != Attribute::IOType::Out)
                 throw std::runtime_error("Tried to set output data of an input attribute!");
 
-            this->getAttributes()[index].getOutputData() = data;
+            attribute.getOutputData() = data;
         }
 
         void setIntegerOnOutput(u32 index, u64 integer) {
             if (index >= this->getAttributes().size())
                 throw std::runtime_error("Attribute index out of bounds!");
 
-            auto attribute = this->getAttributes()[index];
+            auto &attribute = this->getAttributes()[index];
 
             if (attribute.getIOType() != Attribute::IOType::Out)
                 throw std::runtime_error("Tried to set output data of an input attribute!");
@@ -115,14 +115,14 @@ namespace hex::dp {
             std::vector<u8> buffer(sizeof(u64), 0);
             std::memcpy(buffer.data(), &integer, sizeof(u64));
 
-            this->getAttributes()[index].getOutputData() = buffer;
+            attribute.getOutputData() = buffer;
         }
 
         void setFloatOnOutput(u32 index, float floatingPoint) {
             if (index >= this->getAttributes().size())
                 throw std::runtime_error("Attribute index out of bounds!");
 
-            auto attribute = this->getAttributes()[index];
+            auto &attribute = this->getAttributes()[index];
 
             if (attribute.getIOType() != Attribute::IOType::Out)
                 throw std::runtime_error("Tried to set output data of an input attribute!");
@@ -130,7 +130,7 @@ namespace hex::dp {
             std::vector<u8> buffer(sizeof(float), 0);
             std::memcpy(buffer.data(), &floatingPoint, sizeof(float));
 
-            this->getAttributes()[index].getOutputData() = buffer;
+            attribute.getOutputData() = buffer;
         }
 
         void setOverlayData(u64 address, const std::vector<u8> &data) {
