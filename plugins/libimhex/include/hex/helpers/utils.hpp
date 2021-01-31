@@ -172,6 +172,14 @@ namespace hex {
 
     std::vector<u8> readFile(std::string_view path);
 
+    template<typename T>
+    std::vector<u8> toBytes(T value) {
+        std::vector<u8> bytes(sizeof(T));
+        std::memcpy(bytes.data(), &value, sizeof(T));
+
+        return bytes;
+    }
+
     #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
     class ScopeExit {
     public:

@@ -145,7 +145,8 @@ macro(createPackage)
         add_custom_command(TARGET imhex POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy
                 $<TARGET_FILE:${plugin}>
-                $<TARGET_FILE_DIR:imhex>/plugins/$<TARGET_FILE_NAME:${plugin}>)
+                $<TARGET_FILE_DIR:imhex>/plugins/$<TARGET_FILE_NAME:${plugin}>
+                DEPENDS ${plugin})
     endforeach()
 
     add_custom_command(TARGET imhex POST_BUILD
