@@ -139,20 +139,13 @@ endmacro()
 
 macro(createPackage)
     file(MAKE_DIRECTORY "plugins")
-
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
-        add_custom_command(TARGET imhex POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                $<TARGET_FILE:${plugin}>
-                $<TARGET_FILE_DIR:imhex>/plugins/$<TARGET_FILE_NAME:${plugin}>
-                DEPENDS ${plugin})
+        set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+        add_dependencies(imhex ${plugin})
     endforeach()
 
-    add_custom_command(TARGET imhex POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:libimhex>
-            $<TARGET_FILE_DIR:imhex>)
+    set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
     if (WIN32)
         # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
