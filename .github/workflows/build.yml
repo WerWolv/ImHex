@@ -49,7 +49,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DEXTRA_MAGICDBS="$MAGICDB_PATH" \
           ..
-        make -j 4
+        make -j 4 install
 
     - name: 📦 Upload ELF
       uses: actions/upload-artifact@v2
