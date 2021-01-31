@@ -187,17 +187,31 @@ macro(createPackage)
     ]])
     endif()
 
+    if (UNIX AND NOT APPLE)
+        install(TARGETS libimhex DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+        string(REPLACE ":" ";" EXTRA_MAGICDBS "${EXTRA_MAGICDBS}")
+
+        if (NOT EXTRA_MAGICDBS STREQUAL "")
+            list(GET EXTRA_MAGICDBS 0 EXTRA_MAGICDBS)
+            install(FILES "${EXTRA_MAGICDBS}.mgc" DESTINATION magic/)
+        endif ()
+    endif ()
+
     # Compile the imhex-specific magicdb
     add_custom_target(magic_dbs ALL
-            SOURCES magic_dbs/nintendo_magic
+            SOURCES ${MAGICDBS}
             )
     add_custom_command(TARGET magic_dbs
             COMMAND file -C -m ${CMAKE_SOURCE_DIR}/magic_dbs
             )
 
+    foreach (plugin IN LISTS PLUGINS)
+        install(FILES "$<TARGET_FILE:${plugin}>" DESTINATION plugins/)
+    endforeach ()
+
     # Install the magicdb files.
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION magic/ RENAME imhex.mgc)
-    install(FILES ${EXTRA_MAGICDBS} DESTINATION magic/)
 
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
@@ -216,7 +230,7 @@ macro(createPackage)
 
         install(TARGETS imhex BUNDLE DESTINATION .)
     else()
-        install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
     endif()
 
 
@@ -235,18 +249,6 @@ function(JOIN OUTPUT GLUE)
     endforeach()
     set(${OUTPUT} "${_TMP_RESULT}" PARENT_SCOPE)
 endfunction()
-
-macro(createMagicDbList)
-    if (DEFINED MAGICDBS)
-        if (WIN32)
-            join(EXTRA_MAGICDBS "\;" ${MAGICDBS})
-        else()
-            join(EXTRA_MAGICDBS ":" ${MAGICDBS})
-        endif()
-    else()
-        set(EXTRA_MAGICDBS "")
-    endif()
-endmacro()
 
 macro(setDefaultBuiltTypeIfUnset)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
