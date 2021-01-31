@@ -95,11 +95,17 @@ namespace hex {
 
             for (u32 i = 0; i < this->m_endNodes.size(); i++)
                 this->m_dataOverlays.push_back(SharedData::currentProvider->newOverlay());
+
+            u32 overlayIndex = 0;
+            for (auto endNode : this->m_endNodes) {
+                endNode->setCurrentOverlay(this->m_dataOverlays[overlayIndex]);
+                overlayIndex++;
+            }
         }
 
         u32 overlayIndex = 0;
         for (auto &endNode : this->m_endNodes) {
-            (void)endNode->process(this->m_dataOverlays[overlayIndex]);
+            (void)endNode->process();
             overlayIndex++;
         }
     }

@@ -15,11 +15,11 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
 
-        void process(prv::Overlay *dataOverlay) override {
+        void process() override {
             std::vector<u8> data(sizeof(this->m_value), 0);
 
             std::memcpy(data.data(), &this->m_value, sizeof(u64));
-            this->getAttributes()[0].getOutputData() = data;
+            this->setBufferOnOutput(0, data);
         }
 
     private:
@@ -36,12 +36,12 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
 
-        void process(prv::Overlay *dataOverlay) override {
+        void process() override {
             std::vector<u8> data;
             data.resize(sizeof(this->m_value));
 
             std::copy(&this->m_value, &this->m_value + 1, data.data());
-            this->getAttributes()[0].getOutputData() = data;
+            this->setBufferOnOutput(0, data);
         }
 
     private:
@@ -61,11 +61,12 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
 
-        void process(prv::Overlay *dataOverlay) override {
-            this->getAttributes()[0].getOutputData() = hex::toBytes<u64>(this->m_color.Value.x * 0xFF);
-            this->getAttributes()[1].getOutputData() = hex::toBytes<u64>(this->m_color.Value.y * 0xFF);
-            this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(this->m_color.Value.z * 0xFF);
-            this->getAttributes()[3].getOutputData() = hex::toBytes<u64>(this->m_color.Value.w * 0xFF);
+        void process() override {
+            this->setBufferOnOutput(0, hex::toBytes<u64>(this->m_color.Value.x * 0xFF));
+            this->setBufferOnOutput(1, hex::toBytes<u64>(this->m_color.Value.y * 0xFF));
+            this->setBufferOnOutput(2, hex::toBytes<u64>(this->m_color.Value.z * 0xFF));
+            this->setBufferOnOutput(3, hex::toBytes<u64>(this->m_color.Value.w * 0xFF));
+
         }
 
     private:
@@ -86,19 +87,15 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInput = this->getConnectedInputAttribute(0);
-            if (connectedInput == nullptr) {
+        void process() override {
+            auto input = this->getIntegerOnInput(0);
+
+            if (!input.has_value()) {
                 this->m_value.reset();
                 return;
             }
 
-            connectedInput->getParentNode()->process(dataOverlay);
-
-            if (connectedInput->getOutputData().size() < sizeof(u64))
-                return;
-
-            this->m_value = *reinterpret_cast<u64*>(connectedInput->getOutputData().data());
+            this->m_value = input.value();
         }
 
     private:
@@ -118,19 +115,15 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
         }
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInput = this->getConnectedInputAttribute(0);
-            if (connectedInput == nullptr) {
+        void process() override {
+            auto input = this->getFloatOnInput(0);
+
+            if (!input.has_value()) {
                 this->m_value.reset();
                 return;
             }
 
-            connectedInput->getParentNode()->process(dataOverlay);
-
-            if (connectedInput->getOutputData().size() < sizeof(float))
-                return;
-
-            this->m_value = *reinterpret_cast<float*>(connectedInput->getOutputData().data());
+            this->m_value = input.value();
         }
 
     private:
@@ -142,19 +135,17 @@ namespace hex::plugin::builtin {
     public:
         NodeBitwiseNOT() : Node("Bitwise NOT", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInput = this->getConnectedInputAttribute(0);
-            if (connectedInput == nullptr)
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            if (!input.has_value())
                 return;
 
-            connectedInput->getParentNode()->process(dataOverlay);
-
-            std::vector<u8> output = connectedInput->getOutputData();
-
+            std::vector<u8> output = input.value();
             for (auto &byte : output)
                 byte = ~byte;
 
-            this->getAttributes()[1].getOutputData() = output;
+            this->setBufferOnOutput(1, output);
         }
     };
 
@@ -162,24 +153,19 @@ namespace hex::plugin::builtin {
     public:
         NodeBitwiseAND() : Node("Bitwise AND", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input A"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input B"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputA == nullptr || connectedInputB == nullptr)
+        void process() override {
+            auto inputA = this->getBufferOnInput(0);
+            auto inputB = this->getBufferOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputA->getParentNode()->process(dataOverlay);
-            connectedInputB->getParentNode()->process(dataOverlay);
-
-            std::vector<u8> inputA = connectedInputA->getOutputData();
-            std::vector<u8> inputB = connectedInputB->getOutputData();
-
-            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
+            std::vector<u8> output(std::min(inputA->size(), inputB->size()), 0x00);
 
             for (u32 i = 0; i < output.size(); i++)
-                output[i] = inputA[i] & inputB[i];
+                output[i] = inputA.value()[i] & inputB.value()[i];
 
-            this->getAttributes()[2].getOutputData() = output;
+            this->setBufferOnOutput(2, output);
         }
     };
 
@@ -187,24 +173,19 @@ namespace hex::plugin::builtin {
     public:
         NodeBitwiseOR() : Node("Bitwise OR", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input A"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input B"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputA == nullptr || connectedInputB == nullptr)
+        void process() override {
+            auto inputA = this->getBufferOnInput(0);
+            auto inputB = this->getBufferOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputA->getParentNode()->process(dataOverlay);
-            connectedInputB->getParentNode()->process(dataOverlay);
-
-            std::vector<u8> inputA = connectedInputA->getOutputData();
-            std::vector<u8> inputB = connectedInputB->getOutputData();
-
-            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
+            std::vector<u8> output(std::min(inputA->size(), inputB->size()), 0x00);
 
             for (u32 i = 0; i < output.size(); i++)
-                output[i] = inputA[i] | inputB[i];
+                output[i] = inputA.value()[i] | inputB.value()[i];
 
-            this->getAttributes()[2].getOutputData() = output;
+            this->setBufferOnOutput(2, output);
         }
     };
 
@@ -212,24 +193,19 @@ namespace hex::plugin::builtin {
     public:
         NodeBitwiseXOR() : Node("Bitwise XOR", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input A"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input B"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputA == nullptr || connectedInputB == nullptr)
+        void process() override {
+            auto inputA = this->getBufferOnInput(0);
+            auto inputB = this->getBufferOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputA->getParentNode()->process(dataOverlay);
-            connectedInputB->getParentNode()->process(dataOverlay);
-
-            std::vector<u8> inputA = connectedInputA->getOutputData();
-            std::vector<u8> inputB = connectedInputB->getOutputData();
-
-            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
+            std::vector<u8> output(std::min(inputA->size(), inputB->size()), 0x00);
 
             for (u32 i = 0; i < output.size(); i++)
-                output[i] = inputA[i] ^ inputB[i];
+                output[i] = inputA.value()[i] ^ inputB.value()[i];
 
-            this->getAttributes()[2].getOutputData() = output;
+            this->setBufferOnOutput(2, output);
         }
     };
 
@@ -240,24 +216,19 @@ namespace hex::plugin::builtin {
                                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Data")
         }) { }
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputAddress = this->getConnectedInputAttribute(0);
-            auto connectedInputSize = this->getConnectedInputAttribute(1);
-            if (connectedInputAddress == nullptr || connectedInputSize == nullptr)
+        void process() override {
+            auto address = this->getIntegerOnInput(0);
+            auto size = this->getIntegerOnInput(1);
+
+            if (!address.has_value() || !size.has_value())
                 return;
 
-            connectedInputAddress->getParentNode()->process(dataOverlay);
-            connectedInputSize->getParentNode()->process(dataOverlay);
-
-            auto address = *reinterpret_cast<u64*>(connectedInputAddress->getOutputData().data());
-            auto size = *reinterpret_cast<u64*>(connectedInputSize->getOutputData().data());
-
             std::vector<u8> data;
-            data.resize(size);
+            data.resize(size.value());
 
-            SharedData::currentProvider->readRaw(address, data.data(), size);
+            SharedData::currentProvider->readRaw(address.value(), data.data(), size.value());
 
-            this->getAttributes()[2].getOutputData() = data;
+            this->setBufferOnOutput(2, data);
         }
     };
 
@@ -265,20 +236,14 @@ namespace hex::plugin::builtin {
     public:
         NodeWriteData() : Node("Write Data", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Data") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputAddress = this->getConnectedInputAttribute(0);
-            auto connectedInputData = this->getConnectedInputAttribute(1);
-            if (connectedInputAddress == nullptr || connectedInputData == nullptr)
+        void process() override {
+            auto address = this->getIntegerOnInput(0);
+            auto data = this->getBufferOnInput(1);
+
+            if (!address.has_value() || !data.has_value())
                 return;
 
-            connectedInputAddress->getParentNode()->process(dataOverlay);
-            connectedInputData->getParentNode()->process(dataOverlay);
-
-            auto address = *reinterpret_cast<u64*>(connectedInputAddress->getOutputData().data());
-            auto data = connectedInputData->getOutputData();
-
-            dataOverlay->setAddress(address);
-            dataOverlay->getData() = data;
+            this->setOverlayData(address.value(), data.value());
         }
     };
 
@@ -286,21 +251,16 @@ namespace hex::plugin::builtin {
     public:
         NodeCastIntegerToBuffer() : Node("Integer to Buffer", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "In"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Out") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInteger = this->getConnectedInputAttribute(0);
-            if (connectedInputInteger == nullptr)
+        void process() override {
+            auto input = this->getIntegerOnInput(0);
+
+            if (!input.has_value())
                 return;
 
-            connectedInputInteger->getParentNode()->process(dataOverlay);
+            std::vector<u8> output(sizeof(u64), 0x00);
+            std::memcpy(output.data(), &input.value(), sizeof(u64));
 
-            std::vector<u8> output(sizeof(u64), 0);
-
-            auto &inputData = connectedInputInteger->getOutputData();
-
-            if (!inputData.empty())
-                std::copy(inputData.begin(), inputData.end(), output.begin());
-
-            this->getAttributes()[1].getOutputData() = output;
+            this->setBufferOnOutput(1, output);
         }
     };
 
@@ -308,21 +268,16 @@ namespace hex::plugin::builtin {
     public:
         NodeCastBufferToInteger() : Node("Buffer to Integer", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "In"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Out") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputBuffer = this->getConnectedInputAttribute(0);
-            if (connectedInputBuffer == nullptr)
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            if (!input.has_value())
                 return;
 
-            connectedInputBuffer->getParentNode()->process(dataOverlay);
+            u64 output;
+            std::memcpy(&output, input->data(), sizeof(u64));
 
-            std::vector<u8> output(sizeof(u64), 0);
-
-            auto &inputData = connectedInputBuffer->getOutputData();
-
-            if (!inputData.empty())
-                std::copy(inputData.begin(), inputData.end(), output.begin());
-
-            this->getAttributes()[1].getOutputData() = output;
+            this->setIntegerOnOutput(1, output);
         }
     };
 
@@ -333,21 +288,18 @@ namespace hex::plugin::builtin {
                                              dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "False"),
                                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputCondition = this->getConnectedInputAttribute(0);
-            auto connectedInputTrue = this->getConnectedInputAttribute(1);
-            auto connectedInputFalse = this->getConnectedInputAttribute(2);
-            if (connectedInputCondition == nullptr || connectedInputTrue == nullptr || connectedInputFalse == nullptr)
+        void process() override {
+            auto cond = this->getIntegerOnInput(0);
+            auto trueData = this->getBufferOnInput(1);
+            auto falseData = this->getBufferOnInput(2);
+
+            if (!cond.has_value() || !trueData.has_value() || !falseData.has_value())
                 return;
 
-            connectedInputCondition->getParentNode()->process(dataOverlay);
-            connectedInputTrue->getParentNode()->process(dataOverlay);
-            connectedInputFalse->getParentNode()->process(dataOverlay);
-
-            if (*reinterpret_cast<u64*>(connectedInputCondition->getOutputData().data()) != 0)
-                this->getAttributes()[3].getOutputData() = connectedInputTrue->getOutputData();
+            if (cond.value() != 0)
+                this->setBufferOnOutput(3, trueData.value());
             else
-                this->getAttributes()[3].getOutputData() = connectedInputFalse->getOutputData();
+                this->setBufferOnOutput(3, falseData.value());
 
         }
     };
@@ -358,26 +310,14 @@ namespace hex::plugin::builtin {
                                                      dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
                                                      dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputInputA == nullptr || connectedInputInputB == nullptr)
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputInputA->getParentNode()->process(dataOverlay);
-            connectedInputInputB->getParentNode()->process(dataOverlay);
-
-            auto &inputA = connectedInputInputA->getOutputData();
-            auto &inputB = connectedInputInputB->getOutputData();
-
-            if (inputA.empty() || inputB.empty())
-                return;
-
-            if (*reinterpret_cast<u64*>(inputA.data()) == *reinterpret_cast<u64*>(inputB.data()))
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(1);
-            else
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(0);
-
+            this->setIntegerOnOutput(2, inputA.value() == inputB.value());
         }
     };
 
@@ -386,23 +326,13 @@ namespace hex::plugin::builtin {
         NodeNot() : Node("Not", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input"),
                                      dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInput = this->getConnectedInputAttribute(0);
-            if (connectedInputInput == nullptr)
+        void process() override {
+            auto input = this->getIntegerOnInput(0);
+
+            if (!input.has_value())
                 return;
 
-            connectedInputInput->getParentNode()->process(dataOverlay);
-
-
-            auto &input = connectedInputInput->getOutputData();
-            if (input.empty())
-                return;
-
-            if (*reinterpret_cast<u64*>(connectedInputInput->getOutputData().data()) == 0)
-                this->getAttributes()[1].getOutputData() = hex::toBytes<u64>(1);
-            else
-                this->getAttributes()[1].getOutputData() = hex::toBytes<u64>(0);
-
+            this->setIntegerOnOutput(1, !input.value());
         }
     };
 
@@ -412,26 +342,14 @@ namespace hex::plugin::builtin {
                                                                 dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
                                                                 dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputInputA == nullptr || connectedInputInputB == nullptr)
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputInputA->getParentNode()->process(dataOverlay);
-            connectedInputInputB->getParentNode()->process(dataOverlay);
-
-            auto &inputA = connectedInputInputA->getOutputData();
-            auto &inputB = connectedInputInputB->getOutputData();
-
-            if (inputA.empty() || inputB.empty())
-                return;
-
-            if (*reinterpret_cast<u64*>(inputA.data()) > *reinterpret_cast<u64*>(inputB.data()))
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(1);
-            else
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(0);
-
+            this->setIntegerOnOutput(2, inputA.value() > inputB.value());
         }
     };
 
@@ -441,23 +359,14 @@ namespace hex::plugin::builtin {
                                                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
                                                           dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputInputA == nullptr || connectedInputInputB == nullptr)
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            auto &inputA = connectedInputInputA->getOutputData();
-            auto &inputB = connectedInputInputB->getOutputData();
-
-            if (inputA.empty() || inputB.empty())
-                return;
-
-            if (*reinterpret_cast<u64*>(inputA.data()) < *reinterpret_cast<u64*>(inputB.data()))
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(1);
-            else
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(0);
-
+            this->setIntegerOnOutput(2, inputA.value() < inputB.value());
         }
     };
 
@@ -467,26 +376,14 @@ namespace hex::plugin::builtin {
                                                            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
                                                            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputInputA == nullptr || connectedInputInputB == nullptr)
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputInputA->getParentNode()->process(dataOverlay);
-            connectedInputInputB->getParentNode()->process(dataOverlay);
-
-            auto &inputA = connectedInputInputA->getOutputData();
-            auto &inputB = connectedInputInputB->getOutputData();
-
-            if (inputA.empty() || inputB.empty())
-                return;
-
-            if (*reinterpret_cast<u64*>(inputA.data()) && *reinterpret_cast<u64*>(inputB.data()))
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(1);
-            else
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(0);
-
+            this->setIntegerOnOutput(2, inputA.value() && inputB.value());
         }
     };
 
@@ -496,26 +393,14 @@ namespace hex::plugin::builtin {
                                                          dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
                                                          dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
 
-        void process(prv::Overlay *dataOverlay) override {
-            auto connectedInputInputA = this->getConnectedInputAttribute(0);
-            auto connectedInputInputB = this->getConnectedInputAttribute(1);
-            if (connectedInputInputA == nullptr || connectedInputInputB == nullptr)
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (!inputA.has_value() || !inputB.has_value())
                 return;
 
-            connectedInputInputA->getParentNode()->process(dataOverlay);
-            connectedInputInputB->getParentNode()->process(dataOverlay);
-
-            auto &inputA = connectedInputInputA->getOutputData();
-            auto &inputB = connectedInputInputB->getOutputData();
-
-            if (inputA.empty() || inputB.empty())
-                return;
-
-            if (*reinterpret_cast<u64*>(inputA.data()) || *reinterpret_cast<u64*>(inputB.data()))
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(1);
-            else
-                this->getAttributes()[2].getOutputData() = hex::toBytes<u64>(0);
-
+            this->setIntegerOnOutput(2, inputA.value() || inputB.value());
         }
     };
 
