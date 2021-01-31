@@ -53,10 +53,7 @@ namespace hex::dp {
 
             auto &outputData = attribute->getOutputData();
 
-            if (outputData.empty())
-                return { };
-            else
-                return outputData;
+            return outputData;
         }
 
         std::optional<u64> getIntegerOnInput(u32 index) {
