@@ -192,10 +192,13 @@ macro(createPackage)
 
         string(REPLACE ":" ";" EXTRA_MAGICDBS "${EXTRA_MAGICDBS}")
 
-        if (NOT EXTRA_MAGICDBS STREQUAL "")
-            list(GET EXTRA_MAGICDBS -1 EXTRA_MAGICDBS)
-            install(FILES "${EXTRA_MAGICDBS}.mgc" DESTINATION magic/)
-        endif ()
+    endif ()
+
+    if (NOT EXTRA_MAGICDBS STREQUAL "")
+        list(GET EXTRA_MAGICDBS -1 EXTRA_MAGICDBS)
+        install(FILES "${EXTRA_MAGICDBS}.mgc"
+                PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ WORLD_WRITE
+                DESTINATION magic/)
     endif ()
 
     # Compile the imhex-specific magicdb
