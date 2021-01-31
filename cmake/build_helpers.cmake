@@ -193,7 +193,7 @@ macro(createPackage)
         string(REPLACE ":" ";" EXTRA_MAGICDBS "${EXTRA_MAGICDBS}")
 
         if (NOT EXTRA_MAGICDBS STREQUAL "")
-            list(GET EXTRA_MAGICDBS 0 EXTRA_MAGICDBS)
+            list(GET EXTRA_MAGICDBS -1 EXTRA_MAGICDBS)
             install(FILES "${EXTRA_MAGICDBS}.mgc" DESTINATION magic/)
         endif ()
     endif ()
