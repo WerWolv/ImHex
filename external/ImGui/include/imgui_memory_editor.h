@@ -127,6 +127,7 @@ struct MemoryEditor
         // State/Internals
         ContentsWidthChanged = false;
         DataPreviewAddr = DataEditingAddr = DataPreviewAddrEnd = (size_t)-1;
+        DataPreviewAddrOld = DataPreviewAddrEndOld = (size_t)-1;
         DataEditingTakeFocus = false;
         memset(DataInputBuf, 0, sizeof(DataInputBuf));
         memset(AddrInputBuf, 0, sizeof(AddrInputBuf));

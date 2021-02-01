@@ -18,7 +18,7 @@ namespace hex {
     }
 
     Plugin::~Plugin() {
-
+        dlclose(this->m_handle);
     }
 
     void Plugin::initializePlugin() const {

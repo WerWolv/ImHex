@@ -193,6 +193,8 @@ namespace hex {
     }
 
     ViewPattern::~ViewPattern() {
+        delete this->m_patternLanguageRuntime;
+
         View::unsubscribeEvent(Events::ProjectFileStore);
         View::unsubscribeEvent(Events::ProjectFileLoad);
     }
