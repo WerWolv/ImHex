@@ -194,13 +194,15 @@ macro(createPackage)
 
     endif ()
 
-    if (NOT EXTRA_MAGICDBS STREQUAL "" AND NOT EXTRA_MAGICDBS STREQUAL "NOTFOUND")
+    if (NOT EXTRA_MAGICDBS STREQUAL "")
         list(GET EXTRA_MAGICDBS -1 EXTRA_MAGICDBS)
 
-        if (EXTRA_MAGICDBS MATCHES ".*\\.mgc")
-            install(FILES "${EXTRA_MAGICDBS}" DESTINATION magic/)
-        else ()
-            install(FILES "${EXTRA_MAGICDBS}.mgc" DESTINATION magic/)
+        if (NOT EXTRA_MAGICDBS STREQUAL "NOTFOUND")
+            if (EXTRA_MAGICDBS MATCHES ".*\\.mgc")
+                install(FILES "${EXTRA_MAGICDBS}" DESTINATION magic/)
+            else ()
+                install(FILES "${EXTRA_MAGICDBS}.mgc" DESTINATION magic/)
+            endif ()
         endif ()
     endif ()
 
