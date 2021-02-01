@@ -65,13 +65,13 @@ namespace hex::plugin::builtin {
         });
 
         hex::ContentRegistry::DataInspector::add("uint64_t", sizeof(u64), [](auto buffer, auto endian, auto style) {
-            auto format = (style == Style::Decimal) ? "%lu" : ((style == Style::Hexadecimal) ? "0x%lX" : "0o%lo");
+            auto format = (style == Style::Decimal) ? "%llu" : ((style == Style::Hexadecimal) ? "0x%llX" : "0o%llo");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u64*>(buffer.data()), endian));
             return [value] { ImGui::TextUnformatted(value.c_str()); };
         });
 
         hex::ContentRegistry::DataInspector::add("int64_t", sizeof(s64), [](auto buffer, auto endian, auto style) {
-            auto format = (style == Style::Decimal) ? "%ld" : ((style == Style::Hexadecimal) ? "0x%lX" : "0o%lo");
+            auto format = (style == Style::Decimal) ? "%lld" : ((style == Style::Hexadecimal) ? "0x%llX" : "0o%llo");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<s64*>(buffer.data()), endian));
             return [value] { ImGui::TextUnformatted(value.c_str()); };
         });
