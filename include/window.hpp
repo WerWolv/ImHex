@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <hex/helpers/utils.hpp>
@@ -46,6 +47,8 @@ namespace hex {
         bool m_demoWindowOpen = false;
 
         static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
+
+        std::list<std::string> m_recentFiles;
     };
 
 }

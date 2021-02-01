@@ -82,8 +82,51 @@ namespace hex {
             return { };
         });
 
+        EventManager::subscribe(Events::FileLoaded, this, [this](auto userData) -> std::any {
+            auto path = std::any_cast<std::string>(userData);
+
+            this->m_recentFiles.push_front(path);
+
+            {
+                std::list<std::string> uniques;
+                for (auto &file : this->m_recentFiles) {
+
+                    bool exists = false;
+                    for (auto &unique : uniques) {
+                        if (file == unique)
+                            exists = true;
+                    }
+
+                    if (!exists)
+                        uniques.push_back(file);
+
+                    if (uniques.size() > 5)
+                        break;
+                }
+                this->m_recentFiles = uniques;
+            }
+
+            {
+                std::vector<std::string> recentFilesVector;
+                std::copy(this->m_recentFiles.begin(), this->m_recentFiles.end(), std::back_inserter(recentFilesVector));
+
+                ContentRegistry::Settings::write("ImHex", "RecentFiles", recentFilesVector);
+            }
+
+            return { };
+        });
+
+        EventManager::subscribe(Events::CloseImHex, this, [this](auto) -> std::any {
+            glfwSetWindowShouldClose(this->m_window, true);
+
+            return { };
+        });
+
         ContentRegistry::Settings::load();
         View::postEvent(Events::SettingsChanged);
+
+        for (const auto &path : ContentRegistry::Settings::read("ImHex", "RecentFiles"))
+            this->m_recentFiles.push_back(path);
     }
 
     Window::~Window() {
@@ -294,7 +337,14 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::Text("Recent");
             {
-
+                if (!this->m_recentFiles.empty()) {
+                    for (auto &path : this->m_recentFiles) {
+                        if (ImGui::BulletHyperlink(std::filesystem::path(path).filename().string().c_str())) {
+                            EventManager::post(Events::FileDropped, path.c_str());
+                            break;
+                        }
+                    }
+                }
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();

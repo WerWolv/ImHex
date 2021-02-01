@@ -214,7 +214,7 @@ namespace hex {
             ImGui::TextUnformatted(Message);
             ImGui::NewLine();
 
-            confirmButtons("Yes", "No", [] { std::exit(0); }, [] { ImGui::CloseCurrentPopup(); });
+            confirmButtons("Yes", "No", [] { View::postEvent(Events::CloseImHex); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -521,7 +521,7 @@ namespace hex {
 
         this->getWindowOpenState() = true;
 
-        View::postEvent(Events::FileLoaded);
+        View::postEvent(Events::FileLoaded, path);
         View::postEvent(Events::DataChanged);
         View::postEvent(Events::PatternChanged);
     }
