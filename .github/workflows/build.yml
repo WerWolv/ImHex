@@ -39,16 +39,24 @@ jobs:
 
     - name: ✋ Build
       run: |
+        # Get path to magic db
+        MAGICDB_PATH=$(file --version | grep -oP "(?<=magic file from ).+")
+
         mkdir build
         cd build
-        CC=gcc-10 CXX=g++-10 cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
-        make -j 4
+        CC=gcc-10 CXX=g++-10 cmake \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install" \
+          -DEXTRA_MAGICDBS="$MAGICDB_PATH" \
+          ..
+        make -j 4 install
 
     - name: 📦 Upload ELF
       uses: actions/upload-artifact@v2
       with:
         name: Linux ELF
-        path: build/imhex
+        path: |
+          build/install/*
 
   win:
     runs-on: windows-latest

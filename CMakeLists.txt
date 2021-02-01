@@ -18,7 +18,6 @@ set(PLUGINS
 set(MAGICDBS
         magic_dbs/nintendo_magic
         )
-createMagicDbList()
 
 findLibraries()
 
