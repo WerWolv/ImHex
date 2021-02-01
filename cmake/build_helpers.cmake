@@ -238,7 +238,11 @@ macro(createPackage)
 
         install(TARGETS imhex BUNDLE DESTINATION .)
     else()
-        install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
+        if (WIN32)
+            install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        else ()
+            install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
+        endif ()
     endif()
 
 
