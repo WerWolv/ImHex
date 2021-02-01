@@ -39,6 +39,68 @@ namespace hex {
         getSettingsData()[category.data()][name.data()] = defaultValue;
     }
 
+    void ContentRegistry::Settings::write(std::string_view category, std::string_view name, s64 value) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(category.data()))
+            json[category.data()] = nlohmann::json::object();
+
+        json[category.data()][name.data()] = value;
+    }
+
+    void ContentRegistry::Settings::write(std::string_view category, std::string_view name, std::string_view value) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(category.data()))
+            json[category.data()] = nlohmann::json::object();
+
+        json[category.data()][name.data()] = value;
+    }
+
+    void ContentRegistry::Settings::write(std::string_view category, std::string_view name, const std::vector<std::string>& value) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(category.data()))
+            json[category.data()] = nlohmann::json::object();
+
+        json[category.data()][name.data()] = value;
+    }
+
+
+    s64 ContentRegistry::Settings::read(std::string_view category, std::string_view name, s64 defaultValue) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(category.data()))
+            return defaultValue;
+        if (!json[category.data()].contains(name.data()))
+            return defaultValue;
+
+        return json[category.data()][name.data()].get<s64>();
+    }
+
+    std::string ContentRegistry::Settings::read(std::string_view category, std::string_view name, std::string_view defaultValue) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(category.data()))
+            return defaultValue.data();
+        if (!json[category.data()].contains(name.data()))
+            return defaultValue.data();
+
+        return json[category.data()][name.data()].get<std::string>();
+    }
+
+    std::vector<std::string> ContentRegistry::Settings::read(std::string_view category, std::string_view name, const std::vector<std::string>& defaultValue) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(category.data()))
+            return defaultValue;
+        if (!json[category.data()].contains(name.data()))
+            return defaultValue;
+
+        return json[category.data()][name.data()].get<std::vector<std::string>>();
+    }
+
+
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>>& ContentRegistry::Settings::getEntries() {
         return SharedData::settingsEntries;
     }

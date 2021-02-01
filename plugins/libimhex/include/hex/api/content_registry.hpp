@@ -42,6 +42,14 @@ namespace hex {
             static void add(std::string_view category, std::string_view name, s64 defaultValue, const std::function<bool(nlohmann::json&)> &callback);
             static void add(std::string_view category, std::string_view name, std::string_view defaultValue, const std::function<bool(nlohmann::json&)> &callback);
 
+            static void write(std::string_view category, std::string_view name, s64 value);
+            static void write(std::string_view category, std::string_view name, std::string_view value);
+            static void write(std::string_view category, std::string_view name, const std::vector<std::string>& value);
+
+            static s64 read(std::string_view category, std::string_view name, s64 defaultValue);
+            static std::string read(std::string_view category, std::string_view name, std::string_view defaultValue);
+            static std::vector<std::string> read(std::string_view category, std::string_view name, const std::vector<std::string>& defaultValue = { });
+
             static std::map<std::string, std::vector<Entry>>& getEntries();
             static nlohmann::json& getSettingsData();
         };
