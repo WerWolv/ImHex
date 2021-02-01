@@ -478,13 +478,13 @@ namespace hex {
             saveAs();
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
-            ImGui::OpenPopup("Search");
+            View::doLater([]{ ImGui::OpenPopup("Search"); });
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
-            ImGui::OpenPopup("Goto");
+            View::doLater([]{ ImGui::OpenPopup("Goto"); });
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-            ImGui::OpenPopup("Open File");
+            View::doLater([]{ ImGui::OpenPopup("Open File"); });
             return true;
         } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
             this->copyBytes();
@@ -915,7 +915,7 @@ R"(
             }
         };
 
-        if (ImGui::BeginPopup("Search")) {
+        if (ImGui::BeginPopupContextVoid("Search")) {
             ImGui::TextUnformatted("Search");
             if (ImGui::BeginTabBar("searchTabs")) {
                 char *currBuffer;
