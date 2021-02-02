@@ -4,11 +4,13 @@
 #include <functional>
 #include <list>
 #include <map>
+#include <memory>
 #include <vector>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
+#include <hex/views/view.hpp>
 
 #include <imgui.h>
 #include <ImGuiFileBrowser.h>
@@ -55,7 +57,7 @@ namespace hex {
         static u32 customEventsLastId;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
         static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctions;
-        static std::vector<View*> views;
+        static std::vector<std::unique_ptr<View>> views;
         static std::vector<ContentRegistry::Tools::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;

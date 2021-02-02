@@ -104,14 +104,14 @@ namespace hex {
             Views() = delete;
 
             template<hex::derived_from<View> T, typename ... Args>
-            static T* add(Args&& ... args) {
-                return static_cast<T*>(add(new T(std::forward<Args>(args)...)));
+            static void add(Args&& ... args) {
+                return add(std::make_unique<T>(std::forward<Args>(args)...));
             }
 
-            static std::vector<View*>& getEntries();
+            static std::vector<std::unique_ptr<View>>& getEntries();
 
         private:
-            static View* add(View *view);
+            static void add(std::unique_ptr<View> &&view);
 
 
         };

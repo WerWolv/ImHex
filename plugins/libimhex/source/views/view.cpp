@@ -16,6 +16,10 @@ namespace hex {
     void View::drawMenu() { }
     bool View::handleShortcut(int key, int mods) { return false; }
 
+    bool View::isAvailable() {
+        return SharedData::currentProvider != nullptr && SharedData::currentProvider->isAvailable();
+    }
+
     std::vector<std::function<void()>>& View::getDeferedCalls() {
         return SharedData::deferredCalls;
     }

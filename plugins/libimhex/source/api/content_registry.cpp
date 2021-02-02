@@ -149,11 +149,11 @@ namespace hex {
 
     /* Views */
 
-    View* ContentRegistry::Views::add(View *view) {
-        return getEntries().emplace_back(view);
+    void ContentRegistry::Views::add(std::unique_ptr<View> &&view) {
+        getEntries().emplace_back(std::move(view));
     }
 
-    std::vector<View*>& ContentRegistry::Views::getEntries() {
+    std::vector<std::unique_ptr<View>>& ContentRegistry::Views::getEntries() {
         return SharedData::views;
     }
 

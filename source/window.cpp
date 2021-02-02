@@ -134,10 +134,6 @@ namespace hex {
         this->deinitGLFW();
         ContentRegistry::Settings::store();
 
-        for (auto &view : ContentRegistry::Views::getEntries())
-            delete view;
-        ContentRegistry::Views::getEntries().clear();
-
         this->deinitPlugins();
 
         EventManager::unsubscribe(Events::SettingsChanged, this);
@@ -473,8 +469,10 @@ namespace hex {
 
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
+
         auto *ctx = ImGui::CreateContext();
         GImGui = ctx;
+
 
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();

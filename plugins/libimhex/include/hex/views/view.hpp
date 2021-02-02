@@ -6,7 +6,6 @@
 #include <ImGuiFileBrowser.h>
 
 #include <hex/api/event.hpp>
-#include <hex/helpers/shared_data.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <functional>
@@ -24,7 +23,7 @@ namespace hex {
         virtual void drawContent() = 0;
         virtual void drawMenu();
         virtual bool handleShortcut(int key, int mods);
-        virtual bool isAvailable() { return SharedData::currentProvider != nullptr && SharedData::currentProvider->isAvailable(); }
+        virtual bool isAvailable();
 
         static void openFileBrowser(std::string title, imgui_addons::ImGuiFileBrowser::DialogMode mode, std::string validExtensions, const std::function<void(std::string)> &callback);
         static void doLater(std::function<void()> &&function);
