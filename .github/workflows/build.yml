@@ -32,7 +32,7 @@ jobs:
           libglfw3-dev          \
           libglm-dev            \
           libmagic-dev          \
-          libssl-dev            \
+          libmbedtls-dev        \
           libcapstone-dev       \
           python3-dev           \
           libfreetype-dev       \
@@ -92,7 +92,7 @@ jobs:
           mingw-w64-${{ matrix.arch }}-glfw
           mingw-w64-${{ matrix.arch }}-glm
           mingw-w64-${{ matrix.arch }}-file
-          mingw-w64-${{ matrix.arch }}-openssl
+          mingw-w64-${{ matrix.arch }}-mbedtls
           mingw-w64-${{ matrix.arch }}-polly
           mingw-w64-${{ matrix.arch }}-python
           mingw-w64-${{ matrix.arch }}-dlfcn
@@ -155,7 +155,14 @@ jobs:
       run: |
         mkdir build
         cd build
-        CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCREATE_BUNDLE=ON -DCREATE_PACKAGE=ON ..
+        CC=$(brew --prefix llvm)/bin/clang \
+        CXX=$(brew --prefix llvm)/bin/clang++ \
+        PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
+        cmake \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCREATE_BUNDLE=ON \
+          -DCREATE_PACKAGE=ON \
+          ..
         make -j 4 package
 
     - name: 📦 Upload DMG

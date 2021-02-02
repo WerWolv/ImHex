@@ -22,7 +22,7 @@ namespace hex {
         u64 m_hashRegion[2] = { 0 };
         bool m_shouldMatchSelection = false;
 
-        static constexpr const char* HashFunctionNames[] = { "CRC16", "CRC32", "MD4", "MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512" };
+        static constexpr const char* HashFunctionNames[] = { "CRC16", "CRC32", "MD5", "SHA-1", "SHA-224", "SHA-256", "SHA-384", "SHA-512" };
     };
 
 }

@@ -32,9 +32,10 @@ namespace hex {
     }
 
 
-    static void formatBigHexInt(auto dataArray, char *buffer, size_t bufferSize) {
+    template<size_t Size>
+    static void formatBigHexInt(std::array<u8, Size> dataArray, char *buffer, size_t bufferSize) {
         for (int i = 0; i < dataArray.size(); i++)
-            snprintf(buffer + 8 * i, bufferSize - 8 * i, "%08X", hex::changeEndianess(dataArray[i], std::endian::big));
+            snprintf(buffer + 2 * i, bufferSize - 2 * i, "%02X", dataArray[i]);
     }
 
     void ViewHashes::drawContent() {
@@ -83,7 +84,7 @@ namespace hex {
                             static u16 result = 0;
 
                             if (this->m_shouldInvalidate)
-                                result = crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
+                                result = crypt::crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
 
                             char buffer[sizeof(result) * 2 + 1];
                             snprintf(buffer, sizeof(buffer), "%04X", result);
@@ -108,7 +109,7 @@ namespace hex {
                             static u32 result = 0;
 
                             if (this->m_shouldInvalidate)
-                                result = crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
+                                result = crypt::crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
 
                             char buffer[sizeof(result) * 2 + 1];
                             snprintf(buffer, sizeof(buffer), "%08X", result);
@@ -118,12 +119,12 @@ namespace hex {
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 2: // MD4
+                        case 2: // MD5
                         {
-                            static std::array<u32, 4> result;
+                            static std::array<u8, 16> result = { 0 };
 
                             if (this->m_shouldInvalidate)
-                                result = md4(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = crypt::md5(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -134,12 +135,12 @@ namespace hex {
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 3: // MD5
+                        case 3: // SHA-1
                         {
-                            static std::array<u32, 4> result = { 0 };
+                            static std::array<u8, 20> result = { 0 };
 
                             if (this->m_shouldInvalidate)
-                                result = md5(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = crypt::sha1(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -150,12 +151,12 @@ namespace hex {
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 4: // SHA-1
+                        case 4: // SHA-224
                         {
-                            static std::array<u32, 5> result = { 0 };
+                            static std::array<u8, 28> result = { 0 };
 
                             if (this->m_shouldInvalidate)
-                                result = sha1(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = crypt::sha224(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -166,12 +167,12 @@ namespace hex {
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 5: // SHA-224
+                        case 5: // SHA-256
                         {
-                            static std::array<u32, 7> result = { 0 };
+                            static std::array<u8, 32> result;
 
                             if (this->m_shouldInvalidate)
-                                result = sha224(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = crypt::sha256(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -182,12 +183,12 @@ namespace hex {
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 6: // SHA-256
+                        case 6: // SHA-384
                         {
-                            static std::array<u32, 8> result;
+                            static std::array<u8, 48> result;
 
                             if (this->m_shouldInvalidate)
-                                result = sha256(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = crypt::sha384(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));
@@ -198,28 +199,12 @@ namespace hex {
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
                             break;
-                        case 7: // SHA-384
+                        case 7: // SHA-512
                         {
-                            static std::array<u32, 12> result;
+                            static std::array<u8, 64> result;
 
                             if (this->m_shouldInvalidate)
-                                result = sha384(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
-
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
-
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                            break;
-                        case 8: // SHA-512
-                        {
-                            static std::array<u32, 16> result;
-
-                            if (this->m_shouldInvalidate)
-                                result = sha512(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
+                                result = crypt::sha512(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1);
 
                             char buffer[sizeof(result) * 2 + 1];
                             formatBigHexInt(result, buffer, sizeof(buffer));

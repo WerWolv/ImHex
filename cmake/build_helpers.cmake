@@ -36,11 +36,11 @@ macro(findLibraries)
     # Find packages
     find_package(PkgConfig REQUIRED)
 
-    pkg_search_module(CRYPTO libcrypto)
-    if(NOT CRYPTO_FOUND)
-        find_library(CRYPTO crypto REQUIRED)
+    pkg_search_module(MBEDTLS libmbedtls)
+    if(NOT MBEDTLS_FOUND)
+        find_library(MBEDTLS mbedtls REQUIRED)
     else()
-        set(CRYPTO_INCLUDE_DIRS ${CRYPTO_INCLUDEDIR})
+        set(MBEDTLS_INCLUDE_DIRS ${MBEDTLS_INCLUDEDIR})
     endif()
 
     pkg_search_module(CAPSTONE REQUIRED capstone)

@@ -19,7 +19,7 @@ apt install \
   libglfw3-dev \
   libglm-dev \
   libjsoncpp-dev \
-  libssl-dev \
+  libmbedtls-dev \
   libstdc++-10-dev \
   python3-dev \
   libfreetype-dev

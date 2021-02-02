@@ -8,7 +8,7 @@ pacman -S --needed \
   mingw-w64-x86_64-glfw \
   mingw-w64-x86_64-glm \
   mingw-w64-x86_64-file \
-  mingw-w64-x86_64-openssl \
+  mingw-w64-x86_64-mbedtls \
   mingw-w64-x86_64-polly \
   mingw-w64-x86_64-python \
   mingw-w64-x86_64-freetype \

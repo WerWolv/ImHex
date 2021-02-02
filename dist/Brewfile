@@ -1,5 +1,5 @@
 brew "glfw3"
-brew "openssl@1.1"
+brew "mbedtls"
 brew "capstone"
 brew "nlohmann-json"
 brew "glm"

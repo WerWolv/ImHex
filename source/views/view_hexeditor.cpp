@@ -367,7 +367,7 @@ namespace hex {
                         this->loadFromFile(path, base64);
 
                         if (!base64.empty()) {
-                            this->m_dataToSave = decode64(base64);
+                            this->m_dataToSave = crypt::decode64(base64);
 
                             if (this->m_dataToSave.empty())
                                 View::showErrorPopup("File is not in a valid Base64 format!");

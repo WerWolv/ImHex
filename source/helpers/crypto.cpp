@@ -2,16 +2,16 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <openssl/md4.h>
-#include <openssl/md5.h>
-#include <openssl/sha.h>
-
-#include <openssl/evp.h>
+#include <mbedtls/base64.h>
+#include <mbedtls/md5.h>
+#include <mbedtls/sha1.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/sha512.h>
 
 #include <array>
 #include <span>
 
-namespace hex {
+namespace hex::crypt {
 
     u16 crc16(prv::Provider* &data, u64 offset, size_t size, u16 polynomial, u16 init) {
         const auto table = [polynomial] {
@@ -85,134 +85,134 @@ namespace hex {
         return ~c;
     }
 
-    std::array<u32, 4> md4(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 4> result = { 0 };
+    std::array<u8, 16> md5(prv::Provider* &data, u64 offset, size_t size) {
+        std::array<u8, 16> result = { 0 };
 
-        MD4_CTX ctx;
+        mbedtls_md5_context ctx;
+        mbedtls_md5_init(&ctx);
 
-        MD4_Init(&ctx);
+        mbedtls_md5_starts_ret(&ctx);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            MD4_Update(&ctx, buffer.data(), readSize);
+            mbedtls_md5_update_ret(&ctx, buffer.data(), readSize);
         }
 
-        MD4_Final(reinterpret_cast<u8*>(result.data()), &ctx);
+        mbedtls_md5_finish_ret(&ctx, result.data());
+
+        mbedtls_md5_free(&ctx);
 
         return result;
     }
 
-    std::array<u32, 4> md5(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 4> result = { 0 };
+    std::array<u8, 20> sha1(prv::Provider* &data, u64 offset, size_t size) {
+        std::array<u8, 20> result = { 0 };
 
-        MD5_CTX ctx;
+        mbedtls_sha1_context ctx;
+        mbedtls_sha1_init(&ctx);
 
-        MD5_Init(&ctx);
+        mbedtls_sha1_starts_ret(&ctx);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            MD5_Update(&ctx, buffer.data(), readSize);
+            mbedtls_sha1_update_ret(&ctx, buffer.data(), readSize);
         }
 
-        MD5_Final(reinterpret_cast<u8*>(result.data()), &ctx);
+        mbedtls_sha1_finish_ret(&ctx, result.data());
+
+        mbedtls_sha1_free(&ctx);
 
         return result;
     }
 
-    std::array<u32, 5> sha1(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 5> result = { 0 };
+    std::array<u8, 28> sha224(prv::Provider* &data, u64 offset, size_t size) {
+        std::array<u8, 28> result = { 0 };
 
-        SHA_CTX ctx;
+        mbedtls_sha256_context ctx;
+        mbedtls_sha256_init(&ctx);
 
-        SHA1_Init(&ctx);
+        mbedtls_sha256_starts_ret(&ctx, true);
+
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            SHA1_Update(&ctx, buffer.data(), readSize);
+            mbedtls_sha256_update_ret(&ctx, buffer.data(), readSize);
         }
 
-        SHA1_Final(reinterpret_cast<u8*>(result.data()), &ctx);
+        mbedtls_sha256_finish_ret(&ctx, result.data());
+
+        mbedtls_sha256_free(&ctx);
 
         return result;
     }
 
-    std::array<u32, 7> sha224(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 7> result = { 0 };
+    std::array<u8, 32> sha256(prv::Provider* &data, u64 offset, size_t size) {
+        std::array<u8, 32> result = { 0 };
 
-        SHA256_CTX ctx;
+        mbedtls_sha256_context ctx;
+        mbedtls_sha256_init(&ctx);
 
-        SHA224_Init(&ctx);
+        mbedtls_sha256_starts_ret(&ctx, false);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            SHA224_Update(&ctx, buffer.data(), readSize);
+            mbedtls_sha256_update_ret(&ctx, buffer.data(), readSize);
         }
 
-        SHA224_Final(reinterpret_cast<u8*>(result.data()), &ctx);
+        mbedtls_sha256_finish_ret(&ctx, result.data());
+
+        mbedtls_sha256_free(&ctx);
 
         return result;
     }
 
-    std::array<u32, 8> sha256(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 8> result = { 0 };
+    std::array<u8, 48> sha384(prv::Provider* &data, u64 offset, size_t size) {
+        std::array<u8, 48> result = { 0 };
 
-        SHA256_CTX ctx;
+        mbedtls_sha512_context ctx;
+        mbedtls_sha512_init(&ctx);
 
-        SHA256_Init(&ctx);
+        mbedtls_sha512_starts_ret(&ctx, true);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            SHA256_Update(&ctx, buffer.data(), readSize);
+            mbedtls_sha512_update_ret(&ctx, buffer.data(), readSize);
         }
 
-        SHA256_Final(reinterpret_cast<u8*>(result.data()), &ctx);
+        mbedtls_sha512_finish_ret(&ctx, result.data());
+
+        mbedtls_sha512_free(&ctx);
 
         return result;
     }
 
-    std::array<u32, 12> sha384(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 12> result = { 0 };
+    std::array<u8, 64> sha512(prv::Provider* &data, u64 offset, size_t size) {
+        std::array<u8, 64> result = { 0 };
 
-        SHA512_CTX ctx;
+        mbedtls_sha512_context ctx;
+        mbedtls_sha512_init(&ctx);
 
-        SHA384_Init(&ctx);
-
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            SHA384_Update(&ctx, buffer.data(), readSize);
-        }
-
-        SHA384_Final(reinterpret_cast<u8*>(result.data()), &ctx);
-
-        return result;
-    }
-
-    std::array<u32, 16> sha512(prv::Provider* &data, u64 offset, size_t size) {
-        std::array<u32, 16> result = { 0 };
-
-        SHA512_CTX ctx;
-
-        SHA512_Init(&ctx);
+        mbedtls_sha512_starts_ret(&ctx, false);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            SHA512_Update(&ctx, buffer.data(), readSize);
+            mbedtls_sha512_update_ret(&ctx, buffer.data(), readSize);
         }
 
-        SHA512_Final(reinterpret_cast<u8*>(result.data()), &ctx);
+        mbedtls_sha512_finish_ret(&ctx, result.data());
+
+        mbedtls_sha512_free(&ctx);
 
         return result;
     }
@@ -221,7 +221,8 @@ namespace hex {
         size_t outputSize = (3 * input.size()) / 4;
         std::vector<u8> output(outputSize + 1, 0x00);
 
-        if (EVP_DecodeBlock(output.data(), reinterpret_cast<const unsigned char *>(input.data()), input.size()) != outputSize)
+        size_t written = 0;
+        if (mbedtls_base64_decode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
 
         return output;
@@ -231,7 +232,8 @@ namespace hex {
         size_t outputSize = 4 * ((input.size() + 2) / 3);
         std::vector<u8> output(outputSize + 1, 0x00);
 
-        if (EVP_EncodeBlock(output.data(), reinterpret_cast<const unsigned char *>(input.data()), input.size()) != outputSize)
+        size_t written = 0;
+        if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
 
         return output;
