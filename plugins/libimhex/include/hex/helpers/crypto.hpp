@@ -27,5 +27,22 @@ namespace hex::crypt {
     std::vector<u8> decode64(const std::vector<u8> &input);
     std::vector<u8> encode64(const std::vector<u8> &input);
 
-    std::vector<u8> aesCtrDecrypt(const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input);
+    enum class AESMode : u8 {
+        ECB     = 0,
+        CBC     = 1,
+        CFB128  = 2,
+        CTR     = 3,
+        GCM     = 4,
+        CCM     = 5,
+        OFB     = 6,
+        XTS     = 7
+    };
+
+    enum class KeyLength : u8 {
+        Key128Bits = 0,
+        Key192Bits = 1,
+        Key256Bits = 2
+    };
+
+    std::vector<u8> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input);
 }

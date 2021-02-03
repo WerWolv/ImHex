@@ -1,14 +1,51 @@
 #include <hex/plugin.hpp>
 
-#include "math_evaluator.hpp"
-
 #include <hex/helpers/crypto.hpp>
+
+#include <cctype>
 
 namespace hex::plugin::builtin {
 
+    class NodeNullptr : public dp::Node {
+    public:
+        NodeNullptr() : Node("Nullptr", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {}
+
+        void process() override {
+            this->setBufferOnOutput(0, { });
+        }
+
+    private:
+        u64 m_value = 0;
+    };
+
+    class NodeString : public dp::Node {
+    public:
+        NodeString() : Node("String", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {
+            this->m_value.resize(0xFFF, 0x00);
+        }
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100);
+            ImGui::InputText("##string", reinterpret_cast<char*>(this->m_value.data()), this->m_value.size() - 1);
+            ImGui::PopItemWidth();
+        }
+
+        void process() override {
+            std::vector<u8> output(std::strlen(this->m_value.c_str()) + 1, 0x00);
+            std::strcpy(reinterpret_cast<char*>(output.data()), this->m_value.c_str());
+
+            output.pop_back();
+
+            this->setBufferOnOutput(0, output);
+        }
+
+    private:
+        std::string m_value;
+    };
+
     class NodeInteger : public dp::Node {
     public:
-        NodeInteger() : Node("Integer", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Value") }) {}
+        NodeInteger() : Node("Integer", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "") }) {}
 
         void drawNode() override {
             ImGui::TextUnformatted("0x"); ImGui::SameLine(0, 0);
@@ -30,7 +67,7 @@ namespace hex::plugin::builtin {
 
     class NodeFloat : public dp::Node {
     public:
-        NodeFloat() : Node("Float", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "Value") }) {}
+        NodeFloat() : Node("Float", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "") }) {}
 
         void drawNode() override {
             ImGui::PushItemWidth(100);
@@ -406,9 +443,112 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeCryptoAESDecrypt : public dp::Node {
+    public:
+        NodeCryptoAESDecrypt() : Node("Decrypt AES", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Key"),
+                                                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "IV"),
+                                                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Nonce"),
+                                                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input"),
+                                                                    dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100);
+            ImGui::Combo("Mode", &this->m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
+            ImGui::Combo("Key Length", &this->m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
+            ImGui::PopItemWidth();
+        }
+
+        void process() override {
+            auto key = this->getBufferOnInput(0);
+            auto iv = this->getBufferOnInput(1);
+            auto nonce = this->getBufferOnInput(2);
+            auto input = this->getBufferOnInput(3);
+
+            if (!key.has_value() || !iv.has_value() || !nonce.has_value() || !input.has_value())
+                return;
+
+            if (key->empty() || input->empty())
+                return;
+
+            std::array<u8, 8> ivData = { 0 }, nonceData = { 0 };
+
+            std::copy(iv->begin(), iv->end(), ivData.begin());
+            std::copy(nonce->begin(), nonce->end(), nonceData.begin());
+
+            auto output = crypt::aesDecrypt(static_cast<crypt::AESMode>(this->m_mode), static_cast<crypt::KeyLength>(this->m_keyLength), key.value(), nonceData, ivData, input.value());
+
+            this->setBufferOnOutput(4, output);
+        }
+
+    private:
+        int m_mode = 0;
+        int m_keyLength = 0;
+    };
+
+    class NodeDecodingBase64 : public dp::Node {
+    public:
+        NodeDecodingBase64() : Node("Base64 Decoder", {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "In"),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Out") }) {}
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            if (!input.has_value())
+                return;
+
+            auto output = crypt::decode64(input.value());
+
+            this->setBufferOnOutput(1, output);
+        }
+    };
+
+    class NodeDecodingHex : public dp::Node {
+    public:
+        NodeDecodingHex() : Node("Hexadecimal Decoder", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "In"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Out") }) {}
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            if (!input.has_value())
+                return;
+
+            if (input->size() % 2 != 0)
+                return;
+
+            std::vector<u8> output;
+            for (u32 i = 0; i < input->size(); i += 2) {
+                char c1 = tolower(input->at(i));
+                char c2 = tolower(input->at(i + 1));
+
+                if (!std::isxdigit(c1) || !isxdigit(c2))
+                    return;
+
+                u8 value;
+                if (std::isdigit(c1))
+                    value = (c1 - '0') << 4;
+                else
+                    value = ((c1 - 'a') + 0x0A) << 4;
+
+                if (std::isdigit(c2))
+                    value |= c2 - '0';
+                else
+                    value |= (c2 - 'a') + 0x0A;
+
+                output.push_back(value);
+            }
+
+            this->setBufferOnOutput(1, output);
+        }
+    };
+
     void registerDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeInteger>("Constants", "Integer");
         ContentRegistry::DataProcessorNode::add<NodeFloat>("Constants", "Float");
+        ContentRegistry::DataProcessorNode::add<NodeNullptr>("Constants", "Nullptr");
+        ContentRegistry::DataProcessorNode::add<NodeString>("Constants", "String");
         ContentRegistry::DataProcessorNode::add<NodeRGBA8>("Constants", "RGBA8 Color");
 
         ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("Display", "Integer");
@@ -432,6 +572,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeBitwiseOR>("Bitwise Operations", "OR");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseXOR>("Bitwise Operations", "XOR");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseNOT>("Bitwise Operations", "NOT");
+
+        ContentRegistry::DataProcessorNode::add<NodeDecodingBase64>("Decoding", "Base64");
+        ContentRegistry::DataProcessorNode::add<NodeDecodingHex>("Decoding", "Hexadecimal");
+
+        ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("Crypto", "AES");
     }
 
 }

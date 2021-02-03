@@ -241,24 +241,58 @@ namespace hex::crypt {
         return output;
     }
 
-    std::vector<u8> aesCtrDecrypt(const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
-        std::vector<u8> output(input.size());
+    static std::vector<u8> aes(mbedtls_cipher_type_t type, mbedtls_operation_t operation, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
+        std::vector<u8> output;
+
+        if (input.empty())
+            return { };
+
         mbedtls_cipher_context_t ctx;
+        auto cipherInfo = mbedtls_cipher_info_from_type(type);
 
-        mbedtls_cipher_setup(&ctx, mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_128_CTR));
 
-        mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, MBEDTLS_DECRYPT);
+        mbedtls_cipher_setup(&ctx, cipherInfo);
+        mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, operation);
 
         std::array<u8, 16> nonceCounter = { 0 };
         std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());
         std::copy(iv.begin(), iv.end(), nonceCounter.begin() + 8);
 
-        size_t outputSize = output.size();
+        size_t outputSize = input.size() + cipherInfo->block_size;
+        output.resize(outputSize, 0x00);
         mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
 
         mbedtls_cipher_free(&ctx);
 
+        output.resize(input.size());
+
         return output;
+    }
+
+    std::vector<u8> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
+        switch (keyLength) {
+            case KeyLength::Key128Bits: if (key.size() != 128 / 8) return { }; break;
+            case KeyLength::Key192Bits: if (key.size() != 192 / 8) return { }; break;
+            case KeyLength::Key256Bits: if (key.size() != 256 / 8) return { }; break;
+            default: return { };
+        }
+
+        mbedtls_cipher_type_t type;
+        switch (mode) {
+            case AESMode::ECB:      type = MBEDTLS_CIPHER_AES_128_ECB;      break;
+            case AESMode::CBC:      type = MBEDTLS_CIPHER_AES_128_CBC;      break;
+            case AESMode::CFB128:   type = MBEDTLS_CIPHER_AES_128_CFB128;   break;
+            case AESMode::CTR:      type = MBEDTLS_CIPHER_AES_128_CTR;      break;
+            case AESMode::GCM:      type = MBEDTLS_CIPHER_AES_128_GCM;      break;
+            case AESMode::CCM:      type = MBEDTLS_CIPHER_AES_128_CCM;      break;
+            case AESMode::OFB:      type = MBEDTLS_CIPHER_AES_128_OFB;      break;
+            case AESMode::XTS:      type = MBEDTLS_CIPHER_AES_128_XTS;      break;
+            default: return { };
+        }
+
+        type = mbedtls_cipher_type_t(type + u8(keyLength));
+
+        return aes(type, MBEDTLS_DECRYPT, key, nonce, iv, input);
     }
 
 }
