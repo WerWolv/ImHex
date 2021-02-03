@@ -114,6 +114,9 @@ namespace hex {
         if (ImGui::Begin("Data Processor", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
+                imnodes::ClearNodeSelection();
+                imnodes::ClearLinkSelection();
+
                 this->m_rightClickedCoords = ImGui::GetMousePos();
 
                 if (imnodes::IsNodeHovered(&this->m_rightClickedId))
