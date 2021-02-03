@@ -1,4 +1,4 @@
-#include "helpers/crypto.hpp"
+#include <hex/helpers/crypto.hpp>
 
 #include <hex/providers/provider.hpp>
 
@@ -7,6 +7,8 @@
 #include <mbedtls/sha1.h>
 #include <mbedtls/sha256.h>
 #include <mbedtls/sha512.h>
+#include <mbedtls/aes.h>
+#include <mbedtls/cipher.h>
 
 #include <array>
 #include <span>
@@ -235,6 +237,26 @@ namespace hex::crypt {
         size_t written = 0;
         if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
+
+        return output;
+    }
+
+    std::vector<u8> aesCtrDecrypt(const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
+        std::vector<u8> output(input.size());
+        mbedtls_cipher_context_t ctx;
+
+        mbedtls_cipher_setup(&ctx, mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_128_CTR));
+
+        mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, MBEDTLS_DECRYPT);
+
+        std::array<u8, 16> nonceCounter = { 0 };
+        std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());
+        std::copy(iv.begin(), iv.end(), nonceCounter.begin() + 8);
+
+        size_t outputSize = output.size();
+        mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
+
+        mbedtls_cipher_free(&ctx);
 
         return output;
     }

@@ -2,6 +2,8 @@
 
 #include "math_evaluator.hpp"
 
+#include <hex/helpers/crypto.hpp>
+
 namespace hex::plugin::builtin {
 
     class NodeInteger : public dp::Node {

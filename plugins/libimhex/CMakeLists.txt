@@ -19,8 +19,10 @@ add_library(libimhex SHARED
         source/api/event.cpp
         source/api/imhex_api.cpp
         source/api/content_registry.cpp
+
         source/helpers/utils.cpp
         source/helpers/shared_data.cpp
+        source/helpers/crypto.cpp
 
         source/lang/pattern_language.cpp
         source/lang/preprocessor.cpp
@@ -36,4 +38,9 @@ add_library(libimhex SHARED
         )
 
 target_include_directories(libimhex PUBLIC include)
-target_link_libraries(libimhex PUBLIC imgui nlohmann_json)
+
+if (WIN32)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a)
+else ()
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto)
+endif ()

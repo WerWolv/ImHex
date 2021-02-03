@@ -2,11 +2,11 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/api/imhex_api.hpp>
-#include "providers/file_provider.hpp"
+#include <hex/helpers/crypto.hpp>
 
 #include <GLFW/glfw3.h>
 
-#include "helpers/crypto.hpp"
+#include "providers/file_provider.hpp"
 #include "helpers/patches.hpp"
 #include "helpers/project_file_handler.hpp"
 #include "helpers/loader_script_handler.hpp"

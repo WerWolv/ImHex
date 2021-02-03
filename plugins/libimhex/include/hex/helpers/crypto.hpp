@@ -26,4 +26,6 @@ namespace hex::crypt {
 
     std::vector<u8> decode64(const std::vector<u8> &input);
     std::vector<u8> encode64(const std::vector<u8> &input);
+
+    std::vector<u8> aesCtrDecrypt(const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input);
 }
