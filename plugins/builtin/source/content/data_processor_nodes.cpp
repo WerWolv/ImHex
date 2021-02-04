@@ -112,6 +112,24 @@ namespace hex::plugin::builtin {
         ImColor m_color;
     };
 
+    class NodeComment : public dp::Node {
+    public:
+        NodeComment() : Node("Comment", { }) {
+            this->m_comment.resize(0xFFF, 0x00);
+        }
+
+        void drawNode() override {
+            ImGui::InputTextMultiline("##string", reinterpret_cast<char*>(this->m_comment.data()), this->m_comment.size() - 1, ImVec2(150, 100));
+        }
+
+        void process() override {
+
+        }
+
+    private:
+        std::string m_comment;
+    };
+
 
     class NodeDisplayInteger : public dp::Node {
     public:
@@ -461,8 +479,8 @@ namespace hex::plugin::builtin {
 
             std::vector<u8> output;
             for (u32 i = 0; i < input.size(); i += 2) {
-                char c1 = tolower(input[i]);
-                char c2 = tolower(input[i + 1]);
+                char c1 = static_cast<char>(std::tolower(input[i]));
+                char c2 = static_cast<char>(std::tolower(input[i + 1]));
 
                 if (!std::isxdigit(c1) || !isxdigit(c2))
                     throwNodeError("Can't decode non-hexadecimal character");
@@ -491,6 +509,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeNullptr>("Constants", "Nullptr");
         ContentRegistry::DataProcessorNode::add<NodeString>("Constants", "String");
         ContentRegistry::DataProcessorNode::add<NodeRGBA8>("Constants", "RGBA8 Color");
+        ContentRegistry::DataProcessorNode::add<NodeComment>("Constants", "Comment");
 
         ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("Display", "Integer");
         ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("Display", "Float");

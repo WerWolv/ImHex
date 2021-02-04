@@ -123,7 +123,6 @@ namespace hex {
             printf("Node implementation bug! %s\n", e.what());
         }
 
-
     }
 
     void ViewDataProcessor::drawContent() {
@@ -185,12 +184,16 @@ namespace hex {
                     this->m_nodes.push_back(node);
 
                     bool hasOutput = false;
+                    bool hasInput = false;
                     for (auto &attr : node->getAttributes()) {
                         if (attr.getIOType() == dp::Attribute::IOType::Out)
                             hasOutput = true;
+
+                        if (attr.getIOType() == dp::Attribute::IOType::In)
+                            hasInput = true;
                     }
 
-                    if (!hasOutput)
+                    if (hasInput && !hasOutput)
                         this->m_endNodes.push_back(node);
 
                     imnodes::SetNodeScreenSpacePos(node->getID(), this->m_rightClickedCoords);
