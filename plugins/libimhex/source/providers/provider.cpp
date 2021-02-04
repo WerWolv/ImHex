@@ -6,12 +6,16 @@
 #include <map>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace hex::prv {
 
     Provider::Provider() {
         this->m_patches.emplace_back();
+    }
+
+    Provider::~Provider() {
+        for (auto &overlay : this->m_overlays)
+            this->deleteOverlay(overlay);
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size) {

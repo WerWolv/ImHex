@@ -36,7 +36,7 @@ namespace hex::dp {
 
         [[nodiscard]] Node* getParentNode() { return this->m_parentNode; }
 
-        [[nodiscard]] std::vector<u8>& getOutputData() { return this->m_outputData; }
+        [[nodiscard]] std::optional<std::vector<u8>>& getOutputData() { return this->m_outputData; }
     private:
         u32 m_id;
         IOType m_ioType;
@@ -45,7 +45,7 @@ namespace hex::dp {
         std::map<u32, Attribute*> m_connectedAttributes;
         Node *m_parentNode;
 
-        std::vector<u8> m_outputData;
+        std::optional<std::vector<u8>> m_outputData;
 
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }

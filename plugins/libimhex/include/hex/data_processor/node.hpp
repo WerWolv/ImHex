@@ -23,6 +23,14 @@ namespace hex::dp {
 
         virtual void drawNode() { }
         virtual void process() = 0;
+
+        using NodeError = std::pair<Node*, std::string>;
+
+        void resetOutputData() {
+            for (auto &attribute : this->m_attributes)
+                attribute.getOutputData().reset();
+        }
+
     private:
         u32 m_id;
         std::string m_title;
@@ -43,49 +51,71 @@ namespace hex::dp {
 
     protected:
 
-        std::optional<std::vector<u8>> getBufferOnInput(u32 index) {
-            auto attribute = this->getConnectedInputAttribute(index);
-
-            if (attribute == nullptr || attribute->getType() != Attribute::Type::Buffer)
-                return { };
-
-            attribute->getParentNode()->process();
-
-            auto &outputData = attribute->getOutputData();
-
-            return outputData;
+        [[noreturn]] void throwNodeError(std::string_view message) {
+            throw NodeError(this, message);
         }
 
-        std::optional<u64> getIntegerOnInput(u32 index) {
+        std::vector<u8> getBufferOnInput(u32 index) {
             auto attribute = this->getConnectedInputAttribute(index);
 
-            if (attribute == nullptr || attribute->getType() != Attribute::Type::Integer)
-                return { };
+            if (attribute == nullptr)
+                throwNodeError(hex::format("Nothing connected to input '%s'", this->m_attributes[index].getName().data()));
+
+            if (attribute->getType() != Attribute::Type::Buffer)
+                throwNodeError("Tried to read buffer from non-buffer attribute");
 
             attribute->getParentNode()->process();
 
             auto &outputData = attribute->getOutputData();
 
-            if (outputData.empty() || outputData.size() < sizeof(u64))
-                return { };
-            else
-                return *reinterpret_cast<u64*>(outputData.data());
+            if (!outputData.has_value())
+                throw std::runtime_error("No data available at connected attribute");
+
+            return outputData.value();
         }
 
-        std::optional<float> getFloatOnInput(u32 index) {
+        u64 getIntegerOnInput(u32 index) {
             auto attribute = this->getConnectedInputAttribute(index);
 
-            if (attribute == nullptr || attribute->getType() != Attribute::Type::Float)
-                return { };
+            if (attribute == nullptr)
+                throwNodeError(hex::format("Nothing connected to input '%s'", this->m_attributes[index].getName().data()));
+
+            if (attribute->getType() != Attribute::Type::Integer)
+                throwNodeError("Tried to read integer from non-integer attribute");
 
             attribute->getParentNode()->process();
 
             auto &outputData = attribute->getOutputData();
 
-            if (outputData.empty() || outputData.size() < sizeof(float))
-                return { };
-            else
-                return *reinterpret_cast<float*>(outputData.data());
+            if (!outputData.has_value())
+                throw std::runtime_error("No data available at connected attribute");
+
+            if (outputData->size() < sizeof(u64))
+                throw std::runtime_error("Not enough data provided for integer");
+
+            return *reinterpret_cast<u64*>(outputData->data());
+        }
+
+        float getFloatOnInput(u32 index) {
+            auto attribute = this->getConnectedInputAttribute(index);
+
+            if (attribute == nullptr)
+                throwNodeError(hex::format("Nothing connected to input '%s'", this->m_attributes[index].getName().data()));
+
+            if (attribute->getType() != Attribute::Type::Float)
+                throwNodeError("Tried to read float from non-float attribute");
+
+            attribute->getParentNode()->process();
+
+            auto &outputData = attribute->getOutputData();
+
+            if (!outputData.has_value())
+                throw std::runtime_error("No data available at connected attribute");
+
+            if (outputData->size() < sizeof(float))
+                throw std::runtime_error("Not enough data provided for float");
+
+            return *reinterpret_cast<float*>(outputData->data());
         }
 
         void setBufferOnOutput(u32 index, std::vector<u8> data) {

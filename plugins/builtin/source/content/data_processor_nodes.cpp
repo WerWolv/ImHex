@@ -127,18 +127,14 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
+            this->m_value.reset();
             auto input = this->getIntegerOnInput(0);
 
-            if (!input.has_value()) {
-                this->m_value.reset();
-                return;
-            }
-
-            this->m_value = input.value();
+            this->m_value = input;
         }
 
     private:
-        std::optional<u64> m_value = 0;
+        std::optional<u64> m_value;
     };
 
     class NodeDisplayFloat : public dp::Node {
@@ -155,18 +151,14 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
+            this->m_value.reset();
             auto input = this->getFloatOnInput(0);
 
-            if (!input.has_value()) {
-                this->m_value.reset();
-                return;
-            }
-
-            this->m_value = input.value();
+            this->m_value = input;
         }
 
     private:
-        std::optional<float> m_value = 0;
+        std::optional<float> m_value;
     };
 
 
@@ -177,10 +169,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            if (!input.has_value())
-                return;
-
-            std::vector<u8> output = input.value();
+            std::vector<u8> output = input;
             for (auto &byte : output)
                 byte = ~byte;
 
@@ -196,13 +185,10 @@ namespace hex::plugin::builtin {
             auto inputA = this->getBufferOnInput(0);
             auto inputB = this->getBufferOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            std::vector<u8> output(std::min(inputA->size(), inputB->size()), 0x00);
+            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
 
             for (u32 i = 0; i < output.size(); i++)
-                output[i] = inputA.value()[i] & inputB.value()[i];
+                output[i] = inputA[i] & inputB[i];
 
             this->setBufferOnOutput(2, output);
         }
@@ -216,13 +202,10 @@ namespace hex::plugin::builtin {
             auto inputA = this->getBufferOnInput(0);
             auto inputB = this->getBufferOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            std::vector<u8> output(std::min(inputA->size(), inputB->size()), 0x00);
+            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
 
             for (u32 i = 0; i < output.size(); i++)
-                output[i] = inputA.value()[i] | inputB.value()[i];
+                output[i] = inputA[i] | inputB[i];
 
             this->setBufferOnOutput(2, output);
         }
@@ -236,13 +219,10 @@ namespace hex::plugin::builtin {
             auto inputA = this->getBufferOnInput(0);
             auto inputB = this->getBufferOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            std::vector<u8> output(std::min(inputA->size(), inputB->size()), 0x00);
+            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
 
             for (u32 i = 0; i < output.size(); i++)
-                output[i] = inputA.value()[i] ^ inputB.value()[i];
+                output[i] = inputA[i] ^ inputB[i];
 
             this->setBufferOnOutput(2, output);
         }
@@ -259,13 +239,10 @@ namespace hex::plugin::builtin {
             auto address = this->getIntegerOnInput(0);
             auto size = this->getIntegerOnInput(1);
 
-            if (!address.has_value() || !size.has_value())
-                return;
-
             std::vector<u8> data;
-            data.resize(size.value());
+            data.resize(size);
 
-            SharedData::currentProvider->readRaw(address.value(), data.data(), size.value());
+            SharedData::currentProvider->readRaw(address, data.data(), size);
 
             this->setBufferOnOutput(2, data);
         }
@@ -279,10 +256,7 @@ namespace hex::plugin::builtin {
             auto address = this->getIntegerOnInput(0);
             auto data = this->getBufferOnInput(1);
 
-            if (!address.has_value() || !data.has_value())
-                return;
-
-            this->setOverlayData(address.value(), data.value());
+            this->setOverlayData(address, data);
         }
     };
 
@@ -293,11 +267,8 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getIntegerOnInput(0);
 
-            if (!input.has_value())
-                return;
-
             std::vector<u8> output(sizeof(u64), 0x00);
-            std::memcpy(output.data(), &input.value(), sizeof(u64));
+            std::memcpy(output.data(), &input, sizeof(u64));
 
             this->setBufferOnOutput(1, output);
         }
@@ -310,11 +281,8 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            if (!input.has_value())
-                return;
-
             u64 output;
-            std::memcpy(&output, input->data(), sizeof(u64));
+            std::memcpy(&output, input.data(), sizeof(u64));
 
             this->setIntegerOnOutput(1, output);
         }
@@ -332,13 +300,10 @@ namespace hex::plugin::builtin {
             auto trueData = this->getBufferOnInput(1);
             auto falseData = this->getBufferOnInput(2);
 
-            if (!cond.has_value() || !trueData.has_value() || !falseData.has_value())
-                return;
-
-            if (cond.value() != 0)
-                this->setBufferOnOutput(3, trueData.value());
+            if (cond != 0)
+                this->setBufferOnOutput(3, trueData);
             else
-                this->setBufferOnOutput(3, falseData.value());
+                this->setBufferOnOutput(3, falseData);
 
         }
     };
@@ -353,10 +318,7 @@ namespace hex::plugin::builtin {
             auto inputA = this->getIntegerOnInput(0);
             auto inputB = this->getIntegerOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            this->setIntegerOnOutput(2, inputA.value() == inputB.value());
+            this->setIntegerOnOutput(2, inputA == inputB);
         }
     };
 
@@ -368,10 +330,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getIntegerOnInput(0);
 
-            if (!input.has_value())
-                return;
-
-            this->setIntegerOnOutput(1, !input.value());
+            this->setIntegerOnOutput(1, !input);
         }
     };
 
@@ -385,10 +344,7 @@ namespace hex::plugin::builtin {
             auto inputA = this->getIntegerOnInput(0);
             auto inputB = this->getIntegerOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            this->setIntegerOnOutput(2, inputA.value() > inputB.value());
+            this->setIntegerOnOutput(2, inputA > inputB);
         }
     };
 
@@ -402,10 +358,7 @@ namespace hex::plugin::builtin {
             auto inputA = this->getIntegerOnInput(0);
             auto inputB = this->getIntegerOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            this->setIntegerOnOutput(2, inputA.value() < inputB.value());
+            this->setIntegerOnOutput(2, inputA < inputB);
         }
     };
 
@@ -419,10 +372,7 @@ namespace hex::plugin::builtin {
             auto inputA = this->getIntegerOnInput(0);
             auto inputB = this->getIntegerOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            this->setIntegerOnOutput(2, inputA.value() && inputB.value());
+            this->setIntegerOnOutput(2, inputA && inputB);
         }
     };
 
@@ -436,10 +386,7 @@ namespace hex::plugin::builtin {
             auto inputA = this->getIntegerOnInput(0);
             auto inputB = this->getIntegerOnInput(1);
 
-            if (!inputA.has_value() || !inputB.has_value())
-                return;
-
-            this->setIntegerOnOutput(2, inputA.value() || inputB.value());
+            this->setIntegerOnOutput(2, inputA || inputB);
         }
     };
 
@@ -464,18 +411,18 @@ namespace hex::plugin::builtin {
             auto nonce = this->getBufferOnInput(2);
             auto input = this->getBufferOnInput(3);
 
-            if (!key.has_value() || !iv.has_value() || !nonce.has_value() || !input.has_value())
-                return;
+            if (key.empty())
+                throwNodeError("Key cannot be empty");
 
-            if (key->empty() || input->empty())
-                return;
+            if (input.empty())
+                throwNodeError("Input cannot be empty");
 
             std::array<u8, 8> ivData = { 0 }, nonceData = { 0 };
 
-            std::copy(iv->begin(), iv->end(), ivData.begin());
-            std::copy(nonce->begin(), nonce->end(), nonceData.begin());
+            std::copy(iv.begin(), iv.end(), ivData.begin());
+            std::copy(nonce.begin(), nonce.end(), nonceData.begin());
 
-            auto output = crypt::aesDecrypt(static_cast<crypt::AESMode>(this->m_mode), static_cast<crypt::KeyLength>(this->m_keyLength), key.value(), nonceData, ivData, input.value());
+            auto output = crypt::aesDecrypt(static_cast<crypt::AESMode>(this->m_mode), static_cast<crypt::KeyLength>(this->m_keyLength), key, nonceData, ivData, input);
 
             this->setBufferOnOutput(4, output);
         }
@@ -494,10 +441,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            if (!input.has_value())
-                return;
-
-            auto output = crypt::decode64(input.value());
+            auto output = crypt::decode64(input);
 
             this->setBufferOnOutput(1, output);
         }
@@ -512,19 +456,16 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            if (!input.has_value())
-                return;
-
-            if (input->size() % 2 != 0)
-                return;
+            if (input.size() % 2 != 0)
+                throwNodeError("Can't decode odd number of hex characters");
 
             std::vector<u8> output;
-            for (u32 i = 0; i < input->size(); i += 2) {
-                char c1 = tolower(input->at(i));
-                char c2 = tolower(input->at(i + 1));
+            for (u32 i = 0; i < input.size(); i += 2) {
+                char c1 = tolower(input[i]);
+                char c2 = tolower(input[i + 1]);
 
                 if (!std::isxdigit(c1) || !isxdigit(c2))
-                    return;
+                    throwNodeError("Can't decode non-hexadecimal character");
 
                 u8 value;
                 if (std::isdigit(c1))

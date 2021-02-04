@@ -32,6 +32,8 @@ namespace hex {
         int m_rightClickedId = -1;
         ImVec2 m_rightClickedCoords;
 
+        std::optional<dp::Node::NodeError> m_currNodeError;
+
         void eraseLink(u32 id);
         void eraseNodes(const std::vector<int> &ids);
         void processNodes();

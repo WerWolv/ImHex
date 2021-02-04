@@ -17,7 +17,7 @@ namespace hex::prv {
         constexpr static size_t PageSize = 0x1000'0000;
 
         Provider();
-        virtual ~Provider() = default;
+        virtual ~Provider();
 
         virtual bool isAvailable() = 0;
         virtual bool isReadable() = 0;

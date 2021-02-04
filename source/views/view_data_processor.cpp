@@ -35,6 +35,13 @@ namespace hex {
 
             imnodes::GetStyle().flags = imnodes::StyleFlags(imnodes::StyleFlags_NodeOutline | imnodes::StyleFlags_GridLines);
         });
+
+        View::subscribeEvent(Events::FileLoaded, [this](auto) {
+            for (auto &node : this->m_nodes) {
+                node->setCurrentOverlay(nullptr);
+            }
+            this->m_dataOverlays.clear();
+        });
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
@@ -103,11 +110,20 @@ namespace hex {
             }
         }
 
-        u32 overlayIndex = 0;
-        for (auto &endNode : this->m_endNodes) {
-            (void)endNode->process();
-            overlayIndex++;
+        this->m_currNodeError.reset();
+
+        try {
+            for (auto &endNode : this->m_endNodes) {
+                endNode->resetOutputData();
+                endNode->process();
+            }
+        } catch (dp::Node::NodeError &e) {
+            this->m_currNodeError = e;
+        } catch (std::runtime_error &e) {
+            printf("Node implementation bug! %s\n", e.what());
         }
+
+
     }
 
     void ViewDataProcessor::drawContent() {
@@ -197,9 +213,25 @@ namespace hex {
                 ImGui::EndPopup();
             }
 
+            {
+                int nodeId;
+                if (imnodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getID() == nodeId) {
+                    ImGui::BeginTooltip();
+                    ImGui::TextUnformatted("Error");
+                    ImGui::Separator();
+                    ImGui::TextUnformatted(this->m_currNodeError->second.c_str());
+                    ImGui::EndTooltip();
+                }
+            }
+
             imnodes::BeginNodeEditor();
 
             for (auto& node : this->m_nodes) {
+                const bool hasError = this->m_currNodeError.has_value() && this->m_currNodeError->first == node;
+
+                if (hasError)
+                    imnodes::PushColorStyle(imnodes::ColorStyle_NodeOutline, 0xFF0000FF);
+
                 imnodes::BeginNode(node->getID());
 
                 imnodes::BeginNodeTitleBar();
@@ -229,6 +261,9 @@ namespace hex {
                 }
 
                 imnodes::EndNode();
+
+                if (hasError)
+                    imnodes::PopColorStyle();
             }
 
             for (const auto &link : this->m_links)
