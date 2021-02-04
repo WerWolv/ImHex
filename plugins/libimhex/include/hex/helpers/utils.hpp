@@ -99,6 +99,16 @@ namespace hex {
         return std::string(buffer.data(), buffer.data() + size);
     }
 
+    inline std::string toBinaryString(hex::integral auto number) {
+        if (number == 0) return "0";
+
+        std::string result;
+        for (u8 bit = std::bit_width(number); bit > 0; bit--)
+            result += (number & (0b1 << bit)) == 0 ? '0' : '1';
+
+        return result;
+    }
+
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
         using ValueType = std::remove_cvref_t<decltype(value)>;
         ValueType mask = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;

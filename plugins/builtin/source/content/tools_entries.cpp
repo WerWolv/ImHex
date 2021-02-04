@@ -285,6 +285,59 @@ namespace hex::plugin::builtin {
             }
         }
 
+        void drawBaseConverter() {
+            static char buffer[4][0xFFF] = { { '0' }, { '0' }, { '0' }, { '0' } };
+
+            static auto CharFilter = [](ImGuiInputTextCallbackData *data) -> int {
+                switch (*static_cast<u32*>(data->UserData)) {
+                    case 16: return std::isxdigit(data->EventChar);
+                    case 10: return std::isdigit(data->EventChar);
+                    case 8:  return std::isdigit(data->EventChar) && data->EventChar < '8';
+                    case 2:  return data->EventChar == '0' || data->EventChar == '1';
+                    default: return false;
+                }
+            };
+
+            static auto ConvertBases = [](u8 base) {
+                u64 number;
+
+                errno = 0;
+                switch (base) {
+                    case 16: number = std::strtoull(buffer[1], nullptr, base); break;
+                    case 10: number = std::strtoull(buffer[0], nullptr, base); break;
+                    case 8:  number = std::strtoull(buffer[2], nullptr, base); break;
+                    case 2:  number = std::strtoull(buffer[3], nullptr, base); break;
+                    default: return;
+                }
+
+                auto base10String   = std::to_string(number);
+                auto base16String   = hex::format("%X", number);
+                auto base8String    = hex::format("%o", number);
+                auto base2String    = hex::toBinaryString(number);
+
+                std::strncpy(buffer[0], base10String.c_str(), sizeof(buffer[0]));
+                std::strncpy(buffer[1], base16String.c_str(), sizeof(buffer[1]));
+                std::strncpy(buffer[2], base8String.c_str(),  sizeof(buffer[2]));
+                std::strncpy(buffer[3], base2String.c_str(),  sizeof(buffer[3]));
+            };
+
+            u8 base = 10;
+            if (ImGui::InputText("DEC", buffer[0], 20 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+                ConvertBases(base);
+
+            base = 16;
+            if (ImGui::InputText("HEX", buffer[1], 16 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+                ConvertBases(base);
+
+            base = 8;
+            if (ImGui::InputText("OCT", buffer[2], 22 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+                ConvertBases(base);
+
+            base = 2;
+            if (ImGui::InputText("BIN", buffer[3], 64 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+                ConvertBases(base);
+        }
+
     }
 
     void registerToolEntries() {
@@ -293,6 +346,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("Regex replacer",           drawRegexReplacer);
         ContentRegistry::Tools::add("Color picker",             drawColorPicker);
         ContentRegistry::Tools::add("Calculator",               drawMathEvaluator);
+        ContentRegistry::Tools::add("Base Converter",           drawBaseConverter);
     }
 
 }
