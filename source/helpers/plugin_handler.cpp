@@ -18,24 +18,16 @@ namespace hex {
         if (this->m_handle == nullptr)
             return;
 
-        printf("Loaded plugin %s\n", path.data());
-
-
         this->m_initializePluginFunction = reinterpret_cast<InitializePluginFunc>(dlsym(this->m_handle, symbolName.c_str()));
-        printf("Symbol %s at %p\n", symbolName.c_str(), this->m_initializePluginFunction);
-
     }
 
     Plugin::~Plugin() {
-        printf("Plugin unloaded\n");
         dlclose(this->m_handle);
     }
 
     void Plugin::initializePlugin() const {
         if (this->m_initializePluginFunction != nullptr) {
-            printf("Initializing plugin\n");
             this->m_initializePluginFunction();
-            printf("Initialized plugin\n");
         }
     }
 
