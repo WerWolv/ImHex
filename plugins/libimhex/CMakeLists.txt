@@ -37,7 +37,7 @@ add_library(libimhex SHARED
         source/views/view.cpp
         )
 
-target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIRS})
+target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR})
 target_link_directories(libimhex PRIVATE ${MBEDTLS_LIBRARY_DIRS})
 
 if (WIN32)
