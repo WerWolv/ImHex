@@ -37,7 +37,7 @@ macro(findLibraries)
     # Find packages
     find_package(PkgConfig REQUIRED)
 
-    find_library(MBEDTLS mbedtls REQUIRED)
+    find_library(mbedTLS REQUIRED)
 
     pkg_search_module(CAPSTONE REQUIRED capstone)
 
