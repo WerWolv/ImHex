@@ -29,6 +29,7 @@ endmacro()
 macro(findLibraries)
     set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
     set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
     # Enforce that we use non system Python 3 on macOS.
     set(Python_FIND_FRAMEWORK NEVER)
@@ -36,12 +37,7 @@ macro(findLibraries)
     # Find packages
     find_package(PkgConfig REQUIRED)
 
-    pkg_search_module(MBEDTLS mbedtls)
-    if(NOT MBEDTLS_FOUND)
-        find_library(MBEDTLS mbedtls REQUIRED)
-    else()
-        set(MBEDTLS_INCLUDE_DIRS ${MBEDTLS_INCLUDEDIR})
-    endif()
+    find_library(MBEDTLS mbedtls REQUIRED)
 
     pkg_search_module(CAPSTONE REQUIRED capstone)
 
