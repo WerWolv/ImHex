@@ -37,7 +37,8 @@ add_library(libimhex SHARED
         source/views/view.cpp
         )
 
-target_include_directories(libimhex PUBLIC include)
+target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR})
+target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (WIN32)
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a)
