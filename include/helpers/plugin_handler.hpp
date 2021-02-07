@@ -12,6 +12,8 @@ namespace hex {
     class Plugin {
     public:
         Plugin(std::string_view path);
+        Plugin(const Plugin&) = delete;
+        Plugin(Plugin &&other);
         ~Plugin();
 
         void initializePlugin() const;
@@ -38,7 +40,7 @@ namespace hex {
 
     private:
         static inline std::string s_pluginFolder;
-        static inline std::vector<Plugin*> s_plugins;
+        static inline std::vector<Plugin> s_plugins;
     };
 
 }

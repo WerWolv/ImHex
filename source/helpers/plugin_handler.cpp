@@ -8,7 +8,7 @@ namespace hex {
 
     namespace fs = std::filesystem;
 
-    // hex::plugin::internal::initializePlugin()
+    // hex::plugin::<pluginName>::internal::initializePlugin()
     constexpr auto InitializePluginSymbol   = "_ZN3hex6plugin%d%s8internal16initializePluginEv";
 
     Plugin::Plugin(std::string_view path) {
@@ -19,6 +19,14 @@ namespace hex {
             return;
 
         this->m_initializePluginFunction = reinterpret_cast<InitializePluginFunc>(dlsym(this->m_handle, symbolName.c_str()));
+    }
+
+    Plugin::Plugin(Plugin &&other) {
+        this->m_handle = other.m_handle;
+        this->m_initializePluginFunction = other.m_initializePluginFunction;
+
+        other.m_handle = nullptr;
+        other.m_initializePluginFunction = nullptr;
     }
 
     Plugin::~Plugin() {
@@ -39,14 +47,11 @@ namespace hex {
 
         for (auto& pluginPath : std::filesystem::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                PluginHandler::s_plugins.push_back(new Plugin(pluginPath.path().string()));
+                PluginHandler::s_plugins.emplace_back(pluginPath.path().string());
         }
     }
 
     void PluginHandler::unload() {
-        for (auto &plugin : PluginHandler::s_plugins)
-            delete plugin;
-
         PluginHandler::s_plugins.clear();
         PluginHandler::s_pluginFolder.clear();
     }

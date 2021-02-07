@@ -554,7 +554,7 @@ namespace hex {
         } catch (std::runtime_error &e) { return; }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
-            plugin->initializePlugin();
+            plugin.initializePlugin();
         }
     }
 
