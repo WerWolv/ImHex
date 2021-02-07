@@ -2,13 +2,23 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <mbedtls/base64.h>
-#include <mbedtls/md5.h>
-#include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
-#include <mbedtls/sha512.h>
-#include <mbedtls/aes.h>
-#include <mbedtls/cipher.h>
+#if __has_include(<mbedtls/version.h>)
+    #include <mbedtls/base64.h>
+    #include <mbedtls/md5.h>
+    #include <mbedtls/sha1.h>
+    #include <mbedtls/sha256.h>
+    #include <mbedtls/sha512.h>
+    #include <mbedtls/aes.h>
+    #include <mbedtls/cipher.h>
+#else
+    #include <base64.h>
+    #include <md5.h>
+    #include <sha1.h>
+    #include <sha256.h>
+    #include <sha512.h>
+    #include <aes.h>
+    #include <cipher.h>
+#endif
 
 #include <array>
 #include <span>
