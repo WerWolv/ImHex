@@ -23,6 +23,7 @@ namespace hex {
         ~ViewPattern() override;
 
         void drawMenu() override;
+        void drawAlwaysVisible() override;
         void drawContent() override;
 
     private:

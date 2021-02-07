@@ -21,6 +21,7 @@ namespace hex {
         virtual ~View() = default;
 
         virtual void drawContent() = 0;
+        virtual void drawAlwaysVisible() { }
         virtual void drawMenu();
         virtual bool handleShortcut(int key, int mods);
         virtual bool isAvailable();

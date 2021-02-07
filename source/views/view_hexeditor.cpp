@@ -206,7 +206,40 @@ namespace hex {
             this->drawSearchPopup();
             this->drawGotoPopup();
         }
+    }
 
+    static void save() {
+        auto provider = SharedData::currentProvider;
+        for (const auto &[address, value] : provider->getPatches())
+            provider->writeRaw(address, &value, sizeof(u8));
+    }
+
+    static void saveAs() {
+        View::openFileBrowser("Save As", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [](auto path) {
+            FILE *file = fopen(path.c_str(), "wb");
+
+            if (file != nullptr) {
+                std::vector<u8> buffer(0xFF'FFFF, 0x00);
+                size_t bufferSize = buffer.size();
+
+                fseek(file, 0, SEEK_SET);
+
+                auto provider = SharedData::currentProvider;
+                for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
+                    if (bufferSize > provider->getActualSize() - offset)
+                        bufferSize = provider->getActualSize() - offset;
+
+                    provider->read(offset, buffer.data(), bufferSize);
+                    fwrite(buffer.data(), 1, bufferSize, file);
+                }
+
+                fclose(file);
+            }
+        });
+    }
+
+    void ViewHexEditor::drawAlwaysVisible() {
+        auto provider = SharedData::currentProvider;
 
         if (ImGui::BeginPopupModal("Save Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             constexpr auto Message = "You have unsaved changes made to your Project.\nAre you sure you want to exit?";
@@ -248,18 +281,18 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("Load", "Cancel",
-                [this, &provider] {
-                    if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
-                        this->openFile(this->m_loaderScriptFilePath);
-                        LoaderScript::setFilePath(this->m_loaderScriptFilePath);
-                        LoaderScript::setDataProvider(provider);
-                        LoaderScript::processFile(this->m_loaderScriptScriptPath);
-                        ImGui::CloseCurrentPopup();
-                    }
-                },
-                [] {
-                    ImGui::CloseCurrentPopup();
-                }
+                           [this, &provider] {
+                               if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
+                                   this->openFile(this->m_loaderScriptFilePath);
+                                   LoaderScript::setFilePath(this->m_loaderScriptFilePath);
+                                   LoaderScript::setDataProvider(provider);
+                                   LoaderScript::processFile(this->m_loaderScriptScriptPath);
+                                   ImGui::CloseCurrentPopup();
+                               }
+                           },
+                           [] {
+                               ImGui::CloseCurrentPopup();
+                           }
             );
 
             ImGui::EndPopup();
@@ -271,12 +304,12 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("Set", "Cancel",
-            [this, &provider]{
-                provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
-                ImGui::CloseCurrentPopup();
-            }, []{
-                ImGui::CloseCurrentPopup();
-            });
+                           [this, &provider]{
+                               provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
+                               ImGui::CloseCurrentPopup();
+                           }, []{
+                        ImGui::CloseCurrentPopup();
+                    });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -284,36 +317,6 @@ namespace hex {
             ImGui::EndPopup();
         }
     }
-
-    static void save() {
-        auto provider = SharedData::currentProvider;
-        for (const auto &[address, value] : provider->getPatches())
-            provider->writeRaw(address, &value, sizeof(u8));
-    }
-
-    static void saveAs() {
-        View::openFileBrowser("Save As", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [](auto path) {
-            FILE *file = fopen(path.c_str(), "wb");
-
-            if (file != nullptr) {
-                std::vector<u8> buffer(0xFF'FFFF, 0x00);
-                size_t bufferSize = buffer.size();
-
-                fseek(file, 0, SEEK_SET);
-
-                auto provider = SharedData::currentProvider;
-                for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
-                    if (bufferSize > provider->getActualSize() - offset)
-                        bufferSize = provider->getActualSize() - offset;
-
-                    provider->read(offset, buffer.data(), bufferSize);
-                    fwrite(buffer.data(), 1, bufferSize, file);
-                }
-
-                fclose(file);
-            }
-        });
-    };
 
     void ViewHexEditor::drawMenu() {
         auto provider = SharedData::currentProvider;

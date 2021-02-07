@@ -25,6 +25,7 @@ namespace hex {
         ~ViewHexEditor() override;
 
         void drawContent() override;
+        void drawAlwaysVisible() override;
         void drawMenu() override;
         bool handleShortcut(int key, int mods) override;
 

@@ -257,9 +257,9 @@ namespace hex {
             View::discardNavigationRequests();
         }
         ImGui::End();
+    }
 
-
-
+    void ViewPattern::drawAlwaysVisible() {
         if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("One or more patterns compatible with this data type has been found");
 

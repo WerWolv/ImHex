@@ -148,6 +148,8 @@ namespace hex {
             View::getDeferedCalls().clear();
 
             for (auto &view : ContentRegistry::Views::getEntries()) {
+                view->drawAlwaysVisible();
+
                 if (!view->isAvailable() || !view->getWindowOpenState())
                     continue;
 
@@ -275,7 +277,7 @@ namespace hex {
             for (auto &view : ContentRegistry::Views::getEntries())
                 anyViewOpen = anyViewOpen || (view->getWindowOpenState() && view->isAvailable());
 
-            if (!anyViewOpen) {
+            if (!anyViewOpen && SharedData::currentProvider == nullptr) {
                 char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
