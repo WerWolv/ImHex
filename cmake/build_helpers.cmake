@@ -37,6 +37,7 @@ macro(findLibraries)
     find_package(PkgConfig REQUIRED)
 
     find_package(mbedTLS REQUIRED)
+    message(${MBEDTLS_INCLUDE_DIR})
 
     pkg_search_module(CAPSTONE REQUIRED capstone)
 
