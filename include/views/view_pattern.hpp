@@ -8,6 +8,7 @@
 
 #include <cstring>
 #include <filesystem>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -33,7 +34,7 @@ namespace hex {
         TextEditor m_textEditor;
         std::vector<std::pair<lang::LogConsole::Level, std::string>> m_console;
 
-        void loadPatternFile(std::string path);
+        void loadPatternFile(std::string_view path);
         void clearPatternData();
         void parsePattern(char *buffer);
     };

@@ -38,7 +38,7 @@ namespace hex {
 
     private:
         static inline std::string s_pluginFolder;
-        static inline std::vector<Plugin> s_plugins;
+        static inline std::vector<Plugin*> s_plugins;
     };
 
 }

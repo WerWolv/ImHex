@@ -11,7 +11,9 @@
 #include <hex/helpers/shared_data.hpp>
 #include <hex/data_processor/node.hpp>
 
-#define IMHEX_PLUGIN_SETUP      namespace hex::plugin::internal {               \
-                                    void initializePlugin();                    \
-                                }                                               \
-                                void hex::plugin::internal::initializePlugin()
+#define IMHEX_PLUGIN_SETUP IMHEX_PLUGIN_SETUP_IMPL(IMHEX_PLUGIN_NAME)
+
+#define IMHEX_PLUGIN_SETUP_IMPL(name)   namespace hex::plugin::name::internal {                     \
+                                            [[gnu::visibility("default")]] void initializePlugin(); \
+                                        }                                                           \
+                                        void hex::plugin::name::internal::initializePlugin()

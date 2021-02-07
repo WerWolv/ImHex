@@ -153,11 +153,11 @@ namespace hex {
                 size_t size = ftell(file);
                 rewind(file);
 
-                std::vector<char> buffer( size + 1, 0x00);
-                fread(buffer.data(), 1, size, file);
+                std::vector<char> patternBuffer( size + 1, 0x00);
+                fread(patternBuffer.data(), 1, size, file);
                 fclose(file);
 
-                preprocessor.preprocess(buffer.data());
+                preprocessor.preprocess(patternBuffer.data());
 
                 if (foundCorrectType)
                     this->m_possiblePatternFiles.push_back(entry.path().filename().string());
@@ -289,8 +289,8 @@ namespace hex {
     }
 
 
-    void ViewPattern::loadPatternFile(std::string path) {
-        FILE *file = fopen(path.c_str(), "rb");
+    void ViewPattern::loadPatternFile(std::string_view path) {
+        FILE *file = fopen(path.data(), "rb");
 
         if (file != nullptr) {
             char *buffer;
@@ -325,7 +325,7 @@ namespace hex {
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
         this->m_console.clear();
-        this->postEvent(Events::PatternChanged);
+        View::postEvent(Events::PatternChanged);
 
         auto result = this->m_patternLanguageRuntime->executeString(SharedData::currentProvider, buffer);
 
