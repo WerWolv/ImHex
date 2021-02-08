@@ -13,9 +13,30 @@ namespace hex::plugin::builtin {
         void process() override {
             this->setBufferOnOutput(0, { });
         }
+    };
+
+    class NodeBuffer : public dp::Node {
+    public:
+        NodeBuffer() : Node("Buffer", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {}
+
+        void drawNode() override {
+            constexpr int StepSize = 1, FastStepSize = 10;
+
+            ImGui::PushItemWidth(100);
+            ImGui::InputScalar("Size", ImGuiDataType_U32, &this->m_size, &StepSize, &FastStepSize);
+            ImGui::PopItemWidth();
+        }
+
+        void process() override {
+            if (this->m_buffer.size() != this->m_size)
+                this->m_buffer.resize(this->m_size, 0x00);
+
+            this->setBufferOnOutput(0, this->m_buffer);
+        }
 
     private:
-        u64 m_value = 0;
+        u32 m_size = 1;
+        std::vector<u8> m_buffer;
     };
 
     class NodeString : public dp::Node {
@@ -507,6 +528,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeInteger>("Constants", "Integer");
         ContentRegistry::DataProcessorNode::add<NodeFloat>("Constants", "Float");
         ContentRegistry::DataProcessorNode::add<NodeNullptr>("Constants", "Nullptr");
+        ContentRegistry::DataProcessorNode::add<NodeBuffer>("Constants", "Buffer");
         ContentRegistry::DataProcessorNode::add<NodeString>("Constants", "String");
         ContentRegistry::DataProcessorNode::add<NodeRGBA8>("Constants", "RGBA8 Color");
         ContentRegistry::DataProcessorNode::add<NodeComment>("Constants", "Comment");
