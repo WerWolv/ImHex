@@ -74,10 +74,11 @@ namespace hex {
                 Type type;
                 std::string command;
                 std::string description;
-                std::function<std::string(std::string)> callback;
+                std::function<std::string(std::string)> displayCallback;
+                std::function<void(std::string)> executeCallback;
             };
 
-            static void add(Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &callback);
+            static void add(Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback = [](auto){});
             static std::vector<Entry>& getEntries();
         };
 

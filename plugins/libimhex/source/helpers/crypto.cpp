@@ -55,7 +55,7 @@ namespace hex::crypt {
     }
 
     u32 crc32(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init) {
-        auto table = [polynomial] {
+        const auto table = [polynomial] {
             std::array<uint32_t, 256> table = {0};
 
             for (uint32_t i = 0; i < 256; i++) {

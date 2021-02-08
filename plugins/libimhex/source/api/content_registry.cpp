@@ -127,8 +127,8 @@ namespace hex {
 
     /* Command Palette Commands */
 
-    void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &callback) {
-        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command.data(), description.data(), callback });
+    void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
+        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command.data(), description.data(), displayCallback, executeCallback });
     }
 
     std::vector<ContentRegistry::CommandPaletteCommands::Entry>& ContentRegistry::CommandPaletteCommands::getEntries() {

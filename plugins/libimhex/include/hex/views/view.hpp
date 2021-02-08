@@ -25,6 +25,7 @@ namespace hex {
         virtual void drawMenu();
         virtual bool handleShortcut(int key, int mods);
         virtual bool isAvailable();
+        virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
 
         static void openFileBrowser(std::string title, imgui_addons::ImGuiFileBrowser::DialogMode mode, std::string validExtensions, const std::function<void(std::string)> &callback);
         static void doLater(std::function<void()> &&function);

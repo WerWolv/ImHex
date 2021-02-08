@@ -22,6 +22,7 @@ namespace hex {
         void drawContent() override;
         void drawMenu() override;
         bool isAvailable() override { return true; }
+        bool shouldProcess() override { return true; }
 
         bool handleShortcut(int key, int mods) override;
 
@@ -30,12 +31,32 @@ namespace hex {
         ImVec2 getMaxSize() override { return ImVec2(400, 100); }
 
     private:
+        enum class MatchType {
+            NoMatch,
+            InfoMatch,
+            PartialMatch,
+            PerfectMatch
+        };
+
+        struct CommandResult {
+            std::string displayResult;
+            std::string matchedCommand;
+            std::function<void(std::string)> executeCallback;
+        };
+
+        bool m_commandPaletteOpen = false;
         bool m_justOpened = false;
+        bool m_focusInputTextBox = false;
+
         std::vector<char> m_commandBuffer;
-        std::vector<std::string> m_lastResults;
+        std::vector<CommandResult> m_lastResults;
         std::string m_exactResult;
 
-        std::vector<std::string> getCommandResults(std::string_view command);
+        void focusInputTextBox() {
+            this->m_focusInputTextBox = true;
+        }
+
+        std::vector<CommandResult> getCommandResults(std::string_view command);
     };
 
 }

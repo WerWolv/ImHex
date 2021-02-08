@@ -18,12 +18,23 @@ namespace hex::plugin::builtin {
 
                     try {
                         result = evaluator.evaluate(input);
-                    } catch (std::runtime_error &e) {}
+                    } catch (std::exception &e) {}
+
 
                     if (result.has_value())
                         return hex::format("#%s = %Lf", input.data(), result.value());
                     else
                         return hex::format("#%s = ???", input.data());
+                });
+
+        hex::ContentRegistry::CommandPaletteCommands::add(
+                hex::ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
+                "/web", "Website lookup",
+                [](auto input) {
+                    return hex::format("Navigate to '%s'", input.data());
+                },
+                [](auto input) {
+                    hex::openWebpage(input);
                 });
 
     }

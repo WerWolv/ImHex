@@ -150,7 +150,7 @@ namespace hex {
             for (auto &view : ContentRegistry::Views::getEntries()) {
                 view->drawAlwaysVisible();
 
-                if (!view->isAvailable() || !view->getWindowOpenState())
+                if (!view->shouldProcess())
                     continue;
 
                 auto minSize = view->getMinSize();
@@ -264,7 +264,7 @@ namespace hex {
 
             if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
                 for (auto &view : ContentRegistry::Views::getEntries()) {
-                    if (view->getWindowOpenState()) {
+                    if (view->shouldProcess()) {
                         if (view->handleShortcut(key, mods))
                             break;
                     }
