@@ -25,7 +25,7 @@ namespace hex {
 
     namespace lang_literals {
 
-        LangEntry operator""_lang(const char *string, size_t) {
+        inline LangEntry operator""_lang(const char *string, size_t) {
             return LangEntry(string);
         }
 

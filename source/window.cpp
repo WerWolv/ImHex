@@ -200,7 +200,6 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-        printf("%s\n", static_cast<const char*>("hello.world"_lang));
         glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
