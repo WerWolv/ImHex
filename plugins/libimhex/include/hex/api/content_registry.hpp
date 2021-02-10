@@ -174,6 +174,14 @@ namespace hex {
         private:
             static void add(const Entry &entry);
         };
+
+        struct Language {
+            static void registerLanguage(std::string_view name, std::string_view languageCode);
+            static void addLocalizations(std::string_view languageCode, const LanguageDefinition &definition);
+
+            static std::map<std::string, std::string>& getLanguages();
+            static std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
+        };
     };
 
 }

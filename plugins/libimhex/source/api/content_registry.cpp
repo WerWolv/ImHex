@@ -192,4 +192,22 @@ namespace hex {
     std::vector<ContentRegistry::DataProcessorNode::Entry>& ContentRegistry::DataProcessorNode::getEntries() {
         return SharedData::dataProcessorNodes;
     }
+
+    /* Languages */
+
+    void ContentRegistry::Language::registerLanguage(std::string_view name, std::string_view languageCode) {
+        getLanguages().insert({ languageCode.data(), name.data() });
+    }
+
+    void ContentRegistry::Language::addLocalizations(std::string_view languageCode, const LanguageDefinition &definition) {
+        getLanguageDefinitions()[languageCode.data()].push_back(definition);
+    }
+
+    std::map<std::string, std::string>& ContentRegistry::Language::getLanguages() {
+        return SharedData::languageNames;
+    }
+
+    std::map<std::string, std::vector<LanguageDefinition>>& ContentRegistry::Language::getLanguageDefinitions() {
+        return SharedData::languageDefinitions;
+    }
 }

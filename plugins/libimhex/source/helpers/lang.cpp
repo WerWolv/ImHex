@@ -2,11 +2,16 @@
 
 #include "hex/helpers/shared_data.hpp"
 
-#include <nlohmann/json.hpp>
-#include <filesystem>
-#include <fstream>
-
 namespace hex {
+
+    LanguageDefinition::LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries) {
+        for (auto pair : entries)
+            this->m_entries.insert(pair);
+    }
+
+    const std::map<std::string, std::string>& LanguageDefinition::getEntries() const {
+        return this->m_entries;
+    }
 
     LangEntry::LangEntry(const char *unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
 
@@ -23,7 +28,7 @@ namespace hex {
     }
 
     std::string_view LangEntry::get() const {
-        auto &lang = SharedData::loadedLanguage;
+        auto &lang = SharedData::loadedLanguageStrings;
         if (lang.find(this->m_unlocalizedString) != lang.end())
             return lang[this->m_unlocalizedString];
         else
@@ -31,57 +36,26 @@ namespace hex {
     }
 
     void LangEntry::loadLanguage(std::string_view language) {
-        SharedData::loadedLanguage.clear();
+        constexpr auto DefaultLanguage = "en-US";
 
-        bool isDefaultLanguage = language == "en-US";
+        SharedData::loadedLanguageStrings.clear();
 
-        try {
-            std::ifstream languageFile("lang/" + std::string(language) + ".json");
-            nlohmann::json languageJson;
+        auto &definitions = ContentRegistry::Language::getLanguageDefinitions();
 
-            if (!languageFile.is_open() && !isDefaultLanguage)
-                languageFile.open("lang/en-US.json");
+        if (!definitions.contains(language.data()))
+            return;
 
-            languageFile >> languageJson;
+        for (auto &definition : definitions[language.data()])
+            SharedData::loadedLanguageStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
 
-            for (auto &[unlocalizedString, localizedString] : languageJson["lang"].items())
-                SharedData::loadedLanguage.insert({ unlocalizedString, localizedString });
-
-            if (!isDefaultLanguage) {
-                languageFile.open("lang/en-US.json");
-                if (!languageFile.good())
-                    return;
-
-                languageFile >> languageJson;
-
-                for (auto &[unlocalizedString, localizedString] : languageJson["lang"].items())
-                    SharedData::loadedLanguage.insert({ unlocalizedString, localizedString });
-            }
-        } catch (std::exception &e) {
-            printf("Language load error: %s\n", e.what());
-
-            if (!isDefaultLanguage)
-                loadLanguage("en-US");
+        if (language != DefaultLanguage) {
+            for (auto &definition : definitions[DefaultLanguage])
+                SharedData::loadedLanguageStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
         }
-
     }
 
     const std::map<std::string, std::string>& LangEntry::getSupportedLanguages() {
-        static std::map<std::string, std::string> languages;
-
-        if (languages.empty()) {
-            for (auto &entry : std::filesystem::directory_iterator("lang")) {
-                try {
-                    std::ifstream file(entry.path());
-                    nlohmann::json json;
-                    file >> json;
-
-                    languages.insert({ json["name"].get<std::string>(), entry.path().stem().string() });
-                } catch (std::exception &e) {}
-            }
-        }
-
-        return languages;
+        return ContentRegistry::Language::getLanguages();
     }
 
 }

@@ -63,7 +63,10 @@ namespace hex {
         static u32 patternPaletteOffset;
         static std::string errorPopupMessage;
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
-        static std::map<std::string, std::string> loadedLanguage;
+
+        static std::map<std::string, std::string> languageNames;
+        static std::map<std::string, std::vector<LanguageDefinition>> languageDefinitions;
+        static std::map<std::string, std::string> loadedLanguageStrings;
 
         static imgui_addons::ImGuiFileBrowser fileBrowser;
         static imgui_addons::ImGuiFileBrowser::DialogMode fileBrowserDialogMode;

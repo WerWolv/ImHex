@@ -19,8 +19,8 @@ namespace hex::plugin::builtin {
 
             static int selection = [&]() -> int {
                 u16 index = 0;
-                for (auto &[languageName, languageFile] : languages){
-                    if (languageFile == setting)
+                for (auto &[languageCode, languageName] : languages){
+                    if (languageCode == setting)
                         return index;
                     index++;
                 }
@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
 
             static auto languageNames = [&]() {
                 std::vector<const char*> result;
-                for (auto &[languageName, languageFile] : languages)
+                for (auto &[languageCode, languageName] : languages)
                     result.push_back(languageName.c_str());
 
                 return result;
@@ -40,9 +40,9 @@ namespace hex::plugin::builtin {
             if (ImGui::Combo("##language", &selection, languageNames.data(), languageNames.size())) {
 
                 u16 index = 0;
-                for (auto &[languageName, languageFile] : languages){
+                for (auto &[languageCode, languageName] : languages){
                     if (selection == index) {
-                        setting = languageFile;
+                        setting = languageCode;
                         break;
                     }
                     index++;

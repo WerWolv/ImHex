@@ -9,6 +9,8 @@ namespace hex::plugin::builtin {
     void registerSettings();
     void registerDataProcessorNodes();
 
+    void registerLanguageEnUS();
+
 }
 
 IMHEX_PLUGIN_SETUP {
@@ -22,6 +24,7 @@ IMHEX_PLUGIN_SETUP {
     registerSettings();
     registerDataProcessorNodes();
 
+    registerLanguageEnUS();
 }
 
 
