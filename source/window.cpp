@@ -51,33 +51,32 @@ namespace hex {
 
         this->initGLFW();
         this->initImGui();
-
-        ContentRegistry::Settings::add("Interface", "Color theme", 0, [](nlohmann::json &setting) {
-            static int selection = setting;
-            if (ImGui::Combo("##nolabel", &selection, "Dark\0Light\0Classic\0")) {
-                setting = selection;
-                return true;
-            }
-
-            return false;
-        });
+        this->initPlugins();
 
         ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
         EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
-            int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
-            switch (theme) {
-                default:
-                case 0: /* Dark theme */
-                    ImGui::StyleColorsDark();
-                    break;
-                case 1: /* Light theme */
-                    ImGui::StyleColorsLight();
-                    break;
-                case 2: /* Classic theme */
-                    ImGui::StyleColorsClassic();
-                    break;
+
+            {
+                int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
+                switch (theme) {
+                    default:
+                    case 0: /* Dark theme */
+                        ImGui::StyleColorsDark();
+                        break;
+                    case 1: /* Light theme */
+                        ImGui::StyleColorsLight();
+                        break;
+                    case 2: /* Classic theme */
+                        ImGui::StyleColorsClassic();
+                        break;
+                }
+                ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
             }
-            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+
+            {
+                std::string language = ContentRegistry::Settings::getSettingsData()["Interface"]["Language"];
+                LangEntry::loadLanguage(language);
+            }
 
             return { };
         });
@@ -201,6 +200,7 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+        printf("%s\n", static_cast<const char*>("hello.world"_lang));
         glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();

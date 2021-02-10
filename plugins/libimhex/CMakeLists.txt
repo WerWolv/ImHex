@@ -23,6 +23,7 @@ add_library(libimhex SHARED
         source/helpers/utils.cpp
         source/helpers/shared_data.cpp
         source/helpers/crypto.cpp
+        source/helpers/lang.cpp
 
         source/lang/pattern_language.cpp
         source/lang/preprocessor.cpp

@@ -17,6 +17,7 @@ namespace hex {
     u32 SharedData::patternPaletteOffset;
     std::string SharedData::errorPopupMessage;
     std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
+    std::map<std::string, std::string> SharedData::loadedLanguage;
 
     imgui_addons::ImGuiFileBrowser SharedData::fileBrowser;
     imgui_addons::ImGuiFileBrowser::DialogMode SharedData::fileBrowserDialogMode;

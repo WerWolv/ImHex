@@ -1,3 +1,5 @@
+#include <hex.hpp>
+
 #include "window.hpp"
 
 #include <hex/api/content_registry.hpp>
@@ -51,7 +53,6 @@ int main(int argc, char **argv) {
     if (argc > 1)
         View::postEvent(Events::FileDropped, argv[1]);
 
-    window.initPlugins();
     window.loop();
 
 
