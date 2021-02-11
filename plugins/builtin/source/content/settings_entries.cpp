@@ -6,7 +6,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::add("Interface", "Color theme", 0, [](nlohmann::json &setting) {
             static int selection = setting;
-            if (ImGui::Combo("##color_theme", &selection, "Dark\0Light\0Classic\0")) {
+            if (ImGui::Combo("Color theme", &selection, "Dark\0Light\0Classic\0")) {
                 setting = selection;
                 return true;
             }
@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
             }();
 
 
-            if (ImGui::Combo("##language", &selection, languageNames.data(), languageNames.size())) {
+            if (ImGui::Combo("Language", &selection, languageNames.data(), languageNames.size())) {
 
                 u16 index = 0;
                 for (auto &[languageCode, languageName] : languages){

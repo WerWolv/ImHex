@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <numeric>
+#include <typeinfo>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -19,8 +20,6 @@
 #include <GLFW/glfw3.h>
 
 namespace hex {
-
-    constexpr auto MenuBarItems = { "File", "Edit", "View", "Help" };
 
     void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
         return ctx; // Unused, but the return value has to be non-null
@@ -39,7 +38,7 @@ namespace hex {
         buf->appendf("[%s][General]\n", handler->TypeName);
 
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            buf->appendf("%s=%d\n", view->getName().data(), view->getWindowOpenState());
+            buf->appendf("%s=%d\n", typeid(*view).name(), view->getWindowOpenState());
         }
 
         buf->append("\n");
@@ -51,7 +50,6 @@ namespace hex {
 
         this->initGLFW();
         this->initImGui();
-        this->initPlugins();
 
         ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
         EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
@@ -126,6 +124,8 @@ namespace hex {
 
         for (const auto &path : ContentRegistry::Settings::read("ImHex", "RecentFiles"))
             this->m_recentFiles.push_back(path);
+
+        this->initPlugins();
     }
 
     Window::~Window() {
@@ -200,7 +200,6 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-        printf("%s\n", static_cast<const char*>("hello.world"_lang));
         glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -227,13 +226,15 @@ namespace hex {
 
             if (ImGui::BeginMenuBar()) {
 
+                auto MenuBarItems = { "hex.menu.file"_lang, "hex.menu.edit"_lang, "hex.menu.view"_lang, "hex.menu.help"_lang };
+
                 for (auto menu : MenuBarItems)
                     if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
 
-                if (ImGui::BeginMenu("View")) {
+                if (ImGui::BeginMenu("hex.menu.view"_lang)) {
                     for (auto &view : ContentRegistry::Views::getEntries()) {
                         if (view->hasViewMenuItemEntry())
-                            ImGui::MenuItem((std::string(view->getName()) + " View").c_str(), "", &view->getWindowOpenState());
+                            ImGui::MenuItem((std::string(view->getName()) + " " + "hex.menu.view"_lang).c_str(), "", &view->getWindowOpenState());
                     }
                     ImGui::EndMenu();
                 }
@@ -242,11 +243,11 @@ namespace hex {
                     view->drawMenu();
                 }
 
-                if (ImGui::BeginMenu("View")) {
+                if (ImGui::BeginMenu("hex.menu.view"_lang)) {
                     ImGui::Separator();
-                    ImGui::MenuItem("Display FPS", "", &this->m_fpsVisible);
+                    ImGui::MenuItem("hex.menu.view.fps"_lang, "", &this->m_fpsVisible);
                     #ifdef DEBUG
-                        ImGui::MenuItem("Demo View", "", &this->m_demoWindowOpen);
+                        ImGui::MenuItem("hex.menu.view.demo"_lang, "", &this->m_demoWindowOpen);
                     #endif
                     ImGui::EndMenu();
                 }
@@ -314,7 +315,7 @@ namespace hex {
     }
 
     void Window::drawWelcomeScreen() {
-        ImGui::UnderlinedText("Welcome to ImHex!", ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
+        ImGui::UnderlinedText("hex.welcome.header.main"_lang, ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
 
         ImGui::NewLine();
 
@@ -324,16 +325,16 @@ namespace hex {
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();
-            ImGui::Text("Start");
+            ImGui::Text("hex.welcome.header.start"_lang);
             {
-                if (ImGui::BulletHyperlink("Open File"))
+                if (ImGui::BulletHyperlink("hex.welcome.start.open_file"_lang))
                     EventManager::post(Events::OpenWindow, "Open File");
-                if (ImGui::BulletHyperlink("Open Project"))
+                if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))
                     EventManager::post(Events::OpenWindow, "Open Project");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();
-            ImGui::Text("Recent");
+            ImGui::Text("hex.welcome.start.recent"_lang);
             {
                 if (!this->m_recentFiles.empty()) {
                     for (auto &path : this->m_recentFiles) {
@@ -346,10 +347,10 @@ namespace hex {
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();
-            ImGui::Text("Help");
+            ImGui::Text("hex.welcome.header.help"_lang);
             {
-                if (ImGui::BulletHyperlink("GitHub Repository")) hex::openWebpage("https://github.com/WerWolv/ImHex");
-                if (ImGui::BulletHyperlink("Get help")) hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/get-help");
+                if (ImGui::BulletHyperlink("hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
+                if (ImGui::BulletHyperlink("hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
             }
 
             ImGui::EndTable();
@@ -358,21 +359,21 @@ namespace hex {
         if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();
-            ImGui::Text("Customize");
+            ImGui::Text("hex.welcome.header.customize"_lang);
             {
-                if (ImGui::DescriptionButton("Settings", "Change preferences of ImHex", ImVec2(ImGui::GetContentRegionAvail().x * 0.8f, 0)))
+                if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8f, 0)))
                     EventManager::post(Events::OpenWindow, "Preferences");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();
-            ImGui::Text("Learn");
+            ImGui::Text("hex.welcome.header.learn"_lang);
             {
-                if (ImGui::DescriptionButton("Latest Release", "Get the latest version of ImHex or read the current changelog", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
-                    hex::openWebpage("https://github.com/WerWolv/ImHex/releases/latest");
-                if (ImGui::DescriptionButton("Pattern Language Documentation", "Learn how to write ImHex patterns with our extensive documentation", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
-                    hex::openWebpage("https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide");
-                if (ImGui::DescriptionButton("Plugins API", "Extend ImHex with additional features using plugins", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
-                    hex::openWebpage("https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide");
+                if (ImGui::DescriptionButton("hex.welcome.learn.latest.title"_lang, "hex.welcome.learn.latest.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                    hex::openWebpage("hex.welcome.learn.latest.link"_lang);
+                if (ImGui::DescriptionButton("hex.welcome.learn.pattern.title"_lang, "hex.welcome.learn.pattern.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                    hex::openWebpage("hex.welcome.learn.pattern.link"_lang);
+                if (ImGui::DescriptionButton("hex.welcome.learn.plugins.title"_lang, "hex.welcome.learn.plugins.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                    hex::openWebpage("hex.welcome.learn.plugins.link"_lang);
             }
 
             ImGui::EndTable();

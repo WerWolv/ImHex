@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewPatches::ViewPatches() : View("Patches") {
+    ViewPatches::ViewPatches() : View("hex.view.patches.title"_lang) {
         View::subscribeEvent(Events::ProjectFileStore, [](auto) {
             auto provider = SharedData::currentProvider;
             if (provider != nullptr)
@@ -31,7 +31,7 @@ namespace hex {
     }
 
     void ViewPatches::drawContent() {
-        if (ImGui::Begin("Patches", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.patches.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isReadable()) {
@@ -39,9 +39,9 @@ namespace hex {
                 if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
                                                         ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Offset");
-                    ImGui::TableSetupColumn("Previous Value");
-                    ImGui::TableSetupColumn("Patched Value");
+                    ImGui::TableSetupColumn("hex.view.patches.offset"_lang);
+                    ImGui::TableSetupColumn("hex.view.patches.orig"_lang);
+                    ImGui::TableSetupColumn("hex.view.patches.patch"_lang);
 
                     ImGui::TableHeadersRow();
 
@@ -73,7 +73,7 @@ namespace hex {
                     }
 
                     if (ImGui::BeginPopup("PatchContextMenu")) {
-                        if (ImGui::MenuItem("Remove")) {
+                        if (ImGui::MenuItem("hex.view.patches.remove"_lang)) {
                             patches.erase(this->m_selectedPatch);
                             ProjectFile::markDirty();
                         }

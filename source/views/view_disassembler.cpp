@@ -9,7 +9,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewDisassembler::ViewDisassembler() : View("Disassembler") {
+    ViewDisassembler::ViewDisassembler() : View("hex.view.disassembler.name"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto){
             this->m_shouldInvalidate = true;
         });
@@ -93,30 +93,30 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("Disassembler", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.disassembler.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             auto provider = SharedData::currentProvider;
             if (provider != nullptr && provider->isReadable()) {
-                ImGui::TextUnformatted("Position");
+                ImGui::TextUnformatted("hex.view.disassembler.position"_lang);
                 ImGui::Separator();
 
-                ImGui::InputScalar("Base address", ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::InputScalarN("Code region", ImGuiDataType_U64, this->m_codeRegion, 2, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::Checkbox("Match selection", &this->m_shouldMatchSelection);
+                ImGui::InputScalar("hex.view.disassembler.base"_lang, ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::InputScalarN("hex.view.disassembler.region"_lang, ImGuiDataType_U64, this->m_codeRegion, 2, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::Checkbox("hex.common.match_selection"_lang, &this->m_shouldMatchSelection);
 
                 ImGui::NewLine();
-                ImGui::TextUnformatted("Settings");
+                ImGui::TextUnformatted("hex.view.disassembler.settings.header"_lang);
                 ImGui::Separator();
 
-                ImGui::Combo("Architecture", reinterpret_cast<int*>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount());
+                ImGui::Combo("hex.view.disassembler.arch"_lang, reinterpret_cast<int*>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount());
 
 
                 if (ImGui::BeginChild("modes", ImVec2(0, 100), true)) {
 
-                    if (ImGui::RadioButton("Little Endian", this->m_littleEndianMode))
+                    if (ImGui::RadioButton("hex.common.little_endian"_lang, this->m_littleEndianMode))
                         this->m_littleEndianMode = true;
                     ImGui::SameLine();
-                    if (ImGui::RadioButton("Big Endian", !this->m_littleEndianMode))
+                    if (ImGui::RadioButton("hex.common.big_endian"_lang, !this->m_littleEndianMode))
                         this->m_littleEndianMode = false;
 
                     ImGui::NewLine();
@@ -132,19 +132,19 @@ namespace hex {
                             if (this->m_modeBasicARM == cs_mode(0))
                                 this->m_modeBasicARM = CS_MODE_ARM;
 
-                            if (ImGui::RadioButton("ARM mode", this->m_modeBasicARM == CS_MODE_ARM))
+                            if (ImGui::RadioButton("hex.view.disassembler.arm.arm"_lang, this->m_modeBasicARM == CS_MODE_ARM))
                                 this->m_modeBasicARM = CS_MODE_ARM;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("Thumb mode", this->m_modeBasicARM == CS_MODE_THUMB))
+                            if (ImGui::RadioButton("hex.view.disassembler.arm.thumb"_lang, this->m_modeBasicARM == CS_MODE_THUMB))
                                 this->m_modeBasicARM = CS_MODE_THUMB;
 
-                            if (ImGui::RadioButton("Default mode", (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == 0))
+                            if (ImGui::RadioButton("hex.view.disassembler.arm.default"_lang, (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == 0))
                                 this->m_modeExtraARM = cs_mode(0);
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("Cortex-M mode", (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == CS_MODE_MCLASS))
+                            if (ImGui::RadioButton("hex.view.disassembler.arm.cortex_m"_lang, (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == CS_MODE_MCLASS))
                                 this->m_modeExtraARM = CS_MODE_MCLASS;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("ARMv8 mode", (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == CS_MODE_V8))
+                            if (ImGui::RadioButton("hex.view.disassembler.arm.armv8"_lang, (this->m_modeExtraARM & (CS_MODE_MCLASS | CS_MODE_V8)) == CS_MODE_V8))
                                 this->m_modeExtraARM = CS_MODE_V8;
                             break;
                         case Architecture::MIPS:
@@ -157,16 +157,16 @@ namespace hex {
                             if (this->m_modeBasicMIPS == cs_mode(0))
                                 this->m_modeBasicMIPS = CS_MODE_MIPS32;
 
-                            if (ImGui::RadioButton("MIPS32 mode", this->m_modeBasicMIPS == CS_MODE_MIPS32))
+                            if (ImGui::RadioButton("hex.view.disassembler.mips.mips32"_lang, this->m_modeBasicMIPS == CS_MODE_MIPS32))
                                 this->m_modeBasicMIPS = CS_MODE_MIPS32;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("MIPS64 mode", this->m_modeBasicMIPS == CS_MODE_MIPS64))
+                            if (ImGui::RadioButton("hex.view.disassembler.mips.mips64"_lang, this->m_modeBasicMIPS == CS_MODE_MIPS64))
                                 this->m_modeBasicMIPS = CS_MODE_MIPS64;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("MIPS32R6 mode", this->m_modeBasicMIPS == CS_MODE_MIPS32R6))
+                            if (ImGui::RadioButton("hex.view.disassembler.mips.mips32R6"_lang, this->m_modeBasicMIPS == CS_MODE_MIPS32R6))
                                 this->m_modeBasicMIPS = CS_MODE_MIPS32R6;
 
-                            ImGui::Checkbox("Micro Mode", &this->m_micoMode);
+                            ImGui::Checkbox("hex.view.disassembler.mips.micro"_lang, &this->m_micoMode);
                             break;
                         case Architecture::X86:
                             this->m_modeBasicARM = cs_mode(0);
@@ -179,13 +179,13 @@ namespace hex {
                             if (this->m_modeBasicX86 == cs_mode(0))
                                 this->m_modeBasicX86 = CS_MODE_16;
 
-                            if (ImGui::RadioButton("16-bit mode", this->m_modeBasicX86 == CS_MODE_16))
+                            if (ImGui::RadioButton("hex.view.disassembler.x86.16bit"_lang, this->m_modeBasicX86 == CS_MODE_16))
                                 this->m_modeBasicX86 = CS_MODE_16;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("32-bit mode", this->m_modeBasicX86 == CS_MODE_32))
+                            if (ImGui::RadioButton("hex.view.disassembler.x86.32bit"_lang, this->m_modeBasicX86 == CS_MODE_32))
                                 this->m_modeBasicX86 = CS_MODE_32;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("64-bit mode", this->m_modeBasicX86 == CS_MODE_64))
+                            if (ImGui::RadioButton("hex.view.disassembler.x86.64bit"_lang, this->m_modeBasicX86 == CS_MODE_64))
                                 this->m_modeBasicX86 = CS_MODE_64;
                             break;
                         case Architecture::PPC:
@@ -199,10 +199,10 @@ namespace hex {
                             if (m_modeBasicPPC == cs_mode(0))
                                 this->m_modeBasicPPC = CS_MODE_32;
 
-                            if (ImGui::RadioButton("32-bit mode", this->m_modeBasicPPC == CS_MODE_32))
+                            if (ImGui::RadioButton("hex.view.disassembler.ppc.32bit"_lang, this->m_modeBasicPPC == CS_MODE_32))
                                 this->m_modeBasicPPC = CS_MODE_32;
                             ImGui::SameLine();
-                            if (ImGui::RadioButton("64-bit mode", this->m_modeBasicPPC == CS_MODE_64))
+                            if (ImGui::RadioButton("hex.view.disassembler.ppc.64bit"_lang, this->m_modeBasicPPC == CS_MODE_64))
                                 this->m_modeBasicPPC = CS_MODE_64;
                             break;
                         case Architecture::SPARC:
@@ -213,7 +213,7 @@ namespace hex {
                             this->m_modeBasicPPC = cs_mode(0);
                             this->m_micoMode = false;
 
-                            ImGui::Checkbox("Sparc V9 mode", &this->m_sparcV9Mode);
+                            ImGui::Checkbox("hex.view.disassembler.sparc.v9"_lang, &this->m_sparcV9Mode);
                             break;
                         case Architecture::ARM64:
                         case Architecture::SYSZ:
@@ -236,19 +236,19 @@ namespace hex {
                 ImGui::EndChild();
 
                 ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - 300) / 2);
-                if (ImGui::Button("Disassemble", ImVec2(300, 20)))
+                if (ImGui::Button("hex.view.disassembler.disassemble"_lang, ImVec2(300, 20)))
                     this->m_shouldInvalidate = true;
                 ImGui::NewLine();
 
-                ImGui::TextUnformatted("Disassembly");
+                ImGui::TextUnformatted("hex.view.disassembler.disassembly.title"_lang);
                 ImGui::Separator();
 
                 if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Reorderable)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Address");
-                    ImGui::TableSetupColumn("Offset");
-                    ImGui::TableSetupColumn("Bytes");
-                    ImGui::TableSetupColumn("Disassembly");
+                    ImGui::TableSetupColumn("hex.view.disassembler.disassembly.address"_lang);
+                    ImGui::TableSetupColumn("hex.view.disassembler.disassembly.offset"_lang);
+                    ImGui::TableSetupColumn("hex.view.disassembler.disassembly.bytes"_lang);
+                    ImGui::TableSetupColumn("hex.view.disassembler.disassembly.title"_lang);
 
                     ImGuiListClipper clipper;
                     clipper.Begin(this->m_disassembly.size());

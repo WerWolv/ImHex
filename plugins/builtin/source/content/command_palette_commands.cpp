@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
 
         hex::ContentRegistry::CommandPaletteCommands::add(
                 hex::ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
-                "#", "Calculator",
+                "#", "hex.builtin.command.calc.desc"_lang,
                 [](auto input) {
                     hex::MathEvaluator evaluator;
                     evaluator.registerStandardVariables();
@@ -29,9 +29,9 @@ namespace hex::plugin::builtin {
 
         hex::ContentRegistry::CommandPaletteCommands::add(
                 hex::ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
-                "/web", "Website lookup",
+                "/web", "hex.builtin.command.web.desc"_lang,
                 [](auto input) {
-                    return hex::format("Navigate to '%s'", input.data());
+                    return hex::format("hex.builtin.command.web.result"_lang, input.data());
                 },
                 [](auto input) {
                     hex::openWebpage(input);

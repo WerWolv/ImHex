@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewStrings::ViewStrings() : View("Strings") {
+    ViewStrings::ViewStrings() : View("hex.view.strings.title"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto){
             this->m_foundStrings.clear();
         });
@@ -32,14 +32,14 @@ namespace hex {
             this->m_selectedString = foundString.string;
         }
         if (ImGui::BeginPopup("StringContextMenu")) {
-            if (ImGui::MenuItem("Copy string")) {
+            if (ImGui::MenuItem("hex.view.strings.copy"_lang)) {
                 ImGui::SetClipboardText(this->m_selectedString.c_str());
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("Demangle")) {
+            if (ImGui::MenuItem("hex.view.strings.demangle"_lang)) {
                 this->m_demangledName = llvm::demangle(this->m_selectedString);
                 if (!this->m_demangledName.empty())
-                    View::doLater([]{ ImGui::OpenPopup("Demangled Name"); });
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.strings.demangle.title"_lang); });
             }
             ImGui::EndPopup();
         }
@@ -86,11 +86,11 @@ namespace hex {
 
         if (ImGui::Begin("Strings", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (provider != nullptr && provider->isReadable()) {
-                if (ImGui::InputInt("Minimum length", &this->m_minimumLength, 1, 0))
+                if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                     this->m_shouldInvalidate = true;
 
-                ImGui::InputText("Filter", this->m_filter, 0xFFFF);
-                if (ImGui::Button("Extract"))
+                ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter, 0xFFFF);
+                if (ImGui::Button("hex.view.strings.extract"_lang))
                     this->m_shouldInvalidate = true;
 
                 ImGui::Separator();
@@ -100,26 +100,26 @@ namespace hex {
                                       ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
                                       ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Offset", 0, -1, ImGui::GetID("offset"));
-                    ImGui::TableSetupColumn("Size", 0, -1, ImGui::GetID("size"));
-                    ImGui::TableSetupColumn("String", 0, -1, ImGui::GetID("string"));
+                    ImGui::TableSetupColumn("hex.view.strings.offset"_lang, 0, -1, ImGui::GetID("offset"));
+                    ImGui::TableSetupColumn("hex.view.strings.size"_lang, 0, -1, ImGui::GetID("size"));
+                    ImGui::TableSetupColumn("hex.view.strings.string"_lang, 0, -1, ImGui::GetID("string"));
 
                     auto sortSpecs = ImGui::TableGetSortSpecs();
 
                     if (sortSpecs->SpecsDirty) {
                         std::sort(this->m_foundStrings.begin(), this->m_foundStrings.end(),
                                   [&sortSpecs](FoundString &left, FoundString &right) -> bool {
-                                      if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
+                                      if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("hex.view.strings.offset"_lang)) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.offset > right.offset;
                                           else
                                               return left.offset < right.offset;
-                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
+                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("hex.view.strings.size"_lang)) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.size > right.size;
                                           else
                                               return left.size < right.size;
-                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("string")) {
+                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("hex.view.strings.string"_lang)) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.string > right.string;
                                           else
@@ -170,14 +170,14 @@ namespace hex {
         }
         ImGui::End();
 
-        if (ImGui::BeginPopup("Demangled Name")) {
+        if (ImGui::BeginPopup("hex.view.strings.demangle.title"_lang)) {
             if (ImGui::BeginChild("##scrolling", ImVec2(500, 150))) {
-                ImGui::Text("Demangled Name");
+                ImGui::Text("hex.view.strings.demangle.title"_lang);
                 ImGui::Separator();
                 ImGui::TextWrapped("%s", this->m_demangledName.c_str());
                 ImGui::EndChild();
                 ImGui::NewLine();
-                if (ImGui::Button("Copy"))
+                if (ImGui::Button("hex.view.strings.demangle.copy"_lang))
                     ImGui::SetClipboardText(this->m_demangledName.c_str());
             }
             ImGui::EndPopup();

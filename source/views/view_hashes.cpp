@@ -9,7 +9,7 @@
 
 namespace hex {
 
-    ViewHashes::ViewHashes() : View("Hashes") {
+    ViewHashes::ViewHashes() : View("hex.view.hashes.name"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto) {
             this->m_shouldInvalidate = true;
         });
@@ -38,26 +38,26 @@ namespace hex {
     }
 
     void ViewHashes::drawContent() {
-        if (ImGui::Begin("Hashing", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.hashes.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             auto provider = SharedData::currentProvider;
             if (provider != nullptr && provider->isAvailable()) {
 
-                ImGui::TextUnformatted("Region");
+                ImGui::TextUnformatted("hex.common.region"_lang);
                 ImGui::Separator();
 
                 ImGui::InputScalarN("##nolabel", ImGuiDataType_U64, this->m_hashRegion, 2, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                ImGui::Checkbox("Match selection", &this->m_shouldMatchSelection);
+                ImGui::Checkbox("hex.common.match_selection"_lang, &this->m_shouldMatchSelection);
                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                 ImGui::NewLine();
-                ImGui::TextUnformatted("Settings");
+                ImGui::TextUnformatted("hex.view.hashes.settings"_lang);
                 ImGui::Separator();
 
-                if (ImGui::Combo("Hash Function", &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *)))
+                if (ImGui::Combo("hex.view.hashes.function"_lang, &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *)))
                     this->m_shouldInvalidate = true;
 
                 size_t dataSize = provider->getSize();
@@ -72,10 +72,10 @@ namespace hex {
                         {
                             static int polynomial = 0, init = 0;
 
-                            ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            ImGui::InputInt("hex.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                             ImGui::NewLine();
@@ -88,7 +88,7 @@ namespace hex {
                             char buffer[sizeof(result) * 2 + 1];
                             snprintf(buffer, sizeof(buffer), "%04X", result);
 
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -97,10 +97,10 @@ namespace hex {
                         {
                             static int polynomial = 0, init = 0;
 
-                            ImGui::InputInt("Initial Value", &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("Polynomial", &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                            ImGui::InputInt("hex.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                             ImGui::NewLine();
@@ -113,7 +113,7 @@ namespace hex {
                             char buffer[sizeof(result) * 2 + 1];
                             snprintf(buffer, sizeof(buffer), "%08X", result);
 
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -129,7 +129,7 @@ namespace hex {
                             formatBigHexInt(result, buffer, sizeof(buffer));
 
                             ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -145,7 +145,7 @@ namespace hex {
                             formatBigHexInt(result, buffer, sizeof(buffer));
 
                             ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -161,7 +161,7 @@ namespace hex {
                             formatBigHexInt(result, buffer, sizeof(buffer));
 
                             ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -177,7 +177,7 @@ namespace hex {
                             formatBigHexInt(result, buffer, sizeof(buffer));
 
                             ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -193,7 +193,7 @@ namespace hex {
                             formatBigHexInt(result, buffer, sizeof(buffer));
 
                             ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }
@@ -209,7 +209,7 @@ namespace hex {
                             formatBigHexInt(result, buffer, sizeof(buffer));
 
                             ImGui::NewLine();
-                            ImGui::TextUnformatted("Result");
+                            ImGui::TextUnformatted("hex.view.hashes.result"_lang);
                             ImGui::Separator();
                             ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                         }

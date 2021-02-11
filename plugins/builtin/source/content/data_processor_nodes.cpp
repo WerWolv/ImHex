@@ -8,7 +8,9 @@ namespace hex::plugin::builtin {
 
     class NodeNullptr : public dp::Node {
     public:
-        NodeNullptr() : Node("Nullptr", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {}
+        NodeNullptr() : Node("hex.builtin.nodes.constants.nullptr.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.constants.nullptr.output"_lang)
+        }) {}
 
         void process() override {
             this->setBufferOnOutput(0, { });
@@ -17,13 +19,15 @@ namespace hex::plugin::builtin {
 
     class NodeBuffer : public dp::Node {
     public:
-        NodeBuffer() : Node("Buffer", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {}
+        NodeBuffer() : Node("hex.builtin.nodes.constants.buffer.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.constants.buffer.output"_lang)
+        }) {}
 
         void drawNode() override {
             constexpr int StepSize = 1, FastStepSize = 10;
 
             ImGui::PushItemWidth(100);
-            ImGui::InputScalar("Size", ImGuiDataType_U32, &this->m_size, &StepSize, &FastStepSize);
+            ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &this->m_size, &StepSize, &FastStepSize);
             ImGui::PopItemWidth();
         }
 
@@ -41,7 +45,9 @@ namespace hex::plugin::builtin {
 
     class NodeString : public dp::Node {
     public:
-        NodeString() : Node("String", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {
+        NodeString() : Node("hex.builtin.nodes.constants.string.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.constants.string.output"_lang)
+        }) {
             this->m_value.resize(0xFFF, 0x00);
         }
 
@@ -66,7 +72,9 @@ namespace hex::plugin::builtin {
 
     class NodeInteger : public dp::Node {
     public:
-        NodeInteger() : Node("Integer", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "") }) {}
+        NodeInteger() : Node("hex.builtin.nodes.constants.int.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.int.output"_lang)
+        }) {}
 
         void drawNode() override {
             ImGui::TextUnformatted("0x"); ImGui::SameLine(0, 0);
@@ -88,7 +96,9 @@ namespace hex::plugin::builtin {
 
     class NodeFloat : public dp::Node {
     public:
-        NodeFloat() : Node("Float", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "") }) {}
+        NodeFloat() : Node("hex.builtin.nodes.constants.float.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.constants.float.output"_lang)
+        }) {}
 
         void drawNode() override {
             ImGui::PushItemWidth(100);
@@ -110,10 +120,11 @@ namespace hex::plugin::builtin {
 
     class NodeRGBA8 : public dp::Node {
     public:
-        NodeRGBA8() : Node("RGBA8 Color", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Red"),
-                                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Green"),
-                                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Blue"),
-                                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Alpha")}) {}
+        NodeRGBA8() : Node("hex.builtin.nodes.constants.rgba8.header"_lang, 
+                           { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.r"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.g"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.b"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.a"_lang)}) {}
 
         void drawNode() override {
             ImGui::PushItemWidth(200);
@@ -135,7 +146,7 @@ namespace hex::plugin::builtin {
 
     class NodeComment : public dp::Node {
     public:
-        NodeComment() : Node("Comment", { }) {
+        NodeComment() : Node("hex.builtin.nodes.constants.comment.header"_lang, { }) {
             this->m_comment.resize(0xFFF, 0x00);
         }
 
@@ -154,7 +165,9 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayInteger : public dp::Node {
     public:
-        NodeDisplayInteger() : Node("Display Integer", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Value") }) {}
+        NodeDisplayInteger() : Node("hex.builtin.nodes.display.int.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.display.int.input"_lang)
+        }) {}
 
         void drawNode() override {
             ImGui::PushItemWidth(150);
@@ -178,7 +191,9 @@ namespace hex::plugin::builtin {
 
     class NodeDisplayFloat : public dp::Node {
     public:
-        NodeDisplayFloat() : Node("Display Float", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "Value") }) {}
+        NodeDisplayFloat() : Node("hex.builtin.nodes.display.float.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.display.float.input"_lang)
+        }) {}
 
         void drawNode() override {
             ImGui::PushItemWidth(150);
@@ -203,7 +218,9 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseNOT : public dp::Node {
     public:
-        NodeBitwiseNOT() : Node("Bitwise NOT", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+        NodeBitwiseNOT() : Node("hex.builtin.nodes.bitwise.not.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.not.input"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.not.output"_lang) }) {}
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -218,7 +235,10 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseAND : public dp::Node {
     public:
-        NodeBitwiseAND() : Node("Bitwise AND", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input A"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input B"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+        NodeBitwiseAND() : Node("hex.builtin.nodes.bitwise.and.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.and.input.a"_lang),
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.and.input.b"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.and.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getBufferOnInput(0);
@@ -235,7 +255,10 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseOR : public dp::Node {
     public:
-        NodeBitwiseOR() : Node("Bitwise OR", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input A"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input B"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+        NodeBitwiseOR() : Node("hex.builtin.nodes.bitwise.or.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.or.input.a"_lang),
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.or.input.b"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.or.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getBufferOnInput(0);
@@ -252,7 +275,10 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseXOR : public dp::Node {
     public:
-        NodeBitwiseXOR() : Node("Bitwise XOR", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input A"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input B"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+        NodeBitwiseXOR() : Node("hex.builtin.nodes.bitwise.xor.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.xor.input.a"_lang),
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.xor.input.b"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.bitwise.xor.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getBufferOnInput(0);
@@ -269,9 +295,10 @@ namespace hex::plugin::builtin {
 
     class NodeReadData : public dp::Node {
     public:
-        NodeReadData() : Node("Read Data", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Address"),
-                                             dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Size"),
-                                             dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Data")
+        NodeReadData() : Node("hex.builtin.nodes.data_access.read.header"_lang, {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.address"_lang),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.read.size"_lang),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.read.data"_lang)
         }) { }
 
         void process() override {
@@ -289,7 +316,9 @@ namespace hex::plugin::builtin {
 
     class NodeWriteData : public dp::Node {
     public:
-        NodeWriteData() : Node("Write Data", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Address"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Data") }) {}
+        NodeWriteData() : Node("hex.builtin.nodes.data_access.write.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.write.address"_lang),
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.data_access.write.data"_lang) }) {}
 
         void process() override {
             auto address = this->getIntegerOnInput(0);
@@ -301,7 +330,9 @@ namespace hex::plugin::builtin {
 
     class NodeCastIntegerToBuffer : public dp::Node {
     public:
-        NodeCastIntegerToBuffer() : Node("Integer to Buffer", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "In"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Out") }) {}
+        NodeCastIntegerToBuffer() : Node("hex.builtin.nodes.casting.int_to_buffer.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.casting.int_to_buffer.input"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.casting.int_to_buffer.output"_lang) }) {}
 
         void process() override {
             auto input = this->getIntegerOnInput(0);
@@ -315,7 +346,9 @@ namespace hex::plugin::builtin {
 
     class NodeCastBufferToInteger : public dp::Node {
     public:
-        NodeCastBufferToInteger() : Node("Buffer to Integer", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "In"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Out") }) {}
+        NodeCastBufferToInteger() : Node("hex.builtin.nodes.casting.buffer_to_int.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.casting.buffer_to_int.input"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.casting.buffer_to_int.output"_lang) }) {}
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -329,10 +362,11 @@ namespace hex::plugin::builtin {
 
     class NodeIf : public dp::Node {
     public:
-        NodeIf() : Node("If", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Condition"),
-                                             dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "True"),
-                                             dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "False"),
-                                             dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+        NodeIf() : Node("ex.builtin.nodes.control_flow.if.header"_lang,
+                          { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.if.condition"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.true"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.false"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.control_flow.if.output"_lang) }) {}
 
         void process() override {
             auto cond = this->getIntegerOnInput(0);
@@ -349,9 +383,10 @@ namespace hex::plugin::builtin {
 
     class NodeEquals : public dp::Node {
     public:
-        NodeEquals() : Node("Equals", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input A"),
-                                                     dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
-                                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
+        NodeEquals() : Node("hex.builtin.nodes.control_flow.equals.header"_lang,
+                            { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.equals.input.a"_lang),
+                                      dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.equals.input.b"_lang),
+                                      dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.equals.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getIntegerOnInput(0);
@@ -363,8 +398,9 @@ namespace hex::plugin::builtin {
 
     class NodeNot : public dp::Node {
     public:
-        NodeNot() : Node("Not", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input"),
-                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
+        NodeNot() : Node("hex.builtin.nodes.control_flow.not.header"_lang,
+                           { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.not.input"_lang),
+                                     dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.not.output"_lang) }) {}
 
         void process() override {
             auto input = this->getIntegerOnInput(0);
@@ -375,9 +411,10 @@ namespace hex::plugin::builtin {
 
     class NodeGreaterThan : public dp::Node {
     public:
-        NodeGreaterThan() : Node("Greater Than", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input A"),
-                                                                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
-                                                                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
+        NodeGreaterThan() : Node("hex.builtin.nodes.control_flow.gt.header"_lang,
+                                 { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.gt.input.a"_lang),
+                                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.gt.input.b"_lang),
+                                           dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.gt.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getIntegerOnInput(0);
@@ -389,9 +426,10 @@ namespace hex::plugin::builtin {
 
     class NodeLessThan : public dp::Node {
     public:
-        NodeLessThan() : Node("Less Than", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input A"),
-                                                          dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
-                                                          dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
+        NodeLessThan() : Node("hex.builtin.nodes.control_flow.lt.header"_lang,
+                              { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.lt.input.a"_lang),
+                                        dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.lt.input.b"_lang),
+                                        dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.lt.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getIntegerOnInput(0);
@@ -403,9 +441,10 @@ namespace hex::plugin::builtin {
 
     class NodeBoolAND : public dp::Node {
     public:
-        NodeBoolAND() : Node("Boolean AND", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input A"),
-                                                           dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
-                                                           dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
+        NodeBoolAND() : Node("hex.builtin.nodes.control_flow.and.header"_lang,
+                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.and.input.a"_lang),
+                                       dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.and.input.b"_lang),
+                                       dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.and.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getIntegerOnInput(0);
@@ -417,9 +456,10 @@ namespace hex::plugin::builtin {
 
     class NodeBoolOR : public dp::Node {
     public:
-        NodeBoolOR() : Node("Boolean OR", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input A"),
-                                                         dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "Input B"),
-                                                         dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "Output") }) {}
+        NodeBoolOR() : Node("hex.builtin.nodes.control_flow.or.header"_lang,
+                            { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.or.input.a"_lang),
+                                      dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.or.input.b"_lang),
+                                      dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.control_flow.or.output"_lang) }) {}
 
         void process() override {
             auto inputA = this->getIntegerOnInput(0);
@@ -431,16 +471,17 @@ namespace hex::plugin::builtin {
 
     class NodeCryptoAESDecrypt : public dp::Node {
     public:
-        NodeCryptoAESDecrypt() : Node("Decrypt AES", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Key"),
-                                                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "IV"),
-                                                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Nonce"),
-                                                                    dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "Input"),
-                                                                    dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Output") }) {}
+        NodeCryptoAESDecrypt() : Node("hex.builtin.nodes.crypto.aes.header"_lang,
+                                      { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.key"_lang),
+                                                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.iv"_lang),
+                                                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.nonce"_lang),
+                                                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.input"_lang),
+                                                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.crypto.aes.output"_lang) }) {}
 
         void drawNode() override {
             ImGui::PushItemWidth(100);
-            ImGui::Combo("Mode", &this->m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
-            ImGui::Combo("Key Length", &this->m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
+            ImGui::Combo("hex.builtin.nodes.crypto.aes.mode"_lang, &this->m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
+            ImGui::Combo("hex.builtin.nodes.crypto.aes.key_length"_lang, &this->m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
             ImGui::PopItemWidth();
         }
 
@@ -473,9 +514,9 @@ namespace hex::plugin::builtin {
 
     class NodeDecodingBase64 : public dp::Node {
     public:
-        NodeDecodingBase64() : Node("Base64 Decoder", {
-            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "In"),
-            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Out") }) {}
+        NodeDecodingBase64() : Node("hex.builtin.nodes.decoding.base64.header"_lang, {
+            dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.decoding.base64.input"_lang),
+            dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.decoding.base64.output"_lang) }) {}
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -488,9 +529,9 @@ namespace hex::plugin::builtin {
 
     class NodeDecodingHex : public dp::Node {
     public:
-        NodeDecodingHex() : Node("Hexadecimal Decoder", {
-                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "In"),
-                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "Out") }) {}
+        NodeDecodingHex() : Node("hex.builtin.nodes.decoding.hex.header"_lang, {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.decoding.hex.input"_lang),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.decoding.hex.output"_lang) }) {}
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -525,40 +566,40 @@ namespace hex::plugin::builtin {
     };
 
     void registerDataProcessorNodes() {
-        ContentRegistry::DataProcessorNode::add<NodeInteger>("Constants", "Integer");
-        ContentRegistry::DataProcessorNode::add<NodeFloat>("Constants", "Float");
-        ContentRegistry::DataProcessorNode::add<NodeNullptr>("Constants", "Nullptr");
-        ContentRegistry::DataProcessorNode::add<NodeBuffer>("Constants", "Buffer");
-        ContentRegistry::DataProcessorNode::add<NodeString>("Constants", "String");
-        ContentRegistry::DataProcessorNode::add<NodeRGBA8>("Constants", "RGBA8 Color");
-        ContentRegistry::DataProcessorNode::add<NodeComment>("Constants", "Comment");
+        ContentRegistry::DataProcessorNode::add<NodeInteger>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.int"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeFloat>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.float"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeNullptr>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.nullptr"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeBuffer>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.buffer"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeString>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.string"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeRGBA8>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.rgba8"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeComment>("hex.builtin.nodes.constants"_lang, "hex.builtin.nodes.constants.comment"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("Display", "Integer");
-        ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("Display", "Float");
+        ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("hex.builtin.nodes.display"_lang, "hex.builtin.nodes.display.int"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("hex.builtin.nodes.display"_lang, "hex.builtin.nodes.display.float"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeReadData>("Data Access", "Read");
-        ContentRegistry::DataProcessorNode::add<NodeWriteData>("Data Access", "Write");
+        ContentRegistry::DataProcessorNode::add<NodeReadData>("hex.builtin.nodes.data_access"_lang, "hex.builtin.nodes.data_access.read"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeWriteData>("hex.builtin.nodes.data_access"_lang, "hex.builtin.nodes.data_access.write"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeCastIntegerToBuffer>("Casting", "Integer to Buffer");
-        ContentRegistry::DataProcessorNode::add<NodeCastBufferToInteger>("Casting", "Buffer to Integer");
+        ContentRegistry::DataProcessorNode::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting"_lang, "hex.builtin.nodes.casting.int_to_buffer"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting"_lang, "hex.builtin.nodes.casting.buffer_to_int"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeIf>("Control Flow", "If");
-        ContentRegistry::DataProcessorNode::add<NodeEquals>("Control Flow", "Equals");
-        ContentRegistry::DataProcessorNode::add<NodeNot>("Control Flow", "Not");
-        ContentRegistry::DataProcessorNode::add<NodeGreaterThan>("Control Flow", "Greater Than");
-        ContentRegistry::DataProcessorNode::add<NodeLessThan>("Control Flow", "Less Than");
-        ContentRegistry::DataProcessorNode::add<NodeBoolAND>("Control Flow", "AND");
-        ContentRegistry::DataProcessorNode::add<NodeBoolOR>("Control Flow", "OR");
+        ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.if"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.equals"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeNot>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.not"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeGreaterThan>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.gt"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeLessThan>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.lt"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeBoolAND>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.and"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeBoolOR>("hex.builtin.nodes.control_flow"_lang, "hex.builtin.nodes.control_flow.or"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeBitwiseAND>("Bitwise Operations", "AND");
-        ContentRegistry::DataProcessorNode::add<NodeBitwiseOR>("Bitwise Operations", "OR");
-        ContentRegistry::DataProcessorNode::add<NodeBitwiseXOR>("Bitwise Operations", "XOR");
-        ContentRegistry::DataProcessorNode::add<NodeBitwiseNOT>("Bitwise Operations", "NOT");
+        ContentRegistry::DataProcessorNode::add<NodeBitwiseAND>("hex.builtin.nodes.bitwise"_lang, "hex.builtin.nodes.bitwise.and"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeBitwiseOR>("hex.builtin.nodes.bitwise"_lang, "hex.builtin.nodes.bitwise.or"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeBitwiseXOR>("hex.builtin.nodes.bitwise"_lang, "hex.builtin.nodes.bitwise.xor"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeBitwiseNOT>("hex.builtin.nodes.bitwise"_lang, "hex.builtin.nodes.bitwise.not"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeDecodingBase64>("Decoding", "Base64");
-        ContentRegistry::DataProcessorNode::add<NodeDecodingHex>("Decoding", "Hexadecimal");
+        ContentRegistry::DataProcessorNode::add<NodeDecodingBase64>("hex.builtin.nodes.decoding"_lang, "hex.builtin.nodes.decoding.base64"_lang);
+        ContentRegistry::DataProcessorNode::add<NodeDecodingHex>("hex.builtin.nodes.decoding"_lang, "hex.builtin.nodes.decoding.hex"_lang);
 
-        ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("Crypto", "AES");
+        ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto"_lang, "hex.builtin.nodes.crypto.aes"_lang);
     }
 
 }

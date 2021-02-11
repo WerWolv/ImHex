@@ -201,6 +201,8 @@ namespace hex {
 
     void ContentRegistry::Language::addLocalizations(std::string_view languageCode, const LanguageDefinition &definition) {
         getLanguageDefinitions()[languageCode.data()].push_back(definition);
+
+        EventManager::post(hex::Events::SettingsChanged, {});
     }
 
     std::map<std::string, std::string>& ContentRegistry::Language::getLanguages() {

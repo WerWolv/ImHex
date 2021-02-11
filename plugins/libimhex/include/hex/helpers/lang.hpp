@@ -34,6 +34,14 @@ namespace hex {
         std::string m_unlocalizedString;
     };
 
+    std::string operator+(const std::string &&left, const LangEntry &&right);
+    std::string operator+(const LangEntry &&left, const std::string &&right);
+    std::string operator+(const std::string_view &&left, const LangEntry &&right);
+    std::string operator+(const LangEntry &&left, const std::string_view &&right);
+    std::string operator+(const char *left, const LangEntry &&right);
+    std::string operator+(const LangEntry &&left, const char *right);
+    std::string operator+(const LangEntry &&left, const LangEntry &&right);
+
     namespace lang_literals {
 
         inline LangEntry operator""_lang(const char *string, size_t) {

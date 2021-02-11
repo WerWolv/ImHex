@@ -6,7 +6,7 @@
 
 namespace hex {
 
-    ViewDataProcessor::ViewDataProcessor() : View("Data Processor") {
+    ViewDataProcessor::ViewDataProcessor() : View("hex.view.data_processor.name"_lang) {
         imnodes::Initialize();
         imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
         imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkCreationOnSnap);
@@ -126,7 +126,7 @@ namespace hex {
     }
 
     void ViewDataProcessor::drawContent() {
-        if (ImGui::Begin("Data Processor", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.data_processor.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                 imnodes::ClearNodeSelection();
@@ -146,7 +146,7 @@ namespace hex {
                 dp::Node *node = nullptr;
 
                 if (imnodes::NumSelectedNodes() > 0 || imnodes::NumSelectedLinks() > 0) {
-                    if (ImGui::MenuItem("Remove selected")) {
+                    if (ImGui::MenuItem("hex.view.data_processor.name"_lang)) {
                         std::vector<int> ids;
                         ids.resize(imnodes::NumSelectedNodes());
                         imnodes::GetSelectedNodes(ids.data());
@@ -203,14 +203,14 @@ namespace hex {
             }
 
             if (ImGui::BeginPopup("Node Menu")) {
-                if (ImGui::MenuItem("Remove Node"))
+                if (ImGui::MenuItem("hex.view.data_processor.menu.remove_node"_lang))
                     this->eraseNodes({ this->m_rightClickedId });
 
                 ImGui::EndPopup();
             }
 
             if (ImGui::BeginPopup("Link Menu")) {
-                if (ImGui::MenuItem("Remove Link"))
+                if (ImGui::MenuItem("hex.view.data_processor.menu.remove_link"_lang))
                     this->eraseLink(this->m_rightClickedId);
 
                 ImGui::EndPopup();
@@ -220,7 +220,7 @@ namespace hex {
                 int nodeId;
                 if (imnodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getID() == nodeId) {
                     ImGui::BeginTooltip();
-                    ImGui::TextUnformatted("Error");
+                    ImGui::TextUnformatted("hex.common.error"_lang);
                     ImGui::Separator();
                     ImGui::TextUnformatted(this->m_currNodeError->second.c_str());
                     ImGui::EndTooltip();

@@ -13,7 +13,7 @@
 
 namespace hex {
 
-    ViewInformation::ViewInformation() : View("Information") {
+    ViewInformation::ViewInformation() : View("hex.view.information.title"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto) {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
@@ -45,7 +45,7 @@ namespace hex {
     }
 
     void ViewInformation::drawContent() {
-        if (ImGui::Begin("Data Information", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.information.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             auto provider = SharedData::currentProvider;
@@ -125,7 +125,7 @@ namespace hex {
 
                 ImGui::NewLine();
 
-                if (ImGui::Button("Analyze current page"))
+                if (ImGui::Button("hex.view.information.analyze"_lang))
                     this->m_shouldInvalidate = true;
 
                 ImGui::NewLine();
@@ -138,20 +138,20 @@ namespace hex {
                         ImGui::LabelText(name.c_str(), "%s", value.c_str());
                     }
 
-                    ImGui::LabelText("Analyzed region", "0x%llx - 0x%llx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
+                    ImGui::LabelText("hex.view.information.region"_lang, "0x%llx - 0x%llx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
 
                     ImGui::NewLine();
                     ImGui::Separator();
                     ImGui::NewLine();
 
                     if (!this->m_fileDescription.empty()) {
-                        ImGui::TextUnformatted("Description:");
+                        ImGui::TextUnformatted("hex.view.information.description"_lang);
                         ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
                         ImGui::NewLine();
                     }
 
                     if (!this->m_mimeType.empty()) {
-                        ImGui::TextUnformatted("MIME Type:");
+                        ImGui::TextUnformatted("hex.view.information.mime"_lang);
                         ImGui::TextWrapped("%s", this->m_mimeType.c_str());
                         ImGui::NewLine();
                     }
@@ -159,25 +159,25 @@ namespace hex {
                     ImGui::Separator();
                     ImGui::NewLine();
 
-                    ImGui::Text("Byte Distribution");
+                    ImGui::Text("hex.view.information.distribution"_lang);
                     ImGui::PlotHistogram("##nolabel", this->m_valueCounts.data(), 256, 0, nullptr, FLT_MAX, FLT_MAX,ImVec2(0, 100));
 
                     ImGui::NewLine();
                     ImGui::Separator();
                     ImGui::NewLine();
 
-                    ImGui::Text("Entropy");
+                    ImGui::Text("hex.view.information.entropy"_lang);
                     ImGui::PlotLines("##nolabel", this->m_blockEntropy.data(), this->m_blockEntropy.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
 
                     ImGui::NewLine();
 
-                    ImGui::LabelText("Block size", "2048 blocks of %lu bytes", this->m_blockSize);
-                    ImGui::LabelText("Average entropy", "%.8f", this->m_averageEntropy);
-                    ImGui::LabelText("Highest entropy block", "%.8f", this->m_highestBlockEntropy);
+                    ImGui::LabelText("hex.view.information.block_size"_lang, "hex.view.information.block_size.desc"_lang, this->m_blockSize);
+                    ImGui::LabelText("hex.view.information.file_entropy"_lang, "%.8f", this->m_averageEntropy);
+                    ImGui::LabelText("hex.view.information.highest_entropy"_lang, "%.8f", this->m_highestBlockEntropy);
 
                     if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
                         ImGui::NewLine();
-                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),"This data is most likely encrypted or compressed!");
+                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),"hex.view.information.encrypted"_lang);
                     }
 
                 }

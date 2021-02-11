@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    ViewCommandPalette::ViewCommandPalette() : View("Command Palette") {
+    ViewCommandPalette::ViewCommandPalette() : View("hex.view.command_palette.name"_lang) {
         this->m_commandBuffer.resize(1024, 0x00);
     }
 
@@ -17,7 +17,7 @@ namespace hex {
         if (!this->m_commandPaletteOpen) return;
 
         ImGui::SetNextWindowPos(ImVec2(SharedData::windowPos.x + SharedData::windowSize.x * 0.5F, SharedData::windowPos.y), ImGuiCond_Always, ImVec2(0.5F,0.0F));
-        if (ImGui::BeginPopup("Command Palette")) {
+        if (ImGui::BeginPopup("hex.view.command_palette.name"_lang)) {
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
@@ -70,7 +70,7 @@ namespace hex {
     bool ViewCommandPalette::handleShortcut(int key, int mods) {
         if (key == GLFW_KEY_P && mods == (GLFW_MOD_SHIFT | GLFW_MOD_CONTROL)) {
             View::doLater([this] {
-                ImGui::OpenPopup("Command Palette");
+                ImGui::OpenPopup("hex.view.command_palette.name"_lang);
                 this->m_commandPaletteOpen = true;
                 this->m_justOpened = true;
             });

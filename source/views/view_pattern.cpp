@@ -74,7 +74,7 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("Pattern"), m_patternData(patternData) {
+    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.title"_lang), m_patternData(patternData) {
         this->m_patternLanguageRuntime = new lang::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -165,7 +165,7 @@ namespace hex {
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;
-                View::doLater([] { ImGui::OpenPopup("Accept Pattern"); });
+                View::doLater([] { ImGui::OpenPopup("hex.view.pattern.accept_pattern"_lang); });
             }
         });
 
@@ -200,9 +200,9 @@ namespace hex {
     }
 
     void ViewPattern::drawMenu() {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Load pattern...")) {
-                View::openFileBrowser("Open Hex Pattern", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexpat", [this](auto path) {
+        if (ImGui::BeginMenu("hex.menu.file"_lang)) {
+            if (ImGui::MenuItem("hex.view.pattern.menu.file.load_pattern"_lang)) {
+                View::openFileBrowser("hex.view.pattern.open_pattern"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexpat", [this](auto path) {
                     this->loadPatternFile(path);
                 });
             }
@@ -211,13 +211,13 @@ namespace hex {
     }
 
     void ViewPattern::drawContent() {
-        if (ImGui::Begin("Pattern", &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.pattern.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
                 textEditorSize.y *= 4.0/5.0;
-                this->m_textEditor.Render("Pattern", textEditorSize, true);
+                this->m_textEditor.Render("hex.view.pattern.title"_lang, textEditorSize, true);
 
                 auto consoleSize = ImGui::GetContentRegionAvail();
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
@@ -260,8 +260,8 @@ namespace hex {
     }
 
     void ViewPattern::drawAlwaysVisible() {
-        if (ImGui::BeginPopupModal("Accept Pattern", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("One or more patterns compatible with this data type has been found");
+        if (ImGui::BeginPopupModal("hex.view.pattern.accept_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextWrapped("hex.view.pattern.accept_pattern.desc"_lang);
 
             char *entries[this->m_possiblePatternFiles.size()];
 
@@ -269,12 +269,12 @@ namespace hex {
                 entries[i] = this->m_possiblePatternFiles[i].data();
             }
 
-            ImGui::ListBox("Patterns", &this->m_selectedPatternFile, entries, IM_ARRAYSIZE(entries), 4);
+            ImGui::ListBox("hex.view.pattern.accept_pattern.patterns"_lang, &this->m_selectedPatternFile, entries, IM_ARRAYSIZE(entries), 4);
 
             ImGui::NewLine();
-            ImGui::Text("Do you want to load it?");
+            ImGui::Text("hex.view.pattern.accept_pattern.question"_lang);
 
-            confirmButtons("Yes", "No", [this]{
+            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
                 this->loadPatternFile("patterns/" + this->m_possiblePatternFiles[this->m_selectedPatternFile]);
                 ImGui::CloseCurrentPopup();
             }, []{

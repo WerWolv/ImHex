@@ -27,6 +27,34 @@ namespace hex {
         return get().data();
     }
 
+    std::string operator+(const std::string &&left, const LangEntry &&right) {
+        return left + static_cast<std::string>(right);
+    }
+
+    std::string operator+(const LangEntry &&left, const std::string &&right) {
+        return static_cast<std::string>(left) + right;
+    }
+
+    std::string operator+(const LangEntry &&left, const LangEntry &&right) {
+        return static_cast<std::string>(left) + static_cast<std::string>(right);
+    }
+
+    std::string operator+(const std::string_view &&left, const LangEntry &&right) {
+        return std::string(left) + static_cast<std::string>(right);
+    }
+
+    std::string operator+(const LangEntry &&left, const std::string_view &&right) {
+        return static_cast<std::string>(left) + std::string(right);
+    }
+
+    std::string operator+(const char *left, const LangEntry &&right) {
+        return left + static_cast<std::string>(right);
+    }
+
+    std::string operator+(const LangEntry &&left, const char *right) {
+        return static_cast<std::string>(left) + right;
+    }
+
     std::string_view LangEntry::get() const {
         auto &lang = SharedData::loadedLanguageStrings;
         if (lang.find(this->m_unlocalizedString) != lang.end())

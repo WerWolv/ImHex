@@ -13,11 +13,11 @@ namespace hex::plugin::builtin {
             static std::vector<char> mangledBuffer(0xF'FFFF, 0x00);
             static std::string demangledName;
 
-            if (ImGui::InputText("Mangled name", mangledBuffer.data(), 0xF'FFFF)) {
+            if (ImGui::InputText("hex.builtin.tools.demangler.mangled"_lang, mangledBuffer.data(), 0xF'FFFF)) {
                 demangledName = llvm::demangle(mangledBuffer.data());
             }
 
-            ImGui::InputText("Demangled name", demangledName.data(), demangledName.size(), ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputText("hex.builtin.tools.demangler.demangled"_lang, demangledName.data(), demangledName.size(), ImGuiInputTextFlags_ReadOnly);
             ImGui::NewLine();
         }
 
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndTable();
 
-            ImGui::Checkbox("Show octal", &asciiTableShowOctal);
+            ImGui::Checkbox("hex.builtin.tools.ascii_table.octal"_lang, &asciiTableShowOctal);
             ImGui::NewLine();
         }
 
@@ -82,9 +82,9 @@ namespace hex::plugin::builtin {
 
             bool shouldInvalidate;
 
-            shouldInvalidate = ImGui::InputText("Regex pattern", regexPattern.data(), regexPattern.size());
-            shouldInvalidate = ImGui::InputText("Replace pattern", replacePattern.data(), replacePattern.size()) || shouldInvalidate;
-            shouldInvalidate = ImGui::InputTextMultiline("Input", regexInput.data(), regexInput.size())  || shouldInvalidate;
+            shouldInvalidate = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern.data(), regexPattern.size());
+            shouldInvalidate = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern.data(), replacePattern.size()) || shouldInvalidate;
+            shouldInvalidate = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput.data(), regexInput.size())  || shouldInvalidate;
 
             if (shouldInvalidate) {
                 try {
@@ -92,7 +92,7 @@ namespace hex::plugin::builtin {
                 } catch (std::regex_error&) {}
             }
 
-            ImGui::InputTextMultiline("Output", regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
             ImGui::NewLine();
         }
 
@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
             static std::array<float, 4> pickedColor = { 0 };
 
             ImGui::SetNextItemWidth(300.0F);
-            ImGui::ColorPicker4("Color Picker", pickedColor.data(),
+            ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(),
                                 ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHex);
             ImGui::NewLine();
         }
@@ -155,7 +155,7 @@ namespace hex::plugin::builtin {
                 return std::move(evaluator);
             }();
 
-            if (ImGui::InputText("Input", mathInput.data(), mathInput.size(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+            if (ImGui::InputText("hex.builtin.tools.input"_lang, mathInput.data(), mathInput.size(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 ImGui::SetKeyboardFocusHere();
                 std::optional<long double> result;
 
@@ -174,25 +174,25 @@ namespace hex::plugin::builtin {
             }
 
             if (!lastMathError.empty())
-                ImGui::TextColored(ImColor(0xA00040FF), "Last Error: %s", lastMathError.c_str());
+                ImGui::TextColored(ImColor(0xA00040FF), "hex.builtin.tools.error"_lang, lastMathError.c_str());
             else
                 ImGui::NewLine();
 
             enum class MathDisplayType { Standard, Scientific, Engineering, Programmer } mathDisplayType;
             if (ImGui::BeginTabBar("##mathFormatTabBar")) {
-                if (ImGui::BeginTabItem("Standard")) {
+                if (ImGui::BeginTabItem("hex.builtin.tools.format.standard"_lang)) {
                     mathDisplayType = MathDisplayType::Standard;
                     ImGui::EndTabItem();
                 }
-                if (ImGui::BeginTabItem("Scientific")) {
+                if (ImGui::BeginTabItem("hex.builtin.tools.format.scientific"_lang)) {
                     mathDisplayType = MathDisplayType::Scientific;
                     ImGui::EndTabItem();
                 }
-                if (ImGui::BeginTabItem("Engineering")) {
+                if (ImGui::BeginTabItem("hex.builtin.tools.format.engineering"_lang)) {
                     mathDisplayType = MathDisplayType::Engineering;
                     ImGui::EndTabItem();
                 }
-                if (ImGui::BeginTabItem("Programmer")) {
+                if (ImGui::BeginTabItem("hex.builtin.tools.format.programmer"_lang)) {
                     mathDisplayType = MathDisplayType::Programmer;
                     ImGui::EndTabItem();
                 }
@@ -208,7 +208,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 if (ImGui::BeginTable("##mathHistory", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("History");
+                    ImGui::TableSetupColumn("hex.builtin.tools.history"_lang);
 
                     ImGuiListClipper clipper;
                     clipper.Begin(mathHistory.size());
@@ -252,8 +252,8 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 if (ImGui::BeginTable("##mathVariables", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Name");
-                    ImGui::TableSetupColumn("Value");
+                    ImGui::TableSetupColumn("hex.builtin.tools.name"_lang);
+                    ImGui::TableSetupColumn("hex.builtin.tools.value"_lang);
 
                     ImGui::TableHeadersRow();
                     for (const auto &[name, value] : mathEvaluator.getVariables()) {
@@ -322,31 +322,31 @@ namespace hex::plugin::builtin {
             };
 
             u8 base = 10;
-            if (ImGui::InputText("DEC", buffer[0], 20 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+            if (ImGui::InputText("hex.builtin.tools.base_converter.dec"_lang, buffer[0], 20 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
                 ConvertBases(base);
 
             base = 16;
-            if (ImGui::InputText("HEX", buffer[1], 16 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+            if (ImGui::InputText("hex.builtin.tools.base_converter.hex"_lang, buffer[1], 16 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
                 ConvertBases(base);
 
             base = 8;
-            if (ImGui::InputText("OCT", buffer[2], 22 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+            if (ImGui::InputText("hex.builtin.tools.base_converter.oct"_lang, buffer[2], 22 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
                 ConvertBases(base);
 
             base = 2;
-            if (ImGui::InputText("BIN", buffer[3], 64 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
+            if (ImGui::InputText("hex.builtin.tools.base_converter.bin"_lang, buffer[3], 64 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
                 ConvertBases(base);
         }
 
     }
 
     void registerToolEntries() {
-        ContentRegistry::Tools::add("Itanium/MSVC demangler",   drawDemangler);
-        ContentRegistry::Tools::add("ASCII table",              drawASCIITable);
-        ContentRegistry::Tools::add("Regex replacer",           drawRegexReplacer);
-        ContentRegistry::Tools::add("Color picker",             drawColorPicker);
-        ContentRegistry::Tools::add("Calculator",               drawMathEvaluator);
-        ContentRegistry::Tools::add("Base Converter",           drawBaseConverter);
+        ContentRegistry::Tools::add("hex.builtin.tools.demangler"_lang,         drawDemangler);
+        ContentRegistry::Tools::add("hex.builtin.tools.ascii_table"_lang,       drawASCIITable);
+        ContentRegistry::Tools::add("hex.builtin.tools.regex_replacer"_lang,    drawRegexReplacer);
+        ContentRegistry::Tools::add("hex.builtin.tools.color"_lang,             drawColorPicker);
+        ContentRegistry::Tools::add("hex.builtin.tools.calc"_lang,              drawMathEvaluator);
+        ContentRegistry::Tools::add("hex.builtin.tools.base_converter"_lang,    drawBaseConverter);
     }
 
 }
