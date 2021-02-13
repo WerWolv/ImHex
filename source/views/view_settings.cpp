@@ -6,7 +6,7 @@ namespace hex {
 
     ViewSettings::ViewSettings() : View("hex.view.settings.title"_lang) {
         View::subscribeEvent(Events::OpenWindow, [this](auto name) {
-            if (std::any_cast<const char*>(name) == std::string("hex.view.settings.title"_lang)) {
+            if (std::any_cast<const char*>(name) == std::string("hex.view.settings.title")) {
                 View::doLater([]{ ImGui::OpenPopup("hex.view.settings.title"_lang); });
                 this->getWindowOpenState() = true;
             }
@@ -23,10 +23,10 @@ namespace hex {
 
         if (ImGui::BeginPopupModal("hex.view.settings.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
             for (auto &[category, entries] : ContentRegistry::Settings::getEntries()) {
-                ImGui::TextUnformatted(category.c_str());
+                ImGui::TextUnformatted(LangEntry(category));
                 ImGui::Separator();
                 for (auto &[name, callback] : entries) {
-                    if (callback(ContentRegistry::Settings::getSettingsData()[category][name]))
+                    if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category][name]))
                         View::postEvent(Events::SettingsChanged);
                 }
                 ImGui::NewLine();

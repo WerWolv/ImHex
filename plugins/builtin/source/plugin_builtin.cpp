@@ -2,8 +2,6 @@
 
 namespace hex::plugin::builtin {
 
-    void registerLanguageEnUS();
-
     void registerDataInspectorEntries();
     void registerToolEntries();
     void registerPatternLanguageFunctions();
@@ -11,13 +9,13 @@ namespace hex::plugin::builtin {
     void registerSettings();
     void registerDataProcessorNodes();
 
+    void registerLanguageEnUS();
+
 }
 
 IMHEX_PLUGIN_SETUP {
 
     using namespace hex::plugin::builtin;
-
-    registerLanguageEnUS();
 
     registerDataInspectorEntries();
     registerToolEntries();
@@ -25,6 +23,8 @@ IMHEX_PLUGIN_SETUP {
     registerCommandPaletteCommands();
     registerSettings();
     registerDataProcessorNodes();
+
+    registerLanguageEnUS();
 }
 
 

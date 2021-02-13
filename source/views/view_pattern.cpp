@@ -173,7 +173,7 @@ namespace hex {
         {
 
             View::subscribeEvent(Events::SettingsChanged, [this](auto) {
-                int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
+                int theme = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.color"];
 
                 switch (theme) {
                     default:

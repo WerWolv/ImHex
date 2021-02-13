@@ -14,6 +14,8 @@ namespace hex {
     }
 
     LangEntry::LangEntry(const char *unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
+    LangEntry::LangEntry(const std::string &unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
+    LangEntry::LangEntry(std::string_view unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
 
     LangEntry::operator std::string() const {
         return std::string(get());

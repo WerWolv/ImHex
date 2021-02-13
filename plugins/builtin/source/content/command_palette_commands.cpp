@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
 
         hex::ContentRegistry::CommandPaletteCommands::add(
                 hex::ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
-                "#", "hex.builtin.command.calc.desc"_lang,
+                "#", "hex.builtin.command.calc.desc",
                 [](auto input) {
                     hex::MathEvaluator evaluator;
                     evaluator.registerStandardVariables();
@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
 
         hex::ContentRegistry::CommandPaletteCommands::add(
                 hex::ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
-                "/web", "hex.builtin.command.web.desc"_lang,
+                "/web", "hex.builtin.command.web.desc",
                 [](auto input) {
                     return hex::format("hex.builtin.command.web.result"_lang, input.data());
                 },

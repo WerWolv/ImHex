@@ -425,6 +425,14 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.tools.base_converter.oct", "OCT" },
                     { "hex.builtin.tools.base_converter.bin", "BIN" },
 
+                { "hex.builtin.setting.imhex", "ImHex" },
+                    { "hex.builtin.setting.imhex.recent_files", "Recent Files" },
+                { "hex.builtin.setting.interface", "Interface" },
+                    { "hex.builtin.setting.interface.color", "Color theme" },
+                        { "hex.builtin.setting.interface.color.dark", "Dark" },
+                        { "hex.builtin.setting.interface.color.light", "Light" },
+                        { "hex.builtin.setting.interface.color.classic", "Classic" },
+                    { "hex.builtin.setting.interface.language", "Language" }
         });
     }
 

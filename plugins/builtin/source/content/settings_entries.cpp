@@ -4,9 +4,16 @@ namespace hex::plugin::builtin {
 
     void registerSettings() {
 
-        ContentRegistry::Settings::add("Interface", "Color theme", 0, [](nlohmann::json &setting) {
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
             static int selection = setting;
-            if (ImGui::Combo("Color theme", &selection, "Dark\0Light\0Classic\0")) {
+
+            const char* themes[] = {
+                    "hex.builtin.setting.interface.color.dark"_lang,
+                    "hex.builtin.setting.interface.color.light"_lang,
+                    "hex.builtin.setting.interface.color.classic"_lang
+            };
+
+            if (ImGui::Combo(name.data(), &selection, themes, IM_ARRAYSIZE(themes))) {
                 setting = selection;
                 return true;
             }
@@ -14,7 +21,7 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("Interface", "Language", "en-US", [](nlohmann::json &setting) {
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US", [](auto name, nlohmann::json &setting) {
             auto &languages = LangEntry::getSupportedLanguages();
 
             static int selection = [&]() -> int {
@@ -37,7 +44,7 @@ namespace hex::plugin::builtin {
             }();
 
 
-            if (ImGui::Combo("Language", &selection, languageNames.data(), languageNames.size())) {
+            if (ImGui::Combo(name.data(), &selection, languageNames.data(), languageNames.size())) {
 
                 u16 index = 0;
                 for (auto &[languageCode, languageName] : languages){

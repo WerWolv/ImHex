@@ -33,22 +33,22 @@ namespace hex {
 
             struct Entry {
                 std::string name;
-                std::function<bool(nlohmann::json&)> callback;
+                std::function<bool(std::string_view, nlohmann::json&)> callback;
             };
 
             static void load();
             static void store();
 
-            static void add(std::string_view category, std::string_view name, s64 defaultValue, const std::function<bool(nlohmann::json&)> &callback);
-            static void add(std::string_view category, std::string_view name, std::string_view defaultValue, const std::function<bool(nlohmann::json&)> &callback);
+            static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback);
+            static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback);
 
-            static void write(std::string_view category, std::string_view name, s64 value);
-            static void write(std::string_view category, std::string_view name, std::string_view value);
-            static void write(std::string_view category, std::string_view name, const std::vector<std::string>& value);
+            static void write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 value);
+            static void write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view value);
+            static void write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& value);
 
-            static s64 read(std::string_view category, std::string_view name, s64 defaultValue);
-            static std::string read(std::string_view category, std::string_view name, std::string_view defaultValue);
-            static std::vector<std::string> read(std::string_view category, std::string_view name, const std::vector<std::string>& defaultValue = { });
+            static s64 read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue);
+            static std::string read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue);
+            static std::vector<std::string> read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& defaultValue = { });
 
             static std::map<std::string, std::vector<Entry>>& getEntries();
             static nlohmann::json& getSettingsData();
@@ -73,12 +73,12 @@ namespace hex {
             struct Entry {
                 Type type;
                 std::string command;
-                std::string description;
+                std::string unlocalizedDescription;
                 std::function<std::string(std::string)> displayCallback;
                 std::function<void(std::string)> executeCallback;
             };
 
-            static void add(Type type, std::string_view command, std::string_view description, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback = [](auto){});
+            static void add(Type type, std::string_view command, std::string_view unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback = [](auto){});
             static std::vector<Entry>& getEntries();
         };
 
@@ -126,7 +126,7 @@ namespace hex {
                 std::function<void()> function;
             };
 
-            static void add(std::string_view name, const std::function<void()> &function);
+            static void add(std::string_view unlocalizedName, const std::function<void()> &function);
 
             static std::vector<Entry>& getEntries();
         };
@@ -145,12 +145,12 @@ namespace hex {
             using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8>&, std::endian, NumberDisplayStyle)>;
 
             struct Entry {
-                std::string name;
+                std::string unlocalizedName;
                 size_t requiredSize;
                 GeneratorFunction generatorFunction;
             };
 
-            static void add(std::string_view name, size_t requiredSize, GeneratorFunction function);
+            static void add(std::string_view unlocalizedName, size_t requiredSize, GeneratorFunction function);
 
             static std::vector<Entry>& getEntries();
         };
@@ -164,8 +164,8 @@ namespace hex {
             };
 
             template<hex::derived_from<dp::Node> T, typename ... Args>
-            static void add(std::string_view category, std::string_view name, Args&& ... args) {
-                add(Entry{ category.data(), name.data(), [args...]{ return new T(std::forward<Args>(args)...); } });
+            static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, Args&& ... args) {
+                add(Entry{ unlocalizedCategory.data(), unlocalizedName.data(), [args...]{ return new T(std::forward<Args>(args)...); } });
             }
 
             static void addSeparator();

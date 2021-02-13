@@ -341,12 +341,12 @@ namespace hex::plugin::builtin {
     }
 
     void registerToolEntries() {
-        ContentRegistry::Tools::add("hex.builtin.tools.demangler"_lang,         drawDemangler);
-        ContentRegistry::Tools::add("hex.builtin.tools.ascii_table"_lang,       drawASCIITable);
-        ContentRegistry::Tools::add("hex.builtin.tools.regex_replacer"_lang,    drawRegexReplacer);
-        ContentRegistry::Tools::add("hex.builtin.tools.color"_lang,             drawColorPicker);
-        ContentRegistry::Tools::add("hex.builtin.tools.calc"_lang,              drawMathEvaluator);
-        ContentRegistry::Tools::add("hex.builtin.tools.base_converter"_lang,    drawBaseConverter);
+        ContentRegistry::Tools::add("hex.builtin.tools.demangler",         drawDemangler);
+        ContentRegistry::Tools::add("hex.builtin.tools.ascii_table",       drawASCIITable);
+        ContentRegistry::Tools::add("hex.builtin.tools.regex_replacer",    drawRegexReplacer);
+        ContentRegistry::Tools::add("hex.builtin.tools.color",             drawColorPicker);
+        ContentRegistry::Tools::add("hex.builtin.tools.calc",              drawMathEvaluator);
+        ContentRegistry::Tools::add("hex.builtin.tools.base_converter",    drawBaseConverter);
     }
 
 }

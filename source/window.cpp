@@ -55,7 +55,7 @@ namespace hex {
         EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
 
             {
-                int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
+                int theme = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.color"];
                 switch (theme) {
                     default:
                     case 0: /* Dark theme */
@@ -72,7 +72,7 @@ namespace hex {
             }
 
             {
-                std::string language = ContentRegistry::Settings::getSettingsData()["Interface"]["Language"];
+                std::string language = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.language"];
                 LangEntry::loadLanguage(language);
             }
 
@@ -107,7 +107,7 @@ namespace hex {
                 std::vector<std::string> recentFilesVector;
                 std::copy(this->m_recentFiles.begin(), this->m_recentFiles.end(), std::back_inserter(recentFilesVector));
 
-                ContentRegistry::Settings::write("ImHex", "RecentFiles", recentFilesVector);
+                ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }
 
             return { };
@@ -119,13 +119,13 @@ namespace hex {
             return { };
         });
 
+        this->initPlugins();
+
         ContentRegistry::Settings::load();
         View::postEvent(Events::SettingsChanged);
 
-        for (const auto &path : ContentRegistry::Settings::read("ImHex", "RecentFiles"))
+        for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
             this->m_recentFiles.push_back(path);
-
-        this->initPlugins();
     }
 
     Window::~Window() {
@@ -362,7 +362,7 @@ namespace hex {
             ImGui::Text("hex.welcome.header.customize"_lang);
             {
                 if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8f, 0)))
-                    EventManager::post(Events::OpenWindow, "Preferences");
+                    EventManager::post(Events::OpenWindow, "hex.view.settings.title");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
             ImGui::TableNextColumn();

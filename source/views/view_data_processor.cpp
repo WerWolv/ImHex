@@ -18,7 +18,7 @@ namespace hex {
         }
 
         View::subscribeEvent(Events::SettingsChanged, [](auto) {
-            int theme = ContentRegistry::Settings::getSettingsData()["Interface"]["Color theme"];
+            int theme = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.color"];
 
             switch (theme) {
                 default:
@@ -238,7 +238,7 @@ namespace hex {
                 imnodes::BeginNode(node->getID());
 
                 imnodes::BeginNodeTitleBar();
-                ImGui::TextUnformatted(node->getTitle().data());
+                ImGui::TextUnformatted(LangEntry(node->getUnlocalizedName()));
                 imnodes::EndNodeTitleBar();
 
                 node->drawNode();
@@ -254,11 +254,11 @@ namespace hex {
 
                     if (attribute.getIOType() == dp::Attribute::IOType::In) {
                         imnodes::BeginInputAttribute(attribute.getID(), pinShape);
-                        ImGui::TextUnformatted(attribute.getName().data());
+                        ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
                         imnodes::EndInputAttribute();
                     } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
                         imnodes::BeginOutputAttribute(attribute.getID(), imnodes::PinShape(pinShape + 1));
-                        ImGui::TextUnformatted(attribute.getName().data());
+                        ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
                         imnodes::EndOutputAttribute();
                     }
                 }

@@ -49,7 +49,7 @@ namespace hex {
 
                 std::vector<u8> buffer(entry.requiredSize);
                 provider->read(this->m_startAddress, buffer.data(), buffer.size());
-                this->m_cachedData.emplace_back(entry.name, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle));
+                this->m_cachedData.emplace_back(entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle));
             }
         }
 
@@ -67,10 +67,10 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
-                    for (const auto &[name, function] : this->m_cachedData) {
+                    for (const auto &[unlocalizedName, function] : this->m_cachedData) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(name.c_str());
+                        ImGui::TextUnformatted(LangEntry(unlocalizedName));
                         ImGui::TableNextColumn();
                         function();
                     }

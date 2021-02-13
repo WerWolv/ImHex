@@ -19,13 +19,15 @@ namespace hex {
 
     class LangEntry {
     public:
-        LangEntry(const char *unlocalizedString);
+        explicit LangEntry(const char *unlocalizedString);
+        explicit LangEntry(const std::string &unlocalizedString);
+        explicit LangEntry(std::string_view unlocalizedString);
 
         operator std::string() const;
         operator std::string_view() const;
         operator const char*() const;
 
-        std::string_view get() const;
+        [[nodiscard]] std::string_view get() const;
 
         static void loadLanguage(std::string_view language);
         static const std::map<std::string, std::string>& getSupportedLanguages();

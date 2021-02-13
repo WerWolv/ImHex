@@ -101,7 +101,7 @@ namespace hex {
 
         std::vector<CommandResult> results;
 
-        for (const auto &[type, command, description, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::getEntries()) {
+        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::getEntries()) {
 
             auto AutoComplete = [this, &currCommand = command](auto) {
                 focusInputTextBox();
@@ -112,7 +112,7 @@ namespace hex {
             if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
                 if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch)
-                        results.push_back({ command + " (" + description + ")", "", AutoComplete });
+                        results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
                         auto matchedCommand = input.substr(command.length()).data();
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
@@ -121,7 +121,7 @@ namespace hex {
             } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
                 if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch)
-                        results.push_back({ command + " (" + description + ")", "", AutoComplete });
+                        results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
                         auto matchedCommand = input.substr(command.length() + 1).data();
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
