@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/views/view.hpp>
+#include "helpers/encoding_file.hpp"
 
 #include <imgui_memory_editor.h>
 #include <ImGuiFileBrowser.h>
@@ -53,6 +54,8 @@ namespace hex {
 
         std::string m_loaderScriptScriptPath;
         std::string m_loaderScriptFilePath;
+
+        hex::EncodingFile m_currEncodingFile;
 
         void drawSearchPopup();
         void drawGotoPopup();

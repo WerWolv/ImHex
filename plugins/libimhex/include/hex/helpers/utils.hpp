@@ -180,6 +180,23 @@ namespace hex {
         return bytes;
     }
 
+    inline std::vector<u8> parseByteString(std::string_view string) {
+        auto byteString = std::string(string);
+        byteString.erase(std::remove(byteString.begin(), byteString.end(), ' '), byteString.end());
+
+        if ((byteString.length() % 2) != 0) return { };
+
+        std::vector<u8> result;
+        for (u32 i = 0; i < byteString.length(); i += 2) {
+            if (!std::isxdigit(byteString[i]) || !std::isxdigit(byteString[i + 1]))
+                return { };
+
+            result.push_back(std::strtoul(byteString.substr(i, 2).c_str(), nullptr, 16));
+        }
+
+        return result;
+    }
+
     inline std::string toBinaryString(hex::integral auto number) {
         if (number == 0) return "0";
 
@@ -188,6 +205,23 @@ namespace hex {
             result += (number & (0b1 << bit)) == 0 ? '0' : '1';
 
         return result;
+    }
+
+    inline void trimLeft(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }));
+    }
+
+     inline void trimRight(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+    }
+
+    inline void trim(std::string &s) {
+        trimLeft(s);
+        trimRight(s);
     }
 
     #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })

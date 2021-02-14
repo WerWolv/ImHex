@@ -99,6 +99,30 @@ namespace hex {
                 ImGui::EndTooltip();
         };
 
+        this->m_memoryEditor.DecodeFn = [](const ImU8 *data, size_t addr) -> MemoryEditor::DecodeData {
+            ViewHexEditor *_this = (ViewHexEditor *) data;
+
+            if (_this->m_currEncodingFile.getLongestSequence() == 0)
+                return { ".", 1, 0xFFFF8000 };
+
+            auto &provider = SharedData::currentProvider;
+            size_t size = std::min<size_t>(_this->m_currEncodingFile.getLongestSequence(), provider->getActualSize() - addr);
+
+            std::vector<u8> buffer(size);
+            provider->read(addr, buffer.data(), size);
+
+            auto [decoded, advance] = _this->m_currEncodingFile.getEncodingFor(buffer);
+
+            ImColor color;
+            if (decoded.length() == 1 && std::isalnum(decoded[0])) color = 0xFFFF8000;
+            else if (decoded.length() == 1 && advance == 1) color = 0xFF0000FF;
+            else if (decoded.length() > 1 && advance == 1) color = 0xFF00FFFF;
+            else if (advance > 1) color = 0xFFFFFFFF;
+            else color = 0xFFFF8000;
+
+            return { std::string(decoded), advance, color };
+        };
+
         View::subscribeEvent(Events::FileDropped, [this](auto userData) {
             auto filePath = std::any_cast<const char*>(userData);
 
@@ -358,6 +382,12 @@ namespace hex {
                     ProjectFile::store();
             }
 
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.load_encoding_file"_lang)) {
+                View::openFileBrowser("hex.view.hexeditor.load_enconding_file"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                    this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
+                });
+            }
+
             ImGui::Separator();
 
             if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.import"_lang)) {
@@ -515,6 +545,9 @@ namespace hex {
 
         if (!provider->isAvailable()) {
             View::showErrorPopup("hex.view.hexeditor.error.open"_lang);
+            delete provider;
+            provider = nullptr;
+
             return;
         }
 

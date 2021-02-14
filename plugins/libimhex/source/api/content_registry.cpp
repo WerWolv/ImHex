@@ -30,8 +30,6 @@ namespace hex {
             json[unlocalizedCategory.data()] = nlohmann::json::object();
         if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
             json[unlocalizedCategory.data()][unlocalizedName.data()] = defaultValue;
-
-        Settings::store();
     }
 
     void ContentRegistry::Settings::add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback) {
@@ -43,8 +41,6 @@ namespace hex {
             json[unlocalizedCategory.data()] = nlohmann::json::object();
         if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
             json[unlocalizedCategory.data()][unlocalizedName.data()] = defaultValue;
-
-        Settings::store();
     }
 
     void ContentRegistry::Settings::write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 value) {

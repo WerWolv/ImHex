@@ -50,6 +50,8 @@
 
 #include <hex/views/view.hpp>
 
+#include <string>
+
 #ifdef _MSC_VER
 #define _PRISizeT   "I"
 #define ImSnprintf  _snprintf
@@ -75,12 +77,19 @@ struct MemoryEditor
         DataFormat_COUNT
     };
 
+    struct DecodeData {
+        std::string data;
+        size_t advance;
+        ImColor color;
+    };
+
     // Settings
     bool            ReadOnly;                                   // = false  // disable any editing.
     int             Cols;                                       // = 16     // number of columns to display.
     bool            OptShowOptions;                             // = true   // display options button/context menu. when disabled, options will be locked unless you provide your own UI for them.
     bool            OptShowHexII;                               // = false  // display values in HexII representation instead of regular hexadecimal: hide null/zero bytes, ascii values as ".X".
     bool            OptShowAscii;                               // = true   // display ASCII representation on the right side.
+    bool            OptShowAdvancedDecoding;                    // = true   // display advanced decoding data on the right side.
     bool            OptGreyOutZeroes;                           // = true   // display null/zero bytes using the TextDisabled color.
     bool            OptUpperCaseHex;                            // = true   // display hexadecimal values as "FF" instead of "ff".
     int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
@@ -90,6 +99,7 @@ struct MemoryEditor
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off, bool next);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
     void            (*HoverFn)(const ImU8 *data, size_t off);
+    DecodeData      (*DecodeFn)(const ImU8 *data, size_t off);
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -114,6 +124,7 @@ struct MemoryEditor
         OptShowOptions = true;
         OptShowHexII = false;
         OptShowAscii = true;
+        OptShowAdvancedDecoding = true;
         OptGreyOutZeroes = true;
         OptUpperCaseHex = true;
         OptMidColsCount = 8;
@@ -123,6 +134,7 @@ struct MemoryEditor
         WriteFn = NULL;
         HighlightFn = NULL;
         HoverFn = NULL;
+        DecodeFn = NULL;
 
         // State/Internals
         ContentsWidthChanged = false;
@@ -155,6 +167,8 @@ struct MemoryEditor
         float   PosHexEnd;
         float   PosAsciiStart;
         float   PosAsciiEnd;
+        float   PosDecodingStart;
+        float   PosDecodingEnd;
         float   WindowWidth;
 
         Sizes() { memset(this, 0, sizeof(*this)); }
@@ -174,12 +188,27 @@ struct MemoryEditor
         s.PosHexStart = (s.AddrDigitsCount + 2) * s.GlyphWidth;
         s.PosHexEnd = s.PosHexStart + (s.HexCellWidth * Cols);
         s.PosAsciiStart = s.PosAsciiEnd = s.PosHexEnd;
-        if (OptShowAscii)
-        {
+
+        if (OptShowAscii && OptShowAdvancedDecoding) {
             s.PosAsciiStart = s.PosHexEnd + s.GlyphWidth * 1;
             if (OptMidColsCount > 0)
                 s.PosAsciiStart += (float)((Cols + OptMidColsCount - 1) / OptMidColsCount) * s.SpacingBetweenMidCols;
             s.PosAsciiEnd = s.PosAsciiStart + Cols * s.GlyphWidth;
+
+            s.PosDecodingStart = s.PosAsciiEnd + s.GlyphWidth * 1;
+            if (OptMidColsCount > 0)
+                s.PosDecodingStart += (float)((Cols + OptMidColsCount - 1) / OptMidColsCount) * s.SpacingBetweenMidCols;
+            s.PosDecodingEnd = s.PosDecodingStart + Cols * s.GlyphWidth;
+        } else if (OptShowAscii) {
+            s.PosAsciiStart = s.PosHexEnd + s.GlyphWidth * 1;
+            if (OptMidColsCount > 0)
+                s.PosAsciiStart += (float)((Cols + OptMidColsCount - 1) / OptMidColsCount) * s.SpacingBetweenMidCols;
+            s.PosAsciiEnd = s.PosAsciiStart + Cols * s.GlyphWidth;
+        } else if (OptShowAdvancedDecoding) {
+            s.PosDecodingStart = s.PosHexEnd + s.GlyphWidth * 1;
+            if (OptMidColsCount > 0)
+                s.PosDecodingStart += (float)((Cols + OptMidColsCount - 1) / OptMidColsCount) * s.SpacingBetweenMidCols;
+            s.PosDecodingEnd = s.PosDecodingStart + Cols * s.GlyphWidth;
         }
         s.WindowWidth = s.PosAsciiEnd + style.ScrollbarSize + style.WindowPadding.x * 2 + s.GlyphWidth;
     }
@@ -221,15 +250,6 @@ struct MemoryEditor
         Sizes s;
         CalcSizes(s, mem_size, base_display_addr);
         ImGuiStyle& style = ImGui::GetStyle();
-
-        if (mem_size == 0x00) {
-            constexpr const char *noDataString = "No data loaded!";
-
-            auto pos = ImGui::GetCursorScreenPos();
-            pos.x += (ImGui::GetWindowWidth() - (ImGui::CalcTextSize(noDataString).x)) / 2;
-            ImGui::GetWindowDrawList()->AddText(pos, 0xFFFFFFFF, noDataString);
-            return;
-        }
 
         // We begin into our scrolling region with the 'ImGuiWindowFlags_NoMove' in order to prevent click from moving the window.
         // This is used as a facility since our main click detection code doesn't assign an ActiveId so the click would normally be caught as a window-move.
@@ -327,6 +347,8 @@ struct MemoryEditor
         ImVec2 window_pos = ImGui::GetWindowPos();
         if (OptShowAscii)
             draw_list->AddLine(ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth, window_pos.y), ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
+        if (OptShowAdvancedDecoding)
+            draw_list->AddLine(ImVec2(window_pos.x + s.PosDecodingStart - s.GlyphWidth, window_pos.y), ImVec2(window_pos.x + s.PosDecodingStart - s.GlyphWidth, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
 
         const ImU32 color_text = ImGui::GetColorU32(ImGuiCol_Text);
         const ImU32 color_disabled = OptGreyOutZeroes ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : color_text;
@@ -541,6 +563,86 @@ struct MemoryEditor
 
                     pos.x += s.GlyphWidth;
                 }
+
+                ImGui::PushID(-1);
+                ImGui::SameLine();
+                ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+
+                ImGui::PopID();
+            }
+
+            if (OptShowAdvancedDecoding && DecodeFn) {
+                // Draw decoded bytes
+                ImGui::SameLine(s.PosDecodingStart);
+                ImVec2 pos = ImGui::GetCursorScreenPos();
+                addr = line_i * Cols;
+
+                ImGui::PushID(-1);
+                ImGui::SameLine();
+                ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+
+                ImGui::PopID();
+
+                for (int n = 0; n < Cols && addr < mem_size;)
+                {
+                    auto decodedData = DecodeFn(mem_data, addr);
+
+                    auto displayData = decodedData.data;
+                    auto decodedDataLength = displayData.length();
+
+                    if (addr == DataEditingAddr)
+                    {
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth * decodedDataLength, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth * decodedDataLength, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                    }
+
+                    draw_list->AddText(pos, decodedData.color, displayData.c_str(), displayData.c_str() + decodedDataLength);
+
+                    // Draw highlight
+                    bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
+                    bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
+                    bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
+                    if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
+                    {
+                        ImU32 color = HighlightColor;
+                        if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
+                            color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
+
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth * decodedDataLength, pos.y + s.LineHeight), color);
+                    }
+
+
+                    ImGui::PushID(line_i * Cols + n);
+                    ImGui::SameLine();
+                    ImGui::Dummy(ImVec2(s.GlyphWidth * decodedDataLength, s.LineHeight));
+
+                    ImGui::PopID();
+
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                    {
+                        if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
+                            DataEditingTakeFocus = true;
+                            data_editing_addr_next = addr;
+                        }
+
+                        DataPreviewAddr = addr;
+                        DataPreviewAddrEnd = addr;
+
+                    }
+                    if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                        DataPreviewAddrEnd = addr;
+                    }
+
+                    pos.x += s.GlyphWidth * decodedDataLength;
+
+                    if (addr <= 1) {
+                        n++;
+                        addr++;
+                    } else {
+                        n += decodedData.advance;
+                        addr += decodedData.advance;
+                    }
+                }
             }
         }
         IM_ASSERT(clipper.Step() == false);
@@ -585,6 +687,7 @@ struct MemoryEditor
             ImGui::PopItemWidth();
             ImGui::Checkbox("Show HexII", &OptShowHexII);
             if (ImGui::Checkbox("Show Ascii", &OptShowAscii)) { ContentsWidthChanged = true; }
+            if (ImGui::Checkbox("Show Advanced Decoding", &OptShowAdvancedDecoding)) { ContentsWidthChanged = true; }
             ImGui::Checkbox("Grey out zeroes", &OptGreyOutZeroes);
             ImGui::Checkbox("Uppercase Hex", &OptUpperCaseHex);
 
