@@ -588,15 +588,15 @@ struct MemoryEditor
                     auto decodedData = DecodeFn(mem_data, addr);
 
                     auto displayData = decodedData.data;
-                    auto decodedDataLength = displayData.length();
+                    auto glyphWidth = ImGui::CalcTextSize(displayData.c_str()).x + 1;
 
                     if (addr == DataEditingAddr)
                     {
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth * decodedDataLength, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth * decodedDataLength, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
                     }
 
-                    draw_list->AddText(pos, decodedData.color, displayData.c_str(), displayData.c_str() + decodedDataLength);
+                    draw_list->AddText(pos, decodedData.color, displayData.c_str(), displayData.c_str() + displayData.length());
 
                     // Draw highlight
                     bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
@@ -608,13 +608,13 @@ struct MemoryEditor
                         if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
                             color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
 
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth * decodedDataLength, pos.y + s.LineHeight), color);
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), color);
                     }
 
 
                     ImGui::PushID(line_i * Cols + n);
                     ImGui::SameLine();
-                    ImGui::Dummy(ImVec2(s.GlyphWidth * decodedDataLength, s.LineHeight));
+                    ImGui::Dummy(ImVec2(glyphWidth, s.LineHeight));
 
                     ImGui::PopID();
 
@@ -633,7 +633,7 @@ struct MemoryEditor
                         DataPreviewAddrEnd = addr;
                     }
 
-                    pos.x += s.GlyphWidth * decodedDataLength;
+                    pos.x += glyphWidth;
 
                     if (addr <= 1) {
                         n++;

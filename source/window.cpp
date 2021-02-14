@@ -183,7 +183,19 @@ namespace hex {
         // Load font data & build atlas
         std::uint8_t *px;
         int w, h;
-        io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale)); // Needs conversion to char for Windows
+
+        ImVector<ImWchar> ranges;
+        ImFontGlyphRangesBuilder glyphRangesBuilder;
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesKorean());
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesThai());
+        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
+        glyphRangesBuilder.BuildRanges(&ranges);
+
+        io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale), nullptr, ranges.Data); // Needs conversion to char for Windows
         ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeType::Monochrome);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
