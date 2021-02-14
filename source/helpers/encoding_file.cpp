@@ -45,10 +45,13 @@ namespace hex {
                 hex::trim(from);
                 hex::trim(to);
 
+                if (from.empty()) continue;
                 if (to.empty()) to = " ";
             }
 
             auto fromBytes = hex::parseByteString(from);
+            if (fromBytes.empty()) continue;
+
             if (!this->m_mapping.contains(fromBytes.size()))
                 this->m_mapping.insert({ fromBytes.size(), { } });
             this->m_mapping[fromBytes.size()].insert({ fromBytes, to });
