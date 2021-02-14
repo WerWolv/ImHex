@@ -31,15 +31,22 @@ namespace hex {
 
     void EncodingFile::parseThingyFile(std::ifstream &content) {
         for (std::string line; std::getline(content, line);) {
-            auto entry = hex::splitString(line, "=");
 
-            if (entry.size() != 2) return;
+            std::string from, to;
+            {
+                auto delimiterPos = line.find('=', 0);
 
-            auto &from = entry[0];
-            auto &to = entry[1];
+                if (delimiterPos == std::string::npos)
+                    continue;
 
-            hex::trim(from);
-            hex::trim(to);
+                from = line.substr(0, delimiterPos);
+                to = line.substr(delimiterPos + 1);
+
+                hex::trim(from);
+                hex::trim(to);
+
+                if (to.empty()) to = " ";
+            }
 
             auto fromBytes = hex::parseByteString(from);
             if (!this->m_mapping.contains(fromBytes.size()))
