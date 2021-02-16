@@ -51,6 +51,7 @@ namespace hex {
             static std::vector<std::string> read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& defaultValue = { });
 
             static std::map<std::string, std::vector<Entry>>& getEntries();
+            static std::optional<nlohmann::json> getSetting(std::string_view unlocalizedCategory, std::string_view unlocalizedName);
             static nlohmann::json& getSettingsData();
         };
 

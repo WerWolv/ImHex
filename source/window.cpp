@@ -55,25 +55,30 @@ namespace hex {
         EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
 
             {
-                int theme = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.color"];
-                switch (theme) {
-                    default:
-                    case 0: /* Dark theme */
-                        ImGui::StyleColorsDark();
-                        break;
-                    case 1: /* Light theme */
-                        ImGui::StyleColorsLight();
-                        break;
-                    case 2: /* Classic theme */
-                        ImGui::StyleColorsClassic();
-                        break;
+                auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
+
+                if (theme.has_value()) {
+                    switch (static_cast<int>(theme.value())) {
+                        default:
+                        case 0: /* Dark theme */
+                            ImGui::StyleColorsDark();
+                            break;
+                        case 1: /* Light theme */
+                            ImGui::StyleColorsLight();
+                            break;
+                        case 2: /* Classic theme */
+                            ImGui::StyleColorsClassic();
+                            break;
+                    }
+                    ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
                 }
-                ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
             }
 
             {
-                std::string language = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.language"];
-                LangEntry::loadLanguage(language);
+                auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
+
+                if (language.has_value())
+                    LangEntry::loadLanguage(static_cast<std::string>(language.value()));
             }
 
             return { };

@@ -173,19 +173,21 @@ namespace hex {
         {
 
             View::subscribeEvent(Events::SettingsChanged, [this](auto) {
-                int theme = ContentRegistry::Settings::getSettingsData()["hex.builtin.setting.interface"]["hex.builtin.setting.interface.color"];
+                auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
-                switch (theme) {
-                    default:
-                    case 0: /* Dark theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
-                        break;
-                    case 1: /* Light theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
-                        break;
-                    case 2: /* Classic theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
-                        break;
+                if (theme.has_value()) {
+                    switch (static_cast<int>(theme.value())) {
+                        default:
+                        case 0: /* Dark theme */
+                            this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
+                            break;
+                        case 1: /* Light theme */
+                            this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
+                            break;
+                        case 2: /* Classic theme */
+                            this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
+                            break;
+                    }
                 }
             });
 
