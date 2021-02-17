@@ -37,8 +37,8 @@ namespace hex {
 
         std::map<u64, u32> m_highlightedBytes;
 
-        char m_searchStringBuffer[0xFFFF] = { 0 };
-        char m_searchHexBuffer[0xFFFF] = { 0 };
+        std::vector<char> m_searchStringBuffer;
+        std::vector<char> m_searchHexBuffer;
         SearchFunction m_searchFunction = nullptr;
         std::vector<std::pair<u64, u64>> *m_lastSearchBuffer;
 

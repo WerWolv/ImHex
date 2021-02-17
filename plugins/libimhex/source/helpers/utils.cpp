@@ -122,21 +122,21 @@ namespace hex {
     }
 
     std::string toEngineeringString(double value) {
-        constexpr std::array prefixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
+        constexpr std::array Suffixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
 
-        int8_t prefixIndex = 6;
+        int8_t suffixIndex = 6;
 
-        while (prefixIndex != 0 && prefixIndex != 12 && (value >= 1000 || value < 1) && value != 0) {
+        while (suffixIndex != 0 && suffixIndex != 12 && (value >= 1000 || value < 1) && value != 0) {
             if (value >= 1000) {
                 value /= 1000;
-                prefixIndex++;
+                suffixIndex++;
             } else if (value < 1) {
                 value *= 1000;
-                prefixIndex--;
+                suffixIndex--;
             }
         }
 
-        return std::to_string(value).substr(0, 5) + prefixes[prefixIndex];
+        return std::to_string(value).substr(0, 5) + Suffixes[suffixIndex];
     }
 
     std::vector<u8> readFile(std::string_view path) {

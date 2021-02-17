@@ -19,6 +19,9 @@ namespace hex {
     ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
             : View("hex.view.hexeditor.title"_lang), m_patternData(patternData) {
 
+        this->m_searchStringBuffer.resize(0xFFF, 0x00);
+        this->m_searchHexBuffer.resize(0xFFF, 0x00);
+
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
             auto provider = SharedData::currentProvider;
             if (!provider->isAvailable() || !provider->isReadable())
@@ -952,13 +955,13 @@ R"(
         if (ImGui::BeginPopupContextVoid("hex.view.hexeditor.menu.file.search"_lang)) {
             ImGui::TextUnformatted("hex.view.hexeditor.menu.file.search"_lang);
             if (ImGui::BeginTabBar("searchTabs")) {
-                char *currBuffer;
+                std::vector<char> *currBuffer = nullptr;
                 if (ImGui::BeginTabItem("hex.view.hexeditor.search.string"_lang)) {
                     this->m_searchFunction = findString;
                     this->m_lastSearchBuffer = &this->m_lastStringSearch;
-                    currBuffer = this->m_searchStringBuffer;
+                    currBuffer = &this->m_searchStringBuffer;
 
-                    ImGui::InputText("##nolabel", currBuffer, 0xFFFF, ImGuiInputTextFlags_CallbackCompletion,
+                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CallbackCompletion,
                                      InputCallback, this);
                     ImGui::EndTabItem();
                 }
@@ -966,25 +969,27 @@ R"(
                 if (ImGui::BeginTabItem("hex.view.hexeditor.search.hex"_lang)) {
                     this->m_searchFunction = findHex;
                     this->m_lastSearchBuffer = &this->m_lastHexSearch;
-                    currBuffer = this->m_searchHexBuffer;
+                    currBuffer = &this->m_searchHexBuffer;
 
-                    ImGui::InputText("##nolabel", currBuffer, 0xFFFF,
+                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(),
                                      ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion,
                                      InputCallback, this);
                     ImGui::EndTabItem();
                 }
 
-                if (ImGui::Button("hex.view.hexeditor.search.find"_lang))
-                    Find(currBuffer);
+                if (currBuffer != nullptr) {
+                    if (ImGui::Button("hex.view.hexeditor.search.find"_lang))
+                        Find(currBuffer->data());
 
-                if (this->m_lastSearchBuffer->size() > 0) {
-                    if ((ImGui::Button("hex.view.hexeditor.search.find_next"_lang)))
-                        FindNext();
+                    if (this->m_lastSearchBuffer->size() > 0) {
+                        if ((ImGui::Button("hex.view.hexeditor.search.find_next"_lang)))
+                            FindNext();
 
-                    ImGui::SameLine();
+                        ImGui::SameLine();
 
-                    if ((ImGui::Button("hex.view.hexeditor.search.find_prev"_lang)))
-                        FindPrevious();
+                        if ((ImGui::Button("hex.view.hexeditor.search.find_prev"_lang)))
+                            FindPrevious();
+                    }
                 }
 
                 ImGui::EndTabBar();

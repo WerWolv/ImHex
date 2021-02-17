@@ -16,13 +16,11 @@ namespace hex {
             this->m_foundStrings.clear();
         });
 
-        this->m_filter = new char[0xFFFF];
-        std::memset(this->m_filter, 0x00, 0xFFFF);
+        this->m_filter.resize(0xFFFF, 0x00);
     }
 
     ViewStrings::~ViewStrings() {
         View::unsubscribeEvent(Events::DataChanged);
-        delete[] this->m_filter;
     }
 
 
@@ -89,7 +87,7 @@ namespace hex {
                 if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                     this->m_shouldInvalidate = true;
 
-                ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter, 0xFFFF);
+                ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.size());
                 if (ImGui::Button("hex.view.strings.extract"_lang))
                     this->m_shouldInvalidate = true;
 
@@ -109,17 +107,17 @@ namespace hex {
                     if (sortSpecs->SpecsDirty) {
                         std::sort(this->m_foundStrings.begin(), this->m_foundStrings.end(),
                                   [&sortSpecs](FoundString &left, FoundString &right) -> bool {
-                                      if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("hex.view.strings.offset"_lang)) {
+                                      if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.offset > right.offset;
                                           else
                                               return left.offset < right.offset;
-                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("hex.view.strings.size"_lang)) {
+                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.size > right.size;
                                           else
                                               return left.size < right.size;
-                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("hex.view.strings.string"_lang)) {
+                                      } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("string")) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                               return left.string > right.string;
                                           else
@@ -141,8 +139,8 @@ namespace hex {
                         for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             auto &foundString = this->m_foundStrings[i];
 
-                            if (strlen(this->m_filter) != 0 &&
-                                foundString.string.find(this->m_filter) == std::string::npos)
+                            if (strlen(this->m_filter.data()) != 0 &&
+                                foundString.string.find(this->m_filter.data()) == std::string::npos)
                                 continue;
 
                             ImGui::TableNextRow();
@@ -172,7 +170,7 @@ namespace hex {
 
         if (ImGui::BeginPopup("hex.view.strings.demangle.title"_lang)) {
             if (ImGui::BeginChild("##scrolling", ImVec2(500, 150))) {
-                ImGui::Text("hex.view.strings.demangle.title"_lang);
+                ImGui::TextUnformatted("hex.view.strings.demangle.title"_lang);
                 ImGui::Separator();
                 ImGui::TextWrapped("%s", this->m_demangledName.c_str());
                 ImGui::EndChild();

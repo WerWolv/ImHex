@@ -40,7 +40,6 @@ namespace hex {
     }
 
     void View::drawCommonInterfaces() {
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 10));
         if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
             ImGui::NewLine();
@@ -50,7 +49,6 @@ namespace hex {
 
             ImGui::EndPopup();
         }
-        ImGui::PopStyleVar();
 
         if (SharedData::fileBrowser.showFileDialog(SharedData::fileBrowserTitle, SharedData::fileBrowserDialogMode, ImVec2(0, 0), SharedData::fileBrowserValidExtensions)) {
             SharedData::fileBrowserCallback(SharedData::fileBrowser.selected_path);
@@ -61,7 +59,7 @@ namespace hex {
     void View::showErrorPopup(std::string_view errorMessage) {
         SharedData::errorPopupMessage = errorMessage;
 
-        ImGui::OpenPopup("Error");
+        View::doLater([] { ImGui::OpenPopup("Error"); });
     }
 
     bool View::hasViewMenuItemEntry() {

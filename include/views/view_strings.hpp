@@ -28,7 +28,7 @@ namespace hex {
 
         std::vector<FoundString> m_foundStrings;
         int m_minimumLength = 5;
-        char *m_filter;
+        std::vector<char> m_filter;
 
         std::string m_selectedString;
         std::string m_demangledName;
