@@ -92,10 +92,10 @@ namespace hex::lang {
                 default: this->getConsole().abortEvaluation("invalid rvalue size");
             }
         } else if (auto signedPattern = dynamic_cast<PatternDataSigned*>(currPattern); signedPattern != nullptr) {
-            u8 value[unsignedPattern->getSize()];
+            u8 value[signedPattern->getSize()];
             this->m_provider->read(signedPattern->getOffset(), value, signedPattern->getSize());
 
-            switch (unsignedPattern->getSize()) {
+            switch (signedPattern->getSize()) {
                 case 1:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed8Bit,   hex::changeEndianess(*reinterpret_cast<s8*>(value),   1,  signedPattern->getEndian()) });
                 case 2:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed16Bit,  hex::changeEndianess(*reinterpret_cast<s16*>(value),  2,  signedPattern->getEndian()) });
                 case 4:  return new ASTNodeIntegerLiteral({ Token::ValueType::Signed32Bit,  hex::changeEndianess(*reinterpret_cast<s32*>(value),  4,  signedPattern->getEndian()) });
