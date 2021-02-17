@@ -54,6 +54,8 @@ namespace hex {
 
             std::optional<u32> currColor, prevColor;
 
+            off += SharedData::currentProvider->getBaseAddress();
+
             for (const auto &[region, name, comment, color] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size))
                     currColor = (color & 0x00FFFFFF) | 0x80000000;
@@ -83,11 +85,13 @@ namespace hex {
             return false;
         };
 
-        this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t addr) {
+        this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t off) {
             bool tooltipShown = false;
 
+            off += SharedData::currentProvider->getBaseAddress();
+
             for (const auto &[region, name, comment, color] : ImHexApi::Bookmarks::getEntries()) {
-                if (addr >= region.address && addr < (region.address + region.size)) {
+                if (off >= region.address && off < (region.address + region.size)) {
                     if (!tooltipShown) {
                         ImGui::BeginTooltip();
                         tooltipShown = true;
@@ -1098,8 +1102,10 @@ R"(
         }
 
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.bookmark"_lang, nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-            size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-            size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+            auto base = SharedData::currentProvider->getBaseAddress();
+
+            size_t start = base + std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+            size_t end = base + std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
             ImHexApi::Bookmarks::add(start, end - start + 1, { }, { });
         }
