@@ -131,6 +131,9 @@ namespace hex {
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
             this->m_recentFiles.push_back(path);
+
+        ContentRegistry::Interface::addFooterItem([]{ ImGui::TextUnformatted("ImHex"); });
+        ContentRegistry::Interface::addFooterItem([]{ ImGui::ProgressBar(0.69, ImVec2(200, 25)); });
     }
 
     Window::~Window() {
@@ -233,19 +236,33 @@ namespace hex {
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar     | ImGuiWindowFlags_NoDocking
                                      | ImGuiWindowFlags_NoTitleBar  | ImGuiWindowFlags_NoCollapse
                                      | ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoResize
-                                     | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus;
+                                     | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus
+                                     | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
             ImGui::PopStyleVar(2);
-            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, 0.0f));
+
+            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - 1));
+
+            ImGui::Separator();
+            for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
+                auto prevIdx = ImGui::GetWindowDrawList()->_VtxCurrentIdx;
+                callback();
+                auto currIdx = ImGui::GetWindowDrawList()->_VtxCurrentIdx;
+
+                // Only draw separator if something was actually drawn
+                if (prevIdx != currIdx) {
+                    ImGui::SameLine();
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
+                }
+            }
 
             if (ImGui::BeginMenuBar()) {
 
-                auto MenuBarItems = { "hex.menu.file"_lang, "hex.menu.edit"_lang, "hex.menu.view"_lang, "hex.menu.help"_lang };
-
-                for (auto menu : MenuBarItems)
+                for (const auto& menu : { "hex.menu.file"_lang, "hex.menu.edit"_lang, "hex.menu.view"_lang, "hex.menu.help"_lang })
                     if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
 
                 if (ImGui::BeginMenu("hex.menu.view"_lang)) {
@@ -332,26 +349,27 @@ namespace hex {
     }
 
     void Window::drawWelcomeScreen() {
-        ImGui::UnderlinedText("hex.welcome.header.main"_lang, ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
+        ImGui::UnderlinedText("hex.welcome.header.main"_lang, ImGui::GetStyleColorVec4(ImGuiCol_Text));
 
         ImGui::NewLine();
 
-        auto availableSpace = ImGui::GetContentRegionAvail();
+        const auto availableSpace = ImGui::GetContentRegionAvail();
+        const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() * 6;
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
-            ImGui::Text("hex.welcome.header.start"_lang);
+            ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_file"_lang))
                     EventManager::post(Events::OpenWindow, "Open File");
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))
                     EventManager::post(Events::OpenWindow, "Open Project");
             }
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
-            ImGui::Text("hex.welcome.start.recent"_lang);
+            ImGui::TextUnformatted("hex.welcome.start.recent"_lang);
             {
                 if (!this->m_recentFiles.empty()) {
                     for (auto &path : this->m_recentFiles) {
@@ -362,9 +380,9 @@ namespace hex {
                     }
                 }
             }
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
-            ImGui::Text("hex.welcome.header.help"_lang);
+            ImGui::TextUnformatted("hex.welcome.header.help"_lang);
             {
                 if (ImGui::BulletHyperlink("hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
                 if (ImGui::BulletHyperlink("hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
@@ -374,24 +392,36 @@ namespace hex {
         }
         ImGui::SameLine();
         if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
-            ImGui::Text("hex.welcome.header.customize"_lang);
+            ImGui::TextUnformatted("hex.welcome.header.customize"_lang);
             {
-                if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8f, 0)))
+                if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     EventManager::post(Events::OpenWindow, "hex.view.settings.title");
             }
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, 100);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
-            ImGui::Text("hex.welcome.header.learn"_lang);
+            ImGui::TextUnformatted("hex.welcome.header.learn"_lang);
             {
-                if (ImGui::DescriptionButton("hex.welcome.learn.latest.title"_lang, "hex.welcome.learn.latest.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                if (ImGui::DescriptionButton("hex.welcome.learn.latest.title"_lang, "hex.welcome.learn.latest.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     hex::openWebpage("hex.welcome.learn.latest.link"_lang);
-                if (ImGui::DescriptionButton("hex.welcome.learn.pattern.title"_lang, "hex.welcome.learn.pattern.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                if (ImGui::DescriptionButton("hex.welcome.learn.pattern.title"_lang, "hex.welcome.learn.pattern.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     hex::openWebpage("hex.welcome.learn.pattern.link"_lang);
-                if (ImGui::DescriptionButton("hex.welcome.learn.plugins.title"_lang, "hex.welcome.learn.plugins.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 0)))
+                if (ImGui::DescriptionButton("hex.welcome.learn.plugins.title"_lang, "hex.welcome.learn.plugins.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     hex::openWebpage("hex.welcome.learn.plugins.link"_lang);
             }
+
+            auto extraWelcomeScreenEntries = ContentRegistry::Interface::getWelcomeScreenEntries();
+            if (!extraWelcomeScreenEntries.empty()) {
+                ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("hex.welcome.header.various"_lang);
+                {
+                    for (const auto &callback : extraWelcomeScreenEntries)
+                        callback();
+                }
+            }
+
 
             ImGui::EndTable();
         }
@@ -498,7 +528,7 @@ namespace hex {
         ImGuiStyle& style = ImGui::GetStyle();
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable | ImGuiConfigFlags_NavEnableKeyboard;
-        io.ConfigViewportsNoTaskBarIcon = true;
+        io.ConfigViewportsNoTaskBarIcon = false;
         io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
         io.KeyMap[ImGuiKey_LeftArrow]   = GLFW_KEY_LEFT;
         io.KeyMap[ImGuiKey_RightArrow]  = GLFW_KEY_RIGHT;

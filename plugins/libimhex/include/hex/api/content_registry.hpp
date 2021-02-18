@@ -183,6 +183,16 @@ namespace hex {
             static std::map<std::string, std::string>& getLanguages();
             static std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
         };
+
+        struct Interface {
+            using DrawCallback = std::function<void()>;
+
+            static void addWelcomeScreenEntry(const DrawCallback &function);
+            static void addFooterItem(const DrawCallback &function);
+
+            static std::vector<DrawCallback>& getWelcomeScreenEntries();
+            static std::vector<DrawCallback>& getFooterItems();
+        };
     };
 
 }

@@ -225,4 +225,21 @@ namespace hex {
     std::map<std::string, std::vector<LanguageDefinition>>& ContentRegistry::Language::getLanguageDefinitions() {
         return SharedData::languageDefinitions;
     }
+
+
+    void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::DrawCallback &function) {
+        getWelcomeScreenEntries().push_back(function);
+    }
+
+    void ContentRegistry::Interface::addFooterItem(const ContentRegistry::Interface::DrawCallback &function){
+        getFooterItems().push_back(function);
+    }
+
+
+    std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getWelcomeScreenEntries() {
+        return SharedData::welcomeScreenEntries;
+    }
+    std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getFooterItems() {
+        return SharedData::footerItems;
+    }
 }

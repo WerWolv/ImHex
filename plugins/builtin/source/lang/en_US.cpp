@@ -37,6 +37,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.plugins.title", "Plugins API\"" },
                     { "hex.welcome.learn.plugins.desc", "Extend ImHex with additional features using plugins" },
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
+                { "hex.welcome.header.various", "Various" },
 
                 { "hex.common.little_endian", "Little Endian" },
                 { "hex.common.big_endian", "Big Endian" },

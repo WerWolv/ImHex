@@ -68,6 +68,9 @@ namespace hex {
         static std::map<std::string, std::vector<LanguageDefinition>> languageDefinitions;
         static std::map<std::string, std::string> loadedLanguageStrings;
 
+        static std::vector<ContentRegistry::Interface::DrawCallback> welcomeScreenEntries;
+        static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
+
         static imgui_addons::ImGuiFileBrowser fileBrowser;
         static imgui_addons::ImGuiFileBrowser::DialogMode fileBrowserDialogMode;
         static std::string fileBrowserTitle;

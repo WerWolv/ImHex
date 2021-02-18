@@ -107,7 +107,7 @@ namespace ImGui {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0, 0.5));
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarBg : hovered ? ImGuiCol_WindowBg : ImGuiCol_PopupBg);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_TableHeaderBg : hovered ? ImGuiCol_TableBorderLight : ImGuiCol_TableBorderStrong);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));

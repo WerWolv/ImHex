@@ -22,6 +22,9 @@ namespace hex {
     std::map<std::string, std::vector<LanguageDefinition>> SharedData::languageDefinitions;
     std::map<std::string, std::string> SharedData::loadedLanguageStrings;
 
+    std::vector<ContentRegistry::Interface::DrawCallback> SharedData::welcomeScreenEntries;
+    std::vector<ContentRegistry::Interface::DrawCallback> SharedData::footerItems;
+
     imgui_addons::ImGuiFileBrowser SharedData::fileBrowser;
     imgui_addons::ImGuiFileBrowser::DialogMode SharedData::fileBrowserDialogMode;
     std::string SharedData::fileBrowserTitle;
