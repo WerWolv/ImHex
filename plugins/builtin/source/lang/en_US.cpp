@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.pattern.title", "Pattern Language Documentation" },
                     { "hex.welcome.learn.pattern.desc", "Learn how to write ImHex patterns with our extensive documentation" },
                     { "hex.welcome.learn.pattern.link", "https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide" },
-                    { "hex.welcome.learn.plugins.title", "Plugins API\"" },
+                    { "hex.welcome.learn.plugins.title", "Plugins API" },
                     { "hex.welcome.learn.plugins.desc", "Extend ImHex with additional features using plugins" },
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.welcome.header.various", "Various" },

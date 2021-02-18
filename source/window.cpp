@@ -51,9 +51,7 @@ namespace hex {
         this->initGLFW();
         this->initImGui();
 
-        ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
         EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
-
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
@@ -131,9 +129,6 @@ namespace hex {
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
             this->m_recentFiles.push_back(path);
-
-        ContentRegistry::Interface::addFooterItem([]{ ImGui::TextUnformatted("ImHex"); });
-        ContentRegistry::Interface::addFooterItem([]{ ImGui::ProgressBar(0.69, ImVec2(200, 25)); });
     }
 
     Window::~Window() {
@@ -144,6 +139,8 @@ namespace hex {
         this->deinitPlugins();
 
         EventManager::unsubscribe(Events::SettingsChanged, this);
+        EventManager::unsubscribe(Events::FileLoaded, this);
+        EventManager::unsubscribe(Events::CloseImHex, this);
     }
 
     void Window::loop() {
@@ -520,14 +517,17 @@ namespace hex {
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
-        auto *ctx = ImGui::CreateContext();
-        GImGui = ctx;
-
+        GImGui = ImGui::CreateContext();
 
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
 
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable | ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
+        #if !defined(OS_LINUX)
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        #endif
+
+
         io.ConfigViewportsNoTaskBarIcon = false;
         io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
         io.KeyMap[ImGuiKey_LeftArrow]   = GLFW_KEY_LEFT;
@@ -587,9 +587,7 @@ namespace hex {
         handler.ReadLineFn = ImHexSettingsHandler_ReadLine;
         handler.WriteAllFn = ImHexSettingsHandler_WriteAll;
         handler.UserData   = this;
-        ctx->SettingsHandlers.push_back(handler);
-
-        ImGui::StyleColorsDark();
+        ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 150");
