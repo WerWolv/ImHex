@@ -10,8 +10,8 @@ setDefaultBuiltTypeIfUnset()
 
 # List plugin names here. Project name must match folder name
 set(PLUGINS
-        example
         builtin
+        # example
         )
 
 # List extra magic databases to compile here
