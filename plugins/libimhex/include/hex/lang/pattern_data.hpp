@@ -217,6 +217,10 @@ namespace hex::lang {
             this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
         }
 
+        ~PatternDataPointer() override {
+            delete this->m_pointedAt;
+        }
+
         PatternData* clone() override {
             return new PatternDataPointer(*this);
         }
@@ -453,6 +457,11 @@ namespace hex::lang {
                 this->m_entries.push_back(entry->clone());
         }
 
+        ~PatternDataArray() override {
+            for (const auto &entry : this->m_entries)
+                delete entry;
+        }
+
         PatternData* clone() override {
             return new PatternDataArray(*this);
         }
@@ -526,6 +535,11 @@ namespace hex::lang {
         PatternDataStruct(const PatternDataStruct &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
             for (const auto &member : other.m_members)
                 this->m_members.push_back(member->clone());
+        }
+
+        ~PatternDataStruct() override {
+            for (const auto &member : this->m_members)
+                delete member;
         }
 
         PatternData* clone() override {
@@ -607,6 +621,11 @@ namespace hex::lang {
         PatternDataUnion(const PatternDataUnion &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
             for (const auto &member : other.m_members)
                 this->m_members.push_back(member->clone());
+        }
+
+        ~PatternDataUnion() override {
+            for (const auto &member : this->m_members)
+                delete member;
         }
 
         PatternData* clone() override {

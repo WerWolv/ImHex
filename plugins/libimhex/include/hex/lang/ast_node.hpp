@@ -188,6 +188,7 @@ namespace hex::lang {
 
         ~ASTNodeVariableDecl() override {
             delete this->m_type;
+            delete this->m_placementOffset;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -226,6 +227,7 @@ namespace hex::lang {
         ~ASTNodeArrayVariableDecl() override {
             delete this->m_type;
             delete this->m_size;
+            delete this->m_placementOffset;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -262,6 +264,8 @@ namespace hex::lang {
 
         ~ASTNodePointerVariableDecl() override {
             delete this->m_type;
+            delete this->m_sizeType;
+            delete this->m_placementOffset;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
