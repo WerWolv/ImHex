@@ -123,6 +123,8 @@ namespace hex::plugin::builtin {
                         { "hex.view.help.about.donations", "Donations" },
                         { "hex.view.help.about.thanks", "If you like my work, please consider donating to keep the project going. Thanks a lot <3" },
                         { "hex.view.help.about.libs", "Libraries used" },
+                    { "hex.view.help.pattern_cheat_sheet", "Pattern Language Cheat Sheet"},
+                    { "hex.view.help.calc_cheat_sheet", "Calculator Cheat Sheet" },
 
                 { "hex.view.hexeditor.title", "Hex editor" },
                     { "hex.view.hexeditor.save_changes", "Save Changes" },
@@ -172,7 +174,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.hexeditor.goto.offset.begin", "Begin" },
                         { "hex.view.hexeditor.goto.offset.end", "End" },
                     { "hex.view.hexeditor.error.read_only", "Couldn't get write access. File opened in read-only mode." },
-                    { "hex.view.hexeditor.error.open", "Filed to open file!" },
+                    { "hex.view.hexeditor.error.open", "Failed to open file!" },
                     { "hex.view.hexeditor.menu.edit.copy", "Copy as..." },
                         { "hex.view.hexeditor.copy.bytes", "Bytes" },
                         { "hex.view.hexeditor.copy.hex", "Hex String" },

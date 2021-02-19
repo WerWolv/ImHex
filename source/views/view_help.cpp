@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    ViewHelp::ViewHelp() : View("Help") {
+    ViewHelp::ViewHelp() : View("hex.view.help.about.title"_lang) {
     }
 
     ViewHelp::~ViewHelp() {
@@ -312,18 +312,18 @@ namespace hex {
     }
 
     void ViewHelp::drawMenu() {
-        if (ImGui::BeginMenu("Help")) {
-            if (ImGui::MenuItem("About", "")) {
-                View::doLater([] { ImGui::OpenPopup("About"); });
+        if (ImGui::BeginMenu("hex.menu.help"_lang)) {
+            if (ImGui::MenuItem("hex.view.help.about.title"_lang, "")) {
+                View::doLater([] { ImGui::OpenPopup("hex.view.help.about.title"_lang); });
                 this->m_aboutWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("Pattern Language Cheat Sheet", "")) {
+            if (ImGui::MenuItem("hex.view.help.pattern_cheat_sheet"_lang, "")) {
                 this->m_patternHelpWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
-            if (ImGui::MenuItem("Calculator Cheat Sheet", "")) {
+            if (ImGui::MenuItem("hex.view.help.calc_cheat_sheet"_lang, "")) {
                 this->m_mathHelpWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
