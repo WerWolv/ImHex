@@ -177,7 +177,7 @@ namespace hex {
 
                     if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
                         ImGui::NewLine();
-                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),"hex.view.information.encrypted"_lang);
+                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "hex.view.information.encrypted"_lang);
                     }
 
                 }

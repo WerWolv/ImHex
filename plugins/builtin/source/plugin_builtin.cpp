@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
 
 }
 
-IMHEX_PLUGIN_SETUP {
+IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     using namespace hex::plugin::builtin;
 

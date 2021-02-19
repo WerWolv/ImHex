@@ -364,6 +364,7 @@ namespace hex {
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))
                     EventManager::post(Events::OpenWindow, "Open Project");
             }
+
             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.start.recent"_lang);
@@ -377,6 +378,7 @@ namespace hex {
                     }
                 }
             }
+
             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.help"_lang);
@@ -384,6 +386,49 @@ namespace hex {
                 if (ImGui::BulletHyperlink("hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
                 if (ImGui::BulletHyperlink("hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
             }
+
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted("hex.welcome.header.plugins"_lang);
+            {
+                const auto &plugins = PluginHandler::getPlugins();
+
+                if (plugins.empty()) {
+                    // Intentionally left untranslated so it will be readable even if no plugin with translations is loaded
+                    ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),
+                        "No plugins loaded! To use ImHex properly, "
+                             "make sure at least the builtin plugin is in the /plugins folder next to the executable");
+                } else {
+                    if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 4))) {
+                        ImGui::TableSetupScrollFreeze(0, 1);
+                        ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang);
+                        ImGui::TableSetupColumn("hex.welcome.plugins.author"_lang);
+                        ImGui::TableSetupColumn("hex.welcome.plugins.desc"_lang);
+
+                        ImGui::TableHeadersRow();
+
+                        ImGuiListClipper clipper;
+                        clipper.Begin(plugins.size());
+
+                        while (clipper.Step()) {
+                            for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted((plugins[i].getPluginName() + "   ").c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted((plugins[i].getPluginAuthor() + "   ").c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted(plugins[i].getPluginDescription().c_str());
+                            }
+                        }
+
+                        clipper.End();
+
+                        ImGui::EndTable();
+                    }
+                }
+            }
+
 
             ImGui::EndTable();
         }
