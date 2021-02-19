@@ -156,6 +156,7 @@ namespace hex {
             static std::vector<Entry>& getEntries();
         };
 
+        /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
         struct DataProcessorNode {
             using CreatorFunction = std::function<dp::Node*()>;
             struct Entry {
@@ -176,6 +177,7 @@ namespace hex {
             static void add(const Entry &entry);
         };
 
+        /* Language Registry. Allows together with the LangEntry class and the _lang user defined literal to add new languages */
         struct Language {
             static void registerLanguage(std::string_view name, std::string_view languageCode);
             static void addLocalizations(std::string_view languageCode, const LanguageDefinition &definition);
@@ -184,6 +186,7 @@ namespace hex {
             static std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
         };
 
+        /* Interface Registry. Allows adding new items to various interfaces */
         struct Interface {
             using DrawCallback = std::function<void()>;
 
