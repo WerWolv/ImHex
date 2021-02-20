@@ -22,6 +22,7 @@
 #include "views/view_command_palette.hpp"
 #include "views/view_settings.hpp"
 #include "views/view_data_processor.hpp"
+#include "views/view_yara.hpp"
 
 #include <vector>
 
@@ -49,6 +50,7 @@ int main(int argc, char **argv) {
     ContentRegistry::Views::add<ViewHelp>();
     ContentRegistry::Views::add<ViewSettings>();
     ContentRegistry::Views::add<ViewDataProcessor>();
+    ContentRegistry::Views::add<ViewYara>();
 
     if (argc > 1)
         View::postEvent(Events::FileDropped, argv[1]);
