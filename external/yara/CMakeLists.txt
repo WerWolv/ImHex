@@ -98,6 +98,10 @@ target_include_directories(
         PRIVATE ${LIBYARA_SOURCE_PATH}
 )
 
+if (UNIX)
+    target_link_libraries(libyara pthread)
+endif ()
+
 include(GNUInstallDirs)
 configure_file(${LIBYARA_SOURCE_PATH}/yara.pc.in
         ${LIBYARA_SOURCE_PATH}/yara.pc @ONLY)
