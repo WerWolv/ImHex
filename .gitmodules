@@ -1,3 +1,6 @@
 [submodule "external/nativefiledialog"]
 	path = external/nativefiledialog
 	url = https://github.com/btzy/nativefiledialog-extended
+[submodule "external/yara/yara"]
+	path = external/yara/yara
+	url = https://github.com/VirusTotal/yara

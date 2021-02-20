@@ -26,6 +26,7 @@ detectArch()
 
 # Add bundled dependencies
 add_subdirectory(external/llvm)
+add_subdirectory(external/yara)
 add_subdirectory(plugins/libimhex)
 
 # Add include directories
@@ -61,6 +62,7 @@ add_executable(imhex ${application_type}
         source/views/view_command_palette.cpp
         source/views/view_settings.cpp
         source/views/view_data_processor.cpp
+        source/views/view_yara.cpp
 
         ${imhex_icon}
         )
@@ -69,9 +71,9 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcapstone.a LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32)
+    target_link_libraries(imhex libdl.a libmagic.a libgnurx.a libtre.a libintl.a libiconv.a libshlwapi.a libcapstone.a LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32 libyara)
 elseif (UNIX)
-    target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread)
+    target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread libyara)
 endif()
 
 createPackage()
