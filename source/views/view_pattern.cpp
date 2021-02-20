@@ -258,7 +258,7 @@ namespace hex {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-                    if (ImGui::ArrowButton("Compile", ImGuiDir_Right))
+                    if (ImGui::ArrowButton("compile", ImGuiDir_Right))
                         this->parsePattern(this->m_textEditor.GetText().data());
 
                     ImGui::PopStyleVar();
@@ -267,9 +267,9 @@ namespace hex {
 
                 ImGui::SameLine();
                 if (this->m_compilerRunning)
-                    ImGui::Text("[%c] Compiling...", "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                    ImGui::Text("hex.view.pattern.compiling"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
                 else
-                    ImGui::Checkbox("Run automatically", &this->m_runAutomatically);
+                    ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
 
                 if (this->m_textEditor.IsTextChanged() && this->m_runAutomatically) {
                     this->parsePattern(this->m_textEditor.GetText().data());

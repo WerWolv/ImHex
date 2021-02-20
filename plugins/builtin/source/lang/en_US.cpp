@@ -220,6 +220,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.pattern.accept_pattern.question", "Do you want to apply the selected pattern?" },
                 { "hex.view.pattern.menu.file.load_pattern", "Load pattern..." },
                 { "hex.view.pattern.open_pattern", "Open pattern" },
+                { "hex.view.pattern.compiling", "[%c] Compiling..." },
+                { "hex.view.pattern.auto", "Auto compile" },
 
                 { "hex.view.pattern_data.title", "Pattern Data" },
                     { "hex.view.pattern_data.name", "Name" },
