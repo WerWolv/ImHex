@@ -31,6 +31,8 @@ namespace hex {
         std::vector<lang::PatternData*> &m_patternData;
         std::vector<std::string> m_possiblePatternFiles;
         int m_selectedPatternFile = 0;
+        bool m_runAutomatically = false;
+        bool m_compilerRunning = false;
 
         TextEditor m_textEditor;
         std::vector<std::pair<lang::LogConsole::Level, std::string>> m_console;

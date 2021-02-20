@@ -141,4 +141,16 @@ namespace ImGui {
         PopStyleColor();
     }
 
+    void Disabled(std::function<void()> widgets, bool disabled) {
+        if (disabled) {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5F);
+            widgets();
+            ImGui::PopStyleVar();
+            ImGui::PopItemFlag();
+        } else {
+            widgets();
+        }
+    }
+
 }

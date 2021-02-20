@@ -6,6 +6,8 @@
 
 #include <magic.h>
 
+#include <imgui_imhex_extensions.h>
+
 namespace hex {
 
     static const TextEditor::LanguageDefinition& PatternLanguage() {
@@ -213,17 +215,19 @@ namespace hex {
     }
 
     void ViewPattern::drawContent() {
-        if (ImGui::Begin("hex.view.pattern.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.pattern.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
                 textEditorSize.y *= 4.0/5.0;
+                textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
                 this->m_textEditor.Render("hex.view.pattern.title"_lang, textEditorSize, true);
 
                 auto consoleSize = ImGui::GetContentRegionAvail();
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
+                consoleSize.y -= ImGui::GetTextLineHeightWithSpacing();
 
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
                 if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                     for (auto &[level, message] : this->m_console) {
                         switch (level) {
@@ -248,10 +252,26 @@ namespace hex {
                     }
                 }
                 ImGui::EndChild();
-
                 ImGui::PopStyleColor(1);
 
-                if (this->m_textEditor.IsTextChanged()) {
+                ImGui::Disabled([this]{
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+
+                    if (ImGui::ArrowButton("Compile", ImGuiDir_Right))
+                        this->parsePattern(this->m_textEditor.GetText().data());
+
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
+                }, this->m_compilerRunning);
+
+                ImGui::SameLine();
+                if (this->m_compilerRunning)
+                    ImGui::Text("[%c] Compiling...", "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                else
+                    ImGui::Checkbox("Run automatically", &this->m_runAutomatically);
+
+                if (this->m_textEditor.IsTextChanged() && this->m_runAutomatically) {
                     this->parsePattern(this->m_textEditor.GetText().data());
                 }
             }
@@ -324,24 +344,31 @@ namespace hex {
     }
 
     void ViewPattern::parsePattern(char *buffer) {
+        this->m_compilerRunning = true;
+
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
         this->m_console.clear();
         View::postEvent(Events::PatternChanged);
 
-        auto result = this->m_patternLanguageRuntime->executeString(SharedData::currentProvider, buffer);
+        std::thread([this, buffer = std::string(buffer)] {
+            auto result = this->m_patternLanguageRuntime->executeString(SharedData::currentProvider, buffer);
 
-        auto error = this->m_patternLanguageRuntime->getError();
-        if (error.has_value()) {
-            this->m_textEditor.SetErrorMarkers({ error.value() });
-        }
+            auto error = this->m_patternLanguageRuntime->getError();
+            if (error.has_value()) {
+                this->m_textEditor.SetErrorMarkers({ error.value() });
+            }
 
-        this->m_console = this->m_patternLanguageRuntime->getConsoleLog();
+            this->m_console = this->m_patternLanguageRuntime->getConsoleLog();
 
-        if (result.has_value()) {
-            this->m_patternData = std::move(result.value());
-            View::postEvent(Events::PatternChanged);
-        }
+            if (result.has_value()) {
+                this->m_patternData = std::move(result.value());
+                View::doLater([]{ View::postEvent(Events::PatternChanged); });
+            }
+
+            this->m_compilerRunning = false;
+        }).detach();
+
     }
 
 }
