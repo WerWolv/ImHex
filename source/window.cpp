@@ -558,7 +558,7 @@ namespace hex {
         #if defined(OS_WINDOWS)
             std::filesystem::path resourcePath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path();
         #elif defined(OS_LINUX) || defined(OS_MACOS)
-            std::filesystem::path resourcePath = "/usr/share/ImHex";
+            std::filesystem::path resourcePath = "/usr/share/imhex";
         #else
             std::filesystem::path resourcePath = "";
             #warning "Unsupported OS for custom font support"
