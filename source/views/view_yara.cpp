@@ -62,10 +62,17 @@ namespace hex {
                 clipper.Begin(this->m_matches.size());
 
                 while (clipper.Step()) {
-                    for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                    for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         auto &[identifier, address, size] = this->m_matches[i];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
+                        ImGui::PushID(i);
+                        if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                            Region selectRegion = { u64(address), size_t(size) };
+                            View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                        }
+                        ImGui::PopID();
+                        ImGui::SameLine();
                         ImGui::TextUnformatted(identifier.c_str());
                         ImGui::TableNextColumn();
                         ImGui::Text("0x%llX : 0x%llX", address, address + size - 1);
@@ -123,22 +130,32 @@ namespace hex {
 
             SharedData::currentProvider->read(offset, buffer.data(), buffer.size());
 
-            yr_rules_scan_mem(rules, buffer.data(), buffer.size(), 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
+            std::vector<YaraMatch> newMatches;
+
+            auto result = yr_rules_scan_mem(rules, buffer.data(), buffer.size(), 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
                 if (message == CALLBACK_MSG_RULE_MATCHING) {
-                    auto _this = static_cast<ViewYara*>(userData);
+                    auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
                     auto rule  = static_cast<YR_RULE*>(data);
 
                     YR_STRING *string;
                     YR_MATCH *match;
                     yr_rule_strings_foreach(rule, string) {
                         yr_string_matches_foreach(context, string, match) {
-                            _this->m_matches.push_back({ rule->identifier, match->offset, match->match_length });
+                            newMatches.push_back({ rule->identifier, match->offset, match->match_length });
                         }
                     }
                 }
 
                 return CALLBACK_CONTINUE;
-            }, this, 0);
+            }, &newMatches, 0);
+
+            if (result != ERROR_SUCCESS)
+                break;
+
+            for (auto &newMatch : newMatches) {
+                newMatch.address += offset;
+                this->m_matches.push_back(newMatch);
+            }
         }
 
         yr_compiler_destroy(compiler);
