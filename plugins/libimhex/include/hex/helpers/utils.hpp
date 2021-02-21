@@ -224,6 +224,18 @@ namespace hex {
         trimRight(s);
     }
 
+    enum class ImHexPath {
+        Patterns,
+        PatternsInclude,
+        Magic,
+        Python,
+        Plugins,
+        Config,
+        Resources
+    };
+
+    std::string getPath(ImHexPath path);
+
     #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
     class ScopeExit {
     public:

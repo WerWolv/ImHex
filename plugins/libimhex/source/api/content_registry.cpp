@@ -10,14 +10,14 @@ namespace hex {
     /* Settings */
 
     void ContentRegistry::Settings::load() {
-        std::ifstream settingsFile(std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "settings.json");
+        std::ifstream settingsFile(hex::getPath(ImHexPath::Config) + "/settings.json");
 
         if (settingsFile.good())
             settingsFile >> getSettingsData();
     }
 
     void ContentRegistry::Settings::store() {
-        std::ofstream settingsFile(std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "settings.json", std::ios::trunc);
+        std::ofstream settingsFile(hex::getPath(ImHexPath::Config) + "/settings.json", std::ios::trunc);
         settingsFile << getSettingsData();
     }
 

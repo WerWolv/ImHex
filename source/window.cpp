@@ -50,6 +50,7 @@ namespace hex {
         hex::SharedData::mainArgc = argc;
         hex::SharedData::mainArgv = argv;
 
+        this->createDirectories();
         this->initGLFW();
         this->initImGui();
 
@@ -512,9 +513,18 @@ namespace hex {
         ImGui::DockBuilderFinish(dockId);
     }
 
-     void Window::initGLFW() {
+    void Window::createDirectories() const {
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns));
+        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude));
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic));
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins));
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources));
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Config));
+    }
+
+    void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char* desc) {
-            fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
+           fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
         });
 
         if (!glfwInit())
@@ -645,16 +655,7 @@ namespace hex {
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
 
-        #if defined(OS_WINDOWS)
-            std::filesystem::path resourcePath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path();
-        #elif defined(OS_LINUX) || defined(OS_MACOS)
-            std::filesystem::path resourcePath = "/usr/share/ImHex";
-        #else
-            std::filesystem::path resourcePath = "";
-            #warning "Unsupported OS for custom font support"
-        #endif
-
-        if (!resourcePath.empty() && this->setFont(resourcePath / "font.ttf")) {
+        if (this->setFont(hex::getPath(ImHexPath::Resources) + "/font.ttf")) {
 
         }
         else {
@@ -700,14 +701,17 @@ namespace hex {
         handler.UserData   = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
+        static char fileName[255];
+        strcpy(fileName, (hex::getPath(ImHexPath::Config) + "/interface.ini").c_str());
+        io.IniFilename = fileName;
+
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 150");
     }
 
     void Window::initPlugins() {
         try {
-            auto pluginFolderPath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "plugins";
-            PluginHandler::load(pluginFolderPath.string());
+            PluginHandler::load(hex::getPath(ImHexPath::Plugins));
         } catch (std::runtime_error &e) { return; }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
