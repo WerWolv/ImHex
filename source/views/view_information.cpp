@@ -13,7 +13,7 @@
 
 namespace hex {
 
-    ViewInformation::ViewInformation() : View("hex.view.information.title"_lang) {
+    ViewInformation::ViewInformation() : View("hex.view.information.name"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto) {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
@@ -45,7 +45,7 @@ namespace hex {
     }
 
     void ViewInformation::drawContent() {
-        if (ImGui::Begin("hex.view.information.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.information.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             auto provider = SharedData::currentProvider;

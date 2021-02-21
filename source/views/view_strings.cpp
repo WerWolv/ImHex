@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewStrings::ViewStrings() : View("hex.view.strings.title"_lang) {
+    ViewStrings::ViewStrings() : View("hex.view.strings.name"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto){
             this->m_foundStrings.clear();
         });
@@ -37,7 +37,7 @@ namespace hex {
             if (ImGui::MenuItem("hex.view.strings.demangle"_lang)) {
                 this->m_demangledName = llvm::demangle(this->m_selectedString);
                 if (!this->m_demangledName.empty())
-                    View::doLater([]{ ImGui::OpenPopup("hex.view.strings.demangle.title"_lang); });
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.strings.demangle.name"_lang); });
             }
             ImGui::EndPopup();
         }

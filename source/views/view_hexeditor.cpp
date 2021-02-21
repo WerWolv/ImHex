@@ -17,7 +17,7 @@
 namespace hex {
 
     ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
-            : View("hex.view.hexeditor.title"_lang), m_patternData(patternData) {
+            : View("hex.view.hexeditor.name"_lang), m_patternData(patternData) {
 
         this->m_searchStringBuffer.resize(0xFFF, 0x00);
         this->m_searchHexBuffer.resize(0xFFF, 0x00);
@@ -197,10 +197,10 @@ namespace hex {
 
         size_t dataSize = (provider == nullptr || !provider->isReadable()) ? 0x00 : provider->getSize();
 
-        this->m_memoryEditor.DrawWindow("hex.view.hexeditor.title"_lang, &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
+        this->m_memoryEditor.DrawWindow("hex.view.hexeditor.name"_lang, &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
 
         if (dataSize != 0x00) {
-            if (ImGui::Begin("hex.view.hexeditor.title"_lang)) {
+            if (ImGui::Begin("hex.view.hexeditor.name"_lang)) {
 
                 if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
                     ImGui::OpenPopup("hex.menu.edit"_lang);

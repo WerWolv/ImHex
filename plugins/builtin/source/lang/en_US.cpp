@@ -120,8 +120,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.hashes.poly", "Polynomial" },
                     { "hex.view.hashes.result", "Result" },
 
-                { "hex.view.help.title", "Help" },
-                    { "hex.view.help.about.title", "About" },
+                { "hex.view.help.name", "Help" },
+                    { "hex.view.help.about.name", "About" },
                         { "hex.view.help.about.translator", "Translated by WerWolv" },
                         { "hex.view.help.about.source", "Source code available on GitHub:" },
                         { "hex.view.help.about.donations", "Donations" },
@@ -130,7 +130,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.help.pattern_cheat_sheet", "Pattern Language Cheat Sheet"},
                     { "hex.view.help.calc_cheat_sheet", "Calculator Cheat Sheet" },
 
-                { "hex.view.hexeditor.title", "Hex editor" },
+                { "hex.view.hexeditor.name", "Hex editor" },
                     { "hex.view.hexeditor.save_changes", "Save Changes" },
                     { "hex.view.hexeditor.open_file", "Open File" },
                     { "hex.view.hexeditor.open_project", "Open Project" },
@@ -194,7 +194,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.menu.edit.bookmark", "Create bookmark" },
                     { "hex.view.hexeditor.menu.edit.set_base", "Set base address" },
 
-                { "hex.view.information.title", "Data Information" },
+                { "hex.view.information.name", "Data Information" },
                     { "hex.view.information.analyze", "Analyze current page" },
                     { "hex.view.information.region", "analyzed region" },
                     { "hex.view.information.description", "Description:" },
@@ -207,13 +207,13 @@ namespace hex::plugin::builtin {
                     { "hex.view.information.highest_entropy", "Highest entropy block" },
                     { "hex.view.information.encrypted", "This data is most likely encrypted or compressed!" },
 
-                { "hex.view.patches.title", "Patches" },
+                { "hex.view.patches.name", "Patches" },
                     { "hex.view.patches.offset", "Offset" },
                     { "hex.view.patches.orig", "Original value" },
                     { "hex.view.patches.patch", "Patched value"},
                     { "hex.view.patches.remove", "Remove patch" },
 
-                { "hex.view.pattern.title", "Pattern editor" },
+                { "hex.view.pattern.name", "Pattern editor" },
                 { "hex.view.pattern.accept_pattern", "Accept pattern" },
                     { "hex.view.pattern.accept_pattern.desc", "One or more patterns compatible with this data type has been found" },
                     { "hex.view.pattern.accept_pattern.patterns", "Patterns" },
@@ -223,7 +223,7 @@ namespace hex::plugin::builtin {
                 { "hex.view.pattern.compiling", "[%c] Compiling..." },
                 { "hex.view.pattern.auto", "Auto compile" },
 
-                { "hex.view.pattern_data.title", "Pattern Data" },
+                { "hex.view.pattern_data.name", "Pattern Data" },
                     { "hex.view.pattern_data.name", "Name" },
                     { "hex.view.pattern_data.color", "Color" },
                     { "hex.view.pattern_data.offset", "Offset" },
@@ -231,9 +231,9 @@ namespace hex::plugin::builtin {
                     { "hex.view.pattern_data.type", "Type" },
                     { "hex.view.pattern_data.value", "Value" },
 
-                { "hex.view.settings.title", "Settings" },
+                { "hex.view.settings.name", "Settings" },
 
-                { "hex.view.strings.title", "Strings" },
+                { "hex.view.strings.name", "Strings" },
                     { "hex.view.strings.copy", "Copy string" },
                     { "hex.view.strings.demangle", "Demangle" },
                     { "hex.view.strings.min_length", "Minimum length" },
@@ -245,7 +245,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.strings.demangle.title", "Demangled name" },
                     { "hex.view.strings.demangle.copy", "Copy" },
 
-                { "hex.view.tools.title", "Tools" },
+                { "hex.view.tools.name", "Tools" },
 
             /* Builtin plugin features */
 

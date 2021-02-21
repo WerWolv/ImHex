@@ -76,7 +76,7 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.title"_lang), m_patternData(patternData) {
+    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.name"_lang), m_patternData(patternData) {
         this->m_patternLanguageRuntime = new lang::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -215,14 +215,14 @@ namespace hex {
     }
 
     void ViewPattern::drawContent() {
-        if (ImGui::Begin("hex.view.pattern.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        if (ImGui::Begin("hex.view.pattern.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
                 textEditorSize.y *= 4.0/5.0;
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-                this->m_textEditor.Render("hex.view.pattern.title"_lang, textEditorSize, true);
+                this->m_textEditor.Render("hex.view.pattern.name"_lang, textEditorSize, true);
 
                 auto consoleSize = ImGui::GetContentRegionAvail();
                 consoleSize.y -= ImGui::GetTextLineHeightWithSpacing();

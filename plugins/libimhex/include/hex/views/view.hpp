@@ -57,7 +57,7 @@ namespace hex {
 
     private:
         std::string m_viewName;
-        bool m_windowOpen = false;
+        bool m_windowOpen = this->hasViewMenuItemEntry();
     };
 
 }

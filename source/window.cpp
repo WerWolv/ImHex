@@ -305,11 +305,7 @@ namespace hex {
                 Window::s_currShortcut = { -1, -1 };
             }
 
-            bool anyViewOpen = false;
-            for (auto &view : ContentRegistry::Views::getEntries())
-                anyViewOpen = anyViewOpen || (view->getWindowOpenState() && view->isAvailable());
-
-            if (!anyViewOpen && SharedData::currentProvider == nullptr) {
+            if (SharedData::currentProvider == nullptr) {
                 char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
@@ -321,6 +317,12 @@ namespace hex {
                     ImGui::PopStyleVar();
                 }
                 ImGui::End();
+            } else if (!this->m_layoutConfigured) {
+                this->m_layoutConfigured = true;
+                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 0) {
+                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
+                    this->resetLayout();
+                }
             }
 
         }
@@ -429,7 +431,6 @@ namespace hex {
                 }
             }
 
-
             ImGui::EndTable();
         }
         ImGui::SameLine();
@@ -467,6 +468,29 @@ namespace hex {
 
             ImGui::EndTable();
         }
+    }
+
+    void Window::resetLayout() {
+        auto dockId = ImGui::GetID("MainDock");
+
+        ImGui::DockBuilderRemoveNode(dockId);
+        ImGui::DockBuilderAddNode(dockId, ImGuiDockNodeFlags_DockSpace);
+        ImGui::DockBuilderSetNodeSize(dockId, ImGui::GetWindowSize());
+
+        ImGuiID mainWindowId, splitWindowId, hexEditorId, utilitiesId, inspectorId, patternDataId;
+
+        ImGui::DockBuilderSplitNode(dockId, ImGuiDir_Left, 0.8, &mainWindowId, &utilitiesId);
+        ImGui::DockBuilderSplitNode(mainWindowId, ImGuiDir_Down, 0.3, &patternDataId, &splitWindowId);
+        ImGui::DockBuilderSplitNode(splitWindowId, ImGuiDir_Right, 0.3, &inspectorId, &hexEditorId);
+
+        for (auto &view : ContentRegistry::Views::getEntries())
+
+            ImGui::DockBuilderDockWindow(view->getName().data(), utilitiesId);
+        ImGui::DockBuilderDockWindow("hex.view.hexeditor.name"_lang, hexEditorId);
+        ImGui::DockBuilderDockWindow("hex.view.data_inspector.name"_lang, inspectorId);
+        ImGui::DockBuilderDockWindow("hex.view.pattern_data.name"_lang, patternDataId);
+
+        ImGui::DockBuilderFinish(dockId);
     }
 
      void Window::initGLFW() {

@@ -4,10 +4,10 @@
 
 namespace hex {
 
-    ViewSettings::ViewSettings() : View("hex.view.settings.title"_lang) {
+    ViewSettings::ViewSettings() : View("hex.view.settings.name"_lang) {
         View::subscribeEvent(Events::OpenWindow, [this](auto name) {
-            if (std::any_cast<const char*>(name) == std::string("hex.view.settings.title")) {
-                View::doLater([]{ ImGui::OpenPopup("hex.view.settings.title"_lang); });
+            if (std::any_cast<const char*>(name) == std::string("hex.view.settings.name")) {
+                View::doLater([]{ ImGui::OpenPopup("hex.view.settings.name"_lang); });
                 this->getWindowOpenState() = true;
             }
         });
@@ -21,7 +21,7 @@ namespace hex {
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX));
 
-        if (ImGui::BeginPopupModal("hex.view.settings.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.view.settings.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
             for (auto &[category, entries] : ContentRegistry::Settings::getEntries()) {
                 ImGui::TextUnformatted(LangEntry(category));
                 ImGui::Separator();
@@ -39,8 +39,8 @@ namespace hex {
 
     void ViewSettings::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.help"_lang)) {
-            if (ImGui::MenuItem("hex.view.settings.title"_lang)) {
-                View::doLater([]{ ImGui::OpenPopup("hex.view.settings.title"_lang); });
+            if (ImGui::MenuItem("hex.view.settings.name"_lang)) {
+                View::doLater([]{ ImGui::OpenPopup("hex.view.settings.name"_lang); });
                 this->getWindowOpenState() = true;
             }
             ImGui::EndMenu();

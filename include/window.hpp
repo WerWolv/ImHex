@@ -34,6 +34,7 @@ namespace hex {
         void frameEnd();
 
         void drawWelcomeScreen();
+        void resetLayout();
 
         void initGLFW();
         void initImGui();
@@ -45,6 +46,7 @@ namespace hex {
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;
         bool m_demoWindowOpen = false;
+        bool m_layoutConfigured = false;
 
         static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
 

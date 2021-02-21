@@ -11,7 +11,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewPatches::ViewPatches() : View("hex.view.patches.title"_lang) {
+    ViewPatches::ViewPatches() : View("hex.view.patches.name"_lang) {
         View::subscribeEvent(Events::ProjectFileStore, [](auto) {
             auto provider = SharedData::currentProvider;
             if (provider != nullptr)
@@ -31,7 +31,7 @@ namespace hex {
     }
 
     void ViewPatches::drawContent() {
-        if (ImGui::Begin("hex.view.patches.title"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.patches.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isReadable()) {

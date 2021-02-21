@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    ViewHelp::ViewHelp() : View("hex.view.help.about.title"_lang) {
+    ViewHelp::ViewHelp() : View("hex.view.help.about.name"_lang) {
     }
 
     ViewHelp::~ViewHelp() {
@@ -29,7 +29,7 @@ namespace hex {
 
 
     void ViewHelp::drawAboutPopup() {
-        if (ImGui::BeginPopupModal("hex.view.help.about.title"_lang, &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.view.help.about.name"_lang, &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("ImHex Hex Editor v%s by WerWolv -", IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
                 ImGui::SameLine();
@@ -313,8 +313,8 @@ namespace hex {
 
     void ViewHelp::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.help"_lang)) {
-            if (ImGui::MenuItem("hex.view.help.about.title"_lang, "")) {
-                View::doLater([] { ImGui::OpenPopup("hex.view.help.about.title"_lang); });
+            if (ImGui::MenuItem("hex.view.help.about.name"_lang, "")) {
+                View::doLater([] { ImGui::OpenPopup("hex.view.help.about.name"_lang); });
                 this->m_aboutWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
