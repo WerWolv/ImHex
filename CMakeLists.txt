@@ -74,8 +74,4 @@ elseif (UNIX)
     target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread)
 endif()
 
-if (APPLE)
-    target_link_libraries(imhex "-framework Foundation")
-endif ()
-
 createPackage()

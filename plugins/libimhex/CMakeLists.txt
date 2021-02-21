@@ -46,3 +46,7 @@ if (WIN32)
 else ()
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto)
 endif ()
+
+if (APPLE)
+    target_link_libraries(imhex "-framework Foundation")
+endif ()
