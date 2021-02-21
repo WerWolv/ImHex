@@ -48,5 +48,5 @@ else ()
 endif ()
 
 if (APPLE)
-    target_link_libraries(imhex "-framework Foundation")
+    target_link_libraries(libimhex "-framework Foundation")
 endif ()
