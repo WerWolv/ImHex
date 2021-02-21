@@ -7,6 +7,8 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+#elif defined(OS_MACOS)
+    #include <CoreServices/CoreServices.h>
 #endif
 
 
@@ -199,21 +201,26 @@ namespace hex {
                 default: __builtin_unreachable();
             }
         #elif defined(OS_MACOS)
+            std::string appSupportFolder(MAX_PATH, '\0');
+
+            FSRef ref;
+            FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
+            FSRefMakePath(&ref, reinterpret_cast<u8*>(appSupportFolder.data()), PATH_MAX);
             switch (path) {
                 case ImHexPath::Patterns:
-                    return "/usr/local/share/imhex/patterns";
+                    return appSupportFolder + "/imhex/patterns";
                 case ImHexPath::PatternsInclude:
-                    return "/usr/local/share/imhex/includes";
+                    return appSupportFolder + "/imhex/includes";
                 case ImHexPath::Magic:
-                    return "/usr/local/share/imhex/magic";
+                    return appSupportFolder + "/imhex/magic";
                 case ImHexPath::Python:
-                    return "/usr/local/share/imhex";
+                    return appSupportFolder + "/imhex";
                 case ImHexPath::Plugins:
-                    return "/usr/local/lib/imhex/plugins";
+                    return appSupportFolder + "/imhex/plugins";
                 case ImHexPath::Config:
-                    return "/usr/local/share/imhex/config";
+                    return appSupportFolder + "/imhex/config";
                 case ImHexPath::Resources:
-                    return "/usr/local/share/imhex/resources";
+                    return appSupportFolder + "/imhex/resources";
                 default: __builtin_unreachable();
             }
         #else
