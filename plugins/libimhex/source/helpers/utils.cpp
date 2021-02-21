@@ -201,7 +201,7 @@ namespace hex {
                 default: __builtin_unreachable();
             }
         #elif defined(OS_MACOS)
-            std::string appSupportFolder(MAX_PATH, '\0');
+            std::string appSupportFolder(PATH_MAX, '\0');
 
             FSRef ref;
             FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
