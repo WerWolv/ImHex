@@ -43,10 +43,8 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (WIN32)
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a)
-else ()
+elseif (APPLE)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto "-framework Foundation")
+else()
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto)
-endif ()
-
-if (APPLE)
-    target_link_libraries(libimhex "-framework Foundation")
 endif ()
