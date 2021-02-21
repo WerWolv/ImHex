@@ -106,7 +106,7 @@ namespace hex {
             std::string magicFiles;
 
             std::error_code error;
-            for (const auto &entry : std::filesystem::directory_iterator("magic", error)) {
+            for (const auto &entry : std::filesystem::directory_iterator(hex::getPath(ImHexPath::Magic), error)) {
                 if (entry.is_regular_file() && entry.path().extension() == ".mgc")
                     magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
             }
@@ -142,7 +142,7 @@ namespace hex {
 
 
             std::error_code errorCode;
-            for (auto &entry : std::filesystem::directory_iterator("patterns", errorCode)) {
+            for (auto &entry : std::filesystem::directory_iterator(hex::getPath(ImHexPath::Patterns), errorCode)) {
                 if (!entry.is_regular_file())
                     continue;
 
@@ -297,7 +297,7 @@ namespace hex {
             ImGui::Text("hex.view.pattern.accept_pattern.question"_lang);
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
-                this->loadPatternFile("patterns/" + this->m_possiblePatternFiles[this->m_selectedPatternFile]);
+                this->loadPatternFile(hex::getPath(ImHexPath::Patterns) + "/" + this->m_possiblePatternFiles[this->m_selectedPatternFile]);
                 ImGui::CloseCurrentPopup();
             }, []{
                 ImGui::CloseCurrentPopup();

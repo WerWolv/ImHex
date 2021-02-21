@@ -3,6 +3,12 @@
 #include <cstdio>
 #include <codecvt>
 #include <locale>
+#include <filesystem>
+
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#endif
+
 
 namespace hex {
 
@@ -167,6 +173,68 @@ namespace hex {
             #warning "Unknown OS, can't open webpages"
         #endif
 
+    }
+
+    std::string getPath(ImHexPath path) {
+        #if defined(OS_WINDOWS)
+            std::string exePath(MAX_PATH, '\0');
+            GetModuleFileName(nullptr, exePath.data(), exePath.length());
+            auto parentDir = std::filesystem::path(exePath).parent_path();
+
+            switch (path) {
+                case ImHexPath::Patterns:
+                    return (parentDir / "patterns").string();
+                case ImHexPath::PatternsInclude:
+                    return (parentDir / "includes").string();
+                case ImHexPath::Magic:
+                    return (parentDir / "magic").string();
+                case ImHexPath::Python:
+                    return parentDir.string();
+                case ImHexPath::Plugins:
+                    return (parentDir / "plugins").string();
+                case ImHexPath::Config:
+                    return (parentDir / "config").string();
+                case ImHexPath::Resources:
+                    return (parentDir / "resources").string();
+                default: __builtin_unreachable();
+            }
+        #elif defined(OS_MACOS)
+            switch (path) {
+                case ImHexPath::Patterns:
+                    return "/usr/local/share/imhex/patterns";
+                case ImHexPath::PatternsInclude:
+                    return "/usr/local/share/imhex/includes";
+                case ImHexPath::Magic:
+                    return "/usr/local/share/imhex/magic";
+                case ImHexPath::Python:
+                    return "/usr/local/share/imhex";
+                case ImHexPath::Plugins:
+                    return "/usr/local/lib/imhex/plugins";
+                case ImHexPath::Config:
+                    return "/usr/local/share/imhex/config";
+                case ImHexPath::Resources:
+                    return "/usr/local/share/imhex/resources";
+                default: __builtin_unreachable();
+            }
+        #else
+            switch (path) {
+                case ImHexPath::Patterns:
+                    return "/usr/share/imhex/patterns";
+                case ImHexPath::PatternsInclude:
+                    return "/usr/share/imhex/includes";
+                case ImHexPath::Magic:
+                    return "/usr/share/imhex/magic";
+                case ImHexPath::Python:
+                    return "/usr/share/imhex";
+                case ImHexPath::Plugins:
+                    return "/usr/lib/imhex/plugins";
+                case ImHexPath::Config:
+                    return "/usr/share/imhex/config";
+                case ImHexPath::Resources:
+                    return "/usr/share/imhex/resources";
+                default: __builtin_unreachable();
+            }
+        #endif
     }
 
 }

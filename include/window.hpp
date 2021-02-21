@@ -35,6 +35,7 @@ namespace hex {
 
         void drawWelcomeScreen();
 
+        void createDirectories() const;
         void initGLFW();
         void initImGui();
         void deinitGLFW();

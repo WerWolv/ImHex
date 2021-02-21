@@ -48,7 +48,7 @@ namespace hex::lang {
                         offset += 1;
 
                         if (includeFile[0] != '/')
-                            includeFile = "include/" + includeFile;
+                            includeFile = hex::getPath(ImHexPath::PatternsInclude) + "/" + includeFile;
 
                         FILE *file = fopen(includeFile.c_str(), "r");
                         if (file == nullptr)
