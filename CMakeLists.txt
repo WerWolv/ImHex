@@ -75,7 +75,7 @@ elseif (UNIX)
 endif()
 
 if (APPLE)
-    target_link_libraries(imhex "-framework CoreFoundation")
+    target_link_libraries(imhex "-framework Foundation")
 endif ()
 
 createPackage()
