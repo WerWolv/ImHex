@@ -108,6 +108,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.disassembler.sparc.v9", "Sparc V9 mode" },
 
                     { "hex.view.disassembler.disassemble", "Disassemble" },
+                    { "hex.view.disassembler.disassembling", "[%c] Disassembling..." },
                     { "hex.view.disassembler.disassembly.title", "Disassembly" },
                         { "hex.view.disassembler.disassembly.address", "Address" },
                         { "hex.view.disassembler.disassembly.offset", "Offset" },
@@ -220,8 +221,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.pattern.accept_pattern.question", "Do you want to apply the selected pattern?" },
                 { "hex.view.pattern.menu.file.load_pattern", "Load pattern..." },
                 { "hex.view.pattern.open_pattern", "Open pattern" },
-                { "hex.view.pattern.compiling", "[%c] Compiling..." },
-                { "hex.view.pattern.auto", "Auto compile" },
+                { "hex.view.pattern.evaluating", "[%c] Evaluating..." },
+                { "hex.view.pattern.auto", "Auto evaluate" },
 
                 { "hex.view.pattern_data.name", "Pattern Data" },
                     { "hex.view.pattern_data.name", "Name" },
@@ -239,7 +240,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.strings.min_length", "Minimum length" },
                     { "hex.view.strings.filter", "Filter" },
                     { "hex.view.strings.extract", "Extract" },
-                    { "hex.view.strings.searching", "[%c] Searching..."}
+                    { "hex.view.strings.searching", "[%c] Searching..." },
                     { "hex.view.strings.offset", "Offset" },
                     { "hex.view.strings.size", "Size" },
                     { "hex.view.strings.string", "String" },

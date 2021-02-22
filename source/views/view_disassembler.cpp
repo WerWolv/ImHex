@@ -4,6 +4,9 @@
 #include <hex/helpers/utils.hpp>
 
 #include <cstring>
+#include <thread>
+
+#include <imgui_imhex_extensions.h>
 
 using namespace std::literals::string_literals;
 
@@ -11,7 +14,7 @@ namespace hex {
 
     ViewDisassembler::ViewDisassembler() : View("hex.view.disassembler.name"_lang) {
         View::subscribeEvent(Events::DataChanged, [this](auto){
-            this->m_shouldInvalidate = true;
+            this->disassemble();
         });
 
         View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
@@ -29,10 +32,11 @@ namespace hex {
         View::unsubscribeEvent(Events::RegionSelected);
     }
 
-    void ViewDisassembler::drawContent() {
-        if (this->m_shouldInvalidate) {
-            this->m_disassembly.clear();
+    void ViewDisassembler::disassemble() {
+        this->m_disassembly.clear();
+        this->m_disassembling = true;
 
+        std::thread([this] {
             csh capstoneHandle;
             cs_insn *instructions = nullptr;
 
@@ -89,9 +93,12 @@ namespace hex {
                 cs_close(&capstoneHandle);
             }
 
-            this->m_shouldInvalidate = false;
-        }
+            this->m_disassembling = false;
+        }).detach();
 
+    }
+
+    void ViewDisassembler::drawContent() {
 
         if (ImGui::Begin("hex.view.disassembler.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
@@ -235,9 +242,16 @@ namespace hex {
                 }
                 ImGui::EndChild();
 
-                ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - 300) / 2);
-                if (ImGui::Button("hex.view.disassembler.disassemble"_lang, ImVec2(300, 20)))
-                    this->m_shouldInvalidate = true;
+                ImGui::Disabled([this] {
+                    if (ImGui::Button("hex.view.disassembler.disassemble"_lang))
+                        this->disassemble();
+                }, this->m_disassembling);
+
+                if (this->m_disassembling) {
+                    ImGui::SameLine();
+                    ImGui::Text("hex.view.disassembler.disassembling"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                }
+
                 ImGui::NewLine();
 
                 ImGui::TextUnformatted("hex.view.disassembler.disassembly.title"_lang);

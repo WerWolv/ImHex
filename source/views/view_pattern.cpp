@@ -258,16 +258,16 @@ namespace hex {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-                    if (ImGui::ArrowButton("compile", ImGuiDir_Right))
+                    if (ImGui::ArrowButton("evaluate", ImGuiDir_Right))
                         this->parsePattern(this->m_textEditor.GetText().data());
 
                     ImGui::PopStyleVar();
                     ImGui::PopStyleColor();
-                }, this->m_compilerRunning);
+                }, this->m_evaluatorRunning);
 
                 ImGui::SameLine();
-                if (this->m_compilerRunning)
-                    ImGui::Text("hex.view.pattern.compiling"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                if (this->m_evaluatorRunning)
+                    ImGui::Text("hex.view.pattern.evaluating"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
                 else
                     ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
 
@@ -344,7 +344,7 @@ namespace hex {
     }
 
     void ViewPattern::parsePattern(char *buffer) {
-        this->m_compilerRunning = true;
+        this->m_evaluatorRunning = true;
 
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
@@ -366,7 +366,7 @@ namespace hex {
                 View::doLater([]{ View::postEvent(Events::PatternChanged); });
             }
 
-            this->m_compilerRunning = false;
+            this->m_evaluatorRunning = false;
         }).detach();
 
     }
