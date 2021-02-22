@@ -162,6 +162,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DCREATE_BUNDLE=ON \
           -DCREATE_PACKAGE=ON \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
           ..
         make -j 4 package
 
