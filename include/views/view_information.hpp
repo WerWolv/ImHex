@@ -27,12 +27,14 @@ namespace hex {
         std::vector<float> m_blockEntropy;
 
         std::array<float, 256> m_valueCounts = { 0 };
-        bool m_shouldInvalidate = false;
+        bool m_analyzing = false;
 
         std::pair<u64, u64> m_analyzedRegion = { 0, 0 };
 
         std::string m_fileDescription;
         std::string m_mimeType;
+
+        void analyze();
     };
 
 }
