@@ -445,7 +445,13 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.color.dark", "Dark" },
                         { "hex.builtin.setting.interface.color.light", "Light" },
                         { "hex.builtin.setting.interface.color.classic", "Classic" },
-                    { "hex.builtin.setting.interface.language", "Language" }
+                    { "hex.builtin.setting.interface.language", "Language" },
+
+                { "hex.builtin.provider.file.path", "File path" },
+                { "hex.builtin.provider.file.size", "Size" },
+                { "hex.builtin.provider.file.creation", "Creation time" },
+                { "hex.builtin.provider.file.access", "Last access time" },
+                { "hex.builtin.provider.file.modification", "Last modification time" },
         });
     }
 

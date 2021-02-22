@@ -165,13 +165,13 @@ namespace hex::prv {
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
         std::vector<std::pair<std::string, std::string>> result;
 
-        result.emplace_back("File path", this->m_path);
-        result.emplace_back("Size", hex::toByteString(this->getActualSize()));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path);
+        result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStatsValid) {
-            result.emplace_back("Creation time", ctime(&this->m_fileStats.st_ctime));
-            result.emplace_back("Last access time", ctime(&this->m_fileStats.st_atime));
-            result.emplace_back("Last modification time", ctime(&this->m_fileStats.st_mtime));
+            result.emplace_back("hex.builtin.provider.file.creation"_lang, ctime(&this->m_fileStats.st_ctime));
+            result.emplace_back("hex.builtin.provider.file.access"_lang, ctime(&this->m_fileStats.st_atime));
+            result.emplace_back("hex.builtin.provider.file.modification"_lang, ctime(&this->m_fileStats.st_mtime));
         }
 
         return result;
