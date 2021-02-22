@@ -28,15 +28,30 @@ namespace hex {
         return EventManager::post(eventType, userData);
     }
 
-    void View::openFileBrowser(std::string title, imgui_addons::ImGuiFileBrowser::DialogMode mode, std::string validExtensions, const std::function<void(std::string)> &callback) {
-        SharedData::fileBrowserTitle = title;
-        SharedData::fileBrowserDialogMode = mode;
-        SharedData::fileBrowserValidExtensions = std::move(validExtensions);
-        SharedData::fileBrowserCallback = callback;
+    void View::openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback) {
+        NFD::Init();
 
-        View::doLater([title]{
-           ImGui::OpenPopup(title.c_str());
-        });
+        nfdchar_t *outPath;
+        nfdresult_t result;
+        switch (mode) {
+            case DialogMode::Open:
+                result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), nullptr);
+                break;
+            case DialogMode::Save:
+                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), nullptr);
+                break;
+            case DialogMode::Folder:
+                result = NFD::PickFolder(outPath, nullptr);
+                break;
+            default: __builtin_unreachable();
+        }
+
+        if (result == NFD_OKAY) {
+            callback(outPath);
+            NFD::FreePath(outPath);
+        }
+
+        NFD::Quit();
     }
 
     void View::drawCommonInterfaces() {
@@ -48,11 +63,6 @@ namespace hex {
                 ImGui::CloseCurrentPopup();
 
             ImGui::EndPopup();
-        }
-
-        if (SharedData::fileBrowser.showFileDialog(SharedData::fileBrowserTitle, SharedData::fileBrowserDialogMode, ImVec2(0, 0), SharedData::fileBrowserValidExtensions)) {
-            SharedData::fileBrowserCallback(SharedData::fileBrowser.selected_path);
-            SharedData::fileBrowserTitle = "";
         }
     }
 

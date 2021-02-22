@@ -5,7 +5,6 @@
 #include "helpers/encoding_file.hpp"
 
 #include <imgui_memory_editor.h>
-#include <ImGuiFileBrowser.h>
 
 #include <list>
 #include <tuple>

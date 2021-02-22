@@ -3,7 +3,7 @@
 #include <hex.hpp>
 
 #include <imgui.h>
-#include <ImGuiFileBrowser.h>
+#include <nfd.hpp>
 
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
@@ -27,7 +27,13 @@ namespace hex {
         virtual bool isAvailable();
         virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
 
-        static void openFileBrowser(std::string title, imgui_addons::ImGuiFileBrowser::DialogMode mode, std::string validExtensions, const std::function<void(std::string)> &callback);
+        enum class DialogMode {
+            Open,
+            Save,
+            Folder
+        };
+
+        static void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
         static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
 

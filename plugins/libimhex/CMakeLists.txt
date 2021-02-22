@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURRENT_BINARY_DIR}/external/ImGui)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog)
 
 
 if (WIN32)
@@ -42,7 +43,7 @@ target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (WIN32)
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a nfd)
 else ()
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd)
 endif ()

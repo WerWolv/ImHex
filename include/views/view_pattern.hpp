@@ -12,7 +12,6 @@
 #include <thread>
 #include <vector>
 
-#include <ImGuiFileBrowser.h>
 #include <TextEditor.h>
 
 namespace hex {

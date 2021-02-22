@@ -25,12 +25,6 @@ namespace hex {
     std::vector<ContentRegistry::Interface::DrawCallback> SharedData::welcomeScreenEntries;
     std::vector<ContentRegistry::Interface::DrawCallback> SharedData::footerItems;
 
-    imgui_addons::ImGuiFileBrowser SharedData::fileBrowser;
-    imgui_addons::ImGuiFileBrowser::DialogMode SharedData::fileBrowserDialogMode;
-    std::string SharedData::fileBrowserTitle;
-    std::string SharedData::fileBrowserValidExtensions;
-    std::function<void(std::string)> SharedData::fileBrowserCallback;
-
     std::vector<ContentRegistry::DataProcessorNode::Entry> SharedData::dataProcessorNodes;
     u32 SharedData::dataProcessorNodeIdCounter = 1;
 

@@ -13,7 +13,6 @@
 #include <hex/views/view.hpp>
 
 #include <imgui.h>
-#include <ImGuiFileBrowser.h>
 
 #include <nlohmann/json.hpp>
 
@@ -70,12 +69,6 @@ namespace hex {
 
         static std::vector<ContentRegistry::Interface::DrawCallback> welcomeScreenEntries;
         static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
-
-        static imgui_addons::ImGuiFileBrowser fileBrowser;
-        static imgui_addons::ImGuiFileBrowser::DialogMode fileBrowserDialogMode;
-        static std::string fileBrowserTitle;
-        static std::string fileBrowserValidExtensions;
-        static std::function<void(std::string)> fileBrowserCallback;
 
         static std::vector<ContentRegistry::DataProcessorNode::Entry> dataProcessorNodes;
         static u32 dataProcessorNodeIdCounter;

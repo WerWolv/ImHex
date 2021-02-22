@@ -206,7 +206,7 @@ namespace hex {
     void ViewPattern::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.pattern.menu.file.load_pattern"_lang)) {
-                View::openFileBrowser("hex.view.pattern.open_pattern"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexpat", [this](auto path) {
+                View::openFileBrowser("hex.view.pattern.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
                     this->loadPatternFile(path);
                 });
             }

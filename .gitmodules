@@ -1,0 +1,3 @@
+[submodule "external/nativefiledialog"]
+	path = external/nativefiledialog
+	url = https://github.com/btzy/nativefiledialog-extended

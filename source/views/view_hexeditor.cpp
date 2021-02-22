@@ -174,12 +174,12 @@ namespace hex {
 
         View::subscribeEvent(Events::OpenWindow, [this](auto name) {
             if (std::any_cast<const char*>(name) == std::string("Open File")) {
-                View::openFileBrowser("hex.view.hexeditor.open_file"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
                 });
             } else if (std::any_cast<const char*>(name) == std::string("Open Project")) {
-                View::openFileBrowser("hex.view.hexeditor.open_project"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexproj", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
                     View::postEvent(Events::ProjectFileLoad);
                     this->getWindowOpenState() = true;
@@ -246,7 +246,7 @@ namespace hex {
     }
 
     static void saveAs() {
-        View::openFileBrowser("hex.view.hexeditor.save_as"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [](auto path) {
+        View::openFileBrowser("hex.view.hexeditor.save_as"_lang, View::DialogMode::Save, { }, [](auto path) {
             FILE *file = fopen(path.c_str(), "wb");
 
             if (file != nullptr) {
@@ -293,14 +293,14 @@ namespace hex {
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.view.hexeditor.script.script"_lang)) {
-                View::openFileBrowser("hex.view.hexeditor.script.script.title"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".py", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.script.script.title"_lang, DialogMode::Open, { { "Python Script", "py" } }, [this](auto path) {
                     this->m_loaderScriptScriptPath = path;
                 });
             }
             ImGui::InputText("##nolabel", this->m_loaderScriptFilePath.data(), this->m_loaderScriptFilePath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.view.hexeditor.script.file"_lang)) {
-                View::openFileBrowser("hex.view.hexeditor.script.file.title"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.script.file.title"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->m_loaderScriptFilePath = path;
                 });
             }
@@ -353,7 +353,7 @@ namespace hex {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                View::openFileBrowser("hex.view.hexeditor.open_file"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
                 });
@@ -370,7 +370,7 @@ namespace hex {
             ImGui::Separator();
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_project"_lang, "")) {
-                View::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ".hexproj", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
                     View::postEvent(Events::ProjectFileLoad);
                     this->getWindowOpenState() = true;
@@ -381,7 +381,7 @@ namespace hex {
                 View::postEvent(Events::ProjectFileStore);
 
                 if (ProjectFile::getProjectFilePath() == "") {
-                    View::openFileBrowser("hex.view.hexeditor.save_project"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ".hexproj", [](auto path) {
+                    View::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
                         ProjectFile::store(path);
                     });
                 }
@@ -390,7 +390,7 @@ namespace hex {
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.load_encoding_file"_lang)) {
-                View::openFileBrowser("hex.view.hexeditor.load_enconding_file"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                View::openFileBrowser("hex.view.hexeditor.load_enconding_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
                 });
             }
@@ -400,7 +400,7 @@ namespace hex {
             if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.import"_lang)) {
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.import.base64"_lang)) {
 
-                    View::openFileBrowser("hex.view.hexeditor.menu.file.import.base64"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                    View::openFileBrowser("hex.view.hexeditor.menu.file.import.base64"_lang, DialogMode::Open, { }, [this](auto path) {
                         std::vector<u8> base64;
                         this->loadFromFile(path, base64);
 
@@ -420,7 +420,7 @@ namespace hex {
 
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.import.ips"_lang)) {
 
-                   View::openFileBrowser("hex.view.hexeditor.open_file"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                   View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                         auto patchData = hex::readFile(path);
                         auto patch = hex::loadIPSPatch(patchData);
 
@@ -434,7 +434,7 @@ namespace hex {
                 }
 
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.import.ips32"_lang)) {
-                    View::openFileBrowser("hex.view.hexeditor.open_file"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, "*.*", [this](auto path) {
+                    View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                         auto patchData = hex::readFile(path);
                         auto patch = hex::loadIPS32Patch(patchData);
 
@@ -464,7 +464,7 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPSPatch(patches);
-                    View::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [this](auto path) {
+                    View::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
                         this->saveToFile(path, this->m_dataToSave);
                     });
                 }
@@ -477,7 +477,7 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPS32Patch(patches);
-                    View::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, "*.*", [this](auto path) {
+                    View::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
                         this->saveToFile(path, this->m_dataToSave);
                     });
                 }

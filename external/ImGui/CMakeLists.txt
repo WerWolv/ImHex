@@ -19,7 +19,6 @@ add_library(imgui
         source/imgui_impl_opengl3.cpp
         source/imgui_tables.cpp
         source/imgui_widgets.cpp
-        source/ImGuiFileBrowser.cpp
         source/TextEditor.cpp
         source/imgui_imhex_extensions.cpp
         source/imnodes.cpp
