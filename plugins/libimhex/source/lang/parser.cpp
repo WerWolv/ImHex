@@ -118,10 +118,14 @@ namespace hex::lang {
     ASTNode* Parser::parseMultiplicativeExpression() {
         auto node = this->parseUnaryExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(oneOf(OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT))) {
             auto op = getValue<Token::Operator>(-1);
             node = new ASTNodeNumericExpression(node, this->parseUnaryExpression(), op);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -130,10 +134,14 @@ namespace hex::lang {
     ASTNode* Parser::parseAdditiveExpression() {
         auto node = this->parseMultiplicativeExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(variant(OPERATOR_PLUS, OPERATOR_MINUS))) {
             auto op = getValue<Token::Operator>(-1);
             node = new ASTNodeNumericExpression(node, this->parseMultiplicativeExpression(), op);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -142,10 +150,14 @@ namespace hex::lang {
     ASTNode* Parser::parseShiftExpression() {
         auto node = this->parseAdditiveExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(variant(OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT))) {
             auto op = getValue<Token::Operator>(-1);
             node = new ASTNodeNumericExpression(node, this->parseAdditiveExpression(), op);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -154,10 +166,14 @@ namespace hex::lang {
     ASTNode* Parser::parseRelationExpression() {
         auto node = this->parseShiftExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
             auto op = getValue<Token::Operator>(-1);
             node = new ASTNodeNumericExpression(node, this->parseShiftExpression(), op);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -166,10 +182,14 @@ namespace hex::lang {
     ASTNode* Parser::parseEqualityExpression() {
         auto node = this->parseRelationExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BOOLEQUALS) || sequence(OPERATOR_BOOLNOTEQUALS))) {
             auto op = getValue<Token::Operator>(-1);
             node = new ASTNodeNumericExpression(node, this->parseRelationExpression(), op);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -178,9 +198,13 @@ namespace hex::lang {
     ASTNode* Parser::parseBinaryAndExpression() {
         auto node = this->parseEqualityExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BITAND))) {
             node = new ASTNodeNumericExpression(node, this->parseEqualityExpression(), Token::Operator::BitAnd);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -189,9 +213,13 @@ namespace hex::lang {
     ASTNode* Parser::parseBinaryXorExpression() {
         auto node = this->parseBinaryAndExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BITXOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBinaryAndExpression(), Token::Operator::BitXor);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -200,9 +228,13 @@ namespace hex::lang {
     ASTNode* Parser::parseBinaryOrExpression() {
         auto node = this->parseBinaryXorExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BITOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBinaryXorExpression(), Token::Operator::BitOr);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -211,9 +243,13 @@ namespace hex::lang {
     ASTNode* Parser::parseBooleanAnd() {
         auto node = this->parseBinaryOrExpression();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BOOLAND))) {
             node = new ASTNodeNumericExpression(node, this->parseBinaryOrExpression(), Token::Operator::BitOr);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -222,9 +258,13 @@ namespace hex::lang {
     ASTNode* Parser::parseBooleanXor() {
         auto node = this->parseBooleanAnd();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BOOLXOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBooleanAnd(), Token::Operator::BitOr);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -233,9 +273,13 @@ namespace hex::lang {
     ASTNode* Parser::parseBooleanOr() {
         auto node = this->parseBooleanXor();
 
+        ScopeExit nodeCleanup([&]{ delete node; });
+
         while (MATCHES(sequence(OPERATOR_BOOLOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBooleanXor(), Token::Operator::BitOr);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
@@ -243,6 +287,8 @@ namespace hex::lang {
     // (parseBooleanOr) ? (parseBooleanOr) : (parseBooleanOr)
     ASTNode* Parser::parseTernaryConditional() {
         auto node = this->parseBooleanOr();
+
+        ScopeExit nodeCleanup([&]{ delete node; });
 
         while (MATCHES(sequence(OPERATOR_TERNARYCONDITIONAL))) {
             auto second = this->parseBooleanOr();
@@ -253,6 +299,8 @@ namespace hex::lang {
             auto third = this->parseBooleanOr();
             node = new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional);
         }
+
+        nodeCleanup.release();
 
         return node;
     }
