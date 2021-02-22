@@ -153,4 +153,8 @@ namespace ImGui {
         }
     }
 
+    void TextSpinner(const char* label) {
+        ImGui::Text("[%c] %s", "|/-\\"[ImU32(ImGui::GetTime() * 20) % 4], label);
+    }
+
 }

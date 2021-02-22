@@ -249,7 +249,7 @@ namespace hex {
 
                 if (this->m_disassembling) {
                     ImGui::SameLine();
-                    ImGui::Text("hex.view.disassembler.disassembling"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                    ImGui::TextSpinner("hex.view.disassembler.disassembling"_lang);
                 }
 
                 ImGui::NewLine();

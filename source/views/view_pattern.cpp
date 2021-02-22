@@ -267,7 +267,7 @@ namespace hex {
 
                 ImGui::SameLine();
                 if (this->m_evaluatorRunning)
-                    ImGui::Text("hex.view.pattern.evaluating"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                     ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
                 else
                     ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
 

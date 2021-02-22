@@ -13,4 +13,5 @@ namespace ImGui {
     void UnderlinedText(const char* label, ImColor color, const ImVec2& size_arg = ImVec2(0, 0));
 
     void Disabled(std::function<void()> widgets, bool disabled);
+    void TextSpinner(const char* label);
 }
