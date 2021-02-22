@@ -239,6 +239,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.strings.min_length", "Minimum length" },
                     { "hex.view.strings.filter", "Filter" },
                     { "hex.view.strings.extract", "Extract" },
+                    { "hex.view.strings.searching", "[%c] Searching..."}
                     { "hex.view.strings.offset", "Offset" },
                     { "hex.view.strings.size", "Size" },
                     { "hex.view.strings.string", "String" },

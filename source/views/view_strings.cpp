@@ -4,8 +4,10 @@
 #include <hex/helpers/utils.hpp>
 
 #include <cstring>
+#include <thread>
 
 #include <llvm/Demangle/Demangle.h>
+#include <imgui_imhex_extensions.h>
 
 using namespace std::literals::string_literals;
 
@@ -43,14 +45,12 @@ namespace hex {
         }
     }
 
+    void ViewStrings::searchStrings() {
+        this->m_foundStrings.clear();
+        this->m_searching = true;
 
-    void ViewStrings::drawContent() {
-        auto provider = SharedData::currentProvider;
-
-        if (this->m_shouldInvalidate) {
-            this->m_shouldInvalidate = false;
-
-            this->m_foundStrings.clear();
+        std::thread([this] {
+            auto provider = SharedData::currentProvider;
 
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
@@ -79,17 +79,32 @@ namespace hex {
                     }
                 }
             }
-        }
+
+            this->m_searching = false;
+        }).detach();
+
+    }
+
+    void ViewStrings::drawContent() {
+        auto provider = SharedData::currentProvider;
 
 
-        if (ImGui::Begin("Strings", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.strings.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (provider != nullptr && provider->isReadable()) {
-                if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
-                    this->m_shouldInvalidate = true;
+                ImGui::Disabled([this]{
+                    if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
+                        this->m_foundStrings.clear();
 
-                ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.size());
-                if (ImGui::Button("hex.view.strings.extract"_lang))
-                    this->m_shouldInvalidate = true;
+                    ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.size());
+                    if (ImGui::Button("hex.view.strings.extract"_lang))
+                        this->searchStrings();
+                }, this->m_searching);
+
+                if (this->m_searching) {
+                    ImGui::SameLine();
+                    ImGui::Text("hex.view.strings.searching"_lang, "|/-\\"[u8(ImGui::GetTime() * 20) % 4]);
+                }
+
 
                 ImGui::Separator();
                 ImGui::NewLine();
