@@ -15,6 +15,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
+if (APPLE)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -framework CoreFoundation")
+endif ()
+
 add_library(libimhex SHARED
         source/api/event.cpp
         source/api/imhex_api.cpp
@@ -43,9 +47,6 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (WIN32)
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a)
-elseif (APPLE)
-    find_library(FWCoreFoundation NAMES CoreFoundation)
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FWCoreFoundation})
 else()
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto)
 endif ()
