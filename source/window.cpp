@@ -62,12 +62,15 @@ namespace hex {
                         default:
                         case 0: /* Dark theme */
                             ImGui::StyleColorsDark();
+                            ImGui::StyleCustomColorsDark();
                             break;
                         case 1: /* Light theme */
                             ImGui::StyleColorsLight();
+                            ImGui::StyleCustomColorsLight();
                             break;
                         case 2: /* Classic theme */
                             ImGui::StyleColorsClassic();
+                            ImGui::StyleCustomColorsClassic();
                             break;
                     }
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
@@ -637,6 +640,8 @@ namespace hex {
         io.KeyMap[ImGuiKey_Y]           = GLFW_KEY_Y;
         io.KeyMap[ImGuiKey_Z]           = GLFW_KEY_Z;
 
+        io.UserData = new ImGui::ImHexCustomData();
+
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
 
@@ -716,6 +721,8 @@ namespace hex {
     }
 
     void Window::deinitImGui() {
+        delete static_cast<ImGui::ImHexCustomData*>(ImGui::GetIO().UserData);
+
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();

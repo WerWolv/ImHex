@@ -12,6 +12,23 @@ namespace ImGui {
 
     void UnderlinedText(const char* label, ImColor color, const ImVec2& size_arg = ImVec2(0, 0));
 
-    void Disabled(std::function<void()> widgets, bool disabled);
+    void Disabled(const std::function<void()> &widgets, bool disabled);
     void TextSpinner(const char* label);
+
+    enum ImGuiCustomCol {
+        ImGuiCustomCol_DescButton,
+        ImGuiCustomCol_DescButtonHovered,
+        ImGuiCustomCol_DescButtonActive,
+        ImGuiCustomCol_COUNT
+    };
+
+    struct ImHexCustomData {
+        ImVec4 Colors[ImGuiCustomCol_COUNT];
+    };
+
+    ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
+
+    void StyleCustomColorsDark();
+    void StyleCustomColorsLight();
+    void StyleCustomColorsClassic();
 }
