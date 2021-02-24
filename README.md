@@ -69,7 +69,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - File magic-based file parser and MIME type database
   - Byte distribution graph
   - Entropy graph
-  - Highest and avarage entropy
+  - Highest and average entropy
   - Encrypted / Compressed file detection
 - Helpful tools
   - Itanium and MSVC demangler
@@ -87,7 +87,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 ## Pattern Language
 
-The custom C-like Pattern Language developed and used by ImHex is easy to read, understand and learn. A guide with all features of the langauge can be found [in the wiki](https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide) or a simpler version in ImHex under `Help -> Pattern Language Cheat Sheet`
+The custom C-like Pattern Language developed and used by ImHex is easy to read, understand and learn. A guide with all features of the language can be found [in the wiki](https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide) or a simpler version in ImHex under `Help -> Pattern Language Cheat Sheet`
 
 ## Additional Files
 
