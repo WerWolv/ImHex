@@ -22,13 +22,15 @@ add_library(imgui
         source/TextEditor.cpp
         source/imgui_imhex_extensions.cpp
         source/imnodes.cpp
+
+        fonts/fontawesome_font.c
 )
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../glad ${CMAKE_CURRENT_BINARY_DIR}/external/glad)
 
-target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 
 target_link_directories(imgui PUBLIC ${GLM_INCLUDE_DIRS} ${GLFW_LIBRARY_DIRS})
 

@@ -14,6 +14,8 @@
 #include <imgui_freetype.h>
 #include <imgui_imhex_extensions.h>
 
+#include <fontawesome_font.h>
+
 #include "helpers/plugin_handler.hpp"
 
 #include <glad/glad.h>
@@ -191,6 +193,7 @@ namespace hex {
 
         ImVector<ImWchar> ranges;
         ImFontGlyphRangesBuilder glyphRangesBuilder;
+
         glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
         glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
         glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
@@ -200,7 +203,20 @@ namespace hex {
         glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
         glyphRangesBuilder.BuildRanges(&ranges);
 
-        io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale), nullptr, ranges.Data); // Needs conversion to char for Windows
+        ImWchar fontAwesomeRange[] = {
+                ICON_MIN_FA, ICON_MAX_FA,
+                0
+        };
+
+        ImFontConfig cfg;
+        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+        cfg.SizePixels = 13.0f * this->m_fontScale;
+
+        io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+        cfg.MergeMode = true;
+
+        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
+
         ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeType::Monochrome);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
@@ -636,14 +652,35 @@ namespace hex {
         if (!resourcePath.empty() && this->setFont(resourcePath / "font.ttf")) {
 
         }
-        else if ((this->m_fontScale != 0.0f) && (this->m_fontScale != 1.0f)) {
+        else {
             io.Fonts->Clear();
 
             ImFontConfig cfg;
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = 13.0f * this->m_fontScale;
             io.Fonts->AddFontDefault(&cfg);
+
+            cfg.MergeMode = true;
+
+            ImWchar fontAwesomeRange[] = {
+                    ICON_MIN_FA, ICON_MAX_FA,
+                    0
+            };
+            std::uint8_t *px;
+            int w, h;
+            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
+            io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
+
+            // Create new font atlas
+            GLuint tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
+            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
         }
+
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing = 10.0F;
