@@ -30,5 +30,6 @@ RDEPEND="${DEPEND}
 		sys-devel/llvm
 		dev-cpp/nlohmann_json
 		media-libs/glm
+		x11-libs/gtk+
 		"
 BDEPEND="${DEPEND}"

@@ -36,6 +36,7 @@ jobs:
           libcapstone-dev       \
           python3-dev           \
           libfreetype-dev       \
+          libgtk-3-dev          \
 
     - name: ✋ Build
       run: |

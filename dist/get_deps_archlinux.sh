@@ -9,4 +9,5 @@ pacman -S --needed \
   capstone \
   glm \
   python3 \
-  freetype2
+  freetype2 \
+  gtk3
