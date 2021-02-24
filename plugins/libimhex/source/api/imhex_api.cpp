@@ -14,6 +14,7 @@ namespace hex {
         entry.comment.reserve(comment.length());
         std::copy(name.begin(), name.end(), std::back_inserter(entry.name));
         std::copy(comment.begin(), comment.end(), std::back_inserter(entry.comment));
+        entry.locked = false;
 
         entry.color = color;
 

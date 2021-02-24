@@ -19,6 +19,7 @@ namespace hex {
                 std::vector<char> name;
                 std::vector<char> comment;
                 u32 color;
+                bool locked;
             };
 
             static void add(Region region, std::string_view name, std::string_view comment, u32 color = 0x00000000);

@@ -56,7 +56,7 @@ namespace hex {
 
             off += SharedData::currentProvider->getBaseAddress();
 
-            for (const auto &[region, name, comment, color] : ImHexApi::Bookmarks::getEntries()) {
+            for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size))
                     currColor = (color & 0x00FFFFFF) | 0x80000000;
                 if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
@@ -90,7 +90,7 @@ namespace hex {
 
             off += SharedData::currentProvider->getBaseAddress();
 
-            for (const auto &[region, name, comment, color] : ImHexApi::Bookmarks::getEntries()) {
+            for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size)) {
                     if (!tooltipShown) {
                         ImGui::BeginTooltip();

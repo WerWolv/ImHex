@@ -8,7 +8,7 @@ using json = nlohmann::json;
 namespace hex {
 
     void to_json(json& j, const ImHexApi::Bookmarks::Entry& b) {
-        j = json{ { "address", b.region.address }, { "size", b.region.size }, { "name", b.name.data() }, { "comment", b.comment.data() } };
+        j = json{ { "address", b.region.address }, { "size", b.region.size }, { "name", b.name.data() }, { "comment", b.comment.data() }, { "locked", b.locked } };
     }
 
     void from_json(const json& j, ImHexApi::Bookmarks::Entry& b) {
@@ -18,6 +18,7 @@ namespace hex {
         j.at("size").get_to(b.region.size);
         j.at("name").get_to(name);
         j.at("comment").get_to(comment);
+        j.at("locked").get_to(b.locked);
 
         std::copy(name.begin(), name.end(), std::back_inserter(b.name));
         std::copy(comment.begin(), comment.end(), std::back_inserter(b.comment));

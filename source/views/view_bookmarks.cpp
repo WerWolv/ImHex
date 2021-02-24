@@ -58,7 +58,7 @@ namespace hex {
                 u32 id = 1;
                 auto bookmarkToRemove = bookmarks.end();
                 for (auto iter = bookmarks.begin(); iter != bookmarks.end(); iter++) {
-                    auto &[region, name, comment, color] = *iter;
+                    auto &[region, name, comment, color, locked] = *iter;
 
                     auto headerColor = ImColor(color);
                     auto hoverColor = ImColor(color);
@@ -95,18 +95,32 @@ namespace hex {
 
                         if (ImGui::Button("hex.view.bookmarks.button.remove"_lang))
                             bookmarkToRemove = iter;
+                        ImGui::SameLine(0, 15);
+
+                        ImGui::Checkbox("Locked", &locked);
 
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.view.bookmarks.header.name"_lang);
                         ImGui::Separator();
-                        ImGui::InputText("##nameInput", name.data(), 64);
-                        ImGui::SameLine();
-                        ImGui::ColorEdit4("hex.view.bookmarks.header.color"_lang, (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
+
+                        ImGui::ColorEdit4("hex.view.bookmarks.header.color"_lang, (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha | (locked ? ImGuiColorEditFlags_NoPicker : ImGuiColorEditFlags_None));
                         color = headerColor;
+                        ImGui::SameLine();
+
+                        if (locked)
+                            ImGui::TextUnformatted(name.data());
+                        else
+                            ImGui::InputText("##nameInput", name.data(), 64);
+
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.view.bookmarks.header.comment"_lang);
                         ImGui::Separator();
-                        ImGui::InputTextMultiline("##colorInput", comment.data(), 0xF'FFFF);
+
+                        if (locked)
+                            ImGui::TextWrapped("%s", comment.data());
+                        else
+                            ImGui::InputTextMultiline("##commentInput", comment.data(), 0xF'FFFF);
+
                         ImGui::NewLine();
 
                     }
