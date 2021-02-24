@@ -86,9 +86,27 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/pe/pe_utils.c
         ${LIBYARA_SOURCE_PATH}/modules/elf/elf.c
         ${LIBYARA_SOURCE_PATH}/modules/math/math.c
-        ${LIBYARA_SOURCE_PATH}/modules/time/time.c)
+        ${LIBYARA_SOURCE_PATH}/modules/time/time.c
+        ${LIBYARA_SOURCE_PATH}/modules/macho/macho.c
+        ${LIBYARA_SOURCE_PATH}/modules/hash/hash.c
+        ${LIBYARA_SOURCE_PATH}/modules/dex/dex.c
+        ${LIBYARA_SOURCE_PATH}/modules/dotnet/dotnet.c
+        ${LIBYARA_SOURCE_PATH}/modules/magic/magic.c)
+
+# Add mbedtls crypto wrappers
+file(READ crypto_mbedtls.h MBEDTLS_CRYPTO_H)
+file(WRITE ${LIBYARA_SOURCE_PATH}/crypto.h "${MBEDTLS_CRYPTO_H}")
+add_compile_definitions("HAVE_MBEDTLS")
 
 add_compile_definitions("USE_NO_PROC")
+
+add_compile_definitions("HASH_MODULE")
+add_compile_definitions("DOTNET_MODULE")
+add_compile_definitions("MAGIC_MODULE")
+add_compile_definitions("MACHO_MODULE")
+add_compile_definitions("DEX_MODULE")
+
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-count-overflow")
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 
