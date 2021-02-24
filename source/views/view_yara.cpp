@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <thread>
 
+#include <imgui_imhex_extensions.h>
+
 namespace hex {
 
     ViewYara::ViewYara() : View("Yara") {
@@ -29,21 +31,28 @@ namespace hex {
 
                 if (ImGui::Button("Reload")) this->reloadRules();
             } else {
-                if (ImGui::BeginCombo("Rule", this->m_rules[this->m_selectedRule].c_str())) {
-                    for (u32 i = 0; i < this->m_rules.size(); i++) {
-                        const bool selected = (this->m_selectedRule == i);
-                        if (ImGui::Selectable(this->m_rules[i].c_str(), selected))
-                            this->m_selectedRule = i;
+                ImGui::Disabled([this]{
+                    if (ImGui::BeginCombo("Rule", this->m_rules[this->m_selectedRule].c_str())) {
+                        for (u32 i = 0; i < this->m_rules.size(); i++) {
+                            const bool selected = (this->m_selectedRule == i);
+                            if (ImGui::Selectable(this->m_rules[i].c_str(), selected))
+                                this->m_selectedRule = i;
 
-                        if (selected)
-                            ImGui::SetItemDefaultFocus();
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
                     }
-                    ImGui::EndCombo();
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("R")) this->reloadRules();
-                ImGui::SameLine();
-                if (ImGui::Button("Apply")) std::thread([this]{ this->applyRules(); }).detach();
+                    ImGui::SameLine();
+                    if (ImGui::Button("R")) this->reloadRules();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Apply")) this->applyRules();
+                }, this->m_matching);
+
+                if (this->m_matching)
+                    ImGui::TextSpinner("Matching...");
+                else
+                    ImGui::NewLine();
             }
 
             ImGui::NewLine();
@@ -108,100 +117,110 @@ namespace hex {
 
     void ViewYara::applyRules() {
         this->m_matches.clear();
+        this->m_matching = true;
 
-        YR_COMPILER *compiler = nullptr;
-        yr_compiler_create(&compiler);
+        std::thread([this] {
 
-        FILE *file = fopen(this->m_rules[this->m_selectedRule].c_str(), "r");
-        if (file == nullptr) return;
-        SCOPE_EXIT( fclose(file); );
+            YR_COMPILER *compiler = nullptr;
+            yr_compiler_create(&compiler);
 
-        if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
-            std::vector<char> buffer(0xFFFF);
-            yr_compiler_get_error_message(compiler, buffer.data(), buffer.size());
-            printf("Yara error: %s\n", buffer.data());
-            return;
-        }
+            FILE *file = fopen(this->m_rules[this->m_selectedRule].c_str(), "r");
+            if (file == nullptr) return;
+            SCOPE_EXIT( fclose(file); );
 
-        YR_RULES *rules;
-        yr_compiler_get_rules(compiler, &rules);
+            if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
+                std::vector<char> buffer(0xFFFF);
+                yr_compiler_get_error_message(compiler, buffer.data(), buffer.size());
+                printf("Yara error: %s\n", buffer.data());
+                return;
+            }
 
-        auto &provider = SharedData::currentProvider;
-
-        std::vector<YaraMatch> newMatches;
-
-        YR_MEMORY_BLOCK_ITERATOR iterator;
-
-        struct ScanContext {
-            std::vector<u8> buffer;
-            YR_MEMORY_BLOCK currBlock;
-        };
-
-        ScanContext context;
-        context.currBlock.base = 0;
-        context.currBlock.fetch_data = [](auto *block) -> const u8* {
-            auto &context = *static_cast<ScanContext*>(block->context);
+            YR_RULES *rules;
+            yr_compiler_get_rules(compiler, &rules);
 
             auto &provider = SharedData::currentProvider;
 
-            context.buffer.resize(std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base));
+            std::vector<YaraMatch> newMatches;
 
-            if (context.buffer.size() == 0) return nullptr;
+            YR_MEMORY_BLOCK_ITERATOR iterator;
 
-            provider->read(context.currBlock.base, context.buffer.data(), context.buffer.size());
+            struct ScanContext {
+                std::vector<u8> buffer;
+                YR_MEMORY_BLOCK currBlock;
+            };
 
-            return context.buffer.data();
-        };
-        iterator.file_size = [](auto *iterator) -> u64 {
-            return SharedData::currentProvider->getSize();
-        };
-
-        iterator.context = &context;
-        iterator.first = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
-            auto &context = *static_cast<ScanContext*>(iterator->context);
-
+            ScanContext context;
             context.currBlock.base = 0;
-            context.currBlock.size = 0;
-            context.buffer.clear();
-            iterator->last_error = ERROR_SUCCESS;
+            context.currBlock.fetch_data = [](auto *block) -> const u8* {
+                auto &context = *static_cast<ScanContext*>(block->context);
 
-            return iterator->next(iterator);
-        };
-        iterator.next = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
-            auto &context = *static_cast<ScanContext*>(iterator->context);
+                auto &provider = SharedData::currentProvider;
 
-            u64 address = context.currBlock.base + context.currBlock.size;
+                auto bufferSize = std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base);
+                context.buffer.resize(bufferSize);
 
-            iterator->last_error = ERROR_SUCCESS;
-            context.currBlock.base = address;
-            context.currBlock.size = std::min<u64>(0xF'FFFF, SharedData::currentProvider->getSize() - address);
+                if (context.buffer.empty()) return nullptr;
 
-            if (context.currBlock.size == 0) return nullptr;
+                provider->read(context.currBlock.base, context.buffer.data(), context.buffer.size());
 
-            return &context.currBlock;
-        };
+                auto data = &context.buffer[0];
+                return data;
+            };
+            iterator.file_size = [](auto *iterator) -> u64 {
+                return SharedData::currentProvider->getSize();
+            };
+
+            iterator.context = &context;
+            iterator.first = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
+                auto &context = *static_cast<ScanContext*>(iterator->context);
+
+                context.currBlock.base = 0;
+                context.currBlock.size = 0;
+                context.buffer.clear();
+                iterator->last_error = ERROR_SUCCESS;
+
+                return iterator->next(iterator);
+            };
+            iterator.next = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
+                auto &context = *static_cast<ScanContext*>(iterator->context);
+
+                u64 address = context.currBlock.base + context.currBlock.size;
+
+                iterator->last_error = ERROR_SUCCESS;
+                context.currBlock.base = address;
+                context.currBlock.size = std::min<u64>(0xF'FFFF, SharedData::currentProvider->getSize() - address);
+                context.currBlock.context = &context;
+
+                if (context.currBlock.size == 0) return nullptr;
+
+                return &context.currBlock;
+            };
 
 
-        yr_rules_scan_mem_blocks(rules, &iterator, 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
-            if (message == CALLBACK_MSG_RULE_MATCHING) {
-                auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
-                auto rule  = static_cast<YR_RULE*>(data);
+            yr_rules_scan_mem_blocks(rules, &iterator, 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
+                if (message == CALLBACK_MSG_RULE_MATCHING) {
+                    auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
+                    auto rule  = static_cast<YR_RULE*>(data);
 
-                YR_STRING *string;
-                YR_MATCH *match;
-                yr_rule_strings_foreach(rule, string) {
-                    yr_string_matches_foreach(context, string, match) {
-                        newMatches.push_back({ rule->identifier, match->offset, match->match_length });
+                    YR_STRING *string;
+                    YR_MATCH *match;
+                    yr_rule_strings_foreach(rule, string) {
+                        yr_string_matches_foreach(context, string, match) {
+                                newMatches.push_back({ rule->identifier, match->offset, match->match_length });
+                            }
                     }
                 }
-            }
 
-            return CALLBACK_CONTINUE;
-        }, &newMatches, 0);
+                return CALLBACK_CONTINUE;
+            }, &newMatches, 0);
 
-        std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
+            std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
 
-        yr_compiler_destroy(compiler);
+            yr_compiler_destroy(compiler);
+
+            this->m_matching = false;
+        }).detach();
+
     }
 
 }

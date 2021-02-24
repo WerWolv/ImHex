@@ -25,6 +25,7 @@ namespace hex {
         std::vector<std::string> m_rules;
         std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
+        bool m_matching = false;
 
         void reloadRules();
         void applyRules();
