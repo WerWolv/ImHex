@@ -253,6 +253,14 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.tools.name", "Tools" },
 
+                { "hex.view.yara.name", "Yara Rules" },
+                    { "hex.view.yara.header.rules", "Rules" },
+                        { "hex.view.yara.reload", "Reload" },
+                        { "hex.view.yara.match", "Match Rules" },
+                        { "hex.view.yara.matching", "Matching..." },
+                    { "hex.view.yara.header.matches", "Matches" },
+                        { "hex.view.yara.matches.identifier", "Identifier" },
+
             /* Builtin plugin features */
 
                 { "hex.builtin.command.calc.desc", "Calculator" },

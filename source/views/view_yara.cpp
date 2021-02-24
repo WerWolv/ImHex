@@ -10,7 +10,7 @@
 
 namespace hex {
 
-    ViewYara::ViewYara() : View("Yara") {
+    ViewYara::ViewYara() : View("hex.view.yara.name"_lang) {
         yr_initialize();
 
         this->reloadRules();
@@ -21,18 +21,18 @@ namespace hex {
     }
 
     void ViewYara::drawContent() {
-        if (ImGui::Begin("Yara", &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin("hex.view.yara.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            ImGui::TextUnformatted("Rules");
+            ImGui::TextUnformatted("hex.view.yara.header.rules"_lang);
             ImGui::Separator();
 
             if (this->m_rules.empty()) {
                 ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "No YARA rules found. Put them in the 'yara' folder next to the ImHex executable");
 
-                if (ImGui::Button("Reload")) this->reloadRules();
+                if (ImGui::Button("hex.view.yara.reload"_lang)) this->reloadRules();
             } else {
                 ImGui::Disabled([this]{
-                    if (ImGui::BeginCombo("Rule", this->m_rules[this->m_selectedRule].c_str())) {
+                    if (ImGui::BeginCombo("hex.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
                             const bool selected = (this->m_selectedRule == i);
                             if (ImGui::Selectable(this->m_rules[i].c_str(), selected))
@@ -44,26 +44,25 @@ namespace hex {
                         ImGui::EndCombo();
                     }
                     ImGui::SameLine();
-                    if (ImGui::Button("R")) this->reloadRules();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Apply")) this->applyRules();
+                    if (ImGui::Button("hex.view.yara.reload"_lang)) this->reloadRules();
+                    if (ImGui::Button("hex.view.yara.match"_lang)) this->applyRules();
                 }, this->m_matching);
 
-                if (this->m_matching)
-                    ImGui::TextSpinner("Matching...");
-                else
-                    ImGui::NewLine();
+                if (this->m_matching) {
+                    ImGui::SameLine();
+                    ImGui::TextSpinner("hex.view.yara.matching"_lang);
+                }
             }
 
             ImGui::NewLine();
-            ImGui::TextUnformatted("Matches");
+            ImGui::TextUnformatted("hex.view.yara.header.matches"_lang);
             ImGui::Separator();
 
             if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("Identifier");
-                ImGui::TableSetupColumn("Address");
-                ImGui::TableSetupColumn("Size");
+                ImGui::TableSetupColumn("hex.view.yara.matches.identifier"_lang);
+                ImGui::TableSetupColumn("hex.common.address"_lang);
+                ImGui::TableSetupColumn("hex.common.size"_lang);
 
                 ImGui::TableHeadersRow();
 
