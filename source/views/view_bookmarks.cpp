@@ -87,7 +87,7 @@ namespace hex {
                                 bytesString += "...";
                             }
 
-                            ImGui::TextColored(ImColor(0xFF9BC64D), bytesString.c_str());
+                            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", bytesString.c_str());
                         }
                         if (ImGui::Button("hex.view.bookmarks.button.jump"_lang))
                             View::postEvent(Events::SelectionChangeRequest, region);
@@ -99,14 +99,14 @@ namespace hex {
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.view.bookmarks.header.name"_lang);
                         ImGui::Separator();
-                        ImGui::InputText("##nameInput", std::string(name.data()).data(), 64);
+                        ImGui::InputText("##nameInput", name.data(), 64);
                         ImGui::SameLine();
                         ImGui::ColorEdit4("hex.view.bookmarks.header.color"_lang, (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
                         color = headerColor;
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.view.bookmarks.header.comment"_lang);
                         ImGui::Separator();
-                        ImGui::InputTextMultiline("##colorInput", std::string(comment.data()).data(), 0xF'FFFF);
+                        ImGui::InputTextMultiline("##colorInput", comment.data(), 0xF'FFFF);
                         ImGui::NewLine();
 
                     }
