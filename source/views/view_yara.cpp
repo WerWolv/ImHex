@@ -114,49 +114,92 @@ namespace hex {
 
         FILE *file = fopen(this->m_rules[this->m_selectedRule].c_str(), "r");
         if (file == nullptr) return;
+        SCOPE_EXIT( fclose(file); );
 
-        yr_compiler_add_file(compiler, file, nullptr, nullptr);
-        fclose(file);
+        if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
+            std::vector<char> buffer(0xFFFF);
+            yr_compiler_get_error_message(compiler, buffer.data(), buffer.size());
+            printf("Yara error: %s\n", buffer.data());
+            return;
+        }
 
         YR_RULES *rules;
         yr_compiler_get_rules(compiler, &rules);
 
         auto &provider = SharedData::currentProvider;
 
-        std::vector<u8> buffer(0xFFFF, 0x00);
-        for (u64 offset = 0; offset < provider->getSize(); offset += buffer.size()) {
-            if (provider->getSize() - offset < buffer.size())
-                buffer.resize(provider->getSize() - offset);
+        std::vector<YaraMatch> newMatches;
 
-            SharedData::currentProvider->read(offset, buffer.data(), buffer.size());
+        YR_MEMORY_BLOCK_ITERATOR iterator;
 
-            std::vector<YaraMatch> newMatches;
+        struct ScanContext {
+            std::vector<u8> buffer;
+            YR_MEMORY_BLOCK currBlock;
+        };
 
-            auto result = yr_rules_scan_mem(rules, buffer.data(), buffer.size(), 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
-                if (message == CALLBACK_MSG_RULE_MATCHING) {
-                    auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
-                    auto rule  = static_cast<YR_RULE*>(data);
+        ScanContext context;
+        context.currBlock.base = 0;
+        context.currBlock.fetch_data = [](auto *block) -> const u8* {
+            auto &context = *static_cast<ScanContext*>(block->context);
 
-                    YR_STRING *string;
-                    YR_MATCH *match;
-                    yr_rule_strings_foreach(rule, string) {
-                        yr_string_matches_foreach(context, string, match) {
-                            newMatches.push_back({ rule->identifier, match->offset, match->match_length });
-                        }
+            auto &provider = SharedData::currentProvider;
+
+            context.buffer.resize(std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base));
+
+            if (context.buffer.size() == 0) return nullptr;
+
+            provider->read(context.currBlock.base, context.buffer.data(), context.buffer.size());
+
+            return context.buffer.data();
+        };
+        iterator.file_size = [](auto *iterator) -> u64 {
+            return SharedData::currentProvider->getSize();
+        };
+
+        iterator.context = &context;
+        iterator.first = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
+            auto &context = *static_cast<ScanContext*>(iterator->context);
+
+            context.currBlock.base = 0;
+            context.currBlock.size = 0;
+            context.buffer.clear();
+            iterator->last_error = ERROR_SUCCESS;
+
+            return iterator->next(iterator);
+        };
+        iterator.next = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
+            auto &context = *static_cast<ScanContext*>(iterator->context);
+
+            u64 address = context.currBlock.base + context.currBlock.size;
+
+            iterator->last_error = ERROR_SUCCESS;
+            context.currBlock.base = address;
+            context.currBlock.size = std::min<u64>(0xF'FFFF, SharedData::currentProvider->getSize() - address);
+
+            if (context.currBlock.size == 0) return nullptr;
+
+            return &context.currBlock;
+        };
+
+
+        yr_rules_scan_mem_blocks(rules, &iterator, 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
+            if (message == CALLBACK_MSG_RULE_MATCHING) {
+                auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
+                auto rule  = static_cast<YR_RULE*>(data);
+
+                YR_STRING *string;
+                YR_MATCH *match;
+                yr_rule_strings_foreach(rule, string) {
+                    yr_string_matches_foreach(context, string, match) {
+                        newMatches.push_back({ rule->identifier, match->offset, match->match_length });
                     }
                 }
-
-                return CALLBACK_CONTINUE;
-            }, &newMatches, 0);
-
-            if (result != ERROR_SUCCESS)
-                break;
-
-            for (auto &newMatch : newMatches) {
-                newMatch.address += offset;
-                this->m_matches.push_back(newMatch);
             }
-        }
+
+            return CALLBACK_CONTINUE;
+        }, &newMatches, 0);
+
+        std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
 
         yr_compiler_destroy(compiler);
     }
