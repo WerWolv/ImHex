@@ -6,8 +6,8 @@
 #define FONT_ICON_FILE_NAME_FAR "fa-regular-400.ttf"
 #define FONT_ICON_FILE_NAME_FAS "fa-solid-900.ttf"
 
-extern const unsigned int font_awesome_compressed_size = 22262;
-extern const unsigned int font_awesome_compressed_data[22264/4];
+extern const unsigned int font_awesome_compressed_size;
+extern const unsigned int font_awesome_compressed_data[144852/4];
 
 #define ICON_MIN_FA 0xe005
 #define ICON_MAX_FA 0xf8ff

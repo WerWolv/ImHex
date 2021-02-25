@@ -3,6 +3,9 @@
 #include <hex.hpp>
 
 #include <imgui.h>
+#include <imgui_imhex_extensions.h>
+
+#include <fontawesome_font.h>
 #include <nfd.hpp>
 
 #include <hex/api/event.hpp>
