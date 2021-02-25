@@ -333,7 +333,7 @@ namespace hex::lang {
         auto handleVariableAttributes = [this, &currPattern](auto attribute, auto value) {
 
             if (attribute == "color" && value.has_value())
-                currPattern->setColor(hex::changeEndianess(u32(strtoul(value->data(), nullptr, 0)) << 8, std::endian::big));
+                currPattern->setColor(hex::changeEndianess(u32(strtoul(value->data(), nullptr, 16)) << 8, std::endian::big));
             else if (attribute == "name" && value.has_value())
                 currPattern->setVariableName(value->data());
             else if (attribute == "comment" && value.has_value())
