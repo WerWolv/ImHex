@@ -97,7 +97,11 @@ namespace hex {
                             bookmarkToRemove = iter;
                         ImGui::SameLine(0, 15);
 
-                        ImGui::Checkbox("Locked", &locked);
+                        if (locked) {
+                            if (ImGui::Button(ICON_FA_LOCK)) locked = false;
+                        } else {
+                            if (ImGui::Button(ICON_FA_UNLOCK)) locked = true;
+                        }
 
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.view.bookmarks.header.name"_lang);

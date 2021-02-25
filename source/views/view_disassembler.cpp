@@ -118,7 +118,7 @@ namespace hex {
                 ImGui::Combo("hex.view.disassembler.arch"_lang, reinterpret_cast<int*>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount());
 
 
-                if (ImGui::BeginChild("modes", ImVec2(0, 100), true)) {
+                if (ImGui::BeginChild("modes", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), true, ImGuiWindowFlags_AlwaysAutoResize)) {
 
                     if (ImGui::RadioButton("hex.common.little_endian"_lang, this->m_littleEndianMode))
                         this->m_littleEndianMode = true;
