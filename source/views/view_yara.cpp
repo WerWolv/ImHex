@@ -71,7 +71,7 @@ namespace hex {
 
                 while (clipper.Step()) {
                     for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &[identifier, address, size] = this->m_matches[i];
+                        auto &[identifier, address, size, wholeDataMatch] = this->m_matches[i];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::PushID(i);
@@ -82,10 +82,18 @@ namespace hex {
                         ImGui::PopID();
                         ImGui::SameLine();
                         ImGui::TextUnformatted(identifier.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::Text("0x%llX : 0x%llX", address, address + size - 1);
-                        ImGui::TableNextColumn();
-                        ImGui::Text("0x%lX", size);
+
+                        if (!wholeDataMatch) {
+                            ImGui::TableNextColumn();
+                            ImGui::Text("0x%llX : 0x%llX", address, address + size - 1);
+                            ImGui::TableNextColumn();
+                            ImGui::Text("0x%lX", size);
+                        } else {
+                            ImGui::TableNextColumn();
+                            ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.view.yara.whole_data"_lang));
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted("");
+                        }
                     }
                 }
 
@@ -155,15 +163,13 @@ namespace hex {
 
                 auto &provider = SharedData::currentProvider;
 
-                auto bufferSize = std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base);
-                context.buffer.resize(bufferSize);
+                context.buffer.resize(std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base));
 
                 if (context.buffer.empty()) return nullptr;
 
                 provider->read(context.currBlock.base, context.buffer.data(), context.buffer.size());
 
-                auto data = &context.buffer[0];
-                return data;
+                return context.buffer.data();
             };
             iterator.file_size = [](auto *iterator) -> u64 {
                 return SharedData::currentProvider->getSize();
@@ -200,14 +206,20 @@ namespace hex {
                 if (message == CALLBACK_MSG_RULE_MATCHING) {
                     auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
                     auto rule  = static_cast<YR_RULE*>(data);
-
+                    
                     YR_STRING *string;
                     YR_MATCH *match;
-                    yr_rule_strings_foreach(rule, string) {
-                        yr_string_matches_foreach(context, string, match) {
-                                newMatches.push_back({ rule->identifier, match->offset, match->match_length });
+
+                    if (rule->strings != nullptr) {
+                        yr_rule_strings_foreach(rule, string) {
+                            yr_string_matches_foreach(context, string, match) {
+                                newMatches.push_back({ rule->identifier, match->offset, match->match_length, false });
                             }
+                        }
+                    } else {
+                        newMatches.push_back({ rule->identifier, 0, 0, true });
                     }
+
                 }
 
                 return CALLBACK_CONTINUE;

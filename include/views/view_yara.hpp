@@ -20,6 +20,7 @@ namespace hex {
             std::string identifier;
             s64 address;
             s32 size;
+            bool wholeDataMatch;
         };
 
         std::vector<std::string> m_rules;
