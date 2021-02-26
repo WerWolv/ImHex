@@ -258,6 +258,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.reload", "Reload" },
                         { "hex.view.yara.match", "Match Rules" },
                         { "hex.view.yara.matching", "Matching..." },
+                        { "hex.view.yara.error", "Yara Compiler error: " },
                     { "hex.view.yara.header.matches", "Matches" },
                         { "hex.view.yara.matches.identifier", "Identifier" },
                         { "hex.view.yara.whole_data", "Whole file matches!" },

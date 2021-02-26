@@ -27,6 +27,7 @@ namespace hex {
         std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
         bool m_matching = false;
+        std::vector<char> m_errorMessage;
 
         void reloadRules();
         void applyRules();

@@ -23,6 +23,11 @@ namespace hex {
     void ViewYara::drawContent() {
         if (ImGui::Begin("hex.view.yara.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
+            if (!this->m_matching && !this->m_errorMessage.empty()) {
+                View::showErrorPopup("hex.view.yara.error"_lang + this->m_errorMessage.data());
+                this->m_errorMessage.clear();
+            }
+
             ImGui::TextUnformatted("hex.view.yara.header.rules"_lang);
             ImGui::Separator();
 
@@ -124,6 +129,7 @@ namespace hex {
 
     void ViewYara::applyRules() {
         this->m_matches.clear();
+        this->m_errorMessage.clear();
         this->m_matching = true;
 
         std::thread([this] {
@@ -136,9 +142,9 @@ namespace hex {
             SCOPE_EXIT( fclose(file); );
 
             if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
-                std::vector<char> buffer(0xFFFF);
-                yr_compiler_get_error_message(compiler, buffer.data(), buffer.size());
-                printf("Yara error: %s\n", buffer.data());
+                this->m_errorMessage.resize(0xFFFF);
+                yr_compiler_get_error_message(compiler, this->m_errorMessage.data(), this->m_errorMessage.size());
+                this->m_matching = false;
                 return;
             }
 
@@ -206,7 +212,7 @@ namespace hex {
                 if (message == CALLBACK_MSG_RULE_MATCHING) {
                     auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
                     auto rule  = static_cast<YR_RULE*>(data);
-                    
+
                     YR_STRING *string;
                     YR_MATCH *match;
 
