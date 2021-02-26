@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 set(LIBYARA_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/yara/libyara")
 
@@ -113,7 +113,7 @@ add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODUL
 target_include_directories(
         libyara
         PUBLIC $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include> $<INSTALL_INTERFACE:include>
-        PRIVATE ${LIBYARA_SOURCE_PATH}
+        PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
 )
 
 if (UNIX)
