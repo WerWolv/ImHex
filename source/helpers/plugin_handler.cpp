@@ -41,7 +41,8 @@ namespace hex {
     }
 
     Plugin::~Plugin() {
-        dlclose(this->m_handle);
+        if (this->m_handle != nullptr)
+            dlclose(this->m_handle);
     }
 
     void Plugin::initializePlugin() const {
