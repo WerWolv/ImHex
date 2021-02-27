@@ -8,7 +8,7 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
 #elif defined(OS_MACOS)
-    #include <CoreServices/CoreServices.h>
+    #include <hex/helpers/utils_mac.h>
 #endif
 
 
@@ -201,28 +201,7 @@ namespace hex {
                 default: __builtin_unreachable();
             }
         #elif defined(OS_MACOS)
-            std::string appSupportFolder(PATH_MAX, '\0');
-
-            FSRef ref;
-            FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
-            FSRefMakePath(&ref, reinterpret_cast<u8*>(appSupportFolder.data()), PATH_MAX);
-            switch (path) {
-                case ImHexPath::Patterns:
-                    return appSupportFolder + "/imhex/patterns";
-                case ImHexPath::PatternsInclude:
-                    return appSupportFolder + "/imhex/includes";
-                case ImHexPath::Magic:
-                    return appSupportFolder + "/imhex/magic";
-                case ImHexPath::Python:
-                    return appSupportFolder + "/imhex";
-                case ImHexPath::Plugins:
-                    return appSupportFolder + "/imhex/plugins";
-                case ImHexPath::Config:
-                    return appSupportFolder + "/imhex/config";
-                case ImHexPath::Resources:
-                    return appSupportFolder + "/imhex/resources";
-                default: __builtin_unreachable();
-            }
+            return getPathForMac(path);
         #else
             switch (path) {
                 case ImHexPath::Patterns:
