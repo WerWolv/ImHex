@@ -188,7 +188,7 @@ macro(createPackage)
     endif()
 
     if (UNIX AND NOT APPLE)
-        install(TARGETS libimhex DESTINATION ${CMAKE_INSTALL_PREFIX})
+        install(TARGETS libimhex DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/imhex)
 
         string(REPLACE ":" ";" EXTRA_MAGICDBS "${EXTRA_MAGICDBS}")
 
@@ -215,11 +215,19 @@ macro(createPackage)
             )
 
     foreach (plugin IN LISTS PLUGINS)
-        install(FILES "$<TARGET_FILE:${plugin}>" DESTINATION plugins/)
+        if(UNIX AND NOT APPLE)
+            install(FILES "$<TARGET_FILE:${plugin}>" DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/imhex/plugins/)
+        else()
+            install(FILES "$<TARGET_FILE:${plugin}>" DESTINATION plugins/)
+        endif()
     endforeach ()
 
     # Install the magicdb files.
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION magic/ RENAME imhex.mgc)
+    if(UNIX AND NOT APPLE)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION ${CMAKE_INSTALL_DATADIR}/imhex/ RENAME imhex.mgc)
+    else()
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION magic/ RENAME imhex.mgc)
+    endif()
 
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
@@ -240,6 +248,16 @@ macro(createPackage)
     else()
         if (WIN32)
             install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        elseif(UNIX AND NOT APPLE)
+            install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/imhex)
+
+            file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/wrapper "#!/bin/sh
+SETTINGS_FOLDER=$HOME/.local/share/imhex
+mkdir -p $SETTINGS_FOLDER
+cd $SETTINGS_FOLDER
+${CMAKE_INSTALL_LIBEXECDIR}/imhex/imhex")
+
+            install(FILES ${CMAKE_CURRENT_BINARY_DIR}/wrapper DESTINATION ${CMAKE_INSTALL_BINDIR} RENAME imhex PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
         else ()
             install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
         endif ()

@@ -8,6 +8,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 include("${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake")
 setDefaultBuiltTypeIfUnset()
 
+if(UNIX AND NOT APPLE)
+    include(GNUInstallDirs)
+endif()
+
 # List plugin names here. Project name must match folder name
 set(PLUGINS
         builtin
