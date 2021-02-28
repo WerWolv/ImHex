@@ -722,10 +722,13 @@ namespace hex {
     }
 
     void Window::initPlugins() {
-        try {
-            for (const auto &dir : hex::getPath(ImHexPath::Plugins))
+        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) {
+            try {
                 PluginHandler::load(dir);
-        } catch (std::runtime_error &e) { return; }
+            } catch (std::runtime_error &e) {
+                // Plugin folder not found. Not a problem.
+            }
+        }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
             plugin.initializePlugin();
