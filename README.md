@@ -116,6 +116,7 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 - Python3
 - freetype2
 - Brew (macOS only)
+- Xcode (macOS only)
 
 ### Windows
 
@@ -152,15 +153,15 @@ make -j
 
 Install the ImHex executable as well as libimhex.dylib to wherever ImHex should be installed.
 
-All other files belong in `/Application Support/imhex`:
+All other files belong in `~/Library/Application Support/imhex`:
 ```
-Patterns: ~/Application Support/imhex/patterns
-Pattern Includes: ~/Application Support/imhex/includes
-Magic files: ~/Application Support/imhex/magic
-Python: ~/Application Support/imhex/lib/pythonX.X
-Plugins: ~/Application Support/imhex/plugins
-Configuration: ~/Application Support/imhex/config
-Resources: ~/Application Support/imhex/resources
+Patterns: ~/Library/Application Support/imhex/patterns
+Pattern Includes: ~/Library/Application Support/imhex/includes
+Magic files: ~/Library/Application Support/imhex/magic
+Python: ~/Library/Application Support/imhex/lib/pythonX.X
+Plugins: ~/Library/Application Support/imhex/plugins
+Configuration: ~/Library/Application Support/imhex/config
+Resources: ~/Library/Application Support/imhex/resources
 ```
 
 ### Linux
@@ -179,7 +180,7 @@ make -j
 
 Put the ImHex executable into the `/usr/bin` folder.
 Put libimhex.so into the `/usr/lib` folder.
-All other files belong in `/usr/share/imhex`:
+All other files belong in `/usr/share/imhex` or `~/.imhex`:
 ```
 Patterns: /usr/share/imhex/patterns
 Pattern Includes: /usr/share/imhex/includes
@@ -189,7 +190,7 @@ Plugins: /usr/share/imhex/imhex/plugins
 Configuration: /usr/share/imhex/config
 Resources: /usr/share/imhex/resources
 ```
-
+The `/usr` prefix can be customized by changing the cmake install path
 
 ## Credits
 
