@@ -1,5 +1,7 @@
 #include <hex/lang/preprocessor.hpp>
 
+#include <filesystem>
+
 namespace hex::lang {
 
     Preprocessor::Preprocessor() {
@@ -47,8 +49,15 @@ namespace hex::lang {
                         }
                         offset += 1;
 
-                        if (includeFile[0] != '/')
-                            includeFile = hex::getPath(ImHexPath::PatternsInclude) + "/" + includeFile;
+                        if (includeFile[0] != '/') {
+                            std::string tempPath = includeFile;
+                            for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
+                               tempPath = hex::format("%s/%s", dir.c_str(), includeFile.c_str());
+                                if (std::filesystem::exists(includeFile))
+                                    break;
+                            }
+                            includeFile = tempPath;
+                        }
 
                         FILE *file = fopen(includeFile.c_str(), "r");
                         if (file == nullptr)

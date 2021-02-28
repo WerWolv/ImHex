@@ -514,12 +514,12 @@ namespace hex {
     }
 
     void Window::createDirectories() const {
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns));
-        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude));
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic));
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins));
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources));
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Config));
+        for (const auto &dir : hex::getPath(ImHexPath::Patterns)) std::filesystem::create_directories(dir);
+        for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) std::filesystem::create_directories(dir);
+        for (const auto &dir : hex::getPath(ImHexPath::Magic)) std::filesystem::create_directories(dir);
+        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) std::filesystem::create_directories(dir);
+        for (const auto &dir : hex::getPath(ImHexPath::Resources)) std::filesystem::create_directories(dir);
+        for (const auto &dir : hex::getPath(ImHexPath::Config)) std::filesystem::create_directories(dir);
     }
 
     void Window::initGLFW() {
@@ -655,7 +655,14 @@ namespace hex {
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
 
-        if (this->setFont(hex::getPath(ImHexPath::Resources) + "/font.ttf")) {
+        std::string fontFile;
+        for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
+            fontFile = dir + "/font.ttf";
+            if (std::filesystem::exists(fontFile))
+                break;
+        }
+
+        if (this->setFont(fontFile)) {
 
         }
         else {
@@ -701,9 +708,14 @@ namespace hex {
         handler.UserData   = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
-        static char fileName[255];
-        strcpy(fileName, (hex::getPath(ImHexPath::Config) + "/interface.ini").c_str());
-        io.IniFilename = fileName;
+        static std::string iniFileName;
+        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+            if (std::filesystem::exists(dir)) {
+                iniFileName = dir + "/interface.ini";
+                break;
+            }
+        }
+        io.IniFilename = iniFileName.c_str();
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 150");
@@ -711,7 +723,8 @@ namespace hex {
 
     void Window::initPlugins() {
         try {
-            PluginHandler::load(hex::getPath(ImHexPath::Plugins));
+            for (const auto &dir : hex::getPath(ImHexPath::Plugins))
+                PluginHandler::load(dir);
         } catch (std::runtime_error &e) { return; }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {

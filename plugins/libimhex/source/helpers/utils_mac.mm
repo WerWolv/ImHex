@@ -34,6 +34,9 @@
                     case ImHexPath::Plugins:
                         result = [appSupportDir URLByAppendingPathComponent:@"/imhex/plugins"];
                         break;
+                    case ImHexPath::Yara:
+                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/yara"];
+                        break;
                     case ImHexPath::Config:
                         result = [appSupportDir URLByAppendingPathComponent:@"/imhex/config"];
                         break;

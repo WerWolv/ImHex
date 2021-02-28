@@ -9,8 +9,11 @@
     #include <windows.h>
 #elif defined(OS_MACOS)
     #include <hex/helpers/utils_mac.h>
+#elif defined(OS_LINUX)
+    #include <unistd.h>
+    #include <sys/types.h>
+    #include <pwd.h>
 #endif
-
 
 namespace hex {
 
@@ -177,7 +180,7 @@ namespace hex {
 
     }
 
-    std::string getPath(ImHexPath path) {
+    std::vector<std::string> getPath(ImHexPath path) {
         #if defined(OS_WINDOWS)
             std::string exePath(MAX_PATH, '\0');
             GetModuleFileName(nullptr, exePath.data(), exePath.length());
@@ -185,39 +188,47 @@ namespace hex {
 
             switch (path) {
                 case ImHexPath::Patterns:
-                    return (parentDir / "patterns").string();
+                    return { (parentDir / "patterns").string() };
                 case ImHexPath::PatternsInclude:
-                    return (parentDir / "includes").string();
+                    return { (parentDir / "includes").string() };
                 case ImHexPath::Magic:
-                    return (parentDir / "magic").string();
+                    return { (parentDir / "magic").string() };
                 case ImHexPath::Python:
-                    return parentDir.string();
+                    return { parentDir.string() };
                 case ImHexPath::Plugins:
-                    return (parentDir / "plugins").string();
+                    return { (parentDir / "plugins").string() };
+                case ImHexPath::Yara:
+                    return { (parentDir / "yara").string() };
                 case ImHexPath::Config:
-                    return (parentDir / "config").string();
+                    return { (parentDir / "config").string() };
                 case ImHexPath::Resources:
-                    return (parentDir / "resources").string();
+                    return { (parentDir / "resources").string() };
                 default: __builtin_unreachable();
             }
         #elif defined(OS_MACOS)
-            return getPathForMac(path);
+            return { getPathForMac(path) };
         #else
+            const char *homeDirectory = getenv("HOME");
+            if (homeDirectory == nullptr)
+                homeDirectory = getpwuid(getuid())->pw_dir;
+
             switch (path) {
                 case ImHexPath::Patterns:
-                    return "/usr/share/imhex/patterns";
+                    return { std::string(homeDirectory) + "/.imhex/patterns", IMHEX_INSTALL_PREFIX "/share/imhex/patterns" };
                 case ImHexPath::PatternsInclude:
-                    return "/usr/share/imhex/includes";
+                    return { std::string(homeDirectory) + "/.imhex/includes", IMHEX_INSTALL_PREFIX "/share/imhex/includes" };
                 case ImHexPath::Magic:
-                    return "/usr/share/imhex/magic";
+                    return { std::string(homeDirectory) + "/.imhex/magic", IMHEX_INSTALL_PREFIX "/share/imhex/magic" };
                 case ImHexPath::Python:
-                    return "/usr/share/imhex";
+                    return { std::string(homeDirectory) + "/.imhex", IMHEX_INSTALL_PREFIX "/share/imhex" };
                 case ImHexPath::Plugins:
-                    return "/usr/lib/imhex/plugins";
+                    return { std::string(homeDirectory) + "/.imhex/plugins", IMHEX_INSTALL_PREFIX "/lib/imhex/plugins" };
+                case ImHexPath::Plugins:
+                    return { std::string(homeDirectory) + "/.imhex/yara", IMHEX_INSTALL_PREFIX "/lib/imhex/yara" };
                 case ImHexPath::Config:
-                    return "/usr/share/imhex/config";
+                    return { std::string(homeDirectory) + "/.imhex/config", IMHEX_INSTALL_PREFIX "/share/imhex/config" };
                 case ImHexPath::Resources:
-                    return "/usr/share/imhex/resources";
+                    return { std::string(homeDirectory) + "/.imhex/resources", IMHEX_INSTALL_PREFIX "/share/imhex/resources" };
                 default: __builtin_unreachable();
             }
         #endif

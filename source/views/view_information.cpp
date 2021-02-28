@@ -86,9 +86,11 @@ namespace hex {
                 std::string magicFiles;
 
                 std::error_code error;
-                for (const auto &entry : std::filesystem::directory_iterator("magic", error)) {
-                    if (entry.is_regular_file() && entry.path().extension() == ".mgc")
-                        magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
+                for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
+                    for (const auto &entry : std::filesystem::directory_iterator(dir, error)) {
+                        if (entry.is_regular_file() && entry.path().extension() == ".mgc")
+                            magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
+                    }
                 }
 
                 if (!error) {

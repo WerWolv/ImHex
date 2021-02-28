@@ -230,16 +230,17 @@ namespace hex {
         Magic,
         Python,
         Plugins,
+        Yara,
         Config,
         Resources
     };
 
-    std::string getPath(ImHexPath path);
+    std::vector<std::string> getPath(ImHexPath path);
 
     #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
     class ScopeExit {
     public:
-        ScopeExit(std::function<void()> func) : m_func(func) {}
+        ScopeExit(const std::function<void()> &func) : m_func(func) {}
         ~ScopeExit() { if (this->m_func != nullptr) this->m_func(); }
 
         void release() {

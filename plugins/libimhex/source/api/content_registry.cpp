@@ -10,15 +10,25 @@ namespace hex {
     /* Settings */
 
     void ContentRegistry::Settings::load() {
-        std::ifstream settingsFile(hex::getPath(ImHexPath::Config) + "/settings.json");
+        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+            std::ifstream settingsFile(dir + "/settings.json");
 
-        if (settingsFile.good())
-            settingsFile >> getSettingsData();
+            if (settingsFile.good()) {
+                settingsFile >> getSettingsData();
+                break;
+            }
+        }
     }
 
     void ContentRegistry::Settings::store() {
-        std::ofstream settingsFile(hex::getPath(ImHexPath::Config) + "/settings.json", std::ios::trunc);
-        settingsFile << getSettingsData();
+        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+            std::ofstream settingsFile(dir + "/settings.json", std::ios::trunc);
+
+            if (settingsFile.good()) {
+                settingsFile << getSettingsData();
+                break;
+            }
+        }
     }
 
     void ContentRegistry::Settings::add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback) {
