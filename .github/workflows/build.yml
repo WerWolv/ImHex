@@ -62,9 +62,7 @@ jobs:
 
     - name: ⬇️ Install dependencies
       uses: msys2/setup-msys2@v2
-      with:
-        update: true
-        install: |
+      run: |
           bash dist/get_deps_msys2.sh
 
     - name: ✋ Build
