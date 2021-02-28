@@ -514,12 +514,12 @@ namespace hex {
     }
 
     void Window::createDirectories() const {
-        for (const auto &dir : hex::getPath(ImHexPath::Patterns)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Magic)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Resources)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Config)) std::filesystem::create_directories(dir);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Config)[0]);
     }
 
     void Window::initGLFW() {
