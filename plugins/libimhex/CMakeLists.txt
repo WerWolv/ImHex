@@ -15,8 +15,9 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMHEX_INSTALL_PREFIX=\"\\\"${CMAKE_INSTALL_PREFIX}\"\\\"")
 
-set(SRC
+set(LIBIMHEX_SOURCES
     source/api/event.cpp
     source/api/imhex_api.cpp
     source/api/content_registry.cpp
@@ -50,10 +51,10 @@ if (APPLE)
     endif ()
     set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0)
 
-    set(SRC ${SRC} source/helpers/utils_mac.mm)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_mac.mm)
 endif ()
 
-add_library(libimhex SHARED ${SRC})
+add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 
 target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
