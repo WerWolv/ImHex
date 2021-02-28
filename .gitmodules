@@ -5,3 +5,6 @@
 	path = external/yara/yara
 	url = https://github.com/VirusTotal/yara
 	ignore = dirty
+[submodule "external/xdgpp"]
+	path = external/xdgpp
+	url = https://git.sr.ht/~danyspin97/xdgpp

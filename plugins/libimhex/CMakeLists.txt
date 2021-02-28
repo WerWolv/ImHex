@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURRENT_BINARY_DIR}/external/ImGui)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog)
-
+set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
@@ -15,7 +15,6 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMHEX_INSTALL_PREFIX=\"\\\"${CMAKE_INSTALL_PREFIX}\"\\\"")
 
 set(LIBIMHEX_SOURCES
     source/api/event.cpp
@@ -56,7 +55,7 @@ endif ()
 
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 
-target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR})
+target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR} ${XDGPP_INCLUDE_DIRS})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (WIN32)
