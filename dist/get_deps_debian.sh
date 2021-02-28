@@ -10,20 +10,21 @@ then
     PKGCONF="pkgconf"
 fi
 
-apt install \
-  cmake \
-  g++-10 \
-  ${PKGCONF:-} \
-  libcapstone-dev \
-  libmagic-dev \
-  libglfw3-dev \
-  libglm-dev \
-  libjsoncpp-dev \
-  libmbedtls-dev \
-  libstdc++-10-dev \
-  python3-dev \
-  libfreetype-dev \
-  libgtk-3-dev
+apt install -y \
+  build-essential       \
+  gcc-10                \
+  g++-10                \
+  ${PKGCONF:-}          \
+  cmake                 \
+  make                  \
+  libglfw3-dev          \
+  libglm-dev            \
+  libmagic-dev          \
+  libmbedtls-dev        \
+  libcapstone-dev       \
+  python3-dev           \
+  libfreetype-dev       \
+  libgtk-3-dev          \
 
 echo "Please consider this before running cmake (useful on e.g. Ubuntu 20.04):"
 echo "export CXX=g++-10"

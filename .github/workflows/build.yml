@@ -23,21 +23,7 @@ jobs:
     - name: ⬇️ Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          build-essential       \
-          gcc-10                \
-          g++-10                \
-          pkg-config            \
-          cmake                 \
-          make                  \
-          libglfw3-dev          \
-          libglm-dev            \
-          libmagic-dev          \
-          libmbedtls-dev        \
-          libcapstone-dev       \
-          python3-dev           \
-          libfreetype-dev       \
-          libgtk-3-dev          \
+        sudo bash dist/get_deps_debian.sh
 
     - name: ✋ Build
       run: |
@@ -62,18 +48,10 @@ jobs:
 
   win:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { msystem: MINGW64, arch: x86_64 }
-          #- { msystem: MINGW32, arch: i686   } # currently fail
-    name: 🟦 ${{ matrix.msystem }} · ${{ matrix.arch }}
+    name: 🟦 Windows MINGW64
     defaults:
       run:
         shell: msys2 {0}
-    env:
-      MINGW_INSTALLS: ${{ matrix.msystem }}
     steps:
 
     - name: 🧰 Checkout
@@ -84,22 +62,8 @@ jobs:
 
     - name: ⬇️ Install dependencies
       uses: msys2/setup-msys2@v2
-      with:
-        msystem: ${{ matrix.msystem }}
-        update: true
-        install: >
-          mingw-w64-${{ matrix.arch }}-gcc
-          mingw-w64-${{ matrix.arch }}-cmake
-          mingw-w64-${{ matrix.arch }}-make
-          mingw-w64-${{ matrix.arch }}-capstone
-          mingw-w64-${{ matrix.arch }}-glfw
-          mingw-w64-${{ matrix.arch }}-glm
-          mingw-w64-${{ matrix.arch }}-file
-          mingw-w64-${{ matrix.arch }}-mbedtls
-          mingw-w64-${{ matrix.arch }}-polly
-          mingw-w64-${{ matrix.arch }}-python
-          mingw-w64-${{ matrix.arch }}-dlfcn
-          mingw-w64-${{ matrix.arch }}-freetype
+      run: |
+        bash dist/get_deps_msys2.sh
 
     - name: ✋ Build
       run: |

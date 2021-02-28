@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-pacman -S --needed \
+pacman -S --needed --noconfirm \
   mingw-w64-x86_64-gcc \
   mingw-w64-x86_64-cmake \
   mingw-w64-x86_64-make \
@@ -9,7 +9,6 @@ pacman -S --needed \
   mingw-w64-x86_64-glm \
   mingw-w64-x86_64-file \
   mingw-w64-x86_64-mbedtls \
-  mingw-w64-x86_64-polly \
   mingw-w64-x86_64-python \
   mingw-w64-x86_64-freetype \
   mingw-w64-x86_64-dlfcn
