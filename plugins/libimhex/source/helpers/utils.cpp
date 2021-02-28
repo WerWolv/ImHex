@@ -223,7 +223,7 @@ namespace hex {
                     return { std::string(homeDirectory) + "/.imhex", IMHEX_INSTALL_PREFIX "/share/imhex" };
                 case ImHexPath::Plugins:
                     return { std::string(homeDirectory) + "/.imhex/plugins", IMHEX_INSTALL_PREFIX "/lib/imhex/plugins" };
-                case ImHexPath::Plugins:
+                case ImHexPath::Yara:
                     return { std::string(homeDirectory) + "/.imhex/yara", IMHEX_INSTALL_PREFIX "/lib/imhex/yara" };
                 case ImHexPath::Config:
                     return { std::string(homeDirectory) + "/.imhex/config", IMHEX_INSTALL_PREFIX "/share/imhex/config" };
