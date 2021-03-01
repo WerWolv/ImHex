@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     ContentRegistry::Views::add<ViewYara>();
 
     if (argc > 1)
-        View::postEvent(Events::FileDropped, argv[1]);
+        View::postEvent(Events::FileDropped, const_cast<const char*>(argv[1]));
 
     window.loop();
 
