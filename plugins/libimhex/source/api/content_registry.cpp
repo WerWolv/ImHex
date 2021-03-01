@@ -119,7 +119,7 @@ namespace hex {
         return SharedData::settingsEntries;
     }
 
-    std::optional<nlohmann::json> ContentRegistry::Settings::getSetting(std::string_view unlocalizedCategory, std::string_view unlocalizedName) {
+    nlohmann::json ContentRegistry::Settings::getSetting(std::string_view unlocalizedCategory, std::string_view unlocalizedName) {
         auto &settings = getSettingsData();
 
         if (!settings.contains(unlocalizedCategory)) return { };

@@ -5,7 +5,7 @@ namespace hex::plugin::builtin {
     void registerSettings() {
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
-            static int selection = setting;
+            static int selection = setting.is_number() ? static_cast<int>(setting) : 0;
 
             const char* themes[] = {
                     "hex.builtin.setting.interface.color.dark"_lang,

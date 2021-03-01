@@ -61,8 +61,8 @@ namespace hex {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
-                if (theme.has_value()) {
-                    switch (static_cast<int>(theme.value())) {
+                if (theme.is_number()) {
+                    switch (static_cast<int>(theme)) {
                         default:
                         case 0: /* Dark theme */
                             ImGui::StyleColorsDark();
@@ -87,8 +87,8 @@ namespace hex {
             {
                 auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
 
-                if (language.has_value())
-                    LangEntry::loadLanguage(static_cast<std::string>(language.value()));
+                if (language.is_string())
+                    LangEntry::loadLanguage(static_cast<std::string>(language));
             }
 
             return { };

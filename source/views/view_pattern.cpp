@@ -182,8 +182,8 @@ namespace hex {
             View::subscribeEvent(Events::SettingsChanged, [this](auto) {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
-                if (theme.has_value()) {
-                    switch (static_cast<int>(theme.value())) {
+                if (theme.is_number()) {
+                    switch (static_cast<int>(theme)) {
                         default:
                         case 0: /* Dark theme */
                             this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
