@@ -59,22 +59,29 @@ namespace hex {
             }
             ImGui::NewLine();
 
+            const auto Link = [](std::string_view label, std::string_view url) {
+                if (ImGui::BulletHyperlink(label.data()))
+                    hex::openWebpage(url.data());
+            };
+
             ImGui::Text("hex.view.help.about.libs"_lang);
             ImGui::Separator();
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
-            ImGui::BulletText("ImGui by ocornut");
-            ImGui::BulletText("imgui_club by ocornut");
-            ImGui::BulletText("ImGui-Addons by gallickgunner");
-            ImGui::BulletText("ImGuiColorTextEdit by BalazsJako");
-            ImGui::BulletText("capstone by aquynh");
-            ImGui::BulletText("JSON for Modern C++ by nlohmann");
+            Link("ImGui by ocornut", "https://github.com/ocornut/imgui");
+            Link("imgui_club by ocornut", "https://github.com/ocornut/imgui_club");
+            Link("imnodes by Nelarius", "https://github.com/Nelarius/imnodes");
+            Link("ImGuiColorTextEdit by BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit");
+            Link("capstone by aquynh", "https://github.com/aquynh/capstone");
+            Link("JSON for Modern C++ by nlohmann", "https://github.com/nlohmann/json");
+            Link("YARA by VirusTotal", "https://github.com/VirusTotal/yara");
+            Link("Native File Dialog Extended by btzy and mlabbe", "https://github.com/btzy/nativefiledialog-extended");
             ImGui::NewLine();
-            ImGui::BulletText("GNU libmagic");
-            ImGui::BulletText("OpenSSL libcrypto");
-            ImGui::BulletText("GLFW3");
-            ImGui::BulletText("LLVM");
-            ImGui::BulletText("Python 3");
-            ImGui::BulletText("FreeType");
+            Link("GNU libmagic", "http://www.darwinsys.com/file/");
+            Link("GLFW3", "https://github.com/glfw/glfw");
+            Link("LLVM", "https://github.com/llvm/llvm-project");
+            Link("Python 3", "https://github.com/python/cpython");
+            Link("FreeType", "https://gitlab.freedesktop.org/freetype/freetype");
+            Link("Mbed TLS", "https://github.com/ARMmbed/mbedtls");
 
             ImGui::PopStyleColor();
 
