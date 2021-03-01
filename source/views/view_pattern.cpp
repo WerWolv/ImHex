@@ -106,9 +106,11 @@ namespace hex {
             std::string magicFiles;
 
             std::error_code error;
-            for (const auto &entry : std::filesystem::directory_iterator("magic", error)) {
-                if (entry.is_regular_file() && entry.path().extension() == ".mgc")
-                    magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
+            for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
+                for (const auto &entry : std::filesystem::directory_iterator(dir, error)) {
+                    if (entry.is_regular_file() && entry.path().extension() == ".mgc")
+                        magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
+                }
             }
 
             if (error)
@@ -142,28 +144,31 @@ namespace hex {
 
 
             std::error_code errorCode;
-            for (auto &entry : std::filesystem::directory_iterator("patterns", errorCode)) {
-                if (!entry.is_regular_file())
-                    continue;
+            for (const auto &dir : hex::getPath(ImHexPath::Patterns)) {
+                for (auto &entry : std::filesystem::directory_iterator(dir, errorCode)) {
+                    if (!entry.is_regular_file())
+                        continue;
 
-                FILE *file = fopen(entry.path().string().c_str(), "r");
+                    FILE *file = fopen(entry.path().string().c_str(), "r");
 
-                if (file == nullptr)
-                    continue;
+                    if (file == nullptr)
+                        continue;
 
-                fseek(file, 0, SEEK_END);
-                size_t size = ftell(file);
-                rewind(file);
+                    fseek(file, 0, SEEK_END);
+                    size_t size = ftell(file);
+                    rewind(file);
 
-                std::vector<char> patternBuffer( size + 1, 0x00);
-                fread(patternBuffer.data(), 1, size, file);
-                fclose(file);
+                    std::vector<char> patternBuffer( size + 1, 0x00);
+                    fread(patternBuffer.data(), 1, size, file);
+                    fclose(file);
 
-                preprocessor.preprocess(patternBuffer.data());
+                    preprocessor.preprocess(patternBuffer.data());
 
-                if (foundCorrectType)
-                    this->m_possiblePatternFiles.push_back(entry.path().filename().string());
+                    if (foundCorrectType)
+                        this->m_possiblePatternFiles.push_back(entry.path().string());
+                }
             }
+
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;
@@ -297,7 +302,7 @@ namespace hex {
             ImGui::Text("hex.view.pattern.accept_pattern.question"_lang);
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
-                this->loadPatternFile("patterns/" + this->m_possiblePatternFiles[this->m_selectedPatternFile]);
+                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile]);
                 ImGui::CloseCurrentPopup();
             }, []{
                 ImGui::CloseCurrentPopup();

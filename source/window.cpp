@@ -50,6 +50,7 @@ namespace hex {
         hex::SharedData::mainArgc = argc;
         hex::SharedData::mainArgv = argv;
 
+        this->createDirectories();
         this->initGLFW();
         this->initImGui();
 
@@ -512,9 +513,18 @@ namespace hex {
         ImGui::DockBuilderFinish(dockId);
     }
 
-     void Window::initGLFW() {
+    void Window::createDirectories() const {
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Config)[0]);
+    }
+
+    void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char* desc) {
-            fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
+           fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
         });
 
         if (!glfwInit())
@@ -645,16 +655,14 @@ namespace hex {
         if (this->m_globalScale != 0.0f)
             style.ScaleAllSizes(this->m_globalScale);
 
-        #if defined(OS_WINDOWS)
-            std::filesystem::path resourcePath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path();
-        #elif defined(OS_LINUX) || defined(OS_MACOS)
-            std::filesystem::path resourcePath = "/usr/share/ImHex";
-        #else
-            std::filesystem::path resourcePath = "";
-            #warning "Unsupported OS for custom font support"
-        #endif
+        std::string fontFile;
+        for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
+            fontFile = dir + "/font.ttf";
+            if (std::filesystem::exists(fontFile))
+                break;
+        }
 
-        if (!resourcePath.empty() && this->setFont(resourcePath / "font.ttf")) {
+        if (this->setFont(fontFile)) {
 
         }
         else {
@@ -700,15 +708,27 @@ namespace hex {
         handler.UserData   = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
+        static std::string iniFileName;
+        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+            if (std::filesystem::exists(dir)) {
+                iniFileName = dir + "/interface.ini";
+                break;
+            }
+        }
+        io.IniFilename = iniFileName.c_str();
+
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 150");
     }
 
     void Window::initPlugins() {
-        try {
-            auto pluginFolderPath = std::filesystem::path((SharedData::mainArgv)[0]).parent_path() / "plugins";
-            PluginHandler::load(pluginFolderPath.string());
-        } catch (std::runtime_error &e) { return; }
+        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) {
+            try {
+                PluginHandler::load(dir);
+            } catch (std::runtime_error &e) {
+                // Plugin folder not found. Not a problem.
+            }
+        }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
             plugin.initializePlugin();

@@ -179,8 +179,12 @@ namespace hex {
     bool LoaderScript::processFile(std::string_view scriptPath) {
         Py_SetProgramName(Py_DecodeLocale((SharedData::mainArgv)[0], nullptr));
 
-        if (std::filesystem::exists(std::filesystem::path((SharedData::mainArgv)[0]).parent_path().string() + "/lib/python" PYTHON_VERSION_MAJOR_MINOR))
-            Py_SetPythonHome(Py_DecodeLocale(std::filesystem::path((SharedData::mainArgv)[0]).parent_path().string().c_str(), nullptr));
+        for (const auto &dir : hex::getPath(ImHexPath::Python)) {
+            if (std::filesystem::exists(std::filesystem::path(dir + "/lib/python" PYTHON_VERSION_MAJOR_MINOR))) {
+                Py_SetPythonHome(Py_DecodeLocale(dir.c_str(), nullptr));
+                break;
+            }
+        }
 
         PyImport_AppendInittab("_imhex", []() -> PyObject* {
 

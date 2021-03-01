@@ -113,15 +113,14 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 - libmagic, libgnurx, libtre, libintl, libiconv
 - libcrypto
 - capstone
-- nlohmann json
 - Python3
 - freetype2
 - Brew (macOS only)
+- Xcode (macOS only)
 
-### Windows and Linux
+### Windows
 
-Find all-in-one dependency installation scripts for Arch Linux, Fedora, Debian/Ubuntu and/or MSYS2 in [dist](dist).
-
+On Windows, ImHex is built through msys2 / mingw. To install all dependencies, open a mys2 window and run the PKGCONFIG script in the (dist/msys2)[dist/msys2] folder.
 After all the dependencies are installed, run the following commands to build ImHex:
 
 ```sh
@@ -134,8 +133,6 @@ make -j
 ---
 
 To create a standalone zipfile on Windows, get the Python standard library (e.g. from https://github.com/python/cpython/tree/master/Lib) and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` and `libwinpthread-1.dll` from your mingw setup next to the executable.
-
-On both Windows and Linux:
 
 - Copy the files from `python_libs` in the `lib` folder next to your built executable.
 - Place your magic databases in the `magic` folder next to your built executable
@@ -153,6 +150,47 @@ cd build
 CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j
 ```
+
+Install the ImHex executable as well as libimhex.dylib to wherever ImHex should be installed.
+
+All other files belong in `~/Library/Application Support/imhex`:
+```
+Patterns: ~/Library/Application Support/imhex/patterns
+Pattern Includes: ~/Library/Application Support/imhex/includes
+Magic files: ~/Library/Application Support/imhex/magic
+Python: ~/Library/Application Support/imhex/lib/pythonX.X
+Plugins: ~/Library/Application Support/imhex/plugins
+Configuration: ~/Library/Application Support/imhex/config
+Resources: ~/Library/Application Support/imhex/resources
+```
+
+### Linux
+
+Dependency installation scripts are available for many common Linux distributions in the (/dist)[dist] folder.
+After all the dependencies are installed, run the following commands to build ImHex:
+
+```sh
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j
+```
+
+---
+
+Put the ImHex executable into the `/usr/bin` folder.
+Put libimhex.so into the `/usr/lib` folder.
+All other files belong in `/usr/share/imhex` or `~/.imhex`:
+```
+Patterns: /usr/share/imhex/patterns
+Pattern Includes: /usr/share/imhex/includes
+Magic files: /usr/share/imhex/magic
+Python: /usr/share/imhex/lib/pythonX.X
+Plugins: /usr/share/imhex/imhex/plugins
+Configuration: /usr/share/imhex/config
+Resources: /usr/share/imhex/resources
+```
+The `/usr` prefix can be customized by changing the cmake install path
 
 ## Credits
 
