@@ -180,17 +180,22 @@ make -j
 
 Put the ImHex executable into the `/usr/bin` folder.
 Put libimhex.so into the `/usr/lib` folder.
-All other files belong in `/usr/share/imhex` or `~/.imhex`:
+Configuration files go to `/etc/xdg/imhex` or `~/.config/imhex`.
+All other files belong in `/usr/share/imhex` or `~/.local/share/imhex`:
+
 ```
 Patterns: /usr/share/imhex/patterns
 Pattern Includes: /usr/share/imhex/includes
 Magic files: /usr/share/imhex/magic
 Python: /usr/share/imhex/lib/pythonX.X
 Plugins: /usr/share/imhex/imhex/plugins
-Configuration: /usr/share/imhex/config
+Configuration: /etc/xdg/imhex/config
 Resources: /usr/share/imhex/resources
 ```
-The `/usr` prefix can be customized by changing the cmake install path
+
+All paths follow the XDG Base Directories standard, and can thus be modified
+with the environment variables `XDG_CONFIG_HOME`, `XDG_CONFIG_DIRS`,
+`XDG_DATA_HOME` and `XDG_DATA_DIRS`.
 
 ## Credits
 
