@@ -514,12 +514,12 @@ namespace hex {
     }
 
     void Window::createDirectories() const {
-        for (const auto &dir : hex::getPath(ImHexPath::Patterns)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Magic)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Resources)) std::filesystem::create_directories(dir);
-        for (const auto &dir : hex::getPath(ImHexPath::Config)) std::filesystem::create_directories(dir);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources)[0]);
+        std::filesystem::create_directories(hex::getPath(ImHexPath::Config)[0]);
     }
 
     void Window::initGLFW() {
@@ -722,10 +722,13 @@ namespace hex {
     }
 
     void Window::initPlugins() {
-        try {
-            for (const auto &dir : hex::getPath(ImHexPath::Plugins))
+        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) {
+            try {
                 PluginHandler::load(dir);
-        } catch (std::runtime_error &e) { return; }
+            } catch (std::runtime_error &e) {
+                // Plugin folder not found. Not a problem.
+            }
+        }
 
         for (const auto &plugin : PluginHandler::getPlugins()) {
             plugin.initializePlugin();

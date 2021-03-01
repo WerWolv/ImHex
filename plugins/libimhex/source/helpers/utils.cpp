@@ -10,9 +10,7 @@
 #elif defined(OS_MACOS)
     #include <hex/helpers/utils_mac.h>
 #elif defined(OS_LINUX)
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <pwd.h>
+    #include <xdg.hpp>
 #endif
 
 namespace hex {
@@ -208,27 +206,47 @@ namespace hex {
         #elif defined(OS_MACOS)
             return { getPathForMac(path) };
         #else
-            const char *homeDirectory = getenv("HOME");
-            if (homeDirectory == nullptr)
-                homeDirectory = getpwuid(getuid())->pw_dir;
+            std::vector<std::filesystem::path> configDirs = xdg::ConfigDirs();
+            std::vector<std::filesystem::path> dataDirs = xdg::DataDirs();
+
+            configDirs.insert(configDirs.begin(), xdg::ConfigHomeDir());
+            dataDirs.insert(dataDirs.begin(), xdg::DataHomeDir());
+
+            std::vector<std::string> result;
 
             switch (path) {
                 case ImHexPath::Patterns:
-                    return { std::string(homeDirectory) + "/.imhex/patterns", IMHEX_INSTALL_PREFIX "/share/imhex/patterns" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "patterns").string(); });
+                    return result;
                 case ImHexPath::PatternsInclude:
-                    return { std::string(homeDirectory) + "/.imhex/includes", IMHEX_INSTALL_PREFIX "/share/imhex/includes" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "includes").string(); });
+                    return result;
                 case ImHexPath::Magic:
-                    return { std::string(homeDirectory) + "/.imhex/magic", IMHEX_INSTALL_PREFIX "/share/imhex/magic" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "magic").string(); });
+                    return result;
                 case ImHexPath::Python:
-                    return { std::string(homeDirectory) + "/.imhex", IMHEX_INSTALL_PREFIX "/share/imhex" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex").string(); });
+                    return result;
                 case ImHexPath::Plugins:
-                    return { std::string(homeDirectory) + "/.imhex/plugins", IMHEX_INSTALL_PREFIX "/lib/imhex/plugins" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "plugins").string(); });
+                    return result;
                 case ImHexPath::Yara:
-                    return { std::string(homeDirectory) + "/.imhex/yara", IMHEX_INSTALL_PREFIX "/lib/imhex/yara" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "yara").string(); });
+                    return result;
                 case ImHexPath::Config:
-                    return { std::string(homeDirectory) + "/.imhex/config", IMHEX_INSTALL_PREFIX "/share/imhex/config" };
+                    std::transform(configDirs.begin(), configDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex").string(); });
+                    return result;
                 case ImHexPath::Resources:
-                    return { std::string(homeDirectory) + "/.imhex/resources", IMHEX_INSTALL_PREFIX "/share/imhex/resources" };
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "resources").string(); });
+                    return result;
                 default: __builtin_unreachable();
             }
         #endif
