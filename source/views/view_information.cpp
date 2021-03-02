@@ -70,7 +70,7 @@ namespace hex {
                 this->m_blockEntropy.clear();
 
                 for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
-                    std::array<u64, 256> blockValueCounts = { 0 };
+                    std::array<ImU64, 256> blockValueCounts = { 0 };
                     provider->read(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
 
                     for (size_t j = 0; j < this->m_blockSize; j++) {
