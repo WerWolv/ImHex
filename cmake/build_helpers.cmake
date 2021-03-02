@@ -157,10 +157,12 @@ macro(createPackage)
     file(MAKE_DIRECTORY "plugins")
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
+        set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
         install(TARGETS ${plugin} DESTINATION ${PLUGINS_INSTALL_LOCATION})
         add_dependencies(imhex ${plugin})
     endforeach()
 
+    set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     install(TARGETS libimhex DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     if (WIN32)
