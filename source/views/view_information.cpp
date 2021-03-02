@@ -36,7 +36,7 @@ namespace hex {
         View::unsubscribeEvent(Events::DataChanged);
     }
 
-    static float calculateEntropy(std::array<u64, 256> &valueCounts, size_t numBytes) {
+    static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t numBytes) {
         float entropy = 0;
 
         if (numBytes == 0)
