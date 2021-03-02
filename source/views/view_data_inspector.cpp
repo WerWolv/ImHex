@@ -49,7 +49,8 @@ namespace hex {
 
                 std::vector<u8> buffer(entry.requiredSize);
                 provider->read(this->m_startAddress, buffer.data(), buffer.size());
-                this->m_cachedData.emplace_back(entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle));
+
+                this->m_cachedData.push_back({ entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle) });
             }
         }
 
@@ -67,12 +68,21 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
+                    u32 i = 0;
                     for (const auto &[unlocalizedName, function] : this->m_cachedData) {
+                        ImGui::PushID(i);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(LangEntry(unlocalizedName));
                         ImGui::TableNextColumn();
-                        function();
+                        const auto &copyValue = function();
+                        ImGui::SameLine();
+                        if (ImGui::Selectable("##InspectorLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                            ImGui::SetClipboardText(copyValue.c_str());
+                        }
+
+                        ImGui::PopID();
+                        i++;
                     }
 
                     ImGui::EndTable();

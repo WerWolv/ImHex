@@ -142,7 +142,7 @@ namespace hex {
                 Octal
             };
 
-            using DisplayFunction = std::function<void()>;
+            using DisplayFunction = std::function<std::string()>;
             using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8>&, std::endian, NumberDisplayStyle)>;
 
             struct Entry {

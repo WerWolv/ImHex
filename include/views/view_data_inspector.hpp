@@ -21,6 +21,11 @@ namespace hex {
         void drawMenu() override;
 
     private:
+        struct InspectorCacheEntry {
+            std::string unlocalizedName;
+            ContentRegistry::DataInspector::DisplayFunction displayFunction;
+        };
+
         bool m_shouldInvalidate = true;
 
         std::endian m_endian = std::endian::native;
@@ -28,7 +33,7 @@ namespace hex {
 
         u64 m_startAddress = 0;
         size_t m_validBytes = 0;
-        std::vector<std::pair<std::string, ContentRegistry::DataInspector::DisplayFunction>> m_cachedData;
+        std::vector<InspectorCacheEntry> m_cachedData;
     };
 
 }

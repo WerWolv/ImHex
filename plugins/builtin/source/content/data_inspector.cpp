@@ -25,76 +25,79 @@ namespace hex::plugin::builtin {
             for (u8 i = 0; i < 8; i++)
                 binary += ((buffer[0] << i) & 0x80) == 0 ? '0' : '1';
 
-            return [binary] { ImGui::TextUnformatted(binary.c_str()); };
+            return [binary] {
+                ImGui::TextUnformatted(binary.c_str());
+                return binary;
+            };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.u8", sizeof(u8), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%u" : ((style == Style::Hexadecimal) ? "0x%X" : "0o%o");
             auto value = hex::format(format, *reinterpret_cast<u8*>(buffer.data()));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.s8", sizeof(s8), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%d" : ((style == Style::Hexadecimal) ? "0x%X" : "0o%o");
             auto value = hex::format(format, *reinterpret_cast<s8*>(buffer.data()));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.u16", sizeof(u16), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%u" : ((style == Style::Hexadecimal) ? "0x%X" : "0o%o");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u16*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.s16", sizeof(s16), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%d" : ((style == Style::Hexadecimal) ? "0x%X" : "0o%o");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<s16*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.u32", sizeof(u32), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%u" : ((style == Style::Hexadecimal) ? "0x%X" : "0o%o");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u32*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.s32", sizeof(s32), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%d" : ((style == Style::Hexadecimal) ? "0x%X" : "0o%o");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<s32*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.u64", sizeof(u64), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%llu" : ((style == Style::Hexadecimal) ? "0x%llX" : "0o%llo");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u64*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.s64", sizeof(s64), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "%lld" : ((style == Style::Hexadecimal) ? "0x%llX" : "0o%llo");
             auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<s64*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.float", sizeof(float), [](auto buffer, auto endian, auto style) {
             auto value = hex::format("%e", hex::changeEndianess(*reinterpret_cast<float*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.double", sizeof(double), [](auto buffer, auto endian, auto style) {
             auto value = hex::format("%e", hex::changeEndianess(*reinterpret_cast<double*>(buffer.data()), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.ascii", sizeof(char8_t), [](auto buffer, auto endian, auto style) {
             auto value = hex::format("'%s'", makePrintable(*reinterpret_cast<char8_t*>(buffer.data())).c_str());
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(char16_t), [](auto buffer, auto endian, auto style) {
             auto c = *reinterpret_cast<char16_t*>(buffer.data());
             auto value = hex::format("'%lc'", c == 0 ? '\x01' : hex::changeEndianess(c, endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.utf8", sizeof(char8_t) * 4, [](auto buffer, auto endian, auto style) {
@@ -111,7 +114,7 @@ namespace hex::plugin::builtin {
                                                         codepointString,
                                      codepoint);
 
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
 #if defined(OS_WINDOWS) && defined(ARCH_64_BIT)
@@ -126,7 +129,7 @@ namespace hex::plugin::builtin {
                 else
                     value = "Invalid";
 
-                return [value] { ImGui::TextUnformatted(value.c_str()); };
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             });
 
             hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(__time64_t), [](auto buffer, auto endian, auto style) {
@@ -139,7 +142,7 @@ namespace hex::plugin::builtin {
                 else
                     value = "Invalid";
 
-                return [value] { ImGui::TextUnformatted(value.c_str()); };
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             });
 
 #else
@@ -170,16 +173,19 @@ namespace hex::plugin::builtin {
                                      guid.data4[0], guid.data4[1], guid.data4[2], guid.data4[3],
                                      guid.data4[4], guid.data4[5], guid.data4[6], guid.data4[7]);
 
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.rgba8", sizeof(u32), [](auto buffer, auto endian, auto style) {
             ImColor value(hex::changeEndianess(*reinterpret_cast<u32*>(buffer.data()), endian));
 
-            return [value] {
+            auto stringValue = hex::format("(0x%02X, 0x%02X, 0x%02X, 0x%02X)", value.Value.x, value.Value.y, value.Value.z, value.Value.w);
+
+            return [value, stringValue] {
                 ImGui::ColorButton("##inspectorColor", value,
                                    ImGuiColorEditFlags_None,
                                    ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                return stringValue;
             };
         });
 
