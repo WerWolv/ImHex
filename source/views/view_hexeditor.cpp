@@ -146,9 +146,7 @@ namespace hex {
                 return;
 
             provider->setCurrentPage(page.value());
-            this->m_memoryEditor.GotoAddr = region.address;
-            this->m_memoryEditor.DataPreviewAddr = region.address;
-            this->m_memoryEditor.DataPreviewAddrEnd = region.address + region.size - 1;
+            this->m_memoryEditor.GotoAddrAndHighlight(region.address, region.address + region.size - 1);
             View::postEvent(Events::RegionSelected, region);
         });
 
