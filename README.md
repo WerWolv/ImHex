@@ -111,7 +111,7 @@ You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex. Moreov
 
 - GLFW3
 - libmagic, libgnurx, libtre, libintl, libiconv
-- libcrypto
+- libmbedtls
 - capstone
 - Python3
 - freetype2
