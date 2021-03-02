@@ -450,7 +450,11 @@ namespace hex::lang {
     class PatternDataArray : public PatternData {
     public:
         PatternDataArray(u64 offset, size_t size, std::vector<PatternData*> entries, u32 color = 0)
-            : PatternData(offset, size, color), m_entries(std::move(entries)) { }
+            : PatternData(offset, size, color), m_entries(std::move(entries)) {
+
+            for (auto &entry : entries)
+                entry->setColor(color);
+        }
 
         PatternDataArray(const PatternDataArray &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
             for (const auto &entry : other.m_entries)
