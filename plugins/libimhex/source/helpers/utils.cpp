@@ -7,6 +7,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+    #include <shlobj.h>
 #elif defined(OS_MACOS)
     #include <hex/helpers/utils_mac.h>
 #elif defined(OS_LINUX)
@@ -184,6 +185,16 @@ namespace hex {
             GetModuleFileName(nullptr, exePath.data(), exePath.length());
             auto parentDir = std::filesystem::path(exePath).parent_path();
 
+            std::filesystem::path appDataDir;
+            {
+                LPWSTR wAppDataPath = nullptr;
+                if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath)))
+                    throw std::runtime_error("Failed to get APPDATA folder path");
+
+                appDataDir = wAppDataPath;
+                CoTaskMemFree(wAppDataPath);
+            }
+
             switch (path) {
                 case ImHexPath::Patterns:
                     return { (parentDir / "patterns").string() };
@@ -198,7 +209,7 @@ namespace hex {
                 case ImHexPath::Yara:
                     return { (parentDir / "yara").string() };
                 case ImHexPath::Config:
-                    return { (parentDir / "config").string() };
+                    return { (appDataDir / "imhex" / "config").string() };
                 case ImHexPath::Resources:
                     return { (parentDir / "resources").string() };
                 default: __builtin_unreachable();
