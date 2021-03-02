@@ -191,7 +191,7 @@ namespace hex {
                     ImPlot::SetNextPlotLimits(0, 256, 0, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
                     if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1,0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock))  {
                         static auto x = []{
-                            std::array<u64, 256> result{ 0 };
+                            std::array<ImU64, 256> result{ 0 };
                             std::iota(result.begin(), result.end(), 0);
                             return result;
                         }();
