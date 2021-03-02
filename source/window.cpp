@@ -8,11 +8,14 @@
 #include <typeinfo>
 
 #include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_freetype.h>
 #include <imgui_imhex_extensions.h>
+#include <implot.h>
+#include <implot_internal.h>
 
 #include <fontawesome_font.h>
 
@@ -64,14 +67,17 @@ namespace hex {
                         case 0: /* Dark theme */
                             ImGui::StyleColorsDark();
                             ImGui::StyleCustomColorsDark();
+                            ImPlot::StyleColorsDark();
                             break;
                         case 1: /* Light theme */
                             ImGui::StyleColorsLight();
                             ImGui::StyleCustomColorsLight();
+                            ImPlot::StyleColorsLight();
                             break;
                         case 2: /* Classic theme */
                             ImGui::StyleColorsClassic();
                             ImGui::StyleCustomColorsClassic();
+                            ImPlot::StyleColorsClassic();
                             break;
                     }
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
@@ -174,8 +180,10 @@ namespace hex {
             View::drawCommonInterfaces();
 
             #ifdef DEBUG
-                if (this->m_demoWindowOpen)
+                if (this->m_demoWindowOpen) {
                     ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
+                    ImPlot::ShowDemoWindow(&this->m_demoWindowOpen);
+                }
             #endif
 
             this->frameEnd();
@@ -616,6 +624,7 @@ namespace hex {
         IMGUI_CHECKVERSION();
 
         GImGui = ImGui::CreateContext();
+        GImPlot = ImPlot::CreateContext();
 
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
@@ -745,6 +754,7 @@ namespace hex {
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }
 

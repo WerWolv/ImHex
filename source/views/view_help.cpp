@@ -71,6 +71,7 @@ namespace hex {
             Link("imgui_club by ocornut", "https://github.com/ocornut/imgui_club");
             Link("imnodes by Nelarius", "https://github.com/Nelarius/imnodes");
             Link("ImGuiColorTextEdit by BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit");
+            Link("ImPlot by epezent", "https://github.com/epezent/implot");
             Link("capstone by aquynh", "https://github.com/aquynh/capstone");
             Link("JSON for Modern C++ by nlohmann", "https://github.com/nlohmann/json");
             Link("YARA by VirusTotal", "https://github.com/VirusTotal/yara");
