@@ -157,6 +157,13 @@ namespace ImGui {
         ImGui::Text("[%c] %s", "|/-\\"[ImU32(ImGui::GetTime() * 20) % 4], label);
     }
 
+    void Header(const char *label, bool firstEntry) {
+        if (!firstEntry)
+            ImGui::NewLine();
+        ImGui::TextUnformatted(label);
+        ImGui::Separator();
+    }
+
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
         auto& customData = *static_cast<ImHexCustomData*>(GImGui->IO.UserData);
         ImVec4 c = customData.Colors[idx];

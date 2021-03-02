@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.information.distribution", "Byte distribution" },
                     { "hex.view.information.entropy", "Entropy" },
                     { "hex.view.information.block_size", "Block size" },
-                    { "hex.view.information.block_size.desc", "2046 blocks of %lu bytes" },
+                    { "hex.view.information.block_size.desc", "%lu blocks of %lu bytes" },
                     { "hex.view.information.file_entropy", "File entropy" },
                     { "hex.view.information.highest_entropy", "Highest entropy block" },
                     { "hex.view.information.encrypted", "This data is most likely encrypted or compressed!" },

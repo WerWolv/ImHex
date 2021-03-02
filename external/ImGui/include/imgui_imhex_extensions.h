@@ -15,6 +15,8 @@ namespace ImGui {
     void Disabled(const std::function<void()> &widgets, bool disabled);
     void TextSpinner(const char* label);
 
+    void Header(const char *label, bool firstEntry = false);
+
     enum ImGuiCustomCol {
         ImGuiCustomCol_DescButton,
         ImGuiCustomCol_DescButtonHovered,

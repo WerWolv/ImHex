@@ -13,6 +13,8 @@
 #include <magic.h>
 
 #include <imgui_imhex_extensions.h>
+#include <implot.h>
+#include <implot_internal.h>
 
 namespace hex {
 
@@ -34,14 +36,20 @@ namespace hex {
         View::unsubscribeEvent(Events::DataChanged);
     }
 
-    static float calculateEntropy(std::array<float, 256> &valueCounts, size_t numBytes) {
+    static float calculateEntropy(std::array<u64, 256> &valueCounts, size_t numBytes) {
         float entropy = 0;
 
-        for (u16 i = 0; i < 256; i++) {
-            valueCounts[i] /= numBytes;
+        if (numBytes == 0)
+            return 0.0F;
 
-            if (valueCounts[i] > 0)
-                entropy -= (valueCounts[i] * std::log2(valueCounts[i]));
+        std::array<float, 256> floatValueCounts{ 0 };
+        std::copy(valueCounts.begin(), valueCounts.end(), floatValueCounts.begin());
+
+        for (u16 i = 0; i < 256; i++) {
+            floatValueCounts[i] /= float(numBytes);
+
+            if (floatValueCounts[i] > 0)
+                entropy -= (floatValueCounts[i] * std::log2(floatValueCounts[i]));
         }
 
         return entropy / 8;
@@ -56,13 +64,13 @@ namespace hex {
             this->m_analyzedRegion = { provider->getBaseAddress(), provider->getBaseAddress() + provider->getSize() };
 
             {
-                this->m_blockSize = std::ceil(provider->getSize() / 2048.0F);
+                this->m_blockSize = std::max<u32>(std::ceil(provider->getSize() / 2048.0F), 256);
                 std::vector<u8> buffer(this->m_blockSize, 0x00);
                 std::memset(this->m_valueCounts.data(), 0x00, this->m_valueCounts.size() * sizeof(u32));
                 this->m_blockEntropy.clear();
 
                 for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
-                    std::array<float, 256> blockValueCounts = { 0 };
+                    std::array<u64, 256> blockValueCounts = { 0 };
                     provider->read(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
 
                     for (size_t j = 0; j < this->m_blockSize; j++) {
@@ -177,23 +185,46 @@ namespace hex {
                     ImGui::TextUnformatted("hex.view.information.info_analysis"_lang);
                     ImGui::Separator();
 
-                    ImGui::Text("hex.view.information.distribution"_lang);
-                    ImGui::PlotHistogram("##nolabel", this->m_valueCounts.data(), 256, 0, nullptr, FLT_MAX, FLT_MAX,ImVec2(0, 100));
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
+
+                    ImGui::TextUnformatted("hex.view.information.distribution"_lang);
+                    ImPlot::SetNextPlotLimits(0, 256, 0, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
+                    if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1,0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock))  {
+                        constexpr static auto x = []{
+                            std::array<u64, 256> result{ 0 };
+                            std::iota(result.begin(), result.end(), 0);
+                            return result;
+                        }();
+
+                        ImPlot::PlotBars("##bytes", x.data(), this->m_valueCounts.data(), x.size(), 0.67);
+                        ImPlot::EndPlot();
+                    }
 
                     ImGui::NewLine();
 
-                    ImGui::Text("hex.view.information.entropy"_lang);
-                    ImGui::PlotLines("##nolabel", this->m_blockEntropy.data(), this->m_blockEntropy.size(), 0, nullptr, FLT_MAX, FLT_MAX, ImVec2(0, 100));
+                    ImGui::TextUnformatted("hex.view.information.entropy"_lang);
+
+                    ImPlot::SetNextPlotLimits(0, this->m_blockEntropy.size(), -0.1, 1.1, ImGuiCond_Always);
+                    if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1,0), ImPlotFlags_CanvasOnly, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
+                        ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
+
+                        if (ImGui::IsItemClicked())
+                            View::postEvent(Events::SelectionChangeRequest, Region{ u64(ImPlot::GetPlotMousePos().x) * this->m_blockSize, 1 });
+
+                        ImPlot::EndPlot();
+                    }
+
+                    ImGui::PopStyleColor();
 
                     ImGui::NewLine();
 
-                    ImGui::LabelText("hex.view.information.block_size"_lang, "hex.view.information.block_size.desc"_lang, this->m_blockSize);
+                    ImGui::LabelText("hex.view.information.block_size"_lang, "hex.view.information.block_size.desc"_lang, this->m_blockEntropy.size(), this->m_blockSize);
                     ImGui::LabelText("hex.view.information.file_entropy"_lang, "%.8f", this->m_averageEntropy);
                     ImGui::LabelText("hex.view.information.highest_entropy"_lang, "%.8f", this->m_highestBlockEntropy);
 
                     if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
                         ImGui::NewLine();
-                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "hex.view.information.encrypted"_lang);
+                        ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.view.information.encrypted"_lang));
                     }
 
                 }
