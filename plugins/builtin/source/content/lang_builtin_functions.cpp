@@ -195,6 +195,11 @@ namespace hex::plugin::builtin {
 
             return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(result) });
         });
+
+        /* dataSize() */
+        ContentRegistry::PatternLanguageFunctions::add("dataSize", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
+            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(SharedData::currentProvider->getActualSize()) });
+        });
     }
 
 }
