@@ -232,8 +232,12 @@ namespace hex::lang {
                     case Token::Operator::Star:
                         return new ASTNodeIntegerLiteral({ newType, leftValue * rightValue });
                     case Token::Operator::Slash:
+                        if (rightValue == 0)
+                            this->getConsole().abortEvaluation("Division by zero");
                         return new ASTNodeIntegerLiteral({ newType, leftValue / rightValue });
                     case Token::Operator::Percent:
+                        if (rightValue == 0)
+                            this->getConsole().abortEvaluation("Division by zero");
                         return new ASTNodeIntegerLiteral({ newType, modulus(leftValue, rightValue) });
                     case Token::Operator::ShiftLeft:
                         return new ASTNodeIntegerLiteral({ newType, shiftLeft(leftValue, rightValue) });
