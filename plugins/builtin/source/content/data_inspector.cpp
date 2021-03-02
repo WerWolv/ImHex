@@ -157,7 +157,7 @@ namespace hex::plugin::builtin {
             else
                 value = "Invalid";
 
-            return [value] { ImGui::TextUnformatted(value.c_str()); };
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
 #endif
