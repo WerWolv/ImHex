@@ -10,6 +10,7 @@ namespace hex::plugin::builtin {
     void registerDataProcessorNodes();
 
     void registerLanguageEnUS();
+    void registerLanguageDeDE();
 
 }
 
@@ -25,6 +26,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerDataProcessorNodes();
 
     registerLanguageEnUS();
+    registerLanguageDeDE();
 }
 
 

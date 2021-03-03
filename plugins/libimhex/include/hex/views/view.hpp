@@ -20,7 +20,7 @@ namespace hex {
 
     class View {
     public:
-        explicit View(std::string viewName);
+        explicit View(std::string unlocalizedViewName);
         virtual ~View() = default;
 
         virtual void drawContent() = 0;
@@ -52,7 +52,7 @@ namespace hex {
 
         bool& getWindowOpenState();
 
-        std::string_view getName() const;
+        std::string_view getUnlocalizedName() const;
 
     protected:
         void subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback);
@@ -61,11 +61,15 @@ namespace hex {
         void unsubscribeEvent(Events eventType);
 
         void discardNavigationRequests();
-    protected:
+
         void confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
 
+        static inline std::string toWindowName(std::string_view unlocalizedName) {
+            return LangEntry(unlocalizedName) + "##" + std::string(unlocalizedName);
+        }
+
     private:
-        std::string m_viewName;
+        std::string m_unlocalizedViewName;
         bool m_windowOpen = this->hasViewMenuItemEntry();
     };
 

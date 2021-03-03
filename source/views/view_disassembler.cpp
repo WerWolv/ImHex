@@ -12,7 +12,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewDisassembler::ViewDisassembler() : View("hex.view.disassembler.name"_lang) {
+    ViewDisassembler::ViewDisassembler() : View("hex.view.disassembler.name") {
         View::subscribeEvent(Events::DataChanged, [this](auto){
             this->disassemble();
         });
@@ -100,7 +100,7 @@ namespace hex {
 
     void ViewDisassembler::drawContent() {
 
-        if (ImGui::Begin("hex.view.disassembler.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.disassembler.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             auto provider = SharedData::currentProvider;
             if (provider != nullptr && provider->isReadable()) {

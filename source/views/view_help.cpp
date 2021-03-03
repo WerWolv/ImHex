@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    ViewHelp::ViewHelp() : View("hex.view.help.about.name"_lang) {
+    ViewHelp::ViewHelp() : View("hex.view.help.about.name") {
     }
 
     ViewHelp::~ViewHelp() {
@@ -29,7 +29,7 @@ namespace hex {
 
 
     void ViewHelp::drawAboutPopup() {
-        if (ImGui::BeginPopupModal("hex.view.help.about.name"_lang, &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal(View::toWindowName("hex.view.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("ImHex Hex Editor v%s by WerWolv -", IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
                 ImGui::SameLine();
@@ -97,7 +97,7 @@ namespace hex {
         if (!this->m_patternHelpWindowOpen) return;
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(2000, 1000));
-        if (ImGui::Begin("Pattern Language Cheat Sheet", &this->m_patternHelpWindowOpen)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.help.pattern_cheat_sheet").c_str(), &this->m_patternHelpWindowOpen)) {
             ImGui::Text("ImHex Pattern Language Cheat Sheet");
             ImGui::Separator();
             ImGui::NewLine();
@@ -239,7 +239,7 @@ namespace hex {
         if (!this->m_mathHelpWindowOpen) return;
 
         ImGui::SetNextWindowSizeConstraints(ImVec2(450, 300), ImVec2(2000, 1000));
-        if (ImGui::Begin("Calculator Cheat Sheet", &this->m_mathHelpWindowOpen)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.help.calc_cheat_sheet").c_str(), &this->m_mathHelpWindowOpen)) {
             ImGui::Text("ImHex Math Evaluator Cheat Sheet");
             ImGui::Separator();
             ImGui::NewLine();
@@ -322,7 +322,7 @@ namespace hex {
     void ViewHelp::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.help"_lang)) {
             if (ImGui::MenuItem("hex.view.help.about.name"_lang, "")) {
-                View::doLater([] { ImGui::OpenPopup("hex.view.help.about.name"_lang); });
+                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.view.about.name").c_str()); });
                 this->m_aboutWindowOpen = true;
                 this->getWindowOpenState() = true;
             }

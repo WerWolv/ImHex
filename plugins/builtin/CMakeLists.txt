@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME} SHARED
         source/math_evaluator.cpp
 
         source/lang/en_US.cpp
+        source/lang/de_DE.cpp
 )
 
 # Add additional include directories here #

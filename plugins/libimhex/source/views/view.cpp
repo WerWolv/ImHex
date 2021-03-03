@@ -11,7 +11,7 @@
 namespace hex {
 
 
-    View::View(std::string viewName) : m_viewName(viewName) { }
+    View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
     void View::drawMenu() { }
     bool View::handleShortcut(int key, int mods) { return false; }
@@ -55,11 +55,11 @@ namespace hex {
     }
 
     void View::drawCommonInterfaces() {
-        if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
-            if (ImGui::Button("Okay") || ImGui::IsKeyDown(ImGuiKey_Escape))
+            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
             ImGui::EndPopup();
@@ -69,7 +69,7 @@ namespace hex {
     void View::showErrorPopup(std::string_view errorMessage) {
         SharedData::errorPopupMessage = errorMessage;
 
-        View::doLater([] { ImGui::OpenPopup("Error"); });
+        View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() {
@@ -89,8 +89,8 @@ namespace hex {
         return this->m_windowOpen;
     }
 
-    std::string_view View::getName() const {
-        return this->m_viewName;
+    std::string_view View::getUnlocalizedName() const {
+        return this->m_unlocalizedViewName;
     }
 
     void View::subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback) {

@@ -6,7 +6,7 @@
 
 namespace hex {
 
-    ViewDataProcessor::ViewDataProcessor() : View("hex.view.data_processor.name"_lang) {
+    ViewDataProcessor::ViewDataProcessor() : View("hex.view.data_processor.name") {
         imnodes::Initialize();
         imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
         imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkCreationOnSnap);
@@ -128,7 +128,7 @@ namespace hex {
     }
 
     void ViewDataProcessor::drawContent() {
-        if (ImGui::Begin("hex.view.data_processor.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                 imnodes::ClearNodeSelection();

@@ -32,7 +32,7 @@ namespace hex {
 
     void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            std::string format = std::string(view->getName()) + "=%d";
+            std::string format = std::string(view->getUnlocalizedName()) + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
     }
@@ -293,7 +293,7 @@ namespace hex {
                 if (ImGui::BeginMenu("hex.menu.view"_lang)) {
                     for (auto &view : ContentRegistry::Views::getEntries()) {
                         if (view->hasViewMenuItemEntry())
-                            ImGui::MenuItem((std::string(view->getName()) + " " + "hex.menu.view"_lang).c_str(), "", &view->getWindowOpenState());
+                            ImGui::MenuItem((LangEntry(view->getUnlocalizedName()) + " " + "hex.menu.view"_lang).c_str(), "", &view->getWindowOpenState());
                     }
                     ImGui::EndMenu();
                 }
@@ -512,11 +512,11 @@ namespace hex {
         ImGui::DockBuilderSplitNode(splitWindowId, ImGuiDir_Right, 0.3, &inspectorId, &hexEditorId);
 
         for (auto &view : ContentRegistry::Views::getEntries())
+            ImGui::DockBuilderDockWindow(view->getUnlocalizedName().data(), utilitiesId);
 
-            ImGui::DockBuilderDockWindow(view->getName().data(), utilitiesId);
-        ImGui::DockBuilderDockWindow("hex.view.hexeditor.name"_lang, hexEditorId);
-        ImGui::DockBuilderDockWindow("hex.view.data_inspector.name"_lang, inspectorId);
-        ImGui::DockBuilderDockWindow("hex.view.pattern_data.name"_lang, patternDataId);
+        ImGui::DockBuilderDockWindow("hex.view.hexeditor.name", hexEditorId);
+        ImGui::DockBuilderDockWindow("hex.view.data_inspector.name", inspectorId);
+        ImGui::DockBuilderDockWindow("hex.view.pattern_data.name", patternDataId);
 
         ImGui::DockBuilderFinish(dockId);
     }

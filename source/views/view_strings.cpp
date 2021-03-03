@@ -13,7 +13,7 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    ViewStrings::ViewStrings() : View("hex.view.strings.name"_lang) {
+    ViewStrings::ViewStrings() : View("hex.view.strings.name") {
         View::subscribeEvent(Events::DataChanged, [this](auto){
             this->m_foundStrings.clear();
         });
@@ -89,7 +89,7 @@ namespace hex {
         auto provider = SharedData::currentProvider;
 
 
-        if (ImGui::Begin("hex.view.strings.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.strings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (provider != nullptr && provider->isReadable()) {
                 ImGui::Disabled([this]{
                     if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))

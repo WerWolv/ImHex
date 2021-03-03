@@ -159,7 +159,7 @@ namespace hex {
 
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.save_changes"_lang); });
+                View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.save_changes.title"_lang); });
             }
         });
 
@@ -195,10 +195,10 @@ namespace hex {
 
         size_t dataSize = (provider == nullptr || !provider->isReadable()) ? 0x00 : provider->getSize();
 
-        this->m_memoryEditor.DrawWindow("hex.view.hexeditor.name"_lang, &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
+        this->m_memoryEditor.DrawWindow(View::toWindowName("hex.view.hexeditor.name").c_str(), &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
 
         if (dataSize != 0x00) {
-            if (ImGui::Begin("hex.view.hexeditor.name"_lang)) {
+            if (ImGui::Begin(View::toWindowName("hex.view.hexeditor.name").c_str())) {
 
                 if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
                     ImGui::OpenPopup("hex.menu.edit"_lang);
@@ -275,7 +275,7 @@ namespace hex {
             ImGui::TextUnformatted("hex.view.hexeditor.save_changes.desc"_lang);
             ImGui::NewLine();
 
-            confirmButtons("Yes", "No", [] { View::postEvent(Events::CloseImHex); }, [] { ImGui::CloseCurrentPopup(); });
+            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] { View::postEvent(Events::CloseImHex); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();

@@ -55,6 +55,8 @@ namespace hex::plugin::builtin {
                 { "hex.common.match_selection", "Match Selection" },
                 { "hex.common.yes", "Yes" },
                 { "hex.common.no", "No" },
+                { "hex.common.okay", "Okay" },
+                { "hex.common.error", "Error" },
                 { "hex.common.load", "Load" },
                 { "hex.common.cancel", "Cancel" },
                 { "hex.common.set", "Set" },
@@ -262,6 +264,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.yara.header.matches", "Matches" },
                         { "hex.view.yara.matches.identifier", "Identifier" },
                         { "hex.view.yara.whole_data", "Whole file matches!" },
+                        { "hex.view.yara.no_rules", "No YARA rules found. Put them in ImHex' 'yara' folder" },
 
             /* Builtin plugin features */
 

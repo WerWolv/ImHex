@@ -10,7 +10,7 @@
 
 namespace hex {
 
-    ViewYara::ViewYara() : View("hex.view.yara.name"_lang) {
+    ViewYara::ViewYara() : View("hex.view.yara.name") {
         yr_initialize();
 
         this->reloadRules();
@@ -21,7 +21,7 @@ namespace hex {
     }
 
     void ViewYara::drawContent() {
-        if (ImGui::Begin("hex.view.yara.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.yara.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (!this->m_matching && !this->m_errorMessage.empty()) {
                 View::showErrorPopup("hex.view.yara.error"_lang + this->m_errorMessage.data());
@@ -32,7 +32,7 @@ namespace hex {
             ImGui::Separator();
 
             if (this->m_rules.empty()) {
-                ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "No YARA rules found. Put them in the 'yara' folder next to the ImHex executable");
+                ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.view.yara.no_rules"_lang));
 
                 if (ImGui::Button("hex.view.yara.reload"_lang)) this->reloadRules();
             } else {

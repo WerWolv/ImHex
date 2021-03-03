@@ -7,7 +7,7 @@
 
 namespace hex {
 
-    ViewBookmarks::ViewBookmarks() : View("hex.view.bookmarks.name"_lang) {
+    ViewBookmarks::ViewBookmarks() : View("hex.view.bookmarks.name") {
         View::subscribeEvent(Events::AddBookmark, [](auto userData) {
             auto bookmark = std::any_cast<ImHexApi::Bookmarks::Entry>(userData);
             bookmark.comment.resize(0xF'FFFF);
@@ -44,7 +44,7 @@ namespace hex {
     }
 
     void ViewBookmarks::drawContent() {
-        if (ImGui::Begin("hex.view.bookmarks.name"_lang, &this->getWindowOpenState())) {
+        if (ImGui::Begin(View::toWindowName("hex.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
             if (ImGui::BeginChild("##scrolling")) {
 
                 auto &bookmarks = ImHexApi::Bookmarks::getEntries();

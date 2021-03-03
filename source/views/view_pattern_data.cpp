@@ -6,7 +6,7 @@
 namespace hex {
 
     ViewPatternData::ViewPatternData(std::vector<lang::PatternData*> &patternData)
-        : View("hex.view.pattern_data.name"_lang), m_patternData(patternData) {
+        : View("hex.view.pattern_data.name"), m_patternData(patternData) {
 
         this->subscribeEvent(Events::PatternChanged, [this](auto data) {
             this->m_sortedPatternData.clear();
@@ -49,7 +49,7 @@ namespace hex {
     }
 
     void ViewPatternData::drawContent() {
-        if (ImGui::Begin("hex.view.pattern_data.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = SharedData::currentProvider;
             if (provider != nullptr && provider->isReadable()) {
 

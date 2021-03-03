@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    ViewCommandPalette::ViewCommandPalette() : View("hex.view.command_palette.name"_lang) {
+    ViewCommandPalette::ViewCommandPalette() : View("hex.view.command_palette.name") {
         this->m_commandBuffer.resize(1024, 0x00);
     }
 

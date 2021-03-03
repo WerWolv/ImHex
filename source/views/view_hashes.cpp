@@ -9,7 +9,7 @@
 
 namespace hex {
 
-    ViewHashes::ViewHashes() : View("hex.view.hashes.name"_lang) {
+    ViewHashes::ViewHashes() : View("hex.view.hashes.name") {
         View::subscribeEvent(Events::DataChanged, [this](auto) {
             this->m_shouldInvalidate = true;
         });
@@ -38,7 +38,7 @@ namespace hex {
     }
 
     void ViewHashes::drawContent() {
-        if (ImGui::Begin("hex.view.hashes.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.hashes.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
 
             auto provider = SharedData::currentProvider;

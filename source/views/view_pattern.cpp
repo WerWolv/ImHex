@@ -76,7 +76,7 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.name"_lang), m_patternData(patternData) {
+    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.name"), m_patternData(patternData) {
         this->m_patternLanguageRuntime = new lang::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -220,7 +220,7 @@ namespace hex {
     }
 
     void ViewPattern::drawContent() {
-        if (ImGui::Begin("hex.view.pattern.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.pattern.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isAvailable()) {

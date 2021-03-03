@@ -10,7 +10,7 @@ namespace hex {
 
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
-    ViewDataInspector::ViewDataInspector() : View("hex.view.data_inspector.name"_lang) {
+    ViewDataInspector::ViewDataInspector() : View("hex.view.data_inspector.name") {
         View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
             auto region = std::any_cast<Region>(userData);
 
@@ -55,7 +55,7 @@ namespace hex {
         }
 
 
-        if (ImGui::Begin("hex.view.data_inspector.name"_lang, &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = SharedData::currentProvider;
 
             if (provider != nullptr && provider->isReadable()) {
