@@ -11,6 +11,9 @@
 #include <type_traits>
 #include <vector>
 
+#include <fmt/format.h>
+#include <fmt/chrono.h>
+
 #ifdef __MINGW32__
 #include <winsock.h>
 #else
@@ -85,18 +88,13 @@ namespace hex {
     void openWebpage(std::string_view url);
 
     template<typename ... Args>
-    inline std::string format(const char *format, Args ... args) {
-        ssize_t size = snprintf( nullptr, 0, format, args ... );
+    inline std::string format(std::string_view format, Args ... args) {
+        return fmt::format(format, args...);
+    }
 
-        if (size <= 0)
-            return "";
-
-        std::vector<char> buffer(size + 1, 0x00);
-        if (snprintf(buffer.data(), size + 1, format, args ...) <= 0)
-            return "";
-
-
-        return std::string(buffer.data(), buffer.data() + size);
+    template<typename ... Args>
+    inline void print(std::string_view format, Args ... args) {
+        fmt::print(format, args...);
     }
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {

@@ -61,7 +61,7 @@ namespace hex::lang {
             if (candidate != currMembers.end())
                 currPattern = *candidate;
             else
-                this->getConsole().abortEvaluation(hex::format("could not find identifier '%s'", identifier.c_str()));
+                this->getConsole().abortEvaluation(hex::format("could not find identifier '{0}'", identifier.c_str()));
         }
 
         if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr)
@@ -134,7 +134,7 @@ namespace hex::lang {
         }
 
         if (!ContentRegistry::PatternLanguageFunctions::getEntries().contains(node->getFunctionName().data()))
-            this->getConsole().abortEvaluation(hex::format("no function named '%s' found", node->getFunctionName().data()));
+            this->getConsole().abortEvaluation(hex::format("no function named '{0}' found", node->getFunctionName().data()));
 
         auto &function = ContentRegistry::PatternLanguageFunctions::getEntries()[node->getFunctionName().data()];
 
@@ -143,12 +143,12 @@ namespace hex::lang {
         }
         else if (function.parameterCount & ContentRegistry::PatternLanguageFunctions::LessParametersThan) {
             if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan))
-                this->getConsole().abortEvaluation(hex::format("too many parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan));
+                this->getConsole().abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1}", node->getFunctionName().data(), function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan));
         } else if (function.parameterCount & ContentRegistry::PatternLanguageFunctions::MoreParametersThan) {
             if (evaluatedParams.size() <= (function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan))
-                this->getConsole().abortEvaluation(hex::format("too few parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan));
+                this->getConsole().abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1}", node->getFunctionName().data(), function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan));
         } else if (function.parameterCount != evaluatedParams.size()) {
-            this->getConsole().abortEvaluation(hex::format("invalid number of parameters for function '%s'. Expected %d", node->getFunctionName().data(), function.parameterCount));
+            this->getConsole().abortEvaluation(hex::format("invalid number of parameters for function '{0}'. Expected {1}", node->getFunctionName().data(), function.parameterCount));
         }
 
         return function.func(*this, evaluatedParams);
@@ -654,7 +654,7 @@ namespace hex::lang {
             else
                 this->getConsole().abortEvaluation("ASTNodeVariableDecl had an invalid type. This is a bug!");
 
-            entry->setVariableName(hex::format("[%llu]", (u64)i));
+            entry->setVariableName(hex::format("[{0}]", (u64)i));
             entry->setEndian(this->getCurrentEndian());
 
             if (!color.has_value())

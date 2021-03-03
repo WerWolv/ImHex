@@ -71,7 +71,7 @@ namespace hex {
                     if (ImGui::CollapsingHeader((std::string(name.data()) + "###" + std::to_string((u64)comment.data())).c_str())) {
                         ImGui::TextUnformatted("hex.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
-                        ImGui::Text("hex.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
+                        ImGui::TextUnformatted(hex::format("hex.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size).c_str());
 
                         {
                             u8 bytes[10] = { 0 };
@@ -79,7 +79,7 @@ namespace hex {
 
                             std::string bytesString;
                             for (u8 i = 0; i < std::min(region.size, size_t(10)); i++) {
-                                bytesString += hex::format("%02X ", bytes[i]);
+                                bytesString += hex::format("{0:02X} ", bytes[i]);
                             }
 
                             if (region.size > 10) {

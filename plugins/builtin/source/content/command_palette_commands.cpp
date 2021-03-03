@@ -22,9 +22,9 @@ namespace hex::plugin::builtin {
 
 
                     if (result.has_value())
-                        return hex::format("#%s = %Lf", input.data(), result.value());
+                        return hex::format("#{0} = %{1}", input.data(), result.value());
                     else
-                        return hex::format("#%s = ???", input.data());
+                        return hex::format("#{0} = ???", input.data());
                 });
 
         hex::ContentRegistry::CommandPaletteCommands::add(

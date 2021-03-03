@@ -76,7 +76,7 @@ namespace hex {
                         disassembly.operators = instructions[instr].op_str;
 
                         for (u8 i = 0; i < instructions[instr].size; i++)
-                            disassembly.bytes += hex::format("%02X ", instructions[instr].bytes[i]);
+                            disassembly.bytes += hex::format("{0:02X} ", instructions[instr].bytes[i]);
                         disassembly.bytes.pop_back();
 
                         this->m_disassembly.push_back(disassembly);

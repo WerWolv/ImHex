@@ -33,7 +33,7 @@ namespace hex {
             ImGui::Text("ImHex Hex Editor v%s by WerWolv -", IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
                 ImGui::SameLine();
-                if (ImGui::Hyperlink(hex::format("%s@%s", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
+                if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
                     hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH);
             #endif
             ImGui::TextUnformatted("hex.view.help.about.translator"_lang);
@@ -44,7 +44,7 @@ namespace hex {
                 hex::openWebpage("https://github.com/WerWolv/ImHex");
             ImGui::NewLine();
 
-            ImGui::Text("hex.view.help.about.donations"_lang);
+            ImGui::TextUnformatted("hex.view.help.about.donations"_lang);
             ImGui::Separator();
 
             constexpr const char* Links[] = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };

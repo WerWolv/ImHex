@@ -60,7 +60,7 @@ namespace hex {
                 break;
         }
 
-        std::string result = hex::format("%.2f", value);
+        std::string result = hex::format("{0:.2f}", value);
 
         switch (unitIndex) {
             case 0: result += " Bytes"; break;
@@ -168,11 +168,11 @@ namespace hex {
     void openWebpage(std::string_view url) {
 
         #if defined(OS_WINDOWS)
-            system(hex::format("start %s", url.data()).c_str());
+            system(hex::format("start {0}", url.data()).c_str());
         #elif defined(OS_MACOS)
-            system(hex::format("open %s", url.data()).c_str());
+            system(hex::format("open {0}", url.data()).c_str());
         #elif defined(OS_LINUX)
-            system(hex::format("xdg-open %s", url.data()).c_str());
+            system(hex::format("xdg-open {0}", url.data()).c_str());
         #else
             #warning "Unknown OS, can't open webpages"
         #endif

@@ -45,14 +45,14 @@ namespace hex::lang {
                             offset += 1;
 
                             if (offset >= code.length())
-                                throwPreprocessorError(hex::format("missing terminating '%c' character", endChar), lineNumber);
+                                throwPreprocessorError(hex::format("missing terminating '{0}' character", endChar), lineNumber);
                         }
                         offset += 1;
 
                         if (includeFile[0] != '/') {
                             std::string tempPath = includeFile;
                             for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                               tempPath = hex::format("%s/%s", dir.c_str(), includeFile.c_str());
+                               tempPath = hex::format("{0}/{1}", dir.c_str(), includeFile.c_str());
                                 if (std::filesystem::exists(includeFile))
                                     break;
                             }
@@ -61,7 +61,7 @@ namespace hex::lang {
 
                         FILE *file = fopen(includeFile.c_str(), "r");
                         if (file == nullptr)
-                            throwPreprocessorError(hex::format("%s: No such file or directory", includeFile.c_str()), lineNumber);
+                            throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
 
                         fseek(file, 0, SEEK_END);
                         size_t size = ftell(file);
@@ -199,9 +199,9 @@ namespace hex::lang {
                 for (const auto &[type, value] : this->m_pragmas) {
                     if (this->m_pragmaHandlers.contains(type)) {
                         if (!this->m_pragmaHandlers[type](value))
-                            throwPreprocessorError(hex::format("invalid value provided to '%s' #pragma directive", type.c_str()), lineNumber);
+                            throwPreprocessorError(hex::format("invalid value provided to '{0}' #pragma directive", type.c_str()), lineNumber);
                     } else
-                        throwPreprocessorError(hex::format("no #pragma handler registered for type %s", type.c_str()), lineNumber);
+                        throwPreprocessorError(hex::format("no #pragma handler registered for type {0}", type.c_str()), lineNumber);
                 }
             }
         } catch (PreprocessorError &e) {

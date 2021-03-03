@@ -311,8 +311,8 @@ namespace hex::plugin::builtin {
                 }
 
                 auto base10String   = std::to_string(number);
-                auto base16String   = hex::format("%X", number);
-                auto base8String    = hex::format("%o", number);
+                auto base16String   = hex::format("0x{0:X}", number);
+                auto base8String    = hex::format("{0:#o}", number);
                 auto base2String    = hex::toBinaryString(number);
 
                 std::strncpy(buffer[0], base10String.c_str(), sizeof(buffer[0]));

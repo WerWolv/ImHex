@@ -7,10 +7,10 @@ namespace hex {
     namespace fs = std::filesystem;
 
     // hex::plugin::<pluginName>::internal::initializePlugin()
-    constexpr auto InitializePluginSymbol       = "_ZN3hex6plugin%d%s8internal16initializePluginEv";
-    constexpr auto GetPluginNameSymbol          = "_ZN3hex6plugin%d%s8internal13getPluginNameEv";
-    constexpr auto GetPluginAuthorSymbol        = "_ZN3hex6plugin%d%s8internal15getPluginAuthorEv";
-    constexpr auto GetPluginDescriptionSymbol   = "_ZN3hex6plugin%d%s8internal20getPluginDescriptionEv";
+    constexpr auto InitializePluginSymbol       = "_ZN3hex6plugin{0}{1}8internal16initializePluginEv";
+    constexpr auto GetPluginNameSymbol          = "_ZN3hex6plugin{0}{1}8internal13getPluginNameEv";
+    constexpr auto GetPluginAuthorSymbol        = "_ZN3hex6plugin{0}{1}8internal15getPluginAuthorEv";
+    constexpr auto GetPluginDescriptionSymbol   = "_ZN3hex6plugin{0}{1}8internal20getPluginDescriptionEv";
 
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
@@ -54,7 +54,7 @@ namespace hex {
         if (this->m_getPluginNameFunction != nullptr)
             return this->m_getPluginNameFunction();
         else
-            return hex::format("Unknown Plugin @ 0x016llX", this->m_handle);
+            return hex::format("Unknown Plugin @ 0x{0:016X}", this->m_handle);
     }
 
     std::string Plugin::getPluginAuthor() const {

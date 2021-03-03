@@ -211,7 +211,7 @@ namespace hex {
                 ImGui::SameLine();
                 ImGui::Spacing();
                 ImGui::SameLine();
-                ImGui::Text("hex.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount());
+                ImGui::TextUnformatted(hex::format("hex.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount()).c_str());
                 ImGui::SameLine();
 
                 if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
@@ -607,7 +607,7 @@ namespace hex {
 
         std::string str;
         for (const auto &byte : buffer)
-            str += hex::format("%02X ", byte);
+            str += hex::format("{0:02X} ", byte);
         str.pop_back();
 
         ImGui::SetClipboardText(str.c_str());
@@ -645,7 +645,7 @@ namespace hex {
                 str += "const unsigned char data[" + std::to_string(buffer.size()) + "] = { ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -657,7 +657,7 @@ namespace hex {
                 str += "constexpr std::array<unsigned char, " + std::to_string(buffer.size()) + "> data = { ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -669,7 +669,7 @@ namespace hex {
                 str += "final byte[] data = { ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -681,7 +681,7 @@ namespace hex {
                 str += "const byte[] data = { ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -693,7 +693,7 @@ namespace hex {
                 str += "let data: [u8, " + std::to_string(buffer.size()) + "] = [ ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -705,7 +705,7 @@ namespace hex {
                 str += "data = bytes([ ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -717,7 +717,7 @@ namespace hex {
                 str += "const data = new Uint8Array([ ";
 
                 for (const auto &byte : buffer)
-                    str += hex::format("0x%02X, ", byte);
+                    str += hex::format("0x{0:02X}, ", byte);
 
                 // Remove trailing comma
                 str.pop_back();
@@ -745,13 +745,13 @@ namespace hex {
 
 
         for (u32 col = start >> 4; col <= (end >> 4); col++) {
-            str += hex::format("%08lX  ", col << 4);
+            str += hex::format("{0:08X}  ", col << 4);
             for (u64 i = 0 ; i < 16; i++) {
 
                 if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
                     str += "   ";
                 else
-                    str += hex::format("%02lX ", buffer[((col << 4) - start) + i]);
+                    str += hex::format("{0:02X} ", buffer[((col << 4) - start) + i]);
 
                 if ((i & 0xF) == 0x7)
                     str += " ";
@@ -766,7 +766,7 @@ namespace hex {
                 else {
                     u8 c = buffer[((col << 4) - start) + i];
                     char displayChar = (c < 32 || c >= 128) ? '.' : c;
-                    str += hex::format("%c", displayChar);
+                    str += hex::format("{0}", displayChar);
                 }
             }
 
@@ -804,13 +804,13 @@ R"(
 
 
         for (u32 col = start >> 4; col <= (end >> 4); col++) {
-            str += hex::format("        <span class=\"offsetcolumn\">%08lX</span>&nbsp&nbsp<span class=\"hexcolumn\">", col << 4);
+            str += hex::format("        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", col << 4);
             for (u64 i = 0 ; i < 16; i++) {
 
                 if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
                     str += "&nbsp&nbsp ";
                 else
-                    str += hex::format("%02lX ", buffer[((col << 4) - start) + i]);
+                    str += hex::format("{0:02X} ", buffer[((col << 4) - start) + i]);
 
                 if ((i & 0xF) == 0x7)
                     str += "&nbsp";
@@ -825,7 +825,7 @@ R"(
                 else {
                     u8 c = buffer[((col << 4) - start) + i];
                     char displayChar = (c < 32 || c >= 128) ? '.' : c;
-                    str += hex::format("%c", displayChar);
+                    str += hex::format("{0}", displayChar);
                 }
             }
 

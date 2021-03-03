@@ -59,7 +59,7 @@ namespace hex::dp {
             auto attribute = this->getConnectedInputAttribute(index);
 
             if (attribute == nullptr)
-                throwNodeError(hex::format("Nothing connected to input '%s'", static_cast<const char*>(LangEntry(this->m_attributes[index].getUnlocalizedName()))));
+                throwNodeError(hex::format("Nothing connected to input '{0}'", static_cast<const char*>(LangEntry(this->m_attributes[index].getUnlocalizedName()))));
 
             if (attribute->getType() != Attribute::Type::Buffer)
                 throwNodeError("Tried to read buffer from non-buffer attribute");
@@ -78,7 +78,7 @@ namespace hex::dp {
             auto attribute = this->getConnectedInputAttribute(index);
 
             if (attribute == nullptr)
-                throwNodeError(hex::format("Nothing connected to input '%s'", static_cast<const char*>(LangEntry(this->m_attributes[index].getUnlocalizedName()))));
+                throwNodeError(hex::format("Nothing connected to input '{0}'", static_cast<const char*>(LangEntry(this->m_attributes[index].getUnlocalizedName()))));
 
             if (attribute->getType() != Attribute::Type::Integer)
                 throwNodeError("Tried to read integer from non-integer attribute");
@@ -100,7 +100,7 @@ namespace hex::dp {
             auto attribute = this->getConnectedInputAttribute(index);
 
             if (attribute == nullptr)
-                throwNodeError(hex::format("Nothing connected to input '%s'", static_cast<const char*>(LangEntry(this->m_attributes[index].getUnlocalizedName()))));
+                throwNodeError(hex::format("Nothing connected to input '{0}'", static_cast<const char*>(LangEntry(this->m_attributes[index].getUnlocalizedName()))));
 
             if (attribute->getType() != Attribute::Type::Float)
                 throwNodeError("Tried to read float from non-float attribute");

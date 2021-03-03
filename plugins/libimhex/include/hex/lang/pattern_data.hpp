@@ -298,7 +298,7 @@ namespace hex::lang {
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            this->createDefaultEntry(hex::format("%llu (0x%0*llX)", data, this->getSize() * 2, data));
+            this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, this->getSize() * 2));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -329,7 +329,7 @@ namespace hex::lang {
 
             s64 signedData = hex::signExtend(data, this->getSize(), 64);
 
-           this->createDefaultEntry(hex::format("%lld (0x%0*llX)", signedData, this->getSize() * 2, data));
+           this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, this->getSize() * 2));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -359,13 +359,13 @@ namespace hex::lang {
                 provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
 
-                this->createDefaultEntry(hex::format("%e (0x%0*lX)", *reinterpret_cast<float*>(&data), this->getSize() * 2, data));
+                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<float*>(&data), data, this->getSize() * 2));
             } else if (this->getSize() == 8) {
                 u64 data = 0;
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
-                this->createDefaultEntry(hex::format("%e (0x%0*llX)", *reinterpret_cast<double*>(&data), this->getSize() * 2, data));
+                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<double*>(&data), data, this->getSize() * 2));
             }
         }
 
@@ -417,7 +417,7 @@ namespace hex::lang {
             char character;
             provider->read(this->getOffset(), &character, 1);
 
-            this->createDefaultEntry(hex::format("'%c'", character));
+            this->createDefaultEntry(hex::format("'{0}'", character));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -439,7 +439,7 @@ namespace hex::lang {
             provider->read(this->getOffset(), buffer.data(), this->getSize());
             buffer[this->getSize()] = '\0';
 
-            this->createDefaultEntry(hex::format("\"%s\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
+            this->createDefaultEntry(hex::format("\"{0}\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -757,7 +757,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", hex::format("%s (0x%0*llX)", valueString.c_str(), this->getSize() * 2, value).c_str());
+            ImGui::Text("%s", hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2).c_str());
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -803,7 +803,7 @@ namespace hex::lang {
 
             std::string valueString = "{ ";
             for (u64 i = 0; i < value.size(); i++)
-                valueString += hex::format("%02x ", value[i]);
+                valueString += hex::format("{0:02X} ", value[i]);
             valueString += "}";
 
             ImGui::TextUnformatted(valueString.c_str());

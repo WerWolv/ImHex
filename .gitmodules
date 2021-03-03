@@ -8,3 +8,6 @@
 [submodule "external/xdgpp"]
 	path = external/xdgpp
 	url = https://git.sr.ht/~danyspin97/xdgpp
+[submodule "external/fmt"]
+	path = external/fmt
+	url = https://github.com/fmtlib/fmt
