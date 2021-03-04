@@ -3,7 +3,7 @@
 namespace hex::plugin::builtin {
 
     void registerLanguageItIT() {
-        ContentRegistry::Language::registerLanguage("Italian (IT)", "it-IT");
+        ContentRegistry::Language::registerLanguage("Italian", "it-IT");
 
         ContentRegistry::Language::addLocalizations("it-IT", {
             /* ImHex default functionality */
@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.help.name", "Aiuto" },
                     { "hex.view.help.about.name", "Riguardo ImHex" },
-                        { "hex.view.help.about.translator", "Tradotto da WerWolv" },
+                        { "hex.view.help.about.translator", "Tradotto da CrustySeanPro" },
                         { "hex.view.help.about.source", "Codice Sorgente disponibile su GitHub:" },
                         { "hex.view.help.about.donations", "Donazioni" },
                         { "hex.view.help.about.thanks", "Se ti piace il mio lavoro, per favore considera di fare una donazione. Grazie mille <3" },
