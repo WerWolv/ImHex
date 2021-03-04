@@ -17,6 +17,7 @@ add_library(${PROJECT_NAME} SHARED
 
         source/lang/en_US.cpp
         source/lang/de_DE.cpp
+        source/lang/it_IT.cpp
 )
 
 # Add additional include directories here #
