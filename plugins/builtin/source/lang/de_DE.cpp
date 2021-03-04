@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.address", "Adresse" },
                 { "hex.common.size", "Länge" },
                 { "hex.common.region", "Region" },
-                { "hex.common.match_selection", "Benutzselektion" },
+                { "hex.common.match_selection", "Arbeitsbereich synchronisieren" },
                 { "hex.common.yes", "Ja" },
                 { "hex.common.no", "Nein" },
                 { "hex.common.okay", "Okay" },
