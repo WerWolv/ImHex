@@ -360,6 +360,97 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeArithmeticAdd : public dp::Node {
+    public:
+        NodeArithmeticAdd() : Node("hex.builtin.nodes.arithmetic.add.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.add.input.a"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.add.input.b"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.add.output") }) {}
+
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            auto output = inputA + inputB;
+
+            this->setIntegerOnOutput(2, output);
+        }
+    };
+
+    class NodeArithmeticSubtract : public dp::Node {
+    public:
+        NodeArithmeticSubtract() : Node("hex.builtin.nodes.arithmetic.sub.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.sub.input.a"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.sub.input.b"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.sub.output") }) {}
+
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            auto output = inputA - inputB;
+
+            this->setIntegerOnOutput(2, output);
+        }
+    };
+
+    class NodeArithmeticMultiply : public dp::Node {
+    public:
+        NodeArithmeticMultiply() : Node("hex.builtin.nodes.arithmetic.mul.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.mul.input.a"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.mul.input.b"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.mul.output") }) {}
+
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            auto output = inputA * inputB;
+
+            this->setIntegerOnOutput(2, output);
+        }
+    };
+
+    class NodeArithmeticDivide : public dp::Node {
+    public:
+        NodeArithmeticDivide() : Node("hex.builtin.nodes.arithmetic.div.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.div.input.a"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.div.input.b"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.div.output") }) {}
+
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (inputB == 0)
+                throwNodeError("Division by zero");
+
+            auto output = inputA / inputB;
+
+            this->setIntegerOnOutput(2, output);
+        }
+    };
+
+    class NodeArithmeticModulus : public dp::Node {
+    public:
+        NodeArithmeticModulus() : Node("hex.builtin.nodes.arithmetic.mod.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.mod.input.a"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.mod.input.b"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.arithmetic.mod.output") }) {}
+
+        void process() override {
+            auto inputA = this->getIntegerOnInput(0);
+            auto inputB = this->getIntegerOnInput(1);
+
+            if (inputB == 0)
+                throwNodeError("Division by zero");
+
+            auto output = inputA % inputB;
+
+            this->setIntegerOnOutput(2, output);
+        }
+    };
+
     class NodeIf : public dp::Node {
     public:
         NodeIf() : Node("ex.builtin.nodes.control_flow.if.header",
@@ -582,6 +673,12 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataProcessorNode::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.int_to_buffer");
         ContentRegistry::DataProcessorNode::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_int");
+
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.add");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.sub");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.div");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
 
         ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
         ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");

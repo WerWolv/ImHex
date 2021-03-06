@@ -165,16 +165,16 @@ namespace hex {
                     }
                 }
 
-                for (const auto &[category, name, function] : ContentRegistry::DataProcessorNode::getEntries()) {
-                    if (category.empty() && name.empty()) {
+                for (const auto &[unlocalizedCategory, unlocalizedName, function] : ContentRegistry::DataProcessorNode::getEntries()) {
+                    if (unlocalizedCategory.empty() && unlocalizedName.empty()) {
                         ImGui::Separator();
-                    } else if (category.empty()) {
-                        if (ImGui::MenuItem(name.c_str())) {
+                    } else if (unlocalizedCategory.empty()) {
+                        if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                             node = function();
                         }
                     } else {
-                        if (ImGui::BeginMenu(category.c_str())) {
-                            if (ImGui::MenuItem(name.c_str())) {
+                        if (ImGui::BeginMenu(LangEntry(unlocalizedCategory))) {
+                            if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                                 node = function();
                             }
                             ImGui::EndMenu();
