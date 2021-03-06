@@ -3,9 +3,11 @@
 #include <hex.hpp>
 #include <hex/api/content_registry.hpp>
 
+#include <chrono>
 #include <iostream>
 #include <numeric>
 #include <typeinfo>
+#include <thread>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -25,6 +27,8 @@
 #include <GLFW/glfw3.h>
 
 namespace hex {
+
+    using namespace std::literals::chrono_literals;
 
     void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
         return ctx; // Unused, but the return value has to be non-null
@@ -57,7 +61,7 @@ namespace hex {
         this->initGLFW();
         this->initImGui();
 
-        EventManager::subscribe(Events::SettingsChanged, this, [](auto) -> std::any {
+        EventManager::subscribe(Events::SettingsChanged, this, [this](auto) -> std::any {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
@@ -89,6 +93,13 @@ namespace hex {
 
                 if (language.is_string())
                     LangEntry::loadLanguage(static_cast<std::string>(language));
+            }
+
+            {
+                auto targetFps = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps");
+
+                if (targetFps.is_number())
+                    this->m_targetFps = targetFps;
             }
 
             return { };
@@ -156,6 +167,7 @@ namespace hex {
     }
 
     void Window::loop() {
+        this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
             this->frameBegin();
 
@@ -245,6 +257,10 @@ namespace hex {
     }
 
     void Window::frameBegin() {
+
+        if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
+            glfwWaitEvents();
+
         glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -373,6 +389,10 @@ namespace hex {
         glfwMakeContextCurrent(backup_current_context);
 
         glfwSwapBuffers(this->m_window);
+
+        while (glfwGetTime() < this->m_lastFrameTime + (1 / this->m_targetFps))
+            std::this_thread::sleep_for(500us);
+        this->m_lastFrameTime = glfwGetTime();
     }
 
     void Window::drawWelcomeScreen() {

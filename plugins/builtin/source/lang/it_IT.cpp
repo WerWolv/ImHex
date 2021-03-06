@@ -463,6 +463,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.color.light", "Chiaro" },
                         { "hex.builtin.setting.interface.color.classic", "Classico" },
                     { "hex.builtin.setting.interface.language", "Lingua" },
+                { "hex.builtin.setting.interface.fps", "FPS limite" },
 
                 { "hex.builtin.provider.file.path", "Percorso del File" },
                 { "hex.builtin.provider.file.size", "Dimensione" },

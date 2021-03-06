@@ -61,6 +61,17 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60, [](auto name, nlohmann::json &setting) {
+            static int fps = setting.is_number() ? static_cast<int>(setting) : 60;
+
+            if (ImGui::SliderInt(name.data(), &fps, 15, 60)) {
+                setting = fps;
+                return true;
+            }
+
+            return false;
+        });
+
     }
 
 }

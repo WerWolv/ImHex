@@ -46,8 +46,11 @@ namespace hex {
 
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;
+        double m_targetFps;
         bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;
+
+        double m_lastFrameTime;
 
         static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
 
