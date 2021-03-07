@@ -451,6 +451,69 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeBufferCombine : public dp::Node {
+    public:
+        NodeBufferCombine() : Node("hex.builtin.nodes.buffer.combine.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.combine.input.a"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.combine.input.b"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.combine.output") }) {}
+
+        void process() override {
+            auto inputA = this->getBufferOnInput(0);
+            auto inputB = this->getBufferOnInput(1);
+
+            auto &output = inputA;
+            std::copy(inputB.begin(), inputB.end(), std::back_inserter(output));
+
+            this->setBufferOnOutput(2, output);
+        }
+    };
+
+    class NodeBufferSlice : public dp::Node {
+    public:
+        NodeBufferSlice() : Node("hex.builtin.nodes.buffer.slice.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.slice.input.buffer"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.slice.input.from"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.slice.input.to"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.slice.output") }) {}
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+            auto from = this->getIntegerOnInput(1);
+            auto to = this->getIntegerOnInput(2);
+
+            if (from < 0 || from >= input.size())
+                throwNodeError("'from' input out of range");
+            if (to < 0 || from >= input.size())
+                throwNodeError("'to' input out of range");
+            if (to >= from)
+                throwNodeError("'to' input needs to be greater than 'from' input");
+
+            this->setBufferOnOutput(3, std::vector(input.begin() + from, input.begin() + to));
+        }
+    };
+
+    class NodeBufferRepeat : public dp::Node {
+    public:
+        NodeBufferRepeat() : Node("hex.builtin.nodes.buffer.repeat.header", {
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.repeat.input.buffer"),
+                dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.repeat.input.count"),
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.combine.output") }) {}
+
+        void process() override {
+            auto buffer = this->getBufferOnInput(0);
+            auto count = this->getIntegerOnInput(1);
+
+            std::vector<u8> output;
+            output.resize(buffer.size() * count);
+
+            for (u32 i = 0; i < count; i++)
+                std::copy(buffer.begin(), buffer.end(), output.begin() + buffer.size() * i);
+
+            this->setBufferOnOutput(2, output);
+        }
+    };
+
     class NodeIf : public dp::Node {
     public:
         NodeIf() : Node("ex.builtin.nodes.control_flow.if.header",
@@ -679,6 +742,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.div");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
+
+        ContentRegistry::DataProcessorNode::add<NodeBufferCombine>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.combine");
+        ContentRegistry::DataProcessorNode::add<NodeBufferSlice>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.slice");
+        ContentRegistry::DataProcessorNode::add<NodeBufferRepeat>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.repeat");
 
         ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
         ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");
