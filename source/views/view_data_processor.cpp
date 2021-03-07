@@ -117,6 +117,10 @@ namespace hex {
         try {
             for (auto &endNode : this->m_endNodes) {
                 endNode->resetOutputData();
+
+                for (auto &node : this->m_nodes)
+                    node->resetProcessedInputs();
+
                 endNode->process();
             }
         } catch (dp::Node::NodeError &e) {

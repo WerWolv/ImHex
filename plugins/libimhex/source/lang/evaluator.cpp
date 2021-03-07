@@ -538,6 +538,10 @@ namespace hex::lang {
 
         PatternData *pattern;
 
+        this->m_currRecursionDepth++;
+        if (this->m_currRecursionDepth > this->m_recursionLimit)
+            this->getConsole().abortEvaluation(hex::format("evaluation depth exceeds maximum of {0}. Use #pragma eval_depth <depth> to increase the maximum", this->m_recursionLimit));
+
         if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(type); builtinTypeNode != nullptr)
             return this->evaluateBuiltinType(builtinTypeNode);
         else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(type); typeDeclNode != nullptr)
@@ -552,6 +556,8 @@ namespace hex::lang {
             pattern = this->evaluateBitfield(bitfieldNode);
         else
             this->getConsole().abortEvaluation("type could not be evaluated");
+
+        this->m_currRecursionDepth--;
 
         if (!node->getName().empty())
             pattern->setTypeName(node->getName().data());
@@ -752,6 +758,7 @@ namespace hex::lang {
         try {
             for (const auto& node : ast) {
                 this->m_endianStack.push_back(this->m_defaultDataEndian);
+                this->m_currRecursionDepth = 0;
 
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
                     this->m_globalMembers.push_back(this->evaluateVariable(variableDeclNode));

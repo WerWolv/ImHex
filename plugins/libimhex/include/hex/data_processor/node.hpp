@@ -2,6 +2,9 @@
 
 #include <hex/data_processor/attribute.hpp>
 
+#include <set>
+#include <vector>
+
 namespace hex::dp {
 
     class Node {
@@ -31,10 +34,15 @@ namespace hex::dp {
                 attribute.getOutputData().reset();
         }
 
+        void resetProcessedInputs() {
+            this->m_processedInputs.clear();
+        }
+
     private:
         u32 m_id;
         std::string m_unlocalizedName;
         std::vector<Attribute> m_attributes;
+        std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;
 
         Attribute* getConnectedInputAttribute(u32 index) {
@@ -47,6 +55,12 @@ namespace hex::dp {
                 return nullptr;
 
             return connectedAttribute.begin()->second;
+        }
+
+        void markInputProcessed(u32 index) {
+            const auto &[iter, inserted] = this->m_processedInputs.insert(index);
+            if (!inserted)
+                throwNodeError("Recursion detected!");
         }
 
     protected:
@@ -64,6 +78,7 @@ namespace hex::dp {
             if (attribute->getType() != Attribute::Type::Buffer)
                 throwNodeError("Tried to read buffer from non-buffer attribute");
 
+            markInputProcessed(index);
             attribute->getParentNode()->process();
 
             auto &outputData = attribute->getOutputData();
@@ -83,6 +98,7 @@ namespace hex::dp {
             if (attribute->getType() != Attribute::Type::Integer)
                 throwNodeError("Tried to read integer from non-integer attribute");
 
+            markInputProcessed(index);
             attribute->getParentNode()->process();
 
             auto &outputData = attribute->getOutputData();
@@ -105,6 +121,7 @@ namespace hex::dp {
             if (attribute->getType() != Attribute::Type::Float)
                 throwNodeError("Tried to read float from non-float attribute");
 
+            markInputProcessed(index);
             attribute->getParentNode()->process();
 
             auto &outputData = attribute->getOutputData();

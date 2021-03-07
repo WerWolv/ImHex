@@ -41,6 +41,7 @@ namespace hex::lang {
 
         prv::Provider *m_provider;
         std::endian m_defaultEndian;
+        u32 m_recursionLimit;
 
         std::optional<std::pair<u32, std::string>> m_currError;
     };

@@ -24,6 +24,7 @@ namespace hex::lang {
         LogConsole& getConsole() { return this->m_console; }
 
         void setDefaultEndian(std::endian endian) { this->m_defaultDataEndian = endian; }
+        void setRecursionLimit(u32 limit) { this->m_recursionLimit = limit; }
         void setProvider(prv::Provider *provider) { this->m_provider = provider; }
         [[nodiscard]] std::endian getCurrentEndian() const { return this->m_endianStack.back(); }
 
@@ -47,6 +48,8 @@ namespace hex::lang {
         std::vector<std::vector<PatternData*>*> m_currMembers;
         LogConsole m_console;
 
+        u32 m_recursionLimit = 16;
+        u32 m_currRecursionDepth;
 
 
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);

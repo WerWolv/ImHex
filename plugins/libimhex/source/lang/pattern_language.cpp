@@ -33,6 +33,16 @@ namespace hex::lang {
             } else
                 return false;
         });
+
+        this->m_preprocessor->addPragmaHandler("eval_depth", [this](std::string value) {
+            auto limit = strtol(value.c_str(), nullptr, 0);
+
+            if (limit <= 0)
+                return false;
+
+            this->m_recursionLimit = limit;
+            return true;
+        });
         this->m_preprocessor->addDefaultPragmaHandlers();
     }
 
@@ -55,6 +65,9 @@ namespace hex::lang {
             this->m_currError = this->m_preprocessor->getError();
             return { };
         }
+
+        this->m_evaluator->setDefaultEndian(this->m_defaultEndian);
+        this->m_evaluator->setRecursionLimit(this->m_recursionLimit);
 
         auto tokens = this->m_lexer->lex(preprocessedCode.value());
         if (!tokens.has_value()) {
