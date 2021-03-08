@@ -188,7 +188,7 @@ Patterns: /usr/share/imhex/patterns
 Pattern Includes: /usr/share/imhex/includes
 Magic files: /usr/share/imhex/magic
 Python: /usr/share/imhex/lib/pythonX.X
-Plugins: /usr/share/imhex/imhex/plugins
+Plugins: /usr/share/imhex/plugins
 Configuration: /etc/xdg/imhex/config
 Resources: /usr/share/imhex/resources
 ```
