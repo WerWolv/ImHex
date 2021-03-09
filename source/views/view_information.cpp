@@ -229,7 +229,6 @@ namespace hex {
 
                 }
             }
-
             ImGui::EndChild();
         }
         ImGui::End();

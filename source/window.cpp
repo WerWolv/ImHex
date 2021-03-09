@@ -54,8 +54,9 @@ namespace hex {
     }
 
     Window::Window(int &argc, char **&argv) {
-        hex::SharedData::mainArgc = argc;
-        hex::SharedData::mainArgv = argv;
+        SharedData::mainArgc = argc;
+        SharedData::mainArgv = argv;
+        SharedData::currentProvider = nullptr;
 
         this->createDirectories();
         this->initGLFW();
@@ -155,6 +156,8 @@ namespace hex {
     }
 
     Window::~Window() {
+        delete SharedData::currentProvider;
+
         this->deinitImGui();
         this->deinitGLFW();
         ContentRegistry::Settings::store();
