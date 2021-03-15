@@ -39,9 +39,9 @@ namespace hex::lang {
         Validator *m_validator;
         Evaluator *m_evaluator;
 
-        prv::Provider *m_provider;
-        std::endian m_defaultEndian;
-        u32 m_recursionLimit;
+        prv::Provider *m_provider = nullptr;
+        std::endian m_defaultEndian = std::endian::native;
+        u32 m_recursionLimit = 32;
 
         std::optional<std::pair<u32, std::string>> m_currError;
     };

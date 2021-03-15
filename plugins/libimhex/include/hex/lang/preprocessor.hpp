@@ -32,8 +32,8 @@ namespace hex::lang {
 
         std::unordered_map<std::string, std::function<bool(std::string)>> m_pragmaHandlers;
 
-        std::set<std::pair<std::string, std::string>> m_defines;
-        std::set<std::pair<std::string, std::string>> m_pragmas;
+        std::set<std::tuple<std::string, std::string, u32>> m_defines;
+        std::set<std::tuple<std::string, std::string, u32>> m_pragmas;
 
         std::pair<u32, std::string> m_error;
     };

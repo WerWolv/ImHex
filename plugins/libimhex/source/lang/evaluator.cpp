@@ -439,10 +439,16 @@ namespace hex::lang {
         this->m_currMembers.push_back(&memberPatterns);
         SCOPE_EXIT( this->m_currMembers.pop_back(); );
 
+        this->m_currRecursionDepth++;
+        if (this->m_currRecursionDepth > this->m_recursionLimit)
+            this->getConsole().abortEvaluation(hex::format("evaluation depth exceeds maximum of {0}. Use #pragma eval_depth <depth> to increase the maximum", this->m_recursionLimit));
+
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, true);
         }
+
+        this->m_currRecursionDepth--;
 
         return this->evaluateAttributes(node, new PatternDataStruct(startOffset, this->m_currOffset - startOffset, memberPatterns));
     }
@@ -455,9 +461,15 @@ namespace hex::lang {
 
         auto startOffset = this->m_currOffset;
 
+        this->m_currRecursionDepth++;
+        if (this->m_currRecursionDepth > this->m_recursionLimit)
+            this->getConsole().abortEvaluation(hex::format("evaluation depth exceeds maximum of {0}. Use #pragma eval_depth <depth> to increase the maximum", this->m_recursionLimit));
+
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, false);
         }
+
+        this->m_currRecursionDepth--;
 
         size_t size = 0;
         for (const auto &pattern : memberPatterns)
@@ -538,10 +550,6 @@ namespace hex::lang {
 
         PatternData *pattern;
 
-        this->m_currRecursionDepth++;
-        if (this->m_currRecursionDepth > this->m_recursionLimit)
-            this->getConsole().abortEvaluation(hex::format("evaluation depth exceeds maximum of {0}. Use #pragma eval_depth <depth> to increase the maximum", this->m_recursionLimit));
-
         if (auto builtinTypeNode = dynamic_cast<ASTNodeBuiltinType*>(type); builtinTypeNode != nullptr)
             return this->evaluateBuiltinType(builtinTypeNode);
         else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(type); typeDeclNode != nullptr)
@@ -556,8 +564,6 @@ namespace hex::lang {
             pattern = this->evaluateBitfield(bitfieldNode);
         else
             this->getConsole().abortEvaluation("type could not be evaluated");
-
-        this->m_currRecursionDepth--;
 
         if (!node->getName().empty())
             pattern->setTypeName(node->getName().data());

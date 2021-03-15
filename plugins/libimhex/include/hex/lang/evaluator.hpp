@@ -48,7 +48,7 @@ namespace hex::lang {
         std::vector<std::vector<PatternData*>*> m_currMembers;
         LogConsole m_console;
 
-        u32 m_recursionLimit = 16;
+        u32 m_recursionLimit;
         u32 m_currRecursionDepth;
 
 
