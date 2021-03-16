@@ -297,7 +297,7 @@ namespace hex::lang {
                 throwParseError("expected ':' in ternary expression");
 
             auto third = this->parseBooleanOr();
-            node = new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional);
+            node = TO_NUMERIC_EXPRESSION(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional));
         }
 
         nodeCleanup.release();
