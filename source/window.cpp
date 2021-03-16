@@ -162,6 +162,10 @@ namespace hex {
         this->deinitGLFW();
         ContentRegistry::Settings::store();
 
+        for (auto &view : SharedData::views)
+            delete view;
+        SharedData::views.clear();
+
         this->deinitPlugins();
 
         EventManager::unsubscribe(Events::SettingsChanged, this);

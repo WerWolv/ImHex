@@ -107,13 +107,13 @@ namespace hex {
 
             template<hex::derived_from<View> T, typename ... Args>
             static void add(Args&& ... args) {
-                return add(std::make_unique<T>(std::forward<Args>(args)...));
+                return add(new T(std::forward<Args>(args)...));
             }
 
-            static std::vector<std::unique_ptr<View>>& getEntries();
+            static std::vector<View*>& getEntries();
 
         private:
-            static void add(std::unique_ptr<View> &&view);
+            static void add(View *view);
 
 
         };

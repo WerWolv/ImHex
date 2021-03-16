@@ -56,7 +56,7 @@ namespace hex {
         static u32 customEventsLastId;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
         static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctions;
-        static std::vector<std::unique_ptr<View>> views;
+        static std::vector<View*> views;
         static std::vector<ContentRegistry::Tools::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;

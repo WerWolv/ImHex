@@ -11,7 +11,7 @@ namespace hex {
     u32 SharedData::customEventsLastId;
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> SharedData::patternLanguageFunctions;
-    std::vector<std::unique_ptr<View>> SharedData::views;
+    std::vector<View*> SharedData::views;
     std::vector<ContentRegistry::Tools::Entry> SharedData::toolsEntries;
     std::vector<ContentRegistry::DataInspector::Entry> SharedData::dataInspectorEntries;
     u32 SharedData::patternPaletteOffset;
