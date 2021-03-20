@@ -24,13 +24,28 @@ findLibraries()
 detectOS()
 detectArch()
 
+if (NOT USE_SYSTEM_LLVM)
+    add_subdirectory(external/llvm)
+else()
+    find_package(LLVM REQUIRED Demangle)
+endif()
+if (NOT USE_SYSTEM_YARA)
+    add_subdirectory(external/yara)
+else()
+    find_package(yara REQUIRED)
+endif()
+
 # Add bundled dependencies
-add_subdirectory(external/llvm)
-add_subdirectory(external/yara)
 add_subdirectory(plugins/libimhex)
 
 # Add include directories
 include_directories(include ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
+if (USE_SYSTEM_LLVM)
+    include_directories(include ${LLVM_INCLUDE_DIRS})
+endif()
+if (USE_SYSTEM_YARA)
+    include_directories(include ${YARA_INCLUDE_DIRS})
+endif()
 
 addVersionDefines()
 configurePackageCreation()
