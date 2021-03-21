@@ -124,7 +124,7 @@ namespace hex::prv {
     }
 
 
-    void FileProvider::read(u64 offset, void *buffer, size_t size) {
+    void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
@@ -133,6 +133,9 @@ namespace hex::prv {
         for (u64 i = 0; i < size; i++)
             if (this->m_patches.back().contains(offset + i))
                 reinterpret_cast<u8*>(buffer)[i] = this->m_patches.back()[offset + PageSize * this->m_currPage + i];
+
+        if (overlays)
+            this->applyOverlays(offset, buffer, size);
     }
 
     void FileProvider::write(u64 offset, const void *buffer, size_t size) {

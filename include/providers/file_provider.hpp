@@ -25,7 +25,7 @@ namespace hex::prv {
         bool isReadable() override;
         bool isWritable() override;
 
-        void read(u64 offset, void *buffer, size_t size) override;
+        void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;

@@ -18,12 +18,24 @@ namespace hex::prv {
             this->deleteOverlay(overlay);
     }
 
-    void Provider::read(u64 offset, void *buffer, size_t size) {
+    void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
         this->readRaw(offset, buffer, size);
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
         this->writeRaw(offset, buffer, size);
+    }
+
+    void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
+        for (auto &overlay : this->m_overlays) {
+            auto overlayOffset = overlay->getAddress();
+            auto overlaySize = overlay->getSize();
+
+            s128 overlapMin = std::max(offset, overlayOffset);
+            s128 overlapMax = std::min(offset + size, overlayOffset + overlaySize);
+             if (overlapMax > overlapMin)
+                 std::memcpy(static_cast<u8*>(buffer) + std::max<s128>(0, overlapMin - offset), overlay->getData().data() + std::max<s128>(0, overlapMin - overlayOffset), overlapMax - overlapMin);
+        }
     }
 
 
