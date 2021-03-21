@@ -125,6 +125,11 @@ namespace hex {
             }
         } catch (dp::Node::NodeError &e) {
             this->m_currNodeError = e;
+
+            for (auto overlay : this->m_dataOverlays)
+                SharedData::currentProvider->deleteOverlay(overlay);
+            this->m_dataOverlays.clear();
+
         } catch (std::runtime_error &e) {
             printf("Node implementation bug! %s\n", e.what());
         }
