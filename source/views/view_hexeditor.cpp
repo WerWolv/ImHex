@@ -501,25 +501,25 @@ namespace hex {
     }
 
     bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S) {
+        if (mods == GLFW_MOD_CONTROL && key == 'S') {
             save();
             return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_S) {
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == 'S') {
             saveAs();
             return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
+        } else if (mods == GLFW_MOD_CONTROL && key == 'Z') {
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
             return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
+        } else if (mods == GLFW_MOD_CONTROL && key == 'G') {
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
             return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
+        } else if (mods == GLFW_MOD_CONTROL && key == 'O') {
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
             return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == 'C') {
             this->copyBytes();
             return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_C) {
+        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == 'C') {
             this->copyString();
             return true;
         }

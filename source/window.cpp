@@ -612,6 +612,11 @@ namespace hex {
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+
+            auto keyName = glfwGetKeyName(key, scancode);
+            if (keyName != nullptr)
+                key = std::toupper(keyName[0]);
+
             if (action == GLFW_PRESS) {
                 Window::s_currShortcut = { key, mods };
                 auto &io = ImGui::GetIO();
