@@ -40,11 +40,11 @@ namespace hex::prv {
 
 
     std::map<u64, u8>& Provider::getPatches() {
-        return this->m_patches.back();
+        return *(this->m_patches.end() - 1 - this->m_patchTreeOffset);
     }
 
     void Provider::applyPatches() {
-        for (auto &[patchAddress, patch] : this->m_patches.back())
+        for (auto &[patchAddress, patch] : getPatches())
             this->writeRaw(patchAddress, &patch, 1);
     }
 
@@ -96,6 +96,36 @@ namespace hex::prv {
             return { };
 
         return page;
+    }
+
+    void Provider::addPatch(u64 offset, const void *buffer, size_t size) {
+        if (this->m_patchTreeOffset > 0) {
+            this->m_patches.erase(this->m_patches.end() - this->m_patchTreeOffset, this->m_patches.end());
+            this->m_patchTreeOffset = 0;
+        }
+
+        this->m_patches.push_back(getPatches());
+
+        for (u64 i = 0; i < size; i++)
+            getPatches()[offset + this->getBaseAddress() + i] = reinterpret_cast<const u8*>(buffer)[i];
+    }
+
+    void Provider::undo() {
+        if (canUndo())
+            this->m_patchTreeOffset++;
+    }
+
+    void Provider::redo() {
+        if (canRedo())
+            this->m_patchTreeOffset--;
+    }
+
+    bool Provider::canUndo() {
+        return this->m_patchTreeOffset < this->m_patches.size() - 1;
+    }
+
+    bool Provider::canRedo() {
+        return this->m_patchTreeOffset > 0;
     }
 
 }

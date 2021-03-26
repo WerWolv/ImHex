@@ -50,10 +50,19 @@ namespace hex::prv {
 
         virtual std::vector<std::pair<std::string, std::string>> getDataInformation() = 0;
 
+        void addPatch(u64 offset, const void *buffer, size_t size);
+
+        void undo();
+        void redo();
+
+        bool canUndo();
+        bool canRedo();
+
     protected:
         u32 m_currPage = 0;
         u64 m_baseAddress = 0;
 
+        u32 m_patchTreeOffset = 0;
         std::vector<std::map<u64, u8>> m_patches;
         std::list<Overlay*> m_overlays;
     };

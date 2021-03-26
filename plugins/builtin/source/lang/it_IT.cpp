@@ -182,6 +182,8 @@ namespace hex::plugin::builtin {
                         { "hex.view.hexeditor.goto.offset.end", "Fine" },
                     { "hex.view.hexeditor.error.read_only", "Impossibile scrivere sul File. File aperto solo in modalità lettura" },
                     { "hex.view.hexeditor.error.open", "Impossibile aprire il File!" },
+                    // { "hex.view.hexeditor.menu.edit.undo", "" },
+                    // { "hex.view.hexeditor.menu.edit.redo", "" },
                     { "hex.view.hexeditor.menu.edit.copy", "Copia come..." },
                         { "hex.view.hexeditor.copy.bytes", "Bytes" },
                         { "hex.view.hexeditor.copy.hex", "Stringa esadecimale" },

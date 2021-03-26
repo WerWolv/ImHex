@@ -182,6 +182,8 @@ namespace hex::plugin::builtin {
                         { "hex.view.hexeditor.goto.offset.end", "Ende" },
                     { "hex.view.hexeditor.error.read_only", "Schreibzugriff konnte nicht erlangt werden. Datei wurde im Lesemodus geöffnet." },
                     { "hex.view.hexeditor.error.open", "Öffnen der Datei fehlgeschlagen!" },
+                    { "hex.view.hexeditor.menu.edit.undo", "Rückgängig" },
+                    { "hex.view.hexeditor.menu.edit.redo", "Wiederholen" },
                     { "hex.view.hexeditor.menu.edit.copy", "Kopieren als..." },
                         { "hex.view.hexeditor.copy.bytes", "Bytes" },
                         { "hex.view.hexeditor.copy.hex", "Hex String" },

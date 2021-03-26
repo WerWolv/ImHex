@@ -131,8 +131,8 @@ namespace hex::prv {
         std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
 
         for (u64 i = 0; i < size; i++)
-            if (this->m_patches.back().contains(offset + i))
-                reinterpret_cast<u8*>(buffer)[i] = this->m_patches.back()[offset + PageSize * this->m_currPage + i];
+            if (getPatches().contains(offset + i))
+                reinterpret_cast<u8*>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
 
         if (overlays)
             this->applyOverlays(offset, buffer, size);
@@ -142,10 +142,7 @@ namespace hex::prv {
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        this->m_patches.push_back(this->m_patches.back());
-
-        for (u64 i = 0; i < size; i++)
-            this->m_patches.back()[offset + this->getBaseAddress() + i] = reinterpret_cast<const u8*>(buffer)[i];
+        addPatch(offset, buffer, size);
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {

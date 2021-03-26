@@ -508,6 +508,12 @@ namespace hex {
             saveAs();
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == 'Z') {
+            if (SharedData::currentProvider != nullptr)
+                SharedData::currentProvider->undo();
+        } else if (mods == GLFW_MOD_CONTROL && key == 'Y') {
+            if (SharedData::currentProvider != nullptr)
+                SharedData::currentProvider->redo();
+        } else if (mods == GLFW_MOD_CONTROL && key == 'F') {
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
             return true;
         } else if (mods == GLFW_MOD_CONTROL && key == 'G') {
@@ -1060,6 +1066,11 @@ R"(
     }
 
     void ViewHexEditor::drawEditPopup() {
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.undo", "CTRL + Z", false, SharedData::currentProvider != nullptr))
+            SharedData::currentProvider->undo();
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo", "CTRL + Y", false, SharedData::currentProvider != nullptr))
+            SharedData::currentProvider->redo();
+
         if (ImGui::BeginMenu("hex.view.hexeditor.menu.edit.copy"_lang, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
             if (ImGui::MenuItem("hex.view.hexeditor.copy.bytes"_lang, "CTRL + ALT + C"))
                 this->copyBytes();
