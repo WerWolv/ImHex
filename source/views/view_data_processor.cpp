@@ -17,7 +17,7 @@ namespace hex {
             io.link_detach_with_modifier_click.modifier = &always;
         }
 
-        View::subscribeEvent(Events::SettingsChanged, [](auto) {
+        EventManager::subscribe<EventSettingsChanged>(this, [] {
             auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
             if (theme.is_number()) {
@@ -38,7 +38,7 @@ namespace hex {
             }
         });
 
-        View::subscribeEvent(Events::FileLoaded, [this](auto) {
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
             }
@@ -49,6 +49,9 @@ namespace hex {
     ViewDataProcessor::~ViewDataProcessor() {
         for (auto &node : this->m_nodes)
             delete node;
+
+        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
 
         imnodes::PopAttributeFlag();
         imnodes::PopAttributeFlag();

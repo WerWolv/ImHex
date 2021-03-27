@@ -24,10 +24,6 @@ namespace hex {
         return SharedData::deferredCalls;
     }
 
-    std::vector<std::any> View::postEvent(Events eventType, const std::any &userData) {
-        return EventManager::post(eventType, userData);
-    }
-
     void View::openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback) {
         NFD::Init();
 
@@ -91,18 +87,6 @@ namespace hex {
 
     std::string_view View::getUnlocalizedName() const {
         return this->m_unlocalizedViewName;
-    }
-
-    void View::subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback) {
-        EventManager::subscribe(eventType, this, callback);
-    }
-
-    void View::subscribeEvent(Events eventType, const std::function<void(const std::any&)> &callback) {
-        EventManager::subscribe(eventType, this, [callback](auto userData) -> std::any { callback(userData); return { }; });
-    }
-
-    void View::unsubscribeEvent(Events eventType) {
-        EventManager::unsubscribe(eventType, this);
     }
 
     void View::discardNavigationRequests() {

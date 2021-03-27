@@ -154,8 +154,7 @@ namespace hex::lang {
             ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                Region selectRegion = { this->getOffset(), this->getSize() };
-                View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             this->drawCommentTooltip();
             ImGui::SameLine();
@@ -743,8 +742,7 @@ namespace hex::lang {
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                Region selectRegion = { this->getOffset(), this->getSize() };
-                View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             ImGui::SameLine();
             ImGui::Text("%s", this->getVariableName().c_str());

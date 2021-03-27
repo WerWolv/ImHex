@@ -14,7 +14,7 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewStrings::ViewStrings() : View("hex.view.strings.name") {
-        View::subscribeEvent(Events::DataChanged, [this](auto){
+        EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->m_foundStrings.clear();
         });
 
@@ -22,7 +22,7 @@ namespace hex {
     }
 
     ViewStrings::~ViewStrings() {
-        View::unsubscribeEvent(Events::DataChanged);
+        EventManager::unsubscribe<EventDataChanged>(this);
     }
 
 
@@ -161,8 +161,7 @@ namespace hex {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             if (ImGui::Selectable(("##StringLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                Region selectRegion = { foundString.offset, foundString.size };
-                                View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                                EventManager::post<RequestSelectionChange>(Region { foundString.offset, foundString.size });
                             }
                             ImGui::PushID(i + 1);
                             createStringContextMenu(foundString);

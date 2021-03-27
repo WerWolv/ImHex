@@ -40,8 +40,6 @@ namespace hex {
         static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
 
-        static std::vector<std::any> postEvent(Events eventType, const std::any &userData = { });
-
         static void drawCommonInterfaces();
 
         static void showErrorPopup(std::string_view errorMessage);
@@ -55,11 +53,6 @@ namespace hex {
         std::string_view getUnlocalizedName() const;
 
     protected:
-        void subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback);
-        void subscribeEvent(Events eventType, const std::function<void(const std::any&)> &callback);
-
-        void unsubscribeEvent(Events eventType);
-
         void discardNavigationRequests();
 
         void confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);

@@ -133,21 +133,6 @@ namespace hex {
     }
 
 
-    /* Events */
-
-    auto ContentRegistry::Events::get(std::string_view name) {
-        auto &customEvents = SharedData::customEvents;
-        auto &lastId = SharedData::customEventsLastId;
-
-        if (!customEvents.contains(name.data())) {
-            customEvents[name.data()] = static_cast<hex::Events>(lastId);
-            lastId++;
-        }
-
-        return customEvents[name.data()];
-    }
-
-
     /* Command Palette Commands */
 
     void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, std::string_view command, std::string_view unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
@@ -225,7 +210,7 @@ namespace hex {
     void ContentRegistry::Language::addLocalizations(std::string_view languageCode, const LanguageDefinition &definition) {
         getLanguageDefinitions()[languageCode.data()].push_back(definition);
 
-        EventManager::post(hex::Events::SettingsChanged, {});
+        EventManager::post<EventSettingsChanged>();
     }
 
     std::map<std::string, std::string>& ContentRegistry::Language::getLanguages() {

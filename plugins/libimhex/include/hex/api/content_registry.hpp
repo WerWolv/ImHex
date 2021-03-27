@@ -55,13 +55,6 @@ namespace hex {
             static nlohmann::json& getSettingsData();
         };
 
-        /* Events Registry. Allows to define new events that can be used by other plugins later on subscribe to */
-        struct Events {
-            Events() = delete;
-
-            static auto get(std::string_view name);
-        };
-
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
         struct CommandPaletteCommands {
             CommandPaletteCommands() = delete;

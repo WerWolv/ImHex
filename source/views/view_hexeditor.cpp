@@ -39,7 +39,7 @@ namespace hex {
                 return;
 
             provider->write(off, &d, sizeof(ImU8));
-            View::postEvent(Events::DataChanged);
+            EventManager::post<EventDataChanged>();
             ProjectFile::markDirty();
         };
 
@@ -124,16 +124,11 @@ namespace hex {
             return { std::string(decoded), advance, color };
         };
 
-        View::subscribeEvent(Events::FileDropped, [this](auto userData) {
-            auto filePath = std::any_cast<const char*>(userData);
-
-            if (filePath != nullptr)
-                this->openFile(filePath);
+        EventManager::subscribe<EventFileDropped>(this, [this](const std::string &filePath) {
+            this->openFile(filePath);
         });
 
-        View::subscribeEvent(Events::SelectionChangeRequest, [this](auto userData) {
-            const Region &region = std::any_cast<Region>(userData);
-
+        EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
             auto provider = SharedData::currentProvider;
             auto page = provider->getPageOfAddress(region.address);
             if (!page.has_value())
@@ -141,39 +136,37 @@ namespace hex {
 
             provider->setCurrentPage(page.value());
             this->m_memoryEditor.GotoAddrAndHighlight(region.address, region.address + region.size - 1);
-            View::postEvent(Events::RegionSelected, region);
+            EventManager::post<EventRegionSelected>(region);
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](auto) {
+        EventManager::subscribe<EventProjectFileLoad>(this, [this]() {
             this->openFile(ProjectFile::getFilePath());
         });
 
-        View::subscribeEvent(Events::WindowClosing, [this](auto userData) {
-            auto window = std::any_cast<GLFWwindow*>(userData);
-
+        EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.save_changes.title"_lang); });
             }
         });
 
-        View::subscribeEvent(Events::PatternChanged, [this](auto) {
+        EventManager::subscribe<EventPatternChanged>(this, [this]() {
             this->m_highlightedBytes.clear();
 
             for (const auto &pattern : this->m_patternData)
                 this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
         });
 
-        View::subscribeEvent(Events::OpenWindow, [this](auto name) {
-            if (std::any_cast<const char*>(name) == std::string("Open File")) {
+        EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
+            if (name == "Open File") {
                 View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
                 });
-            } else if (std::any_cast<const char*>(name) == std::string("Open Project")) {
+            } else if (name == "Open Project") {
                 View::openFileBrowser("hex.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
-                    View::postEvent(Events::ProjectFileLoad);
+                    EventManager::post<EventProjectFileLoad>();
                     this->getWindowOpenState() = true;
                 });
             }
@@ -181,7 +174,12 @@ namespace hex {
     }
 
     ViewHexEditor::~ViewHexEditor() {
-
+        EventManager::unsubscribe<EventFileDropped>(this);
+        EventManager::unsubscribe<RequestSelectionChange>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
+        EventManager::unsubscribe<EventWindowClosing>(this);
+        EventManager::unsubscribe<EventPatternChanged>(this);
+        EventManager::unsubscribe<RequestOpenWindow>(this);
     }
 
     void ViewHexEditor::drawContent() {
@@ -211,8 +209,7 @@ namespace hex {
                 if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
                     provider->setCurrentPage(provider->getCurrentPage() - 1);
 
-                    Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                    View::postEvent(Events::RegionSelected, dataPreview);
+                    EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
                 }
 
                 ImGui::SameLine();
@@ -220,8 +217,7 @@ namespace hex {
                 if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
                     provider->setCurrentPage(provider->getCurrentPage() + 1);
 
-                    Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                    View::postEvent(Events::RegionSelected, dataPreview);
+                    EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
                 }
             }
             ImGui::End();
@@ -269,7 +265,12 @@ namespace hex {
             ImGui::TextUnformatted("hex.view.hexeditor.save_changes.desc"_lang);
             ImGui::NewLine();
 
-            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] { View::postEvent(Events::CloseImHex); }, [] { ImGui::CloseCurrentPopup(); });
+            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] {
+                EventManager::post<RequestCloseImHex>();
+            },
+            [] {
+                ImGui::CloseCurrentPopup();
+            });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -364,13 +365,13 @@ namespace hex {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_project"_lang, "")) {
                 View::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
-                    View::postEvent(Events::ProjectFileLoad);
+                    EventManager::post<EventProjectFileLoad>();
                     this->getWindowOpenState() = true;
                 });
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_project"_lang, "", false, provider != nullptr && provider->isWritable())) {
-                View::postEvent(Events::ProjectFileStore);
+                EventManager::post<EventProjectFileStore>();
 
                 if (ProjectFile::getProjectFilePath() == "") {
                     View::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
@@ -560,9 +561,9 @@ namespace hex {
 
         this->getWindowOpenState() = true;
 
-        View::postEvent(Events::FileLoaded, path);
-        View::postEvent(Events::DataChanged);
-        View::postEvent(Events::PatternChanged);
+        EventManager::post<EventFileLoaded>(path);
+        EventManager::post<EventDataChanged>();
+        EventManager::post<EventPatternChanged>();
     }
 
     bool ViewHexEditor::saveToFile(std::string path, const std::vector<u8>& data) {

@@ -62,7 +62,7 @@ namespace hex {
         this->initGLFW();
         this->initImGui();
 
-        EventManager::subscribe(Events::SettingsChanged, this, [this](auto) -> std::any {
+        EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
@@ -102,13 +102,9 @@ namespace hex {
                 if (targetFps.is_number())
                     this->m_targetFps = targetFps;
             }
-
-            return { };
         });
 
-        EventManager::subscribe(Events::FileLoaded, this, [this](auto userData) -> std::any {
-            auto path = std::any_cast<std::string>(userData);
-
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
             this->m_recentFiles.push_front(path);
 
             {
@@ -136,20 +132,16 @@ namespace hex {
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }
-
-            return { };
         });
 
-        EventManager::subscribe(Events::CloseImHex, this, [this](auto) -> std::any {
+        EventManager::subscribe<RequestCloseImHex>(this, [this]() {
             glfwSetWindowShouldClose(this->m_window, true);
-
-            return { };
         });
 
         this->initPlugins();
 
         ContentRegistry::Settings::load();
-        View::postEvent(Events::SettingsChanged);
+        EventManager::post<EventSettingsChanged>();
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
             this->m_recentFiles.push_back(path);
@@ -168,9 +160,9 @@ namespace hex {
 
         this->deinitPlugins();
 
-        EventManager::unsubscribe(Events::SettingsChanged, this);
-        EventManager::unsubscribe(Events::FileLoaded, this);
-        EventManager::unsubscribe(Events::CloseImHex, this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<RequestCloseImHex>(this);
     }
 
     void Window::loop() {
@@ -417,9 +409,9 @@ namespace hex {
             ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_file"_lang))
-                    EventManager::post(Events::OpenWindow, "Open File");
+                    EventManager::post<RequestOpenWindow>("Open File");
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))
-                    EventManager::post(Events::OpenWindow, "Open Project");
+                    EventManager::post<RequestOpenWindow>("Open Project");
             }
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
@@ -429,7 +421,7 @@ namespace hex {
                 if (!this->m_recentFiles.empty()) {
                     for (auto &path : this->m_recentFiles) {
                         if (ImGui::BulletHyperlink(std::filesystem::path(path).filename().string().c_str())) {
-                            EventManager::post(Events::FileDropped, path.c_str());
+                            EventManager::post<EventFileDropped>(path);
                             break;
                         }
                     }
@@ -495,7 +487,7 @@ namespace hex {
             ImGui::TextUnformatted("hex.welcome.header.customize"_lang);
             {
                 if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    EventManager::post(Events::OpenWindow, "hex.view.settings.title");
+                    EventManager::post<RequestOpenWindow>("hex.view.settings.title");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
             ImGui::TableNextColumn();
@@ -638,11 +630,11 @@ namespace hex {
             if (count != 1)
                 return;
 
-            View::postEvent(Events::FileDropped, paths[0]);
+            EventManager::post<EventFileDropped>(paths[0]);
         });
 
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
-            View::postEvent(Events::WindowClosing, window);
+            EventManager::post<EventWindowClosing>(window);
         });
 
 

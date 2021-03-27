@@ -163,7 +163,7 @@ namespace hex {
 
         code += "};\n";
 
-        View::postEvent(Events::AppendPatternLanguageCode, code.c_str());
+        EventManager::post<RequestAppendPatternLanguageCode>(code);
 
         Py_RETURN_NONE;
     }

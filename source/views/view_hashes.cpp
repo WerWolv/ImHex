@@ -10,13 +10,11 @@
 namespace hex {
 
     ViewHashes::ViewHashes() : View("hex.view.hashes.name") {
-        View::subscribeEvent(Events::DataChanged, [this](auto) {
+        EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->m_shouldInvalidate = true;
         });
 
-        View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
-            auto region = std::any_cast<const Region>(userData);
-
+        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             if (this->m_shouldMatchSelection) {
                 this->m_hashRegion[0] = region.address;
                 this->m_hashRegion[1] = region.address + region.size - 1;
@@ -26,8 +24,8 @@ namespace hex {
     }
 
     ViewHashes::~ViewHashes() {
-        View::unsubscribeEvent(Events::DataChanged);
-        View::unsubscribeEvent(Events::RegionSelected);
+        EventManager::unsubscribe<EventDataChanged>(this);
+        EventManager::unsubscribe<EventRegionSelected>(this);
     }
 
 

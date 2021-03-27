@@ -48,7 +48,7 @@
 #include <stdint.h>     // uint8_t, etc.
 #include <hex/helpers/utils.hpp>
 
-#include <hex/views/view.hpp>
+#include <hex/api/event.hpp>
 
 #include <string>
 
@@ -223,7 +223,7 @@ struct MemoryEditor
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
                 hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
-                hex::View::postEvent(hex::Events::RegionSelected, selectionRegion);
+                hex::EventManager::post<hex::EventRegionSelected>(selectionRegion);
             }
 
             DataPreviewAddrOld = DataPreviewAddr;

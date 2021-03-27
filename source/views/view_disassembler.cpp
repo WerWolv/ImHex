@@ -13,13 +13,11 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewDisassembler::ViewDisassembler() : View("hex.view.disassembler.name") {
-        View::subscribeEvent(Events::DataChanged, [this](auto){
+        EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->disassemble();
         });
 
-        View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
-            auto region = std::any_cast<Region>(userData);
-
+        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             if (this->m_shouldMatchSelection) {
                 this->m_codeRegion[0] = region.address;
                 this->m_codeRegion[1] = region.address + region.size - 1;
@@ -28,8 +26,8 @@ namespace hex {
     }
 
     ViewDisassembler::~ViewDisassembler() {
-        View::unsubscribeEvent(Events::DataChanged);
-        View::unsubscribeEvent(Events::RegionSelected);
+        EventManager::unsubscribe<EventDataChanged>(this);
+        EventManager::unsubscribe<EventRegionSelected>(this);
     }
 
     void ViewDisassembler::disassemble() {
@@ -273,8 +271,7 @@ namespace hex {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             if (ImGui::Selectable(("##DisassemblyLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                Region selectRegion = { this->m_disassembly[i].offset, this->m_disassembly[i].size };
-                                View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                                EventManager::post<RequestSelectionChange>(Region { this->m_disassembly[i].offset, this->m_disassembly[i].size });
                             }
                             ImGui::SameLine();
                             ImGui::Text("0x%llx", this->m_disassembly[i].address);

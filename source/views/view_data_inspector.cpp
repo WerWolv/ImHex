@@ -11,9 +11,7 @@ namespace hex {
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
     ViewDataInspector::ViewDataInspector() : View("hex.view.data_inspector.name") {
-        View::subscribeEvent(Events::RegionSelected, [this](auto userData) {
-            auto region = std::any_cast<Region>(userData);
-
+        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             auto provider = SharedData::currentProvider;
 
             if (provider == nullptr) {
@@ -34,7 +32,7 @@ namespace hex {
     }
 
     ViewDataInspector::~ViewDataInspector() {
-        View::unsubscribeEvent(Events::RegionSelected);
+        EventManager::unsubscribe<EventRegionSelected>(this);
     }
 
     void ViewDataInspector::drawContent() {

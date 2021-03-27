@@ -9,7 +9,6 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/event.hpp>
 #include <hex/views/view.hpp>
 
 #include <imgui.h>
@@ -47,13 +46,10 @@ namespace hex {
         }
 
     public:
-        static std::vector<EventHandler> eventHandlers;
         static std::vector<std::function<void()>> deferredCalls;
         static prv::Provider *currentProvider;
         static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> settingsEntries;
         static nlohmann::json settingsJson;
-        static std::map<std::string, Events> customEvents;
-        static u32 customEventsLastId;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
         static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctions;
         static std::vector<View*> views;

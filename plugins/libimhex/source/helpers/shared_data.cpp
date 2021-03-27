@@ -2,13 +2,10 @@
 
 namespace hex {
 
-    std::vector<EventHandler> SharedData::eventHandlers;
     std::vector<std::function<void()>> SharedData::deferredCalls;
     prv::Provider *SharedData::currentProvider;
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> SharedData::settingsEntries;
     nlohmann::json SharedData::settingsJson;
-    std::map<std::string, Events> SharedData::customEvents;
-    u32 SharedData::customEventsLastId;
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> SharedData::patternLanguageFunctions;
     std::vector<View*> SharedData::views;

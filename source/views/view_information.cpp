@@ -19,7 +19,7 @@
 namespace hex {
 
     ViewInformation::ViewInformation() : View("hex.view.information.name") {
-        View::subscribeEvent(Events::DataChanged, [this](auto) {
+        EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
             this->m_blockEntropy.clear();
@@ -33,7 +33,7 @@ namespace hex {
     }
 
     ViewInformation::~ViewInformation() {
-        View::unsubscribeEvent(Events::DataChanged);
+        EventManager::unsubscribe<EventDataChanged>(this);
     }
 
     static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t numBytes) {
@@ -209,7 +209,7 @@ namespace hex {
                         ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
                         if (ImGui::IsItemClicked())
-                            View::postEvent(Events::SelectionChangeRequest, Region{ u64(ImPlot::GetPlotMousePos().x) * this->m_blockSize, 1 });
+                            EventManager::post<RequestSelectionChange>( Region{ u64(ImPlot::GetPlotMousePos().x) * this->m_blockSize, 1 });
 
                         ImPlot::EndPlot();
                     }
