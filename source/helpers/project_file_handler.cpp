@@ -21,7 +21,9 @@ namespace hex {
         j.at("locked").get_to(b.locked);
 
         std::copy(name.begin(), name.end(), std::back_inserter(b.name));
+        b.name.push_back('\0');
         std::copy(comment.begin(), comment.end(), std::back_inserter(b.comment));
+        b.comment.push_back('\0');
     }
 
 
