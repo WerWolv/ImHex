@@ -97,6 +97,7 @@ namespace hex {
 
     /* Default Events */
     EVENT_DEF(EventFileLoaded, std::string);
+    EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
     EVENT_DEF(EventPatternChanged);
     EVENT_DEF(EventFileDropped, std::string);

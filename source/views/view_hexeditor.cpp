@@ -347,7 +347,7 @@ namespace hex {
     }
 
     void ViewHexEditor::drawMenu() {
-        auto provider = SharedData::currentProvider;
+        auto &provider = SharedData::currentProvider;
 
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
@@ -364,6 +364,12 @@ namespace hex {
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_as"_lang, "CTRL + SHIFT + S", false, provider != nullptr && provider->isWritable())) {
                 saveAs();
+            }
+
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close", "", false, provider != nullptr && provider->isAvailable())) {
+                EventManager::post<EventFileUnloaded>();
+                delete SharedData::currentProvider;
+                SharedData::currentProvider = nullptr;
             }
 
             ImGui::Separator();

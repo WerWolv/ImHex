@@ -155,6 +155,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.menu.file.open_file", "Datei öffnen..." },
                     { "hex.view.hexeditor.menu.file.save", "Speichern" },
                     { "hex.view.hexeditor.menu.file.save_as", "Speichern unter..." },
+                    { "hex.view.hexeditor.menu.file.close", "Schliessen" },
                     { "hex.view.hexeditor.menu.file.open_project", "Projekt öffnen..." },
                     { "hex.view.hexeditor.menu.file.save_project", "Projekt speichern..." },
                     { "hex.view.hexeditor.menu.file.load_encoding_file", "Custom encoding laden..." },
