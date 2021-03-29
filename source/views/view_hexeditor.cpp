@@ -52,19 +52,21 @@ namespace hex {
 
             off += SharedData::currentProvider->getBaseAddress();
 
+            u32 alpha = static_cast<u32>(_this->m_highlightAlpha) << 24;
+
             for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size))
-                    currColor = (color & 0x00FFFFFF) | 0x80000000;
+                    currColor = (color & 0x00FFFFFF) | alpha;
                 if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
-                    prevColor = (color & 0x00FFFFFF) | 0x80000000;
+                    prevColor = (color & 0x00FFFFFF) | alpha;
             }
 
             if (_this->m_highlightedBytes.contains(off)) {
-                auto color = (_this->m_highlightedBytes[off] & 0x00FFFFFF) | 0x80000000;
+                auto color = (_this->m_highlightedBytes[off] & 0x00FFFFFF) | alpha;
                 currColor = currColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
             }
             if (_this->m_highlightedBytes.contains(off - 1)) {
-                auto color = (_this->m_highlightedBytes[off - 1] & 0x00FFFFFF) | 0x80000000;
+                auto color = (_this->m_highlightedBytes[off - 1] & 0x00FFFFFF) | alpha;
                 prevColor = prevColor.has_value() ? ImAlphaBlendColors(color, prevColor.value()) : color;
             }
 
@@ -73,7 +75,7 @@ namespace hex {
             }
 
             if (currColor.has_value() && (currColor.value() & 0x00FFFFFF) != 0x00) {
-                _this->m_memoryEditor.HighlightColor = (currColor.value() & 0x00FFFFFF) | 0x40000000;
+                _this->m_memoryEditor.HighlightColor = (currColor.value() & 0x00FFFFFF) | alpha;
                 return true;
             }
 
@@ -177,6 +179,12 @@ namespace hex {
         EventManager::subscribe<EventFileLoaded>(this, [](std::string path) {
             EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(path).filename().string());
         });
+
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+            auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
+
+            this->m_highlightAlpha = alpha;
+        });
     }
 
     ViewHexEditor::~ViewHexEditor() {
@@ -186,6 +194,8 @@ namespace hex {
         EventManager::unsubscribe<EventWindowClosing>(this);
         EventManager::unsubscribe<EventPatternChanged>(this);
         EventManager::unsubscribe<RequestOpenWindow>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
     void ViewHexEditor::drawContent() {

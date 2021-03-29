@@ -512,6 +512,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.color.classic", "Classico" },
                     { "hex.builtin.setting.interface.language", "Lingua" },
                 { "hex.builtin.setting.interface.fps", "Limite FPS" },
+                // { "hex.builtin.setting.interface.highlight_alpha", "" },
 
                 { "hex.builtin.provider.file.path", "Percorso del File" },
                 { "hex.builtin.provider.file.size", "Dimensione" },

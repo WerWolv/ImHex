@@ -72,6 +72,17 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha", 0x80, [](auto name, nlohmann::json &setting) {
+            static int alpha = setting.is_number() ? static_cast<int>(setting) : 0x80;
+
+            if (ImGui::SliderInt(name.data(), &alpha, 0x00, 0xFF)) {
+                setting = alpha;
+                return true;
+            }
+
+            return false;
+        });
+
     }
 
 }

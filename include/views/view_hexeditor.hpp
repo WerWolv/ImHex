@@ -55,6 +55,7 @@ namespace hex {
         std::string m_loaderScriptFilePath;
 
         hex::EncodingFile m_currEncodingFile;
+        u8 m_highlightAlpha = 0x80;
 
         void drawSearchPopup();
         void drawGotoPopup();
