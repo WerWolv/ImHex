@@ -14,6 +14,8 @@
 #undef __STRICT_ANSI__
 #include <cstdio>
 
+#include <filesystem>
+
 namespace hex {
 
     ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
@@ -170,6 +172,10 @@ namespace hex {
                     this->getWindowOpenState() = true;
                 });
             }
+        });
+
+        EventManager::subscribe<EventFileLoaded>(this, [](std::string path) {
+            EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(path).filename().string());
         });
     }
 

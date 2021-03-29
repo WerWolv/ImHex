@@ -110,6 +110,7 @@ namespace hex {
     EVENT_DEF(RequestSelectionChange, Region);
     EVENT_DEF(RequestAddBookmark, ImHexApi::Bookmarks::Entry);
     EVENT_DEF(RequestAppendPatternLanguageCode, std::string);
+    EVENT_DEF(RequestChangeWindowTitle, std::string);
     EVENT_DEF(RequestCloseImHex);
 
 }

@@ -138,6 +138,13 @@ namespace hex {
             glfwSetWindowShouldClose(this->m_window, true);
         });
 
+        EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
+            if (windowTitle.empty())
+                glfwSetWindowTitle(this->m_window, "ImHex");
+            else
+                glfwSetWindowTitle(this->m_window, ("ImHex - " + windowTitle).c_str());
+        });
+
         this->initPlugins();
 
         ContentRegistry::Settings::load();
@@ -163,6 +170,7 @@ namespace hex {
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
+        EventManager::unsubscribe<RequestChangeWindowTitle>(this);
     }
 
     void Window::loop() {
