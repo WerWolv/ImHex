@@ -195,11 +195,11 @@ namespace hex {
         return result;
     }
 
-    inline std::string toBinaryString(hex::integral auto number) {
+    inline std::string toBinaryString(hex::unsigned_integral auto number) {
         if (number == 0) return "0";
 
         std::string result;
-        for (u8 bit = hex::bit_width(number); bit > 0; bit--)
+        for (s16 bit = hex::bit_width(number) - 1; bit >= 0; bit--)
             result += (number & (0b1 << bit)) == 0 ? '0' : '1';
 
         return result;
