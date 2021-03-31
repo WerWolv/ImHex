@@ -138,7 +138,7 @@ namespace hex {
 
             FILE *file = fopen(this->m_rules[this->m_selectedRule].c_str(), "r");
             if (file == nullptr) return;
-            SCOPE_EXIT( fclose(file); );
+            ON_SCOPE_EXIT { fclose(file); };
 
             if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
                 this->m_errorMessage.resize(0xFFFF);

@@ -121,10 +121,10 @@ namespace hex::lang {
 
     ASTNode* Evaluator::evaluateFunctionCall(ASTNodeFunctionCall *node) {
         std::vector<ASTNode*> evaluatedParams;
-        ScopeExit paramCleanup([&] {
+        ON_SCOPE_EXIT {
            for (auto &param : evaluatedParams)
                delete param;
-        });
+        };
 
         for (auto &param : node->getParams()) {
             if (auto numericExpression = dynamic_cast<ASTNodeNumericExpression*>(param); numericExpression != nullptr)
@@ -310,7 +310,7 @@ namespace hex::lang {
         switch (node->getOperator()) {
             case Token::Operator::TernaryConditional: {
                 auto condition = this->evaluateOperand(node->getFirstOperand());
-                SCOPE_EXIT( delete condition; );
+                ON_SCOPE_EXIT { delete condition; };
 
                 if (std::visit([](auto &&value){ return value != 0; }, condition->getValue()))
                     return this->evaluateOperand(node->getSecondOperand());
@@ -437,7 +437,7 @@ namespace hex::lang {
         std::vector<PatternData*> memberPatterns;
 
         this->m_currMembers.push_back(&memberPatterns);
-        SCOPE_EXIT( this->m_currMembers.pop_back(); );
+        ON_SCOPE_EXIT { this->m_currMembers.pop_back(); };
 
         this->m_currRecursionDepth++;
         if (this->m_currRecursionDepth > this->m_recursionLimit)
@@ -457,7 +457,7 @@ namespace hex::lang {
         std::vector<PatternData*> memberPatterns;
 
         this->m_currMembers.push_back(&memberPatterns);
-        SCOPE_EXIT( this->m_currMembers.pop_back(); );
+        ON_SCOPE_EXIT { this->m_currMembers.pop_back(); };
 
         auto startOffset = this->m_currOffset;
 
@@ -501,7 +501,7 @@ namespace hex::lang {
                 this->getConsole().abortEvaluation("invalid expression in enum value");
 
             auto valueNode = evaluateMathematicalExpression(expression);
-            SCOPE_EXIT( delete valueNode; );
+            ON_SCOPE_EXIT { delete valueNode; };
 
             entryPatterns.push_back({ Token::castTo(builtinUnderlyingType->getType(), valueNode->getValue()), name });
         }
@@ -522,7 +522,7 @@ namespace hex::lang {
                 this->getConsole().abortEvaluation("invalid expression in bitfield field size");
 
             auto valueNode = evaluateMathematicalExpression(expression);
-            SCOPE_EXIT( delete valueNode; );
+            ON_SCOPE_EXIT { delete valueNode; };
 
             auto fieldBits = std::visit([this, node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
@@ -580,7 +580,7 @@ namespace hex::lang {
 
         if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
             auto valueNode = evaluateMathematicalExpression(offset);
-            SCOPE_EXIT( delete valueNode; );
+            ON_SCOPE_EXIT { delete valueNode; };
 
             this->m_currOffset = std::visit([this, node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
@@ -608,7 +608,7 @@ namespace hex::lang {
 
         if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
             auto valueNode = evaluateMathematicalExpression(offset);
-            SCOPE_EXIT( delete valueNode; );
+            ON_SCOPE_EXIT { delete valueNode; };
 
             this->m_currOffset = std::visit([this, node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
@@ -628,7 +628,7 @@ namespace hex::lang {
             else
                 this->getConsole().abortEvaluation("array size not a numeric expression");
 
-            SCOPE_EXIT( delete valueNode; );
+            ON_SCOPE_EXIT { delete valueNode; };
 
             arraySize = std::visit([this, node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))
@@ -701,7 +701,7 @@ namespace hex::lang {
         s128 pointerOffset;
         if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
             auto valueNode = evaluateMathematicalExpression(offset);
-            SCOPE_EXIT( delete valueNode; );
+            ON_SCOPE_EXIT { delete valueNode; };
 
             pointerOffset = std::visit([this, node, type = valueNode->getType()] (auto &&value) {
                 if (Token::isFloatingPoint(type))

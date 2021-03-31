@@ -42,11 +42,12 @@ namespace hex::prv {
             this->m_writable = false;
         }
 
-        ScopeExit fileCleanup([this]{
+        auto fileCleanup = SCOPE_GUARD {
             this->m_readable = false;
             this->m_file = nullptr;
             CloseHandle(this->m_file);
-        });
+        };
+
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
             return;
         }
@@ -56,11 +57,11 @@ namespace hex::prv {
             return;
         }
 
-        ScopeExit mappingCleanup([this]{
+        auto mappingCleanup = SCOPE_GUARD {
             this->m_readable = false;
             this->m_mapping = nullptr;
             CloseHandle(this->m_mapping);
-        });
+        };
 
         this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
         if (this->m_mappedFile == nullptr) {

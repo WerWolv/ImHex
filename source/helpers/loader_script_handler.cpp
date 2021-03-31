@@ -79,7 +79,7 @@ namespace hex {
             return nullptr;
         }
 
-        SCOPE_EXIT( Py_DECREF(instance); );
+        ON_SCOPE_EXIT { Py_DECREF(instance); };
 
         if (instance->ob_type->tp_base == nullptr || instance->ob_type->tp_base->tp_name != "ImHexType"s) {
             PyErr_SetString(PyExc_TypeError, "class type must extend from ImHexType");
@@ -104,7 +104,7 @@ namespace hex {
             return nullptr;
         }
 
-        SCOPE_EXIT( Py_DECREF(list); );
+        ON_SCOPE_EXIT { Py_DECREF(list); };
 
         std::string code = keyword + " " + instance->ob_type->tp_name + " {\n";
 

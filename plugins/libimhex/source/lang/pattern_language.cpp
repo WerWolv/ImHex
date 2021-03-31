@@ -81,7 +81,10 @@ namespace hex::lang {
             return { };
         }
 
-        SCOPE_EXIT( for(auto &node : ast.value()) delete node; );
+        ON_SCOPE_EXIT {
+            for(auto &node : ast.value())
+                delete node;
+        };
 
         auto validatorResult = this->m_validator->validate(ast.value());
         if (!validatorResult) {

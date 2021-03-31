@@ -76,6 +76,7 @@ namespace hex {
 
 #define TOKEN_CONCAT_IMPL(x, y) x ## y
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
+#define ANONYMOUS_VARIABLE(prefix) TOKEN_CONCAT(prefix, __COUNTER__)
 
 namespace hex {
 
@@ -235,19 +236,31 @@ namespace hex {
 
     std::vector<std::string> getPath(ImHexPath path);
 
-    #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
-    class ScopeExit {
+    #define SCOPE_GUARD ::hex::ScopeGuardOnExit() + [&]()
+    #define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
+    template<class F>
+    class ScopeGuard {
+    private:
+        F m_func;
+        bool m_active;
     public:
-        ScopeExit(const std::function<void()> &func) : m_func(func) {}
-        ~ScopeExit() { if (this->m_func != nullptr) this->m_func(); }
+        constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
+        ~ScopeGuard() { if (this->m_active) { this->m_func(); } }
+        void release() { this->m_active = false; }
 
-        void release() {
-            this->m_func = nullptr;
+        ScopeGuard(ScopeGuard &&other) noexcept : m_func(std::move(other.m_func)), m_active(other.m_active) {
+            other.cancel();
         }
 
-    private:
-        std::function<void()> m_func;
+        ScopeGuard& operator=(ScopeGuard &&) = delete;
     };
+
+    enum class ScopeGuardOnExit { };
+
+    template <typename F>
+    constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F&& f) {
+        return ScopeGuard<F>(std::forward<F>(f));
+    }
 
     struct Region {
         u64 address;

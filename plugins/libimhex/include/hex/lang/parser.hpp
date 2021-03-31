@@ -91,7 +91,10 @@ namespace hex::lang {
 
         std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {
             std::vector<ASTNode*> program;
-            ScopeExit guard([&]{ for (auto &node : program) delete node; });
+            auto guard = SCOPE_GUARD {
+                for (auto &node : program)
+                    delete node;
+            };
 
             while (this->m_curr->type != endTokenType || (*this->m_curr) != value) {
                 program.push_back(parseStatement());
