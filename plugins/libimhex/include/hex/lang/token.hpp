@@ -102,7 +102,8 @@ namespace hex::lang {
             EndOfProgram
         };
 
-        using IntegerLiteral = std::pair<ValueType, std::variant<u8, s8, u16, s16, u32, s32, u64, s64, u128, s128, float, double>>;
+        using Integers = std::variant<u8, s8, u16, s16, u32, s32, u64, s64, u128, s128, float, double>;
+        using IntegerLiteral = std::pair<ValueType, Integers>;
         using ValueTypes = std::variant<Keyword, std::string, Operator, IntegerLiteral, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -123,6 +124,27 @@ namespace hex::lang {
 
         [[nodiscard]] constexpr static inline u32 getTypeSize(const ValueType type) {
             return static_cast<u32>(type) >> 4;
+        }
+
+        [[nodiscard]] constexpr static inline IntegerLiteral castTo(ValueType type, const Integers &literal) {
+            return std::visit([type](auto &&value) {
+                switch (type) {
+                    case ValueType::Signed8Bit:     return IntegerLiteral(type, static_cast<s8>(value));
+                    case ValueType::Signed16Bit:    return IntegerLiteral(type, static_cast<s16>(value));
+                    case ValueType::Signed32Bit:    return IntegerLiteral(type, static_cast<s32>(value));
+                    case ValueType::Signed64Bit:    return IntegerLiteral(type, static_cast<s64>(value));
+                    case ValueType::Signed128Bit:   return IntegerLiteral(type, static_cast<s128>(value));
+                    case ValueType::Unsigned8Bit:   return IntegerLiteral(type, static_cast<u8>(value));
+                    case ValueType::Unsigned16Bit:  return IntegerLiteral(type, static_cast<u16>(value));
+                    case ValueType::Unsigned32Bit:  return IntegerLiteral(type, static_cast<u32>(value));
+                    case ValueType::Unsigned64Bit:  return IntegerLiteral(type, static_cast<u64>(value));
+                    case ValueType::Unsigned128Bit: return IntegerLiteral(type, static_cast<u128>(value));
+                    case ValueType::Float:          return IntegerLiteral(type, static_cast<float>(value));
+                    case ValueType::Double:         return IntegerLiteral(type, static_cast<double>(value));
+                    case ValueType::Character:      return IntegerLiteral(type, static_cast<char>(value));
+                    default: __builtin_unreachable();
+                }
+            }, literal);
         }
 
         [[nodiscard]] constexpr static auto getTypeName(const lang::Token::ValueType type) {

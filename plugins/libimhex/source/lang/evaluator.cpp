@@ -483,6 +483,17 @@ namespace hex::lang {
     PatternData* Evaluator::evaluateEnum(ASTNodeEnum *node) {
         std::vector<std::pair<Token::IntegerLiteral, std::string>> entryPatterns;
 
+        auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(node->getUnderlyingType());
+        if (underlyingType == nullptr)
+            this->getConsole().abortEvaluation("enum underlying type was not ASTNodeTypeDecl. This is a bug");
+
+        size_t size;
+        auto builtinUnderlyingType = dynamic_cast<ASTNodeBuiltinType*>(underlyingType->getType());
+        if (builtinUnderlyingType != nullptr)
+            size = Token::getTypeSize(builtinUnderlyingType->getType());
+        else
+            this->getConsole().abortEvaluation("invalid enum underlying type");
+
         auto startOffset = this->m_currOffset;
         for (auto &[name, value] : node->getEntries()) {
             auto expression = dynamic_cast<ASTNodeNumericExpression*>(value);
@@ -492,18 +503,8 @@ namespace hex::lang {
             auto valueNode = evaluateMathematicalExpression(expression);
             SCOPE_EXIT( delete valueNode; );
 
-            entryPatterns.push_back({{ valueNode->getType(), valueNode->getValue() }, name });
+            entryPatterns.push_back({ Token::castTo(builtinUnderlyingType->getType(), valueNode->getValue()), name });
         }
-
-        auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(node->getUnderlyingType());
-        if (underlyingType == nullptr)
-            this->getConsole().abortEvaluation("enum underlying type was not ASTNodeTypeDecl. This is a bug");
-
-        size_t size;
-        if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(underlyingType->getType()); builtinType != nullptr)
-            size = Token::getTypeSize(builtinType->getType());
-        else
-            this->getConsole().abortEvaluation("invalid enum underlying type");
 
         this->m_currOffset += size;
 
