@@ -63,7 +63,7 @@ namespace hex {
 
     private:
         std::string m_unlocalizedViewName;
-        bool m_windowOpen = this->hasViewMenuItemEntry();
+        bool m_windowOpen = false;
     };
 
 }

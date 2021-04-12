@@ -47,7 +47,7 @@ namespace hex {
         buf->appendf("[%s][General]\n", handler->TypeName);
 
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            buf->appendf("%s=%d\n", typeid(*view).name(), view->getWindowOpenState());
+            buf->appendf("%s=%d\n", view->getUnlocalizedName().data(), view->getWindowOpenState());
         }
 
         buf->append("\n");
@@ -101,6 +101,13 @@ namespace hex {
 
                 if (targetFps.is_number())
                     this->m_targetFps = targetFps;
+            }
+
+            {
+                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 1)
+                    this->m_layoutConfigured = true;
+                else
+                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
             }
         });
 
@@ -370,10 +377,7 @@ namespace hex {
                 ImGui::End();
             } else if (!this->m_layoutConfigured) {
                 this->m_layoutConfigured = true;
-                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 0) {
-                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
-                    this->resetLayout();
-                }
+                this->resetLayout();
             }
 
         }
