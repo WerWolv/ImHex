@@ -717,7 +717,6 @@ struct MemoryEditor
                 ImGui::EndChild();
                 DataEditingAddr = DataPreviewAddr = HighlightMin;
                 DataPreviewAddrEnd = HighlightMax;
-                DataEditingTakeFocus = true;
             }
             GotoAddr = (size_t)-1;
         }
