@@ -46,6 +46,7 @@ namespace hex::lang {
         std::vector<std::endian> m_endianStack;
         std::vector<PatternData*> m_globalMembers;
         std::vector<std::vector<PatternData*>*> m_currMembers;
+        std::vector<PatternData*> m_currMemberScope;
         LogConsole m_console;
 
         u32 m_recursionLimit;
@@ -60,6 +61,7 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
+        PatternData* findPattern(std::vector<PatternData*> currMembers, const std::vector<std::string> &path);
         PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
         void evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset);

@@ -31,7 +31,8 @@ namespace hex::lang {
             LittleEndian,
             BigEndian,
             If,
-            Else
+            Else,
+            Parent
         };
 
         enum class Operator {
@@ -218,6 +219,7 @@ namespace hex::lang {
 #define KEYWORD_BE                          COMPONENT(Keyword, BigEndian)
 #define KEYWORD_IF                          COMPONENT(Keyword, If)
 #define KEYWORD_ELSE                        COMPONENT(Keyword, Else)
+#define KEYWORD_PARENT                      COMPONENT(Keyword, Parent)
 
 #define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral(hex::lang::Token::ValueType::Any, u64(0))
 #define IDENTIFIER                          hex::lang::Token::Type::Identifier, ""

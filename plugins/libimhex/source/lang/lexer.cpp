@@ -412,6 +412,8 @@ namespace hex::lang {
                         tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(0))));
                     else if (identifier == "true")
                         tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(1))));
+                    else if (identifier == "parent")
+                        tokens.emplace_back(TOKEN(Keyword, Parent));
 
                         // Check for built-in types
                     else if (identifier == "u8")

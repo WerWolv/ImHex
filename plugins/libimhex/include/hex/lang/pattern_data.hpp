@@ -25,7 +25,7 @@ namespace hex::lang {
                 if (iscntrl(*c) || *c > 0x7F)
                     result += " ";
                 else
-                    result += *c;
+                    result += static_cast<char>(*c);
             }
 
             if (*(data + size - 1) == '\x00')
@@ -39,7 +39,7 @@ namespace hex::lang {
     class PatternData {
     public:
         PatternData(u64 offset, size_t size, u32 color = 0)
-        : m_offset(offset), m_size(size), m_color(color) {
+        : m_offset(offset), m_size(size), m_color(color), m_parent(nullptr) {
             constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
@@ -55,7 +55,10 @@ namespace hex::lang {
         virtual PatternData* clone() = 0;
 
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
+        void setOffset(u64 offset) { this->m_offset = offset; }
+
         [[nodiscard]] size_t getSize() const { return this->m_size; }
+        void setSize(size_t size) { this->m_size = size; }
 
         [[nodiscard]] const std::string& getVariableName() const { return this->m_variableName; }
         void setVariableName(std::string name) { this->m_variableName = std::move(name); }
@@ -71,6 +74,9 @@ namespace hex::lang {
 
         [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
         void setEndian(std::endian endian) { this->m_endian = endian; }
+
+        [[nodiscard]] PatternData* getParent() const { return this->m_parent; }
+        void setParent(PatternData *parent) { this->m_parent = parent; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
@@ -191,6 +197,8 @@ namespace hex::lang {
         std::string m_variableName;
         std::optional<std::string> m_comment;
         std::string m_typeName;
+
+        PatternData *m_parent;
     };
 
     class PatternDataPadding : public PatternData {
@@ -211,9 +219,13 @@ namespace hex::lang {
 
     class PatternDataPointer : public PatternData {
     public:
-        PatternDataPointer(u64 offset, size_t size, PatternData *pointedAt, u32 color = 0)
-        : PatternData(offset, size, color), m_pointedAt(pointedAt) {
+        PatternDataPointer(u64 offset, size_t size, u32 color = 0)
+        : PatternData(offset, size, color), m_pointedAt(nullptr) {
             this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
+        }
+
+        PatternDataPointer(const PatternDataPointer &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            this->m_pointedAt = other.m_pointedAt->clone();
         }
 
         ~PatternDataPointer() override {
@@ -273,6 +285,10 @@ namespace hex::lang {
         }
         [[nodiscard]] std::string getFormattedName() const override {
             return "Pointer";
+        }
+
+        void setPointedAtPattern(PatternData *pattern) {
+            this->m_pointedAt = pattern;
         }
 
         [[nodiscard]] PatternData* getPointedAtPattern() {
@@ -448,16 +464,16 @@ namespace hex::lang {
 
     class PatternDataArray : public PatternData {
     public:
-        PatternDataArray(u64 offset, size_t size, std::vector<PatternData*> entries, u32 color = 0)
-            : PatternData(offset, size, color), m_entries(std::move(entries)) {
-
-            for (auto &entry : entries)
-                entry->setColor(color);
+        PatternDataArray(u64 offset, size_t size, u32 color = 0)
+            : PatternData(offset, size, color) {
         }
 
         PatternDataArray(const PatternDataArray &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+            std::vector<PatternData*> entries;
             for (const auto &entry : other.m_entries)
-                this->m_entries.push_back(entry->clone());
+                entries.push_back(entry->clone());
+
+            this->setEntries(entries);
         }
 
         ~PatternDataArray() override {
@@ -522,8 +538,22 @@ namespace hex::lang {
 
             return this->m_highlightedAddresses;
         }
+
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
+        }
+
+        [[nodiscard]] const std::vector<PatternData*>& getEntries() {
+            return this->m_entries;
+        }
+
+        void setEntries(const std::vector<PatternData*> &entries) {
+            this->m_entries = entries;
+
+            for (auto &entry : this->m_entries) {
+                entry->setColor(this->getColor());
+                entry->setParent(this);
+            }
         }
 
     private:
@@ -532,8 +562,8 @@ namespace hex::lang {
 
     class PatternDataStruct : public PatternData {
     public:
-        PatternDataStruct(u64 offset, size_t size, const std::vector<PatternData*> & members, u32 color = 0)
-                : PatternData(offset, size, color), m_members(members), m_sortedMembers(members) { }
+        PatternDataStruct(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color){
+        }
 
         PatternDataStruct(const PatternDataStruct &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
             for (const auto &member : other.m_members)
@@ -607,8 +637,16 @@ namespace hex::lang {
             return "struct " + PatternData::getTypeName();
         }
 
-        const auto& getMembers() const {
+        [[nodiscard]] const auto& getMembers() const {
             return this->m_members;
+        }
+
+        void setMembers(const std::vector<PatternData*> & members) {
+            this->m_members = members;
+            this->m_sortedMembers = members;
+
+            for (auto &member : this->m_members)
+                member->setParent(this);
         }
 
     private:
@@ -618,8 +656,9 @@ namespace hex::lang {
 
     class PatternDataUnion : public PatternData {
     public:
-        PatternDataUnion(u64 offset, size_t size, const std::vector<PatternData*> & members, u32 color = 0)
-                : PatternData(offset, size, color), m_members(members), m_sortedMembers(members) { }
+        PatternDataUnion(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
+
+        }
 
         PatternDataUnion(const PatternDataUnion &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
             for (const auto &member : other.m_members)
@@ -694,8 +733,16 @@ namespace hex::lang {
             return "union " + PatternData::getTypeName();;
         }
 
-        const auto& getMembers() const {
+        [[nodiscard]] const auto& getMembers() const {
             return this->m_members;
+        }
+
+        void setMembers(const std::vector<PatternData*> & members) {
+            this->m_members = members;
+            this->m_sortedMembers = members;
+
+            for (auto &member : this->m_members)
+                member->setParent(this);
         }
 
     private:
@@ -705,8 +752,9 @@ namespace hex::lang {
 
     class PatternDataEnum : public PatternData {
     public:
-        PatternDataEnum(u64 offset, size_t size, std::vector<std::pair<Token::IntegerLiteral, std::string>> enumValues, u32 color = 0)
-            : PatternData(offset, size, color), m_enumValues(std::move(enumValues)) { }
+        PatternDataEnum(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
+
+        }
 
         PatternData* clone() override {
             return new PatternDataEnum(*this);
@@ -762,8 +810,12 @@ namespace hex::lang {
             return "enum " + PatternData::getTypeName();
         }
 
-        const auto& getEnumValues() const {
+        [[nodiscard]] const auto& getEnumValues() const {
             return this->m_enumValues;
+        }
+
+        void setEnumValues(const std::vector<std::pair<Token::IntegerLiteral, std::string>> &enumValues) {
+            this->m_enumValues = enumValues;
         }
 
     private:
@@ -772,8 +824,9 @@ namespace hex::lang {
 
     class PatternDataBitfield : public PatternData {
     public:
-        PatternDataBitfield(u64 offset, size_t size, std::vector<std::pair<std::string, size_t>> fields, u32 color = 0)
-                : PatternData(offset, size, color), m_fields(std::move(fields)) { }
+        PatternDataBitfield(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
+
+        }
 
         PatternData* clone() override {
             return new PatternDataBitfield(*this);
@@ -800,8 +853,8 @@ namespace hex::lang {
             ImGui::TableNextColumn();
 
             std::string valueString = "{ ";
-            for (u64 i = 0; i < value.size(); i++)
-                valueString += hex::format("{0:02X} ", value[i]);
+            for (auto i : value)
+                valueString += hex::format("{0:02X} ", i);
             valueString += "}";
 
             ImGui::TextUnformatted(valueString.c_str());
@@ -842,13 +895,16 @@ namespace hex::lang {
             return "bitfield " + PatternData::getTypeName();
         }
 
-        const auto& getFields() const {
+        [[nodiscard]] const auto& getFields() const {
             return this->m_fields;
+        }
+
+        void setFields(const std::vector<std::pair<std::string, size_t>> &fields) {
+            this->m_fields = fields;
         }
 
     private:
         std::vector<std::pair<std::string, size_t>> m_fields;
     };
-
 
 }

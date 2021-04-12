@@ -166,6 +166,7 @@ namespace hex {
     }
 
     std::vector<std::string> splitString(std::string_view string, std::string_view delimiter);
+    std::string combineStrings(const std::vector<std::string> &strings, std::string_view delimiter = "");
 
     std::string toEngineeringString(double value);
 

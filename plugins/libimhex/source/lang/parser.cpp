@@ -69,12 +69,14 @@ namespace hex::lang {
     ASTNode* Parser::parseRValue(std::vector<std::string> &path) {
         if (peek(IDENTIFIER, -1))
             path.push_back(getValue<std::string>(-1));
+        else if (peek(KEYWORD_PARENT, -1))
+            path.emplace_back("parent");
 
         if (MATCHES(sequence(SEPARATOR_DOT))) {
-            if (MATCHES(sequence(IDENTIFIER)))
+            if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT)))
                 return this->parseRValue(path);
             else
-                throwParseError("expected member name", -1);
+                throwParseError("expected member name or 'parent' keyword", -1);
         } else
             return TO_NUMERIC_EXPRESSION(new ASTNodeRValue(path));
     }
@@ -94,7 +96,7 @@ namespace hex::lang {
             return this->parseScopeResolution(path);
         } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN))) {
             return TO_NUMERIC_EXPRESSION(this->parseFunctionCall());
-        } else if (MATCHES(sequence(IDENTIFIER))) {
+        } else if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
             std::vector<std::string> path;
             return this->parseRValue(path);
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
