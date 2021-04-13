@@ -43,6 +43,14 @@ namespace hex::lang {
             this->m_recursionLimit = limit;
             return true;
         });
+
+        this->m_preprocessor->addPragmaHandler("base_address", [](std::string value) {
+            auto baseAddress = strtoull(value.c_str(), nullptr, 0);
+
+            SharedData::currentProvider->setBaseAddress(baseAddress);
+            return true;
+        });
+
         this->m_preprocessor->addDefaultPragmaHandlers();
     }
 
