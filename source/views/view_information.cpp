@@ -31,7 +31,8 @@ namespace hex {
         });
 
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
-            this->m_entropyHandlePosition = region.address / this->m_blockSize;
+            if (this->m_blockSize != 0)
+                this->m_entropyHandlePosition = region.address / this->m_blockSize;
         });
     }
 

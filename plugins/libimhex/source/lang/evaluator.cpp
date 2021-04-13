@@ -679,8 +679,13 @@ namespace hex::lang {
                 return static_cast<u64>(value);
             }, valueNode->getValue());
         }
-        if (this->m_currOffset >= this->m_provider->getActualSize())
-            this->getConsole().abortEvaluation("variable placed out of range");
+
+        if (this->m_currOffset < this->m_provider->getBaseAddress() || this->m_currOffset >= this->m_provider->getActualSize() + this->m_provider->getBaseAddress()) {
+            if (node->getPlacementOffset() != nullptr)
+                this->getConsole().abortEvaluation("variable placed out of range");
+            else
+                return nullptr;
+        }
 
         PatternData *pattern;
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
@@ -706,6 +711,13 @@ namespace hex::lang {
                     this->getConsole().abortEvaluation("placement offset must be an integer value");
                 return static_cast<u64>(value);
             }, valueNode->getValue());
+        }
+
+        if (this->m_currOffset < this->m_provider->getBaseAddress() || this->m_currOffset >= this->m_provider->getActualSize() + this->m_provider->getBaseAddress()) {
+            if (node->getPlacementOffset() != nullptr)
+                this->getConsole().abortEvaluation("variable placed out of range");
+            else
+                return nullptr;
         }
 
         auto startOffset = this->m_currOffset;
@@ -765,10 +777,13 @@ namespace hex::lang {
                 color = entry->getColor();
             entry->setColor(color.value_or(0));
 
+            if (this->m_currOffset > this->m_provider->getActualSize() + this->m_provider->getBaseAddress()) {
+                delete entry;
+                break;
+            }
+
             entries.push_back(entry);
 
-            if (this->m_currOffset > this->m_provider->getActualSize())
-                this->getConsole().abortEvaluation("array exceeds size of file");
         }
 
         PatternData *pattern;
@@ -807,6 +822,13 @@ namespace hex::lang {
             pointerOffset = this->m_currOffset;
         }
 
+        if (this->m_currOffset < this->m_provider->getBaseAddress() || this->m_currOffset >= this->m_provider->getActualSize() + this->m_provider->getBaseAddress()) {
+            if (node->getPlacementOffset() != nullptr)
+                this->getConsole().abortEvaluation("variable placed out of range");
+            else
+                return nullptr;
+        }
+
         PatternData *sizeType;
 
         auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(node->getSizeType());
@@ -827,7 +849,7 @@ namespace hex::lang {
         delete sizeType;
 
 
-        if (this->m_currOffset > this->m_provider->getActualSize())
+        if (this->m_currOffset > this->m_provider->getActualSize() + this->m_provider->getBaseAddress())
             this->getConsole().abortEvaluation("pointer points past the end of the data");
 
         PatternData *pointedAt;
@@ -877,18 +899,23 @@ namespace hex::lang {
                 this->m_endianStack.push_back(this->m_defaultDataEndian);
                 this->m_currRecursionDepth = 0;
 
+                PatternData *pattern = nullptr;
+
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node); variableDeclNode != nullptr) {
-                    this->m_globalMembers.push_back(this->evaluateVariable(variableDeclNode));
+                    pattern = this->evaluateVariable(variableDeclNode);
                 } else if (auto arrayDeclNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); arrayDeclNode != nullptr) {
-                    this->m_globalMembers.push_back(this->evaluateArray(arrayDeclNode));
+                    pattern = this->evaluateArray(arrayDeclNode);
                 } else if (auto pointerDeclNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); pointerDeclNode != nullptr) {
-                    this->m_globalMembers.push_back(this->evaluatePointer(pointerDeclNode));
+                    pattern = this->evaluatePointer(pointerDeclNode);
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
                     // Handled above
                 } else if (auto functionCallNode = dynamic_cast<ASTNodeFunctionCall*>(node); functionCallNode != nullptr) {
                     auto result = this->evaluateFunctionCall(functionCallNode);
                     delete result;
                 }
+
+                if (pattern != nullptr)
+                    this->m_globalMembers.push_back(pattern);
 
                 this->m_endianStack.clear();
             }
