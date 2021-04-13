@@ -130,6 +130,7 @@ namespace hex {
 
         EventManager::subscribe<EventFileDropped>(this, [this](const std::string &filePath) {
             this->openFile(filePath);
+            this->getWindowOpenState() = true;
         });
 
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
@@ -144,7 +145,7 @@ namespace hex {
         });
 
         EventManager::subscribe<EventProjectFileLoad>(this, [this]() {
-            this->openFile(ProjectFile::getFilePath());
+            EventManager::post<EventFileDropped>(ProjectFile::getFilePath());
         });
 
         EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
@@ -319,18 +320,18 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("hex.common.load"_lang, "hex.common.cancel"_lang,
-                           [this, &provider] {
-                               if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
-                                   this->openFile(this->m_loaderScriptFilePath);
-                                   LoaderScript::setFilePath(this->m_loaderScriptFilePath);
-                                   LoaderScript::setDataProvider(provider);
-                                   LoaderScript::processFile(this->m_loaderScriptScriptPath);
-                                   ImGui::CloseCurrentPopup();
-                               }
-                           },
-                           [] {
-                               ImGui::CloseCurrentPopup();
-                           }
+               [this, &provider] {
+                   if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
+                       EventManager::post<EventFileDropped>(this->m_loaderScriptFilePath);
+                       LoaderScript::setFilePath(this->m_loaderScriptFilePath);
+                       LoaderScript::setDataProvider(provider);
+                       LoaderScript::processFile(this->m_loaderScriptScriptPath);
+                       ImGui::CloseCurrentPopup();
+                   }
+               },
+               [] {
+                   ImGui::CloseCurrentPopup();
+               }
             );
 
             ImGui::EndPopup();
@@ -363,9 +364,18 @@ namespace hex {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
                 View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
-                    this->openFile(path);
-                    this->getWindowOpenState() = true;
+                    EventManager::post<EventFileDropped>(path);
                 });
+            }
+
+            if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.open_recent"_lang, !SharedData::recentFilePaths.empty())) {
+                for (auto &path : SharedData::recentFilePaths) {
+                    if (ImGui::MenuItem(std::filesystem::path(path).filename().string().c_str())) {
+                        EventManager::post<EventFileDropped>(path);
+                    }
+                }
+
+                ImGui::EndMenu();
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save"_lang, "CTRL + S", false, provider != nullptr && provider->isWritable())) {
@@ -376,7 +386,7 @@ namespace hex {
                 saveAs();
             }
 
-            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close", "", false, provider != nullptr && provider->isAvailable())) {
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close"_lang, "", false, provider != nullptr && provider->isAvailable())) {
                 EventManager::post<EventFileUnloaded>();
                 delete SharedData::currentProvider;
                 SharedData::currentProvider = nullptr;
@@ -388,7 +398,6 @@ namespace hex {
                 View::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
                     EventManager::post<EventProjectFileLoad>();
-                    this->getWindowOpenState() = true;
                 });
             }
 

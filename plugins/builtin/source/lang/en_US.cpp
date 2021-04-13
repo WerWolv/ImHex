@@ -153,6 +153,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.script.file.title", "Loader Script: Open File" },
 
                     { "hex.view.hexeditor.menu.file.open_file", "Open File..." },
+                    { "hex.view.hexeditor.menu.file.open_recent", "Open Recent"},
                     { "hex.view.hexeditor.menu.file.save", "Save" },
                     { "hex.view.hexeditor.menu.file.save_as", "Save As..." },
                     { "hex.view.hexeditor.menu.file.close", "Close" },

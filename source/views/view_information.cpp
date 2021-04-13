@@ -14,7 +14,6 @@
 
 #include <imgui_imhex_extensions.h>
 #include <implot.h>
-#include <implot_internal.h>
 
 namespace hex {
 

@@ -112,11 +112,11 @@ namespace hex {
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
-            this->m_recentFiles.push_front(path);
+            SharedData::recentFilePaths.push_front(path);
 
             {
                 std::list<std::string> uniques;
-                for (auto &file : this->m_recentFiles) {
+                for (auto &file : SharedData::recentFilePaths) {
 
                     bool exists = false;
                     for (auto &unique : uniques) {
@@ -130,12 +130,12 @@ namespace hex {
                     if (uniques.size() > 5)
                         break;
                 }
-                this->m_recentFiles = uniques;
+                SharedData::recentFilePaths = uniques;
             }
 
             {
                 std::vector<std::string> recentFilesVector;
-                std::copy(this->m_recentFiles.begin(), this->m_recentFiles.end(), std::back_inserter(recentFilesVector));
+                std::copy(SharedData::recentFilePaths.begin(), SharedData::recentFilePaths.end(), std::back_inserter(recentFilesVector));
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }
@@ -158,7 +158,7 @@ namespace hex {
         EventManager::post<EventSettingsChanged>();
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
-            this->m_recentFiles.push_back(path);
+            SharedData::recentFilePaths.push_back(path);
     }
 
     Window::~Window() {
@@ -430,8 +430,8 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.start.recent"_lang);
             {
-                if (!this->m_recentFiles.empty()) {
-                    for (auto &path : this->m_recentFiles) {
+                if (!SharedData::recentFilePaths.empty()) {
+                    for (auto &path : SharedData::recentFilePaths) {
                         if (ImGui::BulletHyperlink(std::filesystem::path(path).filename().string().c_str())) {
                             EventManager::post<EventFileDropped>(path);
                             break;
