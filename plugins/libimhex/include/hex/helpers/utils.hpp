@@ -104,13 +104,7 @@ namespace hex {
 
         return (value & mask) >> to;
     }
-
-    template<hex::integral T>
-    [[nodiscard]] constexpr inline T signExtend(T value, u8 currWidth, u8 targetWidth) {
-        T mask = 1LLU << (currWidth - 1);
-        return (((value ^ mask) - mask) << ((sizeof(T) * 8) - targetWidth)) >> ((sizeof(T) * 8) - targetWidth);
-    }
-
+    
     template<typename T>
     struct always_false : std::false_type {};
 

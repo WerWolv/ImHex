@@ -338,13 +338,42 @@ namespace hex::lang {
         }
 
        void createEntry(prv::Provider* &provider) override {
-            u64 data = 0;
+            u128 data = 0;
             provider->read(this->getOffset() - provider->getBaseAddress(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            s64 signedData = hex::signExtend(data, this->getSize(), 64);
-
-           this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, this->getSize() * 2));
+            switch (this->getSize()) {
+                case 1: {
+                    s8 signedData;
+                    std::memcpy(&signedData, &data, 1);
+                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 1 * 2));
+                }
+                break;
+                case 2: {
+                    s16 signedData;
+                    std::memcpy(&signedData, &data, 2);
+                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 2 * 2));
+                }
+                break;
+                case 4: {
+                    s32 signedData;
+                    std::memcpy(&signedData, &data, 4);
+                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 4 * 2));
+                }
+                break;
+                case 8: {
+                    s64 signedData;
+                    std::memcpy(&signedData, &data, 8);
+                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 8 * 2));
+                }
+                break;
+                case 16: {
+                    s128 signedData;
+                    std::memcpy(&signedData, &data, 16);
+                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 16 * 2));
+                }
+                break;
+            }
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
