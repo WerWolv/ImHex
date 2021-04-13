@@ -149,7 +149,10 @@ namespace hex::lang {
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
-            this->m_type = other.m_type->clone();
+            if (other.m_type != nullptr)
+                this->m_type = other.m_type->clone();
+            else
+                this->m_type = nullptr;
             this->m_endian = other.m_endian;
         }
 

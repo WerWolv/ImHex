@@ -33,8 +33,6 @@ set(LIBIMHEX_SOURCES
     source/lang/parser.cpp
     source/lang/validator.cpp
     source/lang/evaluator.cpp
-    source/lang/builtin_functions.cpp
-
     source/providers/provider.cpp
 
     source/views/view.cpp

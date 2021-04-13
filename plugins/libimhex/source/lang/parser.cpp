@@ -498,6 +498,11 @@ namespace hex::lang {
         const auto &typeName = getValue<std::string>(-2);
         auto structGuard = SCOPE_GUARD { delete structNode; };
 
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
+
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             structNode->addMember(parseMember());
         }
@@ -512,6 +517,11 @@ namespace hex::lang {
         const auto unionNode = new ASTNodeUnion();
         const auto &typeName = getValue<std::string>(-2);
         auto unionGuard = SCOPE_GUARD { delete unionNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             unionNode->addMember(parseMember());
@@ -536,6 +546,11 @@ namespace hex::lang {
 
         const auto enumNode = new ASTNodeEnum(underlyingType);
         auto enumGuard = SCOPE_GUARD { delete enumNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -580,6 +595,11 @@ namespace hex::lang {
 
         const auto bitfieldNode = new ASTNodeBitfield();
         auto enumGuard = SCOPE_GUARD { delete bitfieldNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {

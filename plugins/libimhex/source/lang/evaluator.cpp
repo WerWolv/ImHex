@@ -517,10 +517,6 @@ namespace hex::lang {
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, true);
             structPattern->setMembers(memberPatterns);
-
-            for (auto &pmember : memberPatterns)
-                hex::print("{}\n", pmember->getVariableName());
-            hex::print("======\n");
         }
         structPattern->setSize(this->m_currOffset - startOffset);
 
@@ -638,6 +634,9 @@ namespace hex::lang {
 
     PatternData* Evaluator::evaluateType(ASTNodeTypeDecl *node) {
         auto type = node->getType();
+
+        if (type == nullptr)
+            type = this->m_types[node->getName().data()];
 
         this->m_endianStack.push_back(node->getEndian().value_or(this->m_defaultDataEndian));
 
@@ -859,6 +858,18 @@ namespace hex::lang {
 
         try {
             for (const auto& node : ast) {
+                if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
+                    if (this->m_types[typeDeclNode->getName().data()] == nullptr)
+                        this->m_types[typeDeclNode->getName().data()] = typeDeclNode->getType();
+                }
+            }
+
+            for (const auto& [name, node] : this->m_types) {
+                if (auto typeDeclNode = static_cast<ASTNodeTypeDecl*>(node); typeDeclNode->getType() == nullptr)
+                    this->getConsole().abortEvaluation(hex::format("unresolved type '{}'", name));
+            }
+
+            for (const auto& node : ast) {
                 this->m_currMembers.clear();
                 this->m_currMemberScope.clear();
                 this->m_currMemberScope.push_back(nullptr);
@@ -873,7 +884,7 @@ namespace hex::lang {
                 } else if (auto pointerDeclNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); pointerDeclNode != nullptr) {
                     this->m_globalMembers.push_back(this->evaluatePointer(pointerDeclNode));
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl*>(node); typeDeclNode != nullptr) {
-                    this->m_types[typeDeclNode->getName().data()] = typeDeclNode->getType();
+                    // Handled above
                 } else if (auto functionCallNode = dynamic_cast<ASTNodeFunctionCall*>(node); functionCallNode != nullptr) {
                     auto result = this->evaluateFunctionCall(functionCallNode);
                     delete result;
