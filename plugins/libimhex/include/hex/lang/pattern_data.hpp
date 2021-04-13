@@ -642,6 +642,8 @@ namespace hex::lang {
         }
 
         void setMembers(const std::vector<PatternData*> & members) {
+            this->m_members.clear();
+
             for (auto &member : members) {
                 if (member == nullptr) continue;
 
