@@ -1098,9 +1098,9 @@ R"(
     }
 
     void ViewHexEditor::drawEditPopup() {
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.undo", "CTRL + Z", false, SharedData::currentProvider != nullptr))
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.undo"_lang, "CTRL + Z", false, SharedData::currentProvider != nullptr))
             SharedData::currentProvider->undo();
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo", "CTRL + Y", false, SharedData::currentProvider != nullptr))
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo"_lang, "CTRL + Y", false, SharedData::currentProvider != nullptr))
             SharedData::currentProvider->redo();
 
         if (ImGui::BeginMenu("hex.view.hexeditor.menu.edit.copy"_lang, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
