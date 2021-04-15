@@ -221,7 +221,6 @@ namespace hex::lang {
     public:
         PatternDataPointer(u64 offset, size_t size, u32 color = 0)
         : PatternData(offset, size, color), m_pointedAt(nullptr) {
-            this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
         }
 
         PatternDataPointer(const PatternDataPointer &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
@@ -289,6 +288,7 @@ namespace hex::lang {
 
         void setPointedAtPattern(PatternData *pattern) {
             this->m_pointedAt = pattern;
+            this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
         }
 
         [[nodiscard]] PatternData* getPointedAtPattern() {
