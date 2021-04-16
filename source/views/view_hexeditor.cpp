@@ -140,11 +140,12 @@ namespace hex {
                 return;
 
             provider->setCurrentPage(page.value());
-            this->m_memoryEditor.GotoAddrAndHighlight(region.address, region.address + region.size - 1);
+            u64 start = region.address + provider->getBaseAddress();
+            this->m_memoryEditor.GotoAddrAndHighlight(start, start + region.size - 1);
             EventManager::post<EventRegionSelected>(region);
         });
 
-        EventManager::subscribe<EventProjectFileLoad>(this, [this]() {
+        EventManager::subscribe<EventProjectFileLoad>(this, []() {
             EventManager::post<EventFileDropped>(ProjectFile::getFilePath());
         });
 
