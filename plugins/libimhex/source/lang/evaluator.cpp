@@ -843,7 +843,7 @@ namespace hex::lang {
         size_t pointerSize = sizeType->getSize();
 
         u128 pointedAtOffset = 0;
-        this->m_provider->read(pointerOffset, &pointedAtOffset, pointerSize);
+        this->m_provider->read(pointerOffset - this->m_provider->getBaseAddress(), &pointedAtOffset, pointerSize);
         this->m_currOffset = hex::changeEndianess(pointedAtOffset, pointerSize, underlyingType->getEndian().value_or(this->m_defaultDataEndian));
 
         delete sizeType;
