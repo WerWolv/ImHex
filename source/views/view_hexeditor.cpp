@@ -693,6 +693,8 @@ namespace hex {
                 if (c >= '0' && c <= '9') byte |= (c - '0');
                 else if (c >= 'a' && c <= 'f') byte |= (c - 'a') + 0xA;
                 else if (c >= 'A' && c <= 'F') byte |= (c - 'A') + 0xA;
+
+                stringIndex++;
             }
         }
 
