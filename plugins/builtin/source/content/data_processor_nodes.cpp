@@ -77,9 +77,8 @@ namespace hex::plugin::builtin {
         }) {}
 
         void drawNode() override {
-            ImGui::TextUnformatted("0x"); ImGui::SameLine(0, 0);
             ImGui::PushItemWidth(100);
-            ImGui::InputScalar("##integerValue", ImGuiDataType_U64, &this->m_value, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_value, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::PopItemWidth();
         }
 

@@ -135,12 +135,12 @@ namespace hex {
 
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
             auto provider = SharedData::currentProvider;
-            auto page = provider->getPageOfAddress(region.address);
+            auto page = provider->getPageOfAddress(region.address - provider->getBaseAddress());
             if (!page.has_value())
                 return;
 
             provider->setCurrentPage(page.value());
-            u64 start = region.address + provider->getBaseAddress();
+            u64 start = region.address - provider->getBaseAddress();
             this->m_memoryEditor.GotoAddrAndHighlight(start, start + region.size - 1);
             EventManager::post<EventRegionSelected>(region);
         });
@@ -1093,58 +1093,61 @@ R"(
 
     void ViewHexEditor::drawGotoPopup() {
         auto provider = SharedData::currentProvider;
+        auto baseAddress = provider->getBaseAddress();
+        auto dataSize = provider->getActualSize();
 
         if (ImGui::BeginPopup("hex.view.hexeditor.menu.file.goto"_lang)) {
             ImGui::TextUnformatted("hex.view.hexeditor.menu.file.goto"_lang);
             if (ImGui::BeginTabBar("gotoTabs")) {
-                s64 newOffset = 0;
-                if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.begin"_lang)) {
-                    ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                u64 newOffset = 0;
+                if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.absolute"_lang)) {
+                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= provider->getActualSize())
-                        this->m_gotoAddress = provider->getActualSize() - 1;
+                    if (this->m_gotoAddress < baseAddress || this->m_gotoAddress > baseAddress + dataSize)
+                        this->m_gotoAddress = baseAddress;
 
                     newOffset = this->m_gotoAddress;
 
                     ImGui::EndTabItem();
                 }
+                if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.begin"_lang)) {
+                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+
+                    if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
+                        this->m_gotoAddress = 0;
+
+                    newOffset = this->m_gotoAddress + baseAddress;
+
+                    ImGui::EndTabItem();
+                }
                 if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.current"_lang)) {
-                    ImGui::InputScalar("##nolabel", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("dec", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal);
 
-                    if (this->m_memoryEditor.DataPreviewAddr == -1 || this->m_memoryEditor.DataPreviewAddrEnd == -1) {
-                        this->m_memoryEditor.DataPreviewAddr = 0;
-                        this->m_memoryEditor.DataPreviewAddrEnd = 0;
-                    }
+                    s64 currSelectionOffset = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
-                    s64 currHighlightStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                    if (currSelectionOffset + this->m_gotoAddress < 0)
+                        this->m_gotoAddress = -currSelectionOffset;
+                    else if (currSelectionOffset + this->m_gotoAddress > dataSize)
+                        this->m_gotoAddress = dataSize - currSelectionOffset;
 
-                    newOffset = this->m_gotoAddress + currHighlightStart;
-                    if (newOffset >= provider->getActualSize()) {
-                        newOffset = provider->getActualSize() - 1;
-                        this->m_gotoAddress = (provider->getActualSize() - 1) - currHighlightStart;
-                    } else if (newOffset < 0) {
-                        newOffset = 0;
-                        this->m_gotoAddress = -currHighlightStart;
-                    }
+                    newOffset = currSelectionOffset + this->m_gotoAddress + baseAddress;
 
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.end"_lang)) {
-                    ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= provider->getActualSize())
-                        this->m_gotoAddress = provider->getActualSize() - 1;
+                    if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
+                        this->m_gotoAddress = 0;
 
-                    newOffset = (provider->getActualSize() - 1) - this->m_gotoAddress;
+                    newOffset = (baseAddress + dataSize) - this->m_gotoAddress - 1;
 
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::Button("hex.view.hexeditor.menu.file.goto"_lang)) {
-                    provider->setCurrentPage(std::floor(newOffset / double(prv::Provider::PageSize)));
-                    this->m_memoryEditor.GotoAddr = newOffset;
-                    this->m_memoryEditor.DataPreviewAddr = newOffset;
-                    this->m_memoryEditor.DataPreviewAddrEnd = newOffset;
+                    provider->setCurrentPage(std::floor(double(newOffset - baseAddress) / prv::Provider::PageSize));
+                    EventManager::post<RequestSelectionChange>(Region { newOffset, 1 });
                 }
 
                 ImGui::EndTabBar();

@@ -179,6 +179,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.hexeditor.search.find_next", "Find next" },
                         { "hex.view.hexeditor.search.find_prev", "Find previous" },
                     { "hex.view.hexeditor.menu.file.goto", "Goto" },
+                        { "hex.view.hexeditor.goto.offset.absolute", "Absolute" },
                         { "hex.view.hexeditor.goto.offset.current", "Current" },
                         { "hex.view.hexeditor.goto.offset.begin", "Begin" },
                         { "hex.view.hexeditor.goto.offset.end", "End" },
