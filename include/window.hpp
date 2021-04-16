@@ -52,6 +52,8 @@ namespace hex {
 
         double m_lastFrameTime;
 
+        bool m_prevKeysDown[512];
+
         static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
     };
 

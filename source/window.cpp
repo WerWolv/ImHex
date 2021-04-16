@@ -181,9 +181,16 @@ namespace hex {
     }
 
     void Window::loop() {
+        bool pressedKeys[512] = { 0 };
+
         this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
+            std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
+
             this->frameBegin();
+
+            for (u16 i = 0; i < 512; i++)
+                pressedKeys[i] = ImGui::GetIO().KeysDown[i] && !this->m_prevKeysDown[i];
 
             for (const auto &call : View::getDeferedCalls())
                 call();
@@ -201,6 +208,7 @@ namespace hex {
 
                 ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
                 view->drawContent();
+                view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
             }
 
             View::drawCommonInterfaces();
@@ -350,17 +358,6 @@ namespace hex {
                 }
 
                 ImGui::EndMenuBar();
-            }
-
-            if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
-                for (auto &view : ContentRegistry::Views::getEntries()) {
-                    if (view->shouldProcess()) {
-                        if (view->handleShortcut(key, mods))
-                            break;
-                    }
-                }
-
-                Window::s_currShortcut = { -1, -1 };
             }
 
             if (SharedData::currentProvider == nullptr) {

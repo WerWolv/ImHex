@@ -14,7 +14,7 @@ namespace hex {
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
     void View::drawMenu() { }
-    bool View::handleShortcut(int key, int mods) { return false; }
+    bool View::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) { return false; }
 
     bool View::isAvailable() {
         return SharedData::currentProvider != nullptr && SharedData::currentProvider->isAvailable();

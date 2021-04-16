@@ -26,7 +26,7 @@ namespace hex {
         virtual void drawContent() = 0;
         virtual void drawAlwaysVisible() { }
         virtual void drawMenu();
-        virtual bool handleShortcut(int key, int mods);
+        virtual bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt);
         virtual bool isAvailable();
         virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
 

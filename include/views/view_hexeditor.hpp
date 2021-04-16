@@ -27,7 +27,7 @@ namespace hex {
         void drawContent() override;
         void drawAlwaysVisible() override;
         void drawMenu() override;
-        bool handleShortcut(int key, int mods) override;
+        bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) override;
 
     private:
         MemoryEditor m_memoryEditor;

@@ -533,38 +533,49 @@ namespace hex {
         }
     }
 
-    bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods == GLFW_MOD_CONTROL && key == 'S') {
+    bool ViewHexEditor::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) {
+        if (ctrl && keys['S']) {
             save();
             return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == 'S') {
+        } else if (ctrl && shift && keys['S']) {
             saveAs();
             return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == 'Z') {
-            if (SharedData::currentProvider != nullptr)
-                SharedData::currentProvider->undo();
-        } else if (mods == GLFW_MOD_CONTROL && key == 'Y') {
-            if (SharedData::currentProvider != nullptr)
-                SharedData::currentProvider->redo();
-        } else if (mods == GLFW_MOD_CONTROL && key == 'F') {
-            View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == 'G') {
-            View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == 'O') {
-            View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == 'C') {
-            this->copyBytes();
-            return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == 'C') {
-            this->copyString();
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == 'V') {
-            this->pasteBytes();
-            return true;
         }
+
+        if (ImGui::Begin(View::toWindowName("hex.view.hexeditor.name").c_str())) {
+            ON_SCOPE_EXIT { ImGui::End(); };
+
+            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+                if (ctrl && keys['Z']) {
+                    if (SharedData::currentProvider != nullptr)
+                        SharedData::currentProvider->undo();
+                    return true;
+                } else if (ctrl && keys['Y']) {
+                    if (SharedData::currentProvider != nullptr)
+                        SharedData::currentProvider->redo();
+                } else if (ctrl && keys['F']) {
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
+                    return true;
+                } else if (ctrl && keys['G']) {
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
+                    return true;
+                } else if (ctrl && keys['O']) {
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
+                    return true;
+                } else if (ctrl && keys['C']) {
+                    this->copyBytes();
+                    return true;
+                } else if (ctrl && shift && keys['C']) {
+                    this->copyString();
+                    return true;
+                } else if (ctrl && keys['V']) {
+                    this->pasteBytes();
+                    return true;
+                }
+            }
+        }
+
+
 
         return false;
     }
