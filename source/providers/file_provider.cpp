@@ -126,10 +126,11 @@ namespace hex::prv {
 
 
     void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+
+        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset - this->getBaseAddress(), size);
 
         for (u64 i = 0; i < size; i++)
             if (getPatches().contains(offset + i))
@@ -140,13 +141,15 @@ namespace hex::prv {
     }
 
     void FileProvider::write(u64 offset, const void *buffer, size_t size) {
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
         addPatch(offset, buffer, size);
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
+        offset -= this->getBaseAddress();
+
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 
@@ -154,6 +157,8 @@ namespace hex::prv {
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
+        offset -= this->getBaseAddress();
+
         if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
             return;
 

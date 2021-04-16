@@ -123,8 +123,8 @@ namespace hex::lang {
                 size_t biggerSize = std::max(left->getSize(), right->getSize());
                 std::vector<u8> leftBuffer(biggerSize, 0x00), rightBuffer(biggerSize, 0x00);
 
-                provider->read(left->getOffset() - provider->getBaseAddress(), leftBuffer.data(), left->getSize());
-                provider->read(right->getOffset() - provider->getBaseAddress(), rightBuffer.data(), right->getSize());
+                provider->read(left->getOffset(), leftBuffer.data(), left->getSize());
+                provider->read(right->getOffset(), rightBuffer.data(), right->getSize());
 
                 if (left->m_endian != std::endian::native)
                     std::reverse(leftBuffer.begin(), leftBuffer.end());
@@ -237,7 +237,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
-            provider->read(this->getOffset() - provider->getBaseAddress(), &data, this->getSize());
+            provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
             ImGui::TableNextRow();
@@ -319,7 +319,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             u64 data = 0;
-            provider->read(this->getOffset() - provider->getBaseAddress(), &data, this->getSize());
+            provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
             this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, this->getSize() * 2));
@@ -348,7 +348,7 @@ namespace hex::lang {
 
        void createEntry(prv::Provider* &provider) override {
             u128 data = 0;
-            provider->read(this->getOffset() - provider->getBaseAddress(), &data, this->getSize());
+            provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
             switch (this->getSize()) {
@@ -409,13 +409,13 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             if (this->getSize() == 4) {
                 u32 data = 0;
-                provider->read(this->getOffset() - provider->getBaseAddress(), &data, 4);
+                provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
 
                 this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<float*>(&data), data, this->getSize() * 2));
             } else if (this->getSize() == 8) {
                 u64 data = 0;
-                provider->read(this->getOffset() - provider->getBaseAddress(), &data, 8);
+                provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
                 this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<double*>(&data), data, this->getSize() * 2));
@@ -442,7 +442,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             u8 boolean;
-            provider->read(this->getOffset() - provider->getBaseAddress(), &boolean, 1);
+            provider->read(this->getOffset(), &boolean, 1);
 
             if (boolean == 0)
                 this->createDefaultEntry("false");
@@ -468,7 +468,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             char character;
-            provider->read(this->getOffset() - provider->getBaseAddress(), &character, 1);
+            provider->read(this->getOffset(), &character, 1);
 
             this->createDefaultEntry(hex::format("'{0}'", character));
         }
@@ -489,7 +489,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> buffer(this->getSize() + 1, 0x00);
-            provider->read(this->getOffset() - provider->getBaseAddress(), buffer.data(), this->getSize());
+            provider->read(this->getOffset(), buffer.data(), this->getSize());
             buffer[this->getSize()] = '\0';
 
             this->createDefaultEntry(hex::format("\"{0}\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
@@ -808,7 +808,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             u64 value = 0;
-            provider->read(this->getOffset() - provider->getBaseAddress(), &value, this->getSize());
+            provider->read(this->getOffset(), &value, this->getSize());
             value = hex::changeEndianess(value, this->getSize(), this->getEndian());
 
             std::string valueString = PatternData::getTypeName() + "::";
@@ -880,7 +880,7 @@ namespace hex::lang {
 
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> value(this->getSize(), 0);
-            provider->read(this->getOffset() - provider->getBaseAddress(), &value[0], value.size());
+            provider->read(this->getOffset(), &value[0], value.size());
 
             if (this->m_endian == std::endian::big)
                 std::reverse(value.begin(), value.end());

@@ -76,7 +76,7 @@ namespace hex {
 
                 for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
                     std::array<ImU64, 256> blockValueCounts = { 0 };
-                    provider->read(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
+                    provider->readRelative(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
 
                     for (size_t j = 0; j < this->m_blockSize; j++) {
                         blockValueCounts[buffer[j]]++;
@@ -91,7 +91,7 @@ namespace hex {
 
             {
                 std::vector<u8> buffer(provider->getSize(), 0x00);
-                provider->read(0x00, buffer.data(), buffer.size());
+                provider->readRelative(0x00, buffer.data(), buffer.size());
 
                 this->m_fileDescription.clear();
                 this->m_mimeType.clear();
@@ -216,7 +216,7 @@ namespace hex {
                         ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
                         if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
-                            EventManager::post<RequestSelectionChange>( Region{ u64(this->m_entropyHandlePosition * this->m_blockSize), 1 });
+                            EventManager::post<RequestSelectionChange>( Region{ u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress(), 1 });
                         }
 
                         ImPlot::EndPlot();

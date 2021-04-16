@@ -22,8 +22,16 @@ namespace hex::prv {
         this->readRaw(offset, buffer, size);
     }
 
+    void Provider::readRelative(u64 offset, void *buffer, size_t size, bool overlays) {
+        this->read(offset + this->getBaseAddress(), buffer, size);
+    }
+
     void Provider::write(u64 offset, const void *buffer, size_t size) {
         this->writeRaw(offset, buffer, size);
+    }
+
+    void Provider::writeRelative(u64 offset, const void *buffer, size_t size) {
+        this->write(offset + this->getBaseAddress(), buffer, size);
     }
 
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
@@ -90,7 +98,7 @@ namespace hex::prv {
     }
 
     std::optional<u32> Provider::getPageOfAddress(u64 address) {
-        u32 page = std::floor(address / double(PageSize));
+        u32 page = std::floor((address - this->getBaseAddress()) / double(PageSize));
 
         if (page >= this->getPageCount())
             return { };
@@ -107,7 +115,7 @@ namespace hex::prv {
         this->m_patches.push_back(getPatches());
 
         for (u64 i = 0; i < size; i++)
-            getPatches()[offset + this->getBaseAddress() + i] = reinterpret_cast<const u8*>(buffer)[i];
+            getPatches()[offset + i] = reinterpret_cast<const u8*>(buffer)[i];
     }
 
     void Provider::undo() {

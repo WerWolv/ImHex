@@ -156,6 +156,13 @@ struct MemoryEditor
         HighlightMax = addr_max;
     }
 
+    void GotoAddrAndSelect(size_t addr_min, size_t addr_max)
+    {
+        GotoAddr = addr_min;
+        DataPreviewAddr = addr_min;
+        DataPreviewAddrEnd = addr_max;
+    }
+
     struct Sizes
     {
         int     AddrDigitsCount;
@@ -222,7 +229,7 @@ struct MemoryEditor
         if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs))
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
-                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
+                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd) + base_display_addr, std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
                 hex::EventManager::post<hex::EventRegionSelected>(selectionRegion);
             }
 

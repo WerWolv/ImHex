@@ -59,8 +59,8 @@ namespace hex {
                     this->m_shouldInvalidate = true;
 
                 size_t dataSize = provider->getSize();
-                if (this->m_hashRegion[1] >= dataSize)
-                    this->m_hashRegion[1] = dataSize - 1;
+                if (this->m_hashRegion[1] >= provider->getBaseAddress() + dataSize)
+                    this->m_hashRegion[1] = provider->getBaseAddress() + dataSize - 1;
 
 
                 if (this->m_hashRegion[1] >= this->m_hashRegion[0]) {

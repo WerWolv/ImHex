@@ -30,7 +30,7 @@ namespace hex {
                 return 0x00;
 
             ImU8 byte;
-            provider->read(off, &byte, sizeof(ImU8));
+            provider->readRelative(off, &byte, sizeof(ImU8));
 
             return byte;
         };
@@ -40,7 +40,7 @@ namespace hex {
             if (!provider->isAvailable() || !provider->isWritable())
                 return;
 
-            provider->write(off, &d, sizeof(ImU8));
+            provider->writeRelative(off, &d, sizeof(ImU8));
             EventManager::post<EventDataChanged>();
             ProjectFile::markDirty();
         };
@@ -114,7 +114,7 @@ namespace hex {
             size_t size = std::min<size_t>(_this->m_currEncodingFile.getLongestSequence(), provider->getActualSize() - addr);
 
             std::vector<u8> buffer(size);
-            provider->read(addr, buffer.data(), size);
+            provider->readRelative(addr, buffer.data(), size);
 
             auto [decoded, advance] = _this->m_currEncodingFile.getEncodingFor(buffer);
 
@@ -135,13 +135,16 @@ namespace hex {
 
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
             auto provider = SharedData::currentProvider;
-            auto page = provider->getPageOfAddress(region.address - provider->getBaseAddress());
+            auto page = provider->getPageOfAddress(region.address);
+
             if (!page.has_value())
+                return;
+            if (region.size == 0)
                 return;
 
             provider->setCurrentPage(page.value());
-            u64 start = region.address - provider->getBaseAddress();
-            this->m_memoryEditor.GotoAddrAndHighlight(start, start + region.size - 1);
+            u64 start = region.address;
+            this->m_memoryEditor.GotoAddrAndSelect(start - provider->getBaseAddress(), start + region.size - provider->getBaseAddress() - 1);
             EventManager::post<EventRegionSelected>(region);
         });
 
@@ -266,7 +269,7 @@ namespace hex {
                     if (bufferSize > provider->getActualSize() - offset)
                         bufferSize = provider->getActualSize() - offset;
 
-                    provider->read(offset, buffer.data(), bufferSize);
+                    provider->readRelative(offset, buffer.data(), bufferSize);
                     fwrite(buffer.data(), 1, bufferSize, file);
                 }
 
@@ -650,7 +653,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str;
         for (const auto &byte : buffer)
@@ -699,7 +702,7 @@ namespace hex {
         }
 
         // Write bytes
-        provider->write(start - provider->getBaseAddress(), buffer.data(), std::min(end - start + 1, buffer.size()));
+        provider->writeRelative(start, buffer.data(), std::min(end - start + 1, buffer.size()));
     }
 
     void ViewHexEditor::copyString() {
@@ -712,7 +715,7 @@ namespace hex {
 
         std::string buffer(copySize, 0x00);
         buffer.reserve(copySize + 1);
-        provider->read(start, buffer.data(), copySize);
+        provider->readRelative(start, buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
     }
@@ -726,7 +729,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str;
         switch (language) {
@@ -828,7 +831,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
 
@@ -875,7 +878,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str =
 R"(
@@ -940,7 +943,7 @@ R"(
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
             size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
-            provider->read(offset, buffer.data(), usedBufferSize);
+            provider->readRelative(offset, buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
                 if (buffer[i] == string[foundCharacters])
@@ -978,7 +981,7 @@ R"(
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
             size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
-            provider->read(offset, buffer.data(), usedBufferSize);
+            provider->readRelative(offset, buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
                 if (buffer[i] == hex[foundCharacters])
@@ -1006,7 +1009,7 @@ R"(
             _this->m_lastSearchIndex = 0;
 
             if (_this->m_lastSearchBuffer->size() > 0)
-                _this->m_memoryEditor.GotoAddrAndHighlight((*_this->m_lastSearchBuffer)[0].first, (*_this->m_lastSearchBuffer)[0].second);
+                _this->m_memoryEditor.GotoAddrAndSelect((*_this->m_lastSearchBuffer)[0].first, (*_this->m_lastSearchBuffer)[0].second);
 
             return 0;
         };
@@ -1018,13 +1021,13 @@ R"(
             this->m_lastSearchIndex = 0;
 
             if (this->m_lastSearchBuffer->size() > 0)
-                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[0].first, (*this->m_lastSearchBuffer)[0].second);
+                this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[0].first, (*this->m_lastSearchBuffer)[0].second);
         };
 
         static auto FindNext = [this]() {
             if (this->m_lastSearchBuffer->size() > 0) {
                 ++this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
-                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
+                this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
                                                           (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
             }
         };
@@ -1038,7 +1041,7 @@ R"(
 
                 this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
 
-                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
+                this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
                                                           (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
             }
         };

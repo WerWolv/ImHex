@@ -123,7 +123,7 @@ namespace hex {
                 return;
 
             std::vector<u8> buffer(std::min(provider->getSize(), size_t(0xFFFF)), 0x00);
-            provider->read(0, buffer.data(), buffer.size());
+            provider->readRelative(0, buffer.data(), buffer.size());
 
             std::string mimeType;
 

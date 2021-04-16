@@ -172,7 +172,7 @@ namespace hex {
 
                 if (context.buffer.empty()) return nullptr;
 
-                provider->read(context.currBlock.base, context.buffer.data(), context.buffer.size());
+                provider->readRelative(context.currBlock.base, context.buffer.data(), context.buffer.size());
 
                 return context.buffer.data();
             };
