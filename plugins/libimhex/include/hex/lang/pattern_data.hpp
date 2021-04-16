@@ -251,7 +251,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::Text("0x%04llX", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s*", this->m_pointedAt->getFormattedName().c_str());
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
             ImGui::TableNextColumn();
             ImGui::Text("*(0x%llX)", data);
 
@@ -283,12 +283,21 @@ namespace hex::lang {
             return this->m_highlightedAddresses;
         }
         [[nodiscard]] std::string getFormattedName() const override {
-            return "Pointer";
+            std::string result = this->m_pointedAt->getFormattedName() + "* : ";
+            switch (this->getSize()) {
+                case 1:     result += "u8";  break;
+                case 2:     result += "u16";  break;
+                case 4:     result += "u32";  break;
+                case 8:     result += "u64";  break;
+                case 16:    result += "u128"; break;
+            }
+
+            return result;
         }
 
         void setPointedAtPattern(PatternData *pattern) {
             this->m_pointedAt = pattern;
-            this->m_pointedAt->setVariableName("*" + this->m_pointedAt->getVariableName());
+            this->m_pointedAt->setVariableName("*" + this->getVariableName());
         }
 
         [[nodiscard]] PatternData* getPointedAtPattern() {
