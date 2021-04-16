@@ -555,11 +555,14 @@ namespace hex {
         } else if (mods == GLFW_MOD_CONTROL && key == 'O') {
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
             return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == 'C') {
+        } else if (mods == GLFW_MOD_CONTROL && key == 'C') {
             this->copyBytes();
             return true;
         } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == 'C') {
             this->copyString();
+            return true;
+        } else if (mods == GLFW_MOD_CONTROL && key == 'V') {
+            this->pasteBytes();
             return true;
         }
 
@@ -644,6 +647,46 @@ namespace hex {
         str.pop_back();
 
         ImGui::SetClipboardText(str.c_str());
+    }
+
+    void ViewHexEditor::pasteBytes() {
+        auto provider = SharedData::currentProvider;
+
+        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+        std::string clipboard = ImGui::GetClipboardText();
+
+        // Check for non-hex characters
+        bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {
+            return !std::isxdigit(c) && !std::isspace(c);
+        }) == clipboard.end();
+
+        if (!isValidHexString) return;
+
+        // Remove all whitespace
+        std::erase_if(clipboard, [](char c) { return std::isspace(c); });
+
+        // Only paste whole bytes
+        if (clipboard.length() % 2 != 0) return;
+
+        // Convert hex string to bytes
+        std::vector<u8> buffer(clipboard.length() / 2, 0x00);
+        u32 stringIndex = 0;
+        for (u8 &byte : buffer) {
+            for (u8 i = 0; i < 2; i++) {
+                byte <<= 4;
+
+                char c = clipboard[stringIndex];
+
+                if (c >= '0' && c <= '9') byte |= (c - '0');
+                else if (c >= 'a' && c <= 'f') byte |= (c - 'a') + 0xA;
+                else if (c >= 'A' && c <= 'F') byte |= (c - 'A') + 0xA;
+            }
+        }
+
+        // Write bytes
+        provider->write(start - provider->getBaseAddress(), buffer.data(), std::min(end - start + 1, buffer.size()));
     }
 
     void ViewHexEditor::copyString() {
@@ -1104,9 +1147,14 @@ R"(
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo"_lang, "CTRL + Y", false, SharedData::currentProvider != nullptr))
             SharedData::currentProvider->redo();
 
-        if (ImGui::BeginMenu("hex.view.hexeditor.menu.edit.copy"_lang, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-            if (ImGui::MenuItem("hex.view.hexeditor.copy.bytes"_lang, "CTRL + ALT + C"))
-                this->copyBytes();
+        ImGui::Separator();
+
+        bool bytesSelected = this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1;
+
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.copy"_lang, "CTRL + C", false, bytesSelected))
+            this->copyBytes();
+
+        if (ImGui::BeginMenu("hex.view.hexeditor.menu.edit.copy_as"_lang, bytesSelected)) {
             if (ImGui::MenuItem("hex.view.hexeditor.copy.hex"_lang, "CTRL + SHIFT + C"))
                 this->copyString();
 
@@ -1136,6 +1184,11 @@ R"(
 
             ImGui::EndMenu();
         }
+
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.paste"_lang, "CTRL + V", false, bytesSelected))
+            this->pasteBytes();
+
+        ImGui::Separator();
 
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.bookmark"_lang, nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
             auto base = SharedData::currentProvider->getBaseAddress();

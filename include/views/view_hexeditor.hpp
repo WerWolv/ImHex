@@ -67,6 +67,7 @@ namespace hex {
 
         enum class Language { C, Cpp, CSharp, Rust, Python, Java, JavaScript };
         void copyBytes();
+        void pasteBytes();
         void copyString();
         void copyLanguageArray(Language language);
         void copyHexView();
