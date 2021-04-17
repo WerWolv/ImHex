@@ -58,6 +58,13 @@ namespace hex {
         SharedData::mainArgv = argv;
         SharedData::currentProvider = nullptr;
 
+        #if defined(RELEASE)
+            if (argv[argc - 1] != std::string(GIT_COMMIT_HASH)) {
+                printf("Version mismatch! Make sure you updated all of ImHex\n");
+                exit(1);
+            }
+        #endif
+
         this->createDirectories();
         this->initGLFW();
         this->initImGui();

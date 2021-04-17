@@ -6,7 +6,12 @@
 #include <imgui_internal.h>
 #undef IMGUI_DEFINE_MATH_OPERATORS
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <string>
+
+#include <glad/glad.h>
 
 namespace ImGui {
 
@@ -193,6 +198,37 @@ namespace ImGui {
         colors[ImGuiCustomCol_DescButton]           = ImColor(40, 40, 80);
         colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(60, 60, 100);
         colors[ImGuiCustomCol_DescButtonActive]     = ImColor(80, 80, 120);
+    }
+
+    std::tuple<ImTextureID, int, int> LoadImageFromPath(const char *path) {
+        int imageWidth = 0;
+        int imageHeight = 0;
+
+        unsigned char* imageData = stbi_load(path, &imageWidth, &imageHeight, nullptr, 4);
+        if (imageData == nullptr)
+            return { nullptr, -1, -1 };
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        #if defined(GL_UNPACK_ROW_LENGTH)
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        stbi_image_free(imageData);
+
+        return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
+    }
+
+    void UnloadImage(ImTextureID texture) {
+        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(texture));
+        glDeleteTextures(1, &glTextureId);
     }
 
 }

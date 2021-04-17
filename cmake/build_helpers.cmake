@@ -76,18 +76,21 @@ macro(detectOS)
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         set(MAGIC_INSTALL_LOCATION "magic")
+        set(RESOURCES_INSTALL_LOCATION "resources")
     elseif(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_MACOS")
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         set(MAGIC_INSTALL_LOCATION "magic")
+        set(RESOURCES_INSTALL_LOCATION "resources")
     elseif(UNIX AND NOT APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_LINUX")
         set(CMAKE_INSTALL_BINDIR "bin")
         set(CMAKE_INSTALL_LIBDIR "lib")
         set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
         set(MAGIC_INSTALL_LOCATION "share/imhex/magic")
+        set(RESOURCES_INSTALL_LOCATION "share/imhex/resources")
     else()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()
@@ -116,7 +119,7 @@ macro(configurePackageCreation)
         else ()
             set(application_type)
         endif ()
-        set(imhex_icon "${PROJECT_SOURCE_DIR}/res/resource.rc")
+        set(imhex_icon "${CMAKE_SOURCE_DIR}/res/resource.rc")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -Wl,--allow-multiple-definition -static")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wl,-subsystem,windows")
 
@@ -132,7 +135,7 @@ macro(configurePackageCreation)
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/res/LICENSE.rtf")
         endif()
     elseif (APPLE)
-        set (imhex_icon "${PROJECT_SOURCE_DIR}/res/mac/AppIcon.icns")
+        set (imhex_icon "${CMAKE_SOURCE_DIR}/res/mac/AppIcon.icns")
 
         if (CREATE_BUNDLE)
             set(application_type MACOSX_BUNDLE)
@@ -226,8 +229,12 @@ macro(createPackage)
             COMMAND file -C -m ${CMAKE_SOURCE_DIR}/magic_dbs
             )
 
+
     # Install the magicdb files.
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION ${MAGIC_INSTALL_LOCATION} RENAME imhex.mgc)
+
+    # Install splash screen
+    install(FILES ${CMAKE_SOURCE_DIR}/res/splash.png DESTINATION ${RESOURCES_INSTALL_LOCATION})
 
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
@@ -244,9 +251,9 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        install(TARGETS imhex BUNDLE DESTINATION .)
+        install(TARGETS splash imhex BUNDLE DESTINATION .)
     else()
-        install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(TARGETS splash imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 
 

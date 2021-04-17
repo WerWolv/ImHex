@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     ContentRegistry::Views::add<ViewDataProcessor>();
     ContentRegistry::Views::add<ViewYara>();
 
-    if (argc > 1)
+    if (argc > 2)
         EventManager::post<EventFileDropped>(argv[1]);
 
     window.loop();
