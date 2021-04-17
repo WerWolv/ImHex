@@ -10,7 +10,7 @@ pkg_search_module(GLFW REQUIRED glfw3)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
-add_library(imgui
+add_library(imgui STATIC
         source/imgui.cpp
         source/imgui_demo.cpp
         source/imgui_draw.cpp
@@ -42,7 +42,7 @@ target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} $
 target_link_directories(imgui PUBLIC ${GLM_INCLUDE_DIRS} ${GLFW_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imgui libstdc++.a libgcc.a libharfbuzz.a libfreetype.a libharfbuzz.a libgraphite2.a libpng.a libbrotlidec-static.a libbrotlicommon-static.a libz.a libbz2.a librpcrt4.a glad libglfw3.a)
+    target_link_libraries(imgui libharfbuzz.a libstdc++.a libgcc.a libfreetype.a libharfbuzz.a libgraphite2.a libpng.a libbrotlidec-static.a libbrotlicommon-static.a libz.a libbz2.a librpcrt4.a glad libglfw3.a)
 elseif (UNIX)
     target_link_libraries(imgui Freetype::Freetype glad glfw)
 endif()

@@ -8,6 +8,9 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAK
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/fmt ${CMAKE_CURRENT_BINARY_DIR}/external/fmt)
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
+set(CMAKE_USE_MBEDTLS ON)
+set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/curl ${CMAKE_CURRENT_BINARY_DIR}/external/curl)
 
 if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
@@ -58,10 +61,10 @@ target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR} ${XDGP
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (WIN32)
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a nfd fmt-header-only)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json libmbedcrypto.a nfd fmt-header-only libcurl)
 elseif (APPLE)
     find_library(FOUNDATION NAMES Foundation)
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FOUNDATION} nfd fmt-header-only)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FOUNDATION} nfd fmt-header-only libcurl)
 else()
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd fmt-header-only)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd fmt-header-only libcurl)
 endif ()
