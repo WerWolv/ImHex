@@ -81,7 +81,8 @@ namespace hex::lang {
         PatternData *currPattern = nullptr;
 
         // Local member access
-        currPattern = this->findPattern(*this->m_currMembers.back(), path);
+        if (!this->m_currMembers.empty())
+            currPattern = this->findPattern(*this->m_currMembers.back(), path);
 
         // If no local member was found, try globally
         if (currPattern == nullptr) {
