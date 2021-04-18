@@ -58,7 +58,7 @@ namespace hex {
         SharedData::mainArgv = argv;
         SharedData::currentProvider = nullptr;
 
-        #if !defined(RELEASE)
+        #if defined(RELEASE)
         {
             if (argc < 2) {
                 View::showFatalPopup("No launch arguments supplied! Please launch imhex instead of imhexg!");
