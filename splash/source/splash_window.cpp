@@ -48,19 +48,17 @@ namespace hex::pre {
         this->deinitGLFW();
     }
 
-    static void drawSplashScreen(ImTextureID splashTexture, u32 width, u32 height, float progress) {
-        auto drawList = ImGui::GetOverlayDrawList();
-
-        drawList->AddImage(splashTexture, ImVec2(0, 0), ImVec2(width, height));
-        drawList->AddText(ImVec2(20, 120), 0xFFFFFFFF, hex::format("WerWolv 2020 - {0}\n{1} : {2}@{3}", __DATE__ + 7, IMHEX_VERSION, GIT_COMMIT_HASH, GIT_BRANCH).c_str());
-        drawList->AddRectFilled(ImVec2(0, height - 5), ImVec2(width * progress, height), 0xFFFFFFFF);
-    }
 
     std::future<bool> WindowSplash::processTasksAsync() {
         return std::async(std::launch::async, [this] {
             bool status = true;
 
-            for (const auto &task : this->m_tasks) {
+            for (const auto &[name, task] : this->m_tasks) {
+                {
+                    std::lock_guard guard(this->m_progressMutex);
+                    this->m_currTaskName = name;
+                }
+
                 status = status && task();
 
                 {
@@ -76,11 +74,21 @@ namespace hex::pre {
         });
     }
 
-    void WindowSplash::loop() {
-        auto [splashTexture, splashWidth, splashHeight] = ImGui::LoadImageFromPath((hex::getPath(hex::ImHexPath::Resources)[0] + "/splash.png").c_str());
+    bool WindowSplash::loop() {
+        ImTextureID splashTexture;
+        u32 splashWidth, splashHeight;
+
+        for (const auto &path : hex::getPath(hex::ImHexPath::Resources)) {
+            std::tie(splashTexture, splashWidth, splashHeight) = ImGui::LoadImageFromPath((path + "/splash.png").c_str());
+            if (splashTexture != nullptr)
+                break;
+        }
 
         if (splashTexture == nullptr)
             exit(EXIT_FAILURE);
+
+        ON_SCOPE_EXIT { ImGui::UnloadImage(splashTexture); };
+
 
         auto done = processTasksAsync();
 
@@ -93,7 +101,13 @@ namespace hex::pre {
 
             {
                 std::lock_guard guard(this->m_progressMutex);
-                drawSplashScreen(splashTexture, splashWidth, splashHeight, this->m_progress);
+
+                auto drawList = ImGui::GetOverlayDrawList();
+
+                drawList->AddImage(splashTexture, ImVec2(0, 0), ImVec2(splashWidth, splashHeight));
+                drawList->AddText(ImVec2(15, 120), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}\n{1} : {2}@{3}", &__DATE__[7], IMHEX_VERSION, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
+                drawList->AddRectFilled(ImVec2(0, splashHeight - 5), ImVec2(splashWidth * this->m_progress, splashHeight), 0xFFFFFFFF);
+                drawList->AddText(ImVec2(15, splashHeight - 22), ImColor(0xFF, 0xFF, 0xFF, 0xFF), this->m_currTaskName.data());
             }
 
             ImGui::Render();
@@ -107,13 +121,11 @@ namespace hex::pre {
             glfwSwapBuffers(this->m_window);
 
             if (done.wait_for(0s) == std::future_status::ready) {
-                if (!done.get()) printf("One or more tasks failed to execute!");
-
-                break;
+                return done.get();
             }
         }
 
-        ImGui::UnloadImage(splashTexture);
+        return false;
     }
 
     void WindowSplash::initGLFW() {
@@ -127,6 +139,7 @@ namespace hex::pre {
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);

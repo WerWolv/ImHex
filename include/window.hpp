@@ -36,7 +36,6 @@ namespace hex {
         void drawWelcomeScreen();
         void resetLayout();
 
-        void createDirectories() const;
         void initGLFW();
         void initImGui();
         void deinitGLFW();
@@ -54,7 +53,7 @@ namespace hex {
 
         bool m_prevKeysDown[512];
 
-        static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
+        std::string m_availableUpdate;
     };
 
 }

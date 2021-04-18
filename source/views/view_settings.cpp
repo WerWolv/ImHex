@@ -6,8 +6,8 @@ namespace hex {
 
     ViewSettings::ViewSettings() : View("hex.view.settings.name") {
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
-            if (name == "hex.view.settings.name") {
-                View::doLater([]{ ImGui::OpenPopup("hex.view.settings.name"_lang); });
+            if (name == "Settings") {
+                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });

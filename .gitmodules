@@ -11,3 +11,6 @@
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "external/curl"]
+	path = external/curl
+	url = https://github.com/curl/curl

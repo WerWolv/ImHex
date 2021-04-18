@@ -117,7 +117,9 @@ target_include_directories(
 )
 
 if (UNIX)
-    target_link_libraries(libyara pthread)
+    target_link_libraries(libyara magic pthread)
+else ()
+    target_link_libraries(libyara magic)
 endif ()
 
 include(GNUInstallDirs)

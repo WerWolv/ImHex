@@ -43,6 +43,7 @@ namespace hex {
         static void drawCommonInterfaces();
 
         static void showErrorPopup(std::string_view errorMessage);
+        static void showFatalPopup(std::string_view errorMessage);
 
         virtual bool hasViewMenuItemEntry();
         virtual ImVec2 getMinSize();
