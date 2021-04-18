@@ -13,6 +13,7 @@ set(CMAKE_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
 set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/curl ${CMAKE_CURRENT_BINARY_DIR}/external/curl)
+set_target_properties(libcurl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
