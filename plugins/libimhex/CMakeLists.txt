@@ -27,6 +27,7 @@ set(LIBIMHEX_SOURCES
     source/helpers/shared_data.cpp
     source/helpers/crypto.cpp
     source/helpers/lang.cpp
+    source/helpers/net.cpp
 
     source/lang/pattern_language.cpp
     source/lang/preprocessor.cpp

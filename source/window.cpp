@@ -58,14 +58,62 @@ namespace hex {
         SharedData::mainArgv = argv;
         SharedData::currentProvider = nullptr;
 
-        #if defined(RELEASE)
-            if (argv[argc - 1] != std::string(GIT_COMMIT_HASH)) {
-                printf("Version mismatch! Make sure you updated all of ImHex\n");
-                exit(1);
+        #if !defined(RELEASE)
+        {
+            if (argc < 2) {
+                View::showFatalPopup("No launch arguments supplied! Please launch imhex instead of imhexg!");
             }
+
+            std::string launchArguments = argv[argc - 1];
+
+            if (launchArguments.find("--args=") != 0) {
+                View::showFatalPopup("No launch arguments supplied! Please launch imhex instead of imhexg!");
+            }
+
+            bool commitChecked = false;
+            bool branchChecked = false;
+
+            for (const auto& arg : hex::splitString(launchArguments.substr(7), "|")) {
+                auto splitArg = hex::splitString(arg, "=");
+
+                // Handle flags
+                if (splitArg.size() == 1) {
+                    auto &flag = splitArg[0];
+
+                    if (flag == "tasks-failed") {
+
+                    } else if (flag == "splash-skipped") {
+
+                    }
+                }
+                // Handle arguments
+                else if (splitArg.size() == 2) {
+                    auto &name = splitArg[0];
+                    auto &value = splitArg[1];
+
+                    if (name == "git-hash") {
+                        if (value != GIT_COMMIT_HASH)
+                            View::showFatalPopup("Launcher and ImHex version commit mismatch. Please fully update ImHex before using it!");
+                        commitChecked = true;
+                    } else if (name == "git-branch") {
+                        if (value != GIT_BRANCH)
+                            View::showFatalPopup("Launcher and ImHex version branch mismatch. Please fully update ImHex before using it!");
+                        branchChecked = true;
+                    } else if (name == "update") {
+                        this->m_availableUpdate = value;
+                    }
+                }
+                // Handle others
+                else {
+                    View::showFatalPopup("Invalid launch arguments supplied! Please launch imhex instead of imhexg!");
+                }
+            }
+
+            if (!commitChecked || !branchChecked)
+                View::showFatalPopup("No commit information available! Please launch imhex instead of imhexg!");
+        }
         #endif
 
-        this->createDirectories();
         this->initGLFW();
         this->initImGui();
 
@@ -416,11 +464,10 @@ namespace hex {
         ImGui::NewLine();
 
         const auto availableSpace = ImGui::GetContentRegionAvail();
-        const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() * 6;
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
@@ -430,7 +477,7 @@ namespace hex {
                     EventManager::post<RequestOpenWindow>("Open Project");
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.start.recent"_lang);
             {
@@ -444,7 +491,17 @@ namespace hex {
                 }
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            if (!this->m_availableUpdate.empty()) {
+                ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("hex.welcome.header.update"_lang);
+                {
+                    if (ImGui::DescriptionButton("hex.welcome.update.title"_lang, hex::format("hex.welcome.update.desc"_lang, this->m_availableUpdate).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
+                        hex::openWebpage("hex.welcome.update.link"_lang);
+                }
+            }
+
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.help"_lang);
             {
@@ -452,7 +509,7 @@ namespace hex {
                 if (ImGui::BulletHyperlink("hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.plugins"_lang);
             {
@@ -464,7 +521,7 @@ namespace hex {
                         "No plugins loaded! To use ImHex properly, "
                              "make sure at least the builtin plugin is in the /plugins folder next to the executable");
                 } else {
-                    if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 4))) {
+                    if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                         ImGui::TableSetupScrollFreeze(0, 1);
                         ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang);
                         ImGui::TableSetupColumn("hex.welcome.plugins.author"_lang);
@@ -498,14 +555,14 @@ namespace hex {
         }
         ImGui::SameLine();
         if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.customize"_lang);
             {
                 if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    EventManager::post<RequestOpenWindow>("hex.view.settings.title");
+                    EventManager::post<RequestOpenWindow>("Settings");
             }
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.learn"_lang);
             {
@@ -519,7 +576,7 @@ namespace hex {
 
             auto extraWelcomeScreenEntries = ContentRegistry::Interface::getWelcomeScreenEntries();
             if (!extraWelcomeScreenEntries.empty()) {
-                ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("hex.welcome.header.various"_lang);
                 {
@@ -554,15 +611,6 @@ namespace hex {
         ImGui::DockBuilderDockWindow("hex.view.pattern_data.name", patternDataId);
 
         ImGui::DockBuilderFinish(dockId);
-    }
-
-    void Window::createDirectories() const {
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Config)[0]);
     }
 
     void Window::initGLFW() {
@@ -626,7 +674,6 @@ namespace hex {
                 key = std::toupper(keyName[0]);
 
             if (action == GLFW_PRESS) {
-                Window::s_currShortcut = { key, mods };
                 auto &io = ImGui::GetIO();
                 io.KeysDown[key] = true;
                 io.KeyCtrl  = (mods & GLFW_MOD_CONTROL) != 0;

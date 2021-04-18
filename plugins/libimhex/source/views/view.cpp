@@ -60,12 +60,30 @@ namespace hex {
 
             ImGui::EndPopup();
         }
+
+        if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
+                EventManager::post<RequestCloseImHex>();
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
     void View::showErrorPopup(std::string_view errorMessage) {
         SharedData::errorPopupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
+    }
+
+    void View::showFatalPopup(std::string_view errorMessage) {
+        SharedData::errorPopupMessage = errorMessage;
+
+        View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() {
