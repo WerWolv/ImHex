@@ -75,11 +75,20 @@ namespace hex::pre {
     }
 
     bool WindowSplash::loop() {
-        auto [splashTexture, splashWidth, splashHeight] = ImGui::LoadImageFromPath((hex::getPath(hex::ImHexPath::Resources)[0] + "/splash.png").c_str());
-        ON_SCOPE_EXIT { ImGui::UnloadImage(splashTexture); };
+        ImTextureID splashTexture;
+        u32 splashWidth, splashHeight;
+
+        for (const auto &path : hex::getPath(hex::ImHexPath::Resources)) {
+            std::tie(splashTexture, splashWidth, splashHeight) = ImGui::LoadImageFromPath((path + "/splash.png").c_str());
+            if (splashTexture != nullptr)
+                break;
+        }
 
         if (splashTexture == nullptr)
             exit(EXIT_FAILURE);
+
+        ON_SCOPE_EXIT { ImGui::UnloadImage(splashTexture); };
+
 
         auto done = processTasksAsync();
 

@@ -2,6 +2,8 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <filesystem>
+
 namespace hex {
 
     Net::Net() {
@@ -43,7 +45,10 @@ namespace hex {
         curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, writeToString);
         curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYPEER, 1L);
         curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYHOST, 1L);
-        curl_easy_setopt(ctx, CURLOPT_CAPATH, hex::getPath(ImHexPath::Resources)[0].c_str());
+        for (const auto &resourceDir : hex::getPath(hex::ImHexPath::Resources)) {
+            if (std::filesystem::exists(resourceDir + "/cacert.pem"))
+                curl_easy_setopt(ctx, CURLOPT_CAPATH, resourceDir.c_str());
+        }
         curl_easy_setopt(ctx, CURLOPT_WRITEDATA, &response);
         curl_easy_setopt(ctx, CURLOPT_TIMEOUT_MS, 2000L);
         curl_easy_setopt(ctx, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
