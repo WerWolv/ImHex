@@ -120,7 +120,7 @@ macro(configurePackageCreation)
             set(application_type)
         endif ()
         set(imhex_icon "${CMAKE_SOURCE_DIR}/res/resource.rc")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -Wl,--allow-multiple-definition -static")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--allow-multiple-definition")
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wl,-subsystem,windows")
 
         if (CREATE_PACKAGE)
@@ -233,8 +233,9 @@ macro(createPackage)
     # Install the magicdb files.
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION ${MAGIC_INSTALL_LOCATION} RENAME imhex.mgc)
 
-    # Install splash screen
-    install(FILES ${CMAKE_SOURCE_DIR}/res/splash.png DESTINATION ${RESOURCES_INSTALL_LOCATION})
+    # Install resources
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/res/resources/ DESTINATION ${RESOURCES_INSTALL_LOCATION})
+
 
     if (CREATE_BUNDLE)
         include(PostprocessBundle)

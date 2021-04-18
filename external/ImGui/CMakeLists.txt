@@ -42,7 +42,7 @@ target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} $
 target_link_directories(imgui PUBLIC ${GLM_INCLUDE_DIRS} ${GLFW_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imgui libharfbuzz.a libstdc++.a libgcc.a libfreetype.a libharfbuzz.a libgraphite2.a libpng.a libbrotlidec-static.a libbrotlicommon-static.a libz.a libbz2.a librpcrt4.a glad libglfw3.a)
+    target_link_libraries(imgui Freetype::Freetype glad glfw3)
 elseif (UNIX)
     target_link_libraries(imgui Freetype::Freetype glad glfw)
 endif()
