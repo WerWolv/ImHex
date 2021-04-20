@@ -225,22 +225,23 @@ namespace hex {
     }
 
     void ViewPattern::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.view.pattern.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            auto provider = SharedData::currentProvider;
+        if (!ImGui::IsPopupOpen("hex.view.pattern.accept_pattern"_lang)) {
+            if (ImGui::Begin(View::toWindowName("hex.view.pattern.name").c_str(), &this->getWindowOpenState())) {
+                auto provider = SharedData::currentProvider;
 
-            if (provider != nullptr && provider->isAvailable()) {
-                auto textEditorSize = ImGui::GetContentRegionAvail();
-                textEditorSize.y *= 4.0/5.0;
-                textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-                this->m_textEditor.Render("hex.view.pattern.name"_lang, textEditorSize, true);
+                if (provider != nullptr && provider->isAvailable()) {
+                    auto textEditorSize = ImGui::GetContentRegionAvail();
+                    textEditorSize.y *= 4.0/5.0;
+                    textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
+                    this->m_textEditor.Render("hex.view.pattern.name"_lang, textEditorSize, true);
 
-                auto consoleSize = ImGui::GetContentRegionAvail();
-                consoleSize.y -= ImGui::GetTextLineHeightWithSpacing();
+                    auto consoleSize = ImGui::GetContentRegionAvail();
+                    consoleSize.y -= ImGui::GetTextLineHeightWithSpacing();
 
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
-                if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-                    for (auto &[level, message] : this->m_console) {
-                        switch (level) {
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
+                    if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+                        for (auto &[level, message] : this->m_console) {
+                            switch (level) {
                             case lang::LogConsole::Level::Debug:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
                                 break;
@@ -254,41 +255,42 @@ namespace hex {
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                                 break;
                             default: continue;
+                            }
+
+                            ImGui::TextUnformatted(message.c_str());
+
+                            ImGui::PopStyleColor();
                         }
+                    }
+                    ImGui::EndChild();
+                    ImGui::PopStyleColor(1);
 
-                        ImGui::TextUnformatted(message.c_str());
+                    ImGui::Disabled([this]{
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
+                        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
+                        if (ImGui::ArrowButton("evaluate", ImGuiDir_Right))
+                            this->parsePattern(this->m_textEditor.GetText().data());
+
+                        ImGui::PopStyleVar();
                         ImGui::PopStyleColor();
+                    }, this->m_evaluatorRunning);
+
+                    ImGui::SameLine();
+                    if (this->m_evaluatorRunning)
+                        ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
+                    else
+                        ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
+
+                    if (this->m_textEditor.IsTextChanged() && this->m_runAutomatically) {
+                        this->parsePattern(this->m_textEditor.GetText().data());
                     }
                 }
-                ImGui::EndChild();
-                ImGui::PopStyleColor(1);
 
-                ImGui::Disabled([this]{
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
-                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
-
-                    if (ImGui::ArrowButton("evaluate", ImGuiDir_Right))
-                        this->parsePattern(this->m_textEditor.GetText().data());
-
-                    ImGui::PopStyleVar();
-                    ImGui::PopStyleColor();
-                }, this->m_evaluatorRunning);
-
-                ImGui::SameLine();
-                if (this->m_evaluatorRunning)
-                     ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
-                else
-                    ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
-
-                if (this->m_textEditor.IsTextChanged() && this->m_runAutomatically) {
-                    this->parsePattern(this->m_textEditor.GetText().data());
-                }
+                View::discardNavigationRequests();
             }
-
-            View::discardNavigationRequests();
+            ImGui::End();
         }
-        ImGui::End();
     }
 
     void ViewPattern::drawAlwaysVisible() {
