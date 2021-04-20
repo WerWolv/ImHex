@@ -44,16 +44,16 @@ namespace hex {
         };
     };
 
-    class PluginHandler {
+    class PluginManager {
     public:
-        PluginHandler() = delete;
+        PluginManager() = delete;
 
-        static void load(std::string_view pluginFolder);
+        static bool load(std::string_view pluginFolder);
         static void unload();
         static void reload();
 
         static const auto& getPlugins() {
-            return PluginHandler::s_plugins;
+            return PluginManager::s_plugins;
         }
 
     private:

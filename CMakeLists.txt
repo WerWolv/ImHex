@@ -40,10 +40,13 @@ add_executable(imhex ${application_type}
         source/main.cpp
         source/window.cpp
 
+        source/init/splash_window.cpp
+        source/init/tasks.cpp
+
         source/helpers/patches.cpp
         source/helpers/project_file_handler.cpp
         source/helpers/loader_script_handler.cpp
-        source/helpers/plugin_handler.cpp
+        source/helpers/plugin_manager.cpp
         source/helpers/encoding_file.cpp
 
         source/providers/file_provider.cpp
@@ -68,7 +71,6 @@ add_executable(imhex ${application_type}
         ${imhex_icon}
         )
 
-set_target_properties(imhex PROPERTIES OUTPUT_NAME "imhexg")
 set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
@@ -77,9 +79,5 @@ if (WIN32)
 else ()
     target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread libyara)
 endif ()
-
-set_target_properties(imhex PROPERTIES VERSION ${IMHEX_VERSION})
-add_subdirectory(splash)
-set_target_properties(splash PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 createPackage()

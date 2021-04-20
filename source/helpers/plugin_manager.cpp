@@ -1,4 +1,4 @@
-#include "helpers/plugin_handler.hpp"
+#include "helpers/plugin_manager.hpp"
 
 #include <filesystem>
 
@@ -71,26 +71,31 @@ namespace hex {
             return "";
     }
 
-    void PluginHandler::load(std::string_view pluginFolder) {
+    bool PluginManager::load(std::string_view pluginFolder) {
         if (!std::filesystem::exists(pluginFolder))
-            throw std::runtime_error("Failed to find plugin folder");
+            return false;
 
-        PluginHandler::s_pluginFolder = pluginFolder;
+        PluginManager::s_pluginFolder = pluginFolder;
 
         for (auto& pluginPath : std::filesystem::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                PluginHandler::s_plugins.emplace_back(pluginPath.path().string());
+                PluginManager::s_plugins.emplace_back(pluginPath.path().string());
         }
+
+        if (PluginManager::s_plugins.empty())
+            return false;
+
+        return true;
     }
 
-    void PluginHandler::unload() {
-        PluginHandler::s_plugins.clear();
-        PluginHandler::s_pluginFolder.clear();
+    void PluginManager::unload() {
+        PluginManager::s_plugins.clear();
+        PluginManager::s_pluginFolder.clear();
     }
 
-    void PluginHandler::reload() {
-        PluginHandler::unload();
-        PluginHandler::load(PluginHandler::s_pluginFolder);
+    void PluginManager::reload() {
+        PluginManager::unload();
+        PluginManager::load(PluginManager::s_pluginFolder);
     }
 
 }

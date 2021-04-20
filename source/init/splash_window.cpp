@@ -1,6 +1,7 @@
-#include "splash_window.hpp"
+#include "init/splash_window.hpp"
 
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -17,28 +18,12 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace hex::pre {
+namespace hex::init {
 
-    static void centerWindow(GLFWwindow *window) {
-        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-        if (!monitor)
-            return;
+    WindowSplash::WindowSplash(int &argc, char **&argv) {
+        SharedData::mainArgc = argc;
+        SharedData::mainArgv = argv;
 
-        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        if (!mode)
-            return;
-
-        int monitorX, monitorY;
-        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
-
-        int windowWidth, windowHeight;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-
-        glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
-    }
-
-
-    WindowSplash::WindowSplash() {
         this->initGLFW();
         this->initImGui();
     }
@@ -84,13 +69,14 @@ namespace hex::pre {
                 break;
         }
 
-        if (splashTexture == nullptr)
+        if (splashTexture == nullptr) {
+            log::fatal("Could not load splash screen image!");
             exit(EXIT_FAILURE);
+        }
 
         ON_SCOPE_EXIT { ImGui::UnloadImage(splashTexture); };
 
-
-        auto done = processTasksAsync();
+        auto tasksSucceeded = processTasksAsync();
 
         while (!glfwWindowShouldClose(this->m_window)) {
             glfwPollEvents();
@@ -120,22 +106,42 @@ namespace hex::pre {
 
             glfwSwapBuffers(this->m_window);
 
-            if (done.wait_for(0s) == std::future_status::ready) {
-                return done.get();
+            if (tasksSucceeded.wait_for(0s) == std::future_status::ready) {
+                return tasksSucceeded.get();
             }
         }
 
         return false;
     }
 
+    static void centerWindow(GLFWwindow *window) {
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        if (!monitor)
+            return;
+
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+        if (!mode)
+            return;
+
+        int monitorX, monitorY;
+        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+        int windowWidth, windowHeight;
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+
+        glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+    }
+
     void WindowSplash::initGLFW() {
         glfwSetErrorCallback([](int error, const char *description) {
-            printf("GLFW Error: %d - %s\n", error, description);
+            log::fatal("GLFW Error: {0} - {0}", error, description);
             exit(EXIT_FAILURE);
         });
 
-        if (!glfwInit())
+        if (!glfwInit()) {
+            log::fatal("Failed to initialize GLFW!");
             exit(EXIT_FAILURE);
+        }
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -145,16 +151,20 @@ namespace hex::pre {
         glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 
         this->m_window = glfwCreateWindow(640, 400, "ImHex", nullptr, nullptr);
-        if (this->m_window == nullptr)
+        if (this->m_window == nullptr) {
+            log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);
+        }
 
         centerWindow(this->m_window);
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
 
-        if (gladLoadGL() == 0)
+        if (gladLoadGL() == 0) {
+            log::fatal("Failed to load OpenGL Context!");
             exit(EXIT_FAILURE);
+        }
     }
 
     void WindowSplash::initImGui() {

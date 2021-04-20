@@ -21,7 +21,8 @@
 
 #include <fontawesome_font.h>
 
-#include "helpers/plugin_handler.hpp"
+#include "helpers/plugin_manager.hpp"
+#include "init/tasks.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -53,64 +54,19 @@ namespace hex {
         buf->append("\n");
     }
 
-    Window::Window(int &argc, char **&argv) {
-        SharedData::mainArgc = argc;
-        SharedData::mainArgv = argv;
+    Window::Window() {
         SharedData::currentProvider = nullptr;
 
-        #if defined(RELEASE)
+        #if !defined(RELEASE)
         {
-            if (argc < 2) {
-                View::showFatalPopup("No launch arguments supplied! Please launch imhex instead of imhexg!");
-            }
-
-            std::string launchArguments = argv[argc - 1];
-
-            if (launchArguments.find("--args=") != 0) {
-                View::showFatalPopup("No launch arguments supplied! Please launch imhex instead of imhexg!");
-            }
-
-            bool commitChecked = false;
-            bool branchChecked = false;
-
-            for (const auto& arg : hex::splitString(launchArguments.substr(7), "|")) {
-                auto splitArg = hex::splitString(arg, "=");
-
-                // Handle flags
-                if (splitArg.size() == 1) {
-                    auto &flag = splitArg[0];
-
-                    if (flag == "tasks-failed") {
-
-                    } else if (flag == "splash-skipped") {
-
-                    }
-                }
-                // Handle arguments
-                else if (splitArg.size() == 2) {
-                    auto &name = splitArg[0];
-                    auto &value = splitArg[1];
-
-                    if (name == "git-hash") {
-                        if (value != GIT_COMMIT_HASH)
-                            View::showFatalPopup("Launcher and ImHex version commit mismatch. Please fully update ImHex before using it!");
-                        commitChecked = true;
-                    } else if (name == "git-branch") {
-                        if (value != GIT_BRANCH)
-                            View::showFatalPopup("Launcher and ImHex version branch mismatch. Please fully update ImHex before using it!");
-                        branchChecked = true;
-                    } else if (name == "update") {
-                        this->m_availableUpdate = value;
-                    }
-                }
-                // Handle others
-                else {
-                    View::showFatalPopup("Invalid launch arguments supplied! Please launch imhex instead of imhexg!");
+            for (const auto &[argument, value] : init::getInitArguments()) {
+                if (argument == "update-available") {
+                    this->m_availableUpdate = value;
+                } else if (argument == "no-plugins") {
+                    View::showErrorPopup("No plugins are loaded, including the built-in functions plugin!\n"
+                                                    "Make sure you got at least builtin.hexplug in your plugins folder.");
                 }
             }
-
-            if (!commitChecked || !branchChecked)
-                View::showFatalPopup("No commit information available! Please launch imhex instead of imhexg!");
         }
         #endif
 
@@ -207,9 +163,6 @@ namespace hex {
                 glfwSetWindowTitle(this->m_window, ("ImHex - " + windowTitle).c_str());
         });
 
-        this->initPlugins();
-
-        ContentRegistry::Settings::load();
         EventManager::post<EventSettingsChanged>();
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
@@ -221,13 +174,6 @@ namespace hex {
 
         this->deinitImGui();
         this->deinitGLFW();
-        ContentRegistry::Settings::store();
-
-        for (auto &view : SharedData::views)
-            delete view;
-        SharedData::views.clear();
-
-        this->deinitPlugins();
 
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
@@ -236,7 +182,7 @@ namespace hex {
     }
 
     void Window::loop() {
-        bool pressedKeys[512] = { 0 };
+        bool pressedKeys[512] = { false };
 
         this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
@@ -513,7 +459,7 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.plugins"_lang);
             {
-                const auto &plugins = PluginHandler::getPlugins();
+                const auto &plugins = PluginManager::getPlugins();
 
                 if (plugins.empty()) {
                     // Intentionally left untranslated so it will be readable even if no plugin with translations is loaded
@@ -817,20 +763,6 @@ namespace hex {
         ImGui_ImplOpenGL3_Init("#version 150");
     }
 
-    void Window::initPlugins() {
-        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) {
-            try {
-                PluginHandler::load(dir);
-            } catch (std::runtime_error &e) {
-                // Plugin folder not found. Not a problem.
-            }
-        }
-
-        for (const auto &plugin : PluginHandler::getPlugins()) {
-            plugin.initializePlugin();
-        }
-    }
-
     void Window::deinitGLFW() {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
@@ -843,10 +775,6 @@ namespace hex {
         ImGui_ImplGlfw_Shutdown();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
-    }
-
-    void Window::deinitPlugins() {
-        PluginHandler::unload();
     }
 
 }

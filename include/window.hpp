@@ -15,7 +15,7 @@ namespace hex {
 
     class Window {
     public:
-        Window(int &argc, char **&argv);
+        Window();
         ~Window();
 
         void loop();
@@ -26,9 +26,6 @@ namespace hex {
         friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
 
         bool setFont(const std::filesystem::path &font_path);
-
-        void initPlugins();
-        void deinitPlugins();
     private:
         void frameBegin();
         void frameEnd();

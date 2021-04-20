@@ -16,15 +16,13 @@ namespace hex {
 
     class ViewPatternData : public View {
     public:
-        ViewPatternData(std::vector<lang::PatternData*> &patternData);
+        ViewPatternData();
         ~ViewPatternData() override;
 
         void drawContent() override;
         void drawMenu() override;
 
     private:
-
-        std::vector<lang::PatternData*> &m_patternData;
         std::vector<lang::PatternData*> m_sortedPatternData;
     };
 

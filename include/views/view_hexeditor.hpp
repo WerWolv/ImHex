@@ -21,7 +21,7 @@ namespace hex {
 
     class ViewHexEditor : public View {
     public:
-        ViewHexEditor(std::vector<lang::PatternData*> &patternData);
+        ViewHexEditor();
         ~ViewHexEditor() override;
 
         void drawContent() override;
@@ -31,8 +31,6 @@ namespace hex {
 
     private:
         MemoryEditor m_memoryEditor;
-
-        std::vector<lang::PatternData*> &m_patternData;
 
         std::map<u64, u32> m_highlightedBytes;
 

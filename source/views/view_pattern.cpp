@@ -76,7 +76,7 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.name"), m_patternData(patternData) {
+    ViewPattern::ViewPattern() : View("hex.view.pattern.name") {
         this->m_patternLanguageRuntime = new lang::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -345,10 +345,10 @@ namespace hex {
     }
 
     void ViewPattern::clearPatternData() {
-        for (auto &data : this->m_patternData)
+        for (auto &data : SharedData::patternData)
             delete data;
 
-        this->m_patternData.clear();
+        SharedData::patternData.clear();
         lang::PatternData::resetPalette();
     }
 
@@ -371,7 +371,7 @@ namespace hex {
             this->m_console = this->m_patternLanguageRuntime->getConsoleLog();
 
             if (result.has_value()) {
-                this->m_patternData = std::move(result.value());
+                SharedData::patternData = std::move(result.value());
                 View::doLater([]{
                     EventManager::post<EventPatternChanged>();
                 });

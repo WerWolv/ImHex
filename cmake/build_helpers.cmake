@@ -252,9 +252,9 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        install(TARGETS splash imhex BUNDLE DESTINATION .)
+        install(TARGETS imhex BUNDLE DESTINATION .)
     else()
-        install(TARGETS splash imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 
 

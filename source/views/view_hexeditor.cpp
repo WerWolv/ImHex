@@ -18,8 +18,7 @@
 
 namespace hex {
 
-    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
-            : View("hex.view.hexeditor.name"_lang), m_patternData(patternData) {
+    ViewHexEditor::ViewHexEditor() : View("hex.view.hexeditor.name"_lang) {
 
         this->m_searchStringBuffer.resize(0xFFF, 0x00);
         this->m_searchHexBuffer.resize(0xFFF, 0x00);
@@ -162,7 +161,7 @@ namespace hex {
         EventManager::subscribe<EventPatternChanged>(this, [this]() {
             this->m_highlightedBytes.clear();
 
-            for (const auto &pattern : this->m_patternData)
+            for (const auto &pattern : SharedData::patternData)
                 this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
         });
 

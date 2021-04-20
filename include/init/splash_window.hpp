@@ -8,11 +8,11 @@
 
 struct GLFWwindow;
 
-namespace hex::pre {
+namespace hex::init {
 
     class WindowSplash {
     public:
-        WindowSplash();
+        WindowSplash(int &argc, char **&argv);
         ~WindowSplash();
 
         bool loop();
@@ -24,7 +24,7 @@ namespace hex::pre {
     private:
         GLFWwindow *m_window;
         std::mutex m_progressMutex;
-        float m_progress;
+        float m_progress = 0;
         std::string m_currTaskName;
 
         void initGLFW();

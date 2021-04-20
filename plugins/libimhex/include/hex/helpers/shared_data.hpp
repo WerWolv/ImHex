@@ -25,6 +25,8 @@ namespace hex {
 
     namespace prv { class Provider; }
     namespace dp { class Node; }
+    namespace lang { class PatternData; }
+
     class View;
 
     class SharedData {
@@ -58,6 +60,7 @@ namespace hex {
         static u32 patternPaletteOffset;
         static std::string errorPopupMessage;
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
+        static std::vector<lang::PatternData*> patternData;
 
         static std::map<std::string, std::string> languageNames;
         static std::map<std::string, std::vector<LanguageDefinition>> languageDefinitions;
