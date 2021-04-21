@@ -584,7 +584,7 @@ namespace hex {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
         this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, "ImHex", nullptr, nullptr);
 
@@ -762,6 +762,7 @@ namespace hex {
         io.IniFilename = iniFileName.c_str();
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
+
         ImGui_ImplOpenGL3_Init("#version 150");
     }
 
