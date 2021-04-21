@@ -30,8 +30,8 @@ namespace hex {
 
     void ViewHelp::drawAboutPopup() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.view.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("ImHex Hex Editor v%s by WerWolv -", IMHEX_VERSION);
-            #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
+            ImGui::Text("ImHex Hex Editor v%s by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
+            #if defined(DEBUG) && defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
                 ImGui::SameLine();
                 if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
                     hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH);

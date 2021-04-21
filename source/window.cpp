@@ -725,7 +725,7 @@ namespace hex {
             };
             std::uint8_t *px;
             int w, h;
-            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
+            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * this->m_fontScale, &cfg, fontAwesomeRange);
             io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
             // Create new font atlas

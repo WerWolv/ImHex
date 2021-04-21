@@ -8,6 +8,7 @@
 #include <imgui_imhex_extensions.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <fontawesome_font.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -91,7 +92,14 @@ namespace hex::init {
                 auto drawList = ImGui::GetOverlayDrawList();
 
                 drawList->AddImage(splashTexture, ImVec2(0, 0), ImVec2(splashWidth, splashHeight));
-                drawList->AddText(ImVec2(15, 120), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}\n{1} : {2}@{3}", &__DATE__[7], IMHEX_VERSION, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
+
+                #if defined(DEBUG)
+                    drawList->AddText(ImVec2(15, 120), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
+                    drawList->AddText(ImVec2(15, 140), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0} : {1} {2}@{3}", IMHEX_VERSION, ICON_FA_CODE_BRANCH, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
+                #else
+                    drawList->AddText(ImVec2(15, 120), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
+                    drawList->AddText(ImVec2(15, 140), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
+                #endif
                 drawList->AddRectFilled(ImVec2(0, splashHeight - 5), ImVec2(splashWidth * this->m_progress, splashHeight), 0xFFFFFFFF);
                 drawList->AddText(ImVec2(15, splashHeight - 22), ImColor(0xFF, 0xFF, 0xFF, 0xFF), this->m_currTaskName.data());
             }
@@ -174,6 +182,35 @@ namespace hex::init {
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
         ImGui_ImplOpenGL3_Init("#version 130");
+
+        auto &io = ImGui::GetIO();
+
+        io.Fonts->Clear();
+
+        ImFontConfig cfg;
+        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+        cfg.SizePixels = 13.0f;
+        io.Fonts->AddFontDefault(&cfg);
+
+        cfg.MergeMode = true;
+
+        ImWchar fontAwesomeRange[] = {
+                ICON_MIN_FA, ICON_MAX_FA,
+                0
+        };
+        std::uint8_t *px;
+        int w, h;
+        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f, &cfg, fontAwesomeRange);
+        io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
+
+        // Create new font atlas
+        GLuint tex;
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
+        io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
     }
 
     void WindowSplash::deinitGLFW() {
