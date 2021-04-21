@@ -234,9 +234,9 @@ namespace hex::lang {
 
             switch (typeOperatorNode->getOperator()) {
                 case Token::Operator::AddressOf:
-                    return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() });
+                    return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, static_cast<u64>(pattern->getOffset()) });
                 case Token::Operator::SizeOf:
-                    return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getSize() });
+                    return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, static_cast<u64>(pattern->getSize()) });
                 default:
                     this->getConsole().abortEvaluation("invalid type operator used. This is a bug!");
             }
