@@ -351,11 +351,13 @@ namespace hex {
                 }
 
                 if (this->m_fpsVisible) {
-                    char buffer[0x20];
-                    snprintf(buffer, 0x20, "%.1f FPS", ImGui::GetIO().Framerate);
-
-                    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetFontSize() * strlen(buffer) + 20);
-                    ImGui::TextUnformatted(buffer);
+                    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 3 * ImGui::GetFontSize());
+                    ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+                } else {
+                    #if defined(DEBUG)
+                        ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX());
+                        ImGui::Text(ICON_FA_BUG, ImGui::GetIO().Framerate);
+                    #endif
                 }
 
                 ImGui::EndMenuBar();
