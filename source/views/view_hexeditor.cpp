@@ -187,7 +187,8 @@ namespace hex {
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
 
-            this->m_highlightAlpha = alpha;
+            if (alpha.is_number())
+                this->m_highlightAlpha = alpha;
         });
     }
 

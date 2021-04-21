@@ -63,8 +63,7 @@ namespace hex {
                 if (argument == "update-available") {
                     this->m_availableUpdate = value;
                 } else if (argument == "no-plugins") {
-                    View::showErrorPopup("No plugins are loaded, including the built-in functions plugin!\n"
-                                                    "Make sure you got at least builtin.hexplug in your plugins folder.");
+                    View::doLater([]{ ImGui::OpenPopup("No Plugins"); });
                 }
             }
         }
@@ -351,12 +350,15 @@ namespace hex {
                 }
 
                 if (this->m_fpsVisible) {
-                    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 3 * ImGui::GetFontSize());
-                    ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+                    std::string fps = hex::format("{:.1f} FPS ", ImGui::GetIO().Framerate);
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - fps.length() * ImGui::GetFontSize());
+                    ImGui::TextUnformatted(fps.c_str());
                 } else {
                     #if defined(DEBUG)
-                        ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX());
-                        ImGui::Text(ICON_FA_BUG, ImGui::GetIO().Framerate);
+                        ImGui::SameLine();
+                        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 2 * ImGui::GetFontSize());
+                        ImGui::TextUnformatted(ICON_FA_BUG);
                     #endif
                 }
 
@@ -382,6 +384,15 @@ namespace hex {
 
         }
         ImGui::End();
+
+        // Popup for when no plugins were loaded. Intentionally left untranslated because localization isn't available
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+        if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
+            ImGui::TextUnformatted("Make sure you at least got the builtin plugin in your plugins folder.");
+            ImGui::TextUnformatted("To find out where your plugin folder is, check ImHex' Readme.");
+            ImGui::EndPopup();
+        }
     }
 
     void Window::frameEnd() {
@@ -463,12 +474,7 @@ namespace hex {
             {
                 const auto &plugins = PluginManager::getPlugins();
 
-                if (plugins.empty()) {
-                    // Intentionally left untranslated so it will be readable even if no plugin with translations is loaded
-                    ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),
-                        "No plugins loaded! To use ImHex properly, "
-                             "make sure at least the builtin plugin is in the /plugins folder next to the executable");
-                } else {
+                if (!plugins.empty()) {
                     if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                         ImGui::TableSetupScrollFreeze(0, 1);
                         ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang);

@@ -38,8 +38,8 @@ namespace hex {
 
         if (!json.contains(unlocalizedCategory.data()))
             json[unlocalizedCategory.data()] = nlohmann::json::object();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
-            json[unlocalizedCategory.data()][unlocalizedName.data()] = defaultValue;
+        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()) || !json[unlocalizedCategory.data()][unlocalizedName.data()].is_number())
+            json[unlocalizedCategory.data()][unlocalizedName.data()] = int(defaultValue);
     }
 
     void ContentRegistry::Settings::add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback) {
@@ -49,8 +49,8 @@ namespace hex {
 
         if (!json.contains(unlocalizedCategory.data()))
             json[unlocalizedCategory.data()] = nlohmann::json::object();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
-            json[unlocalizedCategory.data()][unlocalizedName.data()] = defaultValue;
+        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()) || !json[unlocalizedCategory.data()][unlocalizedName.data()].is_string())
+            json[unlocalizedCategory.data()][unlocalizedName.data()] = std::string(defaultValue);
     }
 
     void ContentRegistry::Settings::write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 value) {

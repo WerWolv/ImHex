@@ -42,7 +42,7 @@ namespace hex {
 
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;
-        double m_targetFps;
+        double m_targetFps = 60.0;
         bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;
 
