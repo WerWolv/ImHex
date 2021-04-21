@@ -28,7 +28,7 @@ namespace hex::lang {
         void setProvider(prv::Provider *provider) { this->m_provider = provider; }
         [[nodiscard]] std::endian getCurrentEndian() const { return this->m_endianStack.back(); }
 
-        PatternData* patternFromName(const std::vector<std::string> &name);
+        PatternData* patternFromName(const ASTNodeRValue::Path &name);
 
         template<typename T>
         T* asType(ASTNode *param) {
@@ -56,12 +56,13 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
         ASTNode* evaluateFunctionCall(ASTNodeFunctionCall *node);
+        ASTNodeIntegerLiteral* evaluateTypeOperator(ASTNodeTypeOperator *typeOperatorNode);
         ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op);
         ASTNodeIntegerLiteral* evaluateOperand(ASTNode *node);
         ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
 
-        PatternData* findPattern(std::vector<PatternData*> currMembers, const std::vector<std::string> &path);
+        PatternData* findPattern(std::vector<PatternData*> currMembers, const ASTNodeRValue::Path &path);
         PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);
         PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
         void evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset);

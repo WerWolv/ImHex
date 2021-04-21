@@ -153,36 +153,6 @@ namespace hex::plugin::builtin {
             return nullptr;
         });
 
-        /* addressof(rValueString) */
-        ContentRegistry::PatternLanguageFunctions::add("addressof", 1, [](auto &ctx, auto params) -> ASTNode* {
-            auto name = AS_TYPE(ASTNodeStringLiteral, params[0])->getString();
-
-            std::vector<std::string> path = splitString(name, ".");
-            auto pattern = ctx.patternFromName(path);
-
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(pattern->getOffset()) });
-        });
-
-        /* sizeof(rValueString) */
-        ContentRegistry::PatternLanguageFunctions::add("sizeof", 1, [](auto &ctx, auto params) -> ASTNode* {
-            auto name = AS_TYPE(ASTNodeStringLiteral, params[0])->getString();
-
-            std::vector<std::string> path = splitString(name, ".");
-            auto pattern = ctx.patternFromName(path);
-
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(pattern->getSize()) });
-        });
-
-        /* nextAfter(rValueString) */
-        ContentRegistry::PatternLanguageFunctions::add("nextAfter", 1, [](auto &ctx, auto params) -> ASTNode* {
-            auto name = AS_TYPE(ASTNodeStringLiteral, params[0])->getString();
-
-            std::vector<std::string> path = splitString(name, ".");
-            auto pattern = ctx.patternFromName(path);
-
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, u64(pattern->getOffset() + pattern->getSize()) });
-        });
-
         /* alignTo(alignment, value) */
         ContentRegistry::PatternLanguageFunctions::add("alignTo", 2, [](auto &ctx, auto params) -> ASTNode* {
             auto alignment = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();

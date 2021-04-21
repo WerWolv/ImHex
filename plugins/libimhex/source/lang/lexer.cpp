@@ -365,7 +365,15 @@ namespace hex::lang {
                 } else if (c == '$') {
                     tokens.emplace_back(TOKEN(Operator, Dollar));
                     offset += 1;
-                } else if (c == '\'') {
+                } else if (code.substr(offset, 9) == "addressof") {
+                    tokens.emplace_back(TOKEN(Operator, AddressOf));
+                    offset += 9;
+                }
+                else if (code.substr(offset, 6) == "sizeof") {
+                    tokens.emplace_back(TOKEN(Operator, SizeOf));
+                    offset += 6;
+                }
+                else if (c == '\'') {
                     auto character = getCharacterLiteral(code.substr(offset));
 
                     if (!character.has_value())

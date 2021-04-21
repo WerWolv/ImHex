@@ -61,7 +61,9 @@ namespace hex::lang {
             BoolXor,
             BoolNot,
             TernaryConditional,
-            Dollar
+            Dollar,
+            AddressOf,
+            SizeOf
         };
 
         enum class ValueType {
@@ -251,6 +253,8 @@ namespace hex::lang {
 #define OPERATOR_BOOLNOT                    COMPONENT(Operator, BoolNot)
 #define OPERATOR_TERNARYCONDITIONAL         COMPONENT(Operator, TernaryConditional)
 #define OPERATOR_DOLLAR                     COMPONENT(Operator, Dollar)
+#define OPERATOR_ADDRESSOF                  COMPONENT(Operator, AddressOf)
+#define OPERATOR_SIZEOF                     COMPONENT(Operator, SizeOf)
 
 #define VALUETYPE_CUSTOMTYPE                COMPONENT(ValueType, CustomType)
 #define VALUETYPE_PADDING                   COMPONENT(ValueType, Padding)

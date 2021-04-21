@@ -30,43 +30,73 @@ namespace hex::lang {
         this->getConsole().abortEvaluation("failed to find identifier");
     }
 
-    PatternData* Evaluator::findPattern(std::vector<PatternData*> currMembers, const std::vector<std::string> &path) {
+    PatternData* Evaluator::findPattern(std::vector<PatternData*> currMembers, const ASTNodeRValue::Path &path) {
         PatternData *currPattern = nullptr;
-        for (const auto &identifier : path) {
-            if (identifier == "parent") {
-                if (currPattern == nullptr) {
-                    if (!currMembers.empty())
-                        currPattern = this->m_currMemberScope.back();
+        for (const auto &part : path) {
+            if (auto stringPart = std::get_if<std::string>(&part); stringPart != nullptr) {
+                if (*stringPart == "parent") {
+                    if (currPattern == nullptr) {
+                        if (!currMembers.empty())
+                            currPattern = this->m_currMemberScope.back();
 
-                    if (currPattern == nullptr)
-                        this->getConsole().abortEvaluation("attempted to get parent of global namespace");
-                }
+                        if (currPattern == nullptr)
+                            this->getConsole().abortEvaluation("attempted to get parent of global namespace");
+                    }
 
-                auto parent = currPattern->getParent();
+                    auto parent = currPattern->getParent();
 
-                if (parent == nullptr) {
-                    this->getConsole().abortEvaluation(hex::format("no parent available for identifier '{0}'", currPattern->getVariableName()));
+                    if (parent == nullptr) {
+                        this->getConsole().abortEvaluation(hex::format("no parent available for identifier '{0}'", currPattern->getVariableName()));
+                    } else {
+                        currPattern = parent;
+                    }
                 } else {
-                    currPattern = parent;
-                }
-            } else {
-                if (currPattern != nullptr) {
-                    if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
-                        currMembers = structPattern->getMembers();
-                    else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
-                        currMembers = unionPattern->getMembers();
+                    if (currPattern != nullptr) {
+                        if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
+                            currMembers = structPattern->getMembers();
+                        else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
+                            currMembers = unionPattern->getMembers();
+                        else if (auto arrayPattern = dynamic_cast<PatternDataArray*>(currPattern); arrayPattern != nullptr) {
+                            currMembers = arrayPattern->getEntries();
+                            continue;
+                        }
+                        else
+                            this->getConsole().abortEvaluation("tried to access member of a non-struct/union type");
+                    }
+
+                    auto candidate = std::find_if(currMembers.begin(), currMembers.end(), [&](auto member) {
+                        return member->getVariableName() == *stringPart;
+                    });
+
+                    if (candidate != currMembers.end())
+                        currPattern = *candidate;
                     else
-                        this->getConsole().abortEvaluation("tried to access member of a non-struct/union type");
+                        this->getConsole().abortEvaluation(hex::format("no member found with identifier '{0}'", *stringPart));
                 }
+            } else if (auto nodePart = std::get_if<ASTNode*>(&part); nodePart != nullptr) {
+                if (auto numericalExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(*nodePart)) {
+                    auto arrayIndexNode = evaluateMathematicalExpression(numericalExpressionNode);
+                    ON_SCOPE_EXIT { delete arrayIndexNode; };
 
-                auto candidate = std::find_if(currMembers.begin(), currMembers.end(), [&](auto member) {
-                    return member->getVariableName() == identifier;
-                });
+                    if (currPattern != nullptr) {
+                        if (auto arrayPattern = dynamic_cast<PatternDataArray*>(currPattern); arrayPattern != nullptr) {
+                            if (Token::isFloatingPoint(arrayIndexNode->getType()))
+                                this->getConsole().abortEvaluation("cannot use float to index into array");
 
-                if (candidate != currMembers.end())
-                    currPattern = *candidate;
-                else
-                    this->getConsole().abortEvaluation(hex::format("no member found with identifier '{0}'", identifier));
+                            std::visit([&](auto &&arrayIndex){
+                                if (arrayIndex >= 0 && arrayIndex < arrayPattern->getEntries().size())
+                                    currPattern = arrayPattern->getEntries()[arrayIndex];
+                                else
+                                    this->getConsole().abortEvaluation(hex::format("tried to access out of bounds index {} of '{}'", arrayIndex, currPattern->getVariableName()));
+                            }, arrayIndexNode->getValue());
+
+                        }
+                        else
+                            this->getConsole().abortEvaluation("tried to index into non-array type");
+                    }
+                } else {
+                    this->getConsole().abortEvaluation(hex::format("invalid node in rvalue path. This is a bug!'"));
+                }
             }
 
             if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr)
@@ -76,7 +106,7 @@ namespace hex::lang {
         return currPattern;
     }
 
-    PatternData* Evaluator::patternFromName(const std::vector<std::string> &path) {
+    PatternData* Evaluator::patternFromName(const ASTNodeRValue::Path &path) {
 
         PatternData *currPattern = nullptr;
 
@@ -90,56 +120,34 @@ namespace hex::lang {
         }
 
         // If still no pattern was found, the path is invalid
-        if (currPattern == nullptr)
-            this->getConsole().abortEvaluation(hex::format("no identifier with name '{}' was found", hex::combineStrings(path, ".")));
+        if (currPattern == nullptr) {
+            std::string identifier;
+            for (const auto& part : path) {
+                if (part.index() == 0) {
+                    // Path part is a identifier
+                    identifier += std::get<std::string>(part);
+                } else if (part.index() == 1) {
+                    // Path part is a array index
+                    identifier += "[..]";
+                }
 
-        return currPattern;
-
-        /*std::vector<PatternData*> currMembers;
-
-        if (!this->m_currMembers.empty())
-            std::copy(this->m_currMembers.back()->begin(), this->m_currMembers.back()->end(), std::back_inserter(currMembers));
-        if (!this->m_globalMembers.empty())
-            std::copy(this->m_globalMembers.begin(), this->m_globalMembers.end(), std::back_inserter(currMembers));
-
-        PatternData *currPattern = nullptr;
-        for (u32 i = 0; i < path.size(); i++) {
-            const auto &identifier = path[i];
-
-            if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern); structPattern != nullptr)
-                currMembers = structPattern->getMembers();
-            else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
-                currMembers = unionPattern->getMembers();
-            else if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr) {
-                currPattern = pointerPattern->getPointedAtPattern();
-                i--;
-                continue;
+                identifier += ".";
             }
-            else if (currPattern != nullptr)
-                this->getConsole().abortEvaluation("tried to access member of a non-struct/union type");
-
-            auto candidate = std::find_if(currMembers.begin(), currMembers.end(), [&](auto member) {
-                return member->getVariableName() == identifier;
-            });
-
-            if (candidate != currMembers.end())
-                currPattern = *candidate;
-            else
-                this->getConsole().abortEvaluation(hex::format("could not find identifier '{0}'", identifier.c_str()));
+            identifier.pop_back();
+            this->getConsole().abortEvaluation(hex::format("no identifier with name '{}' was found", identifier));
         }
 
-        if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern); pointerPattern != nullptr)
-            currPattern = pointerPattern->getPointedAtPattern();
-
-        return currPattern;*/
+        return currPattern;
     }
 
     ASTNodeIntegerLiteral* Evaluator::evaluateRValue(ASTNodeRValue *node) {
         if (this->m_currMembers.empty() && this->m_globalMembers.empty())
             this->getConsole().abortEvaluation("no variables available");
 
-        if (node->getPath().size() == 1 && node->getPath()[0] == "$")
-            return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, this->m_currOffset });
+        if (node->getPath().size() == 1) {
+            if (auto part = std::get_if<std::string>(&node->getPath()[0]); part != nullptr && *part == "$")
+                return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, this->m_currOffset });
+        }
 
         auto currPattern = this->patternFromName(node->getPath());
 
@@ -193,6 +201,8 @@ namespace hex::lang {
         for (auto &param : node->getParams()) {
             if (auto numericExpression = dynamic_cast<ASTNodeNumericExpression*>(param); numericExpression != nullptr)
                 evaluatedParams.push_back(this->evaluateMathematicalExpression(numericExpression));
+            else if (auto typeOperatorExpression = dynamic_cast<ASTNodeTypeOperator*>(param))
+                evaluatedParams.push_back(this->evaluateTypeOperator(typeOperatorExpression));
             else if (auto stringLiteral = dynamic_cast<ASTNodeStringLiteral*>(param); stringLiteral != nullptr)
                 evaluatedParams.push_back(stringLiteral->clone());
         }
@@ -216,6 +226,23 @@ namespace hex::lang {
         }
 
         return function.func(*this, evaluatedParams);
+    }
+
+    ASTNodeIntegerLiteral* Evaluator::evaluateTypeOperator(ASTNodeTypeOperator *typeOperatorNode) {
+        if (auto rvalue = dynamic_cast<ASTNodeRValue*>(typeOperatorNode->getExpression()); rvalue != nullptr) {
+            auto pattern = this->patternFromName(rvalue->getPath());
+
+            switch (typeOperatorNode->getOperator()) {
+                case Token::Operator::AddressOf:
+                    return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getOffset() });
+                case Token::Operator::SizeOf:
+                    return new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned64Bit, pattern->getSize() });
+                default:
+                    this->getConsole().abortEvaluation("invalid type operator used. This is a bug!");
+            }
+        } else {
+            this->getConsole().abortEvaluation("non-rvalue used in type operator");
+        }
     }
 
 #define FLOAT_BIT_OPERATION(name) \
@@ -365,7 +392,8 @@ namespace hex::lang {
                 return integerNode;
             else
                 this->getConsole().abortEvaluation("function not returning a numeric value used in expression");
-        }
+        } else if (auto typeOperator = dynamic_cast<ASTNodeTypeOperator*>(node); typeOperator != nullptr)
+            return evaluateTypeOperator(typeOperator);
         else
             this->getConsole().abortEvaluation("invalid operand");
     }

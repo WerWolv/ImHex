@@ -66,11 +66,17 @@ namespace hex::lang {
     }
 
     // <Identifier[.]...>
-    ASTNode* Parser::parseRValue(std::vector<std::string> &path) {
+    ASTNode* Parser::parseRValue(ASTNodeRValue::Path &path) {
         if (peek(IDENTIFIER, -1))
             path.push_back(getValue<std::string>(-1));
         else if (peek(KEYWORD_PARENT, -1))
             path.emplace_back("parent");
+
+        if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN))) {
+            path.push_back(parseMathematicalExpression());
+            if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
+                throwParseError("expected closing ']' at end of array indexing");
+        }
 
         if (MATCHES(sequence(SEPARATOR_DOT))) {
             if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT)))
@@ -78,7 +84,7 @@ namespace hex::lang {
             else
                 throwParseError("expected member name or 'parent' keyword", -1);
         } else
-            return TO_NUMERIC_EXPRESSION(new ASTNodeRValue(path));
+            return new ASTNodeRValue(path);
     }
 
     // <Integer|((parseMathematicalExpression))>
@@ -87,8 +93,10 @@ namespace hex::lang {
             return TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(getValue<Token::IntegerLiteral>(-1)));
         else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto node = this->parseMathematicalExpression();
-            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+                delete node;
                 throwParseError("expected closing parenthesis");
+            }
             return node;
         } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SCOPE_RESOLUTION))) {
             std::vector<std::string> path;
@@ -97,10 +105,24 @@ namespace hex::lang {
         } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN))) {
             return TO_NUMERIC_EXPRESSION(this->parseFunctionCall());
         } else if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
-            std::vector<std::string> path;
-            return this->parseRValue(path);
+            ASTNodeRValue::Path path;
+            return TO_NUMERIC_EXPRESSION(this->parseRValue(path));
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
             return new ASTNodeRValue({ "$" });
+        } else if (MATCHES(oneOf(OPERATOR_ADDRESSOF, OPERATOR_SIZEOF) && sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
+            auto op = getValue<Token::Operator>(-2);
+
+            if (!MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
+                throwParseError("expected rvalue identifier");
+            }
+
+            ASTNodeRValue::Path path;
+            auto node = new ASTNodeTypeOperator(op, this->parseRValue(path));
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+                delete node;
+                throwParseError("expected closing parenthesis");
+            }
+            return TO_NUMERIC_EXPRESSION(node);
         } else
             throwParseError("expected integer or parenthesis");
     }
