@@ -144,7 +144,7 @@ namespace hex {
             preprocessor.addDefaultPragmaHandlers();
 
 
-            m_possiblePatternFiles.clear();
+            this->m_possiblePatternFiles.clear();
             std::error_code errorCode;
             for (const auto &dir : hex::getPath(ImHexPath::Patterns)) {
                 for (auto &entry : std::filesystem::directory_iterator(dir, errorCode)) {
