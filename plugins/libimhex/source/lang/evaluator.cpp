@@ -306,6 +306,7 @@ namespace hex::lang {
             CHECK_TYPE(Token::ValueType::Unsigned8Bit);
             CHECK_TYPE(Token::ValueType::Signed8Bit);
             CHECK_TYPE(Token::ValueType::Character);
+            CHECK_TYPE(Token::ValueType::Character16);
             CHECK_TYPE(Token::ValueType::Boolean);
             DEFAULT_TYPE(Token::ValueType::Signed32Bit);
 
@@ -475,6 +476,8 @@ namespace hex::lang {
 
         if (type == Token::ValueType::Character)
             pattern = new PatternDataCharacter(this->m_currOffset);
+        else if (type == Token::ValueType::Character16)
+            pattern = new PatternDataCharacter16(this->m_currOffset);
         else if (type == Token::ValueType::Boolean)
             pattern = new PatternDataBoolean(this->m_currOffset);
         else if (Token::isUnsigned(type))
@@ -777,14 +780,18 @@ namespace hex::lang {
                 }
             }
         } else {
-            u8 currByte = 0x00;
-            u64 offset = startOffset;
+            if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
+                if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
+                    std::vector<u8> bytes(Token::getTypeSize(builtinType->getType()), 0x00);
+                    u64 offset = startOffset;
 
-            do {
-                this->m_provider->read(offset, &currByte, sizeof(u8));
-                offset += sizeof(u8);
-                arraySize += sizeof(u8);
-            } while (currByte != 0x00 && offset < this->m_provider->getSize());
+                    do {
+                        this->m_provider->read(offset, bytes.data(), bytes.size());
+                        offset += bytes.size();
+                        arraySize++;
+                    } while (!std::all_of(bytes.begin(), bytes.end(), [](u8 byte){ return byte == 0x00; }) && offset < this->m_provider->getSize());
+                }
+            }
         }
 
         std::vector<PatternData*> entries;
@@ -819,8 +826,10 @@ namespace hex::lang {
         if (entries.empty()) {
             pattern = new PatternDataPadding(startOffset, 0);
         }
-        else if (dynamic_cast<PatternDataCharacter*>(entries[0]))
+        else if (dynamic_cast<PatternDataCharacter*>(entries[0]) != nullptr)
             pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
+        else if (dynamic_cast<PatternDataCharacter16*>(entries[0]) != nullptr)
+            pattern = new PatternDataString16(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
         else {
             if (node->getSize() == nullptr)
                 this->getConsole().abortEvaluation("no bounds provided for array");

@@ -10,6 +10,8 @@
 #include <hex/views/view.hpp>
 
 #include <cstring>
+#include <codecvt>
+#include <locale>
 #include <random>
 #include <string>
 
@@ -478,6 +480,27 @@ namespace hex::lang {
         }
     };
 
+    class PatternDataCharacter16 : public PatternData {
+    public:
+        explicit PatternDataCharacter16(u64 offset, u32 color = 0)
+                : PatternData(offset, 2, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataCharacter16(*this);
+        }
+
+        void createEntry(prv::Provider* &provider) override {
+            char16_t character;
+            provider->read(this->getOffset(), &character, 2);
+
+            this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character)));
+        }
+
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "char16";
+        }
+    };
+
     class PatternDataString : public PatternData {
     public:
         PatternDataString(u64 offset, size_t size, u32 color = 0)
@@ -497,6 +520,30 @@ namespace hex::lang {
 
         [[nodiscard]] std::string getFormattedName() const override {
            return "String";
+        }
+    };
+
+    class PatternDataString16 : public PatternData {
+    public:
+        PatternDataString16(u64 offset, size_t size, u32 color = 0)
+                : PatternData(offset, size, color) { }
+
+        PatternData* clone() override {
+            return new PatternDataString16(*this);
+        }
+
+        void createEntry(prv::Provider* &provider) override {
+            std::u16string buffer(this->getSize() + 1, 0x00);
+            provider->read(this->getOffset(), buffer.data(), this->getSize());
+            buffer[this->getSize()] = '\0';
+
+            auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
+
+            this->createDefaultEntry(hex::format("\"{0}\"", utf8String)) ;
+        }
+
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "String16";
         }
     };
 

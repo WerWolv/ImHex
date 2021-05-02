@@ -450,6 +450,8 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(ValueType, Double));
                     else if (identifier == "char")
                         tokens.emplace_back(TOKEN(ValueType, Character));
+                    else if (identifier == "char16")
+                        tokens.emplace_back(TOKEN(ValueType, Character16));
                     else if (identifier == "bool")
                         tokens.emplace_back(TOKEN(ValueType, Boolean));
                     else if (identifier == "padding")

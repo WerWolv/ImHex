@@ -78,6 +78,7 @@ namespace hex::lang {
             Unsigned128Bit      = 0x100,
             Signed128Bit        = 0x101,
             Character           = 0x13,
+            Character16         = 0x23,
             Boolean             = 0x14,
             Float               = 0x42,
             Double              = 0x82,
@@ -145,6 +146,7 @@ namespace hex::lang {
                     case ValueType::Float:          return IntegerLiteral(type, static_cast<float>(value));
                     case ValueType::Double:         return IntegerLiteral(type, static_cast<double>(value));
                     case ValueType::Character:      return IntegerLiteral(type, static_cast<char>(value));
+                    case ValueType::Character16:    return IntegerLiteral(type, static_cast<char16_t>(value));
                     default: __builtin_unreachable();
                 }
             }, literal);
@@ -165,6 +167,7 @@ namespace hex::lang {
                 case ValueType::Float:          return "float";
                 case ValueType::Double:         return "double";
                 case ValueType::Character:      return "char";
+                case ValueType::Character16:    return "char16";
                 default:                        return "< ??? >";
             }
         }
