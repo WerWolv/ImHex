@@ -5,7 +5,7 @@ echo "As of 2020-12, Debian stable does not include g++-10, needs debian testing
 # Tested on 2020-12-09 with Docker image bitnami/minideb:unstable
 
 # Install pkgconf (adds minimum dependencies) only if the equivalent pkf-config is not already installed.
-if !which pkg-config
+if ! which pkg-config
 then
     PKGCONF="pkgconf"
 fi
