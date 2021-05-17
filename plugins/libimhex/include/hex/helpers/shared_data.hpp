@@ -71,6 +71,8 @@ namespace hex {
 
         static std::vector<ContentRegistry::DataProcessorNode::Entry> dataProcessorNodes;
         static u32 dataProcessorNodeIdCounter;
+        static u32 dataProcessorLinkIdCounter;
+        static u32 dataProcessorAttrIdCounter;
 
         static std::list<std::string> recentFilePaths;
 

@@ -160,7 +160,13 @@ namespace hex {
 
             template<hex::derived_from<dp::Node> T, typename ... Args>
             static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, Args&& ... args) {
-                add(Entry{ unlocalizedCategory.data(), unlocalizedName.data(), [args...]{ return new T(std::forward<Args>(args)...); } });
+                add(Entry{ unlocalizedCategory.data(), unlocalizedName.data(),
+                   [args..., name = std::string(unlocalizedName)]{
+                        auto node = new T(std::forward<Args>(args)...);
+                        node->setUnlocalizedName(name);
+                        return node;
+                   }
+                });
             }
 
             static void addSeparator();

@@ -37,6 +37,9 @@ namespace hex {
         void eraseLink(u32 id);
         void eraseNodes(const std::vector<int> &ids);
         void processNodes();
+
+        std::string saveNodes();
+        void loadNodes(std::string_view data);
     };
 
 }

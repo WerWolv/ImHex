@@ -3,6 +3,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <imnodes.h>
+#include <nlohmann/json.hpp>
 
 namespace hex {
 
@@ -252,7 +253,7 @@ namespace hex {
                 imnodes::BeginNode(node->getID());
 
                 imnodes::BeginNodeTitleBar();
-                ImGui::TextUnformatted(LangEntry(node->getUnlocalizedName()));
+                ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
                 imnodes::EndNodeTitleBar();
 
                 node->drawNode();
@@ -365,6 +366,125 @@ namespace hex {
 
     void ViewDataProcessor::drawMenu() {
 
+    }
+
+    std::string ViewDataProcessor::saveNodes() {
+        using json = nlohmann::json;
+        json output;
+
+        output["nodes"] = json::object();
+        for (auto &node : this->m_nodes) {
+            auto id = node->getID();
+            auto &currNodeOutput = output["nodes"][std::to_string(id)];
+            auto pos = imnodes::GetNodeGridSpacePos(id);
+
+            currNodeOutput["type"] = node->getUnlocalizedName();
+            currNodeOutput["pos"] = { { "x", pos.x }, { "y", pos.y } };
+            currNodeOutput["attrs"] = json::array();
+            currNodeOutput["id"] = id;
+
+            u32 attrIndex = 0;
+            for (auto &attr : node->getAttributes()) {
+                currNodeOutput["attrs"][attrIndex] = attr.getID();
+                attrIndex++;
+            }
+        }
+
+        output["links"] = json::object();
+        for (auto &link : this->m_links) {
+            auto id = link.getID();
+            auto &currOutput = output["links"][std::to_string(id)];
+
+            currOutput["id"] = id;
+            currOutput["from"] = link.getFromID();
+            currOutput["to"] = link.getToID();
+        }
+
+        return output.dump();
+    }
+
+    void ViewDataProcessor::loadNodes(std::string_view data) {
+        using json = nlohmann::json;
+
+        json input = json::parse(data);
+
+        u32 maxId = 0;
+
+        for (auto &node : this->m_nodes)
+            delete node;
+
+        this->m_nodes.clear();
+        this->m_endNodes.clear();
+        this->m_links.clear();
+
+        auto &nodeEntries = ContentRegistry::DataProcessorNode::getEntries();
+        for (auto &node : input["nodes"]) {
+            dp::Node *newNode = nullptr;
+            for (auto &entry : nodeEntries) {
+                if (entry.name == node["type"])
+                    newNode = entry.creatorFunction();
+            }
+
+            if (newNode == nullptr)
+                continue;
+
+            u32 id = node["id"];
+            maxId = std::max(id, maxId);
+
+            newNode->setID(id);
+
+            bool hasOutput = false;
+            bool hasInput = false;
+            u32 attrIndex = 0;
+            for (auto &attr : newNode->getAttributes()) {
+                if (attr.getIOType() == dp::Attribute::IOType::Out)
+                    hasOutput = true;
+
+                if (attr.getIOType() == dp::Attribute::IOType::In)
+                    hasInput = true;
+
+                attr.setID(node["attrs"][attrIndex]);
+                attrIndex++;
+            }
+
+            if (hasInput && !hasOutput)
+                this->m_endNodes.push_back(newNode);
+
+            this->m_nodes.push_back(newNode);
+            imnodes::SetNodeGridSpacePos(id, ImVec2(node["pos"]["x"], node["pos"]["y"]));
+        }
+
+        for (auto &link : input["links"]) {
+            dp::Link newLink(link["from"], link["to"]);
+
+            newLink.setID(link["id"]);
+            this->m_links.push_back(newLink);
+
+            dp::Attribute *fromAttr, *toAttr;
+            for (auto &node : this->m_nodes) {
+                for (auto &attribute : node->getAttributes()) {
+                    if (attribute.getID() == newLink.getFromID())
+                        fromAttr = &attribute;
+                    else if (attribute.getID() == newLink.getToID())
+                        toAttr = &attribute;
+                }
+            }
+
+            if (fromAttr == nullptr || toAttr == nullptr)
+                break;
+
+            if (fromAttr->getType() != toAttr->getType())
+                break;
+
+            if (fromAttr->getIOType() == toAttr->getIOType())
+                break;
+
+            if (!toAttr->getConnectedAttributes().empty())
+                break;
+
+            fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
+            toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
+        }
     }
 
 }

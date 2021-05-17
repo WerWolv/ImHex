@@ -25,6 +25,8 @@ namespace hex {
 
     std::vector<ContentRegistry::DataProcessorNode::Entry> SharedData::dataProcessorNodes;
     u32 SharedData::dataProcessorNodeIdCounter = 1;
+    u32 SharedData::dataProcessorLinkIdCounter = 1;
+    u32 SharedData::dataProcessorAttrIdCounter = 1;
 
     std::list<std::string> SharedData::recentFilePaths;
 
