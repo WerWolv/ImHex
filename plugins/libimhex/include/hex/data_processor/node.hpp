@@ -5,6 +5,8 @@
 #include <set>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::dp {
 
     class Node {
@@ -31,6 +33,9 @@ namespace hex::dp {
 
         virtual void drawNode() { }
         virtual void process() = 0;
+
+        virtual nlohmann::json store() { return nullptr; }
+        virtual void load(nlohmann::json &j) { }
 
         using NodeError = std::pair<Node*, std::string>;
 

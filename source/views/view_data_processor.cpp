@@ -1,6 +1,7 @@
 #include "views/view_data_processor.hpp"
 
 #include <hex/providers/provider.hpp>
+#include <helpers/project_file_handler.hpp>
 
 #include <imnodes.h>
 #include <nlohmann/json.hpp>
@@ -39,6 +40,14 @@ namespace hex {
             }
         });
 
+        EventManager::subscribe<EventProjectFileStore>(this, [this] {
+            ProjectFile::setDataProcessorContent(this->saveNodes());
+        });
+
+        EventManager::subscribe<EventProjectFileLoad>(this, [this] {
+            this->loadNodes(ProjectFile::getDataProcessorContent());
+        });
+
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
@@ -53,6 +62,8 @@ namespace hex {
 
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<EventProjectFileStore>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
 
         imnodes::PopAttributeFlag();
         imnodes::PopAttributeFlag();
@@ -383,6 +394,8 @@ namespace hex {
             currNodeOutput["attrs"] = json::array();
             currNodeOutput["id"] = id;
 
+            currNodeOutput["data"] = node->store();
+
             u32 attrIndex = 0;
             for (auto &attr : node->getAttributes()) {
                 currNodeOutput["attrs"][attrIndex] = attr.getID();
@@ -408,7 +421,9 @@ namespace hex {
 
         json input = json::parse(data);
 
-        u32 maxId = 0;
+        u32 maxNodeId = 0;
+        u32 maxAttrId = 0;
+        u32 maxLinkId = 0;
 
         for (auto &node : this->m_nodes)
             delete node;
@@ -428,10 +443,10 @@ namespace hex {
             if (newNode == nullptr)
                 continue;
 
-            u32 id = node["id"];
-            maxId = std::max(id, maxId);
+            u32 nodeId = node["id"];
+            maxNodeId = std::max(nodeId, maxNodeId);
 
-            newNode->setID(id);
+            newNode->setID(nodeId);
 
             bool hasOutput = false;
             bool hasInput = false;
@@ -443,21 +458,30 @@ namespace hex {
                 if (attr.getIOType() == dp::Attribute::IOType::In)
                     hasInput = true;
 
-                attr.setID(node["attrs"][attrIndex]);
+                u32 attrId = node["attrs"][attrIndex];
+                maxAttrId = std::max(attrId, maxAttrId);
+
+                attr.setID(attrId);
                 attrIndex++;
             }
+
+            if (!node["data"].is_null())
+                newNode->load(node["data"]);
 
             if (hasInput && !hasOutput)
                 this->m_endNodes.push_back(newNode);
 
             this->m_nodes.push_back(newNode);
-            imnodes::SetNodeGridSpacePos(id, ImVec2(node["pos"]["x"], node["pos"]["y"]));
+            imnodes::SetNodeGridSpacePos(nodeId, ImVec2(node["pos"]["x"], node["pos"]["y"]));
         }
 
         for (auto &link : input["links"]) {
             dp::Link newLink(link["from"], link["to"]);
 
-            newLink.setID(link["id"]);
+            u32 linkId = link["id"];
+            maxLinkId = std::max(linkId, maxLinkId);
+
+            newLink.setID(linkId);
             this->m_links.push_back(newLink);
 
             dp::Attribute *fromAttr, *toAttr;
@@ -485,6 +509,10 @@ namespace hex {
             fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
             toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
         }
+
+        SharedData::dataProcessorNodeIdCounter = maxNodeId + 1;
+        SharedData::dataProcessorAttrIdCounter = maxAttrId + 1;
+        SharedData::dataProcessorLinkIdCounter = maxLinkId + 1;
     }
 
 }

@@ -38,6 +38,20 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, this->m_buffer);
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["size"] = this->m_size;
+            output["data"] = this->m_buffer;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_size = j["size"];
+            this->m_buffer = j["data"].get<std::vector<u8>>();
+        }
+
     private:
         u32 m_size = 1;
         std::vector<u8> m_buffer;
@@ -66,6 +80,18 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, output);
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = this->m_value;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_value = j["data"];
+        }
+
     private:
         std::string m_value;
     };
@@ -87,6 +113,18 @@ namespace hex::plugin::builtin {
 
             std::memcpy(data.data(), &this->m_value, sizeof(u64));
             this->setBufferOnOutput(0, data);
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = this->m_value;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_value = j["data"];
         }
 
     private:
@@ -111,6 +149,18 @@ namespace hex::plugin::builtin {
 
             std::copy(&this->m_value, &this->m_value + 1, data.data());
             this->setBufferOnOutput(0, data);
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = this->m_value;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_value = j["data"];
         }
 
     private:
@@ -139,6 +189,22 @@ namespace hex::plugin::builtin {
 
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = nlohmann::json::object();
+            output["data"]["r"] = this->m_color.Value.x;
+            output["data"]["g"] = this->m_color.Value.y;
+            output["data"]["b"] = this->m_color.Value.z;
+            output["data"]["a"] = this->m_color.Value.w;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_color = ImVec4(j["data"]["r"], j["data"]["g"], j["data"]["b"], j["data"]["a"]);
+        }
+
     private:
         ImColor m_color;
     };
@@ -155,6 +221,18 @@ namespace hex::plugin::builtin {
 
         void process() override {
 
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["comment"] = this->m_comment;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_comment = j["comment"];
         }
 
     private:
@@ -658,6 +736,22 @@ namespace hex::plugin::builtin {
             auto output = crypt::aesDecrypt(static_cast<crypt::AESMode>(this->m_mode), static_cast<crypt::KeyLength>(this->m_keyLength), key, nonceData, ivData, input);
 
             this->setBufferOnOutput(4, output);
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = nlohmann::json::object();
+            output["data"]["mode"] = this->m_mode;
+            output["data"]["key_length"] = this->m_keyLength;
+
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_mode = j["data"]["mode"];
+            this->m_keyLength = j["data"]["key_length"];
         }
 
     private:

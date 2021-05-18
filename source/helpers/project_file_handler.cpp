@@ -36,9 +36,10 @@ namespace hex {
             std::ifstream projectFile(filePath.data());
             projectFile >> projectFileData;
 
-            ProjectFile::s_filePath = projectFileData["filePath"];
-            ProjectFile::s_pattern  = projectFileData["pattern"];
-            ProjectFile::s_patches  = projectFileData["patches"].get<Patches>();
+            ProjectFile::s_filePath             = projectFileData["filePath"];
+            ProjectFile::s_pattern              = projectFileData["pattern"];
+            ProjectFile::s_patches              = projectFileData["patches"].get<Patches>();
+            ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
 
             for (auto &element : projectFileData["bookmarks"].items()) {
                 ProjectFile::s_bookmarks.push_back(element.value().get<ImHexApi::Bookmarks::Entry>());
@@ -64,9 +65,10 @@ namespace hex {
             filePath = ProjectFile::s_currProjectFilePath;
 
         try {
-            projectFileData["filePath"] = ProjectFile::s_filePath;
-            projectFileData["pattern"]  = ProjectFile::s_pattern;
-            projectFileData["patches"]  = ProjectFile::s_patches;
+            projectFileData["filePath"]         = ProjectFile::s_filePath;
+            projectFileData["pattern"]          = ProjectFile::s_pattern;
+            projectFileData["patches"]          = ProjectFile::s_patches;
+            projectFileData["dataProcessor"]    = ProjectFile::s_dataProcessorContent;
 
             for (auto &bookmark : ProjectFile::s_bookmarks) {
                 projectFileData["bookmarks"].push_back(bookmark);
