@@ -405,6 +405,19 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeDataSize : public dp::Node {
+    public:
+        NodeDataSize() : Node("hex.builtin.nodes.data_access.size.header", {
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.size.size")
+        }) { }
+
+        void process() override {
+            auto size = SharedData::currentProvider->getActualSize();
+
+            this->setIntegerOnOutput(0, size);
+        }
+    };
+
     class NodeCastIntegerToBuffer : public dp::Node {
     public:
         NodeCastIntegerToBuffer() : Node("hex.builtin.nodes.casting.int_to_buffer.header", {
@@ -826,6 +839,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataProcessorNode::add<NodeReadData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.read");
         ContentRegistry::DataProcessorNode::add<NodeWriteData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.write");
+        ContentRegistry::DataProcessorNode::add<NodeDataSize>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.size");
 
         ContentRegistry::DataProcessorNode::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.int_to_buffer");
         ContentRegistry::DataProcessorNode::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_int");
