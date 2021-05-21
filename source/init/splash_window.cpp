@@ -45,7 +45,11 @@ namespace hex::init {
                     this->m_currTaskName = name;
                 }
 
-                status = task() && status;
+                try {
+                    status = task() && status;
+                } catch (...) {
+                    status = false;
+                }
 
                 {
                     std::lock_guard guard(this->m_progressMutex);
