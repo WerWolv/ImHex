@@ -138,7 +138,6 @@ namespace hex::plugin::builtin {
                     { "hex.view.help.calc_cheat_sheet", "Rechner Cheat Sheet" },
 
                 { "hex.view.hexeditor.name", "Hex editor" },
-                    { "hex.view.hexeditor.save_changes", "Änderungen sichern" },
                     { "hex.view.hexeditor.open_file", "Datei öffnen" },
                     { "hex.view.hexeditor.open_project", "Projekt öffnen" },
                     { "hex.view.hexeditor.save_project", "Projekt speichern" },
@@ -147,8 +146,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.load_enconding_file", "Custom encoding Datei laden" },
                     { "hex.view.hexeditor.page", "Seite {0} / {1}" },
                     { "hex.view.hexeditor.save_as", "Speichern unter" },
-                    { "hex.view.hexeditor.save_changes.title", "Änderung sichern" },
-                    { "hex.view.hexeditor.save_changes.desc", "Es wurden ungespeicherte Änderungen an diesem Projekt vorgenommen\nBist du sicher, dass du ImHex schliessen willst?" },
+                    { "hex.view.hexeditor.exit_application.title", "Applikation verlassen?" },
+                    { "hex.view.hexeditor.exit_application.desc", "Es wurden ungespeicherte Änderungen an diesem Projekt vorgenommen\nBist du sicher, dass du ImHex schliessen willst?" },
                     { "hex.view.hexeditor.script.title", "Datei mit Loader Skript laden" },
                     { "hex.view.hexeditor.script.desc", "Lade eine Datei mit Hilfe eines Python Skriptes" },
                     { "hex.view.hexeditor.script.script", "Skript" },

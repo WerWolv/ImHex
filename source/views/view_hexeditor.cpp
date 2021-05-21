@@ -154,7 +154,7 @@ namespace hex {
         EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.save_changes.title"_lang); });
+                View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.exit_application.title"_lang); });
             }
         });
 
@@ -281,9 +281,9 @@ namespace hex {
     void ViewHexEditor::drawAlwaysVisible() {
         auto provider = SharedData::currentProvider;
 
-        if (ImGui::BeginPopupModal("hex.view.hexeditor.save_changes.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.view.hexeditor.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
-            ImGui::TextUnformatted("hex.view.hexeditor.save_changes.desc"_lang);
+            ImGui::TextUnformatted("hex.view.hexeditor.exit_application.desc"_lang);
             ImGui::NewLine();
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] {

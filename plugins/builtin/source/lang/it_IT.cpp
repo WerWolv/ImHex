@@ -138,7 +138,6 @@ namespace hex::plugin::builtin {
                     { "hex.view.help.calc_cheat_sheet", "Calcolatrice Cheat Sheet" },
 
                 { "hex.view.hexeditor.name", "Hex editor" },
-                    { "hex.view.hexeditor.save_changes", "Salva le modifiche" },
                     { "hex.view.hexeditor.open_file", "Apri File" },
                     { "hex.view.hexeditor.menu.file.open_recent", "File recenti" },
                     { "hex.view.hexeditor.open_project", "Apri i Progetti" },
@@ -148,8 +147,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.load_enconding_file", "Carica un File di codfica personalizzato" },
                     { "hex.view.hexeditor.page", "Pagina {0} / {1}" },
                     { "hex.view.hexeditor.save_as", "Salva come" },
-                    { "hex.view.hexeditor.save_changes.title", "Salva le modifiche" },
-                    { "hex.view.hexeditor.save_changes.desc", "Hai delle modifiche non salvate nel tuo progetto.\nSei sicuro di voler uscire?" },
+                    { "hex.view.hexeditor.exit_application.title", "Uscire dall'applicazione?" },
+                    { "hex.view.hexeditor.exit_application.desc", "Hai delle modifiche non salvate nel tuo progetto.\nSei sicuro di voler uscire?" },
                     { "hex.view.hexeditor.script.title", "Carica un File tramite il Caricatore di Script" },
                     { "hex.view.hexeditor.script.desc", "Carica un file tramite il Caricatore di Script di Python." },
                     { "hex.view.hexeditor.script.script", "Script" },
