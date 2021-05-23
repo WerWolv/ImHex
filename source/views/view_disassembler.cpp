@@ -53,6 +53,8 @@ namespace hex {
 
             if (cs_open(Disassembler::toCapstoneArchictecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
 
+                cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
+
                 auto provider = SharedData::currentProvider;
                 std::vector<u8> buffer(2048, 0x00);
                 for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
