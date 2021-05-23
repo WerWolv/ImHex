@@ -134,6 +134,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.help.about.donations", "Spenden" },
                         { "hex.view.help.about.thanks", "Wenn dir meine Arbeit gefällt, bitte ziehe eine Spende in Betracht, um das Projekt am Laufen zu halten. Vielen Dank <3" },
                         { "hex.view.help.about.libs", "Benutzte Libraries" },
+                        { "hex.view.help.about.paths", "ImHex Ordner" },
                     { "hex.view.help.pattern_cheat_sheet", "Pattern Language Cheat Sheet"},
                     { "hex.view.help.calc_cheat_sheet", "Rechner Cheat Sheet" },
 

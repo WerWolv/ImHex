@@ -64,7 +64,7 @@ namespace hex {
                     hex::openWebpage(url.data());
             };
 
-            ImGui::Text("hex.view.help.about.libs"_lang);
+            ImGui::TextUnformatted("hex.view.help.about.libs"_lang);
             ImGui::Separator();
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
             Link("ImGui by ocornut", "https://github.com/ocornut/imgui");
@@ -88,6 +88,40 @@ namespace hex {
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
+
+            ImGui::NewLine();
+            ImGui::TextUnformatted("hex.view.help.about.paths"_lang);
+            ImGui::Separator();
+
+            if (ImGui::BeginTable("##imhex_paths", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("Type");
+                ImGui::TableSetupColumn("Paths");
+
+                constexpr std::array<std::pair<const char*, ImHexPath>, 8> PathTypes = {{
+                    { "Resources", ImHexPath::Resources },
+                    { "Config", ImHexPath::Config },
+                    { "Magic", ImHexPath::Magic },
+                    { "Patterns", ImHexPath::Patterns },
+                    { "Patterns Includes", ImHexPath::PatternsInclude },
+                    { "Plugins", ImHexPath::Plugins },
+                    { "Python Scripts", ImHexPath::Python },
+                    { "Yara Patterns", ImHexPath::Yara }
+                }};
+
+                ImGui::TableHeadersRow();
+                for (const auto &[name, type] : PathTypes) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(name);
+
+                    ImGui::TableNextColumn();
+                    for (auto &path : hex::getPath(type))
+                        ImGui::TextUnformatted(path.c_str());
+                }
+
+                ImGui::EndTable();
+            }
 
             ImGui::EndPopup();
         }
@@ -322,7 +356,7 @@ namespace hex {
     void ViewHelp::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.help"_lang)) {
             if (ImGui::MenuItem("hex.view.help.about.name"_lang, "")) {
-                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.view.about.name").c_str()); });
+                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.view.help.about.name").c_str()); });
                 this->m_aboutWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
