@@ -138,13 +138,14 @@ namespace hex {
 
             if (!page.has_value())
                 return;
-            if (region.size == 0)
-                return;
 
-            provider->setCurrentPage(page.value());
-            u64 start = region.address;
-            this->m_memoryEditor.GotoAddrAndSelect(start - provider->getBaseAddress(), start + region.size - provider->getBaseAddress() - 1);
-            EventManager::post<EventRegionSelected>(region);
+            if (region.size != 0) {
+                provider->setCurrentPage(page.value());
+                u64 start = region.address;
+                this->m_memoryEditor.GotoAddrAndSelect(start - provider->getBaseAddress(), start + region.size - provider->getBaseAddress() - 1);
+            }
+            
+            EventManager::post<EventRegionSelected>(Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1});
         });
 
         EventManager::subscribe<EventProjectFileLoad>(this, []() {

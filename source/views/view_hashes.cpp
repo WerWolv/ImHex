@@ -49,7 +49,11 @@ namespace hex {
                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                 ImGui::Checkbox("hex.common.match_selection"_lang, &this->m_shouldMatchSelection);
-                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                if (ImGui::IsItemEdited()) {
+                    // Force execution of Region Selection Event
+                    EventManager::post<RequestSelectionChange>(Region{ 0, 0 });
+                    this->m_shouldInvalidate = true;
+                }
 
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.view.hashes.settings"_lang);

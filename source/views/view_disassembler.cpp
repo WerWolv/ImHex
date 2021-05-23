@@ -107,7 +107,12 @@ namespace hex {
 
                 ImGui::InputScalar("hex.view.disassembler.base"_lang, ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::InputScalarN("hex.view.disassembler.region"_lang, ImGuiDataType_U64, this->m_codeRegion, 2, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
+
                 ImGui::Checkbox("hex.common.match_selection"_lang, &this->m_shouldMatchSelection);
+                if (ImGui::IsItemEdited()) {
+                    // Force execution of Region Selection Event
+                    EventManager::post<RequestSelectionChange>(Region{ 0, 0 });
+                }
 
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.view.disassembler.settings.header"_lang);
