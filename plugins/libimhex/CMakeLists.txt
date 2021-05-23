@@ -13,14 +13,24 @@ else()
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/fmt ${CMAKE_CURRENT_BINARY_DIR}/external/fmt)
+if(USE_SYSTEM_FMT)
+  find_package(fmt REQUIRED)
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/fmt ${CMAKE_CURRENT_BINARY_DIR}/external/fmt)
+endif()
 
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
 set(CMAKE_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
 set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/curl ${CMAKE_CURRENT_BINARY_DIR}/external/curl EXCLUDE_FROM_ALL)
-set_target_properties(libcurl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+if(USE_SYSTEM_CURL)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl)
+else()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/curl ${CMAKE_CURRENT_BINARY_DIR}/external/curl EXCLUDE_FROM_ALL)
+  set_target_properties(libcurl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
@@ -65,11 +75,32 @@ endif ()
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 
 target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR} ${XDGPP_INCLUDE_DIRS})
+
+if (USE_SYSTEM_FMT)
+    target_include_directories(libimhex PUBLIC include ${FMT_INCLUDE_DIRS})
+endif()
+if (USE_SYSTEM_CURL)
+    target_include_directories(libimhex PUBLIC include ${CURL_INCLUDE_DIRS})
+endif()
+
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (APPLE)
     find_library(FOUNDATION NAMES Foundation)
     target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FOUNDATION} nfd fmt-header-only libcurl)
 else ()
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd fmt-header-only libcurl)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd)
+
+    if (USE_SYSTEM_FMT)
+        target_link_libraries(libimhex PUBLIC fmt)
+    else()
+        target_link_libraries(libimhex PUBLIC fmt-header-only)
+    endif()
+
+    if (USE_SYSTEM_CURL)
+        target_link_libraries(libimhex PUBLIC curl)
+    else()
+        target_link_libraries(libimhex PUBLIC libcurl)
+    endif()
+
 endif ()
