@@ -29,7 +29,7 @@ namespace hex {
 
 
     void ViewHelp::drawAboutPopup() {
-        if (ImGui::BeginPopupModal(View::toWindowName("hex.view.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal(View::toWindowName("hex.view.help.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("ImHex Hex Editor v%s by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
                 ImGui::SameLine();
