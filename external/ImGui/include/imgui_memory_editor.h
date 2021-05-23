@@ -272,7 +272,7 @@ struct MemoryEditor
             if (OptMidColsCount > 0)
                 byte_pos_x += (float)(i / OptMidColsCount) * s.SpacingBetweenMidCols;
             ImGui::SameLine(byte_pos_x);
-            ImGui::Text("%02X", i);
+            ImGui::Text("%02llX", i + (base_display_addr % Cols));
         }
         ImGui::EndChild();
 
