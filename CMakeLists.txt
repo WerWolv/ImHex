@@ -33,7 +33,8 @@ endif()
 if (NOT USE_SYSTEM_YARA)
     add_subdirectory(external/yara)
 else()
-    find_package(yara REQUIRED)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
 endif()
 
 # Add bundled dependencies
