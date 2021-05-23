@@ -5,6 +5,7 @@
 #include <bit>
 #include <optional>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace hex::lang {
@@ -149,7 +150,10 @@ namespace hex::lang {
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
-            this->m_type = other.m_type->clone();
+            if (other.m_type != nullptr)
+                this->m_type = other.m_type->clone();
+            else
+                this->m_type = nullptr;
             this->m_endian = other.m_endian;
         }
 
@@ -391,20 +395,29 @@ namespace hex::lang {
 
     class ASTNodeRValue : public ASTNode {
     public:
-        explicit ASTNodeRValue(std::vector<std::string> path) : ASTNode(), m_path(std::move(path)) { }
+        using Path = std::vector<std::variant<std::string, ASTNode*>>;
+
+        explicit ASTNodeRValue(Path path) : ASTNode(), m_path(std::move(path)) { }
 
         ASTNodeRValue(const ASTNodeRValue&) = default;
+
+        ~ASTNodeRValue() override {
+            for (auto &part : this->m_path) {
+                if (auto node = std::get_if<ASTNode*>(&part); node != nullptr)
+                    delete *node;
+            }
+        }
 
         [[nodiscard]] ASTNode* clone() const override {
             return new ASTNodeRValue(*this);
         }
 
-        const std::vector<std::string>& getPath() {
+        const Path& getPath() {
             return this->m_path;
         }
 
     private:
-        std::vector<std::string> m_path;
+        Path m_path;
     };
 
     class ASTNodeScopeResolution : public ASTNode {
@@ -554,4 +567,35 @@ namespace hex::lang {
         std::optional<std::string> m_value;
     };
 
+    class ASTNodeTypeOperator : public ASTNode {
+    public:
+        ASTNodeTypeOperator(Token::Operator op, ASTNode *expression) : m_op(op), m_expression(expression) {
+
+        }
+
+        ASTNodeTypeOperator(const ASTNodeTypeOperator &other) : ASTNode(other) {
+            this->m_op = other.m_op;
+            this->m_expression = other.m_expression->clone();
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeTypeOperator(*this);
+        }
+
+        ~ASTNodeTypeOperator() override {
+            delete this->m_expression;
+        }
+
+        Token::Operator getOperator() const {
+            return this->m_op;
+        }
+
+        ASTNode* getExpression() const {
+            return this->m_expression;
+        }
+
+    private:
+        Token::Operator m_op;
+        ASTNode *m_expression;
+    };
 }

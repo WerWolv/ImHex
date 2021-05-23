@@ -26,6 +26,8 @@ namespace hex {
         float m_highestBlockEntropy = 0;
         std::vector<float> m_blockEntropy;
 
+        double m_entropyHandlePosition;
+
         std::array<ImU64, 256> m_valueCounts = { 0 };
         bool m_analyzing = false;
 

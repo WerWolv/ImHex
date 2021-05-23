@@ -76,6 +76,7 @@ namespace hex {
 
 #define TOKEN_CONCAT_IMPL(x, y) x ## y
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
+#define ANONYMOUS_VARIABLE(prefix) TOKEN_CONCAT(prefix, __COUNTER__)
 
 namespace hex {
 
@@ -102,12 +103,6 @@ namespace hex {
         ValueType mask = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
 
         return (value & mask) >> to;
-    }
-
-    template<hex::integral T>
-    [[nodiscard]] constexpr inline T signExtend(T value, u8 currWidth, u8 targetWidth) {
-        T mask = 1LLU << (currWidth - 1);
-        return (((value ^ mask) - mask) << ((sizeof(T) * 8) - targetWidth)) >> ((sizeof(T) * 8) - targetWidth);
     }
 
     template<typename T>
@@ -165,6 +160,7 @@ namespace hex {
     }
 
     std::vector<std::string> splitString(std::string_view string, std::string_view delimiter);
+    std::string combineStrings(const std::vector<std::string> &strings, std::string_view delimiter = "");
 
     std::string toEngineeringString(double value);
 
@@ -195,11 +191,11 @@ namespace hex {
         return result;
     }
 
-    inline std::string toBinaryString(hex::integral auto number) {
+    inline std::string toBinaryString(hex::unsigned_integral auto number) {
         if (number == 0) return "0";
 
         std::string result;
-        for (u8 bit = hex::bit_width(number); bit > 0; bit--)
+        for (s16 bit = hex::bit_width(number) - 1; bit >= 0; bit--)
             result += (number & (0b1 << bit)) == 0 ? '0' : '1';
 
         return result;
@@ -235,19 +231,31 @@ namespace hex {
 
     std::vector<std::string> getPath(ImHexPath path);
 
-    #define SCOPE_EXIT(func) ScopeExit TOKEN_CONCAT(scopeGuard, __COUNTER__)([&] { func })
-    class ScopeExit {
+    #define SCOPE_GUARD ::hex::ScopeGuardOnExit() + [&]()
+    #define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
+    template<class F>
+    class ScopeGuard {
+    private:
+        F m_func;
+        bool m_active;
     public:
-        ScopeExit(const std::function<void()> &func) : m_func(func) {}
-        ~ScopeExit() { if (this->m_func != nullptr) this->m_func(); }
+        constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
+        ~ScopeGuard() { if (this->m_active) { this->m_func(); } }
+        void release() { this->m_active = false; }
 
-        void release() {
-            this->m_func = nullptr;
+        ScopeGuard(ScopeGuard &&other) noexcept : m_func(std::move(other.m_func)), m_active(other.m_active) {
+            other.cancel();
         }
 
-    private:
-        std::function<void()> m_func;
+        ScopeGuard& operator=(ScopeGuard &&) = delete;
     };
+
+    enum class ScopeGuardOnExit { };
+
+    template <typename F>
+    constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F&& f) {
+        return ScopeGuard<F>(std::forward<F>(f));
+    }
 
     struct Region {
         u64 address;

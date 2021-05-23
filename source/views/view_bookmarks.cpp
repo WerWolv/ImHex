@@ -8,8 +8,7 @@
 namespace hex {
 
     ViewBookmarks::ViewBookmarks() : View("hex.view.bookmarks.name") {
-        View::subscribeEvent(Events::AddBookmark, [](auto userData) {
-            auto bookmark = std::any_cast<ImHexApi::Bookmarks::Entry>(userData);
+        EventManager::subscribe<RequestAddBookmark>(this, [](ImHexApi::Bookmarks::Entry bookmark) {
             bookmark.comment.resize(0xF'FFFF);
 
             if (bookmark.name.empty()) {
@@ -29,18 +28,19 @@ namespace hex {
             ProjectFile::markDirty();
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [](auto) {
+        EventManager::subscribe<EventProjectFileLoad>(this, []{
             SharedData::bookmarkEntries = ProjectFile::getBookmarks();
         });
-        View::subscribeEvent(Events::ProjectFileStore, [](auto) {
+
+        EventManager::subscribe<EventProjectFileStore>(this, []{
             ProjectFile::setBookmarks(SharedData::bookmarkEntries);
         });
     }
 
     ViewBookmarks::~ViewBookmarks() {
-        View::unsubscribeEvent(Events::AddBookmark);
-        View::unsubscribeEvent(Events::ProjectFileLoad);
-        View::unsubscribeEvent(Events::ProjectFileStore);
+        EventManager::unsubscribe<RequestAddBookmark>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
+        EventManager::unsubscribe<EventProjectFileStore>(this);
     }
 
     void ViewBookmarks::drawContent() {
@@ -75,7 +75,7 @@ namespace hex {
 
                         {
                             u8 bytes[10] = { 0 };
-                            (SharedData::currentProvider)->read(region.address, bytes, std::min(region.size, size_t(10)));
+                            SharedData::currentProvider->read(region.address, bytes, std::min(region.size, size_t(10)));
 
                             std::string bytesString;
                             for (u8 i = 0; i < std::min(region.size, size_t(10)); i++) {
@@ -90,7 +90,7 @@ namespace hex {
                             ImGui::TextColored(ImColor(0xFF9BC64D), "%s", bytesString.c_str());
                         }
                         if (ImGui::Button("hex.view.bookmarks.button.jump"_lang))
-                            View::postEvent(Events::SelectionChangeRequest, region);
+                            EventManager::post<RequestSelectionChange>(region);
                         ImGui::SameLine(0, 15);
 
                         if (ImGui::Button("hex.view.bookmarks.button.remove"_lang))

@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include <hex/helpers/lang.hpp>
+#include <hex/helpers/logger.hpp>
 using namespace hex::lang_literals;
 
 using u8    = std::uint8_t;

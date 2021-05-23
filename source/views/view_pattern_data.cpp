@@ -5,16 +5,15 @@
 
 namespace hex {
 
-    ViewPatternData::ViewPatternData(std::vector<lang::PatternData*> &patternData)
-        : View("hex.view.pattern_data.name"), m_patternData(patternData) {
+    ViewPatternData::ViewPatternData() : View("hex.view.pattern_data.name") {
 
-        this->subscribeEvent(Events::PatternChanged, [this](auto data) {
+        EventManager::subscribe<EventPatternChanged>(this, [this]() {
             this->m_sortedPatternData.clear();
         });
     }
 
     ViewPatternData::~ViewPatternData() {
-        this->unsubscribeEvent(Events::PatternChanged);
+        EventManager::unsubscribe<EventPatternChanged>(this);
     }
 
     static bool beginPatternDataTable(prv::Provider* &provider, const std::vector<lang::PatternData*> &patterns, std::vector<lang::PatternData*> &sortedPatterns) {
@@ -53,7 +52,7 @@ namespace hex {
             auto provider = SharedData::currentProvider;
             if (provider != nullptr && provider->isReadable()) {
 
-                if (beginPatternDataTable(provider, this->m_patternData, this->m_sortedPatternData)) {
+                if (beginPatternDataTable(provider, SharedData::patternData, this->m_sortedPatternData)) {
                     ImGui::TableHeadersRow();
                     if (this->m_sortedPatternData.size() > 0) {
 

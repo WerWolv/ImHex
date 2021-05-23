@@ -18,7 +18,7 @@ namespace hex {
 
     class ViewPattern : public View {
     public:
-        explicit ViewPattern(std::vector<lang::PatternData*> &patternData);
+        ViewPattern();
         ~ViewPattern() override;
 
         void drawMenu() override;
@@ -27,7 +27,6 @@ namespace hex {
 
     private:
         lang::PatternLanguage *m_patternLanguageRuntime;
-        std::vector<lang::PatternData*> &m_patternData;
         std::vector<std::string> m_possiblePatternFiles;
         int m_selectedPatternFile = 0;
         bool m_runAutomatically = false;

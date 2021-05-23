@@ -14,7 +14,7 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewStrings::ViewStrings() : View("hex.view.strings.name") {
-        View::subscribeEvent(Events::DataChanged, [this](auto){
+        EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->m_foundStrings.clear();
         });
 
@@ -22,7 +22,7 @@ namespace hex {
     }
 
     ViewStrings::~ViewStrings() {
-        View::unsubscribeEvent(Events::DataChanged);
+        EventManager::unsubscribe<EventDataChanged>(this);
     }
 
 
@@ -57,7 +57,7 @@ namespace hex {
 
             for (u64 offset = 0; offset < provider->getSize(); offset += buffer.size()) {
                 size_t readSize = std::min(u64(buffer.size()), provider->getSize() - offset);
-                provider->read(offset,  buffer.data(), readSize);
+                provider->readRelative(offset,  buffer.data(), readSize);
 
                 for (u32 i = 0; i < readSize; i++) {
                     if (buffer[i] >= 0x20 && buffer[i] <= 0x7E)
@@ -66,7 +66,7 @@ namespace hex {
                         if (foundCharacters >= this->m_minimumLength) {
                             FoundString foundString;
 
-                            foundString.offset = offset + i - foundCharacters;
+                            foundString.offset = offset + i - foundCharacters + provider->getBaseAddress();
                             foundString.size = foundCharacters;
                             foundString.string.reserve(foundCharacters);
                             foundString.string.resize(foundCharacters);
@@ -87,7 +87,6 @@ namespace hex {
 
     void ViewStrings::drawContent() {
         auto provider = SharedData::currentProvider;
-
 
         if (ImGui::Begin(View::toWindowName("hex.view.strings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (provider != nullptr && provider->isReadable()) {
@@ -161,8 +160,7 @@ namespace hex {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             if (ImGui::Selectable(("##StringLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                Region selectRegion = { foundString.offset, foundString.size };
-                                View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                                EventManager::post<RequestSelectionChange>(Region { foundString.offset, foundString.size });
                             }
                             ImGui::PushID(i + 1);
                             createStringContextMenu(foundString);

@@ -48,7 +48,7 @@
 #include <stdint.h>     // uint8_t, etc.
 #include <hex/helpers/utils.hpp>
 
-#include <hex/views/view.hpp>
+#include <hex/api/event.hpp>
 
 #include <string>
 
@@ -156,6 +156,13 @@ struct MemoryEditor
         HighlightMax = addr_max;
     }
 
+    void GotoAddrAndSelect(size_t addr_min, size_t addr_max)
+    {
+        GotoAddr = addr_min;
+        DataPreviewAddr = addr_min;
+        DataPreviewAddrEnd = addr_max;
+    }
+
     struct Sizes
     {
         int     AddrDigitsCount;
@@ -222,8 +229,8 @@ struct MemoryEditor
         if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs))
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
-                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd), std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
-                hex::View::postEvent(hex::Events::RegionSelected, selectionRegion);
+                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd) + base_display_addr, std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
+                hex::EventManager::post<hex::EventRegionSelected>(selectionRegion);
             }
 
             DataPreviewAddrOld = DataPreviewAddr;
@@ -717,7 +724,6 @@ struct MemoryEditor
                 ImGui::EndChild();
                 DataEditingAddr = DataPreviewAddr = HighlightMin;
                 DataPreviewAddrEnd = HighlightMax;
-                DataEditingTakeFocus = true;
             }
             GotoAddr = (size_t)-1;
         }

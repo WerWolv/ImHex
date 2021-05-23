@@ -24,7 +24,7 @@ namespace hex {
         bool isAvailable() override { return true; }
         bool shouldProcess() override { return true; }
 
-        bool handleShortcut(int key, int mods) override;
+        bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) override;
 
         bool hasViewMenuItemEntry() override { return false; }
         ImVec2 getMinSize() override { return ImVec2(400, 100); }

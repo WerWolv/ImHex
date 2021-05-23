@@ -1,8 +1,10 @@
 #include "views/view_data_processor.hpp"
 
 #include <hex/providers/provider.hpp>
+#include <helpers/project_file_handler.hpp>
 
 #include <imnodes.h>
+#include <nlohmann/json.hpp>
 
 namespace hex {
 
@@ -17,7 +19,7 @@ namespace hex {
             io.link_detach_with_modifier_click.modifier = &always;
         }
 
-        View::subscribeEvent(Events::SettingsChanged, [](auto) {
+        EventManager::subscribe<EventSettingsChanged>(this, [] {
             auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
             if (theme.is_number()) {
@@ -38,7 +40,15 @@ namespace hex {
             }
         });
 
-        View::subscribeEvent(Events::FileLoaded, [this](auto) {
+        EventManager::subscribe<EventProjectFileStore>(this, [this] {
+            ProjectFile::setDataProcessorContent(this->saveNodes());
+        });
+
+        EventManager::subscribe<EventProjectFileLoad>(this, [this] {
+            this->loadNodes(ProjectFile::getDataProcessorContent());
+        });
+
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
             }
@@ -49,6 +59,11 @@ namespace hex {
     ViewDataProcessor::~ViewDataProcessor() {
         for (auto &node : this->m_nodes)
             delete node;
+
+        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<EventProjectFileStore>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
 
         imnodes::PopAttributeFlag();
         imnodes::PopAttributeFlag();
@@ -125,6 +140,11 @@ namespace hex {
             }
         } catch (dp::Node::NodeError &e) {
             this->m_currNodeError = e;
+
+            for (auto overlay : this->m_dataOverlays)
+                SharedData::currentProvider->deleteOverlay(overlay);
+            this->m_dataOverlays.clear();
+
         } catch (std::runtime_error &e) {
             printf("Node implementation bug! %s\n", e.what());
         }
@@ -244,7 +264,7 @@ namespace hex {
                 imnodes::BeginNode(node->getID());
 
                 imnodes::BeginNodeTitleBar();
-                ImGui::TextUnformatted(LangEntry(node->getUnlocalizedName()));
+                ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
                 imnodes::EndNodeTitleBar();
 
                 node->drawNode();
@@ -357,6 +377,142 @@ namespace hex {
 
     void ViewDataProcessor::drawMenu() {
 
+    }
+
+    std::string ViewDataProcessor::saveNodes() {
+        using json = nlohmann::json;
+        json output;
+
+        output["nodes"] = json::object();
+        for (auto &node : this->m_nodes) {
+            auto id = node->getID();
+            auto &currNodeOutput = output["nodes"][std::to_string(id)];
+            auto pos = imnodes::GetNodeGridSpacePos(id);
+
+            currNodeOutput["type"] = node->getUnlocalizedName();
+            currNodeOutput["pos"] = { { "x", pos.x }, { "y", pos.y } };
+            currNodeOutput["attrs"] = json::array();
+            currNodeOutput["id"] = id;
+
+            currNodeOutput["data"] = node->store();
+
+            u32 attrIndex = 0;
+            for (auto &attr : node->getAttributes()) {
+                currNodeOutput["attrs"][attrIndex] = attr.getID();
+                attrIndex++;
+            }
+        }
+
+        output["links"] = json::object();
+        for (auto &link : this->m_links) {
+            auto id = link.getID();
+            auto &currOutput = output["links"][std::to_string(id)];
+
+            currOutput["id"] = id;
+            currOutput["from"] = link.getFromID();
+            currOutput["to"] = link.getToID();
+        }
+
+        return output.dump();
+    }
+
+    void ViewDataProcessor::loadNodes(std::string_view data) {
+        using json = nlohmann::json;
+
+        json input = json::parse(data);
+
+        u32 maxNodeId = 0;
+        u32 maxAttrId = 0;
+        u32 maxLinkId = 0;
+
+        for (auto &node : this->m_nodes)
+            delete node;
+
+        this->m_nodes.clear();
+        this->m_endNodes.clear();
+        this->m_links.clear();
+
+        auto &nodeEntries = ContentRegistry::DataProcessorNode::getEntries();
+        for (auto &node : input["nodes"]) {
+            dp::Node *newNode = nullptr;
+            for (auto &entry : nodeEntries) {
+                if (entry.name == node["type"])
+                    newNode = entry.creatorFunction();
+            }
+
+            if (newNode == nullptr)
+                continue;
+
+            u32 nodeId = node["id"];
+            maxNodeId = std::max(nodeId, maxNodeId);
+
+            newNode->setID(nodeId);
+
+            bool hasOutput = false;
+            bool hasInput = false;
+            u32 attrIndex = 0;
+            for (auto &attr : newNode->getAttributes()) {
+                if (attr.getIOType() == dp::Attribute::IOType::Out)
+                    hasOutput = true;
+
+                if (attr.getIOType() == dp::Attribute::IOType::In)
+                    hasInput = true;
+
+                u32 attrId = node["attrs"][attrIndex];
+                maxAttrId = std::max(attrId, maxAttrId);
+
+                attr.setID(attrId);
+                attrIndex++;
+            }
+
+            if (!node["data"].is_null())
+                newNode->load(node["data"]);
+
+            if (hasInput && !hasOutput)
+                this->m_endNodes.push_back(newNode);
+
+            this->m_nodes.push_back(newNode);
+            imnodes::SetNodeGridSpacePos(nodeId, ImVec2(node["pos"]["x"], node["pos"]["y"]));
+        }
+
+        for (auto &link : input["links"]) {
+            dp::Link newLink(link["from"], link["to"]);
+
+            u32 linkId = link["id"];
+            maxLinkId = std::max(linkId, maxLinkId);
+
+            newLink.setID(linkId);
+            this->m_links.push_back(newLink);
+
+            dp::Attribute *fromAttr, *toAttr;
+            for (auto &node : this->m_nodes) {
+                for (auto &attribute : node->getAttributes()) {
+                    if (attribute.getID() == newLink.getFromID())
+                        fromAttr = &attribute;
+                    else if (attribute.getID() == newLink.getToID())
+                        toAttr = &attribute;
+                }
+            }
+
+            if (fromAttr == nullptr || toAttr == nullptr)
+                break;
+
+            if (fromAttr->getType() != toAttr->getType())
+                break;
+
+            if (fromAttr->getIOType() == toAttr->getIOType())
+                break;
+
+            if (!toAttr->getConnectedAttributes().empty())
+                break;
+
+            fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
+            toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
+        }
+
+        SharedData::dataProcessorNodeIdCounter = maxNodeId + 1;
+        SharedData::dataProcessorAttrIdCounter = maxAttrId + 1;
+        SharedData::dataProcessorLinkIdCounter = maxLinkId + 1;
     }
 
 }

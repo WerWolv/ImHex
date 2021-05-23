@@ -22,10 +22,10 @@ namespace hex::lang {
     ASTNode* Parser::parseFunctionCall() {
         auto functionName = getValue<std::string>(-2);
         std::vector<ASTNode*> params;
-        ScopeExit paramCleanup([&]{
+        auto paramCleanup = SCOPE_GUARD {
             for (auto &param : params)
                 delete param;
-        });
+        };
 
         while (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
             if (MATCHES(sequence(STRING)))
@@ -66,17 +66,25 @@ namespace hex::lang {
     }
 
     // <Identifier[.]...>
-    ASTNode* Parser::parseRValue(std::vector<std::string> &path) {
+    ASTNode* Parser::parseRValue(ASTNodeRValue::Path &path) {
         if (peek(IDENTIFIER, -1))
             path.push_back(getValue<std::string>(-1));
+        else if (peek(KEYWORD_PARENT, -1))
+            path.emplace_back("parent");
+
+        if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN))) {
+            path.push_back(parseMathematicalExpression());
+            if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
+                throwParseError("expected closing ']' at end of array indexing");
+        }
 
         if (MATCHES(sequence(SEPARATOR_DOT))) {
-            if (MATCHES(sequence(IDENTIFIER)))
+            if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT)))
                 return this->parseRValue(path);
             else
-                throwParseError("expected member name", -1);
+                throwParseError("expected member name or 'parent' keyword", -1);
         } else
-            return TO_NUMERIC_EXPRESSION(new ASTNodeRValue(path));
+            return new ASTNodeRValue(path);
     }
 
     // <Integer|((parseMathematicalExpression))>
@@ -85,8 +93,10 @@ namespace hex::lang {
             return TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(getValue<Token::IntegerLiteral>(-1)));
         else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto node = this->parseMathematicalExpression();
-            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+                delete node;
                 throwParseError("expected closing parenthesis");
+            }
             return node;
         } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SCOPE_RESOLUTION))) {
             std::vector<std::string> path;
@@ -94,11 +104,25 @@ namespace hex::lang {
             return this->parseScopeResolution(path);
         } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN))) {
             return TO_NUMERIC_EXPRESSION(this->parseFunctionCall());
-        } else if (MATCHES(sequence(IDENTIFIER))) {
-            std::vector<std::string> path;
-            return this->parseRValue(path);
+        } else if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
+            ASTNodeRValue::Path path;
+            return TO_NUMERIC_EXPRESSION(this->parseRValue(path));
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
             return new ASTNodeRValue({ "$" });
+        } else if (MATCHES(oneOf(OPERATOR_ADDRESSOF, OPERATOR_SIZEOF) && sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
+            auto op = getValue<Token::Operator>(-2);
+
+            if (!MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
+                throwParseError("expected rvalue identifier");
+            }
+
+            ASTNodeRValue::Path path;
+            auto node = new ASTNodeTypeOperator(op, this->parseRValue(path));
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+                delete node;
+                throwParseError("expected closing parenthesis");
+            }
+            return TO_NUMERIC_EXPRESSION(node);
         } else
             throwParseError("expected integer or parenthesis");
     }
@@ -118,7 +142,7 @@ namespace hex::lang {
     ASTNode* Parser::parseMultiplicativeExpression() {
         auto node = this->parseUnaryExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(oneOf(OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT))) {
             auto op = getValue<Token::Operator>(-1);
@@ -134,7 +158,7 @@ namespace hex::lang {
     ASTNode* Parser::parseAdditiveExpression() {
         auto node = this->parseMultiplicativeExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(variant(OPERATOR_PLUS, OPERATOR_MINUS))) {
             auto op = getValue<Token::Operator>(-1);
@@ -150,7 +174,7 @@ namespace hex::lang {
     ASTNode* Parser::parseShiftExpression() {
         auto node = this->parseAdditiveExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(variant(OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT))) {
             auto op = getValue<Token::Operator>(-1);
@@ -166,7 +190,7 @@ namespace hex::lang {
     ASTNode* Parser::parseRelationExpression() {
         auto node = this->parseShiftExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD{ delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
             auto op = getValue<Token::Operator>(-1);
@@ -182,7 +206,7 @@ namespace hex::lang {
     ASTNode* Parser::parseEqualityExpression() {
         auto node = this->parseRelationExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLEQUALS) || sequence(OPERATOR_BOOLNOTEQUALS))) {
             auto op = getValue<Token::Operator>(-1);
@@ -198,7 +222,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBinaryAndExpression() {
         auto node = this->parseEqualityExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BITAND))) {
             node = new ASTNodeNumericExpression(node, this->parseEqualityExpression(), Token::Operator::BitAnd);
@@ -213,7 +237,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBinaryXorExpression() {
         auto node = this->parseBinaryAndExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BITXOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBinaryAndExpression(), Token::Operator::BitXor);
@@ -228,7 +252,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBinaryOrExpression() {
         auto node = this->parseBinaryXorExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BITOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBinaryXorExpression(), Token::Operator::BitOr);
@@ -243,7 +267,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBooleanAnd() {
         auto node = this->parseBinaryOrExpression();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLAND))) {
             node = new ASTNodeNumericExpression(node, this->parseBinaryOrExpression(), Token::Operator::BitOr);
@@ -258,7 +282,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBooleanXor() {
         auto node = this->parseBooleanAnd();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLXOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBooleanAnd(), Token::Operator::BitOr);
@@ -273,7 +297,7 @@ namespace hex::lang {
     ASTNode* Parser::parseBooleanOr() {
         auto node = this->parseBooleanXor();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLOR))) {
             node = new ASTNodeNumericExpression(node, this->parseBooleanXor(), Token::Operator::BitOr);
@@ -288,7 +312,7 @@ namespace hex::lang {
     ASTNode* Parser::parseTernaryConditional() {
         auto node = this->parseBooleanOr();
 
-        ScopeExit nodeCleanup([&]{ delete node; });
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_TERNARYCONDITIONAL))) {
             auto second = this->parseBooleanOr();
@@ -341,13 +365,13 @@ namespace hex::lang {
         auto condition = parseMathematicalExpression();
         std::vector<ASTNode*> trueBody, falseBody;
 
-        ScopeExit cleanup([&]{
+        auto cleanup = SCOPE_GUARD {
             delete condition;
             for (auto &statement : trueBody)
                 delete statement;
             for (auto &statement : falseBody)
                 delete statement;
-        });
+        };
 
         if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE, SEPARATOR_CURLYBRACKETOPEN))) {
             while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -432,7 +456,7 @@ namespace hex::lang {
         auto name = getValue<std::string>(-2);
 
         ASTNode *size = nullptr;
-        ScopeExit sizeCleanup([&]{ delete size; });
+        auto sizeCleanup = SCOPE_GUARD { delete size; };
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
             size = parseMathematicalExpression();
@@ -494,7 +518,12 @@ namespace hex::lang {
     ASTNode* Parser::parseStruct() {
         const auto structNode = new ASTNodeStruct();
         const auto &typeName = getValue<std::string>(-2);
-        ScopeExit structGuard([&]{ delete structNode; });
+        auto structGuard = SCOPE_GUARD { delete structNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             structNode->addMember(parseMember());
@@ -509,7 +538,12 @@ namespace hex::lang {
     ASTNode* Parser::parseUnion() {
         const auto unionNode = new ASTNodeUnion();
         const auto &typeName = getValue<std::string>(-2);
-        ScopeExit unionGuard([&]{ delete unionNode; });
+        auto unionGuard = SCOPE_GUARD { delete unionNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             unionNode->addMember(parseMember());
@@ -533,7 +567,12 @@ namespace hex::lang {
         if (underlyingType->getEndian().has_value()) throwParseError("underlying type may not have an endian specification", -2);
 
         const auto enumNode = new ASTNodeEnum(underlyingType);
-        ScopeExit enumGuard([&]{ delete enumNode; });
+        auto enumGuard = SCOPE_GUARD { delete enumNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -577,7 +616,12 @@ namespace hex::lang {
         std::string typeName = getValue<std::string>(-2);
 
         const auto bitfieldNode = new ASTNodeBitfield();
-        ScopeExit enumGuard([&]{ delete bitfieldNode; });
+        auto enumGuard = SCOPE_GUARD { delete bitfieldNode; };
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
@@ -615,7 +659,7 @@ namespace hex::lang {
         auto name = getValue<std::string>(-2);
 
         ASTNode *size = nullptr;
-        ScopeExit sizeCleanup([&]{ delete size; });
+        auto sizeCleanup = SCOPE_GUARD { delete size; };
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
             size = parseMathematicalExpression();

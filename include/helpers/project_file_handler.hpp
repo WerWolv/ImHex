@@ -33,6 +33,9 @@ namespace hex {
         [[nodiscard]] static const std::list<ImHexApi::Bookmarks::Entry>& getBookmarks()  { return ProjectFile::s_bookmarks; }
         static void setBookmarks(const std::list<ImHexApi::Bookmarks::Entry> &bookmarks)  { ProjectFile::s_hasUnsavedChanged = true; ProjectFile::s_bookmarks = bookmarks; }
 
+        [[nodiscard]] static const std::string_view getDataProcessorContent()   { return ProjectFile::s_dataProcessorContent; }
+        static void setDataProcessorContent(std::string_view json)              { ProjectFile::s_dataProcessorContent = json; }
+
     private:
         static inline std::string s_currProjectFilePath;
         static inline bool s_hasUnsavedChanged = false;
@@ -41,6 +44,7 @@ namespace hex {
         static inline std::string s_pattern;
         static inline Patches s_patches;
         static inline std::list<ImHexApi::Bookmarks::Entry> s_bookmarks;
+        static inline std::string s_dataProcessorContent;
     };
 
 }

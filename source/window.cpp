@@ -21,7 +21,8 @@
 
 #include <fontawesome_font.h>
 
-#include "helpers/plugin_handler.hpp"
+#include "helpers/plugin_manager.hpp"
+#include "init/tasks.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -47,22 +48,31 @@ namespace hex {
         buf->appendf("[%s][General]\n", handler->TypeName);
 
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            buf->appendf("%s=%d\n", typeid(*view).name(), view->getWindowOpenState());
+            buf->appendf("%s=%d\n", view->getUnlocalizedName().data(), view->getWindowOpenState());
         }
 
         buf->append("\n");
     }
 
-    Window::Window(int &argc, char **&argv) {
-        SharedData::mainArgc = argc;
-        SharedData::mainArgv = argv;
+    Window::Window() {
         SharedData::currentProvider = nullptr;
 
-        this->createDirectories();
+        #if !defined(RELEASE)
+        {
+            for (const auto &[argument, value] : init::getInitArguments()) {
+                if (argument == "update-available") {
+                    this->m_availableUpdate = value;
+                } else if (argument == "no-plugins") {
+                    View::doLater([]{ ImGui::OpenPopup("No Plugins"); });
+                }
+            }
+        }
+        #endif
+
         this->initGLFW();
         this->initImGui();
 
-        EventManager::subscribe(Events::SettingsChanged, this, [this](auto) -> std::any {
+        EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
@@ -103,17 +113,20 @@ namespace hex {
                     this->m_targetFps = targetFps;
             }
 
-            return { };
+            {
+                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 1)
+                    this->m_layoutConfigured = true;
+                else
+                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
+            }
         });
 
-        EventManager::subscribe(Events::FileLoaded, this, [this](auto userData) -> std::any {
-            auto path = std::any_cast<std::string>(userData);
-
-            this->m_recentFiles.push_front(path);
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
+            SharedData::recentFilePaths.push_front(path);
 
             {
                 std::list<std::string> uniques;
-                for (auto &file : this->m_recentFiles) {
+                for (auto &file : SharedData::recentFilePaths) {
 
                     bool exists = false;
                     for (auto &unique : uniques) {
@@ -127,32 +140,32 @@ namespace hex {
                     if (uniques.size() > 5)
                         break;
                 }
-                this->m_recentFiles = uniques;
+                SharedData::recentFilePaths = uniques;
             }
 
             {
                 std::vector<std::string> recentFilesVector;
-                std::copy(this->m_recentFiles.begin(), this->m_recentFiles.end(), std::back_inserter(recentFilesVector));
+                std::copy(SharedData::recentFilePaths.begin(), SharedData::recentFilePaths.end(), std::back_inserter(recentFilesVector));
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }
-
-            return { };
         });
 
-        EventManager::subscribe(Events::CloseImHex, this, [this](auto) -> std::any {
+        EventManager::subscribe<RequestCloseImHex>(this, [this]() {
             glfwSetWindowShouldClose(this->m_window, true);
-
-            return { };
         });
 
-        this->initPlugins();
+        EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
+            if (windowTitle.empty())
+                glfwSetWindowTitle(this->m_window, "ImHex");
+            else
+                glfwSetWindowTitle(this->m_window, ("ImHex - " + windowTitle).c_str());
+        });
 
-        ContentRegistry::Settings::load();
-        View::postEvent(Events::SettingsChanged);
+        EventManager::post<EventSettingsChanged>();
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
-            this->m_recentFiles.push_back(path);
+            SharedData::recentFilePaths.push_back(path);
     }
 
     Window::~Window() {
@@ -160,23 +173,24 @@ namespace hex {
 
         this->deinitImGui();
         this->deinitGLFW();
-        ContentRegistry::Settings::store();
 
-        for (auto &view : SharedData::views)
-            delete view;
-        SharedData::views.clear();
-
-        this->deinitPlugins();
-
-        EventManager::unsubscribe(Events::SettingsChanged, this);
-        EventManager::unsubscribe(Events::FileLoaded, this);
-        EventManager::unsubscribe(Events::CloseImHex, this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<RequestCloseImHex>(this);
+        EventManager::unsubscribe<RequestChangeWindowTitle>(this);
     }
 
     void Window::loop() {
+        bool pressedKeys[512] = { false };
+
         this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
+            std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
+
             this->frameBegin();
+
+            for (u16 i = 0; i < 512; i++)
+                pressedKeys[i] = ImGui::GetIO().KeysDown[i] && !this->m_prevKeysDown[i];
 
             for (const auto &call : View::getDeferedCalls())
                 call();
@@ -194,6 +208,7 @@ namespace hex {
 
                 ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
                 view->drawContent();
+                view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
             }
 
             View::drawCommonInterfaces();
@@ -335,25 +350,19 @@ namespace hex {
                 }
 
                 if (this->m_fpsVisible) {
-                    char buffer[0x20];
-                    snprintf(buffer, 0x20, "%.1f FPS", ImGui::GetIO().Framerate);
-
-                    ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetFontSize() * strlen(buffer) + 20);
-                    ImGui::TextUnformatted(buffer);
+                    std::string fps = hex::format("{:.1f} FPS ", ImGui::GetIO().Framerate);
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - fps.length() * ImGui::GetFontSize());
+                    ImGui::TextUnformatted(fps.c_str());
+                } else {
+                    #if defined(DEBUG)
+                        ImGui::SameLine();
+                        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 2 * ImGui::GetFontSize());
+                        ImGui::TextUnformatted(ICON_FA_BUG);
+                    #endif
                 }
 
                 ImGui::EndMenuBar();
-            }
-
-            if (auto &[key, mods] = Window::s_currShortcut; key != -1) {
-                for (auto &view : ContentRegistry::Views::getEntries()) {
-                    if (view->shouldProcess()) {
-                        if (view->handleShortcut(key, mods))
-                            break;
-                    }
-                }
-
-                Window::s_currShortcut = { -1, -1 };
             }
 
             if (SharedData::currentProvider == nullptr) {
@@ -370,14 +379,20 @@ namespace hex {
                 ImGui::End();
             } else if (!this->m_layoutConfigured) {
                 this->m_layoutConfigured = true;
-                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 0) {
-                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
-                    this->resetLayout();
-                }
+                this->resetLayout();
             }
 
         }
         ImGui::End();
+
+        // Popup for when no plugins were loaded. Intentionally left untranslated because localization isn't available
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+        if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
+            ImGui::TextUnformatted("Make sure you at least got the builtin plugin in your plugins folder.");
+            ImGui::TextUnformatted("To find out where your plugin folder is, check ImHex' Readme.");
+            ImGui::EndPopup();
+        }
     }
 
     void Window::frameEnd() {
@@ -408,35 +423,44 @@ namespace hex {
         ImGui::NewLine();
 
         const auto availableSpace = ImGui::GetContentRegionAvail();
-        const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() * 6;
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_file"_lang))
-                    EventManager::post(Events::OpenWindow, "Open File");
+                    EventManager::post<RequestOpenWindow>("Open File");
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))
-                    EventManager::post(Events::OpenWindow, "Open Project");
+                    EventManager::post<RequestOpenWindow>("Open Project");
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.start.recent"_lang);
             {
-                if (!this->m_recentFiles.empty()) {
-                    for (auto &path : this->m_recentFiles) {
+                if (!SharedData::recentFilePaths.empty()) {
+                    for (auto &path : SharedData::recentFilePaths) {
                         if (ImGui::BulletHyperlink(std::filesystem::path(path).filename().string().c_str())) {
-                            EventManager::post(Events::FileDropped, path.c_str());
+                            EventManager::post<EventFileDropped>(path);
                             break;
                         }
                     }
                 }
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            if (!this->m_availableUpdate.empty()) {
+                ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("hex.welcome.header.update"_lang);
+                {
+                    if (ImGui::DescriptionButton("hex.welcome.update.title"_lang, hex::format("hex.welcome.update.desc"_lang, this->m_availableUpdate).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
+                        hex::openWebpage("hex.welcome.update.link"_lang);
+                }
+            }
+
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.help"_lang);
             {
@@ -444,19 +468,14 @@ namespace hex {
                 if (ImGui::BulletHyperlink("hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.plugins"_lang);
             {
-                const auto &plugins = PluginHandler::getPlugins();
+                const auto &plugins = PluginManager::getPlugins();
 
-                if (plugins.empty()) {
-                    // Intentionally left untranslated so it will be readable even if no plugin with translations is loaded
-                    ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F),
-                        "No plugins loaded! To use ImHex properly, "
-                             "make sure at least the builtin plugin is in the /plugins folder next to the executable");
-                } else {
-                    if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 4))) {
+                if (!plugins.empty()) {
+                    if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                         ImGui::TableSetupScrollFreeze(0, 1);
                         ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang);
                         ImGui::TableSetupColumn("hex.welcome.plugins.author"_lang);
@@ -490,14 +509,14 @@ namespace hex {
         }
         ImGui::SameLine();
         if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.customize"_lang);
             {
                 if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    EventManager::post(Events::OpenWindow, "hex.view.settings.title");
+                    EventManager::post<RequestOpenWindow>("Settings");
             }
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.learn"_lang);
             {
@@ -511,7 +530,7 @@ namespace hex {
 
             auto extraWelcomeScreenEntries = ContentRegistry::Interface::getWelcomeScreenEntries();
             if (!extraWelcomeScreenEntries.empty()) {
-                ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("hex.welcome.header.various"_lang);
                 {
@@ -548,15 +567,6 @@ namespace hex {
         ImGui::DockBuilderFinish(dockId);
     }
 
-    void Window::createDirectories() const {
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Patterns)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::PatternsInclude)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Magic)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Plugins)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Resources)[0]);
-        std::filesystem::create_directories(hex::getPath(ImHexPath::Config)[0]);
-    }
-
     void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char* desc) {
            fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
@@ -580,7 +590,7 @@ namespace hex {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
         this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, "ImHex", nullptr, nullptr);
 
@@ -612,8 +622,12 @@ namespace hex {
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+
+            auto keyName = glfwGetKeyName(key, scancode);
+            if (keyName != nullptr)
+                key = std::toupper(keyName[0]);
+
             if (action == GLFW_PRESS) {
-                Window::s_currShortcut = { key, mods };
                 auto &io = ImGui::GetIO();
                 io.KeysDown[key] = true;
                 io.KeyCtrl  = (mods & GLFW_MOD_CONTROL) != 0;
@@ -633,11 +647,11 @@ namespace hex {
             if (count != 1)
                 return;
 
-            View::postEvent(Events::FileDropped, paths[0]);
+            EventManager::post<EventFileDropped>(paths[0]);
         });
 
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
-            View::postEvent(Events::WindowClosing, window);
+            EventManager::post<EventWindowClosing>(window);
         });
 
 
@@ -662,7 +676,7 @@ namespace hex {
         #endif
 
 
-        io.ConfigViewportsNoTaskBarIcon = false;
+        io.ConfigViewportsNoTaskBarIcon = true;
         io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
         io.KeyMap[ImGuiKey_LeftArrow]   = GLFW_KEY_LEFT;
         io.KeyMap[ImGuiKey_RightArrow]  = GLFW_KEY_RIGHT;
@@ -717,7 +731,7 @@ namespace hex {
             };
             std::uint8_t *px;
             int w, h;
-            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
+            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * this->m_fontScale, &cfg, fontAwesomeRange);
             io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
             // Create new font atlas
@@ -754,21 +768,8 @@ namespace hex {
         io.IniFilename = iniFileName.c_str();
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
+
         ImGui_ImplOpenGL3_Init("#version 150");
-    }
-
-    void Window::initPlugins() {
-        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) {
-            try {
-                PluginHandler::load(dir);
-            } catch (std::runtime_error &e) {
-                // Plugin folder not found. Not a problem.
-            }
-        }
-
-        for (const auto &plugin : PluginHandler::getPlugins()) {
-            plugin.initializePlugin();
-        }
     }
 
     void Window::deinitGLFW() {
@@ -783,10 +784,6 @@ namespace hex {
         ImGui_ImplGlfw_Shutdown();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
-    }
-
-    void Window::deinitPlugins() {
-        PluginHandler::unload();
     }
 
 }

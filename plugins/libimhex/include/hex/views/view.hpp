@@ -26,7 +26,7 @@ namespace hex {
         virtual void drawContent() = 0;
         virtual void drawAlwaysVisible() { }
         virtual void drawMenu();
-        virtual bool handleShortcut(int key, int mods);
+        virtual bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt);
         virtual bool isAvailable();
         virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
 
@@ -40,11 +40,10 @@ namespace hex {
         static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
 
-        static std::vector<std::any> postEvent(Events eventType, const std::any &userData = { });
-
         static void drawCommonInterfaces();
 
         static void showErrorPopup(std::string_view errorMessage);
+        static void showFatalPopup(std::string_view errorMessage);
 
         virtual bool hasViewMenuItemEntry();
         virtual ImVec2 getMinSize();
@@ -55,11 +54,6 @@ namespace hex {
         std::string_view getUnlocalizedName() const;
 
     protected:
-        void subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback);
-        void subscribeEvent(Events eventType, const std::function<void(const std::any&)> &callback);
-
-        void unsubscribeEvent(Events eventType);
-
         void discardNavigationRequests();
 
         void confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
@@ -70,7 +64,7 @@ namespace hex {
 
     private:
         std::string m_unlocalizedViewName;
-        bool m_windowOpen = this->hasViewMenuItemEntry();
+        bool m_windowOpen = false;
     };
 
 }

@@ -81,8 +81,7 @@ namespace hex {
                         ImGui::TableNextColumn();
                         ImGui::PushID(i);
                         if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                            Region selectRegion = { u64(address), size_t(size) };
-                            View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                            EventManager::post<RequestSelectionChange>(Region { u64(address), size_t(size) });
                         }
                         ImGui::PopID();
                         ImGui::SameLine();
@@ -139,7 +138,7 @@ namespace hex {
 
             FILE *file = fopen(this->m_rules[this->m_selectedRule].c_str(), "r");
             if (file == nullptr) return;
-            SCOPE_EXIT( fclose(file); );
+            ON_SCOPE_EXIT { fclose(file); };
 
             if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
                 this->m_errorMessage.resize(0xFFFF);
@@ -173,7 +172,7 @@ namespace hex {
 
                 if (context.buffer.empty()) return nullptr;
 
-                provider->read(context.currBlock.base, context.buffer.data(), context.buffer.size());
+                provider->readRelative(context.currBlock.base, context.buffer.data(), context.buffer.size());
 
                 return context.buffer.data();
             };

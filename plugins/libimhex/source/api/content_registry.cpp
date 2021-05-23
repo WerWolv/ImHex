@@ -38,8 +38,8 @@ namespace hex {
 
         if (!json.contains(unlocalizedCategory.data()))
             json[unlocalizedCategory.data()] = nlohmann::json::object();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
-            json[unlocalizedCategory.data()][unlocalizedName.data()] = defaultValue;
+        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()) || !json[unlocalizedCategory.data()][unlocalizedName.data()].is_number())
+            json[unlocalizedCategory.data()][unlocalizedName.data()] = int(defaultValue);
     }
 
     void ContentRegistry::Settings::add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback) {
@@ -49,8 +49,8 @@ namespace hex {
 
         if (!json.contains(unlocalizedCategory.data()))
             json[unlocalizedCategory.data()] = nlohmann::json::object();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
-            json[unlocalizedCategory.data()][unlocalizedName.data()] = defaultValue;
+        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()) || !json[unlocalizedCategory.data()][unlocalizedName.data()].is_string())
+            json[unlocalizedCategory.data()][unlocalizedName.data()] = std::string(defaultValue);
     }
 
     void ContentRegistry::Settings::write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 value) {
@@ -133,21 +133,6 @@ namespace hex {
     }
 
 
-    /* Events */
-
-    auto ContentRegistry::Events::get(std::string_view name) {
-        auto &customEvents = SharedData::customEvents;
-        auto &lastId = SharedData::customEventsLastId;
-
-        if (!customEvents.contains(name.data())) {
-            customEvents[name.data()] = static_cast<hex::Events>(lastId);
-            lastId++;
-        }
-
-        return customEvents[name.data()];
-    }
-
-
     /* Command Palette Commands */
 
     void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, std::string_view command, std::string_view unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
@@ -225,7 +210,7 @@ namespace hex {
     void ContentRegistry::Language::addLocalizations(std::string_view languageCode, const LanguageDefinition &definition) {
         getLanguageDefinitions()[languageCode.data()].push_back(definition);
 
-        EventManager::post(hex::Events::SettingsChanged, {});
+        EventManager::post<EventSettingsChanged>();
     }
 
     std::map<std::string, std::string>& ContentRegistry::Language::getLanguages() {

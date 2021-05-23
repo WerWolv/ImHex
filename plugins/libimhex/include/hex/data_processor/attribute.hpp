@@ -16,7 +16,7 @@ namespace hex::dp {
             In, Out
         };
 
-        Attribute(IOType ioType, Type type, std::string_view unlocalizedName) : m_id(SharedData::dataProcessorNodeIdCounter++), m_ioType(ioType), m_type(type), m_unlocalizedName(unlocalizedName) {
+        Attribute(IOType ioType, Type type, std::string_view unlocalizedName) : m_id(SharedData::dataProcessorAttrIdCounter++), m_ioType(ioType), m_type(type), m_unlocalizedName(unlocalizedName) {
 
         }
 
@@ -26,6 +26,8 @@ namespace hex::dp {
         }
 
         [[nodiscard]] u32 getID() const { return this->m_id; }
+        void setID(u32 id) { this->m_id = id; }
+
         [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
         [[nodiscard]] std::string_view getUnlocalizedName() const { return this->m_unlocalizedName; }

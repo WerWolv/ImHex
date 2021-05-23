@@ -12,13 +12,13 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     ViewPatches::ViewPatches() : View("hex.view.patches.name") {
-        View::subscribeEvent(Events::ProjectFileStore, [](auto) {
+        EventManager::subscribe<EventProjectFileStore>(this, []{
             auto provider = SharedData::currentProvider;
             if (provider != nullptr)
                 ProjectFile::setPatches(provider->getPatches());
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [](auto) {
+        EventManager::subscribe<EventProjectFileLoad>(this, []{
             auto provider = SharedData::currentProvider;
             if (provider != nullptr)
                 provider->getPatches() = ProjectFile::getPatches();
@@ -26,8 +26,8 @@ namespace hex {
     }
 
     ViewPatches::~ViewPatches() {
-        View::unsubscribeEvent(Events::ProjectFileStore);
-        View::unsubscribeEvent(Events::ProjectFileLoad);
+        EventManager::unsubscribe<EventProjectFileStore>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
     }
 
     void ViewPatches::drawContent() {
@@ -52,8 +52,7 @@ namespace hex {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         if (ImGui::Selectable(("##patchLine" + std::to_string(index)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            Region selectRegion = { address, 1 };
-                            View::postEvent(Events::SelectionChangeRequest, selectRegion);
+                            EventManager::post<RequestSelectionChange>(Region { address, 1 });
                         }
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup("PatchContextMenu");

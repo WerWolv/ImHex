@@ -38,6 +38,20 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, this->m_buffer);
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["size"] = this->m_size;
+            output["data"] = this->m_buffer;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_size = j["size"];
+            this->m_buffer = j["data"].get<std::vector<u8>>();
+        }
+
     private:
         u32 m_size = 1;
         std::vector<u8> m_buffer;
@@ -66,6 +80,18 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, output);
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = this->m_value;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_value = j["data"];
+        }
+
     private:
         std::string m_value;
     };
@@ -77,9 +103,8 @@ namespace hex::plugin::builtin {
         }) {}
 
         void drawNode() override {
-            ImGui::TextUnformatted("0x"); ImGui::SameLine(0, 0);
             ImGui::PushItemWidth(100);
-            ImGui::InputScalar("##integerValue", ImGuiDataType_U64, &this->m_value, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_value, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::PopItemWidth();
         }
 
@@ -88,6 +113,18 @@ namespace hex::plugin::builtin {
 
             std::memcpy(data.data(), &this->m_value, sizeof(u64));
             this->setBufferOnOutput(0, data);
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = this->m_value;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_value = j["data"];
         }
 
     private:
@@ -112,6 +149,18 @@ namespace hex::plugin::builtin {
 
             std::copy(&this->m_value, &this->m_value + 1, data.data());
             this->setBufferOnOutput(0, data);
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = this->m_value;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_value = j["data"];
         }
 
     private:
@@ -140,6 +189,22 @@ namespace hex::plugin::builtin {
 
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = nlohmann::json::object();
+            output["data"]["r"] = this->m_color.Value.x;
+            output["data"]["g"] = this->m_color.Value.y;
+            output["data"]["b"] = this->m_color.Value.z;
+            output["data"]["a"] = this->m_color.Value.w;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_color = ImVec4(j["data"]["r"], j["data"]["g"], j["data"]["b"], j["data"]["a"]);
+        }
+
     private:
         ImColor m_color;
     };
@@ -156,6 +221,18 @@ namespace hex::plugin::builtin {
 
         void process() override {
 
+        }
+
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["comment"] = this->m_comment;
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_comment = j["comment"];
         }
 
     private:
@@ -325,6 +402,19 @@ namespace hex::plugin::builtin {
             auto data = this->getBufferOnInput(1);
 
             this->setOverlayData(address, data);
+        }
+    };
+
+    class NodeDataSize : public dp::Node {
+    public:
+        NodeDataSize() : Node("hex.builtin.nodes.data_access.size.header", {
+                dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.size.size")
+        }) { }
+
+        void process() override {
+            auto size = SharedData::currentProvider->getActualSize();
+
+            this->setIntegerOnOutput(0, size);
         }
     };
 
@@ -661,6 +751,22 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(4, output);
         }
 
+        nlohmann::json store() override {
+            auto output = nlohmann::json::object();
+
+            output["data"] = nlohmann::json::object();
+            output["data"]["mode"] = this->m_mode;
+            output["data"]["key_length"] = this->m_keyLength;
+
+
+            return output;
+        }
+
+        void load(nlohmann::json &j) override {
+            this->m_mode = j["data"]["mode"];
+            this->m_keyLength = j["data"]["key_length"];
+        }
+
     private:
         int m_mode = 0;
         int m_keyLength = 0;
@@ -733,6 +839,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataProcessorNode::add<NodeReadData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.read");
         ContentRegistry::DataProcessorNode::add<NodeWriteData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.write");
+        ContentRegistry::DataProcessorNode::add<NodeDataSize>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.size");
 
         ContentRegistry::DataProcessorNode::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.int_to_buffer");
         ContentRegistry::DataProcessorNode::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_int");

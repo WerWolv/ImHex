@@ -1,1 +1,32 @@
 GLFW_ICON ICON icon.ico
+
+1 VERSIONINFO
+    FILEVERSION PROJECT_VERSION_MAJOR,PROJECT_VERSION_MINOR,PROJECT_VERSION_PATCH
+    PRODUCTVERSION PROJECT_VERSION_MAJOR,PROJECT_VERSION_MINOR,PROJECT_VERSION_PATCH
+    FILEFLAGSMASK 0x17L
+    #ifdef _DEBUG
+    FILEFLAGS 0x1L
+    #else
+    FILEFLAGS 0x0L
+    #endif
+    FILEOS 0x4L
+    FILETYPE 0x1L
+    FILESUBTYPE 0x0L
+    BEGIN
+        BLOCK "StringFileInfo"
+        BEGIN
+            BLOCK "080904b0"
+            BEGIN
+                VALUE "Comments", "A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM."
+                VALUE "CompanyName", "WerWolv"
+                VALUE "FileDescription", "ImHex Hex Editor"
+                VALUE "LegalCopyright", "WerWolv 2020-2021"
+                VALUE "OriginalFilename", "imhex.exe"
+                VALUE "ProductName", "ImHex"
+            END
+        END
+        BLOCK "VarFileInfo"
+        BEGIN
+            VALUE "Translation", 0x809, 1200
+        END
+    END

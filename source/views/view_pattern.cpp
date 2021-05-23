@@ -15,7 +15,7 @@ namespace hex {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             static const char* const keywords[] = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "parent", "addressof", "sizeof", "$"
             };
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);
@@ -23,7 +23,7 @@ namespace hex {
             static std::pair<const char* const, size_t> builtInTypes[] = {
                     { "u8", 1 }, { "u16", 2 }, { "u32", 4 }, { "u64", 8 }, { "u128", 16 },
                     { "s8", 1 }, { "s16", 2 }, { "s32", 4 }, { "s64", 8 }, { "s128", 16 },
-                    { "float", 4 }, { "double", 8 }, { "char", 1 }, { "bool", 1 }, { "padding", 1 }
+                    { "float", 4 }, { "double", 8 }, { "char", 1 }, { "char16", 2 }, { "bool", 1 }, { "padding", 1 }
             };
 
             for (const auto &[name, size] : builtInTypes) {
@@ -76,29 +76,27 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern(std::vector<lang::PatternData*> &patternData) : View("hex.view.pattern.name"), m_patternData(patternData) {
+    ViewPattern::ViewPattern() : View("hex.view.pattern.name") {
         this->m_patternLanguageRuntime = new lang::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
-        View::subscribeEvent(Events::ProjectFileStore, [this](auto) {
+        EventManager::subscribe<EventProjectFileStore>(this, [this]() {
             ProjectFile::setPattern(this->m_textEditor.GetText());
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](auto) {
+        EventManager::subscribe<EventProjectFileLoad>(this, [this]() {
             this->m_textEditor.SetText(ProjectFile::getPattern());
             this->parsePattern(this->m_textEditor.GetText().data());
         });
 
-        View::subscribeEvent(Events::AppendPatternLanguageCode, [this](auto userData) {
-             auto code = std::any_cast<const char*>(userData);
-
+        EventManager::subscribe<RequestAppendPatternLanguageCode>(this, [this](std::string code) {
              this->m_textEditor.InsertText("\n");
              this->m_textEditor.InsertText(code);
         });
 
-        View::subscribeEvent(Events::FileLoaded, [this](auto) {
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path) {
             if (this->m_textEditor.GetText().find_first_not_of(" \f\n\r\t\v") != std::string::npos)
                 return;
 
@@ -107,6 +105,9 @@ namespace hex {
 
             std::error_code error;
             for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
+                if (!std::filesystem::is_directory(dir))
+                    continue;
+
                 for (const auto &entry : std::filesystem::directory_iterator(dir, error)) {
                     if (entry.is_regular_file() && entry.path().extension() == ".mgc")
                         magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
@@ -122,7 +123,7 @@ namespace hex {
                 return;
 
             std::vector<u8> buffer(std::min(provider->getSize(), size_t(0xFFFF)), 0x00);
-            provider->read(0, buffer.data(), buffer.size());
+            provider->readRelative(0, buffer.data(), buffer.size());
 
             std::string mimeType;
 
@@ -142,6 +143,7 @@ namespace hex {
             });
             preprocessor.addDefaultPragmaHandlers();
 
+            this->m_possiblePatternFiles.clear();
 
             std::error_code errorCode;
             for (const auto &dir : hex::getPath(ImHexPath::Patterns)) {
@@ -179,7 +181,7 @@ namespace hex {
         /* Settings */
         {
 
-            View::subscribeEvent(Events::SettingsChanged, [this](auto) {
+            EventManager::subscribe<EventSettingsChanged>(this, [this]() {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
                 if (theme.is_number()) {
@@ -204,8 +206,11 @@ namespace hex {
     ViewPattern::~ViewPattern() {
         delete this->m_patternLanguageRuntime;
 
-        View::unsubscribeEvent(Events::ProjectFileStore);
-        View::unsubscribeEvent(Events::ProjectFileLoad);
+        EventManager::unsubscribe<EventProjectFileStore>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
+        EventManager::unsubscribe<RequestAppendPatternLanguageCode>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
     void ViewPattern::drawMenu() {
@@ -290,13 +295,20 @@ namespace hex {
         if (ImGui::BeginPopupModal("hex.view.pattern.accept_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("hex.view.pattern.accept_pattern.desc"_lang);
 
-            char *entries[this->m_possiblePatternFiles.size()];
+            std::vector<std::string> entries;
+            entries.resize(this->m_possiblePatternFiles.size());
 
-            for (u32 i = 0; i < this->m_possiblePatternFiles.size(); i++) {
-                entries[i] = this->m_possiblePatternFiles[i].data();
+            for (u32 i = 0; i < entries.size(); i++) {
+                entries[i] = std::filesystem::path(this->m_possiblePatternFiles[i]).filename().string();
             }
 
-            ImGui::ListBox("hex.view.pattern.accept_pattern.patterns"_lang, &this->m_selectedPatternFile, entries, IM_ARRAYSIZE(entries), 4);
+            ImGui::ListBox("hex.view.pattern.accept_pattern.patterns"_lang, &this->m_selectedPatternFile, [](void *data, int id, const char** outText) -> bool {
+                auto &entries = *static_cast<std::vector<std::string>*>(data);
+
+                *outText = entries[id].c_str();
+
+                return true;
+            }, &entries, entries.size(), 4);
 
             ImGui::NewLine();
             ImGui::Text("hex.view.pattern.accept_pattern.question"_lang);
@@ -341,10 +353,10 @@ namespace hex {
     }
 
     void ViewPattern::clearPatternData() {
-        for (auto &data : this->m_patternData)
+        for (auto &data : SharedData::patternData)
             delete data;
 
-        this->m_patternData.clear();
+        SharedData::patternData.clear();
         lang::PatternData::resetPalette();
     }
 
@@ -354,7 +366,7 @@ namespace hex {
         this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
         this->m_console.clear();
-        View::postEvent(Events::PatternChanged);
+        EventManager::post<EventPatternChanged>();
 
         std::thread([this, buffer = std::string(buffer)] {
             auto result = this->m_patternLanguageRuntime->executeString(SharedData::currentProvider, buffer);
@@ -367,8 +379,10 @@ namespace hex {
             this->m_console = this->m_patternLanguageRuntime->getConsoleLog();
 
             if (result.has_value()) {
-                this->m_patternData = std::move(result.value());
-                View::doLater([]{ View::postEvent(Events::PatternChanged); });
+                SharedData::patternData = std::move(result.value());
+                View::doLater([]{
+                    EventManager::post<EventPatternChanged>();
+                });
             }
 
             this->m_evaluatorRunning = false;

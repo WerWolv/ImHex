@@ -17,6 +17,9 @@ namespace ImGui {
 
     void Header(const char *label, bool firstEntry = false);
 
+    std::tuple<ImTextureID, int, int> LoadImageFromPath(const char *path);
+    void UnloadImage(ImTextureID texture);
+
     enum ImGuiCustomCol {
         ImGuiCustomCol_DescButton,
         ImGuiCustomCol_DescButtonHovered,

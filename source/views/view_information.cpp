@@ -14,12 +14,11 @@
 
 #include <imgui_imhex_extensions.h>
 #include <implot.h>
-#include <implot_internal.h>
 
 namespace hex {
 
     ViewInformation::ViewInformation() : View("hex.view.information.name") {
-        View::subscribeEvent(Events::DataChanged, [this](auto) {
+        EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->m_dataValid = false;
             this->m_highestBlockEntropy = 0;
             this->m_blockEntropy.clear();
@@ -30,10 +29,16 @@ namespace hex {
             this->m_fileDescription = "";
             this->m_analyzedRegion = { 0, 0 };
         });
+
+        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
+            if (this->m_blockSize != 0)
+                this->m_entropyHandlePosition = region.address / this->m_blockSize;
+        });
     }
 
     ViewInformation::~ViewInformation() {
-        View::unsubscribeEvent(Events::DataChanged);
+        EventManager::unsubscribe<EventDataChanged>(this);
+        EventManager::unsubscribe<EventRegionSelected>(this);
     }
 
     static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t numBytes) {
@@ -71,7 +76,7 @@ namespace hex {
 
                 for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
                     std::array<ImU64, 256> blockValueCounts = { 0 };
-                    provider->read(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
+                    provider->readRelative(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
 
                     for (size_t j = 0; j < this->m_blockSize; j++) {
                         blockValueCounts[buffer[j]]++;
@@ -86,7 +91,7 @@ namespace hex {
 
             {
                 std::vector<u8> buffer(provider->getSize(), 0x00);
-                provider->read(0x00, buffer.data(), buffer.size());
+                provider->readRelative(0x00, buffer.data(), buffer.size());
 
                 this->m_fileDescription.clear();
                 this->m_mimeType.clear();
@@ -196,7 +201,9 @@ namespace hex {
                             return result;
                         }();
 
+
                         ImPlot::PlotBars<ImU64>("##bytes", x.data(), this->m_valueCounts.data(), x.size(), 0.67);
+
                         ImPlot::EndPlot();
                     }
 
@@ -208,8 +215,9 @@ namespace hex {
                     if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1,0), ImPlotFlags_CanvasOnly, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
                         ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
-                        if (ImGui::IsItemClicked())
-                            View::postEvent(Events::SelectionChangeRequest, Region{ u64(ImPlot::GetPlotMousePos().x) * this->m_blockSize, 1 });
+                        if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
+                            EventManager::post<RequestSelectionChange>( Region{ u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress(), 1 });
+                        }
 
                         ImPlot::EndPlot();
                     }
@@ -218,7 +226,7 @@ namespace hex {
 
                     ImGui::NewLine();
 
-                    ImGui::LabelText("hex.view.information.block_size"_lang, "hex.view.information.block_size.desc"_lang, this->m_blockEntropy.size(), this->m_blockSize);
+                    ImGui::LabelText("hex.view.information.block_size"_lang, "%s", hex::format("hex.view.information.block_size.desc"_lang, this->m_blockEntropy.size(), this->m_blockSize).c_str());
                     ImGui::LabelText("hex.view.information.file_entropy"_lang, "%.8f", this->m_averageEntropy);
                     ImGui::LabelText("hex.view.information.highest_entropy"_lang, "%.8f", this->m_highestBlockEntropy);
 

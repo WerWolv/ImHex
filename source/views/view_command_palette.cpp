@@ -67,8 +67,8 @@ namespace hex {
 
     }
 
-    bool ViewCommandPalette::handleShortcut(int key, int mods) {
-        if (key == GLFW_KEY_P && mods == (GLFW_MOD_SHIFT | GLFW_MOD_CONTROL)) {
+    bool ViewCommandPalette::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) {
+        if (ctrl && shift && keys['P']) {
             View::doLater([this] {
                 ImGui::OpenPopup("hex.view.command_palette.name"_lang);
                 this->m_commandPaletteOpen = true;

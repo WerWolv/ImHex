@@ -15,7 +15,7 @@ namespace hex {
 
     class Window {
     public:
-        Window(int &argc, char **&argv);
+        Window();
         ~Window();
 
         void loop();
@@ -26,9 +26,6 @@ namespace hex {
         friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
 
         bool setFont(const std::filesystem::path &font_path);
-
-        void initPlugins();
-        void deinitPlugins();
     private:
         void frameBegin();
         void frameEnd();
@@ -36,7 +33,6 @@ namespace hex {
         void drawWelcomeScreen();
         void resetLayout();
 
-        void createDirectories() const;
         void initGLFW();
         void initImGui();
         void deinitGLFW();
@@ -46,15 +42,15 @@ namespace hex {
 
         float m_globalScale = 1.0f, m_fontScale = 1.0f;
         bool m_fpsVisible = false;
-        double m_targetFps;
+        double m_targetFps = 60.0;
         bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;
 
         double m_lastFrameTime;
 
-        static inline std::tuple<int, int> s_currShortcut = { -1, -1 };
+        bool m_prevKeysDown[512];
 
-        std::list<std::string> m_recentFiles;
+        std::string m_availableUpdate;
     };
 
 }

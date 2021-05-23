@@ -14,10 +14,11 @@
 #undef __STRICT_ANSI__
 #include <cstdio>
 
+#include <filesystem>
+
 namespace hex {
 
-    ViewHexEditor::ViewHexEditor(std::vector<lang::PatternData*> &patternData)
-            : View("hex.view.hexeditor.name"_lang), m_patternData(patternData) {
+    ViewHexEditor::ViewHexEditor() : View("hex.view.hexeditor.name"_lang) {
 
         this->m_searchStringBuffer.resize(0xFFF, 0x00);
         this->m_searchHexBuffer.resize(0xFFF, 0x00);
@@ -28,13 +29,7 @@ namespace hex {
                 return 0x00;
 
             ImU8 byte;
-            provider->read(off, &byte, sizeof(ImU8));
-
-            for (auto &overlay : SharedData::currentProvider->getOverlays()) {
-                auto overlayAddress = overlay->getAddress();
-                if (off >= overlayAddress && off < overlayAddress + overlay->getSize())
-                    byte = overlay->getData()[off - overlayAddress];
-            }
+            provider->readRelative(off, &byte, sizeof(ImU8));
 
             return byte;
         };
@@ -44,8 +39,8 @@ namespace hex {
             if (!provider->isAvailable() || !provider->isWritable())
                 return;
 
-            provider->write(off, &d, sizeof(ImU8));
-            View::postEvent(Events::DataChanged);
+            provider->writeRelative(off, &d, sizeof(ImU8));
+            EventManager::post<EventDataChanged>();
             ProjectFile::markDirty();
         };
 
@@ -56,19 +51,21 @@ namespace hex {
 
             off += SharedData::currentProvider->getBaseAddress();
 
+            u32 alpha = static_cast<u32>(_this->m_highlightAlpha) << 24;
+
             for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size))
-                    currColor = (color & 0x00FFFFFF) | 0x80000000;
+                    currColor = (color & 0x00FFFFFF) | alpha;
                 if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
-                    prevColor = (color & 0x00FFFFFF) | 0x80000000;
+                    prevColor = (color & 0x00FFFFFF) | alpha;
             }
 
             if (_this->m_highlightedBytes.contains(off)) {
-                auto color = (_this->m_highlightedBytes[off] & 0x00FFFFFF) | 0x80000000;
+                auto color = (_this->m_highlightedBytes[off] & 0x00FFFFFF) | alpha;
                 currColor = currColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
             }
             if (_this->m_highlightedBytes.contains(off - 1)) {
-                auto color = (_this->m_highlightedBytes[off - 1] & 0x00FFFFFF) | 0x80000000;
+                auto color = (_this->m_highlightedBytes[off - 1] & 0x00FFFFFF) | alpha;
                 prevColor = prevColor.has_value() ? ImAlphaBlendColors(color, prevColor.value()) : color;
             }
 
@@ -77,7 +74,7 @@ namespace hex {
             }
 
             if (currColor.has_value() && (currColor.value() & 0x00FFFFFF) != 0x00) {
-                _this->m_memoryEditor.HighlightColor = (currColor.value() & 0x00FFFFFF) | 0x40000000;
+                _this->m_memoryEditor.HighlightColor = (currColor.value() & 0x00FFFFFF) | alpha;
                 return true;
             }
 
@@ -116,7 +113,7 @@ namespace hex {
             size_t size = std::min<size_t>(_this->m_currEncodingFile.getLongestSequence(), provider->getActualSize() - addr);
 
             std::vector<u8> buffer(size);
-            provider->read(addr, buffer.data(), size);
+            provider->readRelative(addr, buffer.data(), size);
 
             auto [decoded, advance] = _this->m_currEncodingFile.getEncodingFor(buffer);
 
@@ -130,64 +127,80 @@ namespace hex {
             return { std::string(decoded), advance, color };
         };
 
-        View::subscribeEvent(Events::FileDropped, [this](auto userData) {
-            auto filePath = std::any_cast<const char*>(userData);
-
-            if (filePath != nullptr)
-                this->openFile(filePath);
+        EventManager::subscribe<EventFileDropped>(this, [this](const std::string &filePath) {
+            this->openFile(filePath);
+            this->getWindowOpenState() = true;
         });
 
-        View::subscribeEvent(Events::SelectionChangeRequest, [this](auto userData) {
-            const Region &region = std::any_cast<Region>(userData);
-
+        EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
             auto provider = SharedData::currentProvider;
             auto page = provider->getPageOfAddress(region.address);
+
             if (!page.has_value())
+                return;
+            if (region.size == 0)
                 return;
 
             provider->setCurrentPage(page.value());
-            this->m_memoryEditor.GotoAddrAndHighlight(region.address, region.address + region.size - 1);
-            View::postEvent(Events::RegionSelected, region);
+            u64 start = region.address;
+            this->m_memoryEditor.GotoAddrAndSelect(start - provider->getBaseAddress(), start + region.size - provider->getBaseAddress() - 1);
+            EventManager::post<EventRegionSelected>(region);
         });
 
-        View::subscribeEvent(Events::ProjectFileLoad, [this](auto) {
-            this->openFile(ProjectFile::getFilePath());
+        EventManager::subscribe<EventProjectFileLoad>(this, []() {
+            EventManager::post<EventFileDropped>(ProjectFile::getFilePath());
         });
 
-        View::subscribeEvent(Events::WindowClosing, [this](auto userData) {
-            auto window = std::any_cast<GLFWwindow*>(userData);
-
+        EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.save_changes.title"_lang); });
+                View::doLater([] { ImGui::OpenPopup("hex.view.hexeditor.exit_application.title"_lang); });
             }
         });
 
-        View::subscribeEvent(Events::PatternChanged, [this](auto) {
+        EventManager::subscribe<EventPatternChanged>(this, [this]() {
             this->m_highlightedBytes.clear();
 
-            for (const auto &pattern : this->m_patternData)
+            for (const auto &pattern : SharedData::patternData)
                 this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
         });
 
-        View::subscribeEvent(Events::OpenWindow, [this](auto name) {
-            if (std::any_cast<const char*>(name) == std::string("Open File")) {
+        EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
+            if (name == "Open File") {
                 View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
                 });
-            } else if (std::any_cast<const char*>(name) == std::string("Open Project")) {
+            } else if (name == "Open Project") {
                 View::openFileBrowser("hex.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
-                    View::postEvent(Events::ProjectFileLoad);
+                    EventManager::post<EventProjectFileLoad>();
                     this->getWindowOpenState() = true;
                 });
             }
         });
+
+        EventManager::subscribe<EventFileLoaded>(this, [](std::string path) {
+            EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(path).filename().string());
+        });
+
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+            auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
+
+            if (alpha.is_number())
+                this->m_highlightAlpha = alpha;
+        });
     }
 
     ViewHexEditor::~ViewHexEditor() {
-
+        EventManager::unsubscribe<EventFileDropped>(this);
+        EventManager::unsubscribe<RequestSelectionChange>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
+        EventManager::unsubscribe<EventWindowClosing>(this);
+        EventManager::unsubscribe<EventPatternChanged>(this);
+        EventManager::unsubscribe<RequestOpenWindow>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
     void ViewHexEditor::drawContent() {
@@ -217,8 +230,7 @@ namespace hex {
                 if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
                     provider->setCurrentPage(provider->getCurrentPage() - 1);
 
-                    Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                    View::postEvent(Events::RegionSelected, dataPreview);
+                    EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
                 }
 
                 ImGui::SameLine();
@@ -226,8 +238,7 @@ namespace hex {
                 if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
                     provider->setCurrentPage(provider->getCurrentPage() + 1);
 
-                    Region dataPreview = { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 };
-                    View::postEvent(Events::RegionSelected, dataPreview);
+                    EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
                 }
             }
             ImGui::End();
@@ -258,7 +269,7 @@ namespace hex {
                     if (bufferSize > provider->getActualSize() - offset)
                         bufferSize = provider->getActualSize() - offset;
 
-                    provider->read(offset, buffer.data(), bufferSize);
+                    provider->readRelative(offset, buffer.data(), bufferSize);
                     fwrite(buffer.data(), 1, bufferSize, file);
                 }
 
@@ -270,12 +281,17 @@ namespace hex {
     void ViewHexEditor::drawAlwaysVisible() {
         auto provider = SharedData::currentProvider;
 
-        if (ImGui::BeginPopupModal("hex.view.hexeditor.save_changes.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.view.hexeditor.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
-            ImGui::TextUnformatted("hex.view.hexeditor.save_changes.desc"_lang);
+            ImGui::TextUnformatted("hex.view.hexeditor.exit_application.desc"_lang);
             ImGui::NewLine();
 
-            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] { View::postEvent(Events::CloseImHex); }, [] { ImGui::CloseCurrentPopup(); });
+            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] {
+                EventManager::post<RequestCloseImHex>();
+            },
+            [] {
+                ImGui::CloseCurrentPopup();
+            });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -308,18 +324,18 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("hex.common.load"_lang, "hex.common.cancel"_lang,
-                           [this, &provider] {
-                               if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
-                                   this->openFile(this->m_loaderScriptFilePath);
-                                   LoaderScript::setFilePath(this->m_loaderScriptFilePath);
-                                   LoaderScript::setDataProvider(provider);
-                                   LoaderScript::processFile(this->m_loaderScriptScriptPath);
-                                   ImGui::CloseCurrentPopup();
-                               }
-                           },
-                           [] {
-                               ImGui::CloseCurrentPopup();
-                           }
+               [this, &provider] {
+                   if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
+                       EventManager::post<EventFileDropped>(this->m_loaderScriptFilePath);
+                       LoaderScript::setFilePath(this->m_loaderScriptFilePath);
+                       LoaderScript::setDataProvider(provider);
+                       LoaderScript::processFile(this->m_loaderScriptScriptPath);
+                       ImGui::CloseCurrentPopup();
+                   }
+               },
+               [] {
+                   ImGui::CloseCurrentPopup();
+               }
             );
 
             ImGui::EndPopup();
@@ -346,15 +362,24 @@ namespace hex {
     }
 
     void ViewHexEditor::drawMenu() {
-        auto provider = SharedData::currentProvider;
+        auto &provider = SharedData::currentProvider;
 
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
                 View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
-                    this->openFile(path);
-                    this->getWindowOpenState() = true;
+                    EventManager::post<EventFileDropped>(path);
                 });
+            }
+
+            if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.open_recent"_lang, !SharedData::recentFilePaths.empty())) {
+                for (auto &path : SharedData::recentFilePaths) {
+                    if (ImGui::MenuItem(std::filesystem::path(path).filename().string().c_str())) {
+                        EventManager::post<EventFileDropped>(path);
+                    }
+                }
+
+                ImGui::EndMenu();
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save"_lang, "CTRL + S", false, provider != nullptr && provider->isWritable())) {
@@ -365,18 +390,23 @@ namespace hex {
                 saveAs();
             }
 
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close"_lang, "", false, provider != nullptr && provider->isAvailable())) {
+                EventManager::post<EventFileUnloaded>();
+                delete SharedData::currentProvider;
+                SharedData::currentProvider = nullptr;
+            }
+
             ImGui::Separator();
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_project"_lang, "")) {
                 View::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
-                    View::postEvent(Events::ProjectFileLoad);
-                    this->getWindowOpenState() = true;
+                    EventManager::post<EventProjectFileLoad>();
                 });
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_project"_lang, "", false, provider != nullptr && provider->isWritable())) {
-                View::postEvent(Events::ProjectFileStore);
+                EventManager::post<EventProjectFileStore>();
 
                 if (ProjectFile::getProjectFilePath() == "") {
                     View::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
@@ -506,29 +536,49 @@ namespace hex {
         }
     }
 
-    bool ViewHexEditor::handleShortcut(int key, int mods) {
-        if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_S) {
+    bool ViewHexEditor::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) {
+        if (ctrl && keys['S']) {
             save();
             return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_S) {
+        } else if (ctrl && shift && keys['S']) {
             saveAs();
             return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_F) {
-            View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_G) {
-            View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
-            return true;
-        } else if (mods == GLFW_MOD_CONTROL && key == GLFW_KEY_O) {
-            View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
-            return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_ALT) && key == GLFW_KEY_C) {
-            this->copyBytes();
-            return true;
-        } else if (mods == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT) && key == GLFW_KEY_C) {
-            this->copyString();
-            return true;
         }
+
+        if (ImGui::Begin(View::toWindowName("hex.view.hexeditor.name").c_str())) {
+            ON_SCOPE_EXIT { ImGui::End(); };
+
+            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
+                if (ctrl && keys['Z']) {
+                    if (SharedData::currentProvider != nullptr)
+                        SharedData::currentProvider->undo();
+                    return true;
+                } else if (ctrl && keys['Y']) {
+                    if (SharedData::currentProvider != nullptr)
+                        SharedData::currentProvider->redo();
+                } else if (ctrl && keys['F']) {
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
+                    return true;
+                } else if (ctrl && keys['G']) {
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
+                    return true;
+                } else if (ctrl && keys['O']) {
+                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
+                    return true;
+                } else if (ctrl && keys['C']) {
+                    this->copyBytes();
+                    return true;
+                } else if (ctrl && shift && keys['C']) {
+                    this->copyString();
+                    return true;
+                } else if (ctrl && keys['V']) {
+                    this->pasteBytes();
+                    return true;
+                }
+            }
+        }
+
+
 
         return false;
     }
@@ -560,9 +610,9 @@ namespace hex {
 
         this->getWindowOpenState() = true;
 
-        View::postEvent(Events::FileLoaded, path);
-        View::postEvent(Events::DataChanged);
-        View::postEvent(Events::PatternChanged);
+        EventManager::post<EventFileLoaded>(path);
+        EventManager::post<EventDataChanged>();
+        EventManager::post<EventPatternChanged>();
     }
 
     bool ViewHexEditor::saveToFile(std::string path, const std::vector<u8>& data) {
@@ -603,7 +653,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str;
         for (const auto &byte : buffer)
@@ -611,6 +661,48 @@ namespace hex {
         str.pop_back();
 
         ImGui::SetClipboardText(str.c_str());
+    }
+
+    void ViewHexEditor::pasteBytes() {
+        auto provider = SharedData::currentProvider;
+
+        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+
+        std::string clipboard = ImGui::GetClipboardText();
+
+        // Check for non-hex characters
+        bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {
+            return !std::isxdigit(c) && !std::isspace(c);
+        }) == clipboard.end();
+
+        if (!isValidHexString) return;
+
+        // Remove all whitespace
+        std::erase_if(clipboard, [](char c) { return std::isspace(c); });
+
+        // Only paste whole bytes
+        if (clipboard.length() % 2 != 0) return;
+
+        // Convert hex string to bytes
+        std::vector<u8> buffer(clipboard.length() / 2, 0x00);
+        u32 stringIndex = 0;
+        for (u8 &byte : buffer) {
+            for (u8 i = 0; i < 2; i++) {
+                byte <<= 4;
+
+                char c = clipboard[stringIndex];
+
+                if (c >= '0' && c <= '9') byte |= (c - '0');
+                else if (c >= 'a' && c <= 'f') byte |= (c - 'a') + 0xA;
+                else if (c >= 'A' && c <= 'F') byte |= (c - 'A') + 0xA;
+
+                stringIndex++;
+            }
+        }
+
+        // Write bytes
+        provider->writeRelative(start, buffer.data(), std::min(end - start + 1, buffer.size()));
     }
 
     void ViewHexEditor::copyString() {
@@ -623,7 +715,7 @@ namespace hex {
 
         std::string buffer(copySize, 0x00);
         buffer.reserve(copySize + 1);
-        provider->read(start, buffer.data(), copySize);
+        provider->readRelative(start, buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
     }
@@ -637,7 +729,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str;
         switch (language) {
@@ -739,7 +831,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
 
@@ -786,7 +878,7 @@ namespace hex {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start, buffer.data(), buffer.size());
+        provider->readRelative(start, buffer.data(), buffer.size());
 
         std::string str =
 R"(
@@ -851,7 +943,7 @@ R"(
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
             size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
-            provider->read(offset, buffer.data(), usedBufferSize);
+            provider->readRelative(offset, buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
                 if (buffer[i] == string[foundCharacters])
@@ -889,7 +981,7 @@ R"(
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
             size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
-            provider->read(offset, buffer.data(), usedBufferSize);
+            provider->readRelative(offset, buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
                 if (buffer[i] == hex[foundCharacters])
@@ -917,7 +1009,7 @@ R"(
             _this->m_lastSearchIndex = 0;
 
             if (_this->m_lastSearchBuffer->size() > 0)
-                _this->m_memoryEditor.GotoAddrAndHighlight((*_this->m_lastSearchBuffer)[0].first, (*_this->m_lastSearchBuffer)[0].second);
+                _this->m_memoryEditor.GotoAddrAndSelect((*_this->m_lastSearchBuffer)[0].first, (*_this->m_lastSearchBuffer)[0].second);
 
             return 0;
         };
@@ -929,13 +1021,13 @@ R"(
             this->m_lastSearchIndex = 0;
 
             if (this->m_lastSearchBuffer->size() > 0)
-                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[0].first, (*this->m_lastSearchBuffer)[0].second);
+                this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[0].first, (*this->m_lastSearchBuffer)[0].second);
         };
 
         static auto FindNext = [this]() {
             if (this->m_lastSearchBuffer->size() > 0) {
                 ++this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
-                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
+                this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
                                                           (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
             }
         };
@@ -949,7 +1041,7 @@ R"(
 
                 this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
 
-                this->m_memoryEditor.GotoAddrAndHighlight((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
+                this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
                                                           (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
             }
         };
@@ -1004,58 +1096,61 @@ R"(
 
     void ViewHexEditor::drawGotoPopup() {
         auto provider = SharedData::currentProvider;
+        auto baseAddress = provider->getBaseAddress();
+        auto dataSize = provider->getActualSize();
 
         if (ImGui::BeginPopup("hex.view.hexeditor.menu.file.goto"_lang)) {
             ImGui::TextUnformatted("hex.view.hexeditor.menu.file.goto"_lang);
             if (ImGui::BeginTabBar("gotoTabs")) {
-                s64 newOffset = 0;
-                if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.begin"_lang)) {
-                    ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                u64 newOffset = 0;
+                if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.absolute"_lang)) {
+                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= provider->getActualSize())
-                        this->m_gotoAddress = provider->getActualSize() - 1;
+                    if (this->m_gotoAddress < baseAddress || this->m_gotoAddress > baseAddress + dataSize)
+                        this->m_gotoAddress = baseAddress;
 
                     newOffset = this->m_gotoAddress;
 
                     ImGui::EndTabItem();
                 }
+                if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.begin"_lang)) {
+                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+
+                    if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
+                        this->m_gotoAddress = 0;
+
+                    newOffset = this->m_gotoAddress + baseAddress;
+
+                    ImGui::EndTabItem();
+                }
                 if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.current"_lang)) {
-                    ImGui::InputScalar("##nolabel", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("dec", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal);
 
-                    if (this->m_memoryEditor.DataPreviewAddr == -1 || this->m_memoryEditor.DataPreviewAddrEnd == -1) {
-                        this->m_memoryEditor.DataPreviewAddr = 0;
-                        this->m_memoryEditor.DataPreviewAddrEnd = 0;
-                    }
+                    s64 currSelectionOffset = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
-                    s64 currHighlightStart = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                    if (currSelectionOffset + this->m_gotoAddress < 0)
+                        this->m_gotoAddress = -currSelectionOffset;
+                    else if (currSelectionOffset + this->m_gotoAddress > dataSize)
+                        this->m_gotoAddress = dataSize - currSelectionOffset;
 
-                    newOffset = this->m_gotoAddress + currHighlightStart;
-                    if (newOffset >= provider->getActualSize()) {
-                        newOffset = provider->getActualSize() - 1;
-                        this->m_gotoAddress = (provider->getActualSize() - 1) - currHighlightStart;
-                    } else if (newOffset < 0) {
-                        newOffset = 0;
-                        this->m_gotoAddress = -currHighlightStart;
-                    }
+                    newOffset = currSelectionOffset + this->m_gotoAddress + baseAddress;
 
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.end"_lang)) {
-                    ImGui::InputScalar("##nolabel", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
-                    if (this->m_gotoAddress >= provider->getActualSize())
-                        this->m_gotoAddress = provider->getActualSize() - 1;
+                    if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
+                        this->m_gotoAddress = 0;
 
-                    newOffset = (provider->getActualSize() - 1) - this->m_gotoAddress;
+                    newOffset = (baseAddress + dataSize) - this->m_gotoAddress - 1;
 
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::Button("hex.view.hexeditor.menu.file.goto"_lang)) {
-                    provider->setCurrentPage(std::floor(newOffset / double(prv::Provider::PageSize)));
-                    this->m_memoryEditor.GotoAddr = newOffset;
-                    this->m_memoryEditor.DataPreviewAddr = newOffset;
-                    this->m_memoryEditor.DataPreviewAddrEnd = newOffset;
+                    provider->setCurrentPage(std::floor(double(newOffset - baseAddress) / prv::Provider::PageSize));
+                    EventManager::post<RequestSelectionChange>(Region { newOffset, 1 });
                 }
 
                 ImGui::EndTabBar();
@@ -1066,9 +1161,19 @@ R"(
     }
 
     void ViewHexEditor::drawEditPopup() {
-        if (ImGui::BeginMenu("hex.view.hexeditor.menu.edit.copy"_lang, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-            if (ImGui::MenuItem("hex.view.hexeditor.copy.bytes"_lang, "CTRL + ALT + C"))
-                this->copyBytes();
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.undo"_lang, "CTRL + Z", false, SharedData::currentProvider != nullptr))
+            SharedData::currentProvider->undo();
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo"_lang, "CTRL + Y", false, SharedData::currentProvider != nullptr))
+            SharedData::currentProvider->redo();
+
+        ImGui::Separator();
+
+        bool bytesSelected = this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1;
+
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.copy"_lang, "CTRL + C", false, bytesSelected))
+            this->copyBytes();
+
+        if (ImGui::BeginMenu("hex.view.hexeditor.menu.edit.copy_as"_lang, bytesSelected)) {
             if (ImGui::MenuItem("hex.view.hexeditor.copy.hex"_lang, "CTRL + SHIFT + C"))
                 this->copyString();
 
@@ -1098,6 +1203,11 @@ R"(
 
             ImGui::EndMenu();
         }
+
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.paste"_lang, "CTRL + V", false, bytesSelected))
+            this->pasteBytes();
+
+        ImGui::Separator();
 
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.bookmark"_lang, nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
             auto base = SharedData::currentProvider->getBaseAddress();

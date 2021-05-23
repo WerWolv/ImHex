@@ -5,16 +5,16 @@
 namespace hex {
 
     ViewSettings::ViewSettings() : View("hex.view.settings.name") {
-        View::subscribeEvent(Events::OpenWindow, [this](auto name) {
-            if (std::any_cast<const char*>(name) == std::string("hex.view.settings.name")) {
-                View::doLater([]{ ImGui::OpenPopup("hex.view.settings.name"_lang); });
+        EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
+            if (name == "Settings") {
+                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });
     }
 
     ViewSettings::~ViewSettings() {
-        View::unsubscribeEvent(Events::OpenWindow);
+        EventManager::unsubscribe<RequestOpenWindow>(this);
     }
 
     void ViewSettings::drawContent() {
@@ -27,7 +27,7 @@ namespace hex {
                 ImGui::Separator();
                 for (auto &[name, callback] : entries) {
                     if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category][name]))
-                        View::postEvent(Events::SettingsChanged);
+                        EventManager::post<EventSettingsChanged>();
                 }
                 ImGui::NewLine();
             }

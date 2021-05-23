@@ -127,8 +127,18 @@ namespace hex {
             res.push_back(token);
         }
 
-        res.push_back(std::string(string.substr(start)));
+        res.emplace_back(string.substr(start));
         return res;
+    }
+
+    std::string combineStrings(const std::vector<std::string> &strings, std::string_view delimiter) {
+        std::string result;
+        for (const auto &string : strings) {
+            result += string;
+            result += delimiter;
+        }
+
+        return result.substr(0, result.length() - delimiter.length());
     }
 
     std::string toEngineeringString(double value) {

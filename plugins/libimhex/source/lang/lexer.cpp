@@ -365,7 +365,15 @@ namespace hex::lang {
                 } else if (c == '$') {
                     tokens.emplace_back(TOKEN(Operator, Dollar));
                     offset += 1;
-                } else if (c == '\'') {
+                } else if (code.substr(offset, 9) == "addressof") {
+                    tokens.emplace_back(TOKEN(Operator, AddressOf));
+                    offset += 9;
+                }
+                else if (code.substr(offset, 6) == "sizeof") {
+                    tokens.emplace_back(TOKEN(Operator, SizeOf));
+                    offset += 6;
+                }
+                else if (c == '\'') {
                     auto character = getCharacterLiteral(code.substr(offset));
 
                     if (!character.has_value())
@@ -412,6 +420,8 @@ namespace hex::lang {
                         tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(0))));
                     else if (identifier == "true")
                         tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(1))));
+                    else if (identifier == "parent")
+                        tokens.emplace_back(TOKEN(Keyword, Parent));
 
                         // Check for built-in types
                     else if (identifier == "u8")
@@ -440,6 +450,8 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(ValueType, Double));
                     else if (identifier == "char")
                         tokens.emplace_back(TOKEN(ValueType, Character));
+                    else if (identifier == "char16")
+                        tokens.emplace_back(TOKEN(ValueType, Character16));
                     else if (identifier == "bool")
                         tokens.emplace_back(TOKEN(ValueType, Boolean));
                     else if (identifier == "padding")

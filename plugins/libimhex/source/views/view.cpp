@@ -14,7 +14,7 @@ namespace hex {
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
     void View::drawMenu() { }
-    bool View::handleShortcut(int key, int mods) { return false; }
+    bool View::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) { return false; }
 
     bool View::isAvailable() {
         return SharedData::currentProvider != nullptr && SharedData::currentProvider->isAvailable();
@@ -22,10 +22,6 @@ namespace hex {
 
     std::vector<std::function<void()>>& View::getDeferedCalls() {
         return SharedData::deferredCalls;
-    }
-
-    std::vector<std::any> View::postEvent(Events eventType, const std::any &userData) {
-        return EventManager::post(eventType, userData);
     }
 
     void View::openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback) {
@@ -64,12 +60,30 @@ namespace hex {
 
             ImGui::EndPopup();
         }
+
+        if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
+                EventManager::post<RequestCloseImHex>();
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
     void View::showErrorPopup(std::string_view errorMessage) {
         SharedData::errorPopupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
+    }
+
+    void View::showFatalPopup(std::string_view errorMessage) {
+        SharedData::errorPopupMessage = errorMessage;
+
+        View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() {
@@ -91,18 +105,6 @@ namespace hex {
 
     std::string_view View::getUnlocalizedName() const {
         return this->m_unlocalizedViewName;
-    }
-
-    void View::subscribeEvent(Events eventType, const std::function<std::any(const std::any&)> &callback) {
-        EventManager::subscribe(eventType, this, callback);
-    }
-
-    void View::subscribeEvent(Events eventType, const std::function<void(const std::any&)> &callback) {
-        EventManager::subscribe(eventType, this, [callback](auto userData) -> std::any { callback(userData); return { }; });
-    }
-
-    void View::unsubscribeEvent(Events eventType) {
-        EventManager::unsubscribe(eventType, this);
     }
 
     void View::discardNavigationRequests() {

@@ -23,12 +23,16 @@ namespace hex::prv {
         virtual bool isReadable() = 0;
         virtual bool isWritable() = 0;
 
-        virtual void read(u64 offset, void *buffer, size_t size);
+        virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
+        virtual void readRelative(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void write(u64 offset, const void *buffer, size_t size);
+        virtual void writeRelative(u64 offset, const void *buffer, size_t size);
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
         virtual size_t getActualSize() = 0;
+
+        void applyOverlays(u64 offset, void *buffer, size_t size);
 
         std::map<u64, u8>& getPatches();
         void applyPatches();
@@ -48,10 +52,19 @@ namespace hex::prv {
 
         virtual std::vector<std::pair<std::string, std::string>> getDataInformation() = 0;
 
+        void addPatch(u64 offset, const void *buffer, size_t size);
+
+        void undo();
+        void redo();
+
+        bool canUndo();
+        bool canRedo();
+
     protected:
         u32 m_currPage = 0;
         u64 m_baseAddress = 0;
 
+        u32 m_patchTreeOffset = 0;
         std::vector<std::map<u64, u8>> m_patches;
         std::list<Overlay*> m_overlays;
     };

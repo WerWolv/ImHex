@@ -117,9 +117,12 @@ target_include_directories(
 )
 
 if (UNIX)
-    target_link_libraries(libyara pthread)
+    target_link_libraries(libyara magic pthread)
+else ()
+    target_link_libraries(libyara magic)
 endif ()
 
 include(GNUInstallDirs)
 configure_file(${LIBYARA_SOURCE_PATH}/yara.pc.in
         ${LIBYARA_SOURCE_PATH}/yara.pc @ONLY)
+set(CMAKE_STATIC_LIBRARY_PREFIX "")

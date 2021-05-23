@@ -55,13 +55,6 @@ namespace hex {
             static nlohmann::json& getSettingsData();
         };
 
-        /* Events Registry. Allows to define new events that can be used by other plugins later on subscribe to */
-        struct Events {
-            Events() = delete;
-
-            static auto get(std::string_view name);
-        };
-
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
         struct CommandPaletteCommands {
             CommandPaletteCommands() = delete;
@@ -167,7 +160,13 @@ namespace hex {
 
             template<hex::derived_from<dp::Node> T, typename ... Args>
             static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, Args&& ... args) {
-                add(Entry{ unlocalizedCategory.data(), unlocalizedName.data(), [args...]{ return new T(std::forward<Args>(args)...); } });
+                add(Entry{ unlocalizedCategory.data(), unlocalizedName.data(),
+                   [args..., name = std::string(unlocalizedName)]{
+                        auto node = new T(std::forward<Args>(args)...);
+                        node->setUnlocalizedName(name);
+                        return node;
+                   }
+                });
             }
 
             static void addSeparator();
