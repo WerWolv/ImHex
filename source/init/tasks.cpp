@@ -32,7 +32,7 @@ namespace hex::init {
 
         auto releases = net.getJson("https://api.github.com/repos/WerWolv/ImHex/releases/latest");
         if (releases.code != 200)
-        return false;
+            return false;
 
         if (!releases.response.contains("tag_name") || !releases.response["tag_name"].is_string())
             return false;

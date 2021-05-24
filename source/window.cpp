@@ -57,7 +57,6 @@ namespace hex {
     Window::Window() {
         SharedData::currentProvider = nullptr;
 
-        #if !defined(RELEASE)
         {
             for (const auto &[argument, value] : init::getInitArguments()) {
                 if (argument == "update-available") {
@@ -67,7 +66,6 @@ namespace hex {
                 }
             }
         }
-        #endif
 
         this->initGLFW();
         this->initImGui();
