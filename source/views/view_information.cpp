@@ -73,6 +73,7 @@ namespace hex {
                 std::vector<u8> buffer(this->m_blockSize, 0x00);
                 std::memset(this->m_valueCounts.data(), 0x00, this->m_valueCounts.size() * sizeof(u32));
                 this->m_blockEntropy.clear();
+                this->m_valueCounts.fill(0);
 
                 for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
                     std::array<ImU64, 256> blockValueCounts = { 0 };
@@ -216,7 +217,9 @@ namespace hex {
                         ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
                         if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
-                            EventManager::post<RequestSelectionChange>( Region{ u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress(), 1 });
+                            u64 address = u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress();
+                            address = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
+                            EventManager::post<RequestSelectionChange>( Region{ address, 1 });
                         }
 
                         ImPlot::EndPlot();

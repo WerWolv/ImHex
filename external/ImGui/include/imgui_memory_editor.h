@@ -161,6 +161,8 @@ struct MemoryEditor
         GotoAddr = addr_min;
         DataPreviewAddr = addr_min;
         DataPreviewAddrEnd = addr_max;
+        DataPreviewAddrOld = addr_min;
+        DataPreviewAddrEndOld = addr_max;
     }
 
     struct Sizes
@@ -722,8 +724,6 @@ struct MemoryEditor
                 ImGui::BeginChild("##scrolling");
                 ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (GotoAddr / Cols) * ImGui::GetTextLineHeight());
                 ImGui::EndChild();
-                DataEditingAddr = DataPreviewAddr = HighlightMin;
-                DataPreviewAddrEnd = HighlightMax;
             }
             GotoAddr = (size_t)-1;
         }
