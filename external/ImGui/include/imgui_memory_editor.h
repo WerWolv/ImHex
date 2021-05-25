@@ -354,10 +354,12 @@ struct MemoryEditor
 
         // Draw vertical separator
         ImVec2 window_pos = ImGui::GetWindowPos();
+        float scrollX = ImGui::GetScrollX();
+        
         if (OptShowAscii)
-            draw_list->AddLine(ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth, window_pos.y), ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
+            draw_list->AddLine(ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth - scrollX, window_pos.y), ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth - scrollX, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
         if (OptShowAdvancedDecoding)
-            draw_list->AddLine(ImVec2(window_pos.x + s.PosDecodingStart - s.GlyphWidth, window_pos.y), ImVec2(window_pos.x + s.PosDecodingStart - s.GlyphWidth, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
+            draw_list->AddLine(ImVec2(window_pos.x + s.PosDecodingStart - s.GlyphWidth - scrollX, window_pos.y), ImVec2(window_pos.x + s.PosDecodingStart - s.GlyphWidth - scrollX, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
 
         const ImU32 color_text = ImGui::GetColorU32(ImGuiCol_Text);
         const ImU32 color_disabled = OptGreyOutZeroes ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : color_text;
