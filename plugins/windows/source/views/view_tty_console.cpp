@@ -99,11 +99,14 @@ namespace hex {
                     for (u32 i = clipper.DisplayStart + 1; i < clipper.DisplayEnd; i++) {
                         ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions[i - 1], this->m_receiveDataBuffer.data() + this->m_wrapPositions[i]);
                     }
+
+                    if (!this->m_receiveDataBuffer.empty() && !this->m_wrapPositions.empty())
+                        if (clipper.DisplayEnd >= this->m_wrapPositions.size() - 1)
+                            ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions.back());
                 }
 
-                if (this->m_shouldAutoScroll && this->m_needsScrolling) {
+                if (this->m_shouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
                     ImGui::SetScrollHereY(0.0F);
-                    this->m_needsScrolling = false;
                 }
 
                 ImGui::EndChild();
@@ -195,19 +198,28 @@ namespace hex {
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);
             ON_SCOPE_EXIT { ::CloseHandle(&overlapped); };
 
+            auto addByte = [this](char byte) {
+                if (byte >= 0x20 && byte <= 0x7E) {
+                    this->m_receiveDataBuffer.back() = byte;
+                    this->m_receiveDataBuffer.push_back(0x00);
+                } else if (byte == '\n' || byte == '\r') {
+                    if (this->m_receiveDataBuffer.empty())
+                        return;
+
+                    u32 wrapPos = this->m_receiveDataBuffer.size() - 1;
+
+                    if (this->m_wrapPositions.empty() || this->m_wrapPositions.back() != wrapPos)
+                        this->m_wrapPositions.push_back(wrapPos);
+                }
+            };
+
             while (!token.stop_requested()) {
                DWORD bytesRead = 0;
 
                char byte;
                if (!waitingOnRead) {
                    if (::ReadFile(this->m_portHandle, &byte, sizeof(char), &bytesRead, &overlapped)) {
-                       if (byte >= 0x20 && byte <= 0x7E) {
-                           this->m_receiveDataBuffer.back() = byte;
-                           this->m_receiveDataBuffer.push_back(0x00);
-                           this->m_needsScrolling = true;
-                       } else if (byte == '\n' || byte == '\r') {
-                           this->m_wrapPositions.push_back(this->m_receiveDataBuffer.size() - 1);
-                       }
+                       addByte(byte);
                    } else if (::GetLastError() == ERROR_IO_PENDING) {
                        waitingOnRead = true;
                    }
@@ -216,11 +228,7 @@ namespace hex {
                    switch (res) {
                        case WAIT_OBJECT_0:
                            if (::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesRead, false)) {
-                               if (byte >= 0x20 && byte <= 0x7E) {
-                                   this->m_receiveDataBuffer.back() = byte;
-                                   this->m_receiveDataBuffer.push_back(0x00);
-                                   this->m_needsScrolling = true;
-                               }
+                               addByte(byte);
                                waitingOnRead = false;
                            }
                        default: break;

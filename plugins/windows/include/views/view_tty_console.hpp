@@ -43,8 +43,6 @@ namespace hex {
         std::vector<u32> m_wrapPositions;
         bool m_transmitting = false;
 
-        bool m_needsScrolling = false;
-
         constexpr static std::array BaudRates = {
                 "110",
                 "300",
