@@ -5,6 +5,7 @@
 #include "views/view_tty_console.hpp"
 
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
+    ContentRegistry::Views::add<hex::ViewTTYConsole>();
 }
 
 
