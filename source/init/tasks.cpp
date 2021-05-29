@@ -152,15 +152,15 @@ namespace hex::init {
                 { "Creating directories...",    createDirectories   },
                 { "Loading default views...",   loadDefaultViews    },
                 { "Loading plugins...",         loadPlugins         },
-                { "Loading settings...",        loadSettings        }
+                { "Loading settings...",        loadSettings        },
         };
     }
 
     std::vector<Task> getExitTasks() {
         return {
-                { "Unloading plugins...",       unloadPlugins       },
+                { "Cleaning up views...",       deleteViews         },
                 { "Saving settings...",         storeSettings       },
-                { "Cleaning up views...",       deleteViews         }
+                { "Unloading plugins...",       unloadPlugins       },
         };
     }
 
