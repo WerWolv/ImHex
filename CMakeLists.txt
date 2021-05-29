@@ -12,6 +12,7 @@ setDefaultBuiltTypeIfUnset()
 # List plugin names here. Project name must match folder name
 set(PLUGINS
         builtin
+        windows
         # example
         )
 
