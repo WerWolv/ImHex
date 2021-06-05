@@ -77,6 +77,8 @@ namespace hex {
             ImGui::NewLine();
 
             if (ImGui::Button("Clear")) {
+                std::scoped_lock lock(this->m_receiveBufferMutex);
+
                 this->m_receiveDataBuffer.clear();
                 this->m_wrapPositions.clear();
             }
@@ -86,7 +88,7 @@ namespace hex {
             ImGui::Checkbox("Auto Scroll", &this->m_shouldAutoScroll);
 
             ImGui::NewLine();
-            ImGui::TextUnformatted("Data");
+            ImGui::TextUnformatted("Console");
             ImGui::Separator();
 
             auto consoleSize = ImGui::GetContentRegionAvail();
@@ -95,7 +97,10 @@ namespace hex {
                 ImGuiListClipper clipper;
                 clipper.Begin(this->m_wrapPositions.size(), ImGui::GetTextLineHeight());
 
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
                 while (clipper.Step()) {
+                    std::scoped_lock lock(this->m_receiveBufferMutex);
+
                     for (u32 i = clipper.DisplayStart + 1; i < clipper.DisplayEnd; i++) {
                         ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions[i - 1], this->m_receiveDataBuffer.data() + this->m_wrapPositions[i]);
                     }
@@ -103,11 +108,12 @@ namespace hex {
                     if (!this->m_receiveDataBuffer.empty() && !this->m_wrapPositions.empty())
                         if (clipper.DisplayEnd >= this->m_wrapPositions.size() - 1)
                             ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions.back());
-                }
 
-                if (this->m_shouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
-                    ImGui::SetScrollHereY(0.0F);
+                    if (this->m_shouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
+                        ImGui::SetScrollHereY(0.0F);
+                    }
                 }
+                ImGui::PopStyleVar();
 
                 ImGui::EndChild();
             }
@@ -119,10 +125,32 @@ namespace hex {
                 this->m_transmitDataBuffer[size + 0] = '\n';
                 this->m_transmitDataBuffer[size + 1] = 0x00;
 
-                this->transmitData();
+                this->transmitData(this->m_transmitDataBuffer);
                 ImGui::SetKeyboardFocusHere(0);
             }
             ImGui::PopItemWidth();
+
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && this->m_portHandle != INVALID_HANDLE_VALUE && !this->m_transmitting)
+                ImGui::OpenPopup("ConsoleMenu");
+
+            if (ImGui::BeginPopup("ConsoleMenu")) {
+
+                static std::vector<char> buffer(2, 0x00);
+                if (ImGui::MenuItem("Send ETX", "CTRL + C")) {
+                    buffer[0] = 0x03;
+                    this->transmitData(buffer);
+                }
+                if (ImGui::MenuItem("Send EOT", "CTRL + D")) {
+                    buffer[0] = 0x04;
+                    this->transmitData(buffer);
+                }
+                if (ImGui::MenuItem("Send SUB", "CTRL + Z")) {
+                    buffer[0] = 0x1A;
+                    this->transmitData(buffer);
+                }
+
+                ImGui::EndPopup();
+            }
 
         }
         ImGui::End();
@@ -191,7 +219,7 @@ namespace hex {
 
         closeHandle.release();
 
-        this->m_receiveThread = std::jthread([this](std::stop_token token) {
+        this->m_receiveThread = std::jthread([this](const std::stop_token &token) {
             bool waitingOnRead = false;
             OVERLAPPED overlapped = { 0 };
 
@@ -199,6 +227,8 @@ namespace hex {
             ON_SCOPE_EXIT { ::CloseHandle(&overlapped); };
 
             auto addByte = [this](char byte) {
+                std::scoped_lock lock(this->m_receiveBufferMutex);
+
                 if (byte >= 0x20 && byte <= 0x7E) {
                     this->m_receiveDataBuffer.back() = byte;
                     this->m_receiveDataBuffer.push_back(0x00);
@@ -216,7 +246,7 @@ namespace hex {
             while (!token.stop_requested()) {
                DWORD bytesRead = 0;
 
-               char byte;
+               char byte = 0;
                if (!waitingOnRead) {
                    if (::ReadFile(this->m_portHandle, &byte, sizeof(char), &bytesRead, &overlapped)) {
                        addByte(byte);
@@ -224,6 +254,7 @@ namespace hex {
                        waitingOnRead = true;
                    }
                } else {
+                   byte = 0;
                    auto res = ::WaitForSingleObject(overlapped.hEvent, 500);
                    switch (res) {
                        case WAIT_OBJECT_0:
@@ -251,7 +282,7 @@ namespace hex {
         return true;
     }
 
-    void ViewTTYConsole::transmitData() {
+    void ViewTTYConsole::transmitData(std::vector<char> &data) {
         if (this->m_transmitting)
             return;
 
@@ -264,14 +295,14 @@ namespace hex {
             this->m_transmitting = true;
 
             DWORD bytesWritten = 0;
-            if (!::WriteFile(this->m_portHandle, this->m_transmitDataBuffer.data(), strlen(this->m_transmitDataBuffer.data()), &bytesWritten, &overlapped)) {
+            if (!::WriteFile(this->m_portHandle, data.data(), strlen(data.data()), &bytesWritten, &overlapped)) {
                 if (::GetLastError() == ERROR_IO_PENDING) {
                     ::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesWritten, true);
                 }
             }
 
             if (bytesWritten > 0)
-                this->m_transmitDataBuffer[0] = 0x00;
+                data[0] = 0x00;
 
             this->m_transmitting = false;
         });

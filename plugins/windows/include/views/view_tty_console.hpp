@@ -4,7 +4,9 @@
 
 #include <windows.h>
 
+#include <mutex>
 #include <thread>
+#include <vector>
 
 namespace hex {
 
@@ -25,7 +27,7 @@ namespace hex {
         bool connect();
         bool disconnect();
 
-        void transmitData();
+        void transmitData(std::vector<char> &data);
 
         HANDLE m_portHandle = INVALID_HANDLE_VALUE;
         std::jthread m_receiveThread;
@@ -39,6 +41,7 @@ namespace hex {
 
         bool m_shouldAutoScroll = true;
 
+        std::mutex m_receiveBufferMutex;
         std::vector<char> m_receiveDataBuffer, m_transmitDataBuffer;
         std::vector<u32> m_wrapPositions;
         bool m_transmitting = false;
