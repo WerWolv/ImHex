@@ -410,8 +410,7 @@ namespace hex {
 
         glfwSwapBuffers(this->m_window);
 
-        while (glfwGetTime() < this->m_lastFrameTime + 1 / (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) ? this->m_targetFps : 5.0))
-            std::this_thread::sleep_for(500us);
+        std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) ? this->m_targetFps : 5.0) - glfwGetTime()) * 1000)));
         this->m_lastFrameTime = glfwGetTime();
     }
 
