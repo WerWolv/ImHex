@@ -72,7 +72,7 @@ namespace hex {
                     switch (this->m_currHashFunction) {
                         case 0: // CRC16
                         {
-                            static int polynomial = 0, init = 0;
+                            static int polynomial = 0x8005, init = 0x0000;
 
                             ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
@@ -97,7 +97,7 @@ namespace hex {
                             break;
                         case 1: // CRC32
                         {
-                            static int polynomial = 0, init = 0;
+                            static int polynomial = 0x04C11DB7, init = 0xFFFFFFFF;
 
                             ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                             if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
