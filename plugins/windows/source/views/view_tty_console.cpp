@@ -3,7 +3,7 @@
 #include <imgui_imhex_extensions.h>
 #include <imgui_internal.h>
 
-namespace hex {
+namespace hex::plugin::windows {
 
     ViewTTYConsole::ViewTTYConsole() : View("hex.windows.view.tty_console.name") {
         this->m_comPorts = getAvailablePorts();
@@ -19,7 +19,7 @@ namespace hex {
     void ViewTTYConsole::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.windows.view.tty_console.name").c_str(), &this->getWindowOpenState())) {
 
-            ImGui::TextUnformatted("Configuration");
+            ImGui::TextUnformatted("hex.windows.view.tty_console.config"_lang);
             ImGui::Separator();
 
             bool connected = this->m_portHandle != INVALID_HANDLE_VALUE;
@@ -27,7 +27,7 @@ namespace hex {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, connected);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, connected ? 0.5F : 1.0F);
 
-            ImGui::Combo("Port", &this->m_selectedPort, [](void* data, int idx, const char** out_text) -> bool {
+            ImGui::Combo("hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void* data, int idx, const char** out_text) -> bool {
                 auto &ports = *static_cast<std::vector<std::pair<std::string, std::string>>*>(data);
 
                 *out_text = ports[idx].first.c_str();
@@ -35,30 +35,30 @@ namespace hex {
             }, &this->m_comPorts, this->m_comPorts.size());
 
             ImGui::SameLine();
-            if (ImGui::Button("Reload"))
+            if (ImGui::Button("hex.windows.view.tty_console.reload"_lang))
                 this->m_comPorts = getAvailablePorts();
 
-            ImGui::Combo("Baud rate", &this->m_selectedBaudRate, [](void* data, int idx, const char** out_text) -> bool {
+            ImGui::Combo("hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void* data, int idx, const char** out_text) -> bool {
                 *out_text = ViewTTYConsole::BaudRates[idx];
                 return true;
             }, nullptr, ViewTTYConsole::BaudRates.size());
 
-            ImGui::Combo("Data bits", &this->m_selectedNumBits, [](void* data, int idx, const char** out_text) -> bool {
+            ImGui::Combo("hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void* data, int idx, const char** out_text) -> bool {
                 *out_text = ViewTTYConsole::NumBits[idx];
                 return true;
             }, nullptr, ViewTTYConsole::NumBits.size());
 
-            ImGui::Combo("Stop bits", &this->m_selectedStopBits, [](void* data, int idx, const char** out_text) -> bool {
+            ImGui::Combo("hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void* data, int idx, const char** out_text) -> bool {
                 *out_text = ViewTTYConsole::StopBits[idx];
                 return true;
             }, nullptr, ViewTTYConsole::StopBits.size());
 
-            ImGui::Combo("Parity bit", &this->m_selectedParityBits, [](void* data, int idx, const char** out_text) -> bool {
+            ImGui::Combo("hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void* data, int idx, const char** out_text) -> bool {
                 *out_text = ViewTTYConsole::ParityBits[idx];
                 return true;
             }, nullptr, ViewTTYConsole::ParityBits.size());
 
-            ImGui::Checkbox("CTS Flow control", &this->m_hasCTSFlowControl);
+            ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &this->m_hasCTSFlowControl);
 
             ImGui::PopStyleVar();
             ImGui::PopItemFlag();
@@ -66,17 +66,17 @@ namespace hex {
             ImGui::NewLine();
 
             if (this->m_portHandle == INVALID_HANDLE_VALUE) {
-                if (ImGui::Button("Connect"))
+                if (ImGui::Button("hex.windows.view.tty_console.connect"_lang))
                     if (!this->connect())
-                        log::error("Connect error");
+                        View::showErrorPopup("hex.windows.view.tty_console.connect_error"_lang);
             } else {
-                if (ImGui::Button("Disconnect"))
+                if (ImGui::Button("hex.windows.view.tty_console.disconnect"))
                     this->disconnect();
             }
 
             ImGui::NewLine();
 
-            if (ImGui::Button("Clear")) {
+            if (ImGui::Button("hex.windows.view.tty_console.clear"_lang)) {
                 std::scoped_lock lock(this->m_receiveBufferMutex);
 
                 this->m_receiveDataBuffer.clear();
@@ -85,10 +85,10 @@ namespace hex {
 
             ImGui::SameLine();
 
-            ImGui::Checkbox("Auto Scroll", &this->m_shouldAutoScroll);
+            ImGui::Checkbox("hex.windows.view.tty_console.auto_scroll"_lang, &this->m_shouldAutoScroll);
 
             ImGui::NewLine();
-            ImGui::TextUnformatted("Console");
+            ImGui::TextUnformatted("hex.windows.view.tty_console.console"_lang);
             ImGui::Separator();
 
             auto consoleSize = ImGui::GetContentRegionAvail();
@@ -136,15 +136,15 @@ namespace hex {
             if (ImGui::BeginPopup("ConsoleMenu")) {
 
                 static std::vector<char> buffer(2, 0x00);
-                if (ImGui::MenuItem("Send ETX", "CTRL + C")) {
+                if (ImGui::MenuItem("hex.windows.view.tty_console.send_etx"_lang, "CTRL + C")) {
                     buffer[0] = 0x03;
                     this->transmitData(buffer);
                 }
-                if (ImGui::MenuItem("Send EOT", "CTRL + D")) {
+                if (ImGui::MenuItem("hex.windows.view.tty_console.send_eot"_lang, "CTRL + D")) {
                     buffer[0] = 0x04;
                     this->transmitData(buffer);
                 }
-                if (ImGui::MenuItem("Send SUB", "CTRL + Z")) {
+                if (ImGui::MenuItem("hex.windows.view.tty_console.send_sub"_lang, "CTRL + Z")) {
                     buffer[0] = 0x1A;
                     this->transmitData(buffer);
                 }

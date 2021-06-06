@@ -8,7 +8,7 @@
 #include <thread>
 #include <vector>
 
-namespace hex {
+namespace hex::plugin::windows {
 
     namespace prv { class Provider; }
 

@@ -4,8 +4,19 @@
 
 #include "views/view_tty_console.hpp"
 
+namespace hex::plugin::windows {
+
+    void registerLanguageEnUS();
+
+}
+
+
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
-    ContentRegistry::Views::add<hex::ViewTTYConsole>();
+    using namespace hex::plugin::windows;
+
+    ContentRegistry::Views::add<ViewTTYConsole>();
+
+    registerLanguageEnUS();
 }
 
 

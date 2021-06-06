@@ -9,6 +9,8 @@ if (WIN32)
             source/plugin_windows.cpp
 
             source/views/view_tty_console.cpp
+
+            source/lang/en_US.cpp
     )
 
     # Add additional include directories here #
