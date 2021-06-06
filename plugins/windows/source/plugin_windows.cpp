@@ -8,6 +8,7 @@ namespace hex::plugin::windows {
 
     void registerLanguageEnUS();
 
+    void addFooterItems();
 }
 
 
@@ -17,6 +18,8 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     ContentRegistry::Views::add<ViewTTYConsole>();
 
     registerLanguageEnUS();
+
+    addFooterItems();
 }
 
 
