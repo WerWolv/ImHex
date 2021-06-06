@@ -575,6 +575,9 @@ namespace hex {
                 } else if (ctrl && keys['V']) {
                     this->pasteBytes();
                     return true;
+                } else if (ctrl && keys['A']) {
+                    EventManager::post<RequestSelectionChange>(Region { SharedData::currentProvider->getBaseAddress(), SharedData::currentProvider->getSize() });
+                    return true;
                 }
             }
         }
