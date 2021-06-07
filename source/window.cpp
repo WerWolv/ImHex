@@ -339,26 +339,18 @@ namespace hex {
                 }
 
                 if (ImGui::BeginMenu("hex.menu.view"_lang)) {
-                    ImGui::Separator();
-                    ImGui::MenuItem("hex.menu.view.fps"_lang, "", &this->m_fpsVisible);
-                    #ifdef DEBUG
+                    #if defined(DEBUG)
+                        ImGui::Separator();
                         ImGui::MenuItem("hex.menu.view.demo"_lang, "", &this->m_demoWindowOpen);
                     #endif
                     ImGui::EndMenu();
                 }
 
-                if (this->m_fpsVisible) {
-                    std::string fps = hex::format("{:.1f} FPS ", ImGui::GetIO().Framerate);
+                #if defined(DEBUG)
                     ImGui::SameLine();
-                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - fps.length() * ImGui::GetFontSize());
-                    ImGui::TextUnformatted(fps.c_str());
-                } else {
-                    #if defined(DEBUG)
-                        ImGui::SameLine();
-                        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 2 * ImGui::GetFontSize());
-                        ImGui::TextUnformatted(ICON_FA_BUG);
-                    #endif
-                }
+                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 2 * ImGui::GetFontSize());
+                    ImGui::TextUnformatted(ICON_FA_BUG);
+                #endif
 
                 ImGui::EndMenuBar();
             }

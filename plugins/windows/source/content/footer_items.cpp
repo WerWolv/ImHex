@@ -22,7 +22,7 @@ namespace hex::plugin::windows {
         ContentRegistry::Interface::addFooterItem([] {
             static float cpuUsage = 0.0F;
 
-            if (ImGui::GetFrameCount() % 60 == 0) {
+            if (ImGui::HasSecondPassed()) {
                 static ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
                 static u32 numProcessors;
                 static HANDLE self = GetCurrentProcess();
@@ -62,14 +62,14 @@ namespace hex::plugin::windows {
                 }
             }
 
-            ImGui::TextUnformatted(hex::format(ICON_FA_TACHOMETER_ALT " {0:.3}%", cpuUsage * 100).c_str());
+            ImGui::TextUnformatted(hex::format(ICON_FA_TACHOMETER_ALT " {0:.2f}%", cpuUsage * 100).c_str());
         });
 
         ContentRegistry::Interface::addFooterItem([] {
             static MEMORYSTATUSEX memInfo;
             static PROCESS_MEMORY_COUNTERS_EX pmc;
 
-            if (ImGui::GetFrameCount() % 60 == 0) {
+            if (ImGui::HasSecondPassed()) {
                 memInfo.dwLength = sizeof(MEMORYSTATUSEX);
                 GlobalMemoryStatusEx(&memInfo);
                 GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc));
