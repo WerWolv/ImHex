@@ -1,8 +1,5 @@
 #include <hex/plugin.hpp>
 
-#include <windows.h>
-#include <psapi.h>
-
 namespace hex::plugin::builtin {
 
     void addFooterItems() {
