@@ -179,45 +179,15 @@ namespace hex {
     }
 
     void Window::loop() {
-        bool pressedKeys[512] = { false };
-
         this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
-            std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
+            if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
+                glfwWaitEvents();
+
+            glfwPollEvents();
 
             this->frameBegin();
-
-            for (u16 i = 0; i < 512; i++)
-                pressedKeys[i] = ImGui::GetIO().KeysDown[i] && !this->m_prevKeysDown[i];
-
-            for (const auto &call : View::getDeferedCalls())
-                call();
-            View::getDeferedCalls().clear();
-
-            for (auto &view : ContentRegistry::Views::getEntries()) {
-                view->drawAlwaysVisible();
-
-                if (!view->shouldProcess())
-                    continue;
-
-                auto minSize = view->getMinSize();
-                minSize.x *= this->m_globalScale;
-                minSize.y *= this->m_globalScale;
-
-                ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
-                view->drawContent();
-                view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
-            }
-
-            View::drawCommonInterfaces();
-
-            #ifdef DEBUG
-                if (this->m_demoWindowOpen) {
-                    ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
-                    ImPlot::ShowDemoWindow(&this->m_demoWindowOpen);
-                }
-            #endif
-
+            this->frame();
             this->frameEnd();
         }
     }
@@ -277,11 +247,6 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-
-        if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
-            glfwWaitEvents();
-
-        glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -383,6 +348,42 @@ namespace hex {
             ImGui::TextUnformatted("To find out where your plugin folder is, check ImHex' Readme.");
             ImGui::EndPopup();
         }
+    }
+
+    void Window::frame() {
+        bool pressedKeys[512] = { false };
+
+        std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
+        for (u16 i = 0; i < 512; i++)
+            pressedKeys[i] = ImGui::GetIO().KeysDown[i] && !this->m_prevKeysDown[i];
+
+        for (const auto &call : View::getDeferedCalls())
+            call();
+        View::getDeferedCalls().clear();
+
+        for (auto &view : ContentRegistry::Views::getEntries()) {
+            view->drawAlwaysVisible();
+
+            if (!view->shouldProcess())
+                continue;
+
+            auto minSize = view->getMinSize();
+            minSize.x *= this->m_globalScale;
+            minSize.y *= this->m_globalScale;
+
+            ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
+            view->drawContent();
+            view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
+        }
+
+        View::drawCommonInterfaces();
+
+#ifdef DEBUG
+        if (this->m_demoWindowOpen) {
+            ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
+            ImPlot::ShowDemoWindow(&this->m_demoWindowOpen);
+        }
+#endif
     }
 
     void Window::frameEnd() {
@@ -583,6 +584,7 @@ namespace hex {
 
         this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, "ImHex", nullptr, nullptr);
 
+        glfwSetWindowUserPointer(this->m_window, this);
 
         if (this->m_window == nullptr)
             throw std::runtime_error("Failed to create window!");
@@ -604,10 +606,20 @@ namespace hex {
 
          glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
              SharedData::windowPos = ImVec2(x, y);
+
+             auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+             win->frameBegin();
+             win->frame();
+             win->frameEnd();
          });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
             SharedData::windowSize = ImVec2(width, height);
+
+            auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            win->frameBegin();
+            win->frame();
+            win->frameEnd();
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
