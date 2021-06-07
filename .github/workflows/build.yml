@@ -53,8 +53,6 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
     - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
@@ -71,7 +69,7 @@ jobs:
         mkdir build
         cd build
         # Get path to mingw python library
-        PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//')
+        PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//' | sed 's/ //')
         PYTHON_LIB_PATH=$(cygpath -m $(which lib${PYTHON_LIB_NAME}.dll))
 
         # Get path to magic db
