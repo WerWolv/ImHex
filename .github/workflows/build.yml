@@ -53,7 +53,8 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
