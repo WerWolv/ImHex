@@ -538,11 +538,11 @@ namespace hex {
     }
 
     bool ViewHexEditor::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) {
-        if (ctrl && keys['S']) {
-            save();
-            return true;
-        } else if (ctrl && shift && keys['S']) {
+        if (ctrl && shift && keys['S']) {
             saveAs();
+            return true;
+        } else if (ctrl && keys['S']) {
+            save();
             return true;
         }
 
