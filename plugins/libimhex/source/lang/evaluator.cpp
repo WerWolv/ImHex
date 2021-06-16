@@ -46,7 +46,7 @@ namespace hex::lang {
                     auto parent = currPattern->getParent();
 
                     if (parent == nullptr) {
-                        this->getConsole().abortEvaluation(hex::format("no parent available for identifier '{0}'", currPattern->getVariableName()));
+                        this->getConsole().abortEvaluation("no parent available for identifier");
                     } else {
                         currPattern = parent;
                     }
@@ -111,8 +111,8 @@ namespace hex::lang {
         PatternData *currPattern = nullptr;
 
         // Local member access
-        if (!this->m_currMembers.empty())
-            currPattern = this->findPattern(*this->m_currMembers.back(), path);
+        if (this->m_currMembers.size() > 1)
+            currPattern = this->findPattern(*this->m_currMembers[this->m_currMembers.size() - 2], path);
 
         // If no local member was found, try globally
         if (currPattern == nullptr) {
