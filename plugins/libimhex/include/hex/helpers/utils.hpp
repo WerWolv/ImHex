@@ -108,6 +108,9 @@ namespace hex {
     template<typename T>
     struct always_false : std::false_type {};
 
+    template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+    template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
     template<typename T>
     constexpr T changeEndianess(T value, std::endian endian) {
         if (endian == std::endian::native)

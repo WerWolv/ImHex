@@ -73,6 +73,7 @@ namespace hex::lang {
 
         void parseAttribute(Attributable *currNode);
         ASTNode* parseConditional();
+        ASTNode* parseWhileStatement();
         ASTNode* parseType(s32 startIndex);
         ASTNode* parseUsingDeclaration();
         ASTNode* parsePadding();

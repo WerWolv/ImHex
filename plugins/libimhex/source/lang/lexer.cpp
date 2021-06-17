@@ -223,7 +223,7 @@ namespace hex::lang {
         if (string.empty())
             return { };
 
-        if (!string[0] != '\'')
+        if (string[0] != '\'')
             return { };
 
 
@@ -234,7 +234,7 @@ namespace hex::lang {
 
         auto &[c, charSize] = character.value();
 
-        if (string.length() >= charSize || string[charSize] != '\'')
+        if (string.length() >= charSize + 2 && string[charSize + 1] != '\'')
             return { };
 
         return {{ c, charSize + 2 }};
@@ -422,6 +422,8 @@ namespace hex::lang {
                         tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(1))));
                     else if (identifier == "parent")
                         tokens.emplace_back(TOKEN(Keyword, Parent));
+                    else if (identifier == "while")
+                        tokens.emplace_back(TOKEN(Keyword, While));
 
                         // Check for built-in types
                     else if (identifier == "u8")
