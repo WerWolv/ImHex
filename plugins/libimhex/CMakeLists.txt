@@ -67,7 +67,6 @@ if (APPLE)
             message(WARNING "CMAKE_OSX_SYSROOT not set and macOS 10.9 SDK not found! Using default one.")
         endif ()
     endif ()
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0)
 
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_mac.mm)
 endif ()
