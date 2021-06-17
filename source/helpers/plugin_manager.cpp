@@ -15,8 +15,10 @@ namespace hex {
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
 
-        if (this->m_handle == nullptr)
+        if (this->m_handle == nullptr) {
+            fprintf(stderr, "dlopen failed: %s", dlerror());
             return;
+        }
 
         auto pluginName = fs::path(path).stem().string();
 
