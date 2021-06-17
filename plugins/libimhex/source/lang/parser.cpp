@@ -84,7 +84,7 @@ namespace hex::lang {
             else
                 throwParseError("expected member name or 'parent' keyword", -1);
         } else
-            return new ASTNodeRValue(path);
+            return TO_NUMERIC_EXPRESSION(new ASTNodeRValue(path));
     }
 
     // <Integer|((parseMathematicalExpression))>
@@ -108,7 +108,7 @@ namespace hex::lang {
             ASTNodeRValue::Path path;
             return TO_NUMERIC_EXPRESSION(this->parseRValue(path));
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
-            return new ASTNodeRValue({ "$" });
+            return TO_NUMERIC_EXPRESSION(new ASTNodeRValue({ "$" }));
         } else if (MATCHES(oneOf(OPERATOR_ADDRESSOF, OPERATOR_SIZEOF) && sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto op = getValue<Token::Operator>(-2);
 
@@ -395,6 +395,22 @@ namespace hex::lang {
         return new ASTNodeConditionalStatement(condition, trueBody, falseBody);
     }
 
+    // while ((parseMathematicalExpression))
+    ASTNode* Parser::parseWhileStatement() {
+        auto condition = parseMathematicalExpression();
+
+        auto cleanup = SCOPE_GUARD {
+            delete condition;
+        };
+
+        if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            throwParseError("expected closing ')' after while head");
+
+        cleanup.release();
+
+        return new ASTNodeWhileStatement(condition);
+    }
+
     /* Type declarations */
 
     // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double>
@@ -459,7 +475,10 @@ namespace hex::lang {
         auto sizeCleanup = SCOPE_GUARD { delete size; };
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
-            size = parseMathematicalExpression();
+            if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN)))
+                size = parseWhileStatement();
+            else
+                size = parseMathematicalExpression();
 
             if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
                 throwParseError("expected closing ']' at end of array declaration", -1);
@@ -662,7 +681,10 @@ namespace hex::lang {
         auto sizeCleanup = SCOPE_GUARD { delete size; };
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
-            size = parseMathematicalExpression();
+            if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN)))
+                size = parseWhileStatement();
+            else
+                size = parseMathematicalExpression();
 
             if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
                 throwParseError("expected closing ']' at end of array declaration", -1);

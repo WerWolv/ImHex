@@ -126,23 +126,27 @@ namespace hex::plugin::builtin {
             std::string message;
             for (auto& param : params) {
                 if (auto integerLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(param); integerLiteral != nullptr) {
-                    switch (integerLiteral->getType()) {
-                        case Token::ValueType::Character:       message += std::get<s8>(integerLiteral->getValue()); break;
-                        case Token::ValueType::Unsigned8Bit:    message += std::to_string(std::get<u8>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Signed8Bit:      message += std::to_string(std::get<s8>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Unsigned16Bit:   message += std::to_string(std::get<u16>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Signed16Bit:     message += std::to_string(std::get<s16>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Unsigned32Bit:   message += std::to_string(std::get<u32>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Signed32Bit:     message += std::to_string(std::get<s32>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Unsigned64Bit:   message += std::to_string(std::get<u64>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Signed64Bit:     message += std::to_string(std::get<s64>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Unsigned128Bit:  message += hex::to_string(std::get<u128>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Signed128Bit:    message += hex::to_string(std::get<s128>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Float:           message += std::to_string(std::get<float>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Double:          message += std::to_string(std::get<double>(integerLiteral->getValue())); break;
-                        case Token::ValueType::Boolean:         message += std::get<s32>(integerLiteral->getValue()) ? "true" : "false"; break;
-                        case Token::ValueType::CustomType:      message += "< Custom Type >"; break;
-                    }
+                    std::visit([&](auto &&value) {
+                        switch (integerLiteral->getType()) {
+                            case lang::Token::ValueType::Character: message += (char)value; break;
+                            case lang::Token::ValueType::Boolean: message += value == 0 ? "false" : "true"; break;
+                            case lang::Token::ValueType::Unsigned8Bit:
+                            case lang::Token::ValueType::Unsigned16Bit:
+                            case lang::Token::ValueType::Unsigned32Bit:
+                            case lang::Token::ValueType::Unsigned64Bit:
+                            case lang::Token::ValueType::Unsigned128Bit:
+                                message += std::to_string(static_cast<u64>(value));
+                                break;
+                            case lang::Token::ValueType::Signed8Bit:
+                            case lang::Token::ValueType::Signed16Bit:
+                            case lang::Token::ValueType::Signed32Bit:
+                            case lang::Token::ValueType::Signed64Bit:
+                            case lang::Token::ValueType::Signed128Bit:
+                                message += std::to_string(static_cast<s64>(value));
+                                break;
+                            default: message += "< Custom Type >";
+                        }
+                    }, integerLiteral->getValue());
                 }
                 else if (auto stringLiteral = dynamic_cast<ASTNodeStringLiteral*>(param); stringLiteral != nullptr)
                     message += stringLiteral->getString();

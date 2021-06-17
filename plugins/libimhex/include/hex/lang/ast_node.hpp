@@ -482,6 +482,30 @@ namespace hex::lang {
         std::vector<ASTNode*> m_trueBody, m_falseBody;
     };
 
+    class ASTNodeWhileStatement : public ASTNode {
+    public:
+        explicit ASTNodeWhileStatement(ASTNode *condition) : ASTNode(), m_condition(condition) { }
+
+        ~ASTNodeWhileStatement() override {
+            delete this->m_condition;
+        }
+
+        ASTNodeWhileStatement(const ASTNodeWhileStatement &other) : ASTNode(other) {
+            this->m_condition = other.m_condition->clone();
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeWhileStatement(*this);
+        }
+
+        [[nodiscard]] ASTNode* getCondition() {
+            return this->m_condition;
+        }
+
+    private:
+        ASTNode *m_condition;
+    };
+
     class ASTNodeFunctionCall : public ASTNode {
     public:
         explicit ASTNodeFunctionCall(std::string_view functionName, std::vector<ASTNode*> params)

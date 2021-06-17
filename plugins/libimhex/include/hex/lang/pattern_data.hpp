@@ -92,6 +92,7 @@ namespace hex::lang {
         }
 
         virtual std::map<u64, u32> getHighlightedAddresses() {
+            if (this->isHidden()) return { };
             if (this->m_highlightedAddresses.empty()) {
                 for (u64 i = 0; i < this->getSize(); i++)
                     this->m_highlightedAddresses.insert({ this->getOffset() + i, this->getColor() });
@@ -154,7 +155,21 @@ namespace hex::lang {
             return false;
         }
 
+        void draw(prv::Provider *provider) {
+            if (isHidden()) return;
+
+            this->createEntry(provider);
+        }
+
         static void resetPalette() { SharedData::patternPaletteOffset = 0; }
+
+        void setHidden(bool hidden) {
+            this->m_hidden = hidden;
+        }
+
+        bool isHidden() const {
+            return this->m_hidden;
+        }
 
     protected:
         void createDefaultEntry(std::string_view value) const {
@@ -190,6 +205,7 @@ namespace hex::lang {
     protected:
         std::endian m_endian = std::endian::native;
         std::map<u64, u32> m_highlightedAddresses;
+        bool m_hidden = false;
 
     private:
         u64 m_offset;
@@ -599,7 +615,7 @@ namespace hex::lang {
 
             if (open) {
                 for (auto &member : this->m_entries)
-                    member->createEntry(provider);
+                    member->draw(provider);
 
                 ImGui::TreePop();
             }
@@ -681,7 +697,7 @@ namespace hex::lang {
 
             if (open) {
                 for (auto &member : this->m_sortedMembers)
-                    member->createEntry(provider);
+                    member->draw(provider);
 
                 ImGui::TreePop();
             }
@@ -782,7 +798,7 @@ namespace hex::lang {
 
             if (open) {
                 for (auto &member : this->m_sortedMembers)
-                    member->createEntry(provider);
+                    member->draw(provider);
 
                 ImGui::TreePop();
             }

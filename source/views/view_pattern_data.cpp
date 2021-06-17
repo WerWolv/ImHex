@@ -57,7 +57,7 @@ namespace hex {
                     if (this->m_sortedPatternData.size() > 0) {
 
                         for (auto &patternData : this->m_sortedPatternData)
-                            patternData->createEntry(provider);
+                            patternData->draw(provider);
 
                     }
 
