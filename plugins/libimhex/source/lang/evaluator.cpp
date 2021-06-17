@@ -432,6 +432,8 @@ namespace hex::lang {
                 currPattern->setVariableName(value->data());
             else if (attribute == "comment" && value.has_value())
                 currPattern->setComment(value->data());
+            else if (attribute == "hidden" && value.has_value())
+                currPattern->setHidden(true);
             else
                 this->getConsole().abortEvaluation("unknown or invalid attribute");
 

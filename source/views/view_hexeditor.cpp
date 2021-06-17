@@ -162,8 +162,9 @@ namespace hex {
         EventManager::subscribe<EventPatternChanged>(this, [this]() {
             this->m_highlightedBytes.clear();
 
-            for (const auto &pattern : SharedData::patternData)
+            for (const auto &pattern : SharedData::patternData) {
                 this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
+            }
         });
 
         EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
