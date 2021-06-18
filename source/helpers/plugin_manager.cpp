@@ -16,7 +16,7 @@ namespace hex {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
 
         if (this->m_handle == nullptr) {
-            fprintf(stderr, "dlopen failed: %s", dlerror());
+            hex::log::error("dlopen failed: {}", dlerror());
             return;
         }
 
