@@ -19,29 +19,29 @@
                 NSURL * result = nil;
                 switch (path) {
                     case ImHexPath::Patterns:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/patterns"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/patterns"];
                         break;
 
                     case ImHexPath::PatternsInclude:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/patterns"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/patterns"];
                         break;
                     case ImHexPath::Magic:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/magic"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/magic"];
                         break;
                     case ImHexPath::Python:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex"];
                         break;
                     case ImHexPath::Plugins:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/plugins"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/plugins"];
                         break;
                     case ImHexPath::Yara:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/yara"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/yara"];
                         break;
                     case ImHexPath::Config:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/config"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/config"];
                         break;
                     case ImHexPath::Resources:
-                        result = [appSupportDir URLByAppendingPathComponent:@"/imhex/resources"];
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/resources"];
                         break;
                 }
 

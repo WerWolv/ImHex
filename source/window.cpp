@@ -100,8 +100,12 @@ namespace hex {
             {
                 auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
 
-                if (language.is_string())
+                if (language.is_string()) {
                     LangEntry::loadLanguage(static_cast<std::string>(language));
+                } else {
+                    // If no language is specified, fall back to English.
+                    LangEntry::loadLanguage("en-US");
+                }
             }
 
             {
