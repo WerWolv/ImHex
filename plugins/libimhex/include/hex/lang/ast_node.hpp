@@ -480,10 +480,14 @@ namespace hex::lang {
 
     class ASTNodeWhileStatement : public ASTNode {
     public:
-        explicit ASTNodeWhileStatement(ASTNode *condition) : ASTNode(), m_condition(condition) { }
+        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode*> body)
+            : ASTNode(), m_condition(condition), m_body(std::move(body)) { }
 
         ~ASTNodeWhileStatement() override {
             delete this->m_condition;
+
+            for (auto &statement : this->m_body)
+                delete statement;
         }
 
         ASTNodeWhileStatement(const ASTNodeWhileStatement &other) : ASTNode(other) {
@@ -498,8 +502,13 @@ namespace hex::lang {
             return this->m_condition;
         }
 
+        [[nodiscard]] const std::vector<ASTNode*>& getBody() {
+            return this->m_body;
+        }
+
     private:
         ASTNode *m_condition;
+        std::vector<ASTNode*> m_body;
     };
 
     class ASTNodeFunctionCall : public ASTNode {

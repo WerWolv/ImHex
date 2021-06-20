@@ -534,10 +534,33 @@ namespace hex::lang {
                     else
                         returnResult = this->evaluateFunctionBody(conditionalNode->getFalseBody());
 
-                    for (u32 i = localVariableStartCount; i < this->m_localVariables.size(); i++)
+                    for (u32 i = localVariableStartCount; i < this->m_localVariables.back()->size(); i++)
                         delete (*this->m_localVariables.back())[i];
                     this->m_localVariables.back()->resize(localVariableStartCount);
                     this->m_localStack.resize(localVariableStackStartSize);
+
+                } else {
+                    this->getConsole().abortEvaluation("invalid rvalue used in return statement");
+                }
+            } else if (auto whileLoopNode = dynamic_cast<ASTNodeWhileStatement*>(statement); whileLoopNode != nullptr) {
+                if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(whileLoopNode->getCondition()); numericExpressionNode != nullptr) {
+                    auto condition = this->evaluateMathematicalExpression(numericExpressionNode);
+
+                    while (std::visit([](auto &&value) { return value != 0; }, condition->getValue())) {
+                        u32 localVariableStartCount = this->m_localVariables.back()->size();
+                        u32 localVariableStackStartSize = this->m_localStack.size();
+
+                        returnResult = this->evaluateFunctionBody(whileLoopNode->getBody());
+                        if (returnResult.has_value())
+                            break;
+
+                        for (u32 i = localVariableStartCount; i < this->m_localVariables.back()->size(); i++)
+                            delete (*this->m_localVariables.back())[i];
+                        this->m_localVariables.back()->resize(localVariableStartCount);
+                        this->m_localStack.resize(localVariableStackStartSize);
+
+                        condition = this->evaluateMathematicalExpression(numericExpressionNode);
+                    }
 
                 } else {
                     this->getConsole().abortEvaluation("invalid rvalue used in return statement");

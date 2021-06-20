@@ -71,12 +71,14 @@ namespace hex::lang {
         ASTNode* parseTernaryConditional();
         ASTNode* parseMathematicalExpression();
 
-        void parseAttribute(Attributable *currNode);
         ASTNode* parseFunctionDefintion();
         ASTNode* parseFunctionStatement();
         ASTNode* parseFunctionVariableAssignment();
         ASTNode* parseFunctionReturnStatement();
         ASTNode* parseFunctionConditional();
+        ASTNode* parseFunctionWhileLoop();
+
+        void parseAttribute(Attributable *currNode);
         ASTNode* parseConditional();
         ASTNode* parseWhileStatement();
         ASTNode* parseType(s32 startIndex);

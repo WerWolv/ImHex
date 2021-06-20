@@ -410,8 +410,10 @@ namespace hex::lang {
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN))) {
             statement = parseFunctionConditional();
             needsSemicolon = false;
-        }
-        else
+        } else if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN))) {
+            statement = parseFunctionWhileLoop();
+            needsSemicolon = false;
+        } else
             throwParseError("invalid sequence", 0);
 
         if (needsSemicolon && !MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION))) {
@@ -471,6 +473,30 @@ namespace hex::lang {
         return new ASTNodeConditionalStatement(condition, trueBody, falseBody);
     }
 
+    ASTNode* Parser::parseFunctionWhileLoop() {
+        auto condition = parseMathematicalExpression();
+        std::vector<ASTNode*> body;
+
+        auto cleanup = SCOPE_GUARD {
+            delete condition;
+            for (auto &statement : body)
+                delete statement;
+        };
+
+        if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE, SEPARATOR_CURLYBRACKETOPEN))) {
+            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+                body.push_back(parseFunctionStatement());
+            }
+        } else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
+            body.push_back(parseFunctionStatement());
+        } else
+            throwParseError("expected body of conditional statement");
+
+        cleanup.release();
+
+        return new ASTNodeWhileStatement(condition, body);
+    }
+
     /* Control flow */
 
     // if ((parseMathematicalExpression)) { (parseMember) }
@@ -521,7 +547,7 @@ namespace hex::lang {
 
         cleanup.release();
 
-        return new ASTNodeWhileStatement(condition);
+        return new ASTNodeWhileStatement(condition, { });
     }
 
     /* Type declarations */
