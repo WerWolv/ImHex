@@ -72,6 +72,9 @@ namespace hex::lang {
         ASTNode* parseMathematicalExpression();
 
         void parseAttribute(Attributable *currNode);
+        ASTNode* parseFunctionDefintion();
+        ASTNode* parseVariableAssignment();
+        ASTNode* parseReturnStatement();
         ASTNode* parseConditional();
         ASTNode* parseWhileStatement();
         ASTNode* parseType(s32 startIndex);

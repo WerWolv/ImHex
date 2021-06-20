@@ -563,7 +563,7 @@ namespace hex {
 
     void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char* desc) {
-           fprintf(stderr, "Glfw Error %d: %s\n", error, desc);
+            log::error("GLFW Error [{}] : {}", error, desc);
         });
 
         if (!glfwInit())

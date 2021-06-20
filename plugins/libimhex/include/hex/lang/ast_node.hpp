@@ -56,11 +56,7 @@ namespace hex::lang {
         }
 
         [[nodiscard]] const auto& getValue() const {
-            return this->m_literal.second;
-        }
-
-        [[nodiscard]] Token::ValueType getType() const {
-            return this->m_literal.first;
+            return this->m_literal;
         }
 
     private:
@@ -621,5 +617,106 @@ namespace hex::lang {
     private:
         Token::Operator m_op;
         ASTNode *m_expression;
+    };
+
+    class ASTNodeFunctionDefinition : public ASTNode {
+    public:
+        ASTNodeFunctionDefinition(std::string name, std::vector<std::string> params, std::vector<ASTNode*> body)
+            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
+
+        }
+
+        ASTNodeFunctionDefinition(const ASTNodeFunctionDefinition &other) : ASTNode(other) {
+            this->m_name = other.m_name;
+            this->m_params = other.m_params;
+
+            for (auto statement : other.m_body) {
+                this->m_body.push_back(statement->clone());
+            }
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeFunctionDefinition(*this);
+        }
+
+        ~ASTNodeFunctionDefinition() override {
+            for (auto statement : this->m_body)
+                delete statement;
+        }
+
+        [[nodiscard]] std::string_view getName() const {
+            return this->m_name;
+        }
+
+        [[nodiscard]] const auto& getParams() const {
+            return this->m_params;
+        }
+
+        [[nodiscard]] const auto& getBody() const {
+            return this->m_body;
+        }
+
+    private:
+        std::string m_name;
+        std::vector<std::string> m_params;
+        std::vector<ASTNode*> m_body;
+    };
+
+    class ASTNodeAssignment : public ASTNode {
+    public:
+        ASTNodeAssignment(std::string lvalueName, ASTNode *rvalue) : m_lvalueName(std::move(lvalueName)), m_rvalue(rvalue) {
+
+        }
+
+        ASTNodeAssignment(const ASTNodeAssignment &other) : ASTNode(other) {
+            this->m_lvalueName = other.m_lvalueName;
+            this->m_rvalue = other.m_rvalue->clone();
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeAssignment(*this);
+        }
+
+        ~ASTNodeAssignment() override {
+            delete this->m_rvalue;
+        }
+
+        [[nodiscard]] std::string_view getLValueName() const {
+            return this->m_lvalueName;
+        }
+
+        [[nodiscard]] ASTNode* getRValue() const {
+            return this->m_rvalue;
+        }
+
+    private:
+        std::string m_lvalueName;
+        ASTNode *m_rvalue;
+    };
+
+    class ASTNodeReturnStatement : public ASTNode {
+    public:
+        ASTNodeReturnStatement(ASTNode *rvalue) : m_rvalue(rvalue) {
+
+        }
+
+        ASTNodeReturnStatement(const ASTNodeReturnStatement &other) : ASTNode(other) {
+            this->m_rvalue = other.m_rvalue->clone();
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeReturnStatement(*this);
+        }
+
+        ~ASTNodeReturnStatement() override {
+            delete this->m_rvalue;
+        }
+
+        [[nodiscard]] ASTNode* getRValue() const {
+            return this->m_rvalue;
+        }
+
+    private:
+        ASTNode *m_rvalue;
     };
 }

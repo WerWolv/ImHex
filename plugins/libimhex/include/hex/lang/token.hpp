@@ -33,7 +33,9 @@ namespace hex::lang {
             If,
             Else,
             Parent,
-            While
+            While,
+            Function,
+            Return
         };
 
         enum class Operator {
@@ -107,8 +109,7 @@ namespace hex::lang {
             EndOfProgram
         };
 
-        using Integers = std::variant<u8, s8, u16, s16, u32, s32, u64, s64, u128, s128, float, double>;
-        using IntegerLiteral = std::pair<ValueType, Integers>;
+        using IntegerLiteral = std::variant<char, bool, u8, s8, u16, s16, u32, s32, u64, s64, u128, s128, float, double>;
         using ValueTypes = std::variant<Keyword, std::string, Operator, IntegerLiteral, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -129,28 +130,6 @@ namespace hex::lang {
 
         [[nodiscard]] constexpr static inline u32 getTypeSize(const ValueType type) {
             return static_cast<u32>(type) >> 4;
-        }
-
-        [[nodiscard]] constexpr static inline IntegerLiteral castTo(ValueType type, const Integers &literal) {
-            return std::visit([type](auto &&value) {
-                switch (type) {
-                    case ValueType::Signed8Bit:     return IntegerLiteral(type, static_cast<s8>(value));
-                    case ValueType::Signed16Bit:    return IntegerLiteral(type, static_cast<s16>(value));
-                    case ValueType::Signed32Bit:    return IntegerLiteral(type, static_cast<s32>(value));
-                    case ValueType::Signed64Bit:    return IntegerLiteral(type, static_cast<s64>(value));
-                    case ValueType::Signed128Bit:   return IntegerLiteral(type, static_cast<s128>(value));
-                    case ValueType::Unsigned8Bit:   return IntegerLiteral(type, static_cast<u8>(value));
-                    case ValueType::Unsigned16Bit:  return IntegerLiteral(type, static_cast<u16>(value));
-                    case ValueType::Unsigned32Bit:  return IntegerLiteral(type, static_cast<u32>(value));
-                    case ValueType::Unsigned64Bit:  return IntegerLiteral(type, static_cast<u64>(value));
-                    case ValueType::Unsigned128Bit: return IntegerLiteral(type, static_cast<u128>(value));
-                    case ValueType::Float:          return IntegerLiteral(type, static_cast<float>(value));
-                    case ValueType::Double:         return IntegerLiteral(type, static_cast<double>(value));
-                    case ValueType::Character:      return IntegerLiteral(type, static_cast<char>(value));
-                    case ValueType::Character16:    return IntegerLiteral(type, static_cast<char16_t>(value));
-                    default: __builtin_unreachable();
-                }
-            }, literal);
         }
 
         [[nodiscard]] constexpr static auto getTypeName(const lang::Token::ValueType type) {
@@ -227,8 +206,10 @@ namespace hex::lang {
 #define KEYWORD_ELSE                        COMPONENT(Keyword, Else)
 #define KEYWORD_PARENT                      COMPONENT(Keyword, Parent)
 #define KEYWORD_WHILE                       COMPONENT(Keyword, While)
+#define KEYWORD_FUNCTION                    COMPONENT(Keyword, Function)
+#define KEYWORD_RETURN                      COMPONENT(Keyword, Return)
 
-#define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral(hex::lang::Token::ValueType::Any, u64(0))
+#define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral(u64(0))
 #define IDENTIFIER                          hex::lang::Token::Type::Identifier, ""
 #define STRING                              hex::lang::Token::Type::String, ""
 

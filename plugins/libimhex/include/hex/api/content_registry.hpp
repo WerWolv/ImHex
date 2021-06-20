@@ -87,10 +87,10 @@ namespace hex {
 
             struct Function {
                 u32 parameterCount;
-                std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>)> func;
+                std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> func;
             };
 
-            static void add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>)> &func);
+            static void add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func);
             static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
         };
 

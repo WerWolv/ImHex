@@ -121,20 +121,20 @@ namespace hex::lang {
             }
 
             switch (type) {
-                case Token::ValueType::Unsigned32Bit:  return {{ type, u32(integer) }};
-                case Token::ValueType::Signed32Bit:    return {{ type, s32(integer) }};
-                case Token::ValueType::Unsigned64Bit:  return {{ type, u64(integer) }};
-                case Token::ValueType::Signed64Bit:    return {{ type, s64(integer) }};
-                case Token::ValueType::Unsigned128Bit: return {{ type, u128(integer) }};
-                case Token::ValueType::Signed128Bit:   return {{ type, s128(integer) }};
+                case Token::ValueType::Unsigned32Bit:  return { u32(integer) };
+                case Token::ValueType::Signed32Bit:    return { s32(integer) };
+                case Token::ValueType::Unsigned64Bit:  return { u64(integer) };
+                case Token::ValueType::Signed64Bit:    return { s64(integer) };
+                case Token::ValueType::Unsigned128Bit: return { u128(integer) };
+                case Token::ValueType::Signed128Bit:   return { s128(integer) };
                 default: return { };
             }
         } else if (Token::isFloatingPoint(type)) {
             double floatingPoint = strtod(numberData.data(), nullptr);
 
             switch (type) {
-                case Token::ValueType::Float:  return {{ type, float(floatingPoint) }};
-                case Token::ValueType::Double: return {{ type, double(floatingPoint) }};
+                case Token::ValueType::Float:  return { float(floatingPoint) };
+                case Token::ValueType::Double: return { double(floatingPoint) };
                 default: return { };
             }
         }
@@ -381,7 +381,7 @@ namespace hex::lang {
 
                     auto [c, charSize] = character.value();
 
-                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Character, c) ));
+                    tokens.emplace_back(VALUE_TOKEN(Integer, c));
                     offset += charSize;
                 } else if (c == '\"') {
                     auto string = getStringLiteral(code.substr(offset));
@@ -417,13 +417,17 @@ namespace hex::lang {
                     else if (identifier == "else")
                         tokens.emplace_back(TOKEN(Keyword, Else));
                     else if (identifier == "false")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(0))));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, bool(0)));
                     else if (identifier == "true")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::IntegerLiteral(Token::ValueType::Boolean, s32(1))));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, bool(1)));
                     else if (identifier == "parent")
                         tokens.emplace_back(TOKEN(Keyword, Parent));
                     else if (identifier == "while")
                         tokens.emplace_back(TOKEN(Keyword, While));
+                    else if (identifier == "fn")
+                        tokens.emplace_back(TOKEN(Keyword, Function));
+                    else if (identifier == "return")
+                        tokens.emplace_back(TOKEN(Keyword, Return));
 
                         // Check for built-in types
                     else if (identifier == "u8")

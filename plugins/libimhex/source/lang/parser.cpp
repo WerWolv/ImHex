@@ -5,7 +5,7 @@
 
 #define MATCHES(x) (begin() && x)
 
-#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral({ Token::ValueType::Any, s32(0) }), Token::Operator::Plus)
+#define TO_NUMERIC_EXPRESSION(node) new ASTNodeNumericExpression((node), new ASTNodeIntegerLiteral(s32(0)), Token::Operator::Plus)
 
 // Definition syntax:
 // [A]          : Either A or no token
@@ -132,7 +132,7 @@ namespace hex::lang {
         if (MATCHES(oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_BOOLNOT, OPERATOR_BITNOT))) {
             auto op = getValue<Token::Operator>(-1);
 
-            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral({ Token::ValueType::Any, 0 }), this->parseFactor(), op);
+            return new ASTNodeNumericExpression(new ASTNodeIntegerLiteral(0), this->parseFactor(), op);
         }
 
         return this->parseFactor();
@@ -356,6 +356,72 @@ namespace hex::lang {
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE, SEPARATOR_SQUAREBRACKETCLOSE)))
             throwParseError("unfinished attribute. Expected ']]'");
+    }
+
+    /* Functions */
+
+    ASTNode* Parser::parseFunctionDefintion() {
+        const auto &functionName = getValue<std::string>(-2);
+        std::vector<std::string> params;
+
+        // Parse parameter list
+        while (MATCHES(sequence(IDENTIFIER))) {
+            params.push_back(getValue<std::string>(-1));
+
+            if (!MATCHES(sequence(SEPARATOR_COMMA))) {
+                if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+                    break;
+                else
+                    throwParseError("expected closing ')' after parameter list");
+            }
+        }
+
+        if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
+            throwParseError("expected opening '{' after function definition");
+
+
+        // Parse function body
+        std::vector<ASTNode*> body;
+        auto bodyCleanup = SCOPE_GUARD {
+            for (auto &node : body)
+                delete node;
+        };
+
+        while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+            ASTNode *statement;
+            if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
+                statement = parseFunctionCall();
+            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN)))
+                statement = parseMemberArrayVariable();
+            else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
+                statement = parseMemberVariable();
+            else if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
+                statement = parseVariableAssignment();
+            else if (MATCHES(sequence(KEYWORD_RETURN)))
+                statement = parseReturnStatement();
+            else
+                throwParseError("invalid sequence", 0);
+
+            body.push_back(statement);
+
+            if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
+                throwParseError("missing ';' at end of expression", -1);
+        }
+
+        bodyCleanup.release();
+        return new ASTNodeFunctionDefinition(functionName, params, body);
+    }
+
+    ASTNode* Parser::parseVariableAssignment() {
+        const auto &lvalue = getValue<std::string>(-2);
+
+        auto rvalue = this->parseMathematicalExpression();
+
+        return new ASTNodeAssignment(lvalue, rvalue);
+    }
+
+    ASTNode* Parser::parseReturnStatement() {
+        return new ASTNodeReturnStatement(this->parseMathematicalExpression());
     }
 
     /* Control flow */
@@ -606,9 +672,9 @@ namespace hex::lang {
                 ASTNode *valueExpr;
                 auto name = getValue<std::string>(-1);
                 if (enumNode->getEntries().empty())
-                    valueExpr = lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral({ Token::ValueType::Unsigned8Bit, u8(0) }));
+                    valueExpr = lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(u8(0)));
                 else
-                    valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral({ Token::ValueType::Any, s32(1) }), Token::Operator::Plus);
+                    valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral(s32(1)), Token::Operator::Plus);
 
                 enumNode->addEntry(name, valueExpr);
             }
@@ -743,6 +809,8 @@ namespace hex::lang {
             statement = parseBitfield();
         else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
             statement = parseFunctionCall();
+        else if (MATCHES(sequence(KEYWORD_FUNCTION, IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
+            statement = parseFunctionDefintion();
         else throwParseError("invalid sequence", 0);
 
         if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))

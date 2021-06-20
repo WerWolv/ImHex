@@ -9,6 +9,7 @@
 #include <hex/lang/log_console.hpp>
 
 #include <bit>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -46,12 +47,17 @@ namespace hex::lang {
         std::vector<std::endian> m_endianStack;
         std::vector<PatternData*> m_globalMembers;
         std::vector<std::vector<PatternData*>*> m_currMembers;
+        std::vector<std::vector<PatternData*>*> m_localVariables;
         std::vector<PatternData*> m_currMemberScope;
+        std::vector<u8> m_localStack;
+        std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_definedFunctions;
         LogConsole m_console;
 
         u32 m_recursionLimit;
         u32 m_currRecursionDepth;
 
+        void createLocalVariable(std::string_view varName, PatternData *pattern);
+        void setLocalVariableValue(std::string_view varName, const void *value, size_t size);
 
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
@@ -61,6 +67,7 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateOperand(ASTNode *node);
         ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
+        void evaluateFunctionDefinition(ASTNodeFunctionDefinition *node);
 
         PatternData* findPattern(std::vector<PatternData*> currMembers, const ASTNodeRValue::Path &path);
         PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);

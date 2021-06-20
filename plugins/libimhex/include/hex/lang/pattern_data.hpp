@@ -167,8 +167,16 @@ namespace hex::lang {
             this->m_hidden = hidden;
         }
 
-        bool isHidden() const {
+        [[nodiscard]] bool isHidden() const {
             return this->m_hidden;
+        }
+
+        void setLocal(bool local) {
+            this->m_local = local;
+        }
+
+        [[nodiscard]] bool isLocal() const {
+            return this->m_local;
         }
 
     protected:
@@ -217,6 +225,7 @@ namespace hex::lang {
         std::string m_typeName;
 
         PatternData *m_parent;
+        bool m_local = false;
     };
 
     class PatternDataPadding : public PatternData {
@@ -886,7 +895,7 @@ namespace hex::lang {
                     }
 
                     return false;
-                }, entryValueLiteral.second);
+                }, entryValueLiteral);
                 if (matches)
                     break;
             }
