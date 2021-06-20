@@ -68,6 +68,7 @@ namespace hex::lang {
         ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
         ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
         void evaluateFunctionDefinition(ASTNodeFunctionDefinition *node);
+        std::optional<ASTNode*> evaluateFunctionBody(const std::vector<ASTNode*> &body);
 
         PatternData* findPattern(std::vector<PatternData*> currMembers, const ASTNodeRValue::Path &path);
         PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);

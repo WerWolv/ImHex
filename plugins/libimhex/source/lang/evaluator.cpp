@@ -480,47 +480,7 @@ namespace hex::lang {
                     }
                     evaluator.m_currOffset = startOffset;
 
-                    for (auto &statement : body) {
-                        ON_SCOPE_EXIT { evaluator.m_currOffset = startOffset; };
-
-                        if (auto functionCallNode = dynamic_cast<ASTNodeFunctionCall*>(statement); functionCallNode != nullptr) {
-                            auto result = evaluator.evaluateFunctionCall(functionCallNode);
-                            delete result;
-                        } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl*>(statement); varDeclNode != nullptr) {
-                            auto pattern = evaluator.evaluateVariable(varDeclNode);
-                            evaluator.createLocalVariable(varDeclNode->getName(), pattern);
-                        } else if (auto assignmentNode = dynamic_cast<ASTNodeAssignment*>(statement); assignmentNode != nullptr) {
-                            if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(assignmentNode->getRValue()); numericExpressionNode != nullptr) {
-                                auto value = evaluator.evaluateMathematicalExpression(numericExpressionNode);
-                                ON_SCOPE_EXIT { delete value; };
-
-                                std::visit([&](auto &&value) {
-                                    evaluator.setLocalVariableValue(assignmentNode->getLValueName(), &value, sizeof(value));
-                                }, value->getValue());
-                            } else {
-                                evaluator.getConsole().abortEvaluation("invalid rvalue used in assignment");
-                            }
-                        } else if (auto assignmentNode = dynamic_cast<ASTNodeAssignment*>(statement); assignmentNode != nullptr) {
-                            if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(assignmentNode->getRValue()); numericExpressionNode != nullptr) {
-                                auto value = evaluator.evaluateMathematicalExpression(numericExpressionNode);
-                                ON_SCOPE_EXIT { delete value; };
-
-                                std::visit([&](auto &&value) {
-                                    evaluator.setLocalVariableValue(assignmentNode->getLValueName(), &value, sizeof(value));
-                                }, value->getValue());
-                            } else {
-                                evaluator.getConsole().abortEvaluation("invalid rvalue used in assignment");
-                            }
-                        } else if (auto returnNode = dynamic_cast<ASTNodeReturnStatement*>(statement); returnNode != nullptr) {
-                            if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(returnNode->getRValue()); numericExpressionNode != nullptr) {
-                                return evaluator.evaluateMathematicalExpression(numericExpressionNode);
-                            } else {
-                                evaluator.getConsole().abortEvaluation("invalid rvalue used in return statement");
-                            }
-                        }
-                    }
-
-                    return nullptr;
+                    return evaluator.evaluateFunctionBody(body).value_or(nullptr);
                 }
         };
 
@@ -528,6 +488,68 @@ namespace hex::lang {
             this->getConsole().abortEvaluation(hex::format("redefinition of function {}", node->getName()));
 
         this->m_definedFunctions.insert({ std::string(node->getName()), function });
+    }
+
+    std::optional<ASTNode*> Evaluator::evaluateFunctionBody(const std::vector<ASTNode*> &body) {
+        std::optional<ASTNode*> returnResult;
+        auto startOffset = this->m_currOffset;
+
+        for (auto &statement : body) {
+            ON_SCOPE_EXIT { this->m_currOffset = startOffset; };
+
+            if (auto functionCallNode = dynamic_cast<ASTNodeFunctionCall*>(statement); functionCallNode != nullptr) {
+                auto result = this->evaluateFunctionCall(functionCallNode);
+                delete result;
+            } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl*>(statement); varDeclNode != nullptr) {
+                auto pattern = this->evaluateVariable(varDeclNode);
+                this->createLocalVariable(varDeclNode->getName(), pattern);
+            } else if (auto assignmentNode = dynamic_cast<ASTNodeAssignment*>(statement); assignmentNode != nullptr) {
+                if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(assignmentNode->getRValue()); numericExpressionNode != nullptr) {
+                    auto value = this->evaluateMathematicalExpression(numericExpressionNode);
+                    ON_SCOPE_EXIT { delete value; };
+
+                    std::visit([&](auto &&value) {
+                        this->setLocalVariableValue(assignmentNode->getLValueName(), &value, sizeof(value));
+                    }, value->getValue());
+                } else {
+                    this->getConsole().abortEvaluation("invalid rvalue used in assignment");
+                }
+            } else if (auto returnNode = dynamic_cast<ASTNodeReturnStatement*>(statement); returnNode != nullptr) {
+                if (returnNode->getRValue() == nullptr) {
+                    returnResult = nullptr;
+                } else if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(returnNode->getRValue()); numericExpressionNode != nullptr) {
+                    returnResult = this->evaluateMathematicalExpression(numericExpressionNode);
+                } else {
+                    this->getConsole().abortEvaluation("invalid rvalue used in return statement");
+                }
+            } else if (auto conditionalNode = dynamic_cast<ASTNodeConditionalStatement*>(statement); conditionalNode != nullptr) {
+                if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(conditionalNode->getCondition()); numericExpressionNode != nullptr) {
+                    auto condition = this->evaluateMathematicalExpression(numericExpressionNode);
+
+                    u32 localVariableStartCount = this->m_localVariables.back()->size();
+                    u32 localVariableStackStartSize = this->m_localStack.size();
+
+                    if (std::visit([](auto &&value) { return value != 0; }, condition->getValue()))
+                        returnResult = this->evaluateFunctionBody(conditionalNode->getTrueBody());
+                    else
+                        returnResult = this->evaluateFunctionBody(conditionalNode->getFalseBody());
+
+                    for (u32 i = localVariableStartCount; i < this->m_localVariables.size(); i++)
+                        delete (*this->m_localVariables.back())[i];
+                    this->m_localVariables.back()->resize(localVariableStartCount);
+                    this->m_localStack.resize(localVariableStackStartSize);
+
+                } else {
+                    this->getConsole().abortEvaluation("invalid rvalue used in return statement");
+                }
+            }
+
+            if (returnResult.has_value())
+                return returnResult.value();
+        }
+
+
+        return { };
     }
 
     PatternData* Evaluator::evaluateAttributes(ASTNode *currNode, PatternData *currPattern) {
