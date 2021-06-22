@@ -365,7 +365,8 @@ namespace hex::lang {
         std::vector<std::string> params;
 
         // Parse parameter list
-        while (MATCHES(sequence(IDENTIFIER))) {
+        bool hasParams = MATCHES(sequence(IDENTIFIER));
+        while (hasParams) {
             params.push_back(getValue<std::string>(-1));
 
             if (!MATCHES(sequence(SEPARATOR_COMMA))) {
@@ -374,6 +375,10 @@ namespace hex::lang {
                 else
                     throwParseError("expected closing ')' after parameter list");
             }
+        }
+        if (!hasParams) {
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+                throwParseError("expected closing ')' after parameter list");
         }
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))

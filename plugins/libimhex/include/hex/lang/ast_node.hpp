@@ -569,7 +569,7 @@ namespace hex::lang {
 
     class ASTNodeAttribute : public ASTNode {
     public:
-        explicit ASTNodeAttribute(std::string_view attribute, std::string_view value = { })
+        explicit ASTNodeAttribute(std::string_view attribute, std::optional<std::string_view> value = { })
             : ASTNode(), m_attribute(attribute), m_value(value) { }
 
         ~ASTNodeAttribute() override = default;

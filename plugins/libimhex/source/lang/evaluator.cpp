@@ -113,7 +113,8 @@ namespace hex::lang {
         PatternData *currPattern = nullptr;
 
         // Local variable access
-        currPattern = this->findPattern(*this->m_localVariables.back(), path);
+        if (!this->m_localVariables.empty())
+            currPattern = this->findPattern(*this->m_localVariables.back(), path);
 
         // If no local variable was found try local structure members
         if (this->m_currMembers.size() > 1) {
