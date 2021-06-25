@@ -229,7 +229,8 @@ namespace hex {
         Plugins,
         Yara,
         Config,
-        Resources
+        Resources,
+        Constants
     };
 
     std::vector<std::string> getPath(ImHexPath path);

@@ -43,6 +43,9 @@
                     case ImHexPath::Resources:
                         result = [appSupportDir URLByAppendingPathComponent:@"imhex/resources"];
                         break;
+                    case ImHexPath::Constants:
+                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/constants"];
+                        break;
                 }
 
                 if (result == nil) {

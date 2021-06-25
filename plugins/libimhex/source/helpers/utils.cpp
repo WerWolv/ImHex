@@ -222,6 +222,8 @@ namespace hex {
                     return { (appDataDir / "imhex" / "config").string() };
                 case ImHexPath::Resources:
                     return { (parentDir / "resources").string() };
+                case ImHexPath::Constants:
+                    return { (parentDir / "constants").string() };
                 default: __builtin_unreachable();
             }
         #elif defined(OS_MACOS)
@@ -267,6 +269,10 @@ namespace hex {
                 case ImHexPath::Resources:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
                         [](auto p) { return (p / "imhex" / "resources").string(); });
+                    return result;
+                case ImHexPath::Constants:
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "imhex" / "constants").string(); });
                     return result;
                 default: __builtin_unreachable();
             }

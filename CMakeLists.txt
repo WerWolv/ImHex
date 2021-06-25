@@ -84,6 +84,7 @@ add_executable(imhex ${application_type}
         source/views/view_settings.cpp
         source/views/view_data_processor.cpp
         source/views/view_yara.cpp
+        source/views/view_constants.cpp
 
         ${imhex_icon}
         )
