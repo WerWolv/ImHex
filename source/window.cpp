@@ -187,8 +187,9 @@ namespace hex {
         while (!glfwWindowShouldClose(this->m_window)) {
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
                 glfwWaitEvents();
+            else
+                glfwWaitEventsTimeout(this->m_lastFrameTime - glfwGetTime() + 1 / 5.0);
 
-            glfwPollEvents();
 
             this->frameBegin();
             this->frame();
@@ -407,7 +408,7 @@ namespace hex {
 
         glfwSwapBuffers(this->m_window);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) ? this->m_targetFps : 5.0) - glfwGetTime()) * 1000)));
+        std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / this->m_targetFps - glfwGetTime()) * 1000)));
         this->m_lastFrameTime = glfwGetTime();
     }
 
@@ -660,7 +661,6 @@ namespace hex {
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
             EventManager::post<EventWindowClosing>(window);
         });
-
 
         glfwSetWindowSizeLimits(this->m_window, 720, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
