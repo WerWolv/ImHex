@@ -106,7 +106,7 @@ namespace hex::prv {
     #else
         auto handle = ::open(this->m_path.data(), 0644);
 
-        truncate(handle, newSize - 1);
+        ftruncate(handle, newSize - 1);
 
         close(handle);
     #endif
@@ -196,7 +196,7 @@ namespace hex::prv {
         ProjectFile::setFilePath(this->m_path);
 
         #else
-        this->m_file = ::open(path.data(), O_RDWR);
+        this->m_file = ::open(this->m_path.data(), O_RDWR);
             if (this->m_file == -1) {
                 this->m_file = ::open(path.data(), O_RDONLY);
                 this->m_writable = false;
