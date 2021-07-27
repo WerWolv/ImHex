@@ -22,11 +22,14 @@ namespace hex::prv {
         virtual bool isAvailable() = 0;
         virtual bool isReadable() = 0;
         virtual bool isWritable() = 0;
+        virtual bool isResizable() = 0;
 
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void readRelative(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void write(u64 offset, const void *buffer, size_t size);
         virtual void writeRelative(u64 offset, const void *buffer, size_t size);
+
+        virtual void resize(ssize_t newSize);
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;

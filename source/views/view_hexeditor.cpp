@@ -16,6 +16,13 @@
 
 #include <filesystem>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#else
+    #include <fcntl.h>
+    #include <unistd.h>
+#endif
+
 namespace hex {
 
     ViewHexEditor::ViewHexEditor() : View("hex.view.hexeditor.name"_lang) {
@@ -168,7 +175,16 @@ namespace hex {
         });
 
         EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
-            if (name == "Open File") {
+            if (name == "Create File") {
+                View::openFileBrowser("hex.view.hexeditor.create_file"_lang, DialogMode::Save, { }, [this](auto path) {
+                    if (!this->createFile(path)) {
+                        View::showErrorPopup("hex.view.hexeditor.error.create"_lang);
+                        return;
+                    }
+                    this->openFile(path);
+                    this->getWindowOpenState() = true;
+                });
+            } else if (name == "Open File") {
                 View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
@@ -351,6 +367,24 @@ namespace hex {
             confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
                            [this, &provider]{
                                provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
+                               ImGui::CloseCurrentPopup();
+                           }, []{
+                        ImGui::CloseCurrentPopup();
+                    });
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopupModal("hex.view.hexeditor.menu.edit.resize"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "0x%016llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::NewLine();
+
+            confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
+                           [this, &provider]{
+                               provider->resize(this->m_resizeSize);
                                ImGui::CloseCurrentPopup();
                            }, []{
                         ImGui::CloseCurrentPopup();
@@ -583,17 +617,47 @@ namespace hex {
             }
         }
 
-
-
         return false;
     }
 
+    bool ViewHexEditor::createFile(std::string_view path) {
+    #if defined(OS_WINDOWS)
+        std::wstring widePath;
+        {
+            auto length = path.length() + 1;
+            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, path.data(), length, 0, 0);
+            auto buffer = new wchar_t[wideLength];
+            MultiByteToWideChar(CP_UTF8, 0, path.data(), length, buffer, wideLength);
+            widePath = buffer;
+            delete[] buffer;
+        }
 
-    void ViewHexEditor::openFile(std::string path) {
+        auto handle = ::CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+        if (handle == INVALID_HANDLE_VALUE)
+            return false;
+
+        ::SetFilePointer(handle, 1, nullptr, FILE_BEGIN);
+        ::SetEndOfFile(handle);
+        ::CloseHandle(handle);
+    #else
+        auto handle = ::open(path.data(), O_RDWR | O_CREAT);
+        if (handle == -1)
+            return false;
+
+        lseek(handle, 0, SEEK_SET);
+        write(handle, "", 1);
+
+        close(handle);
+    #endif
+
+        return true;
+    }
+
+    void ViewHexEditor::openFile(std::string_view path) {
         auto& provider = SharedData::currentProvider;
 
-        if (provider != nullptr)
-            delete provider;
+        delete provider;
 
         provider = new prv::FileProvider(path);
         if (!provider->isWritable()) {
@@ -615,13 +679,13 @@ namespace hex {
 
         this->getWindowOpenState() = true;
 
-        EventManager::post<EventFileLoaded>(path);
+        EventManager::post<EventFileLoaded>(std::string(path));
         EventManager::post<EventDataChanged>();
         EventManager::post<EventPatternChanged>();
     }
 
-    bool ViewHexEditor::saveToFile(std::string path, const std::vector<u8>& data) {
-        FILE *file = fopen(path.c_str(), "wb");
+    bool ViewHexEditor::saveToFile(std::string_view path, const std::vector<u8>& data) {
+        FILE *file = fopen(path.data(), "wb");
 
         if (file == nullptr)
             return false;
@@ -632,8 +696,8 @@ namespace hex {
         return true;
     }
 
-    bool ViewHexEditor::loadFromFile(std::string path, std::vector<u8>& data) {
-        FILE *file = fopen(path.c_str(), "rb");
+    bool ViewHexEditor::loadFromFile(std::string_view path, std::vector<u8>& data) {
+        FILE *file = fopen(path.data(), "rb");
 
         if (file == nullptr)
             return false;
@@ -1227,6 +1291,13 @@ R"(
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.set_base"_lang, nullptr, false, provider != nullptr && provider->isReadable())) {
             std::memset(this->m_baseAddressBuffer, 0x00, sizeof(this->m_baseAddressBuffer));
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.edit.set_base"_lang); });
+        }
+
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.resize"_lang, nullptr, false, provider != nullptr && provider->isResizable())) {
+            View::doLater([this, &provider]{
+                this->m_resizeSize = provider->getActualSize();
+                ImGui::OpenPopup("hex.view.hexeditor.menu.edit.resize"_lang);
+            });
         }
     }
 

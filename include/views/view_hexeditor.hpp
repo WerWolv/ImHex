@@ -46,6 +46,7 @@ namespace hex {
         s64 m_gotoAddress = 0;
 
         char m_baseAddressBuffer[0x20] = { 0 };
+        u64 m_resizeSize = 0;
 
         std::vector<u8> m_dataToSave;
 
@@ -59,9 +60,10 @@ namespace hex {
         void drawGotoPopup();
         void drawEditPopup();
 
-        void openFile(std::string path);
-        bool saveToFile(std::string path, const std::vector<u8>& data);
-        bool loadFromFile(std::string path, std::vector<u8>& data);
+        bool createFile(std::string_view path);
+        void openFile(std::string_view path);
+        bool saveToFile(std::string_view path, const std::vector<u8>& data);
+        bool loadFromFile(std::string_view path, std::vector<u8>& data);
 
         enum class Language { C, Cpp, CSharp, Rust, Python, Java, JavaScript };
         void copyBytes();

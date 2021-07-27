@@ -13,7 +13,128 @@
 namespace hex::prv {
 
     FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
-        this->m_fileStatsValid = stat(path.data(), &this->m_fileStats) == 0;
+        this->open();
+    }
+
+    FileProvider::~FileProvider() {
+        this->close();
+    }
+
+
+    bool FileProvider::isAvailable() {
+        #if defined(OS_WINDOWS)
+        return this->m_file != nullptr && this->m_mapping != nullptr && this->m_mappedFile != nullptr;
+        #else
+        return this->m_file != -1 && this->m_mappedFile != nullptr;
+        #endif
+    }
+
+    bool FileProvider::isReadable() {
+        return isAvailable() && this->m_readable;
+    }
+
+    bool FileProvider::isWritable() {
+        return isAvailable() && this->m_writable;
+    }
+
+    bool FileProvider::isResizable() {
+        return true;
+    }
+
+
+    void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
+
+        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
+            return;
+
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset - this->getBaseAddress(), size);
+
+        for (u64 i = 0; i < size; i++)
+            if (getPatches().contains(offset + i))
+                reinterpret_cast<u8*>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
+
+        if (overlays)
+            this->applyOverlays(offset, buffer, size);
+    }
+
+    void FileProvider::write(u64 offset, const void *buffer, size_t size) {
+        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
+            return;
+
+        addPatch(offset, buffer, size);
+    }
+
+    void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
+        offset -= this->getBaseAddress();
+
+        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+            return;
+
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
+    }
+
+    void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
+        offset -= this->getBaseAddress();
+
+        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+            return;
+
+        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, buffer, size);
+    }
+
+    void FileProvider::resize(ssize_t newSize) {
+        close();
+
+    #if defined(OS_WINDOWS)
+        std::wstring widePath;
+        {
+            auto length = static_cast<int>(this->m_path.length() + 1);
+            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, nullptr, 0);
+            auto buffer = new wchar_t[wideLength];
+            MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, buffer, wideLength);
+            widePath = buffer;
+            delete[] buffer;
+        }
+
+        auto handle = ::CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+        if (handle != INVALID_HANDLE_VALUE) {
+            ::SetFilePointerEx(handle, LARGE_INTEGER { .QuadPart = newSize }, nullptr, FILE_BEGIN);
+            ::SetEndOfFile(handle);
+            ::CloseHandle(handle);
+        }
+    #else
+        auto handle = ::open(path.data(), O_RDWR | O_CREAT);
+
+        truncate(handle, newSize - 1);
+
+        close(handle);
+    #endif
+
+        open();
+    }
+
+    size_t FileProvider::getActualSize() {
+        return this->m_fileSize;
+    }
+
+    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
+        std::vector<std::pair<std::string, std::string>> result;
+
+        result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path);
+        result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
+
+        if (this->m_fileStatsValid) {
+            result.emplace_back("hex.builtin.provider.file.creation"_lang, ctime(&this->m_fileStats.st_ctime));
+            result.emplace_back("hex.builtin.provider.file.access"_lang, ctime(&this->m_fileStats.st_atime));
+            result.emplace_back("hex.builtin.provider.file.modification"_lang, ctime(&this->m_fileStats.st_mtime));
+        }
+
+        return result;
+    }
+
+    void FileProvider::open() {
+        this->m_fileStatsValid = stat(this->m_path.data(), &this->m_fileStats) == 0;
 
         this->m_readable = true;
         this->m_writable = true;
@@ -21,10 +142,10 @@ namespace hex::prv {
         #if defined(OS_WINDOWS)
         std::wstring widePath;
         {
-            auto length = path.length() + 1;
-            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, path.data(), length, 0, 0);
+            auto length = this->m_path.length() + 1;
+            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, 0, 0);
             wchar_t* buffer = new wchar_t[wideLength];
-            MultiByteToWideChar(CP_UTF8, 0, path.data(), length, buffer, wideLength);
+            MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, buffer, wideLength);
             widePath = buffer;
             delete[] buffer;
         }
@@ -72,12 +193,12 @@ namespace hex::prv {
         fileCleanup.release();
         mappingCleanup.release();
 
-        ProjectFile::setFilePath(path);
+        ProjectFile::setFilePath(this->m_path);
 
         #else
-            this->m_file = open(path.data(), O_RDWR);
+        this->m_file = ::open(path.data(), O_RDWR);
             if (this->m_file == -1) {
-                this->m_file = open(path.data(), O_RDONLY);
+                this->m_file = ::open(path.data(), O_RDONLY);
                 this->m_writable = false;
             }
 
@@ -90,97 +211,21 @@ namespace hex::prv {
 
             this->m_mappedFile = mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, this->m_file, 0);
 
-        #endif
+    #endif
     }
 
-    FileProvider::~FileProvider() {
-        #if defined(OS_WINDOWS)
+    void FileProvider::close() {
+    #if defined(OS_WINDOWS)
         if (this->m_mappedFile != nullptr)
-            UnmapViewOfFile(this->m_mappedFile);
+            ::UnmapViewOfFile(this->m_mappedFile);
         if (this->m_mapping != nullptr)
-            CloseHandle(this->m_mapping);
+            ::CloseHandle(this->m_mapping);
         if (this->m_file != nullptr)
-            CloseHandle(this->m_file);
-        #else
-        munmap(this->m_mappedFile, this->m_fileSize);
-        close(this->m_file);
-        #endif
-    }
-
-
-    bool FileProvider::isAvailable() {
-        #if defined(OS_WINDOWS)
-        return this->m_file != nullptr && this->m_mapping != nullptr && this->m_mappedFile != nullptr;
-        #else
-        return this->m_file != -1 && this->m_mappedFile != nullptr;
-        #endif
-    }
-
-    bool FileProvider::isReadable() {
-        return isAvailable() && this->m_readable;
-    }
-
-    bool FileProvider::isWritable() {
-        return isAvailable() && this->m_writable;
-    }
-
-
-    void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-
-        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
-            return;
-
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset - this->getBaseAddress(), size);
-
-        for (u64 i = 0; i < size; i++)
-            if (getPatches().contains(offset + i))
-                reinterpret_cast<u8*>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
-
-        if (overlays)
-            this->applyOverlays(offset, buffer, size);
-    }
-
-    void FileProvider::write(u64 offset, const void *buffer, size_t size) {
-        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
-            return;
-
-        addPatch(offset, buffer, size);
-    }
-
-    void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        offset -= this->getBaseAddress();
-
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
-            return;
-
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
-    }
-
-    void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        offset -= this->getBaseAddress();
-
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
-            return;
-
-        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, buffer, size);
-    }
-    size_t FileProvider::getActualSize() {
-        return this->m_fileSize;
-    }
-
-    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
-        std::vector<std::pair<std::string, std::string>> result;
-
-        result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path);
-        result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
-
-        if (this->m_fileStatsValid) {
-            result.emplace_back("hex.builtin.provider.file.creation"_lang, ctime(&this->m_fileStats.st_ctime));
-            result.emplace_back("hex.builtin.provider.file.access"_lang, ctime(&this->m_fileStats.st_atime));
-            result.emplace_back("hex.builtin.provider.file.modification"_lang, ctime(&this->m_fileStats.st_mtime));
-        }
-
-        return result;
+            ::CloseHandle(this->m_file);
+    #else
+        ::munmap(this->m_mappedFile, this->m_fileSize);
+        ::close(this->m_file);
+    #endif
     }
 
 }

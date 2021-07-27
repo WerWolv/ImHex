@@ -24,9 +24,11 @@ namespace hex::prv {
         bool isAvailable() override;
         bool isReadable() override;
         bool isWritable() override;
+        bool isResizable() override;
 
         void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
+        void resize(ssize_t newSize) override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
@@ -41,6 +43,7 @@ namespace hex::prv {
         #else
         int m_file;
         #endif
+
         std::string m_path;
         void *m_mappedFile;
         size_t m_fileSize;
@@ -49,6 +52,9 @@ namespace hex::prv {
         struct stat m_fileStats = { 0 };
 
         bool m_readable, m_writable;
+
+        void open();
+        void close();
     };
 
 }

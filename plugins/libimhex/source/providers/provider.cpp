@@ -34,6 +34,8 @@ namespace hex::prv {
         this->write(offset + this->getBaseAddress(), buffer, size);
     }
 
+    void Provider::resize(ssize_t newSize) { }
+
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
         for (auto &overlay : this->m_overlays) {
             auto overlayOffset = overlay->getAddress();

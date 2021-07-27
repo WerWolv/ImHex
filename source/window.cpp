@@ -424,6 +424,8 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
+                if (ImGui::BulletHyperlink("hex.welcome.start.create_file"_lang))
+                    EventManager::post<RequestOpenWindow>("Create File");
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_file"_lang))
                     EventManager::post<RequestOpenWindow>("Open File");
                 if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))

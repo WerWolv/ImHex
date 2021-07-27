@@ -16,6 +16,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.welcome.header.main", "Benvenuto in ImHex" },
                 { "hex.welcome.header.start", "Inizia" },
+                    // { "hex.welcome.start.create_file", "Create New File" },
                     { "hex.welcome.start.open_file", "Apri un File" },
                     { "hex.welcome.start.open_project", "Apri un Progetto" },
                     { "hex.welcome.start.recent", "File recenti" },
@@ -139,7 +140,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.help.calc_cheat_sheet", "Calcolatrice Cheat Sheet" },
 
                 { "hex.view.hexeditor.name", "Hex editor" },
-                    { "hex.view.hexeditor.open_file", "Apri File" },
+                    // { "hex.view.hexeditor.create_file", "New" },
+                    { "hex.view.hexeditor.open_file", "Apri" },
                     { "hex.view.hexeditor.menu.file.open_recent", "File recenti" },
                     { "hex.view.hexeditor.open_project", "Apri i Progetti" },
                     { "hex.view.hexeditor.save_project", "Salva i Progetti" },
@@ -189,6 +191,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.hexeditor.goto.offset.end", "Fine" },
                     { "hex.view.hexeditor.error.read_only", "Impossibile scrivere sul File. File aperto solo in modalità lettura" },
                     { "hex.view.hexeditor.error.open", "Impossibile aprire il File!" },
+                    // { "hex.view.hexeditor.error.create", "Failed to create new file!" },
                     { "hex.view.hexeditor.menu.edit.undo", "Annulla" },
                     { "hex.view.hexeditor.menu.edit.redo", "Ripeti" },
                     { "hex.view.hexeditor.menu.edit.copy", "Copia" },
@@ -206,6 +209,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.menu.edit.paste", "Incolla" },
                     { "hex.view.hexeditor.menu.edit.bookmark", "Crea segnalibro" },
                     { "hex.view.hexeditor.menu.edit.set_base", "Imposta indirizzo di base" },
+                    // { "hex.view.hexeditor.menu.edit.resize", "Resize" },
 
                 { "hex.view.information.name", "Informazione sui Dati" },
                     { "hex.view.information.control", "Controllo" },
@@ -275,6 +279,8 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.matches.identifier", "Identificatore" },
                         { "hex.view.yara.whole_data", "Tutti i file combaciano!" },
                         { "hex.view.yara.no_rules", "Nessuna regola di YARA. Aggiungile in nella cartella 'yara' di 'ImHex'" },
+
+                // { "hex.view.constants.name", "Constants" },
 
             /* Builtin plugin features */
 
