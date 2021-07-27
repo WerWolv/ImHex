@@ -641,7 +641,7 @@ namespace hex {
         ::SetEndOfFile(handle);
         ::CloseHandle(handle);
     #else
-        auto handle = ::open(path.data(), O_RDWR | O_CREAT);
+        auto handle = ::open(path.data(), O_RDWR | O_CREAT, 0644);
         if (handle == -1)
             return false;
 

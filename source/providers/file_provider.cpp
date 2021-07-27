@@ -104,7 +104,7 @@ namespace hex::prv {
             ::CloseHandle(handle);
         }
     #else
-        auto handle = ::open(path.data(), O_RDWR | O_CREAT);
+        auto handle = ::open(this->m_path.data(), 0644);
 
         truncate(handle, newSize - 1);
 
