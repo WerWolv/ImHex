@@ -518,6 +518,12 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.tools.base_converter.hex", "HEX" },
                     { "hex.builtin.tools.base_converter.oct", "OCT" },
                     { "hex.builtin.tools.base_converter.bin", "BIN" },
+                { "hex.builtin.tools.permissions", "UNIX Permissions Calculator" },
+                    { "hex.builtin.tools.permissions.perm_bits", "Permission bits" },
+                    { "hex.builtin.tools.permissions.absolute", "Absolute Notation" },
+                    { "hex.builtin.tools.permissions.setuid_error", "User must have execute rights for setuid bit to apply!" },
+                    { "hex.builtin.tools.permissions.setgid_error", "Group must have execute rights for setgid bit to apply!" },
+                    { "hex.builtin.tools.permissions.sticky_error", "Other must have execute rights for sticky bit to apply!" },
 
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "Recent Files" },

@@ -83,7 +83,7 @@ namespace hex::prv {
     }
 
     void FileProvider::resize(ssize_t newSize) {
-        close();
+        this->close();
 
     #if defined(OS_WINDOWS)
         std::wstring widePath;
@@ -106,12 +106,12 @@ namespace hex::prv {
     #else
         auto handle = ::open(this->m_path.data(), 0644);
 
-        ftruncate(handle, newSize - 1);
+        ::ftruncate(handle, newSize - 1);
 
-        close(handle);
+        ::close(handle);
     #endif
 
-        open();
+        this->open();
     }
 
     size_t FileProvider::getActualSize() {
@@ -198,7 +198,7 @@ namespace hex::prv {
         #else
         this->m_file = ::open(this->m_path.data(), O_RDWR);
             if (this->m_file == -1) {
-                this->m_file = ::open(path.data(), O_RDONLY);
+                this->m_file = ::open(this->m_path.data(), O_RDONLY);
                 this->m_writable = false;
             }
 
