@@ -185,12 +185,12 @@ namespace hex {
 
     template<typename ... Args>
     inline std::string format(std::string_view format, Args ... args) {
-        return fmt::format(format, args...);
+        return fmt::format(fmt::runtime(format), args...);
     }
 
     template<typename ... Args>
     inline void print(std::string_view format, Args ... args) {
-        fmt::print(format, args...);
+        fmt::print(fmt::runtime(format), args...);
     }
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {

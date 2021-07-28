@@ -391,11 +391,11 @@ namespace hex::plugin::builtin {
 
         static const auto WarningColor = ImColor(0.92F, 0.25F, 0.2F, 1.0F);
         if (setuid && !x[0])
-            ImGui::TextColored(WarningColor, "hex.builtin.tools.permissions.setuid_error"_lang);
+            ImGui::TextColored(WarningColor, "%s", static_cast<const char*>("hex.builtin.tools.permissions.setuid_error"_lang));
         if (setgid && !x[1])
-            ImGui::TextColored(WarningColor, "hex.builtin.tools.permissions.setgid_error"_lang);
+            ImGui::TextColored(WarningColor, "%s", static_cast<const char*>("hex.builtin.tools.permissions.setgid_error"_lang));
         if (sticky && !x[2])
-            ImGui::TextColored(WarningColor, "hex.builtin.tools.permissions.sticky_error"_lang);
+            ImGui::TextColored(WarningColor, "%s", static_cast<const char*>("hex.builtin.tools.permissions.sticky_error"_lang));
 
     }
 
