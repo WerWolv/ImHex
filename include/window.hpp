@@ -51,6 +51,9 @@ namespace hex {
         bool m_prevKeysDown[512];
 
         std::string m_availableUpdate;
+
+        u32 m_bannerWidth = 0, m_bannerHeight = 0;
+        void *m_bannerTexture = nullptr;
     };
 
 }

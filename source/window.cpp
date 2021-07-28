@@ -74,26 +74,46 @@ namespace hex {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
+                if (this->m_bannerTexture != nullptr)
+                    ImGui::UnloadImage(this->m_bannerTexture);
+
                 if (theme.is_number()) {
+                    std::string bannerFile;
+
                     switch (static_cast<int>(theme)) {
                         default:
                         case 0: /* Dark theme */
                             ImGui::StyleColorsDark();
                             ImGui::StyleCustomColorsDark();
                             ImPlot::StyleColorsDark();
+                            bannerFile = "/banner_dark.png";
                             break;
                         case 1: /* Light theme */
                             ImGui::StyleColorsLight();
                             ImGui::StyleCustomColorsLight();
                             ImPlot::StyleColorsLight();
+                            bannerFile = "/banner_light.png";
                             break;
                         case 2: /* Classic theme */
                             ImGui::StyleColorsClassic();
                             ImGui::StyleCustomColorsClassic();
                             ImPlot::StyleColorsClassic();
+                            bannerFile = "/banner_dark.png";
                             break;
                     }
+
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+
+                    for (const auto &path : hex::getPath(hex::ImHexPath::Resources)) {
+                        std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromPath((path + bannerFile).c_str());
+                        if (this->m_bannerTexture != nullptr)
+                            break;
+                    }
+
+                    if (this->m_bannerTexture == nullptr) {
+                        log::fatal("Failed to load banner texture!");
+                        exit(EXIT_FAILURE);
+                    }
                 }
             }
 
@@ -180,6 +200,8 @@ namespace hex {
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
+
+        ImGui::UnloadImage(this->m_bannerTexture);
     }
 
     void Window::loop() {
@@ -188,7 +210,7 @@ namespace hex {
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
                 glfwWaitEvents();
             else
-                glfwWaitEventsTimeout(this->m_lastFrameTime - glfwGetTime() + 1 / 5.0);
+                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ? 0 : (this->m_lastFrameTime - glfwGetTime() + 1 / 5.0));
 
 
             this->frameBegin();
@@ -330,7 +352,7 @@ namespace hex {
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * this->m_globalScale, 10 * this->m_globalScale));
-                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoDecoration)) {
+                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
                         this->drawWelcomeScreen();
                     }
                     ImGui::EndChild();
@@ -413,16 +435,22 @@ namespace hex {
     }
 
     void Window::drawWelcomeScreen() {
-        ImGui::UnderlinedText("hex.welcome.header.main"_lang, ImGui::GetStyleColorVec4(ImGuiCol_Text));
-
-        ImGui::NewLine();
-
         const auto availableSpace = ImGui::GetContentRegionAvail();
 
+        ImGui::Image(this->m_bannerTexture, ImVec2(this->m_bannerWidth / 2, this->m_bannerHeight / 2));
+
         ImGui::Indent();
-        if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
+        if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
+
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 3);
+            ImGui::TableNextColumn();
+
+            ImGui::TextWrapped("A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM.");
+
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
+
+
             ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
                 if (ImGui::BulletHyperlink("hex.welcome.start.create_file"_lang))
@@ -505,7 +533,7 @@ namespace hex {
             ImGui::EndTable();
         }
         ImGui::SameLine();
-        if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, availableSpace.y))) {
+        if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.customize"_lang);
