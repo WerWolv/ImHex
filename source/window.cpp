@@ -380,9 +380,9 @@ namespace hex {
     void Window::frame() {
         bool pressedKeys[512] = { false };
 
-        std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
         for (u16 i = 0; i < 512; i++)
             pressedKeys[i] = ImGui::GetIO().KeysDown[i] && !this->m_prevKeysDown[i];
+        std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
 
         for (const auto &call : View::getDeferedCalls())
             call();

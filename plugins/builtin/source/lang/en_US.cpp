@@ -207,6 +207,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.hexeditor.copy.ascii", "ASCII Art" },
                         { "hex.view.hexeditor.copy.html", "HTML" },
                     { "hex.view.hexeditor.menu.edit.paste", "Paste" },
+                    { "hex.view.hexeditor.menu.edit.select_all", "Select all" },
                     { "hex.view.hexeditor.menu.edit.bookmark", "Create bookmark" },
                     { "hex.view.hexeditor.menu.edit.set_base", "Set base address" },
                     { "hex.view.hexeditor.menu.edit.resize", "Resize" },

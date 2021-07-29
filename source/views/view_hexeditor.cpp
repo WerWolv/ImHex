@@ -611,7 +611,7 @@ namespace hex {
                     this->pasteBytes();
                     return true;
                 } else if (ctrl && keys['A']) {
-                    EventManager::post<RequestSelectionChange>(Region { SharedData::currentProvider->getBaseAddress(), SharedData::currentProvider->getSize() });
+                    EventManager::post<RequestSelectionChange>(Region { SharedData::currentProvider->getBaseAddress(), SharedData::currentProvider->getActualSize() });
                     return true;
                 }
             }
@@ -1275,6 +1275,9 @@ R"(
 
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.paste"_lang, "CTRL + V", false, bytesSelected))
             this->pasteBytes();
+
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.select_all"_lang, "CTRL + A", false, SharedData::currentProvider != nullptr))
+            EventManager::post<RequestSelectionChange>(Region { SharedData::currentProvider->getBaseAddress(), SharedData::currentProvider->getActualSize() });
 
         ImGui::Separator();
 
