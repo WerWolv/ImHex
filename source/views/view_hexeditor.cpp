@@ -446,7 +446,12 @@ namespace hex {
 
                 if (ProjectFile::getProjectFilePath() == "") {
                     View::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
-                        ProjectFile::store(path);
+                        if (path.ends_with(".hexproj")) {
+                            ProjectFile::store(path);
+                        }
+                        else {
+                            ProjectFile::store(path + ".hexproj");
+                        }
                     });
                 }
                 else
