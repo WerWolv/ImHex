@@ -117,8 +117,8 @@ namespace hex::lang {
             currPattern = this->findPattern(*this->m_localVariables.back(), path);
 
         // If no local variable was found try local structure members
-        if (this->m_currMembers.size() > 1) {
-            currPattern = this->findPattern(*this->m_currMembers[this->m_currMembers.size() - 2], path);
+        if (!this->m_currMembers.empty()) {
+            currPattern = this->findPattern(*this->m_currMembers.back(), path);
         }
 
         // If no local member was found, try globally
