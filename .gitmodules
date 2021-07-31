@@ -1,6 +1,7 @@
 [submodule "external/nativefiledialog"]
 	path = external/nativefiledialog
 	url = https://github.com/btzy/nativefiledialog-extended
+	ignore = dirty
 [submodule "external/yara/yara"]
 	path = external/yara/yara
 	url = https://github.com/VirusTotal/yara
@@ -8,9 +9,12 @@
 [submodule "external/xdgpp"]
 	path = external/xdgpp
 	url = https://git.sr.ht/~danyspin97/xdgpp
+	ignore = dirty
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt
+	ignore = dirty
 [submodule "external/curl"]
 	path = external/curl
 	url = https://github.com/curl/curl
+	ignore = dirty
