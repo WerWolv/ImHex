@@ -4,6 +4,11 @@
 
 #include <filesystem>
 
+#include <mbedtls/x509.h>
+#include <mbedtls/x509_crt.h>
+
+#include <hex/resources.hpp>
+
 namespace hex {
 
     Net::Net() {
@@ -45,10 +50,16 @@ namespace hex {
         curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, writeToString);
         curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYPEER, 1L);
         curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYHOST, 1L);
-        for (const auto &resourceDir : hex::getPath(hex::ImHexPath::Resources)) {
-            if (std::filesystem::exists(resourceDir + "/cacert.pem"))
-                curl_easy_setopt(ctx, CURLOPT_CAPATH, resourceDir.c_str());
-        }
+        curl_easy_setopt(ctx, CURLOPT_CAINFO, nullptr);
+        curl_easy_setopt(ctx, CURLOPT_CAPATH, nullptr);
+        curl_easy_setopt(ctx, CURLOPT_SSL_CTX_DATA, [](CURL *ctx, void *sslctx, void *userdata) -> CURLcode {
+            auto* mbedtlsCert = static_cast<mbedtls_x509_crt*>(sslctx);
+            mbedtls_x509_crt_init(mbedtlsCert);
+
+            mbedtls_x509_crt_parse(mbedtlsCert, cacert, cacert_size);
+
+            return CURLE_OK;
+        });
         curl_easy_setopt(ctx, CURLOPT_WRITEDATA, &response);
         curl_easy_setopt(ctx, CURLOPT_TIMEOUT_MS, 2000L);
         curl_easy_setopt(ctx, CURLOPT_CONNECTTIMEOUT_MS, 2000L);

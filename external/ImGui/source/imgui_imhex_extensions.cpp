@@ -226,7 +226,37 @@ namespace ImGui {
         return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
     }
 
+    std::tuple<ImTextureID, int, int> LoadImageFromMemory(ImU8 *buffer, int size) {
+        int imageWidth = 0;
+        int imageHeight = 0;
+
+
+        unsigned char* imageData = stbi_load_from_memory(buffer, size, &imageWidth, &imageHeight, nullptr, 4);
+        if (imageData == nullptr)
+            return { nullptr, -1, -1 };
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        #if defined(GL_UNPACK_ROW_LENGTH)
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        stbi_image_free(imageData);
+
+        return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
+    }
+
     void UnloadImage(ImTextureID texture) {
+        if (texture == nullptr)
+            return;
+
         auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(texture));
         glDeleteTextures(1, &glTextureId);
     }

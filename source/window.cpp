@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/resources.hpp>
 
 #include <chrono>
 #include <iostream>
@@ -78,37 +79,27 @@ namespace hex {
                     ImGui::UnloadImage(this->m_bannerTexture);
 
                 if (theme.is_number()) {
-                    std::string bannerFile;
-
                     switch (static_cast<int>(theme)) {
                         default:
                         case 0: /* Dark theme */
                             ImGui::StyleColorsDark();
                             ImGui::StyleCustomColorsDark();
                             ImPlot::StyleColorsDark();
-                            bannerFile = "/banner_dark.png";
+                            std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
                             break;
                         case 1: /* Light theme */
                             ImGui::StyleColorsLight();
                             ImGui::StyleCustomColorsLight();
                             ImPlot::StyleColorsLight();
-                            bannerFile = "/banner_light.png";
-                            break;
+                            std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromMemory(banner_light, banner_light_size);                            break;
                         case 2: /* Classic theme */
                             ImGui::StyleColorsClassic();
                             ImGui::StyleCustomColorsClassic();
                             ImPlot::StyleColorsClassic();
-                            bannerFile = "/banner_dark.png";
-                            break;
+                            std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);                            break;
                     }
 
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-
-                    for (const auto &path : hex::getPath(hex::ImHexPath::Resources)) {
-                        std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromPath((path + bannerFile).c_str());
-                        if (this->m_bannerTexture != nullptr)
-                            break;
-                    }
 
                     if (this->m_bannerTexture == nullptr) {
                         log::fatal("Failed to load banner texture!");
@@ -191,8 +182,6 @@ namespace hex {
     }
 
     Window::~Window() {
-        delete SharedData::currentProvider;
-
         this->deinitImGui();
         this->deinitGLFW();
 

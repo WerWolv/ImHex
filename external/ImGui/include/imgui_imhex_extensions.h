@@ -22,6 +22,7 @@ namespace ImGui {
     }
 
     std::tuple<ImTextureID, int, int> LoadImageFromPath(const char *path);
+    std::tuple<ImTextureID, int, int> LoadImageFromMemory(ImU8 *buffer, int size);
     void UnloadImage(ImTextureID texture);
 
     enum ImGuiCustomCol {

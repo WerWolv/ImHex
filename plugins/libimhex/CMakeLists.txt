@@ -56,6 +56,8 @@ set(LIBIMHEX_SOURCES
     source/providers/provider.cpp
 
     source/views/view.cpp
+
+    source/resources.cpp
 )
 
 if (APPLE)

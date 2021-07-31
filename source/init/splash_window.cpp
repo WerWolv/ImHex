@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/shared_data.hpp>
+#include <hex/resources.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -68,11 +69,7 @@ namespace hex::init {
         ImTextureID splashTexture;
         u32 splashWidth, splashHeight;
 
-        for (const auto &path : hex::getPath(hex::ImHexPath::Resources)) {
-            std::tie(splashTexture, splashWidth, splashHeight) = ImGui::LoadImageFromPath((path + "/splash.png").c_str());
-            if (splashTexture != nullptr)
-                break;
-        }
+        std::tie(splashTexture, splashWidth, splashHeight) = ImGui::LoadImageFromMemory(splash, splash_size);
 
         if (splashTexture == nullptr) {
             log::fatal("Could not load splash screen image!");
