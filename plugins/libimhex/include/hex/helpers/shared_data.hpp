@@ -47,6 +47,10 @@ namespace hex {
             SharedData::sharedVariables[variableName] = value;
         }
 
+        static void clearVariables() {
+            SharedData::sharedVariables.clear();
+        }
+
     public:
         static std::vector<std::function<void()>> deferredCalls;
         static prv::Provider *currentProvider;

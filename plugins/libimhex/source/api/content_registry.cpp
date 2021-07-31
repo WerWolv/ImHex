@@ -10,14 +10,19 @@ namespace hex {
     /* Settings */
 
     void ContentRegistry::Settings::load() {
+        bool loaded = false;
         for (const auto &dir : hex::getPath(ImHexPath::Config)) {
             std::ifstream settingsFile(dir + "/settings.json");
 
             if (settingsFile.good()) {
                 settingsFile >> getSettingsData();
+                loaded = true;
                 break;
             }
         }
+
+        if (!loaded)
+            ContentRegistry::Settings::store();
     }
 
     void ContentRegistry::Settings::store() {

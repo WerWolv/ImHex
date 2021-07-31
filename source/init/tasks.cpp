@@ -98,10 +98,44 @@ namespace hex::init {
         return true;
     }
 
-    bool deleteViews() {
+    bool deleteSharedData() {
+        SharedData::deferredCalls.clear();
+
+        delete SharedData::currentProvider;
+        SharedData::currentProvider = nullptr;
+
+        SharedData::settingsEntries.clear();
+        SharedData::settingsJson.clear();
+
+        SharedData::commandPaletteCommands.clear();
+        SharedData::patternLanguageFunctions.clear();
+
         for (auto &view : SharedData::views)
             delete view;
         SharedData::views.clear();
+
+        SharedData::toolsEntries.clear();
+
+        SharedData::dataInspectorEntries.clear();
+
+        SharedData::bookmarkEntries.clear();
+
+        for (auto &pattern : SharedData::patternData)
+            delete pattern;
+        SharedData::patternData.clear();
+
+        SharedData::languageNames.clear();
+        SharedData::languageDefinitions.clear();
+        SharedData::loadedLanguageStrings.clear();
+
+        SharedData::welcomeScreenEntries.clear();
+        SharedData::footerItems.clear();
+
+        SharedData::dataProcessorNodes.clear();
+
+        SharedData::recentFilePaths.clear();
+
+        SharedData::clearVariables();
 
         return true;
     }
@@ -160,8 +194,8 @@ namespace hex::init {
 
     std::vector<Task> getExitTasks() {
         return {
-                { "Cleaning up views...",       deleteViews         },
                 { "Saving settings...",         storeSettings       },
+                { "Cleaning up shared data...", deleteSharedData    },
                 { "Unloading plugins...",       unloadPlugins       },
         };
     }

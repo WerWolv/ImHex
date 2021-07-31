@@ -4,6 +4,7 @@
 cmake-build-debug/
 cmake-build-release/
 cmake-build-relwithdebinfo/
+cmake-build-wsl/
 
 build-linux/
 build/
