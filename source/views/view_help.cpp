@@ -218,6 +218,14 @@ namespace hex {
                 "};"
             );
 
+            drawTitle("Variable placement");
+            ImGui::TextWrapped(
+                    "In order to highlight bytes and displaying their value in the pattern data window, "
+                    "a variable needs to be created and placed in memory. The following line of code creates"
+                    "a unsigned 32 bit variable named data and places it at offset 0x100."
+                    );
+            drawCodeSegment("var placement", "u32 data @ 0x100;");
+
             drawTitle("Unions");
             ImGui::TextWrapped(
                     "A union is used to make two or more variables occupy the same region of memory. "
@@ -333,14 +341,6 @@ namespace hex {
                             "/* This is a\n"
                             "multiline comment */"
             );
-
-            drawTitle("Variable placement");
-            ImGui::TextWrapped(
-                    "In order to highlight bytes and displaying their value in the pattern data window, "
-                    "a variable needs to be created and placed in memory. The following line of code creates"
-                    "a unsigned 32 bit variable named data and places it at offset 0x100."
-                    );
-            drawCodeSegment("var placement", "u32 data @ 0x100;");
         }
         ImGui::End();
     }
