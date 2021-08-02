@@ -47,6 +47,10 @@ namespace hex {
         ImGui::PopStyleColor();
     };
 
+    static void drawUnaryBulletPoint(const std::string &op, const std::string &name) {
+        ImGui::Bullet();
+        ImGui::TextWrapped("a %s b - %s", op.c_str(), name.c_str());
+    }
 
     void ViewHelp::drawAboutPopup() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.view.help.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -289,6 +293,36 @@ namespace hex {
             drawCodeSegment("using",
                             "using magic_t = u32;"
             );
+
+            drawTitle("Math Expressions");
+            ImGui::TextWrapped(
+                "In any place where a numeric value is required, a mathematical expression can be"
+                " inserted. This can be as easy as 1 + 1 but can get much more complex as well by"
+                " accessing values within structs or enum constants. These expressions work the"
+                " same as in basically every other language as well with the following operators"
+                " being supported:"
+            );
+            drawUnaryBulletPoint("+", "Addition");
+            drawUnaryBulletPoint("-", "Subtraction");
+            drawUnaryBulletPoint("*", "Multiplication");
+            drawUnaryBulletPoint("/", "Division");
+            drawUnaryBulletPoint("%", "Modulus");
+            drawUnaryBulletPoint(">>", "Bit Right Shift");
+            drawUnaryBulletPoint("<<", "Bit Left Shift");
+            drawUnaryBulletPoint("&", "Bitwise AND");
+            drawUnaryBulletPoint("|", "Bitwise OR");
+            drawUnaryBulletPoint("^", "Bitwise XOR");
+            drawUnaryBulletPoint("==", "Equality comparison");
+            drawUnaryBulletPoint("!=", "Inequality comparison");
+            drawUnaryBulletPoint(">", "Greater-than comparison");
+            drawUnaryBulletPoint(">=", "Greater-or-equals comparison");
+            drawUnaryBulletPoint("<", "Less-than comparison");
+            drawUnaryBulletPoint("<=", "Less-or-Equal comparison");
+            drawUnaryBulletPoint("&&", "Boolean AND");
+            drawUnaryBulletPoint("||", "Boolean OR");
+            drawUnaryBulletPoint("^^", "Boolean XOR");
+            ImGui::Bullet(); ImGui::Text("a ? b : c - Ternary comparison");
+            ImGui::Bullet(); ImGui::Text("$ - Current offset");
 
             drawTitle("Comments");
             ImGui::TextWrapped(
