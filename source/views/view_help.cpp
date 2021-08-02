@@ -264,6 +264,18 @@ namespace hex {
                 "returns the smallest value divisible by `alignment` that is greater or equal to `value`"
             );
             drawBuiltinFunction(
+                "void", "print", ("values..."),
+                "output debugging information to pattern console"
+            );
+            drawBuiltinFunction(
+                "void", "assert", ("condition, message"),
+                "assert that a condition holds, aborting execution and displaying `message` if false"
+            );
+            drawBuiltinFunction(
+                "void", "warnAssert", ("condition, message"),
+                "assert that a condition holds, printing `message` as a warning if false"
+            );
+            drawBuiltinFunction(
                 "u64", "dataSize", (""),
                 "return the size of the current file"
             );
