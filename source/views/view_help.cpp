@@ -16,6 +16,26 @@ namespace hex {
         ImGui::TextColored(ImVec4(0.6F, 0.6F, 1.0F, 1.0F), title.c_str());
     }
 
+    static void drawBuiltinFunction(
+        const std::string &return_type,
+        const std::string &name,
+        const std::string &arguments,
+        const std::string &description
+    ) {
+        ImGui::Bullet();
+        ImGui::TextColored(ImVec4(0.3F, 0.7F, 0.2F, 1.0F), return_type.c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.57F, 0.24F, 0.69F, 1.0F), name.c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.71F, 0.19F, 0.31F, 1.0F), "(");
+        ImGui::SameLine();
+        ImGui::Text("%s", arguments.c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.71F, 0.19F, 0.31F, 1.0F), ")");
+        ImGui::SameLine();
+        ImGui::TextWrapped(" - %s", description.c_str());
+    }
+
     static void drawCodeSegment(const std::string &id, const std::string &code) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
         ImGui::BeginChild(id.c_str(), ImVec2(-1, ImGui::CalcTextSize(code.c_str()).y));
@@ -160,7 +180,7 @@ namespace hex {
             ImGui::TextWrapped(
                     "The following built-in types are available for use");
             drawCodeSegment("built-in",
-                    "u8, s8\n"
+                    "u8, s8, char, bool\n"
                     "u16, s16\n"
                     "u32, s32\n"
                     "u64, s64\n"
@@ -212,6 +232,28 @@ namespace hex {
                     "The leading type is treated as the data being pointed to and the trailing type as the size of the pointer.");
             drawCodeSegment("pointer",
                             "Data *data : u16;"
+            );
+
+            drawTitle("Built-in Functions");
+            drawBuiltinFunction(
+                "u64", "findSequence", ("u32 index, u8 ... bytes"),
+                "find the `index`th occurence of the list of `bytes`"
+            );
+            drawBuiltinFunction(
+                "u(size * 8)", "readUnsigned", ("u64 address, u8 size"),
+                "read `size` bytes at `address` as little-endian unsigned integer"
+            );
+            drawBuiltinFunction(
+                "s(size * 8)", "readSigned", ("u64 address, u8 size"),
+                "read `size` bytes at `address` as little-endian signed integer"
+            );
+            drawBuiltinFunction(
+                "u64", "alignTo", ("u64 value, u64 alignment"),
+                "returns the smallest value divisible by `alignment` that is greater or equal to `value`"
+            );
+            drawBuiltinFunction(
+                "u64", "dataSize", (""),
+                "return the size of the current file"
             );
 
             drawTitle("Bitfields");
