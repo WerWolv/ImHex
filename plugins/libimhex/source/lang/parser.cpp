@@ -84,7 +84,7 @@ namespace hex::lang {
             else
                 throwParseError("expected member name or 'parent' keyword", -1);
         } else
-            return TO_NUMERIC_EXPRESSION(new ASTNodeRValue(path));
+            return new ASTNodeRValue(path);
     }
 
     // <Integer|((parseMathematicalExpression))>
