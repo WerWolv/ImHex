@@ -27,6 +27,8 @@ namespace hex::init {
         float m_progress = 0;
         std::string m_currTaskName;
 
+        float m_globalScale = 1.0F;
+
         void initGLFW();
         void initImGui();
 
