@@ -6,6 +6,7 @@
 #include <imgui_imhex_extensions.h>
 
 #include <fontawesome_font.h>
+#include <codicons_font.h>
 #include <nfd.hpp>
 
 #include <hex/api/event.hpp>

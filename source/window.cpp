@@ -21,6 +21,7 @@
 #include <implot_internal.h>
 
 #include <fontawesome_font.h>
+#include <codicons_font.h>
 
 #include "helpers/plugin_manager.hpp"
 #include "init/tasks.hpp"
@@ -238,6 +239,11 @@ namespace hex {
                 0
         };
 
+        ImWchar codiconsRange[] = {
+                ICON_MIN_VS, ICON_MAX_VS,
+                0
+        };
+
         ImFontConfig cfg;
         cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
         cfg.SizePixels = 13.0f * this->m_fontScale;
@@ -246,6 +252,7 @@ namespace hex {
         cfg.MergeMode = true;
 
         io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
+        io.Fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0f * this->m_fontScale, &cfg, codiconsRange);
 
         ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeType::Monochrome);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
@@ -442,11 +449,11 @@ namespace hex {
 
             ImGui::TextUnformatted("hex.welcome.header.start"_lang);
             {
-                if (ImGui::BulletHyperlink("hex.welcome.start.create_file"_lang))
+                if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.welcome.start.create_file"_lang))
                     EventManager::post<RequestOpenWindow>("Create File");
-                if (ImGui::BulletHyperlink("hex.welcome.start.open_file"_lang))
+                if (ImGui::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.welcome.start.open_file"_lang))
                     EventManager::post<RequestOpenWindow>("Open File");
-                if (ImGui::BulletHyperlink("hex.welcome.start.open_project"_lang))
+                if (ImGui::IconHyperlink(ICON_VS_NOTEBOOK, "hex.welcome.start.open_project"_lang))
                     EventManager::post<RequestOpenWindow>("Open Project");
             }
 
@@ -478,8 +485,8 @@ namespace hex {
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("hex.welcome.header.help"_lang);
             {
-                if (ImGui::BulletHyperlink("hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
-                if (ImGui::BulletHyperlink("hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
+                if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
+                if (ImGui::IconHyperlink(ICON_VS_ORGANIZATION, "hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
             }
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
@@ -753,9 +760,16 @@ namespace hex {
                     ICON_MIN_FA, ICON_MAX_FA,
                     0
             };
+
+            ImWchar codiconsRange[] = {
+                    ICON_MIN_VS, ICON_MAX_VS,
+                    0
+            };
             std::uint8_t *px;
             int w, h;
             io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * this->m_fontScale, &cfg, fontAwesomeRange);
+            io.Fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 11.0f * this->m_fontScale, &cfg, codiconsRange);
+
             io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
             // Create new font atlas

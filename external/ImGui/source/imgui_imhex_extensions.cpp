@@ -15,6 +15,40 @@
 
 namespace ImGui {
 
+    bool IconHyperlink(const char *icon, const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        const ImVec2 label_size = CalcTextSize(icon, NULL, false) + CalcTextSize(" ", NULL, false) + CalcTextSize(label, NULL, false);
+
+        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
+
+        const ImRect bb(pos, pos + size);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        if (window->DC.ItemFlags & ImGuiItemFlags_ButtonRepeat)
+            flags |= ImGuiButtonFlags_Repeat;
+        bool hovered, held;
+        bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
+
+        // Render
+        const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
+        PushStyleColor(ImGuiCol_Text, ImU32(col));
+
+        Text("%s %s", icon, label);
+        GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
+        PopStyleColor();
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        return pressed;
+    }
+
     bool Hyperlink(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)

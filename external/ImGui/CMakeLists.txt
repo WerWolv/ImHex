@@ -31,6 +31,7 @@ add_library(imgui STATIC
         source/implot_demo.cpp
 
         fonts/fontawesome_font.c
+        fonts/codicons_font.c
 )
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)

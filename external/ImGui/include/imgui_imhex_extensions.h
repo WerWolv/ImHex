@@ -6,6 +6,7 @@
 
 namespace ImGui {
 
+    bool IconHyperlink(const char *icon, const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool Hyperlink(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool BulletHyperlink(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool DescriptionButton(const char* label, const char* description, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
