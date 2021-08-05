@@ -197,6 +197,23 @@ All paths follow the XDG Base Directories standard, and can thus be modified
 with the environment variables `XDG_CONFIG_HOME`, `XDG_CONFIG_DIRS`,
 `XDG_DATA_HOME` and `XDG_DATA_DIRS`.
 
+
+#### E.g., installation procedure on Ubuntu 20.04
+```
+sudo apt install wget libcapstone3 libglfw3 libmbedcrypto3 libmbedtls12
+cd /tmp
+wget https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20ELF.zip
+unzip Linux\ ELF.zip -d tmpimhex
+cd tmpimhex
+sudo cp bin/imhex /usr/bin
+sudo cp lib/libimhex.so /usr/lib/
+sudo cp -r imhex/ /usr/share/
+sudo cp -r share/imhex /usr/share/
+sudo mkdir /usr/share/imhex/plugins
+sudo mv lib/builtin.hexplug /usr/share/imhex/plugins
+sudo chmod +x /usr/bin/imhex
+```
+
 ## Credits
 
 - Thanks a lot to ocornut for their amazing [Dear ImGui](https://github.com/ocornut/imgui) which is used for building the entire interface
