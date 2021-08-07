@@ -80,12 +80,12 @@ namespace hex::plugin::builtin {
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.float", sizeof(float), [](auto buffer, auto endian, auto style) {
-            auto value = hex::format("{0:E}", hex::changeEndianess(*reinterpret_cast<float*>(buffer.data()), endian));
+            auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<float*>(buffer.data()), endian));
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
         hex::ContentRegistry::DataInspector::add("hex.builtin.inspector.double", sizeof(double), [](auto buffer, auto endian, auto style) {
-            auto value = hex::format("{0:E}", hex::changeEndianess(*reinterpret_cast<float*>(buffer.data()), endian));
+            auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<float*>(buffer.data()), endian));
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
