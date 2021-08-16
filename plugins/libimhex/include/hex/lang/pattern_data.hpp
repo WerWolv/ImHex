@@ -940,10 +940,75 @@ namespace hex::lang {
         std::vector<std::pair<Token::IntegerLiteral, std::string>> m_enumValues;
     };
 
+
+    class PatternDataBitfieldField : public PatternData {
+    public:
+        PatternDataBitfieldField(u64 offset, u8 bitOffset, u8 bitSize, u32 color = 0)
+        : m_bitOffset(bitOffset), m_bitSize(bitSize), PatternData(offset, 0, color) {
+
+        }
+
+        PatternData* clone() override {
+            return new PatternDataBitfieldField(*this);
+        }
+
+        void createEntry(prv::Provider* &provider) override {
+            std::vector<u8> value(this->getSize(), 0);
+            provider->read(this->getOffset(), &value[0], value.size());
+
+            if (this->m_endian != std::endian::native)
+                std::reverse(value.begin(), value.end());
+
+            ImGui::TableNextRow();
+            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", this->getVariableName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset() + (this->m_bitOffset >> 3), this->getOffset() + ((this->m_bitOffset + this->m_bitSize) >> 3));
+            ImGui::TableNextColumn();
+            if (this->m_bitSize == 1)
+                ImGui::Text("%u bit", this->m_bitSize);
+            else
+                ImGui::Text("%u bits", this->m_bitSize);
+            ImGui::TableNextColumn();
+            ImGui::TextColored(ImColor(0xFF9BC64D), "bits");
+            ImGui::TableNextColumn();
+            {
+                u128 fieldValue = 0;
+                std::memcpy(&fieldValue, value.data() + (this->m_bitOffset / 8), (this->m_bitSize / 8) + 1);
+                u64 maskedValue = hex::extract((this->m_bitOffset + this->m_bitSize) - 1 - ((this->m_bitOffset / 8) * 8), this->m_bitOffset - ((this->m_bitOffset / 8) * 8), fieldValue);
+                ImGui::Text("%llu (0x%llX)", maskedValue, maskedValue);
+            }
+
+        }
+
+        [[nodiscard]] std::string getFormattedName() const override {
+            return "bits";
+        }
+
+        [[nodiscard]] u8 getBitOffset() const {
+            return this->m_bitOffset;
+        }
+
+        [[nodiscard]] u8 getBitSize() const {
+            return this->m_bitSize;
+        }
+
+    private:
+        u8 m_bitOffset, m_bitSize;
+    };
+
     class PatternDataBitfield : public PatternData {
     public:
         PatternDataBitfield(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
 
+        }
+
+        ~PatternDataBitfield() override {
+            for (auto field : this->m_fields)
+                delete field;
         }
 
         PatternData* clone() override {
@@ -954,7 +1019,7 @@ namespace hex::lang {
             std::vector<u8> value(this->getSize(), 0);
             provider->read(this->getOffset(), &value[0], value.size());
 
-            if (this->m_endian == std::endian::big)
+            if (this->m_endian != std::endian::native)
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
@@ -978,31 +1043,9 @@ namespace hex::lang {
             ImGui::TextUnformatted(valueString.c_str());
 
             if (open) {
-                u16 bitOffset = 0;
-                for (auto &[entryName, entrySize] : this->m_fields) {
-                    ImGui::TableNextRow();
-                    ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%s", entryName.c_str());
-                    ImGui::TableNextColumn();
-                    ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-                    ImGui::TableNextColumn();
-                    ImGui::Text("0x%08llX : 0x%08llX", this->getOffset() + (bitOffset >> 3), this->getOffset() + ((bitOffset + entrySize) >> 3));
-                    ImGui::TableNextColumn();
-                    if (entrySize == 1)
-                        ImGui::Text("%llu bit", entrySize);
-                    else
-                        ImGui::Text("%llu bits", entrySize);
-                    ImGui::TableNextColumn();
-                    ImGui::TextColored(ImColor(0xFF9BC64D), "bits");
-                    ImGui::TableNextColumn();
-                    {
-                        u128 fieldValue = 0;
-                        std::memcpy(&fieldValue, value.data() + (bitOffset / 8), (entrySize / 8) + 1);
-                        ImGui::Text("%llX", hex::extract((bitOffset + entrySize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
-                    }
-                    bitOffset += entrySize;
-                }
+
+                for (auto &field : this->m_fields)
+                    field->draw(provider);
 
                 ImGui::TreePop();
             }
@@ -1017,12 +1060,15 @@ namespace hex::lang {
             return this->m_fields;
         }
 
-        void setFields(const std::vector<std::pair<std::string, size_t>> &fields) {
+        void setFields(const std::vector<PatternData*> &fields) {
             this->m_fields = fields;
+
+            for (auto &field : this->m_fields)
+                field->setSize(this->getSize());
         }
 
     private:
-        std::vector<std::pair<std::string, size_t>> m_fields;
+        std::vector<PatternData*> m_fields;
     };
 
 }

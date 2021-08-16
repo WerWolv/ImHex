@@ -56,6 +56,9 @@ namespace hex::lang {
                             currMembers = structPattern->getMembers();
                         else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern); unionPattern != nullptr)
                             currMembers = unionPattern->getMembers();
+                        else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield*>(currPattern); bitfieldPattern != nullptr) {
+                            currMembers = bitfieldPattern->getFields();
+                        }
                         else if (auto arrayPattern = dynamic_cast<PatternDataArray*>(currPattern); arrayPattern != nullptr) {
                             currMembers = arrayPattern->getEntries();
                             continue;
@@ -201,6 +204,20 @@ namespace hex::lang {
                 case 16: return new ASTNodeIntegerLiteral(hex::changeEndianess(*reinterpret_cast<u128*>(value), 16, enumPattern->getEndian()));
                 default: this->getConsole().abortEvaluation("invalid rvalue size");
             }
+        } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(currPattern); bitfieldFieldPattern != nullptr) {
+            u8 value[bitfieldFieldPattern->getSize()];
+            if (currPattern->isLocal())
+                std::memcpy(value, this->m_localStack.data() + bitfieldFieldPattern->getOffset(), bitfieldFieldPattern->getSize());
+            else
+                this->m_provider->read(bitfieldFieldPattern->getOffset(), value, bitfieldFieldPattern->getSize());
+
+            u8 bitOffset = bitfieldFieldPattern->getBitOffset();
+            u8 bitSize = bitfieldFieldPattern->getBitSize();
+
+            u128 fieldValue = 0;
+            std::memcpy(&fieldValue, value + (bitOffset / 8), (bitSize / 8) + 1);
+
+            return new ASTNodeIntegerLiteral(hex::extract((bitOffset + bitSize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
         } else
             this->getConsole().abortEvaluation("tried to use non-integer value in numeric expression");
     }
@@ -787,7 +804,7 @@ namespace hex::lang {
     }
 
     PatternData* Evaluator::evaluateBitfield(ASTNodeBitfield *node) {
-        std::vector<std::pair<std::string, size_t>> entryPatterns;
+        std::vector<PatternData*> entryPatterns;
 
         auto startOffset = this->m_currOffset;
         size_t bits = 0;
@@ -809,9 +826,11 @@ namespace hex::lang {
             if (fieldBits > 64 || fieldBits <= 0)
                 this->getConsole().abortEvaluation("bitfield entry must occupy between 1 and 64 bits");
 
-            bits += fieldBits;
+            auto fieldPattern = new PatternDataBitfieldField(startOffset, bits, fieldBits);
+            fieldPattern->setVariableName(name);
+            entryPatterns.push_back(fieldPattern);
 
-            entryPatterns.emplace_back(name, fieldBits);
+            bits += fieldBits;
         }
 
         size_t size = (bits + 7) / 8;
