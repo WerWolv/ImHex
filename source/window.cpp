@@ -433,7 +433,7 @@ namespace hex {
     void Window::drawWelcomeScreen() {
         const auto availableSpace = ImGui::GetContentRegionAvail();
 
-        ImGui::Image(this->m_bannerTexture, ImVec2(this->m_bannerWidth / 2, this->m_bannerHeight / 2));
+        ImGui::Image(this->m_bannerTexture, ImVec2(this->m_bannerWidth / (2 * (1.0F / this->m_globalScale)), this->m_bannerHeight / (2 * (1.0F / this->m_globalScale))));
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {

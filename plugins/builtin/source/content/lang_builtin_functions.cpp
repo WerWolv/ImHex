@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
             auto message = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
 
             if (LITERAL_COMPARE(condition, condition == 0))
-                ctx.getConsole().log(LogConsole::Level::Warning, hex::format("assert failed \"{0}\"", message.data()));
+                ctx.getConsole().log(LogConsole::Level::Warning, hex::format("assert failed \"{0}\"", message));
 
             return nullptr;
         });

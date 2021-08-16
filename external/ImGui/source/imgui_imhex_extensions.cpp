@@ -23,7 +23,8 @@ namespace ImGui {
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         const ImGuiID id = window->GetID(label);
-        const ImVec2 label_size = CalcTextSize(icon, NULL, false) + CalcTextSize(" ", NULL, false) + CalcTextSize(label, NULL, false);
+        ImVec2 label_size = CalcTextSize(icon, NULL, false);
+        label_size.x += CalcTextSize(" ", NULL, false).x + CalcTextSize(label, NULL, false).x;
 
         ImVec2 pos = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
