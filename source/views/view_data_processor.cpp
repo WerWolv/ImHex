@@ -70,6 +70,8 @@ namespace hex {
         }
 
         this->m_links.erase(link);
+
+        ProjectFile::markDirty();
     }
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
@@ -95,6 +97,8 @@ namespace hex {
 
             this->m_nodes.erase(node);
         }
+
+        ProjectFile::markDirty();
     }
 
     void ViewDataProcessor::processNodes() {
@@ -181,11 +185,13 @@ namespace hex {
                     } else if (unlocalizedCategory.empty()) {
                         if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                             node = function();
+                            ProjectFile::markDirty();
                         }
                     } else {
                         if (ImGui::BeginMenu(LangEntry(unlocalizedCategory))) {
                             if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                                 node = function();
+                                ProjectFile::markDirty();
                             }
                             ImGui::EndMenu();
                         }

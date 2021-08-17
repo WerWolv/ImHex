@@ -19,11 +19,14 @@
 #include <imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
+#include <imnodes.h>
+#include <imnodes_internal.h>
 
 #include <fontawesome_font.h>
 #include <codicons_font.h>
 
 #include "helpers/plugin_manager.hpp"
+#include "helpers/project_file_handler.hpp"
 #include "init/tasks.hpp"
 
 #include <glad/glad.h>

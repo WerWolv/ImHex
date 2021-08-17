@@ -57,7 +57,7 @@ namespace hex {
     }
 
     bool ProjectFile::store(std::string_view filePath) {
-        ProjectFile::s_hasUnsavedChanged = false;
+        EventManager::post<EventProjectFileStore>();
 
         json projectFileData;
 
@@ -82,6 +82,7 @@ namespace hex {
             return false;
         }
 
+        ProjectFile::s_hasUnsavedChanged = false;
         ProjectFile::s_currProjectFilePath = filePath;
 
         return true;
