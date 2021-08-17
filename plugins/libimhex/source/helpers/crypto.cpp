@@ -2,6 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 
+#include <mbedtls/version.h>
 #include <mbedtls/base64.h>
 #include <mbedtls/md5.h>
 #include <mbedtls/sha1.h>
@@ -12,6 +13,26 @@
 
 #include <array>
 #include <span>
+
+#if MBEDTLS_VERSION_MAJOR <= 2
+
+#define mbedtls_md5_starts mbedtls_md5_starts_ret
+#define mbedtls_md5_update mbedtls_md5_update_ret
+#define mbedtls_md5_finish mbedtls_md5_finish_ret
+
+#define mbedtls_sha1_starts mbedtls_sha1_starts_ret
+#define mbedtls_sha1_update mbedtls_sha1_update_ret
+#define mbedtls_sha1_finish mbedtls_sha1_finish_ret
+
+#define mbedtls_sha256_starts mbedtls_sha256_starts_ret
+#define mbedtls_sha256_update mbedtls_sha256_update_ret
+#define mbedtls_sha256_finish mbedtls_sha256_finish_ret
+
+#define mbedtls_sha512_starts mbedtls_sha512_starts_ret
+#define mbedtls_sha512_update mbedtls_sha512_update_ret
+#define mbedtls_sha512_finish mbedtls_sha512_finish_ret
+
+#endif
 
 namespace hex::crypt {
 
@@ -87,22 +108,23 @@ namespace hex::crypt {
         return ~c;
     }
 
+
     std::array<u8, 16> md5(prv::Provider* &data, u64 offset, size_t size) {
         std::array<u8, 16> result = { 0 };
 
         mbedtls_md5_context ctx;
         mbedtls_md5_init(&ctx);
 
-        mbedtls_md5_starts_ret(&ctx);
+        mbedtls_md5_starts(&ctx);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_md5_update_ret(&ctx, buffer.data(), readSize);
+            mbedtls_md5_update(&ctx, buffer.data(), readSize);
         }
 
-        mbedtls_md5_finish_ret(&ctx, result.data());
+        mbedtls_md5_finish(&ctx, result.data());
 
         mbedtls_md5_free(&ctx);
 
@@ -115,16 +137,16 @@ namespace hex::crypt {
         mbedtls_sha1_context ctx;
         mbedtls_sha1_init(&ctx);
 
-        mbedtls_sha1_starts_ret(&ctx);
+        mbedtls_sha1_starts(&ctx);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha1_update_ret(&ctx, buffer.data(), readSize);
+            mbedtls_sha1_update(&ctx, buffer.data(), readSize);
         }
 
-        mbedtls_sha1_finish_ret(&ctx, result.data());
+        mbedtls_sha1_finish(&ctx, result.data());
 
         mbedtls_sha1_free(&ctx);
 
@@ -137,16 +159,16 @@ namespace hex::crypt {
         mbedtls_sha256_context ctx;
         mbedtls_sha256_init(&ctx);
 
-        mbedtls_sha256_starts_ret(&ctx, true);
+        mbedtls_sha256_starts(&ctx, true);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha256_update_ret(&ctx, buffer.data(), readSize);
+            mbedtls_sha256_update(&ctx, buffer.data(), readSize);
         }
 
-        mbedtls_sha256_finish_ret(&ctx, result.data());
+        mbedtls_sha256_finish(&ctx, result.data());
 
         mbedtls_sha256_free(&ctx);
 
@@ -159,16 +181,16 @@ namespace hex::crypt {
         mbedtls_sha256_context ctx;
         mbedtls_sha256_init(&ctx);
 
-        mbedtls_sha256_starts_ret(&ctx, false);
+        mbedtls_sha256_starts(&ctx, false);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha256_update_ret(&ctx, buffer.data(), readSize);
+            mbedtls_sha256_update(&ctx, buffer.data(), readSize);
         }
 
-        mbedtls_sha256_finish_ret(&ctx, result.data());
+        mbedtls_sha256_finish(&ctx, result.data());
 
         mbedtls_sha256_free(&ctx);
 
@@ -181,16 +203,16 @@ namespace hex::crypt {
         mbedtls_sha512_context ctx;
         mbedtls_sha512_init(&ctx);
 
-        mbedtls_sha512_starts_ret(&ctx, true);
+        mbedtls_sha512_starts(&ctx, true);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha512_update_ret(&ctx, buffer.data(), readSize);
+            mbedtls_sha512_update(&ctx, buffer.data(), readSize);
         }
 
-        mbedtls_sha512_finish_ret(&ctx, result.data());
+        mbedtls_sha512_finish(&ctx, result.data());
 
         mbedtls_sha512_free(&ctx);
 
@@ -203,16 +225,16 @@ namespace hex::crypt {
         mbedtls_sha512_context ctx;
         mbedtls_sha512_init(&ctx);
 
-        mbedtls_sha512_starts_ret(&ctx, false);
+        mbedtls_sha512_starts(&ctx, false);
 
         std::array<u8, 512> buffer = { 0 };
         for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha512_update_ret(&ctx, buffer.data(), readSize);
+            mbedtls_sha512_update(&ctx, buffer.data(), readSize);
         }
 
-        mbedtls_sha512_finish_ret(&ctx, result.data());
+        mbedtls_sha512_finish(&ctx, result.data());
 
         mbedtls_sha512_free(&ctx);
 
@@ -258,7 +280,7 @@ namespace hex::crypt {
         std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());
         std::copy(iv.begin(), iv.end(), nonceCounter.begin() + 8);
 
-        size_t outputSize = input.size() + cipherInfo->block_size;
+        size_t outputSize = input.size() + mbedtls_cipher_get_block_size(&ctx);
         output.resize(outputSize, 0x00);
         mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
 
