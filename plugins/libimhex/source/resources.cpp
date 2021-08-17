@@ -11,7 +11,20 @@
         ".align 8\n"                            \
         )
 
-#else
+#elif defined(OS_MACOS)
+
+    #define RESOURCE(name, path) __asm__ (      \
+    ".data;\n"                                  \
+    ".global " #name ";\n"                      \
+    ".global " #name "_size;\n"                 \
+        #name ":\n"                             \
+        ".incbin \"" path "\";\n"               \
+        #name "_size:\n"                        \
+        ".int " #name "_size - " #name ";\n"    \
+        ".align 8;\n"                           \
+        )
+
+#elif defined(OS_LINUX)
 
     #define RESOURCE(name, path) __asm__ (      \
     ".section .rodata\n"                        \
