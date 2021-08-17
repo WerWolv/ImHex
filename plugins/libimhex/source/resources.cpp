@@ -14,7 +14,7 @@
 #elif defined(OS_MACOS)
 
     #define RESOURCE(name, path) __asm__ (      \
-    ".data;\n"                                  \
+    ".text;\n"                                  \
     ".global " #name ";\n"                      \
     ".global " #name "_size;\n"                 \
         #name ":\n"                             \

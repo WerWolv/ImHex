@@ -124,6 +124,7 @@ typedef CC_SHA256_CTX yr_sha256_ctx;
 typedef mbedtls_md5_context yr_md5_ctx;
 typedef mbedtls_sha1_context yr_sha1_ctx;
 typedef mbedtls_sha256_context yr_sha256_ctx;
+#if MBEDTLS_VERSION_MAJOR <= 2
 
 #define yr_md5_init(ctx)                    { mbedtls_md5_init(ctx); mbedtls_md5_starts_ret(ctx); }
 #define yr_md5_update(ctx, data, len)       mbedtls_md5_update_ret(ctx, data, len)
@@ -136,6 +137,22 @@ typedef mbedtls_sha256_context yr_sha256_ctx;
 #define yr_sha256_init(ctx)                 { mbedtls_sha256_init(ctx); mbedtls_sha256_starts_ret(ctx, false); }
 #define yr_sha256_update(ctx, data, len)    mbedtls_sha256_update_ret(ctx, data, len)
 #define yr_sha256_final(digest, ctx)        { mbedtls_sha256_finish_ret(ctx, digest); mbedtls_sha256_free(ctx); }
+
+#else
+
+#define yr_md5_init(ctx)                    { mbedtls_md5_init(ctx); mbedtls_md5_starts(ctx); }
+#define yr_md5_update(ctx, data, len)       mbedtls_md5_update(ctx, data, len)
+#define yr_md5_final(digest, ctx)           { mbedtls_md5_finish(ctx, digest); mbedtls_md5_free(ctx); }
+
+#define yr_sha1_init(ctx)                   { mbedtls_sha1_init(ctx); mbedtls_sha1_starts(ctx); }
+#define yr_sha1_update(ctx, data, len)      mbedtls_sha1_update(ctx, data, len)
+#define yr_sha1_final(digest, ctx)          { mbedtls_sha1_finish(ctx, digest); mbedtls_sha1_free(ctx); }
+
+#define yr_sha256_init(ctx)                 { mbedtls_sha256_init(ctx); mbedtls_sha256_starts(ctx, false); }
+#define yr_sha256_update(ctx, data, len)    mbedtls_sha256_update(ctx, data, len)
+#define yr_sha256_final(digest, ctx)        { mbedtls_sha256_finish(ctx, digest); mbedtls_sha256_free(ctx); }
+
+#endif
 
 #define HAVE_COMMONCRYPTO_COMMONCRYPTO_H
 #endif
