@@ -697,6 +697,7 @@ namespace hex {
 
         GImGui = ImGui::CreateContext();
         GImPlot = ImPlot::CreateContext();
+        GImNodes = ImNodes::CreateContext();
 
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
@@ -730,6 +731,14 @@ namespace hex {
         io.KeyMap[ImGuiKey_X]           = GLFW_KEY_X;
         io.KeyMap[ImGuiKey_Y]           = GLFW_KEY_Y;
         io.KeyMap[ImGuiKey_Z]           = GLFW_KEY_Z;
+
+        ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
+        ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkCreationOnSnap);
+
+        {
+            static bool always = true;
+            ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &always;
+        }
 
         io.UserData = new ImGui::ImHexCustomData();
 
@@ -818,8 +827,12 @@ namespace hex {
     void Window::deinitImGui() {
         delete static_cast<ImGui::ImHexCustomData*>(ImGui::GetIO().UserData);
 
+        ImNodes::PopAttributeFlag();
+        ImNodes::PopAttributeFlag();
+
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        ImNodes::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }
