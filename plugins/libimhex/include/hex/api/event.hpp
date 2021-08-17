@@ -106,6 +106,7 @@ namespace hex {
     EVENT_DEF(EventProjectFileStore);
     EVENT_DEF(EventProjectFileLoad);
     EVENT_DEF(EventSettingsChanged);
+    EVENT_DEF(EventAbnormalTermination, int);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);

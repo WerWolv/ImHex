@@ -198,10 +198,6 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [](std::string path) {
-            EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(path).filename().string());
-        });
-
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
 
@@ -217,7 +213,6 @@ namespace hex {
         EventManager::unsubscribe<EventWindowClosing>(this);
         EventManager::unsubscribe<EventPatternChanged>(this);
         EventManager::unsubscribe<RequestOpenWindow>(this);
-        EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
@@ -442,8 +437,6 @@ namespace hex {
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_project"_lang, "", false, provider != nullptr && provider->isWritable())) {
-                EventManager::post<EventProjectFileStore>();
-
                 if (ProjectFile::getProjectFilePath() == "") {
                     View::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
                         if (path.ends_with(".hexproj")) {

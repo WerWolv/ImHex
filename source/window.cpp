@@ -5,6 +5,7 @@
 #include <hex/resources.hpp>
 
 #include <chrono>
+#include <csignal>
 #include <iostream>
 #include <numeric>
 #include <typeinfo>
@@ -173,16 +174,40 @@ namespace hex {
         });
 
         EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
-            if (windowTitle.empty())
-                glfwSetWindowTitle(this->m_window, "ImHex");
-            else
-                glfwSetWindowTitle(this->m_window, ("ImHex - " + windowTitle).c_str());
+            std::string title = "ImHex";
+            if (!windowTitle.empty())
+                title += " - " + windowTitle;
+
+            if (ProjectFile::hasUnsavedChanges())
+                title += " (*)";
+
+            glfwSetWindowTitle(this->m_window, title.c_str());
+        });
+
+        EventManager::subscribe<EventAbnormalTermination>(this, [](int signal) {
+            for (const auto &path : hex::getPath(ImHexPath::Config)) {
+                if (ProjectFile::store((std::filesystem::path(path) / "crash_backup.hexproj").string()))
+                    break;
+            }
         });
 
         EventManager::post<EventSettingsChanged>();
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
             SharedData::recentFilePaths.push_back(path);
+
+
+        auto signalHandler = [](int signalNumber) {
+            EventManager::post<EventAbnormalTermination>(signalNumber);
+            std::abort();
+        };
+
+        std::signal(SIGTERM, signalHandler);
+        std::signal(SIGSEGV, signalHandler);
+        std::signal(SIGINT,  signalHandler);
+        std::signal(SIGILL,  signalHandler);
+        std::signal(SIGABRT, signalHandler);
+        std::signal(SIGFPE,  signalHandler);
     }
 
     Window::~Window() {
