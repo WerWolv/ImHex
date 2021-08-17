@@ -9,16 +9,6 @@
 namespace hex {
 
     ViewDataProcessor::ViewDataProcessor() : View("hex.view.data_processor.name") {
-        imnodes::Initialize();
-        imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkDetachWithDragClick);
-        imnodes::PushAttributeFlag(imnodes::AttributeFlags_EnableLinkCreationOnSnap);
-
-        {
-            static bool always = true;
-            imnodes::IO& io = imnodes::GetIO();
-            io.link_detach_with_modifier_click.modifier = &always;
-        }
-
         EventManager::subscribe<EventSettingsChanged>(this, [] {
             auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
@@ -26,17 +16,17 @@ namespace hex {
                 switch (static_cast<int>(theme)) {
                     default:
                     case 0: /* Dark theme */
-                        imnodes::StyleColorsDark();
+                        ImNodes::StyleColorsDark();
                         break;
                     case 1: /* Light theme */
-                        imnodes::StyleColorsLight();
+                        ImNodes::StyleColorsLight();
                         break;
                     case 2: /* Classic theme */
-                        imnodes::StyleColorsClassic();
+                        ImNodes::StyleColorsClassic();
                         break;
                 }
 
-                imnodes::GetStyle().flags = imnodes::StyleFlags(imnodes::StyleFlags_NodeOutline | imnodes::StyleFlags_GridLines);
+                ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
             }
         });
 
@@ -64,10 +54,6 @@ namespace hex {
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
-
-        imnodes::PopAttributeFlag();
-        imnodes::PopAttributeFlag();
-        imnodes::Shutdown();
     }
 
 
@@ -155,14 +141,14 @@ namespace hex {
         if (ImGui::Begin(View::toWindowName("hex.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
-                imnodes::ClearNodeSelection();
-                imnodes::ClearLinkSelection();
+                ImNodes::ClearNodeSelection();
+                ImNodes::ClearLinkSelection();
 
                 this->m_rightClickedCoords = ImGui::GetMousePos();
 
-                if (imnodes::IsNodeHovered(&this->m_rightClickedId))
+                if (ImNodes::IsNodeHovered(&this->m_rightClickedId))
                     ImGui::OpenPopup("Node Menu");
-                else if (imnodes::IsLinkHovered(&this->m_rightClickedId))
+                else if (ImNodes::IsLinkHovered(&this->m_rightClickedId))
                     ImGui::OpenPopup("Link Menu");
                 else
                     ImGui::OpenPopup("Context Menu");
@@ -171,21 +157,21 @@ namespace hex {
             if (ImGui::BeginPopup("Context Menu")) {
                 dp::Node *node = nullptr;
 
-                if (imnodes::NumSelectedNodes() > 0 || imnodes::NumSelectedLinks() > 0) {
+                if (ImNodes::NumSelectedNodes() > 0 || ImNodes::NumSelectedLinks() > 0) {
                     if (ImGui::MenuItem("hex.view.data_processor.name"_lang)) {
                         std::vector<int> ids;
-                        ids.resize(imnodes::NumSelectedNodes());
-                        imnodes::GetSelectedNodes(ids.data());
+                        ids.resize(ImNodes::NumSelectedNodes());
+                        ImNodes::GetSelectedNodes(ids.data());
 
                         this->eraseNodes(ids);
-                        imnodes::ClearNodeSelection();
+                        ImNodes::ClearNodeSelection();
 
-                        ids.resize(imnodes::NumSelectedLinks());
-                        imnodes::GetSelectedLinks(ids.data());
+                        ids.resize(ImNodes::NumSelectedLinks());
+                        ImNodes::GetSelectedLinks(ids.data());
 
                         for (auto id : ids)
                             this->eraseLink(id);
-                        imnodes::ClearLinkSelection();
+                        ImNodes::ClearLinkSelection();
                     }
                 }
 
@@ -222,7 +208,7 @@ namespace hex {
                     if (hasInput && !hasOutput)
                         this->m_endNodes.push_back(node);
 
-                    imnodes::SetNodeScreenSpacePos(node->getID(), this->m_rightClickedCoords);
+                    ImNodes::SetNodeScreenSpacePos(node->getID(), this->m_rightClickedCoords);
                 }
 
                 ImGui::EndPopup();
@@ -244,7 +230,7 @@ namespace hex {
 
             {
                 int nodeId;
-                if (imnodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getID() == nodeId) {
+                if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getID() == nodeId) {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted("hex.common.error"_lang);
                     ImGui::Separator();
@@ -253,63 +239,65 @@ namespace hex {
                 }
             }
 
-            imnodes::BeginNodeEditor();
+            ImNodes::BeginNodeEditor();
 
             for (auto& node : this->m_nodes) {
                 const bool hasError = this->m_currNodeError.has_value() && this->m_currNodeError->first == node;
 
                 if (hasError)
-                    imnodes::PushColorStyle(imnodes::ColorStyle_NodeOutline, 0xFF0000FF);
+                    ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
 
-                imnodes::BeginNode(node->getID());
+                ImNodes::BeginNode(node->getID());
 
-                imnodes::BeginNodeTitleBar();
+                ImNodes::BeginNodeTitleBar();
                 ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
-                imnodes::EndNodeTitleBar();
+                ImNodes::EndNodeTitleBar();
 
                 node->drawNode();
 
                 for (auto& attribute : node->getAttributes()) {
-                    imnodes::PinShape pinShape;
+                    ImNodesPinShape pinShape;
 
                     switch (attribute.getType()) {
-                        case dp::Attribute::Type::Integer: pinShape = imnodes::PinShape_Circle; break;
-                        case dp::Attribute::Type::Float: pinShape = imnodes::PinShape_Triangle; break;
-                        case dp::Attribute::Type::Buffer: pinShape = imnodes::PinShape_Quad; break;
+                        case dp::Attribute::Type::Integer: pinShape = ImNodesPinShape_Circle; break;
+                        case dp::Attribute::Type::Float: pinShape = ImNodesPinShape_Triangle; break;
+                        case dp::Attribute::Type::Buffer: pinShape = ImNodesPinShape_Quad; break;
                     }
 
                     if (attribute.getIOType() == dp::Attribute::IOType::In) {
-                        imnodes::BeginInputAttribute(attribute.getID(), pinShape);
+                        ImNodes::BeginInputAttribute(attribute.getID(), pinShape);
                         ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
-                        imnodes::EndInputAttribute();
+                        ImNodes::EndInputAttribute();
                     } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
-                        imnodes::BeginOutputAttribute(attribute.getID(), imnodes::PinShape(pinShape + 1));
+                        ImNodes::BeginOutputAttribute(attribute.getID(), ImNodesPinShape(pinShape + 1));
                         ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
-                        imnodes::EndOutputAttribute();
+                        ImNodes::EndOutputAttribute();
                     }
                 }
 
-                imnodes::EndNode();
+                ImNodes::EndNode();
 
                 if (hasError)
-                    imnodes::PopColorStyle();
+                    ImNodes::PopColorStyle();
             }
 
             for (const auto &link : this->m_links)
-                imnodes::Link(link.getID(), link.getFromID(), link.getToID());
+                ImNodes::Link(link.getID(), link.getFromID(), link.getToID());
 
-            imnodes::EndNodeEditor();
+            ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
+
+            ImNodes::EndNodeEditor();
 
             {
                 int linkId;
-                if (imnodes::IsLinkDestroyed(&linkId)) {
+                if (ImNodes::IsLinkDestroyed(&linkId)) {
                     this->eraseLink(linkId);
                 }
             }
 
             {
                 int from, to;
-                if (imnodes::IsLinkCreated(&from, &to)) {
+                if (ImNodes::IsLinkCreated(&from, &to)) {
 
                     do {
                         dp::Attribute *fromAttr, *toAttr;
@@ -344,11 +332,11 @@ namespace hex {
             }
 
             {
-                const int selectedLinkCount = imnodes::NumSelectedLinks();
+                const int selectedLinkCount = ImNodes::NumSelectedLinks();
                 if (selectedLinkCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
                     static std::vector<int> selectedLinks;
                     selectedLinks.resize(static_cast<size_t>(selectedLinkCount));
-                    imnodes::GetSelectedLinks(selectedLinks.data());
+                    ImNodes::GetSelectedLinks(selectedLinks.data());
 
                     for (const int id : selectedLinks) {
                         eraseLink(id);
@@ -358,11 +346,11 @@ namespace hex {
             }
 
             {
-                const int selectedNodeCount = imnodes::NumSelectedNodes();
+                const int selectedNodeCount = ImNodes::NumSelectedNodes();
                 if (selectedNodeCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
                     static std::vector<int> selectedNodes;
                     selectedNodes.resize(static_cast<size_t>(selectedNodeCount));
-                    imnodes::GetSelectedNodes(selectedNodes.data());
+                    ImNodes::GetSelectedNodes(selectedNodes.data());
 
                     this->eraseNodes(selectedNodes);
 
@@ -387,7 +375,7 @@ namespace hex {
         for (auto &node : this->m_nodes) {
             auto id = node->getID();
             auto &currNodeOutput = output["nodes"][std::to_string(id)];
-            auto pos = imnodes::GetNodeGridSpacePos(id);
+            auto pos = ImNodes::GetNodeGridSpacePos(id);
 
             currNodeOutput["type"] = node->getUnlocalizedName();
             currNodeOutput["pos"] = { { "x", pos.x }, { "y", pos.y } };
@@ -472,7 +460,7 @@ namespace hex {
                 this->m_endNodes.push_back(newNode);
 
             this->m_nodes.push_back(newNode);
-            imnodes::SetNodeGridSpacePos(nodeId, ImVec2(node["pos"]["x"], node["pos"]["y"]));
+            ImNodes::SetNodeGridSpacePos(nodeId, ImVec2(node["pos"]["x"], node["pos"]["y"]));
         }
 
         for (auto &link : input["links"]) {
