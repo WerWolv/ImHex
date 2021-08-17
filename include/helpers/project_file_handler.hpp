@@ -36,6 +36,10 @@ namespace hex {
             return ProjectFile::s_currProjectFilePath;
         }
 
+        static void clearProjectFilePath() {
+            ProjectFile::s_currProjectFilePath.clear();
+        }
+
 
         [[nodiscard]] static std::string getFilePath() {
             return ProjectFile::s_filePath;

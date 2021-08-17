@@ -26,6 +26,7 @@ namespace hex {
         friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
 
         bool setFont(const std::filesystem::path &font_path);
+
     private:
         void frameBegin();
         void frame();
@@ -54,6 +55,8 @@ namespace hex {
 
         u32 m_bannerWidth = 0, m_bannerHeight = 0;
         void *m_bannerTexture = nullptr;
+
+        std::filesystem::path m_safetyBackupPath;
     };
 
 }

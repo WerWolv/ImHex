@@ -184,12 +184,21 @@ namespace hex {
             glfwSetWindowTitle(this->m_window, title.c_str());
         });
 
-        EventManager::subscribe<EventAbnormalTermination>(this, [](int signal) {
+        constexpr auto CrashBackupFileName = "crash_backup.hexproj";
+
+        EventManager::subscribe<EventAbnormalTermination>(this, [CrashBackupFileName](int signal) {
             for (const auto &path : hex::getPath(ImHexPath::Config)) {
-                if (ProjectFile::store((std::filesystem::path(path) / "crash_backup.hexproj").string()))
+                if (ProjectFile::store((std::filesystem::path(path) / CrashBackupFileName).string()))
                     break;
             }
         });
+
+        for (const auto &path : hex::getPath(ImHexPath::Config)) {
+            if (auto filePath = std::filesystem::path(path) / CrashBackupFileName; std::filesystem::exists(filePath)) {
+                this->m_safetyBackupPath = filePath;
+                View::doLater([]{ ImGui::OpenPopup("hex.safety_backup.title"_lang); });
+            }
+        }
 
         EventManager::post<EventSettingsChanged>();
 
@@ -397,6 +406,35 @@ namespace hex {
             ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
             ImGui::TextUnformatted("Make sure you at least got the builtin plugin in your plugins folder.");
             ImGui::TextUnformatted("To find out where your plugin folder is, check ImHex' Readme.");
+            ImGui::EndPopup();
+        }
+
+        // Popup for if there is a safety backup present because ImHex crashed
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+        if (ImGui::BeginPopupModal("hex.safety_backup.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextUnformatted("hex.safety_backup.desc"_lang);
+            ImGui::NewLine();
+
+            auto width = ImGui::GetWindowWidth();
+            ImGui::SetCursorPosX(width / 9);
+            if (ImGui::Button("hex.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
+                ProjectFile::load(this->m_safetyBackupPath.string());
+                EventManager::post<EventProjectFileLoad>();
+                ProjectFile::markDirty();
+
+                ProjectFile::clearProjectFilePath();
+                std::filesystem::remove(this->m_safetyBackupPath);
+
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(width / 9 * 5);
+            if (ImGui::Button("hex.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
+                std::filesystem::remove(this->m_safetyBackupPath);
+
+                ImGui::CloseCurrentPopup();
+            }
+
             ImGui::EndPopup();
         }
     }

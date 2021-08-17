@@ -48,6 +48,12 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.welcome.header.various", "Various" },
 
+                { "hex.safety_backup.title", "Restore lost data" },
+                { "hex.safety_backup.desc", "Oh no, ImHex crashed last time.\nDo you want to restore your past work?"},
+                { "hex.safety_backup.restore", "Yes, Restore" },
+                { "hex.safety_backup.delete", "No, Delete" },
+
+
                 { "hex.common.little_endian", "Little Endian" },
                 { "hex.common.big_endian", "Big Endian" },
                 { "hex.common.decimal", "Decimal" },
