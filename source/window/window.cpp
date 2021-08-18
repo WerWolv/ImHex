@@ -190,6 +190,9 @@ namespace hex {
         constexpr auto CrashBackupFileName = "crash_backup.hexproj";
 
         EventManager::subscribe<EventAbnormalTermination>(this, [CrashBackupFileName](int signal) {
+            if (!ProjectFile::hasUnsavedChanges())
+                return;
+
             for (const auto &path : hex::getPath(ImHexPath::Config)) {
                 if (ProjectFile::store((std::filesystem::path(path) / CrashBackupFileName).string()))
                     break;
