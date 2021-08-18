@@ -67,10 +67,9 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
-        ImTextureID splashTexture;
-        u32 splashWidth, splashHeight;
+        ImGui::Texture splashTexture;
 
-        std::tie(splashTexture, splashWidth, splashHeight) = ImGui::LoadImageFromMemory(splash, splash_size);
+        splashTexture = ImGui::LoadImageFromMemory(splash, splash_size);
 
         if (splashTexture == nullptr) {
             log::fatal("Could not load splash screen image!");
@@ -93,7 +92,7 @@ namespace hex::init {
 
                 auto drawList = ImGui::GetOverlayDrawList();
 
-                drawList->AddImage(splashTexture, ImVec2(0, 0), ImVec2(splashWidth, splashHeight) * this->m_globalScale);
+                drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.size() * this->m_globalScale);
 
                 drawList->AddText(ImVec2(15, 120) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
 
@@ -103,8 +102,8 @@ namespace hex::init {
                     drawList->AddText(ImVec2(15, 140) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
                 #endif
 
-                drawList->AddRectFilled(ImVec2(0, splashHeight - 5) * this->m_globalScale, ImVec2(splashWidth * this->m_progress, splashHeight) * this->m_globalScale, 0xFFFFFFFF);
-                drawList->AddText(ImVec2(15, splashHeight - 25) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF),
+                drawList->AddRectFilled(ImVec2(0, splashTexture.size().y - 5) * this->m_globalScale, ImVec2(splashTexture.size().x * this->m_progress, splashTexture.size().y) * this->m_globalScale, 0xFFFFFFFF);
+                drawList->AddText(ImVec2(15, splashTexture.size().y - 25) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF),
                                   hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
             }
 

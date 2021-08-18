@@ -56,7 +56,11 @@ configurePackageCreation()
 
 add_executable(imhex ${application_type}
         source/main.cpp
-        source/window.cpp
+
+        source/window/window.cpp
+        source/window/win_window.cpp
+        source/window/macos_window.cpp
+        source/window/linux_window.cpp
 
         source/init/splash_window.cpp
         source/init/tasks.cpp
@@ -94,7 +98,7 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32 libyara)
+    target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32 libyara Dwmapi.lib)
 else ()
     target_link_libraries(imhex magic ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread libyara)
 endif ()

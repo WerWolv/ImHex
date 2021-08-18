@@ -235,7 +235,7 @@ namespace ImGui {
         colors[ImGuiCustomCol_DescButtonActive]     = ImColor(80, 80, 120);
     }
 
-    std::tuple<ImTextureID, int, int> LoadImageFromPath(const char *path) {
+    Texture LoadImageFromPath(const char *path) {
         int imageWidth = 0;
         int imageHeight = 0;
 
@@ -261,7 +261,7 @@ namespace ImGui {
         return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
     }
 
-    std::tuple<ImTextureID, int, int> LoadImageFromMemory(ImU8 *buffer, int size) {
+    Texture LoadImageFromMemory(ImU8 *buffer, int size) {
         int imageWidth = 0;
         int imageHeight = 0;
 
@@ -288,12 +288,14 @@ namespace ImGui {
         return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
     }
 
-    void UnloadImage(ImTextureID texture) {
-        if (texture == nullptr)
+    void UnloadImage(Texture &texture) {
+        if (texture.textureId == nullptr)
             return;
 
-        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(texture));
+        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(texture.textureId));
         glDeleteTextures(1, &glTextureId);
+
+        texture = { nullptr, 0, 0 };
     }
 
 }

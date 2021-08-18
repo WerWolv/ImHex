@@ -6,6 +6,26 @@
 
 namespace ImGui {
 
+    struct Texture {
+        ImTextureID textureId;
+        int width, height;
+
+        [[nodiscard]]
+        constexpr bool valid() const noexcept {
+            return this->textureId != nullptr;
+        }
+
+        [[nodiscard]]
+        constexpr operator ImTextureID() {
+            return this->textureId;
+        }
+
+        [[nodiscard]]
+        auto size() const noexcept {
+            return ImVec2(this->width, this->height);
+        }
+    };
+
     bool IconHyperlink(const char *icon, const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool Hyperlink(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool BulletHyperlink(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
@@ -22,9 +42,9 @@ namespace ImGui {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
     }
 
-    std::tuple<ImTextureID, int, int> LoadImageFromPath(const char *path);
-    std::tuple<ImTextureID, int, int> LoadImageFromMemory(ImU8 *buffer, int size);
-    void UnloadImage(ImTextureID texture);
+    Texture LoadImageFromPath(const char *path);
+    Texture LoadImageFromMemory(ImU8 *buffer, int size);
+    void UnloadImage(Texture &texture);
 
     enum ImGuiCustomCol {
         ImGuiCustomCol_DescButton,

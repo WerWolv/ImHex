@@ -46,5 +46,6 @@
 RESOURCE(banner_light, "../../../res/resources/banner_light.png");
 RESOURCE(banner_dark, "../../../res/resources/banner_dark.png");
 RESOURCE(splash, "../../../res/resources/splash.png");
+RESOURCE(imhex_logo, "../../../res/resources/logo.png");
 
 RESOURCE(cacert, "../../../res/resources/cacert.pem");

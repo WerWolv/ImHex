@@ -80,33 +80,35 @@ namespace hex {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
-                if (this->m_bannerTexture != nullptr)
+                if (this->m_bannerTexture.valid())
                     ImGui::UnloadImage(this->m_bannerTexture);
 
                 if (theme.is_number()) {
                     switch (static_cast<int>(theme)) {
                         default:
-                        case 0: /* Dark theme */
-                            ImGui::StyleColorsDark();
-                            ImGui::StyleCustomColorsDark();
-                            ImPlot::StyleColorsDark();
-                            std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
-                            break;
-                        case 1: /* Light theme */
-                            ImGui::StyleColorsLight();
-                            ImGui::StyleCustomColorsLight();
-                            ImPlot::StyleColorsLight();
-                            std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromMemory(banner_light, banner_light_size);                            break;
-                        case 2: /* Classic theme */
-                            ImGui::StyleColorsClassic();
-                            ImGui::StyleCustomColorsClassic();
-                            ImPlot::StyleColorsClassic();
-                            std::tie(this->m_bannerTexture, this->m_bannerWidth, this->m_bannerHeight) = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);                            break;
+                            case 0: /* Dark theme */
+                                ImGui::StyleColorsDark();
+                                ImGui::StyleCustomColorsDark();
+                                ImPlot::StyleColorsDark();
+                                this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+                                break;
+                            case 1: /* Light theme */
+                                ImGui::StyleColorsLight();
+                                ImGui::StyleCustomColorsLight();
+                                ImPlot::StyleColorsLight();
+                                this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_light, banner_light_size);
+                                break;
+                            case 2: /* Classic theme */
+                                ImGui::StyleColorsClassic();
+                                ImGui::StyleCustomColorsClassic();
+                                ImPlot::StyleColorsClassic();
+                                this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+                                break;
                     }
 
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
 
-                    if (this->m_bannerTexture == nullptr) {
+                    if (!this->m_bannerTexture.valid()) {
                         log::fatal("Failed to load banner texture!");
                         exit(EXIT_FAILURE);
                     }
@@ -181,6 +183,7 @@ namespace hex {
             if (ProjectFile::hasUnsavedChanges())
                 title += " (*)";
 
+            this->m_windowTitle = title;
             glfwSetWindowTitle(this->m_window, title.c_str());
         });
 
@@ -217,6 +220,8 @@ namespace hex {
         std::signal(SIGILL,  signalHandler);
         std::signal(SIGABRT, signalHandler);
         std::signal(SIGFPE,  signalHandler);
+
+        this->m_logoTexture = ImGui::LoadImageFromMemory(imhex_logo, imhex_logo_size);
     }
 
     Window::~Window() {
@@ -229,6 +234,7 @@ namespace hex {
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
 
         ImGui::UnloadImage(this->m_bannerTexture);
+        ImGui::UnloadImage(this->m_logoTexture);
     }
 
     void Window::loop() {
@@ -320,10 +326,10 @@ namespace hex {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar     | ImGuiWindowFlags_NoDocking
-                                     | ImGuiWindowFlags_NoTitleBar  | ImGuiWindowFlags_NoCollapse
-                                     | ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoResize
-                                     | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus
-                                     | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+                | ImGuiWindowFlags_NoTitleBar  | ImGuiWindowFlags_NoCollapse
+                | ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoResize
+                | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus
+                | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
@@ -348,40 +354,40 @@ namespace hex {
 
             if (ImGui::BeginMenuBar()) {
 
+                auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+                ImGui::SetCursorPosX(5);
+                ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
+
                 for (const auto& menu : { "hex.menu.file"_lang, "hex.menu.edit"_lang, "hex.menu.view"_lang, "hex.menu.help"_lang })
                     if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
 
-                if (ImGui::BeginMenu("hex.menu.view"_lang)) {
-                    for (auto &view : ContentRegistry::Views::getEntries()) {
-                        if (view->hasViewMenuItemEntry())
-                            ImGui::MenuItem((LangEntry(view->getUnlocalizedName()) + " " + "hex.menu.view"_lang).c_str(), "", &view->getWindowOpenState());
+                    if (ImGui::BeginMenu("hex.menu.view"_lang)) {
+                        for (auto &view : ContentRegistry::Views::getEntries()) {
+                            if (view->hasViewMenuItemEntry())
+                                ImGui::MenuItem((LangEntry(view->getUnlocalizedName()) + " " + "hex.menu.view"_lang).c_str(), "", &view->getWindowOpenState());
+                        }
+                        ImGui::EndMenu();
                     }
-                    ImGui::EndMenu();
-                }
 
-                for (auto &view : ContentRegistry::Views::getEntries()) {
-                    view->drawMenu();
-                }
+                    for (auto &view : ContentRegistry::Views::getEntries()) {
+                        view->drawMenu();
+                    }
 
-                if (ImGui::BeginMenu("hex.menu.view"_lang)) {
+                    if (ImGui::BeginMenu("hex.menu.view"_lang)) {
                     #if defined(DEBUG)
                         ImGui::Separator();
                         ImGui::MenuItem("hex.menu.view.demo"_lang, "", &this->m_demoWindowOpen);
                     #endif
-                    ImGui::EndMenu();
-                }
+                        ImGui::EndMenu();
+                    }
 
-                #if defined(DEBUG)
-                    ImGui::SameLine();
-                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 2 * ImGui::GetFontSize());
-                    ImGui::TextUnformatted(ICON_FA_BUG);
-                #endif
+                    this->drawTitleBar();
 
-                ImGui::EndMenuBar();
+                    ImGui::EndMenuBar();
             }
 
             if (SharedData::currentProvider == nullptr) {
-                char title[256];
+                static char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * this->m_globalScale, 10 * this->m_globalScale));
@@ -397,8 +403,11 @@ namespace hex {
                 this->resetLayout();
             }
 
+            this->updateNativeWindow();
+
         }
         ImGui::End();
+
 
         // Popup for when no plugins were loaded. Intentionally left untranslated because localization isn't available
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
@@ -467,12 +476,12 @@ namespace hex {
 
         View::drawCommonInterfaces();
 
-#ifdef DEBUG
+    #ifdef DEBUG
         if (this->m_demoWindowOpen) {
             ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
             ImPlot::ShowDemoWindow(&this->m_demoWindowOpen);
         }
-#endif
+    #endif
     }
 
     void Window::frameEnd() {
@@ -499,7 +508,7 @@ namespace hex {
     void Window::drawWelcomeScreen() {
         const auto availableSpace = ImGui::GetContentRegionAvail();
 
-        ImGui::Image(this->m_bannerTexture, ImVec2(this->m_bannerWidth / (2 * (1.0F / this->m_globalScale)), this->m_bannerHeight / (2 * (1.0F / this->m_globalScale))));
+        ImGui::Image(this->m_bannerTexture, this->m_bannerTexture.size() / (2 * (1.0F / this->m_globalScale)));
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
@@ -507,7 +516,7 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 3);
             ImGui::TableNextColumn();
 
-            ImGui::TextWrapped("A Hex Editor for Reverse Engineers, Programmers and people that value their eye sight when working at 3 AM.");
+            ImGui::TextWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
@@ -663,7 +672,7 @@ namespace hex {
             throw std::runtime_error("Failed to initialize GLFW!");
 
         #ifdef __APPLE__
-            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         #endif
 
         if (auto *monitor = glfwGetPrimaryMonitor(); monitor) {
@@ -679,7 +688,10 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-        this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, "ImHex", nullptr, nullptr);
+        this->m_windowTitle = "ImHex";
+        this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, this->m_windowTitle.c_str(), nullptr, nullptr);
+
+        this->setupNativeWindow();
 
         glfwSetWindowUserPointer(this->m_window, this);
 
@@ -689,29 +701,34 @@ namespace hex {
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
 
-         {
-             int x = 0, y = 0;
-             glfwGetWindowPos(this->m_window, &x, &y);
-             SharedData::windowPos = ImVec2(x, y);
-         }
+        {
+            int x = 0, y = 0;
+            glfwGetWindowPos(this->m_window, &x, &y);
+            SharedData::windowPos = ImVec2(x, y);
+        }
 
-         {
-             int width = 0, height = 0;
-             glfwGetWindowSize(this->m_window, &width, &height);
-             SharedData::windowSize = ImVec2(width, height);
-         }
+        {
+            int width = 0, height = 0;
+            glfwGetWindowSize(this->m_window, &width, &height);
+            glfwSetWindowSize(this->m_window, width, height);
+            SharedData::windowSize = ImVec2(width, height);
+        }
 
-         glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
-             SharedData::windowPos = ImVec2(x, y);
+        glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
+            SharedData::windowPos = ImVec2(x, y);
 
-             auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
-             win->frameBegin();
-             win->frame();
-             win->frameEnd();
-         });
+            if (ImGui::GetCurrentContext()->WithinFrameScope) return;
+
+            auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            win->frameBegin();
+            win->frame();
+            win->frameEnd();
+        });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
             SharedData::windowSize = ImVec2(width, height);
+
+            if (ImGui::GetCurrentContext()->WithinFrameScope) return;
 
             auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
             win->frameBegin();
@@ -770,7 +787,7 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         #if !defined(OS_LINUX)
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         #endif
 
 

@@ -8,8 +8,11 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/views/view.hpp>
 
+#include <imgui_imhex_extensions.h>
+
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
+
 
 namespace hex {
 
@@ -28,6 +31,10 @@ namespace hex {
         bool setFont(const std::filesystem::path &font_path);
 
     private:
+        void setupNativeWindow();
+        void updateNativeWindow();
+        void drawTitleBar();
+
         void frameBegin();
         void frame();
         void frameEnd();
@@ -47,14 +54,18 @@ namespace hex {
         bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;
 
+        std::string m_windowTitle;
+
         double m_lastFrameTime;
 
         bool m_prevKeysDown[512];
 
         std::string m_availableUpdate;
 
-        u32 m_bannerWidth = 0, m_bannerHeight = 0;
-        void *m_bannerTexture = nullptr;
+        ImGui::Texture m_bannerTexture;
+        ImGui::Texture m_logoTexture;
+
+
 
         std::filesystem::path m_safetyBackupPath;
     };
