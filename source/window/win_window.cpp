@@ -148,9 +148,11 @@
         #if defined(DEBUG)
             if (ImGui::Button(ICON_VS_DEBUG, buttonSize))
                 hex::openWebpage("https://imhex.werwolv.net/debug");
+            ImGui::InfoTooltip("hex.menu.debug_build"_lang);
         #endif
             if (ImGui::Button(ICON_VS_SMILEY, buttonSize))
                 hex::openWebpage("mailto://hey@werwolv.net");
+            ImGui::InfoTooltip("hex.menu.feedback"_lang);
 
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
             if (ImGui::Button(ICON_VS_CHROME_MINIMIZE, buttonSize))

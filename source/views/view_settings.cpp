@@ -43,9 +43,7 @@ namespace hex {
                 View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
-            if (ImGui::MenuItem("Crash")) {
-                *reinterpret_cast<int*>(8) = 16;
-            }
+
             ImGui::EndMenu();
         }
     }

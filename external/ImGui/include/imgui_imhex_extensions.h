@@ -38,6 +38,8 @@ namespace ImGui {
 
     void Header(const char *label, bool firstEntry = false);
 
+    void InfoTooltip(const char *text);
+
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
     }

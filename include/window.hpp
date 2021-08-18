@@ -65,8 +65,6 @@ namespace hex {
         ImGui::Texture m_bannerTexture;
         ImGui::Texture m_logoTexture;
 
-
-
         std::filesystem::path m_safetyBackupPath;
     };
 

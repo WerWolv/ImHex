@@ -13,6 +13,8 @@ namespace hex::plugin::builtin {
                     { "hex.menu.view.fps", "Mostra FPS" },
                     { "hex.menu.view.demo", "Mostra la demo di ImGui" },
                 { "hex.menu.help", "Aiuto" },
+                //{ "hex.menu.feedback", "Leave Feedback" },
+                //{ "hex.menu.debug_build", "Debug build"},
 
                 { "hex.welcome.header.main", "Benvenuto in ImHex" },
                 { "hex.welcome.header.start", "Inizia" },

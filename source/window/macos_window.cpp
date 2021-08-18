@@ -12,6 +12,10 @@
 
         }
 
+        void Window::drawTitleBar() {
+
+        }
+
     }
 
 #endif

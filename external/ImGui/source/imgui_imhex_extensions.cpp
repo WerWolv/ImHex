@@ -204,6 +204,14 @@ namespace ImGui {
         ImGui::Separator();
     }
 
+    void InfoTooltip(const char *text) {
+        if (IsItemHovered()) {
+            BeginTooltip();
+            TextUnformatted(text);
+            EndTooltip();
+        }
+    }
+
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
         auto& customData = *static_cast<ImHexCustomData*>(GImGui->IO.UserData);
         ImVec4 c = customData.Colors[idx];
