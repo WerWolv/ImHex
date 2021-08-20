@@ -9,6 +9,8 @@
 #include <string_view>
 #include <dlfcn.h>
 
+struct ImGuiContext;
+
 namespace hex {
 
     class Plugin {
@@ -22,6 +24,7 @@ namespace hex {
         std::string getPluginName() const;
         std::string getPluginAuthor() const;
         std::string getPluginDescription() const;
+        void setImGuiContext(ImGuiContext *ctx) const;
 
 
     private:
@@ -29,6 +32,7 @@ namespace hex {
         using GetPluginNameFunc         = const char*(*)();
         using GetPluginAuthorFunc       = const char*(*)();
         using GetPluginDescriptionFunc  = const char*(*)();
+        using SetImGuiContextFunc       = void(*)(ImGuiContext*);
 
         void *m_handle = nullptr;
 
@@ -36,6 +40,7 @@ namespace hex {
         GetPluginNameFunc m_getPluginNameFunction                   = nullptr;
         GetPluginAuthorFunc m_getPluginAuthorFunction               = nullptr;
         GetPluginDescriptionFunc m_getPluginDescriptionFunction     = nullptr;
+        SetImGuiContextFunc m_setImGuiContextFunction               = nullptr;
 
         template<typename T>
         auto getPluginFunction(std::string_view pluginName, std::string_view symbol) {

@@ -4,6 +4,23 @@
 
 #include <imgui.h>
 
+
+enum ImGuiCustomCol {
+    ImGuiCustomCol_DescButton,
+    ImGuiCustomCol_DescButtonHovered,
+    ImGuiCustomCol_DescButtonActive,
+
+    ImGuiCustomCol_ToolbarGray,
+    ImGuiCustomCol_ToolbarRed,
+    ImGuiCustomCol_ToolbarYellow,
+    ImGuiCustomCol_ToolbarGreen,
+    ImGuiCustomCol_ToolbarBlue,
+    ImGuiCustomCol_ToolbarPurple,
+    ImGuiCustomCol_ToolbarBrown,
+
+    ImGuiCustomCol_COUNT
+};
+
 namespace ImGui {
 
     struct Texture {
@@ -40,6 +57,9 @@ namespace ImGui {
 
     void InfoTooltip(const char *text);
 
+    bool TitleBarButton(const char* label, ImVec2 size_arg);
+    bool ToolBarButton(const char* symbol, ImVec4 color, ImVec2 size_arg);
+
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
     }
@@ -48,18 +68,13 @@ namespace ImGui {
     Texture LoadImageFromMemory(ImU8 *buffer, int size);
     void UnloadImage(Texture &texture);
 
-    enum ImGuiCustomCol {
-        ImGuiCustomCol_DescButton,
-        ImGuiCustomCol_DescButtonHovered,
-        ImGuiCustomCol_DescButtonActive,
-        ImGuiCustomCol_COUNT
-    };
 
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
     };
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
+    ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
     void StyleCustomColorsDark();
     void StyleCustomColorsLight();

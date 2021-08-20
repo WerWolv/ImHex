@@ -33,7 +33,7 @@ namespace ImGui {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (window->DC.ItemFlags & ImGuiItemFlags_ButtonRepeat)
+        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
@@ -67,7 +67,7 @@ namespace ImGui {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (window->DC.ItemFlags & ImGuiItemFlags_ButtonRepeat)
+        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
@@ -100,7 +100,7 @@ namespace ImGui {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (window->DC.ItemFlags & ImGuiItemFlags_ButtonRepeat)
+        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
@@ -139,7 +139,7 @@ namespace ImGui {
         if (!ItemAdd(bb, id))
             return false;
 
-        if (window->DC.ItemFlags & ImGuiItemFlags_ButtonRepeat)
+        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
@@ -205,11 +205,22 @@ namespace ImGui {
     }
 
     void InfoTooltip(const char *text) {
-        if (IsItemHovered()) {
+        static double lastMoveTime;
+        static ImGuiID lastHoveredID;
+
+        double currTime = ImGui::GetTime();
+        ImGuiID hoveredID = ImGui::GetHoveredID();
+
+        if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             BeginTooltip();
             TextUnformatted(text);
             EndTooltip();
         }
+
+        if (hoveredID != lastHoveredID) {
+            lastMoveTime = currTime;
+        }
+        lastHoveredID = hoveredID;
     }
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
@@ -219,12 +230,27 @@ namespace ImGui {
         return ColorConvertFloat4ToU32(c);
     }
 
+    ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul) {
+        auto& customData = *static_cast<ImHexCustomData*>(GImGui->IO.UserData);
+        ImVec4 c = customData.Colors[idx];
+        c.w *= GImGui->Style.Alpha * alpha_mul;
+        return c;
+    }
+
     void StyleCustomColorsDark() {
         auto &colors = static_cast<ImHexCustomData*>(GImGui->IO.UserData)->Colors;
 
         colors[ImGuiCustomCol_DescButton]           = ImColor(20, 20, 20);
         colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(40, 40, 40);
         colors[ImGuiCustomCol_DescButtonActive]     = ImColor(60, 60, 60);
+
+        colors[ImGuiCustomCol_ToolbarGray]          = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_ToolbarRed]           = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarYellow]        = ImColor(241, 196, 15);
+        colors[ImGuiCustomCol_ToolbarGreen]         = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
+        colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
     }
 
     void StyleCustomColorsLight() {
@@ -233,6 +259,14 @@ namespace ImGui {
         colors[ImGuiCustomCol_DescButton]           = ImColor(230, 230, 230);
         colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(210, 210, 210);
         colors[ImGuiCustomCol_DescButtonActive]     = ImColor(190, 190, 190);
+
+        colors[ImGuiCustomCol_ToolbarGray]          = ImColor(25, 25, 25);
+        colors[ImGuiCustomCol_ToolbarRed]           = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarYellow]        = ImColor(241, 196, 15);
+        colors[ImGuiCustomCol_ToolbarGreen]         = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
+        colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
     }
 
     void StyleCustomColorsClassic() {
@@ -241,6 +275,14 @@ namespace ImGui {
         colors[ImGuiCustomCol_DescButton]           = ImColor(40, 40, 80);
         colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(60, 60, 100);
         colors[ImGuiCustomCol_DescButtonActive]     = ImColor(80, 80, 120);
+
+        colors[ImGuiCustomCol_ToolbarGray]          = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_ToolbarRed]           = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarYellow]        = ImColor(241, 196, 15);
+        colors[ImGuiCustomCol_ToolbarGreen]         = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
+        colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
     }
 
     Texture LoadImageFromPath(const char *path) {
@@ -304,6 +346,85 @@ namespace ImGui {
         glDeleteTextures(1, &glTextureId);
 
         texture = { nullptr, 0, 0 };
+    }
+
+
+    bool TitleBarButton(const char* label, ImVec2 size_arg) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+
+        ImVec2 pos = window->DC.CursorPos;
+
+        ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+        const ImRect bb(pos, pos + size);
+        ItemSize(size, style.FramePadding.y);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        bool hovered, held;
+        bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+        // Render
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+        RenderNavHighlight(bb, id);
+        RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+
+        // Automatically close popups
+        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        //    CloseCurrentPopup();
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        return pressed;
+    }
+
+    bool ToolBarButton(const char* symbol, ImVec4 color, ImVec2 size_arg) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        color.w = 1.0F;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(symbol);
+        const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
+
+        ImVec2 pos = window->DC.CursorPos;
+
+        ImVec2 size = CalcItemSize(size_arg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+        const ImRect bb(pos, pos + size);
+        ItemSize(size, style.FramePadding.y);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        bool hovered, held;
+        bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+        PushStyleColor(ImGuiCol_Text, color);
+
+        // Render
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_MenuBarBg);
+        RenderNavHighlight(bb, id);
+        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);
+
+        PopStyleColor();
+
+        // Automatically close popups
+        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        //    CloseCurrentPopup();
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        return pressed;
     }
 
 }

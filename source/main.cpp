@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
             EventManager::post<EventFileDropped>(argv[1]);
         else {
             hex::log::fatal("Usage: imhex [file_name]");
-            return EXIT_SUCCESS;
+            return EXIT_FAILURE;
         }
 
         hex::log::info("Welcome to ImHex!");
