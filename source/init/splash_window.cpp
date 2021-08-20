@@ -90,7 +90,7 @@ namespace hex::init {
             {
                 std::lock_guard guard(this->m_progressMutex);
 
-                auto drawList = ImGui::GetOverlayDrawList();
+                auto drawList = ImGui::GetForegroundDrawList();
 
                 drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.size() * this->m_globalScale);
 

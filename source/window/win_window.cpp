@@ -110,7 +110,7 @@
                         case RegionBottom | RegionRight:
                             return HTBOTTOMRIGHT;
                         case RegionClient:
-                            if ((cursor.y < (window.top + titleBarHeight)) && !ImGui::IsAnyItemHovered())
+                            if ((cursor.y < (window.top + titleBarHeight * 2)) && !ImGui::IsAnyItemHovered())
                                 return HTCAPTION;
                             else break;
                     }
@@ -137,7 +137,7 @@
         }
 
         void Window::drawTitleBar() {
-            auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight);
+            auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
@@ -146,22 +146,22 @@
 
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 6);
         #if defined(DEBUG)
-            if (ImGui::Button(ICON_VS_DEBUG, buttonSize))
+            if (ImGui::TitleBarButton(ICON_VS_DEBUG, buttonSize))
                 hex::openWebpage("https://imhex.werwolv.net/debug");
             ImGui::InfoTooltip("hex.menu.debug_build"_lang);
         #endif
-            if (ImGui::Button(ICON_VS_SMILEY, buttonSize))
+            if (ImGui::TitleBarButton(ICON_VS_SMILEY, buttonSize))
                 hex::openWebpage("mailto://hey@werwolv.net");
             ImGui::InfoTooltip("hex.menu.feedback"_lang);
 
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
-            if (ImGui::Button(ICON_VS_CHROME_MINIMIZE, buttonSize))
+            if (ImGui::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
                 glfwIconifyWindow(this->m_window);
             if (glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED)) {
-                if (ImGui::Button(ICON_VS_CHROME_RESTORE, buttonSize))
+                if (ImGui::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
                     glfwRestoreWindow(this->m_window);
             } else {
-                if (ImGui::Button(ICON_VS_CHROME_MAXIMIZE, buttonSize))
+                if (ImGui::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
                     glfwMaximizeWindow(this->m_window);
             }
 
@@ -169,7 +169,7 @@
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
 
 
-            if (ImGui::Button(ICON_VS_CHROME_CLOSE, buttonSize)) {
+            if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
                 EventManager::post<RequestCloseImHex>();
                 EventManager::post<EventWindowClosing>(this->m_window);
             }

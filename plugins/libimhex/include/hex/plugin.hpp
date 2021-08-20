@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <hex.hpp>
 #include <hex/api/imhex_api.hpp>
@@ -20,5 +21,6 @@
         [[gnu::visibility("default")]] const char* getPluginName() { return name; }                 \
         [[gnu::visibility("default")]] const char* getPluginAuthor() { return author; }             \
         [[gnu::visibility("default")]] const char* getPluginDescription() { return description; }   \
+        [[gnu::visibility("default")]] void setImGuiContext(ImGuiContext *ctx) { ImGui::SetCurrentContext(ctx); GImGui = ctx; }    \
     }                                                                                               \
     void hex::plugin::namespaceName::internal::initializePlugin()

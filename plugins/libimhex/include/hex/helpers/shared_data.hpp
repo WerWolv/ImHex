@@ -72,6 +72,7 @@ namespace hex {
 
         static std::vector<ContentRegistry::Interface::DrawCallback> welcomeScreenEntries;
         static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
+        static std::vector<ContentRegistry::Interface::DrawCallback> toolbarItems;
 
         static std::vector<ContentRegistry::DataProcessorNode::Entry> dataProcessorNodes;
         static u32 dataProcessorNodeIdCounter;

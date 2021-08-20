@@ -191,9 +191,11 @@ namespace hex {
 
             static void addWelcomeScreenEntry(const DrawCallback &function);
             static void addFooterItem(const DrawCallback &function);
+            static void addToolbarItem(const DrawCallback &function);
 
             static std::vector<DrawCallback>& getWelcomeScreenEntries();
             static std::vector<DrawCallback>& getFooterItems();
+            static std::vector<DrawCallback>& getToolbarItems();
         };
     };
 

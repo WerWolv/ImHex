@@ -107,6 +107,9 @@ namespace hex {
                     }
 
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+                    ImGui::GetStyle().Colors[ImGuiCol_TitleBg] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+                    ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+                    ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
 
                     if (!this->m_bannerTexture.valid()) {
                         log::fatal("Failed to load banner texture!");
@@ -214,7 +217,9 @@ namespace hex {
 
         auto signalHandler = [](int signalNumber) {
             EventManager::post<EventAbnormalTermination>(signalNumber);
-            std::abort();
+
+            std::signal(signalNumber, SIG_DFL);
+            std::raise(signalNumber);
         };
 
         std::signal(SIGTERM, signalHandler);
@@ -255,14 +260,8 @@ namespace hex {
         }
     }
 
-    bool Window::setFont(const std::filesystem::path &path) {
-        if (!std::filesystem::exists(path))
-            return false;
-
+    void Window::setFont(const std::filesystem::path &path) {
         auto &io = ImGui::GetIO();
-
-        // If we have a custom font, then rescaling is unnecessary and will make it blurry
-        io.FontGlobalScale = 1.0f;
 
         // Load font data & build atlas
         std::uint8_t *px;
@@ -270,15 +269,6 @@ namespace hex {
 
         ImVector<ImWchar> ranges;
         ImFontGlyphRangesBuilder glyphRangesBuilder;
-
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesKorean());
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesThai());
-        glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
-        glyphRangesBuilder.BuildRanges(&ranges);
 
         ImWchar fontAwesomeRange[] = {
                 ICON_MIN_FA, ICON_MAX_FA,
@@ -291,16 +281,42 @@ namespace hex {
         };
 
         ImFontConfig cfg;
-        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-        cfg.SizePixels = 13.0f * this->m_fontScale;
 
-        io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+        if (!std::filesystem::exists(path)) {
+            // Load default font
+            io.Fonts->Clear();
+
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = 13.0f * this->m_fontScale;
+            io.Fonts->AddFontDefault(&cfg);
+        } else {
+            // Load custom font
+
+            // If we have a custom font, then rescaling is unnecessary and will make it blurry
+            io.FontGlobalScale = 1.0f;
+
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesKorean());
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesThai());
+            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
+            glyphRangesBuilder.BuildRanges(&ranges);
+
+
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = 13.0f * this->m_fontScale;
+
+            io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+        }
+
         cfg.MergeMode = true;
 
         io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
         io.Fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0f * this->m_fontScale, &cfg, codiconsRange);
 
-        ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeType::Monochrome);
+        ImGuiFreeType::BuildFontAtlas(io.Fonts);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
         // Create new font atlas
@@ -311,8 +327,6 @@ namespace hex {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
         io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
-
-        return true;
     }
 
     void Window::frameBegin() {
@@ -322,11 +336,12 @@ namespace hex {
         ImGui::NewFrame();
 
         ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->GetWorkPos());
-        ImGui::SetNextWindowSize(viewport->GetWorkSize());
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar     | ImGuiWindowFlags_NoDocking
                 | ImGuiWindowFlags_NoTitleBar  | ImGuiWindowFlags_NoCollapse
@@ -337,11 +352,11 @@ namespace hex {
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
-            ImGui::PopStyleVar(2);
-
-            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - 1));
+            ImGui::PopStyleVar();
+            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2 - 1));
 
             ImGui::Separator();
+            ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
                 auto prevIdx = ImGui::GetWindowDrawList()->_VtxCurrentIdx;
                 callback();
@@ -355,7 +370,8 @@ namespace hex {
                 }
             }
 
-            if (ImGui::BeginMenuBar()) {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            if (ImGui::BeginMainMenuBar()) {
 
                 auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
                 ImGui::SetCursorPosX(5);
@@ -386,7 +402,19 @@ namespace hex {
 
                     this->drawTitleBar();
 
-                    ImGui::EndMenuBar();
+                    ImGui::EndMainMenuBar();
+            }
+            ImGui::PopStyleVar();
+
+            // Draw toolbar
+            if (ImGui::BeginMenuBar()) {
+
+                for (const auto &callback : ContentRegistry::Interface::getToolbarItems()) {
+                    callback();
+                    ImGui::SameLine();
+                }
+
+                ImGui::EndMenuBar();
             }
 
             if (SharedData::currentProvider == nullptr) {
@@ -410,6 +438,7 @@ namespace hex {
 
         }
         ImGui::End();
+        ImGui::PopStyleVar(2);
 
 
         // Popup for when no plugins were loaded. Intentionally left untranslated because localization isn't available
@@ -788,6 +817,9 @@ namespace hex {
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
 
+        style.Alpha = 1.0F;
+        style.WindowRounding = 0.0F;
+
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         #if !defined(OS_LINUX)
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
@@ -838,44 +870,7 @@ namespace hex {
                 break;
         }
 
-        if (this->setFont(fontFile)) {
-
-        }
-        else {
-            io.Fonts->Clear();
-
-            ImFontConfig cfg;
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = 13.0f * this->m_fontScale;
-            io.Fonts->AddFontDefault(&cfg);
-
-            cfg.MergeMode = true;
-
-            ImWchar fontAwesomeRange[] = {
-                    ICON_MIN_FA, ICON_MAX_FA,
-                    0
-            };
-
-            ImWchar codiconsRange[] = {
-                    ICON_MIN_VS, ICON_MAX_VS,
-                    0
-            };
-            std::uint8_t *px;
-            int w, h;
-            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * this->m_fontScale, &cfg, fontAwesomeRange);
-            io.Fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 11.0f * this->m_fontScale, &cfg, codiconsRange);
-
-            io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
-
-            // Create new font atlas
-            GLuint tex;
-            glGenTextures(1, &tex);
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
-            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
-        }
+        this->setFont(fontFile);
 
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
@@ -903,6 +898,9 @@ namespace hex {
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
         ImGui_ImplOpenGL3_Init("#version 150");
+
+        for (const auto &plugin : PluginManager::getPlugins())
+            plugin.setImGuiContext(ImGui::GetCurrentContext());
     }
 
     void Window::deinitGLFW() {

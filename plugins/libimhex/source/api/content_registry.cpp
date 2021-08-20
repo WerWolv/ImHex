@@ -233,11 +233,18 @@ namespace hex {
         getFooterItems().push_back(function);
     }
 
+    void ContentRegistry::Interface::addToolbarItem(const ContentRegistry::Interface::DrawCallback &function){
+        getToolbarItems().push_back(function);
+    }
+
 
     std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getWelcomeScreenEntries() {
         return SharedData::welcomeScreenEntries;
     }
     std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getFooterItems() {
         return SharedData::footerItems;
+    }
+    std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getToolbarItems() {
+        return SharedData::toolbarItems;
     }
 }

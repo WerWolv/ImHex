@@ -11,6 +11,7 @@ namespace hex {
     constexpr auto GetPluginNameSymbol          = "_ZN3hex6plugin{0}{1}8internal13getPluginNameEv";
     constexpr auto GetPluginAuthorSymbol        = "_ZN3hex6plugin{0}{1}8internal15getPluginAuthorEv";
     constexpr auto GetPluginDescriptionSymbol   = "_ZN3hex6plugin{0}{1}8internal20getPluginDescriptionEv";
+    constexpr auto SetImGuiContextSymbol        = "_ZN3hex6plugin{0}{1}8internal15setImGuiContextEP12ImGuiContext";
 
     Plugin::Plugin(std::string_view path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
@@ -26,6 +27,7 @@ namespace hex {
         this->m_getPluginNameFunction           = getPluginFunction<GetPluginNameFunc>(pluginName, GetPluginNameSymbol);
         this->m_getPluginAuthorFunction         = getPluginFunction<GetPluginAuthorFunc>(pluginName, GetPluginAuthorSymbol);
         this->m_getPluginDescriptionFunction    = getPluginFunction<GetPluginDescriptionFunc>(pluginName, GetPluginDescriptionSymbol);
+        this->m_setImGuiContextFunction         = getPluginFunction<SetImGuiContextFunc>(pluginName, SetImGuiContextSymbol);
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -34,12 +36,14 @@ namespace hex {
         this->m_getPluginNameFunction           = other.m_getPluginNameFunction;
         this->m_getPluginAuthorFunction         = other.m_getPluginAuthorFunction;
         this->m_getPluginDescriptionFunction    = other.m_getPluginDescriptionFunction;
+        this->m_setImGuiContextFunction         = other.m_setImGuiContextFunction;
 
         other.m_handle = nullptr;
         other.m_initializePluginFunction        = nullptr;
         other.m_getPluginNameFunction           = nullptr;
         other.m_getPluginAuthorFunction         = nullptr;
         other.m_getPluginDescriptionFunction    = nullptr;
+        other.m_setImGuiContextFunction         = nullptr;
     }
 
     Plugin::~Plugin() {
@@ -71,6 +75,11 @@ namespace hex {
             return this->m_getPluginDescriptionFunction();
         else
             return "";
+    }
+
+    void Plugin::setImGuiContext(ImGuiContext *ctx) const {
+        if (this->m_setImGuiContextFunction != nullptr)
+            this->m_setImGuiContextFunction(ctx);
     }
 
     bool PluginManager::load(std::string_view pluginFolder) {
