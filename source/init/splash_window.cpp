@@ -11,7 +11,6 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <fontawesome_font.h>
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <unistd.h>
@@ -182,11 +181,6 @@ namespace hex::init {
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
-
-        if (gladLoadGL() == 0) {
-            log::fatal("Failed to load OpenGL Context!");
-            exit(EXIT_FAILURE);
-        }
     }
 
     void WindowSplash::initImGui() {

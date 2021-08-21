@@ -36,14 +36,12 @@ add_library(imgui STATIC
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../glad ${CMAKE_CURRENT_BINARY_DIR}/external/glad)
-
 target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 
 target_link_directories(imgui PUBLIC ${GLM_INCLUDE_DIRS} ${GLFW_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imgui Freetype::Freetype glad glfw3)
+    target_link_libraries(imgui Freetype::Freetype glfw3 opengl32.lib)
 elseif (UNIX)
-    target_link_libraries(imgui Freetype::Freetype glad glfw)
+    target_link_libraries(imgui Freetype::Freetype glfw)
 endif()

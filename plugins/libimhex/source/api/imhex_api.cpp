@@ -3,6 +3,8 @@
 #include <hex/api/event.hpp>
 #include <hex/helpers/shared_data.hpp>
 
+#include <unistd.h>
+
 namespace hex {
 
     void ImHexApi::Common::closeImHex(bool noQuestions) {

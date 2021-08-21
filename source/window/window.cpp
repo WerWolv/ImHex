@@ -30,7 +30,6 @@
 #include "helpers/project_file_handler.hpp"
 #include "init/tasks.hpp"
 
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 namespace hex {
@@ -837,9 +836,6 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(this->m_window, 720 * this->m_globalScale, 480 * this->m_globalScale, GLFW_DONT_CARE, GLFW_DONT_CARE);
-
-        if (gladLoadGL() == 0)
-            throw std::runtime_error("Failed to initialize OpenGL loader!");
     }
 
     void Window::initImGui() {
