@@ -541,6 +541,12 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.color.light", "Chiaro" },
                         { "hex.builtin.setting.interface.color.classic", "Classico" },
                     { "hex.builtin.setting.interface.language", "Lingua" },
+                    //{ "hex.builtin.setting.interface.scaling", "Scaling" },
+                        //{ "hex.builtin.setting.interface.scaling.native", "Native" },
+                        //{ "hex.builtin.setting.interface.scaling.x0_5", "x0.5" },
+                        //{ "hex.builtin.setting.interface.scaling.x1_0", "x1.0" },
+                        //{ "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
+                        //{ "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
                 { "hex.builtin.setting.interface.fps", "Limite FPS" },
                 { "hex.builtin.setting.interface.highlight_alpha", "Evidenziazione dell'opacità" },
 

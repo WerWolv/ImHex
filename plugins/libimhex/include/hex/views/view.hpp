@@ -9,6 +9,7 @@
 #include <codicons_font.h>
 #include <nfd.hpp>
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
 

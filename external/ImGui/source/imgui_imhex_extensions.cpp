@@ -183,14 +183,13 @@ namespace ImGui {
 
     void Disabled(const std::function<void()> &widgets, bool disabled) {
         if (disabled) {
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5F);
+            BeginDisabled();
             widgets();
-            ImGui::PopStyleVar();
-            ImGui::PopItemFlag();
+            EndDisabled();
         } else {
             widgets();
         }
+
     }
 
     void TextSpinner(const char* label) {
@@ -292,6 +291,7 @@ namespace ImGui {
         unsigned char* imageData = stbi_load(path, &imageWidth, &imageHeight, nullptr, 4);
         if (imageData == nullptr)
             return { nullptr, -1, -1 };
+
 
         GLuint texture;
         glGenTextures(1, &texture);

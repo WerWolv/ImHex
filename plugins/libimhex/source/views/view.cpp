@@ -66,7 +66,7 @@ namespace hex {
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
-                EventManager::post<RequestCloseImHex>();
+                ImHexApi::Common::closeImHex();
                 ImGui::CloseCurrentPopup();
             }
 

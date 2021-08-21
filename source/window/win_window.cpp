@@ -18,6 +18,7 @@
         static LONG_PTR oldWndProc;
         static float titleBarHeight;
         static ImGuiMouseCursor mouseCursorIcon;
+        static float borderScaling;
 
         LRESULT wndProcImHex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             switch (uMsg) {
@@ -72,9 +73,10 @@
                     POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                     const POINT border{
-                        ::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER),
-                        ::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)
+                        static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * borderScaling / 2.0F),
+                        static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * borderScaling / 2.0F)
                     };
+
                     RECT window;
                     if (!::GetWindowRect(hwnd, &window)) {
                         return HTNOWHERE;
@@ -122,15 +124,19 @@
 
         void Window::setupNativeWindow() {
             auto hwnd = glfwGetWin32Window(this->m_window);
+
             oldWndProc = SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProcImHex);
+
             MARGINS borderless = {1,1,1,1};
             DwmExtendFrameIntoClientArea(hwnd, &borderless);
+
             SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);
             SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU);
         }
 
         void Window::updateNativeWindow() {
             titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+            borderScaling = this->m_globalScale;
 
             if (mouseCursorIcon != ImGuiMouseCursor_None)
                 ImGui::SetMouseCursor(mouseCursorIcon);
@@ -170,8 +176,7 @@
 
 
             if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
-                EventManager::post<RequestCloseImHex>();
-                EventManager::post<EventWindowClosing>(this->m_window);
+                ImHexApi::Common::closeImHex();
             }
 
             ImGui::PopStyleColor(5);

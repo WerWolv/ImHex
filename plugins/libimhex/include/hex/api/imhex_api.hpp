@@ -10,6 +10,13 @@ namespace hex {
     struct ImHexApi {
         ImHexApi() = delete;
 
+        struct Common {
+
+            static void closeImHex(bool noQuestions = false);
+            static void restartImHex();
+
+        };
+
         struct Bookmarks {
             Bookmarks() = delete;
 
@@ -27,6 +34,7 @@ namespace hex {
 
             static std::list<Entry>& getEntries();
         };
+
     };
 
 }

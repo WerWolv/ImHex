@@ -25,6 +25,7 @@ namespace hex::prv {
         bool isReadable() override;
         bool isWritable() override;
         bool isResizable() override;
+        bool isSavable() override;
 
         void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
@@ -33,6 +34,9 @@ namespace hex::prv {
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         size_t getActualSize() override;
+
+        void save() override;
+        void saveAs(const std::string &path) override;
 
         std::vector<std::pair<std::string, std::string>> getDataInformation() override;
 

@@ -5,6 +5,18 @@
 
 namespace hex {
 
+    void ImHexApi::Common::closeImHex(bool noQuestions) {
+        EventManager::post<RequestCloseImHex>(noQuestions);
+    }
+
+    void ImHexApi::Common::restartImHex() {
+        EventManager::post<RequestCloseImHex>(false);
+        std::atexit([]{
+            execve(SharedData::mainArgv[0], SharedData::mainArgv, nullptr);
+        });
+    }
+
+
     void ImHexApi::Bookmarks::add(Region region, std::string_view name, std::string_view comment, u32 color) {
         Entry entry;
 

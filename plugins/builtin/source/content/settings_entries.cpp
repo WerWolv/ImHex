@@ -21,6 +21,25 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0, [](auto name, nlohmann::json &setting) {
+            static int selection = setting.is_number() ? static_cast<int>(setting) : 0;
+
+            const char* scaling[] = {
+                    "hex.builtin.setting.interface.scaling.native"_lang,
+                    "hex.builtin.setting.interface.scaling.x0_5"_lang,
+                    "hex.builtin.setting.interface.scaling.x1_0"_lang,
+                    "hex.builtin.setting.interface.scaling.x1_5"_lang,
+                    "hex.builtin.setting.interface.scaling.x2_0"_lang,
+            };
+
+            if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
+                setting = selection;
+                return true;
+            }
+
+            return false;
+        });
+
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US", [](auto name, nlohmann::json &setting) {
             auto &languages = LangEntry::getSupportedLanguages();
 

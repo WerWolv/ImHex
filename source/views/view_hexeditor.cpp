@@ -286,7 +286,7 @@ namespace hex {
             ImGui::NewLine();
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] {
-                EventManager::post<RequestCloseImHex>();
+                ImHexApi::Common::closeImHex(true);
             },
             [] {
                 ImGui::CloseCurrentPopup();

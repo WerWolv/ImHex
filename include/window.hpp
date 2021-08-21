@@ -49,7 +49,7 @@ namespace hex {
 
         GLFWwindow* m_window = nullptr;
 
-        float m_globalScale = 1.0f, m_fontScale = 1.0f;
+        float m_globalScale = 1.0F, m_fontScale = 1.0F;
         double m_targetFps = 60.0;
         bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;

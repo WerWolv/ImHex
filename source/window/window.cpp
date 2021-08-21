@@ -86,24 +86,24 @@ namespace hex {
                 if (theme.is_number()) {
                     switch (static_cast<int>(theme)) {
                         default:
-                            case 0: /* Dark theme */
-                                ImGui::StyleColorsDark();
-                                ImGui::StyleCustomColorsDark();
-                                ImPlot::StyleColorsDark();
-                                this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
-                                break;
-                            case 1: /* Light theme */
-                                ImGui::StyleColorsLight();
-                                ImGui::StyleCustomColorsLight();
-                                ImPlot::StyleColorsLight();
-                                this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_light, banner_light_size);
-                                break;
-                            case 2: /* Classic theme */
-                                ImGui::StyleColorsClassic();
-                                ImGui::StyleCustomColorsClassic();
-                                ImPlot::StyleColorsClassic();
-                                this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
-                                break;
+                        case 0: /* Dark theme */
+                            ImGui::StyleColorsDark();
+                            ImGui::StyleCustomColorsDark();
+                            ImPlot::StyleColorsDark();
+                            this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+                            break;
+                        case 1: /* Light theme */
+                            ImGui::StyleColorsLight();
+                            ImGui::StyleCustomColorsLight();
+                            ImPlot::StyleColorsLight();
+                            this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_light, banner_light_size);
+                            break;
+                        case 2: /* Classic theme */
+                            ImGui::StyleColorsClassic();
+                            ImGui::StyleCustomColorsClassic();
+                            ImPlot::StyleColorsClassic();
+                            this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+                            break;
                     }
 
                     ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
@@ -115,6 +115,19 @@ namespace hex {
                         log::fatal("Failed to load banner texture!");
                         exit(EXIT_FAILURE);
                     }
+                }
+            }
+
+            {
+                auto scaling = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling");
+
+                if (scaling.is_number()) {
+                    static bool firstTime = true;
+
+                    if (!firstTime) {
+                        ImHexApi::Common::restartImHex();
+                    }
+                    firstTime = false;
                 }
             }
 
@@ -174,8 +187,11 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<RequestCloseImHex>(this, [this]() {
+        EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, true);
+
+            if (!noQuestions)
+                EventManager::post<EventWindowClosing>(this->m_window);
         });
 
         EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
@@ -209,8 +225,6 @@ namespace hex {
             }
         }
 
-        EventManager::post<EventSettingsChanged>();
-
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
             SharedData::recentFilePaths.push_back(path);
 
@@ -230,6 +244,8 @@ namespace hex {
         std::signal(SIGFPE,  signalHandler);
 
         this->m_logoTexture = ImGui::LoadImageFromMemory(imhex_logo, imhex_logo_size);
+
+        EventManager::post<EventSettingsChanged>();
     }
 
     Window::~Window() {
@@ -441,7 +457,6 @@ namespace hex {
         ImGui::PopStyleVar(2);
 
 
-        // Popup for when no plugins were loaded. Intentionally left untranslated because localization isn't available
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
             ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
@@ -707,12 +722,32 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         #endif
 
+        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
+            default:
+            case 0:
+                this->m_globalScale = this->m_fontScale = -1.0F;
+                break;
+            case 1:
+                this->m_globalScale = this->m_fontScale = 0.5F;
+                break;
+            case 2:
+                this->m_globalScale = this->m_fontScale = 1.0F;
+                break;
+            case 3:
+                this->m_globalScale = this->m_fontScale = 1.5F;
+                break;
+            case 4:
+                this->m_globalScale = this->m_fontScale = 2.0F;
+                break;
+        }
+
         if (auto *monitor = glfwGetPrimaryMonitor(); monitor) {
             float xscale, yscale;
             glfwGetMonitorContentScale(monitor, &xscale, &yscale);
 
             // In case the horizontal and vertical scale are different, fall back on the average
-            this->m_globalScale = this->m_fontScale = std::midpoint(xscale, yscale);
+            if (this->m_globalScale <= 0.0F)
+                this->m_globalScale = this->m_fontScale = std::midpoint(xscale, yscale);
         }
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -749,7 +784,7 @@ namespace hex {
         glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
             SharedData::windowPos = ImVec2(x, y);
 
-            if (ImGui::GetCurrentContext()->WithinFrameScope) return;
+            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
             win->frameBegin();
@@ -760,7 +795,7 @@ namespace hex {
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
             SharedData::windowSize = ImVec2(width, height);
 
-            if (ImGui::GetCurrentContext()->WithinFrameScope) return;
+            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
             win->frameBegin();
@@ -801,7 +836,7 @@ namespace hex {
             EventManager::post<EventWindowClosing>(window);
         });
 
-        glfwSetWindowSizeLimits(this->m_window, 720, 480, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(this->m_window, 720 * this->m_globalScale, 480 * this->m_globalScale, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         if (gladLoadGL() == 0)
             throw std::runtime_error("Failed to initialize OpenGL loader!");
@@ -860,8 +895,7 @@ namespace hex {
 
         io.UserData = new ImGui::ImHexCustomData();
 
-        if (this->m_globalScale != 0.0f)
-            style.ScaleAllSizes(this->m_globalScale);
+        style.ScaleAllSizes(this->m_globalScale);
 
         std::string fontFile;
         for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
