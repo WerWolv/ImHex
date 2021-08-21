@@ -41,6 +41,10 @@ namespace hex::prv {
         return true;
     }
 
+    bool FileProvider::isSavable() {
+        return !this->getPatches().empty();
+    }
+
 
     void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
 
@@ -80,6 +84,32 @@ namespace hex::prv {
             return;
 
         std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, buffer, size);
+    }
+
+    void FileProvider::save() {
+        this->applyPatches();
+    }
+
+    void FileProvider::saveAs(const std::string &path) {
+        FILE *file = fopen(path.c_str(), "wb");
+
+        if (file != nullptr) {
+            std::vector<u8> buffer(0xFF'FFFF, 0x00);
+            size_t bufferSize = buffer.size();
+
+            fseek(file, 0, SEEK_SET);
+
+            auto provider = SharedData::currentProvider;
+            for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
+                if (bufferSize > provider->getActualSize() - offset)
+                    bufferSize = provider->getActualSize() - offset;
+
+                provider->readRelative(offset, buffer.data(), bufferSize);
+                fwrite(buffer.data(), 1, bufferSize, file);
+            }
+
+            fclose(file);
+        }
     }
 
     void FileProvider::resize(ssize_t newSize) {

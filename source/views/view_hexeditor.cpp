@@ -204,6 +204,10 @@ namespace hex {
             if (alpha.is_number())
                 this->m_highlightAlpha = alpha;
         });
+
+        EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
+            region = Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1 };
+        });
     }
 
     ViewHexEditor::~ViewHexEditor() {
@@ -263,31 +267,13 @@ namespace hex {
 
     static void save() {
         auto provider = SharedData::currentProvider;
-        for (const auto &[address, value] : provider->getPatches())
-            provider->writeRaw(address, &value, sizeof(u8));
+        provider->save();
     }
 
     static void saveAs() {
         View::openFileBrowser("hex.view.hexeditor.save_as"_lang, View::DialogMode::Save, { }, [](auto path) {
-            FILE *file = fopen(path.c_str(), "wb");
-
-            if (file != nullptr) {
-                std::vector<u8> buffer(0xFF'FFFF, 0x00);
-                size_t bufferSize = buffer.size();
-
-                fseek(file, 0, SEEK_SET);
-
-                auto provider = SharedData::currentProvider;
-                for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
-                    if (bufferSize > provider->getActualSize() - offset)
-                        bufferSize = provider->getActualSize() - offset;
-
-                    provider->readRelative(offset, buffer.data(), bufferSize);
-                    fwrite(buffer.data(), 1, bufferSize, file);
-                }
-
-                fclose(file);
-            }
+            auto provider = SharedData::currentProvider;
+            provider->saveAs(path);
         });
     }
 

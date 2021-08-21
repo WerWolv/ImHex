@@ -34,6 +34,9 @@ namespace hex::prv {
         this->write(offset + this->getBaseAddress(), buffer, size);
     }
 
+    void Provider::save() { }
+    void Provider::saveAs(const std::string &path) { }
+
     void Provider::resize(ssize_t newSize) { }
 
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {

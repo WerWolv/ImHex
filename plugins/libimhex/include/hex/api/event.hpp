@@ -21,7 +21,7 @@ namespace hex {
 
     class EventId {
     public:
-        constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
+        explicit constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
             this->m_hash = line ^ 123456789;
             for (auto c : std::string_view(func)) {
                 this->m_hash  = (this->m_hash >> 5) | (this->m_hash << 27);
@@ -43,7 +43,7 @@ namespace hex {
     struct Event : public EventBase {
         using Callback = std::function<void(Params...)>;
 
-        explicit Event(Callback func) noexcept : m_func(func) {}
+        explicit Event(Callback func) noexcept : m_func(std::move(func)) {}
 
         void operator()(Params... params) const noexcept {
             this->m_func(params...);
@@ -83,10 +83,10 @@ namespace hex {
         }
 
         template<typename E>
-        static void post(auto ... args) noexcept {
+        static void post(auto&& ... args) noexcept {
             for (const auto &[id, event] : s_events) {
                 if (id == E::id)
-                    (*reinterpret_cast<E *>(event))(args...);
+                    (*reinterpret_cast<E *>(event))(std::forward<decltype(args)>(args)...);
             }
         }
         
@@ -113,6 +113,8 @@ namespace hex {
     EVENT_DEF(RequestAddBookmark, ImHexApi::Bookmarks::Entry);
     EVENT_DEF(RequestAppendPatternLanguageCode, std::string);
     EVENT_DEF(RequestChangeWindowTitle, std::string);
-    EVENT_DEF(RequestCloseImHex);
+    EVENT_DEF(RequestCloseImHex, bool);
+
+    EVENT_DEF(QuerySelection, Region&);
 
 }
