@@ -1,5 +1,5 @@
 brew "glfw3"
-brew "mbedtls"
+brew "mbedtls@2"
 brew "capstone"
 brew "nlohmann-json"
 brew "glm"
