@@ -297,8 +297,10 @@ namespace hex::plugin::builtin {
             /* Builtin plugin features */
 
                 { "hex.builtin.command.calc.desc", "Calculator" },
+                { "hex.builtin.command.cmd.desc", "Command" },
+                { "hex.builtin.command.cmd.result", "Run command '{0}'" },
                 { "hex.builtin.command.web.desc", "Website lookup" },
-                { "hex.builtin.command.web.result", "Navigate to '{0}'"},
+                { "hex.builtin.command.web.result", "Navigate to '{0}'" },
 
                 { "hex.builtin.inspector.binary", "Binary (8 bit)" },
                 { "hex.builtin.inspector.u8", "uint8_t" },
