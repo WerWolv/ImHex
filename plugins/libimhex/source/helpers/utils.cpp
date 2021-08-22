@@ -175,14 +175,31 @@ namespace hex {
         return result;
     }
 
-    void openWebpage(std::string_view url) {
+    void runCommand(const std::string &command) {
 
         #if defined(OS_WINDOWS)
-            system(hex::format("start {0}", url.data()).c_str());
+        system(hex::format("start {0}", command).c_str());
         #elif defined(OS_MACOS)
-            system(hex::format("open {0}", url.data()).c_str());
+        system(hex::format("open {0}", command).c_str());
         #elif defined(OS_LINUX)
-            system(hex::format("xdg-open {0}", url.data()).c_str());
+        system(hex::format("xdg-open {0}", command).c_str());
+        #else
+            #warning "Unknown OS, can't open webpages"
+        #endif
+
+    }
+
+    void openWebpage(std::string url) {
+
+        if (!url.starts_with("http://") && !url.starts_with("https://"))
+            url = "https://" + url;
+
+        #if defined(OS_WINDOWS)
+            system(hex::format("start {0}", url).c_str());
+        #elif defined(OS_MACOS)
+            system(hex::format("open {0}", url).c_str());
+        #elif defined(OS_LINUX)
+            system(hex::format("xdg-open {0}", url).c_str());
         #else
             #warning "Unknown OS, can't open webpages"
         #endif

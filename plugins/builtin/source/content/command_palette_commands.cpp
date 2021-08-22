@@ -37,6 +37,16 @@ namespace hex::plugin::builtin {
                     hex::openWebpage(input);
                 });
 
+        hex::ContentRegistry::CommandPaletteCommands::add(
+                hex::ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+                "$", "hex.builtin.command.cmd.desc",
+                [](auto input) {
+                    return hex::format("hex.builtin.command.cmd.result"_lang, input.data());
+                },
+                [](auto input) {
+                    hex::runCommand(input);
+                });
+
     }
 
 }

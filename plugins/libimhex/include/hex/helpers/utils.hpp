@@ -181,7 +181,8 @@ namespace hex {
     std::string toByteString(u64 bytes);
     std::string makePrintable(char c);
 
-    void openWebpage(std::string_view url);
+    void runCommand(const std::string &command);
+    void openWebpage(std::string url);
 
     template<typename ... Args>
     inline std::string format(std::string_view format, Args ... args) {

@@ -22,7 +22,7 @@ namespace hex {
                 ImGui::CloseCurrentPopup();
 
             ImGui::PushItemWidth(-1);
-            if (ImGui::InputText("##nolabel", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue,
+            if (ImGui::InputText("##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue,
             [](ImGuiInputTextCallbackData *callbackData) -> int {
                 auto _this = static_cast<ViewCommandPalette*>(callbackData->UserData);
                 _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
