@@ -592,7 +592,8 @@ namespace hex {
             ImGui::TableNextColumn();
 
 
-            ImGui::TextUnformatted("hex.welcome.header.start"_lang);
+            ImGui::UnderlinedText("hex.welcome.header.start"_lang);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * this->m_globalScale);
             {
                 if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.welcome.start.create_file"_lang))
                     EventManager::post<RequestOpenWindow>("Create File");
@@ -604,7 +605,8 @@ namespace hex {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("hex.welcome.start.recent"_lang);
+            ImGui::UnderlinedText("hex.welcome.start.recent"_lang);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * this->m_globalScale);
             {
                 if (!SharedData::recentFilePaths.empty()) {
                     for (auto &path : SharedData::recentFilePaths) {
@@ -619,7 +621,7 @@ namespace hex {
             if (!this->m_availableUpdate.empty()) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("hex.welcome.header.update"_lang);
+                ImGui::UnderlinedText("hex.welcome.header.update"_lang);
                 {
                     if (ImGui::DescriptionButton("hex.welcome.update.title"_lang, hex::format("hex.welcome.update.desc"_lang, this->m_availableUpdate).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                         hex::openWebpage("hex.welcome.update.link"_lang);
@@ -628,7 +630,8 @@ namespace hex {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("hex.welcome.header.help"_lang);
+            ImGui::UnderlinedText("hex.welcome.header.help"_lang);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * this->m_globalScale);
             {
                 if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
                 if (ImGui::IconHyperlink(ICON_VS_ORGANIZATION, "hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
@@ -636,7 +639,7 @@ namespace hex {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("hex.welcome.header.plugins"_lang);
+            ImGui::UnderlinedText("hex.welcome.header.plugins"_lang);
             {
                 const auto &plugins = PluginManager::getPlugins();
 
@@ -677,14 +680,14 @@ namespace hex {
         if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("hex.welcome.header.customize"_lang);
+            ImGui::UnderlinedText("hex.welcome.header.customize"_lang);
             {
                 if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     EventManager::post<RequestOpenWindow>("Settings");
             }
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("hex.welcome.header.learn"_lang);
+            ImGui::UnderlinedText("hex.welcome.header.learn"_lang);
             {
                 if (ImGui::DescriptionButton("hex.welcome.learn.latest.title"_lang, "hex.welcome.learn.latest.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     hex::openWebpage("hex.welcome.learn.latest.link"_lang);
@@ -698,7 +701,7 @@ namespace hex {
             if (!extraWelcomeScreenEntries.empty()) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("hex.welcome.header.various"_lang);
+                ImGui::UnderlinedText("hex.welcome.header.various"_lang);
                 {
                     for (const auto &callback : extraWelcomeScreenEntries)
                         callback();
