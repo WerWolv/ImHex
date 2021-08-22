@@ -122,16 +122,31 @@
             return CallWindowProc((WNDPROC)oldWndProc, hwnd, uMsg, wParam, lParam);
         }
 
+
+        void Window::initNative() {
+            auto hConsoleWindow = ::GetConsoleWindow();
+            ::ShowWindow(hConsoleWindow, FALSE);
+
+            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hConsole != INVALID_HANDLE_VALUE) {
+                DWORD mode = 0;
+                if (::GetConsoleMode(hConsole, &mode)) {
+                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                    ::SetConsoleMode(hConsole, mode);
+                }
+            }
+        }
+
         void Window::setupNativeWindow() {
             auto hwnd = glfwGetWin32Window(this->m_window);
 
-            oldWndProc = SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProcImHex);
+            oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProcImHex);
 
             MARGINS borderless = {1,1,1,1};
-            DwmExtendFrameIntoClientArea(hwnd, &borderless);
+            ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
 
-            SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);
-            SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU);
+            ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);
+            ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU);
         }
 
         void Window::updateNativeWindow() {

@@ -4,6 +4,10 @@
 
     namespace hex {
 
+        void Window::initNative() {
+
+        }
+
         void Window::setupNativeWindow() {
 
         }

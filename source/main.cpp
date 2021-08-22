@@ -5,12 +5,13 @@
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
-
 int main(int argc, char **argv) {
     using namespace hex;
 
     // Initialization
     {
+        Window::initNative();
+
         init::WindowSplash splashWindow(argc, argv);
 
         for (const auto &[name, task] : init::getInitTasks())

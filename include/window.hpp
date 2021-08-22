@@ -23,12 +23,7 @@ namespace hex {
 
         void loop();
 
-        friend void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *);
-        friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
-        friend void ImHexSettingsHandler_ApplyAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler);
-        friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
-
-        void setFont(const std::filesystem::path &font_path);
+        static void initNative();
 
     private:
         void setupNativeWindow();
@@ -46,6 +41,12 @@ namespace hex {
         void initImGui();
         void deinitGLFW();
         void deinitImGui();
+
+        friend void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *);
+        friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
+        friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
+
+        void setFont(const std::filesystem::path &font_path);
 
         GLFWwindow* m_window = nullptr;
 
