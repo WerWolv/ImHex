@@ -49,6 +49,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.plugins.desc", "Extend ImHex with additional features using plugins" },
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.welcome.header.various", "Various" },
+                { "hex.welcome.tip_of_the_day", "Tip of the Day" },
 
                 { "hex.safety_backup.title", "Restore lost data" },
                 { "hex.safety_backup.desc", "Oh no, ImHex crashed last time.\nDo you want to restore your past work?"},
@@ -73,6 +74,8 @@ namespace hex::plugin::builtin {
                 { "hex.common.load", "Load" },
                 { "hex.common.cancel", "Cancel" },
                 { "hex.common.set", "Set" },
+                { "hex.common.close", "Close" },
+                { "hex.common.dont_show_again", "Don't show again" },
 
                 { "hex.view.bookmarks.name", "Bookmarks" },
                     { "hex.view.bookmarks.default_title", "Bookmark [0x{0:X} - 0x{1:X}]" },
@@ -536,6 +539,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "Recent Files" },
+                { "hex.builtin.setting.general", "General" },
+                    { "hex.builtin.setting.general.show_tips", "Show tips on startup" },
                 { "hex.builtin.setting.interface", "Interface" },
                     { "hex.builtin.setting.interface.color", "Color theme" },
                         { "hex.builtin.setting.interface.color.dark", "Dark" },

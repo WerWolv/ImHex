@@ -49,11 +49,13 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.plugins.desc", "Erweitere ImHex mit neuen Funktionen mit Plugins" },
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.welcome.header.various", "Verschiedenes" },
+                { "hex.welcome.tip_of_the_day", "Tipp des Tages" },
 
                 { "hex.safety_backup.title", "Verlorene Daten wiederherstellen" },
                 { "hex.safety_backup.desc", "Oh nein, ImHex ist letztes mal abgestürtzt.\nWillst du das verherige Projekt wiederherstellen?"},
                 { "hex.safety_backup.restore", "Ja, Wiederherstellen" },
                 { "hex.safety_backup.delete", "Nein, Entfernen" },
+
 
                 { "hex.common.little_endian", "Little Endian" },
                 { "hex.common.big_endian", "Big Endian" },
@@ -72,6 +74,8 @@ namespace hex::plugin::builtin {
                 { "hex.common.load", "Laden" },
                 { "hex.common.cancel", "Abbrechen" },
                 { "hex.common.set", "Setzen" },
+                { "hex.common.close", "Schliessen" },
+                { "hex.common.dont_show_again", "Nicht mehr anzeigen" },
 
                 { "hex.view.bookmarks.name", "Lesezeichen" },
                     { "hex.view.bookmarks.default_title", "Lesezeichen [0x{0:X} - 0x{1:X}]" },
@@ -535,6 +539,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "Kürzlich geöffnete Dateien" },
+                { "hex.builtin.setting.general", "Allgemein" },
+                    { "hex.builtin.setting.general.show_tips", "Tipps beim start anzeigen" },
                 { "hex.builtin.setting.interface", "Aussehen" },
                     { "hex.builtin.setting.interface.color", "Farbthema" },
                         { "hex.builtin.setting.interface.color.dark", "Dunkel" },

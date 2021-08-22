@@ -63,6 +63,9 @@ namespace hex {
 
         std::string m_availableUpdate;
 
+        bool m_showTipOfTheDay;
+        std::string m_tipOfTheDay;
+
         ImGui::Texture m_bannerTexture;
         ImGui::Texture m_logoTexture;
 

@@ -4,6 +4,21 @@ namespace hex::plugin::builtin {
 
     void registerSettings() {
 
+        /* General */
+
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1, [](auto name, nlohmann::json &setting) {
+            static bool enabled = setting.is_number() ? static_cast<int>(setting) : 1;
+
+            if (ImGui::Checkbox(name.data(), &enabled)) {
+                setting = static_cast<int>(enabled);
+                return true;
+            }
+
+            return false;
+        });
+
+        /* Interface */
+
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
             static int selection = setting.is_number() ? static_cast<int>(setting) : 0;
 

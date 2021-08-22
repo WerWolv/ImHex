@@ -68,6 +68,12 @@ namespace hex {
                     this->m_availableUpdate = value;
                 } else if (argument == "no-plugins") {
                     View::doLater([]{ ImGui::OpenPopup("No Plugins"); });
+                } else if (argument == "tip-of-the-day") {
+                    this->m_tipOfTheDay = value;
+
+                    this->m_showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
+                    if (this->m_showTipOfTheDay)
+                        View::doLater([]{ ImGui::OpenPopup("hex.welcome.tip_of_the_day"_lang); });
                 }
             }
         }
@@ -455,6 +461,24 @@ namespace hex {
         ImGui::End();
         ImGui::PopStyleVar(2);
 
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+        ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size / 3, ImGuiCond_Appearing);
+        if (ImGui::BeginPopup("hex.welcome.tip_of_the_day"_lang)) {
+            ImGui::Header("hex.welcome.tip_of_the_day"_lang, true);
+
+            ImGui::TextWrapped("%s", this->m_tipOfTheDay.c_str());
+            ImGui::NewLine();
+
+            if (ImGui::Checkbox("hex.common.dont_show_again"_lang, &this->m_showTipOfTheDay))
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", this->m_showTipOfTheDay);
+
+            ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
+
+            if (ImGui::Button("hex.common.close"_lang))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
 
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {

@@ -47,6 +47,18 @@ namespace hex::init {
         return true;
     }
 
+    static bool downloadInformation() {
+        hex::Net net;
+
+        auto tip = net.getString("https://api.werwolv.net/imhex/tip");
+        if (tip.code != 200)
+            return false;
+
+        getInitArguments().push_back({ "tip-of-the-day", tip.response });
+
+        return true;
+    }
+
     bool createDirectories() {
         bool result = true;
 
@@ -185,6 +197,7 @@ namespace hex::init {
     std::vector<Task> getInitTasks() {
         return {
                 { "Checking for updates...",    checkForUpdates     },
+                { "Downloading information...", downloadInformation },
                 { "Creating directories...",    createDirectories   },
                 { "Loading default views...",   loadDefaultViews    },
                 { "Loading plugins...",         loadPlugins         },
