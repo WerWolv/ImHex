@@ -4,15 +4,18 @@
 
 #include <filesystem>
 
+#include <mbedtls/ssl.h>
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crt.h>
+#include <mbedtls/error.h>
 
 #include <hex/resources.hpp>
 
 namespace hex {
 
     Net::Net() {
-        curl_global_init(CURL_GLOBAL_DEFAULT);
+        curl_global_sslset(CURLSSLBACKEND_MBEDTLS, nullptr, nullptr);
+        curl_global_init(CURL_GLOBAL_ALL);
         this->m_ctx = curl_easy_init();
     }
 
@@ -24,6 +27,18 @@ namespace hex {
     static size_t writeToString(void *contents, size_t size, size_t nmemb, void *userp){
         static_cast<std::string*>(userp)->append((char*)contents, size * nmemb);
         return size * nmemb;
+    }
+
+    static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userdata) {
+        auto* cfg = static_cast<mbedtls_ssl_config*>(sslctx);
+
+        static mbedtls_x509_crt crt;
+        mbedtls_x509_crt_init(&crt);
+        mbedtls_x509_crt_parse(&crt, cacert, cacert_size);
+
+        mbedtls_ssl_conf_ca_chain(cfg, &crt, nullptr);
+
+        return CURLE_OK;
     }
 
     static void setCommonSettings(CURL *ctx, std::string &response, std::string_view path, const std::map<std::string, std::string> &extraHeaders, const std::string &body) {
@@ -42,28 +57,25 @@ namespace hex {
         if (!body.empty())
             curl_easy_setopt(ctx, CURLOPT_POSTFIELDS, body.c_str());
 
-        curl_easy_setopt(ctx, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(ctx, CURLOPT_USERAGENT, "ImHex/1.0");
+        curl_easy_setopt(ctx, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
+        curl_easy_setopt(ctx, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2 | CURL_SSLVERSION_MAX_TLSv1_2);
         curl_easy_setopt(ctx, CURLOPT_URL, path.data());
         curl_easy_setopt(ctx, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(ctx, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(ctx, CURLOPT_USERAGENT, "ImHex/1.0");
         curl_easy_setopt(ctx, CURLOPT_DEFAULT_PROTOCOL, "https");
         curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, writeToString);
         curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYPEER, 1L);
-        curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYHOST, 1L);
+        curl_easy_setopt(ctx, CURLOPT_SSL_VERIFYHOST, 2L);
         curl_easy_setopt(ctx, CURLOPT_CAINFO, nullptr);
         curl_easy_setopt(ctx, CURLOPT_CAPATH, nullptr);
-        curl_easy_setopt(ctx, CURLOPT_SSL_CTX_DATA, [](CURL *ctx, void *sslctx, void *userdata) -> CURLcode {
-            auto* mbedtlsCert = static_cast<mbedtls_x509_crt*>(sslctx);
-            mbedtls_x509_crt_init(mbedtlsCert);
-
-            mbedtls_x509_crt_parse(mbedtlsCert, cacert, cacert_size);
-
-            return CURLE_OK;
-        });
+        curl_easy_setopt(ctx, CURLOPT_SSLCERTTYPE, "PEM");
+        curl_easy_setopt(ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
         curl_easy_setopt(ctx, CURLOPT_WRITEDATA, &response);
         curl_easy_setopt(ctx, CURLOPT_TIMEOUT_MS, 2000L);
         curl_easy_setopt(ctx, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
         curl_easy_setopt(ctx, CURLOPT_NOPROGRESS, 1L);
+        curl_easy_setopt(ctx, CURLOPT_NOSIGNAL, 1L);
     }
 
     Response<std::string> Net::getString(std::string_view url) {
