@@ -103,7 +103,8 @@ jobs:
         path: |
           build/*.msi
 
-  macos-build:
+  macos:
+    if: false
     runs-on: macos-11.0
     name: 🍎 macOS 11.0
     steps:
