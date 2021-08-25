@@ -285,6 +285,32 @@ namespace hex::lang {
         ASTNode *m_placementOffset;
     };
 
+    class ASTNodeMultiVariableDecl : public ASTNode {
+    public:
+        explicit ASTNodeMultiVariableDecl(std::vector<ASTNode*> variables) : m_variables(std::move(variables)) { }
+
+        ASTNodeMultiVariableDecl(const ASTNodeMultiVariableDecl &other) : ASTNode(other) {
+            for (auto &variable : other.m_variables)
+                this->m_variables.push_back(variable->clone());
+        }
+
+        ~ASTNodeMultiVariableDecl() override {
+            for (auto &variable : this->m_variables)
+                delete variable;
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeMultiVariableDecl(*this);
+        }
+
+        [[nodiscard]] std::vector<ASTNode*> getVariables() {
+            return this->m_variables;
+        }
+
+    private:
+        std::vector<ASTNode*> m_variables;
+    };
+
     class ASTNodeStruct : public ASTNode, public Attributable {
     public:
         ASTNodeStruct() : ASTNode() { }

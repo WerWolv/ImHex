@@ -634,7 +634,22 @@ namespace hex::lang {
     ASTNode* Parser::parseMemberVariable(ASTNodeTypeDecl *type) {
         if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
-        return new ASTNodeVariableDecl(getValue<std::string>(-1), type);
+        if (peek(SEPARATOR_COMMA)) {
+
+            std::vector<ASTNode*> variables;
+            auto variableCleanup = SCOPE_GUARD { for (auto var : variables) delete var; };
+
+            do {
+                variables.push_back(new ASTNodeVariableDecl(getValue<std::string>(-1), type->clone()));
+            } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
+
+            delete type;
+
+            variableCleanup.release();
+
+            return new ASTNodeMultiVariableDecl(variables);
+        } else
+            return new ASTNodeVariableDecl(getValue<std::string>(-1), type);
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]

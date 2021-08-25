@@ -521,6 +521,14 @@ namespace hex::lang {
             } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl*>(statement); varDeclNode != nullptr) {
                 auto pattern = this->evaluateVariable(varDeclNode);
                 this->createLocalVariable(varDeclNode->getName(), pattern);
+            } else if (auto multiVarDeclNode = dynamic_cast<ASTNodeMultiVariableDecl*>(statement); multiVarDeclNode != nullptr) {
+                for (auto &delc : multiVarDeclNode->getVariables()) {
+                    if (auto varDecl = dynamic_cast<ASTNodeVariableDecl*>(delc); varDecl != nullptr) {
+                        auto pattern = this->evaluateVariable(varDecl);
+                        this->createLocalVariable(varDecl->getName(), pattern);
+                    } else
+                        this->getConsole().abortEvaluation("invalid multi-variable declaration");
+                }
             } else if (auto assignmentNode = dynamic_cast<ASTNodeAssignment*>(statement); assignmentNode != nullptr) {
                 if (auto numericExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(assignmentNode->getRValue()); numericExpressionNode != nullptr) {
                     auto value = this->evaluateMathematicalExpression(numericExpressionNode);
@@ -677,6 +685,14 @@ namespace hex::lang {
 
         if (auto memberVariableNode = dynamic_cast<ASTNodeVariableDecl*>(node); memberVariableNode != nullptr)
             currMembers.push_back(this->evaluateVariable(memberVariableNode));
+        else if (auto memberMultiVariableNode = dynamic_cast<ASTNodeMultiVariableDecl*>(node); memberMultiVariableNode != nullptr) {
+            for (auto decl : memberMultiVariableNode->getVariables()) {
+                if (auto variableDecl = dynamic_cast<ASTNodeVariableDecl*>(decl); variableDecl != nullptr)
+                    currMembers.push_back(this->evaluateVariable(variableDecl));
+                else
+                    this->getConsole().abortEvaluation("invalid multi-variable declaration");
+            }
+        }
         else if (auto memberArrayNode = dynamic_cast<ASTNodeArrayVariableDecl*>(node); memberArrayNode != nullptr)
             currMembers.push_back(this->evaluateArray(memberArrayNode));
         else if (auto memberPointerNode = dynamic_cast<ASTNodePointerVariableDecl*>(node); memberPointerNode != nullptr)
