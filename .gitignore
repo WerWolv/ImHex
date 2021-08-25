@@ -7,7 +7,7 @@ cmake-build-relwithdebinfo/
 cmake-build-wsl/
 
 build-linux/
-build/
+build*/
 
 *.mgc
 imgui.ini

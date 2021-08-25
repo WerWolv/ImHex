@@ -16,6 +16,26 @@ namespace hex {
         ImGui::TextColored(ImVec4(0.6F, 0.6F, 1.0F, 1.0F), title.c_str());
     }
 
+    static void drawBuiltinFunction(
+        const std::string &return_type,
+        const std::string &name,
+        const std::string &arguments,
+        const std::string &description
+    ) {
+        ImGui::Bullet();
+        ImGui::TextColored(ImVec4(0.3F, 0.7F, 0.2F, 1.0F), return_type.c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.57F, 0.24F, 0.69F, 1.0F), name.c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.71F, 0.19F, 0.31F, 1.0F), "(");
+        ImGui::SameLine();
+        ImGui::Text("%s", arguments.c_str());
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(0.71F, 0.19F, 0.31F, 1.0F), ")");
+        ImGui::SameLine();
+        ImGui::TextWrapped(" - %s", description.c_str());
+    }
+
     static void drawCodeSegment(const std::string &id, const std::string &code) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
         ImGui::BeginChild(id.c_str(), ImVec2(-1, ImGui::CalcTextSize(code.c_str()).y));
@@ -27,6 +47,10 @@ namespace hex {
         ImGui::PopStyleColor();
     };
 
+    static void drawUnaryBulletPoint(const std::string &op, const std::string &name) {
+        ImGui::Bullet();
+        ImGui::TextWrapped("a %s b - %s", op.c_str(), name.c_str());
+    }
 
     void ViewHelp::drawAboutPopup() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.view.help.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -160,7 +184,7 @@ namespace hex {
             ImGui::TextWrapped(
                     "The following built-in types are available for use");
             drawCodeSegment("built-in",
-                    "u8, s8\n"
+                    "u8, s8, char, bool\n"
                     "u16, s16\n"
                     "u32, s32\n"
                     "u64, s64\n"
@@ -194,6 +218,14 @@ namespace hex {
                 "};"
             );
 
+            drawTitle("Variable placement");
+            ImGui::TextWrapped(
+                    "In order to highlight bytes and displaying their value in the pattern data window, "
+                    "a variable needs to be created and placed in memory. The following line of code creates"
+                    "a unsigned 32 bit variable named data and places it at offset 0x100."
+                    );
+            drawCodeSegment("var placement", "u32 data @ 0x100;");
+
             drawTitle("Unions");
             ImGui::TextWrapped(
                     "A union is used to make two or more variables occupy the same region of memory. "
@@ -212,6 +244,40 @@ namespace hex {
                     "The leading type is treated as the data being pointed to and the trailing type as the size of the pointer.");
             drawCodeSegment("pointer",
                             "Data *data : u16;"
+            );
+
+            drawTitle("Built-in Functions");
+            drawBuiltinFunction(
+                "u64", "findSequence", ("u32 index, u8 ... bytes"),
+                "find the `index`th occurence of the list of `bytes`"
+            );
+            drawBuiltinFunction(
+                "u(size * 8)", "readUnsigned", ("u64 address, u8 size"),
+                "read `size` bytes at `address` as little-endian unsigned integer"
+            );
+            drawBuiltinFunction(
+                "s(size * 8)", "readSigned", ("u64 address, u8 size"),
+                "read `size` bytes at `address` as little-endian signed integer"
+            );
+            drawBuiltinFunction(
+                "u64", "alignTo", ("u64 value, u64 alignment"),
+                "returns the smallest value divisible by `alignment` that is greater or equal to `value`"
+            );
+            drawBuiltinFunction(
+                "void", "print", ("values..."),
+                "output debugging information to pattern console"
+            );
+            drawBuiltinFunction(
+                "void", "assert", ("condition, message"),
+                "assert that a condition holds, aborting execution and displaying `message` if false"
+            );
+            drawBuiltinFunction(
+                "void", "warnAssert", ("condition, message"),
+                "assert that a condition holds, printing `message` as a warning if false"
+            );
+            drawBuiltinFunction(
+                "u64", "dataSize", (""),
+                "return the size of the current file"
             );
 
             drawTitle("Bitfields");
@@ -248,6 +314,36 @@ namespace hex {
                             "using magic_t = u32;"
             );
 
+            drawTitle("Math Expressions");
+            ImGui::TextWrapped(
+                "In any place where a numeric value is required, a mathematical expression can be"
+                " inserted. This can be as easy as 1 + 1 but can get much more complex as well by"
+                " accessing values within structs or enum constants. These expressions work the"
+                " same as in basically every other language as well with the following operators"
+                " being supported:"
+            );
+            drawUnaryBulletPoint("+", "Addition");
+            drawUnaryBulletPoint("-", "Subtraction");
+            drawUnaryBulletPoint("*", "Multiplication");
+            drawUnaryBulletPoint("/", "Division");
+            drawUnaryBulletPoint("%", "Modulus");
+            drawUnaryBulletPoint(">>", "Bit Right Shift");
+            drawUnaryBulletPoint("<<", "Bit Left Shift");
+            drawUnaryBulletPoint("&", "Bitwise AND");
+            drawUnaryBulletPoint("|", "Bitwise OR");
+            drawUnaryBulletPoint("^", "Bitwise XOR");
+            drawUnaryBulletPoint("==", "Equality comparison");
+            drawUnaryBulletPoint("!=", "Inequality comparison");
+            drawUnaryBulletPoint(">", "Greater-than comparison");
+            drawUnaryBulletPoint(">=", "Greater-or-equals comparison");
+            drawUnaryBulletPoint("<", "Less-than comparison");
+            drawUnaryBulletPoint("<=", "Less-or-Equal comparison");
+            drawUnaryBulletPoint("&&", "Boolean AND");
+            drawUnaryBulletPoint("||", "Boolean OR");
+            drawUnaryBulletPoint("^^", "Boolean XOR");
+            ImGui::Bullet(); ImGui::Text("a ? b : c - Ternary comparison");
+            ImGui::Bullet(); ImGui::Text("$ - Current offset");
+
             drawTitle("Comments");
             ImGui::TextWrapped(
                     "To create a comment the C // or /*  */ syntax can be used. //-style comments end at the next new line "
@@ -257,14 +353,6 @@ namespace hex {
                             "/* This is a\n"
                             "multiline comment */"
             );
-
-            drawTitle("Variable placement");
-            ImGui::TextWrapped(
-                    "In order to highlight bytes and displaying their value in the pattern data window, "
-                    "a variable needs to be created and placed in memory. The following line of code creates"
-                    "a unsigned 32 bit variable named data and places it at offset 0x100."
-                    );
-            drawCodeSegment("var placement", "u32 data @ 0x100;");
         }
         ImGui::End();
     }
