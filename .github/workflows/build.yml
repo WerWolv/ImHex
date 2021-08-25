@@ -46,7 +46,7 @@ jobs:
         flatpak --user install -y flathub org.freedesktop.Platform//20.08
         flatpak --user install -y flathub org.freedesktop.Sdk//20.08
         flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml
-        flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex
+        flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
 
     - name: 📦 Upload ELF
       uses: actions/upload-artifact@v2
@@ -60,7 +60,7 @@ jobs:
       with:
         name: Linux Flatpak
         path: |
-          _flatpak/*.flatpak
+         imhex.flatpak
 
   win:
     runs-on: windows-latest
