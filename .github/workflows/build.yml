@@ -12,9 +12,6 @@ jobs:
   linux:
     runs-on: ubuntu-20.04
     name: 🐧 Ubuntu 20.04
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:freedesktop-20.08
-      options: --privileged
     steps:
 
     - name: 🧰 Checkout
@@ -43,11 +40,13 @@ jobs:
         make -j 4 install
 
     - name: ✋ Bundle Flatpak
-      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v3
-      with:
-        bundle: imhex.flatpak
-        manifest-path: dist/net.werwolv.ImHex.yaml
-        cache-key: flatpak-builder-${{ github.sha }}
+      run: |
+        sudo apt install flatpak flatpak-builder
+        flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak --user install flathub org.freedesktop.Platform//20.08
+        flatpak --user install flathub org.freedesktop.Sdk//20.08
+        flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml
+        flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex
 
     - name: 📦 Upload ELF
       uses: actions/upload-artifact@v2
@@ -61,7 +60,7 @@ jobs:
       with:
         name: Linux Flatpak
         path: |
-          build/*.flatpak
+          _flatpak/*.flatpak
 
   win:
     runs-on: windows-latest
