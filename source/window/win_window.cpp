@@ -3,44 +3,65 @@
 #if defined(OS_WINDOWS)
 
     #include <imgui.h>
+    #include <imgui_internal.h>
+    #include <codicons_font.h>
 
     #include <GLFW/glfw3.h>
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
+    #undef GLFW_EXPOSE_NATIVE_WIN32
+
     #include <winuser.h>
     #include <dwmapi.h>
     #include <windowsx.h>
-    #include <imgui_internal.h>
-
-    #include <codicons_font.h>
 
     namespace hex {
+
         static LONG_PTR oldWndProc;
         static float titleBarHeight;
         static ImGuiMouseCursor mouseCursorIcon;
         static float borderScaling;
 
-        LRESULT wndProcImHex(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+        static bool isTaskbarAutoHideEnabled(UINT edge, RECT monitor) {
+            APPBARDATA data = { .cbSize = sizeof(APPBARDATA), .uEdge = edge, .rc = monitor };
+            return ::SHAppBarMessage(ABM_GETAUTOHIDEBAR, &data);
+        }
+
+        static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             switch (uMsg) {
                 case WM_NCCALCSIZE: {
-                    auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
-                    RECT &rect = params.rgrc[0];
+                    RECT &rect = *reinterpret_cast<RECT*>(lParam);
+                    RECT client = rect;
 
-                    WINDOWPLACEMENT placement;
-                    if (!::GetWindowPlacement(hwnd, &placement) || placement.showCmd != SW_MAXIMIZE)
-                        return 0;
+                    DefWindowProcW(hwnd, WM_NCCALCSIZE, wParam, lParam);
 
-                    auto monitor = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
-                    if (monitor == nullptr) {
-                        return 0;
+                    if (IsMaximized(hwnd)) {
+                        WINDOWINFO windowInfo = { .cbSize = sizeof(WINDOWINFO) };
+                        GetWindowInfo(hwnd, &windowInfo);
+                        rect = RECT {
+                            .left = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
+                            .top = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
+                            .right = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
+                            .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders)
+                        };
+
+                        HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+                        MONITORINFO monitorInfo = { .cbSize = sizeof(MONITORINFO) };
+                        GetMonitorInfoW(hMonitor, &monitorInfo);
+
+                        if (EqualRect(&rect, &monitorInfo.rcMonitor)) {
+                            if (isTaskbarAutoHideEnabled(ABE_BOTTOM, monitorInfo.rcMonitor))
+                                rect.bottom--;
+                            else if (isTaskbarAutoHideEnabled(ABE_LEFT, monitorInfo.rcMonitor))
+                                rect.left++;
+                            else if (isTaskbarAutoHideEnabled(ABE_TOP, monitorInfo.rcMonitor))
+                                rect.top++;
+                            else if (isTaskbarAutoHideEnabled(ABE_RIGHT, monitorInfo.rcMonitor))
+                                rect.right--;
+                        }
+                    } else {
+                        rect = client;
                     }
-
-                    MONITORINFO monitor_info{};
-                    monitor_info.cbSize = sizeof(monitor_info);
-                    if (!::GetMonitorInfoW(monitor, &monitor_info))
-                        return 0;
-
-                    rect = monitor_info.rcWork;
 
                     return 0;
                 }
@@ -112,11 +133,13 @@
                         case RegionBottom | RegionRight:
                             return HTBOTTOMRIGHT;
                         case RegionClient:
+                        default:
                             if ((cursor.y < (window.top + titleBarHeight * 2)) && !ImGui::IsAnyItemHovered())
                                 return HTCAPTION;
                             else break;
                     }
                 }
+                default: break;
             }
 
             return CallWindowProc((WNDPROC)oldWndProc, hwnd, uMsg, wParam, lParam);
@@ -140,7 +163,7 @@
         void Window::setupNativeWindow() {
             auto hwnd = glfwGetWin32Window(this->m_window);
 
-            oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProcImHex);
+            oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
 
             MARGINS borderless = {1,1,1,1};
             ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
