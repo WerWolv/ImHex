@@ -1,0 +1,71 @@
+app-id: net.werwolv.ImHex
+runtime: org.freedesktop.Platform
+runtime-version: '20.08'
+default-branch: stable
+sdk: org.freedesktop.Sdk
+command: imhex
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --filesystem=host
+  - --device=all
+
+modules:
+  - name: capstone
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    sources:
+      - type: archive
+        url: https://github.com/aquynh/capstone/archive/4.0.2.tar.gz
+        sha256: 7c81d798022f81e7507f1a60d6817f63aa76e489aa4e7055255f21a22f5e526a
+
+  - name: libiconv
+    sources:
+      - type: archive
+        url: https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz
+        sha256: e6a1b1b589654277ee790cce3734f07876ac4ccfaecbee8afa0b649cf529cc04
+
+  - name: glfw
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DBUILD_SHARED_LIBS:BOOL=ON
+    sources:
+      - type: archive
+        url: https://github.com/glfw/glfw/releases/download/3.3.2/glfw-3.3.2.zip
+        sha256: 08a33a512f29d7dbf78eab39bd7858576adcc95228c9efe8e4bc5f0f3261efc7
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+
+  - name: mbedtls
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_C_FLAGS=-fPIC
+    sources:
+      - type: archive
+        url: https://github.com/ARMmbed/mbedtls/archive/refs/tags/v2.27.0.tar.gz
+        sha256: 2a07856e541f0e5f6eaee4f78018c52f25bd244ed76f9020dea54a8b02cac6ea
+
+  - name: nlohmann-json
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DBUILD_TESTING=OFF
+
+    sources:
+      - type: archive
+        url: https://github.com/nlohmann/json/archive/v3.9.1.tar.gz
+        sha256: 4cf0df69731494668bdd6460ed8cb269b68de9c19ad8c27abc24cd72605b2d5b
+
+  - name: imhex
+    buildsystem: cmake-ninja
+
+    sources:
+      - type: git
+        url: https://github.com/WerWolv/ImHex.git

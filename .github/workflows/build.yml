@@ -12,6 +12,9 @@ jobs:
   linux:
     runs-on: ubuntu-20.04
     name: 🐧 Ubuntu 20.04
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:gnome-40
+      options: --privileged
     steps:
 
     - name: 🧰 Checkout
@@ -39,12 +42,26 @@ jobs:
           ..
         make -j 4 install
 
+    - name: ✋ Bundle Flatpak
+      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
+      with:
+        bundle: imhex.flatpak
+        manifest-path: dist/net.werwolv.ImHex.yaml
+        cache-key: flatpak-builder-${{ github.sha }}
+
     - name: 📦 Upload ELF
       uses: actions/upload-artifact@v2
       with:
         name: Linux ELF
         path: |
           build/install/*
+
+    - name: 📦 Upload Flatpak
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux Flatpak
+        path: |
+          build/*.flatpak
 
   win:
     runs-on: windows-latest
