@@ -43,8 +43,8 @@ jobs:
       run: |
         sudo apt install flatpak flatpak-builder
         flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak --user install flathub org.freedesktop.Platform//20.08
-        flatpak --user install flathub org.freedesktop.Sdk//20.08
+        flatpak --user install -y flathub org.freedesktop.Platform//20.08
+        flatpak --user install -y flathub org.freedesktop.Sdk//20.08
         flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml
         flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex
 
