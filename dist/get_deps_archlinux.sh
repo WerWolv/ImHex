@@ -7,7 +7,6 @@ pacman -S --needed \
   file \
   mbedtls \
   capstone \
-  glm \
   python3 \
   freetype2 \
   gtk3

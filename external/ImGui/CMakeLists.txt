@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
 find_package(Freetype REQUIRED)
-pkg_search_module(GLM REQUIRED glm)
 pkg_search_module(GLFW REQUIRED glfw3)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -38,7 +37,7 @@ add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
 target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 
-target_link_directories(imgui PUBLIC ${GLM_INCLUDE_DIRS} ${GLFW_LIBRARY_DIRS})
+target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
 
 if (WIN32)
     target_link_libraries(imgui Freetype::Freetype glfw3 opengl32.lib)
