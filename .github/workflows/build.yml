@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-20.04
     name: 🐧 Ubuntu 20.04
     container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-40
+      image: bilelmoussaoui/flatpak-github-actions:freedesktop-20.08
       options: --privileged
     steps:
 
@@ -43,7 +43,7 @@ jobs:
         make -j 4 install
 
     - name: ✋ Bundle Flatpak
-      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
+      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v3
       with:
         bundle: imhex.flatpak
         manifest-path: dist/net.werwolv.ImHex.yaml
