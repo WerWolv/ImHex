@@ -35,7 +35,8 @@ namespace hex::lang {
             Parent,
             While,
             Function,
-            Return
+            Return,
+            Namespace
         };
 
         enum class Operator {
@@ -66,7 +67,8 @@ namespace hex::lang {
             TernaryConditional,
             Dollar,
             AddressOf,
-            SizeOf
+            SizeOf,
+            ScopeResolution
         };
 
         enum class ValueType {
@@ -208,6 +210,7 @@ namespace hex::lang {
 #define KEYWORD_WHILE                       COMPONENT(Keyword, While)
 #define KEYWORD_FUNCTION                    COMPONENT(Keyword, Function)
 #define KEYWORD_RETURN                      COMPONENT(Keyword, Return)
+#define KEYWORD_NAMESPACE                   COMPONENT(Keyword, Namespace)
 
 #define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral(u64(0))
 #define IDENTIFIER                          hex::lang::Token::Type::Identifier, ""
@@ -241,6 +244,7 @@ namespace hex::lang {
 #define OPERATOR_DOLLAR                     COMPONENT(Operator, Dollar)
 #define OPERATOR_ADDRESSOF                  COMPONENT(Operator, AddressOf)
 #define OPERATOR_SIZEOF                     COMPONENT(Operator, SizeOf)
+#define OPERATOR_SCOPERESOLUTION            COMPONENT(Operator, ScopeResolution)
 
 #define VALUETYPE_CUSTOMTYPE                COMPONENT(ValueType, CustomType)
 #define VALUETYPE_PADDING                   COMPONENT(ValueType, Padding)

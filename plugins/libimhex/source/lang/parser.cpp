@@ -1,7 +1,6 @@
 #include <hex/lang/parser.hpp>
 
 #include <optional>
-#include <variant>
 
 #define MATCHES(x) (begin() && x)
 
@@ -20,7 +19,11 @@ namespace hex::lang {
 
     // Identifier([(parseMathematicalExpression)|<(parseMathematicalExpression),...>(parseMathematicalExpression)]
     ASTNode* Parser::parseFunctionCall() {
-        auto functionName = getValue<std::string>(-2);
+        std::string functionName = parseScopeResolution();
+
+        if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN)))
+            throwParseError("expected '(' after function name");
+
         std::vector<ASTNode*> params;
         auto paramCleanup = SCOPE_GUARD {
             for (auto &param : params)
@@ -51,18 +54,21 @@ namespace hex::lang {
         return new ASTNodeStringLiteral(getValue<std::string>(-1));
     }
 
-    // Identifier::<Identifier[::]...>
-    ASTNode* Parser::parseScopeResolution(std::vector<std::string> &path) {
-        if (peek(IDENTIFIER, -1))
-            path.push_back(getValue<std::string>(-1));
+    std::string Parser::parseScopeResolution() {
+        std::string name;
 
-        if (MATCHES(sequence(SEPARATOR_SCOPE_RESOLUTION))) {
-            if (MATCHES(sequence(IDENTIFIER)))
-                return this->parseScopeResolution(path);
+        while (true) {
+            name += getValue<std::string>(-1);
+
+            if (MATCHES(sequence(OPERATOR_SCOPERESOLUTION, IDENTIFIER))) {
+                name += "::";
+                continue;
+            }
             else
-                throwParseError("expected member name", -1);
-        } else
-            return TO_NUMERIC_EXPRESSION(new ASTNodeScopeResolution(path));
+                break;
+        }
+
+        return name;
     }
 
     // <Identifier[.]...>
@@ -98,13 +104,22 @@ namespace hex::lang {
                 throwParseError("expected closing parenthesis");
             }
             return node;
-        } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SCOPE_RESOLUTION))) {
-            std::vector<std::string> path;
-            this->m_curr--;
-            return this->parseScopeResolution(path);
-        } else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN))) {
-            return TO_NUMERIC_EXPRESSION(this->parseFunctionCall());
-        } else if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
+        } else if (MATCHES(sequence(IDENTIFIER))) {
+            auto originalPos = this->m_curr;
+            this->m_curr++;
+            parseScopeResolution();
+            bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
+            this->m_curr = originalPos;
+
+            if (isFunction) {
+                this->m_curr++;
+                return TO_NUMERIC_EXPRESSION(parseFunctionCall());
+            }
+            else {
+                ASTNodeRValue::Path path;
+                return TO_NUMERIC_EXPRESSION(this->parseRValue(path));
+            }
+        } else if (MATCHES(oneOf(KEYWORD_PARENT))) {
             ASTNodeRValue::Path path;
             return TO_NUMERIC_EXPRESSION(this->parseRValue(path));
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
@@ -397,17 +412,29 @@ namespace hex::lang {
         }
 
         bodyCleanup.release();
-        return new ASTNodeFunctionDefinition(functionName, params, body);
+        return new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), params, body);
     }
 
     ASTNode* Parser::parseFunctionStatement() {
         bool needsSemicolon = true;
         ASTNode *statement;
 
-        if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
-            statement = parseFunctionCall();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
-            statement = parseMemberVariable();
+        if (peek(IDENTIFIER)) {
+            auto originalPos = this->m_curr;
+            this->m_curr++;
+            parseScopeResolution();
+            bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
+            this->m_curr = originalPos;
+
+            if (isFunction) {
+                this->m_curr++;
+                statement = parseFunctionCall();
+            }
+            else
+                statement = parseMemberVariable(parseType());
+        }
+        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY))
+            statement = parseMemberVariable(parseType());
         else if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
             statement = parseFunctionVariableAssignment();
         else if (MATCHES(sequence(KEYWORD_RETURN)))
@@ -418,7 +445,8 @@ namespace hex::lang {
         } else if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN))) {
             statement = parseFunctionWhileLoop();
             needsSemicolon = false;
-        } else
+        }
+        else
             throwParseError("invalid sequence", 0);
 
         if (needsSemicolon && !MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION))) {
@@ -558,34 +586,36 @@ namespace hex::lang {
     /* Type declarations */
 
     // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double>
-    ASTNode* Parser::parseType(s32 startIndex) {
+    ASTNodeTypeDecl* Parser::parseType() {
         std::optional<std::endian> endian;
 
-        if (peekOptional(KEYWORD_LE, 0))
+        if (MATCHES(sequence(KEYWORD_LE)))
             endian = std::endian::little;
-        else if (peekOptional(KEYWORD_BE, 0))
+        else if (MATCHES(sequence(KEYWORD_BE)))
             endian = std::endian::big;
 
-        if (getType(startIndex) == Token::Type::Identifier) { // Custom type
-            if (!this->m_types.contains(getValue<std::string>(startIndex)))
-                throwParseError("failed to parse type");
+        if (MATCHES(sequence(IDENTIFIER))) { // Custom type
+            std::string typeName = parseScopeResolution();
 
-            return new ASTNodeTypeDecl({ }, this->m_types[getValue<std::string>(startIndex)]->clone(), endian);
+            if (this->m_types.contains(typeName))
+                return new ASTNodeTypeDecl({ }, this->m_types[typeName]->clone(), endian);
+            else if (this->m_types.contains(getNamespacePrefixedName(typeName)))
+                return new ASTNodeTypeDecl({ }, this->m_types[getNamespacePrefixedName(typeName)]->clone(), endian);
+            else
+                throwParseError(hex::format("unknown type '{}'", typeName));
         }
-        else { // Builtin type
-            return new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(getValue<Token::ValueType>(startIndex)), endian);
-        }
+        else if (MATCHES(sequence(VALUETYPE_ANY))) { // Builtin type
+            return new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(getValue<Token::ValueType>(-1)), endian);
+        } else throwParseError("failed to parse type. Expected identifier or builtin type");
     }
 
     // using Identifier = (parseType)
     ASTNode* Parser::parseUsingDeclaration() {
-        auto *type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
+        auto name = getValue<std::string>(-2);
+        auto *type = dynamic_cast<ASTNodeTypeDecl *>(parseType());
         if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
-        if (peekOptional(KEYWORD_BE) || peekOptional(KEYWORD_LE))
-            return new ASTNodeTypeDecl(getValue<std::string>(-4), type, type->getEndian());
-        else
-            return new ASTNodeTypeDecl(getValue<std::string>(-3), type, type->getEndian());
+        return new ASTNodeTypeDecl(name, type, type->getEndian());
     }
 
     // padding[(parseMathematicalExpression)]
@@ -601,16 +631,14 @@ namespace hex::lang {
     }
 
     // (parseType) Identifier
-    ASTNode* Parser::parseMemberVariable() {
-        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-2));
+    ASTNode* Parser::parseMemberVariable(ASTNodeTypeDecl *type) {
         if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
         return new ASTNodeVariableDecl(getValue<std::string>(-1), type);
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]
-    ASTNode* Parser::parseMemberArrayVariable() {
-        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
+    ASTNode* Parser::parseMemberArrayVariable(ASTNodeTypeDecl *type) {
         if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
         auto name = getValue<std::string>(-2);
@@ -634,33 +662,40 @@ namespace hex::lang {
     }
 
     // (parseType) *Identifier : (parseType)
-    ASTNode* Parser::parseMemberPointerVariable() {
+    ASTNode* Parser::parseMemberPointerVariable(ASTNodeTypeDecl *type) {
         auto name = getValue<std::string>(-2);
 
-        auto pointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
-        if (pointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        auto sizeType = parseType();
 
-        if (!MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED)))
-            throwParseError("expected unsigned builtin type as size", -1);
+        {
+            auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(sizeType->getType());
 
-        auto sizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
-        if (sizeType == nullptr) throwParseError("invalid type used for pointer size", -1);
+            if (builtinType == nullptr || !Token::isUnsigned(builtinType->getType()))
+                throwParseError("invalid type used for pointer size", -1);
+        }
 
-        return new ASTNodePointerVariableDecl(name, pointerType, sizeType);
+        return new ASTNodePointerVariableDecl(name, type, sizeType);
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
     ASTNode* Parser::parseMember() {
         ASTNode *member;
 
-        if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
+
+        if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY) || peek(IDENTIFIER)) {
+            // Some kind of variable definition
+
+            auto type = parseType();
+
+            if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN))
+                member = parseMemberArrayVariable(type);
+            else if (MATCHES(sequence(IDENTIFIER)))
+                member = parseMemberVariable(type);
+            else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+                member = parseMemberPointerVariable(type);
+        }
+        else if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
             member = parsePadding();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN)))
-            member = parseMemberArrayVariable();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER)))
-            member = parseMemberVariable();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
-            member = parseMemberPointerVariable();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN)))
             return parseConditional();
         else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
@@ -686,8 +721,6 @@ namespace hex::lang {
         if (this->m_types.contains(typeName))
             throwParseError(hex::format("redefinition of type '{}'", typeName));
 
-        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
-
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             structNode->addMember(parseMember());
         }
@@ -706,8 +739,6 @@ namespace hex::lang {
         if (this->m_types.contains(typeName))
             throwParseError(hex::format("redefinition of type '{}'", typeName));
 
-        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
-
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             unionNode->addMember(parseMember());
         }
@@ -719,14 +750,9 @@ namespace hex::lang {
 
     // enum Identifier : (parseType) { <<Identifier|Identifier = (parseMathematicalExpression)[,]>...> }
     ASTNode* Parser::parseEnum() {
-        std::string typeName;
-        if (peekOptional(KEYWORD_BE) || peekOptional(KEYWORD_LE))
-            typeName = getValue<std::string>(-5);
-        else
-            typeName = getValue<std::string>(-4);
+        auto typeName = getNamespacePrefixedName(getValue<std::string>(-2));
 
-        auto underlyingType = dynamic_cast<ASTNodeTypeDecl*>(parseType(-2));
-        if (underlyingType == nullptr) throwParseError("failed to parse type", -2);
+        auto underlyingType = parseType();
         if (underlyingType->getEndian().has_value()) throwParseError("underlying type may not have an endian specification", -2);
 
         const auto enumNode = new ASTNodeEnum(underlyingType);
@@ -734,8 +760,6 @@ namespace hex::lang {
 
         if (this->m_types.contains(typeName))
             throwParseError(hex::format("redefinition of type '{}'", typeName));
-
-        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
 
         ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -784,8 +808,6 @@ namespace hex::lang {
         if (this->m_types.contains(typeName))
             throwParseError(hex::format("redefinition of type '{}'", typeName));
 
-        this->m_types.insert({ typeName, new ASTNodeTypeDecl(typeName, nullptr) });
-
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
                 auto name = getValue<std::string>(-2);
@@ -807,18 +829,19 @@ namespace hex::lang {
     }
 
     // (parseType) Identifier @ Integer
-    ASTNode* Parser::parseVariablePlacement() {
-        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
-        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
+    ASTNode* Parser::parseVariablePlacement(ASTNodeTypeDecl *type) {
+        auto name = getValue<std::string>(-1);
 
-        return new ASTNodeVariableDecl(getValue<std::string>(-2), type, parseMathematicalExpression());
+        if (!MATCHES(sequence(OPERATOR_AT)))
+            throwParseError("expected placement instruction", -1);
+
+        auto placementOffset = parseMathematicalExpression();
+
+        return new ASTNodeVariableDecl(name, type, placementOffset);
     }
 
     // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer
-    ASTNode* Parser::parseArrayVariablePlacement() {
-        auto type = dynamic_cast<ASTNodeTypeDecl *>(parseType(-3));
-        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
-
+    ASTNode* Parser::parseArrayVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<std::string>(-2);
 
         ASTNode *size = nullptr;
@@ -837,58 +860,115 @@ namespace hex::lang {
         if (!MATCHES(sequence(OPERATOR_AT)))
             throwParseError("expected placement instruction", -1);
 
+        auto placementOffset = parseMathematicalExpression();
+
         sizeCleanup.release();
 
-        return new ASTNodeArrayVariableDecl(name, type, size, parseMathematicalExpression());
+        return new ASTNodeArrayVariableDecl(name, type, size, placementOffset);
     }
 
     // (parseType) *Identifier : (parseType) @ Integer
-    ASTNode* Parser::parsePointerVariablePlacement() {
+    ASTNode* Parser::parsePointerVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<std::string>(-2);
 
-        auto temporaryPointerType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-4));
-        if (temporaryPointerType == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        auto sizeType = parseType();
+        auto sizeCleanup = SCOPE_GUARD { delete sizeType; };
 
-        if (!MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED)))
-            throwParseError("expected unsigned builtin type as size", -1);
+        {
+            auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(sizeType->getType());
 
-        auto temporaryPointerSizeType = dynamic_cast<ASTNodeTypeDecl *>(parseType(-1));
-        if (temporaryPointerSizeType == nullptr) throwParseError("invalid size type used in pointer declaration", -1);
+            if (builtinType == nullptr || !Token::isUnsigned(builtinType->getType()))
+                throwParseError("invalid type used for pointer size", -1);
+        }
 
         if (!MATCHES(sequence(OPERATOR_AT)))
             throwParseError("expected placement instruction", -1);
 
-        return new ASTNodePointerVariableDecl(name, temporaryPointerType, temporaryPointerSizeType, parseMathematicalExpression());
+        auto placementOffset = parseMathematicalExpression();
+
+        sizeCleanup.release();
+
+        return new ASTNodePointerVariableDecl(name, type, sizeType, placementOffset);
     }
 
+    std::vector<ASTNode*> Parser::parseNamespace() {
+        std::vector<ASTNode*> statements;
 
+        if (!MATCHES(sequence(IDENTIFIER)))
+            throwParseError("expected namespace identifier");
+
+        this->m_currNamespace.push_back(this->m_currNamespace.back());
+
+        while (true) {
+            this->m_currNamespace.back().push_back(getValue<std::string>(-1));
+
+            if (MATCHES(sequence(OPERATOR_SCOPERESOLUTION, IDENTIFIER)))
+                continue;
+            else
+                break;
+        }
+
+        if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
+            throwParseError("expected '{' at start of namespace");
+
+        while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+            auto newStatements = parseStatements();
+            std::copy(newStatements.begin(), newStatements.end(), std::back_inserter(statements));
+        }
+
+        this->m_currNamespace.pop_back();
+
+        return statements;
+    }
+
+    ASTNode* Parser::parsePlacement() {
+        auto type = parseType();
+
+        if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
+            return parseArrayVariablePlacement(type);
+        else if (MATCHES(sequence(IDENTIFIER)))
+            return parseVariablePlacement(type);
+        else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+            return parsePointerVariablePlacement(type);
+        else throwParseError("invalid sequence", 0);
+    }
 
     /* Program */
 
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
-    ASTNode* Parser::parseStatement() {
+    std::vector<ASTNode*> Parser::parseStatements() {
         ASTNode *statement;
 
-        if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT) && (optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY)))
-            statement = dynamic_cast<ASTNodeTypeDecl*>(parseUsingDeclaration());
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
-            statement = parseArrayVariablePlacement();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(IDENTIFIER, OPERATOR_AT)))
-            statement = parseVariablePlacement();
-        else if (MATCHES((optional(KEYWORD_BE), optional(KEYWORD_LE)) && variant(IDENTIFIER, VALUETYPE_ANY) && sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
-            statement = parsePointerVariablePlacement();
+        if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT)))
+            statement = parseUsingDeclaration();
+        else if (peek(IDENTIFIER)) {
+            auto originalPos = this->m_curr;
+            this->m_curr++;
+            parseScopeResolution();
+            bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
+            this->m_curr = originalPos;
+
+            if (isFunction) {
+                this->m_curr++;
+                statement = parseFunctionCall();
+            }
+            else
+                statement = parsePlacement();
+        }
+        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY))
+            statement = parsePlacement();
         else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseStruct();
         else if (MATCHES(sequence(KEYWORD_UNION, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseUnion();
-        else if (MATCHES(sequence(KEYWORD_ENUM, IDENTIFIER, OPERATOR_INHERIT) && (optional(KEYWORD_BE), optional(KEYWORD_LE)) && sequence(VALUETYPE_UNSIGNED, SEPARATOR_CURLYBRACKETOPEN)))
+        else if (MATCHES(sequence(KEYWORD_ENUM, IDENTIFIER, OPERATOR_INHERIT)))
             statement = parseEnum();
         else if (MATCHES(sequence(KEYWORD_BITFIELD, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseBitfield();
-        else if (MATCHES(sequence(IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
-            statement = parseFunctionCall();
         else if (MATCHES(sequence(KEYWORD_FUNCTION, IDENTIFIER, SEPARATOR_ROUNDBRACKETOPEN)))
             statement = parseFunctionDefintion();
+        else if (MATCHES(sequence(KEYWORD_NAMESPACE)))
+            return parseNamespace();
         else throwParseError("invalid sequence", 0);
 
         if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
@@ -897,17 +977,24 @@ namespace hex::lang {
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
             throwParseError("missing ';' at end of expression", -1);
 
-        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(statement); typeDecl != nullptr)
-            this->m_types.insert({ typeDecl->getName().data(), typeDecl });
+        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(statement); typeDecl != nullptr) {
+            auto typeName = getNamespacePrefixedName(typeDecl->getName().data());
 
-        return statement;
+            typeDecl->setName(typeName);
+            this->m_types.insert({ typeName, typeDecl });
+        }
+
+        return { statement };
     }
 
-    // <(parseStatement)...> EndOfProgram
+    // <(parseNamespace)...> EndOfProgram
     std::optional<std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
         this->m_curr = tokens.begin();
 
         this->m_types.clear();
+
+        this->m_currNamespace.clear();
+        this->m_currNamespace.emplace_back();
 
         try {
             auto program = parseTillToken(SEPARATOR_ENDOFPROGRAM);

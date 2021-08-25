@@ -32,6 +32,7 @@ namespace hex::lang {
 
         std::unordered_map<std::string, ASTNode*> m_types;
         std::vector<TokenIter> m_matchedOptionals;
+        std::vector<std::vector<std::string>> m_currNamespace;
 
         u32 getLineNumber(s32 index) const {
             return this->m_curr[index].lineNumber;
@@ -51,9 +52,20 @@ namespace hex::lang {
             return this->m_curr[index].type;
         }
 
+        std::string getNamespacePrefixedName(const std::string &name) {
+            std::string result;
+            for (const auto &part : this->m_currNamespace.back()) {
+                result += part + "::";
+            }
+
+            result += name;
+
+            return result;
+        }
+
         ASTNode* parseFunctionCall();
         ASTNode* parseStringLiteral();
-        ASTNode* parseScopeResolution(std::vector<std::string> &path);
+        std::string parseScopeResolution();
         ASTNode* parseRValue(ASTNodeRValue::Path &path);
         ASTNode* parseFactor();
         ASTNode* parseUnaryExpression();
@@ -81,21 +93,23 @@ namespace hex::lang {
         void parseAttribute(Attributable *currNode);
         ASTNode* parseConditional();
         ASTNode* parseWhileStatement();
-        ASTNode* parseType(s32 startIndex);
+        ASTNodeTypeDecl* parseType();
         ASTNode* parseUsingDeclaration();
         ASTNode* parsePadding();
-        ASTNode* parseMemberVariable();
-        ASTNode* parseMemberArrayVariable();
-        ASTNode* parseMemberPointerVariable();
+        ASTNode* parseMemberVariable(ASTNodeTypeDecl *type);
+        ASTNode* parseMemberArrayVariable(ASTNodeTypeDecl *type);
+        ASTNode* parseMemberPointerVariable(ASTNodeTypeDecl *type);
         ASTNode* parseMember();
         ASTNode* parseStruct();
         ASTNode* parseUnion();
         ASTNode* parseEnum();
         ASTNode* parseBitfield();
-        ASTNode* parseVariablePlacement();
-        ASTNode* parseArrayVariablePlacement();
-        ASTNode* parsePointerVariablePlacement();
-        ASTNode* parseStatement();
+        ASTNode* parseVariablePlacement(ASTNodeTypeDecl *type);
+        ASTNode* parseArrayVariablePlacement(ASTNodeTypeDecl *type);
+        ASTNode* parsePointerVariablePlacement(ASTNodeTypeDecl *type);
+        ASTNode* parsePlacement();
+        std::vector<ASTNode*> parseNamespace();
+        std::vector<ASTNode*> parseStatements();
 
         std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {
             std::vector<ASTNode*> program;
@@ -105,7 +119,8 @@ namespace hex::lang {
             };
 
             while (this->m_curr->type != endTokenType || (*this->m_curr) != value) {
-                program.push_back(parseStatement());
+                for (auto statement : parseStatements())
+                    program.push_back(statement);
             }
 
             this->m_curr++;
@@ -132,6 +147,10 @@ namespace hex::lang {
             return true;
         }
 
+        void reset() {
+            this->m_curr = this->m_originalPosition;
+        }
+
         template<Setting S = Normal>
         bool sequence() {
             if constexpr (S == Normal)
@@ -146,14 +165,14 @@ namespace hex::lang {
         bool sequence(Token::Type type, auto value, auto ... args) {
             if constexpr (S == Normal) {
                 if (!peek(type, value)) {
-                    this->m_curr = this->m_originalPosition;
+                    reset();
                     return false;
                 }
 
                 this->m_curr++;
 
                 if (!sequence<Normal>(args...)) {
-                    this->m_curr = this->m_originalPosition;
+                    reset();
                     return false;
                 }
 
@@ -167,7 +186,7 @@ namespace hex::lang {
                 if (!sequence<Normal>(args...))
                     return true;
 
-                this->m_curr = this->m_originalPosition;
+                reset();
                 return false;
             } else
                 __builtin_unreachable();
@@ -196,7 +215,7 @@ namespace hex::lang {
         bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {
             if (!peek(type1, value1)) {
                 if (!peek(type2, value2)) {
-                    this->m_curr = this->m_originalPosition;
+                    reset();
                     return false;
                 }
             }

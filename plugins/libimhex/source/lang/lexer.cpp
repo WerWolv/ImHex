@@ -284,6 +284,9 @@ namespace hex::lang {
                 } else if (c == '.') {
                     tokens.emplace_back(TOKEN(Separator, Dot));
                     offset += 1;
+                } else if (code.substr(offset, 2) == "::") {
+                    tokens.emplace_back(TOKEN(Operator, ScopeResolution));
+                    offset += 2;
                 } else if (c == '@') {
                     tokens.emplace_back(TOKEN(Operator, AtDeclaration));
                     offset += 1;
@@ -428,6 +431,8 @@ namespace hex::lang {
                         tokens.emplace_back(TOKEN(Keyword, Function));
                     else if (identifier == "return")
                         tokens.emplace_back(TOKEN(Keyword, Return));
+                    else if (identifier == "namespace")
+                        tokens.emplace_back(TOKEN(Keyword, Namespace));
 
                         // Check for built-in types
                     else if (identifier == "u8")

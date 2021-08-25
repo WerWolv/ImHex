@@ -161,6 +161,7 @@ namespace hex::lang {
             return new ASTNodeTypeDecl(*this);
         }
 
+        void setName(const std::string &name) { this->m_name = name; }
         [[nodiscard]] std::string_view getName() const { return this->m_name; }
         [[nodiscard]] ASTNode* getType() { return this->m_type; }
         [[nodiscard]] std::optional<std::endian> getEndian() const { return this->m_endian; }
