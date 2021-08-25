@@ -76,21 +76,18 @@ macro(detectOS)
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         set(MAGIC_INSTALL_LOCATION "magic")
-        set(RESOURCES_INSTALL_LOCATION "resources")
     elseif(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_MACOS")
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         set(MAGIC_INSTALL_LOCATION "magic")
-        set(RESOURCES_INSTALL_LOCATION "resources")
     elseif(UNIX AND NOT APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_LINUX")
         set(CMAKE_INSTALL_BINDIR "bin")
         set(CMAKE_INSTALL_LIBDIR "lib")
         set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
         set(MAGIC_INSTALL_LOCATION "share/imhex/magic")
-        set(RESOURCES_INSTALL_LOCATION "share/imhex/resources")
     else()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()
@@ -236,10 +233,6 @@ macro(createPackage)
 
     # Install the magicdb files.
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION ${MAGIC_INSTALL_LOCATION} RENAME imhex.mgc)
-
-    # Install resources
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/res/resources/ DESTINATION ${RESOURCES_INSTALL_LOCATION})
-
 
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
