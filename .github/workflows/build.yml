@@ -25,7 +25,7 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        sudo apt-get update
+        sudo apt update
         sudo bash dist/get_deps_debian.sh
 
     - name: ✋ Build
