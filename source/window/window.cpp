@@ -124,19 +124,6 @@ namespace hex {
             }
 
             {
-                auto scaling = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling");
-
-                if (scaling.is_number()) {
-                    static bool firstTime = true;
-
-                    if (!firstTime) {
-                        ImHexApi::Common::restartImHex();
-                    }
-                    firstTime = false;
-                }
-            }
-
-            {
                 auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
 
                 if (language.is_string()) {
