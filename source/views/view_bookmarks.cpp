@@ -68,27 +68,57 @@ namespace hex {
                     ImGui::PushStyleColor(ImGuiCol_Header, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
-                    if (ImGui::CollapsingHeader((std::string(name.data()) + "###" + std::to_string((u64)comment.data())).c_str())) {
+                    if (ImGui::CollapsingHeader(std::string(name.data()).c_str())) {
                         ImGui::TextUnformatted("hex.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
                         ImGui::TextUnformatted(hex::format("hex.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size).c_str());
 
-                        {
-                            u8 bytes[10] = { 0 };
-                            SharedData::currentProvider->read(region.address, bytes, std::min(region.size, size_t(10)));
+                        if (ImGui::BeginChild("hexData", ImVec2(0, ImGui::GetTextLineHeight() * 8), true)) {
+                            size_t offset = region.address % 0x10;
 
-                            std::string bytesString;
-                            for (u8 i = 0; i < std::min(region.size, size_t(10)); i++) {
-                                bytesString += hex::format("{0:02X} ", bytes[i]);
+                            for (size_t byte = 0; byte < 0x10; byte++) {
+                                ImGui::TextDisabled("%02X", byte);
+                                ImGui::SameLine();
                             }
 
-                            if (region.size > 10) {
-                                bytesString.pop_back();
-                                bytesString += "...";
+                            ImGui::NewLine();
+
+                            // TODO: Clip this somehow
+
+                            // First line
+                            {
+                                std::array<u8, 0x10> bytes = { 0 };
+                                size_t byteCount = std::min<size_t>(0x10 - offset, region.size);
+                                SharedData::currentProvider->read(region.address, bytes.data() + offset, byteCount);
+
+                                for (size_t byte = 0; byte < 0x10; byte++) {
+                                    if (byte < offset)
+                                        ImGui::TextUnformatted("  ");
+                                    else
+                                        ImGui::Text("%02X", bytes[byte]);
+                                    ImGui::SameLine();
+                                }
+                                ImGui::NewLine();
                             }
 
-                            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", bytesString.c_str());
+                            // Other lines
+                            {
+                                std::array<u8, 0x10> bytes = { 0 };
+                                for (u32 i = 0x10 - offset; i < region.size; i += 0x10) {
+                                    size_t byteCount = std::min<size_t>(region.size - i, 0x10);
+                                    SharedData::currentProvider->read(region.address + i, bytes.data(), byteCount);
+
+                                    for (size_t byte = 0; byte < byteCount; byte++) {
+                                        ImGui::Text("%02X", bytes[byte]);
+                                        ImGui::SameLine();
+                                    }
+                                    ImGui::NewLine();
+                                }
+                            }
+
+                            ImGui::EndChild();
                         }
+
                         if (ImGui::Button("hex.view.bookmarks.button.jump"_lang))
                             EventManager::post<RequestSelectionChange>(region);
                         ImGui::SameLine(0, 15);
