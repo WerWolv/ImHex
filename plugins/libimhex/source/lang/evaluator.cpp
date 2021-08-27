@@ -74,7 +74,7 @@ namespace hex::lang {
                     if (candidate != currMembers.end())
                         currPattern = *candidate;
                     else
-                        this->getConsole().abortEvaluation(hex::format("no member found with identifier '{0}'", *stringPart));
+                        return nullptr;
                 }
             } else if (auto nodePart = std::get_if<ASTNode*>(&part); nodePart != nullptr) {
                 if (auto numericalExpressionNode = dynamic_cast<ASTNodeNumericExpression*>(*nodePart)) {
@@ -144,7 +144,7 @@ namespace hex::lang {
                 identifier += ".";
             }
             identifier.pop_back();
-            this->getConsole().abortEvaluation(hex::format("no identifier with name '{}' was found", identifier));
+            this->getConsole().abortEvaluation(hex::format("no identifier with name '{}' found", identifier));
         }
 
         return currPattern;
@@ -189,6 +189,30 @@ namespace hex::lang {
                 case 16: return new ASTNodeIntegerLiteral(hex::changeEndianess(*reinterpret_cast<s128*>(value), 16, signedPattern->getEndian()));
                 default: this->getConsole().abortEvaluation("invalid rvalue size");
             }
+        } else if (auto boolPattern = dynamic_cast<PatternDataBoolean*>(currPattern); boolPattern != nullptr) {
+            u8 value[boolPattern->getSize()];
+            if (currPattern->isLocal())
+                std::memcpy(value, this->m_localStack.data() + boolPattern->getOffset(), boolPattern->getSize());
+            else
+                this->m_provider->read(boolPattern->getOffset(), value, boolPattern->getSize());
+
+            return new ASTNodeIntegerLiteral(hex::changeEndianess(*reinterpret_cast<u8*>(value), 1, boolPattern->getEndian()));
+        } else if (auto charPattern = dynamic_cast<PatternDataCharacter*>(currPattern); charPattern != nullptr) {
+            u8 value[charPattern->getSize()];
+            if (currPattern->isLocal())
+                std::memcpy(value, this->m_localStack.data() + charPattern->getOffset(), charPattern->getSize());
+            else
+                this->m_provider->read(charPattern->getOffset(), value, charPattern->getSize());
+
+            return new ASTNodeIntegerLiteral(hex::changeEndianess(*reinterpret_cast<char*>(value), 1, charPattern->getEndian()));
+        } else if (auto char16Pattern = dynamic_cast<PatternDataCharacter16*>(currPattern); char16Pattern != nullptr) {
+            u8 value[char16Pattern->getSize()];
+            if (currPattern->isLocal())
+                std::memcpy(value, this->m_localStack.data() + char16Pattern->getOffset(), char16Pattern->getSize());
+            else
+                this->m_provider->read(char16Pattern->getOffset(), value, char16Pattern->getSize());
+
+            return new ASTNodeIntegerLiteral(hex::changeEndianess(*reinterpret_cast<u16*>(value), 1, char16Pattern->getEndian()));
         } else if (auto enumPattern = dynamic_cast<PatternDataEnum*>(currPattern); enumPattern != nullptr) {
             u8 value[enumPattern->getSize()];
             if (currPattern->isLocal())
@@ -494,7 +518,13 @@ namespace hex::lang {
                                 evaluator.createLocalVariable(paramNames[i], pattern);
                                 evaluator.setLocalVariableValue(paramNames[i], &value, sizeof(value));
                             }, integerLiteralNode->getValue());
-                        }
+                        } else if (auto stringLiteralNode = dynamic_cast<ASTNodeStringLiteral*>(params[i]); stringLiteralNode != nullptr) {
+                            auto string = stringLiteralNode->getString();
+
+                            evaluator.createLocalVariable(paramNames[i], new PatternDataString(0, string.length()));
+                            evaluator.setLocalVariableValue(paramNames[i], string.data(), string.length());
+                        } else
+                            evaluator.getConsole().abortEvaluation(hex::format("cannot create local variable {}, invalid type", paramNames[i]));
                     }
                     evaluator.m_currOffset = startOffset;
 

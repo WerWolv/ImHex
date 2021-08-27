@@ -106,13 +106,11 @@ namespace hex::lang {
             return node;
         } else if (MATCHES(sequence(IDENTIFIER))) {
             auto originalPos = this->m_curr;
-            this->m_curr++;
             parseScopeResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
             this->m_curr = originalPos;
 
             if (isFunction) {
-                this->m_curr++;
                 return TO_NUMERIC_EXPRESSION(parseFunctionCall());
             }
             else {
@@ -384,7 +382,7 @@ namespace hex::lang {
         while (hasParams) {
             params.push_back(getValue<std::string>(-1));
 
-            if (!MATCHES(sequence(SEPARATOR_COMMA))) {
+            if (!MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER))) {
                 if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                     break;
                 else
@@ -419,23 +417,7 @@ namespace hex::lang {
         bool needsSemicolon = true;
         ASTNode *statement;
 
-        if (peek(IDENTIFIER)) {
-            auto originalPos = this->m_curr;
-            this->m_curr++;
-            parseScopeResolution();
-            bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
-            this->m_curr = originalPos;
-
-            if (isFunction) {
-                this->m_curr++;
-                statement = parseFunctionCall();
-            }
-            else
-                statement = parseMemberVariable(parseType());
-        }
-        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY))
-            statement = parseMemberVariable(parseType());
-        else if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
+        if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
             statement = parseFunctionVariableAssignment();
         else if (MATCHES(sequence(KEYWORD_RETURN)))
             statement = parseFunctionReturnStatement();
@@ -445,6 +427,25 @@ namespace hex::lang {
         } else if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN))) {
             statement = parseFunctionWhileLoop();
             needsSemicolon = false;
+        } else if (MATCHES(sequence(IDENTIFIER))) {
+            auto originalPos = this->m_curr;
+            parseScopeResolution();
+            bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
+            this->m_curr = originalPos;
+
+            if (isFunction) {
+                statement = parseFunctionCall();
+            }
+            else
+                statement = parseMemberVariable(parseType());
+        }
+        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
+            auto type = parseType();
+
+            if (MATCHES(sequence(IDENTIFIER)))
+                statement = parseMemberVariable(type);
+            else
+                throwParseError("invalid variable declaration");
         }
         else
             throwParseError("invalid sequence", 0);
@@ -632,8 +633,6 @@ namespace hex::lang {
 
     // (parseType) Identifier
     ASTNode* Parser::parseMemberVariable(ASTNodeTypeDecl *type) {
-        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
-
         if (peek(SEPARATOR_COMMA)) {
 
             std::vector<ASTNode*> variables;
@@ -708,6 +707,8 @@ namespace hex::lang {
                 member = parseMemberVariable(type);
             else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
                 member = parseMemberPointerVariable(type);
+            else
+                throwParseError("invalid variable declaration");
         }
         else if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
             member = parsePadding();
