@@ -1,6 +1,9 @@
 #include <hex/plugin.hpp>
 
+#include <hex/helpers/net.hpp>
+
 #include <regex>
+#include <chrono>
 
 #include <llvm/Demangle/Demangle.h>
 #include "math_evaluator.hpp"
@@ -8,6 +11,8 @@
 namespace hex::plugin::builtin {
 
     namespace {
+
+        using namespace std::literals::chrono_literals;
 
         void drawDemangler() {
             static std::vector<char> mangledBuffer(0xF'FFFF, 0x00);
@@ -399,6 +404,98 @@ namespace hex::plugin::builtin {
 
     }
 
+    void drawFileUploader() {
+        struct UploadedFile {
+            std::string fileName, link, size;
+        };
+
+        static hex::Net net;
+        static std::future<Response<std::string>> uploadProcess;
+        static std::filesystem::path currFile;
+        static std::vector<UploadedFile> links;
+
+        bool uploading = uploadProcess.valid() && uploadProcess.wait_for(0s) != std::future_status::ready;
+
+        ImGui::Header("hex.builtin.tools.file_uploader.control"_lang, true);
+        if (!uploading) {
+            if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
+                hex::openFileBrowser("hex.builtin.tools.file_uploader.done"_lang, DialogMode::Open, { }, [&](auto path){
+                    uploadProcess = net.uploadFile("https://api.anonfiles.com/upload", path);
+                    currFile = path;
+                });
+            }
+        } else {
+            if (ImGui::Button("hex.common.cancel"_lang)) {
+                net.cancel();
+            }
+        }
+
+        ImGui::SameLine();
+
+        ImGui::ProgressBar(net.getProgress(), ImVec2(0, 0), uploading ? nullptr : "Done!");
+
+        ImGui::Header("hex.builtin.tools.file_uploader.recent"_lang);
+
+        if (ImGui::BeginTable("##links", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("hex.common.file"_lang);
+            ImGui::TableSetupColumn("hex.common.link"_lang);
+            ImGui::TableSetupColumn("hex.common.size"_lang);
+            ImGui::TableHeadersRow();
+
+            ImGuiListClipper clipper;
+            clipper.Begin(links.size());
+
+            while (clipper.Step()) {
+                for (s32 i = clipper.DisplayEnd - 1; i >= clipper.DisplayStart; i--) {
+                    auto &[fileName, link, size] = links[i];
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(fileName.c_str());
+
+                    ImGui::TableNextColumn();
+                    if (ImGui::Hyperlink(link.c_str())) {
+                        if (ImGui::GetMergedKeyModFlags() == ImGuiKeyModFlags_Ctrl)
+                            hex::openWebpage(link);
+                        else
+                            ImGui::SetClipboardText(link.c_str());
+                    }
+
+                    ImGui::InfoTooltip("hex.builtin.tools.file_uploader.tooltip"_lang);
+
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(size.c_str());
+                }
+            }
+
+            clipper.End();
+
+            ImGui::EndTable();
+        }
+
+        if (uploadProcess.valid() && uploadProcess.wait_for(0s) == std::future_status::ready) {
+            auto response = uploadProcess.get();
+            if (response.code == 200) {
+                try {
+                    auto json = nlohmann::json::parse(response.body);
+                    links.push_back({
+                        currFile.filename().string(),
+                        json["data"]["file"]["url"]["short"],
+                        json["data"]["file"]["metadata"]["size"]["readable"]
+                    });
+                } catch (...) {
+                    View::showErrorPopup("hex.builtin.tools.file_uploader.invalid_response"_lang);
+                }
+            } else if (response.code == 0) {
+                // Canceled by user, no action needed
+            } else View::showErrorPopup(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.code));
+
+            uploadProcess = { };
+            currFile.clear();
+        }
+    }
+
     void registerToolEntries() {
         ContentRegistry::Tools::add("hex.builtin.tools.demangler",         drawDemangler);
         ContentRegistry::Tools::add("hex.builtin.tools.ascii_table",       drawASCIITable);
@@ -407,6 +504,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.calc",              drawMathEvaluator);
         ContentRegistry::Tools::add("hex.builtin.tools.base_converter",    drawBaseConverter);
         ContentRegistry::Tools::add("hex.builtin.tools.permissions",       drawPermissionsCalculator);
+        ContentRegistry::Tools::add("hex.builtin.tools.file_uploader",     drawFileUploader);
     }
 
 }

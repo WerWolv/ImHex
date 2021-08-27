@@ -31,15 +31,15 @@ namespace hex::init {
     static bool checkForUpdates() {
         hex::Net net;
 
-        auto releases = net.getJson("https://api.github.com/repos/WerWolv/ImHex/releases/latest");
+        auto releases = net.getJson("https://api.github.com/repos/WerWolv/ImHex/releases/latest").get();
         if (releases.code != 200)
             return false;
 
-        if (!releases.response.contains("tag_name") || !releases.response["tag_name"].is_string())
+        if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
             return false;
 
         auto currVersion = "v" + std::string(IMHEX_VERSION).substr(0, 5);
-        auto latestVersion = releases.response["tag_name"].get<std::string_view>();
+        auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
         if (latestVersion != currVersion)
             getInitArguments().push_back({ "update-available", latestVersion.data() });
@@ -50,11 +50,11 @@ namespace hex::init {
     static bool downloadInformation() {
         hex::Net net;
 
-        auto tip = net.getString("https://api.werwolv.net/imhex/tip");
+        auto tip = net.getString("https://api.werwolv.net/imhex/tip").get();
         if (tip.code != 200)
             return false;
 
-        getInitArguments().push_back({ "tip-of-the-day", tip.response });
+        getInitArguments().push_back({ "tip-of-the-day", tip.body });
 
         return true;
     }

@@ -176,7 +176,7 @@ namespace hex {
 
         EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
             if (name == "Create File") {
-                View::openFileBrowser("hex.view.hexeditor.create_file"_lang, DialogMode::Save, { }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.create_file"_lang, DialogMode::Save, { }, [this](auto path) {
                     if (!this->createFile(path)) {
                         View::showErrorPopup("hex.view.hexeditor.error.create"_lang);
                         return;
@@ -185,12 +185,12 @@ namespace hex {
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open File") {
-                View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->openFile(path);
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open Project") {
-                View::openFileBrowser("hex.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
                     EventManager::post<EventProjectFileLoad>();
                     this->getWindowOpenState() = true;
@@ -271,7 +271,7 @@ namespace hex {
     }
 
     static void saveAs() {
-        View::openFileBrowser("hex.view.hexeditor.save_as"_lang, View::DialogMode::Save, { }, [](auto path) {
+        hex::openFileBrowser("hex.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [](auto path) {
             auto provider = SharedData::currentProvider;
             provider->saveAs(path);
         });
@@ -306,14 +306,14 @@ namespace hex {
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.view.hexeditor.script.script"_lang)) {
-                View::openFileBrowser("hex.view.hexeditor.script.script.title"_lang, DialogMode::Open, { { "Python Script", "py" } }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.script.script.title"_lang, DialogMode::Open, { { "Python Script", "py" } }, [this](auto path) {
                     this->m_loaderScriptScriptPath = path;
                 });
             }
             ImGui::InputText("##nolabel", this->m_loaderScriptFilePath.data(), this->m_loaderScriptFilePath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.view.hexeditor.script.file"_lang)) {
-                View::openFileBrowser("hex.view.hexeditor.script.file.title"_lang, DialogMode::Open, { }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.script.file.title"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->m_loaderScriptFilePath = path;
                 });
             }
@@ -384,7 +384,7 @@ namespace hex {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     EventManager::post<EventFileDropped>(path);
                 });
             }
@@ -416,7 +416,7 @@ namespace hex {
             ImGui::Separator();
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_project"_lang, "")) {
-                View::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
                     EventManager::post<EventProjectFileLoad>();
                 });
@@ -424,7 +424,7 @@ namespace hex {
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_project"_lang, "", false, provider != nullptr && provider->isWritable())) {
                 if (ProjectFile::getProjectFilePath() == "") {
-                    View::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
+                    hex::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
                         if (path.ends_with(".hexproj")) {
                             ProjectFile::store(path);
                         }
@@ -438,7 +438,7 @@ namespace hex {
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.load_encoding_file"_lang)) {
-                View::openFileBrowser("hex.view.hexeditor.load_enconding_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                hex::openFileBrowser("hex.view.hexeditor.load_enconding_file"_lang, DialogMode::Open, { }, [this](auto path) {
                     this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
                 });
             }
@@ -448,7 +448,7 @@ namespace hex {
             if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.import"_lang)) {
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.import.base64"_lang)) {
 
-                    View::openFileBrowser("hex.view.hexeditor.menu.file.import.base64"_lang, DialogMode::Open, { }, [this](auto path) {
+                    hex::openFileBrowser("hex.view.hexeditor.menu.file.import.base64"_lang, DialogMode::Open, { }, [this](auto path) {
                         std::vector<u8> base64;
                         this->loadFromFile(path, base64);
 
@@ -468,7 +468,7 @@ namespace hex {
 
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.import.ips"_lang)) {
 
-                   View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                   hex::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                         auto patchData = hex::readFile(path);
                         auto patch = hex::loadIPSPatch(patchData);
 
@@ -482,7 +482,7 @@ namespace hex {
                 }
 
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.import.ips32"_lang)) {
-                    View::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                    hex::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
                         auto patchData = hex::readFile(path);
                         auto patch = hex::loadIPS32Patch(patchData);
 
@@ -512,7 +512,7 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPSPatch(patches);
-                    View::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
+                    hex::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
                         this->saveToFile(path, this->m_dataToSave);
                     });
                 }
@@ -525,7 +525,7 @@ namespace hex {
                     }
 
                     this->m_dataToSave = generateIPS32Patch(patches);
-                    View::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
+                    hex::openFileBrowser("hex.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
                         this->saveToFile(path, this->m_dataToSave);
                     });
                 }

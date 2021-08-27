@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
             // Save file as
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
-                    View::openFileBrowser("hex.view.hexeditor.save_as"_lang, View::DialogMode::Save, { }, [&provider](auto path) {
+                    hex::openFileBrowser("hex.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [&provider](auto path) {
                         provider->saveAs(path);
                     });
             }, provider == nullptr || !provider->isSavable());

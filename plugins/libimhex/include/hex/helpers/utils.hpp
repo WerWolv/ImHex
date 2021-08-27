@@ -15,10 +15,12 @@
 #include <fmt/chrono.h>
 
 #ifdef __MINGW32__
-#include <winsock.h>
+#include <winsock2.h>
 #else
 #include <arpa/inet.h>
 #endif
+
+#include <nfd.hpp>
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
     #define off64_t off_t
@@ -331,30 +333,87 @@ namespace hex {
 
     std::vector<std::string> getPath(ImHexPath path);
 
-    #define SCOPE_GUARD ::hex::ScopeGuardOnExit() + [&]()
-    #define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
-    template<class F>
-    class ScopeGuard {
-    private:
-        F m_func;
-        bool m_active;
-    public:
-        constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
-        ~ScopeGuard() { if (this->m_active) { this->m_func(); } }
-        void release() { this->m_active = false; }
-
-        ScopeGuard(ScopeGuard &&other) noexcept : m_func(std::move(other.m_func)), m_active(other.m_active) {
-            other.cancel();
-        }
-
-        ScopeGuard& operator=(ScopeGuard &&) = delete;
+    enum class DialogMode {
+        Open,
+        Save,
+        Folder
     };
 
-    enum class ScopeGuardOnExit { };
+    void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
 
-    template <typename F>
-    constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F&& f) {
-        return ScopeGuard<F>(std::forward<F>(f));
+    namespace scope_guard {
+
+        #define SCOPE_GUARD ::hex::scope_guard::ScopeGuardOnExit() + [&]()
+        #define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
+
+        template<class F>
+        class ScopeGuard {
+        private:
+            F m_func;
+            bool m_active;
+        public:
+            constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
+            ~ScopeGuard() { if (this->m_active) { this->m_func(); } }
+            void release() { this->m_active = false; }
+
+            ScopeGuard(ScopeGuard &&other) noexcept : m_func(std::move(other.m_func)), m_active(other.m_active) {
+                other.cancel();
+            }
+
+            ScopeGuard& operator=(ScopeGuard &&) = delete;
+        };
+
+        enum class ScopeGuardOnExit { };
+
+        template <typename F>
+        constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F&& f) {
+            return ScopeGuard<F>(std::forward<F>(f));
+        }
+
+    }
+
+    namespace first_time_exec {
+
+        #define FIRST_TIME static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
+
+        template<class F>
+        class FirstTimeExecute {
+        public:
+            constexpr FirstTimeExecute(F func) { func(); }
+
+            FirstTimeExecute& operator=(FirstTimeExecute &&) = delete;
+        };
+
+        enum class FirstTimeExecutor { };
+
+        template <typename F>
+        constexpr FirstTimeExecute<F> operator+(FirstTimeExecutor, F&& f) {
+            return FirstTimeExecute<F>(std::forward<F>(f));
+        }
+
+    }
+
+    namespace final_cleanup {
+
+        #define FINAL_CLEANUP static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
+
+        template<class F>
+        class FinalCleanupExecute {
+            F m_func;
+        public:
+            constexpr FinalCleanupExecute(F func) : m_func(func) { }
+            constexpr ~FinalCleanupExecute() { this->m_func(); }
+
+            FinalCleanupExecute& operator=(FinalCleanupExecute &&) = delete;
+        };
+
+        enum class FinalCleanupExecutor { };
+
+        template <typename F>
+        constexpr FinalCleanupExecute<F> operator+(FinalCleanupExecutor, F&& f) {
+            return FinalCleanupExecute<F>(std::forward<F>(f));
+        }
+
     }
 
     struct Region {

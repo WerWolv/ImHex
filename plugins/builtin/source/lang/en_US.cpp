@@ -76,6 +76,8 @@ namespace hex::plugin::builtin {
                 { "hex.common.set", "Set" },
                 { "hex.common.close", "Close" },
                 { "hex.common.dont_show_again", "Don't show again" },
+                { "hex.common.link", "Link" },
+                { "hex.common.file", "File" },
 
                 { "hex.view.bookmarks.name", "Bookmarks" },
                     { "hex.view.bookmarks.default_title", "Bookmark [0x{0:X} - 0x{1:X}]" },
@@ -538,6 +540,15 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.tools.permissions.setuid_error", "User must have execute rights for setuid bit to apply!" },
                     { "hex.builtin.tools.permissions.setgid_error", "Group must have execute rights for setgid bit to apply!" },
                     { "hex.builtin.tools.permissions.sticky_error", "Other must have execute rights for sticky bit to apply!" },
+                { "hex.builtin.tools.file_uploader", "File Uploader" },
+                    { "hex.builtin.tools.file_uploader.control", "Control" },
+                    { "hex.builtin.tools.file_uploader.upload", "Upload" },
+                    { "hex.builtin.tools.file_uploader.done", "Done!" },
+                    { "hex.builtin.tools.file_uploader.recent", "Recent Uploads" },
+                    { "hex.builtin.tools.file_uploader.tooltip", "Click to copy\nCTRL + Click to open" },
+                    { "hex.builtin.tools.file_uploader.invalid_response", "Invalid response from Anonfiles!" },
+                    { "hex.builtin.tools.file_uploader.error", "Failed to upload file!\n\nError Code: {0}" },
+
 
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "Recent Files" },

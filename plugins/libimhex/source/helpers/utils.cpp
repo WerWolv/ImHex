@@ -296,4 +296,30 @@ namespace hex {
         #endif
     }
 
+    void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback) {
+        NFD::Init();
+
+        nfdchar_t *outPath;
+        nfdresult_t result;
+        switch (mode) {
+            case DialogMode::Open:
+                result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), nullptr);
+                break;
+            case DialogMode::Save:
+                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), nullptr);
+                break;
+            case DialogMode::Folder:
+                result = NFD::PickFolder(outPath, nullptr);
+                break;
+            default: __builtin_unreachable();
+        }
+
+        if (result == NFD_OKAY) {
+            callback(outPath);
+            NFD::FreePath(outPath);
+        }
+
+        NFD::Quit();
+    }
+
 }

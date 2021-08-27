@@ -7,7 +7,6 @@
 
 #include <fontawesome_font.h>
 #include <codicons_font.h>
-#include <nfd.hpp>
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
@@ -32,13 +31,6 @@ namespace hex {
         virtual bool isAvailable();
         virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
 
-        enum class DialogMode {
-            Open,
-            Save,
-            Folder
-        };
-
-        static void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
         static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
 
