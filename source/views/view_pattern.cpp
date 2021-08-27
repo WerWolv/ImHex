@@ -45,10 +45,7 @@ namespace hex {
                     paletteIndex = TextEditor::PaletteIndex::Default;
                 }
                 else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
-                    if (SharedData::patternLanguageFunctions.contains(std::string(outBegin, outEnd - outBegin)))
-                        paletteIndex = TextEditor::PaletteIndex::LineNumber;
-                    else
-                        paletteIndex = TextEditor::PaletteIndex::Identifier;
+                    paletteIndex = TextEditor::PaletteIndex::Identifier;
                 }
                 else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
                     paletteIndex = TextEditor::PaletteIndex::Number;

@@ -151,8 +151,15 @@ namespace hex {
 
     /* Pattern Language Functions */
 
-    void ContentRegistry::PatternLanguageFunctions::add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func) {
-        getEntries()[name.data()] = Function{ parameterCount, func };
+
+    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func) {
+        std::string functionName;
+        for (auto &scope : ns)
+            functionName += scope + "::";
+
+        functionName += name;
+
+        getEntries()[functionName] = Function { parameterCount, func };
     }
 
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& ContentRegistry::PatternLanguageFunctions::getEntries() {

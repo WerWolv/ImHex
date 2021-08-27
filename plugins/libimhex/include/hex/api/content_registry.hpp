@@ -85,12 +85,14 @@ namespace hex {
             constexpr static u32 LessParametersThan    = 0x4000'0000;
             constexpr static u32 NoParameters          = 0x0000'0000;
 
+            using Namespace = std::vector<std::string>;
+
             struct Function {
                 u32 parameterCount;
                 std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> func;
             };
 
-            static void add(std::string_view name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func);
+            static void add(const Namespace &ns, const std::string &name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func);
             static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
         };
 
