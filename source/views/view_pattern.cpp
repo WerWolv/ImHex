@@ -258,8 +258,8 @@ namespace hex {
                         ImGui::PopStyleColor();
                     }
 
-                    ImGui::EndChild();
                 }
+                ImGui::EndChild();
                 ImGui::PopStyleColor(1);
 
                 ImGui::Disabled([this]{

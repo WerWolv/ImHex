@@ -203,6 +203,13 @@ namespace ImGui {
         ImGui::Separator();
     }
 
+    void HeaderColored(const char *label, ImColor color, bool firstEntry) {
+        if (!firstEntry)
+            ImGui::NewLine();
+        ImGui::TextColored(color, "%s", label);
+        ImGui::Separator();
+    }
+
     void InfoTooltip(const char *text) {
         static double lastMoveTime;
         static ImGuiID lastHoveredID;
@@ -250,6 +257,8 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
         colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
         colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
+
+        colors[ImGuiCustomCol_Highlight]            = ImColor(77, 198, 155);
     }
 
     void StyleCustomColorsLight() {
@@ -266,6 +275,8 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
         colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
         colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
+
+        colors[ImGuiCustomCol_Highlight]            = ImColor(41, 151, 112);
     }
 
     void StyleCustomColorsClassic() {
@@ -282,6 +293,8 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
         colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
         colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
+
+        colors[ImGuiCustomCol_Highlight]            = ImColor(77, 198, 155);
     }
 
     Texture LoadImageFromPath(const char *path) {

@@ -190,8 +190,8 @@ namespace hex {
                 if (ImGui::Button("hex.view.strings.demangle.copy"_lang))
                     ImGui::SetClipboardText(this->m_demangledName.c_str());
 
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
             ImGui::EndPopup();
         }
     }

@@ -241,8 +241,8 @@ namespace hex {
 
                     }
                 }
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
         }
         ImGui::End();
     }

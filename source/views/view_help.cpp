@@ -40,8 +40,8 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
         if (ImGui::BeginChild(id.c_str(), ImVec2(-1, ImGui::CalcTextSize(code.c_str()).y))) {
             ImGui::Text("%s", code.c_str());
-            ImGui::EndChild();
         }
+        ImGui::EndChild();
 
         ImGui::NewLine();
         ImGui::PopStyleColor();

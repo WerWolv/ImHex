@@ -115,9 +115,8 @@ namespace hex {
                                     ImGui::NewLine();
                                 }
                             }
-
-                            ImGui::EndChild();
                         }
+                        ImGui::EndChild();
 
                         if (ImGui::Button("hex.view.bookmarks.button.jump"_lang))
                             EventManager::post<RequestSelectionChange>(region);
@@ -168,8 +167,8 @@ namespace hex {
                     ProjectFile::markDirty();
                 }
 
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
         }
         ImGui::End();
     }

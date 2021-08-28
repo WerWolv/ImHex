@@ -547,6 +547,11 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.tools.file_uploader.tooltip", "Click to copy\nCTRL + Click to open" },
                     //{ "hex.builtin.tools.file_uploader.invalid_response", "Invalid response from Anonfiles!" },
                    //{ "hex.builtin.tools.file_uploader.error", "Failed to upload file!\n\nError Code: {0}" },
+                //{ "hex.builtin.tools.wiki_explain", "Wikipedia term definitions" },
+                    //{ "hex.builtin.tools.file_uploader.control", "Control" },
+                    //{ "hex.builtin.tools.file_uploader.search", "Search" },
+                    //{ "hex.builtin.tools.file_uploader.results", "Results" },
+                    //{ "hex.builtin.tools.file_uploader.invalid_response", "Invalid response from Wikipedia!" },
 
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "File recenti" },

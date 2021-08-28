@@ -18,6 +18,8 @@ enum ImGuiCustomCol {
     ImGuiCustomCol_ToolbarPurple,
     ImGuiCustomCol_ToolbarBrown,
 
+    ImGuiCustomCol_Highlight,
+
     ImGuiCustomCol_COUNT
 };
 
@@ -54,6 +56,7 @@ namespace ImGui {
     void TextSpinner(const char* label);
 
     void Header(const char *label, bool firstEntry = false);
+    void HeaderColored(const char *label, ImColor color, bool firstEntry);
 
     void InfoTooltip(const char *text);
 

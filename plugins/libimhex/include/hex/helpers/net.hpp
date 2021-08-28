@@ -29,6 +29,20 @@ namespace hex {
         std::future<Response<std::string>> uploadFile(const std::string &url, const std::filesystem::path &filePath);
 
         [[nodiscard]]
+        std::string encode(const std::string &input) {
+            auto escapedString = curl_easy_escape(this->m_ctx, input.c_str(), std::strlen(input.c_str()));
+
+            if (escapedString != nullptr) {
+                std::string output = escapedString;
+                curl_free(escapedString);
+
+                return output;
+            }
+
+            return { };
+        }
+
+        [[nodiscard]]
         float getProgress() const { return this->m_progress; }
 
         void cancel() { this->m_shouldCancel = true; }

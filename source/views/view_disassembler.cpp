@@ -244,8 +244,8 @@ namespace hex {
                             break;
                     }
 
-                    ImGui::EndChild();
                 }
+                ImGui::EndChild();
 
                 ImGui::Disabled([this] {
                     if (ImGui::Button("hex.view.disassembler.disassemble"_lang))

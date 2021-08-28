@@ -12,6 +12,7 @@ namespace hex::plugin::builtin {
 
     namespace {
 
+        using namespace std::literals::string_literals;
         using namespace std::literals::chrono_literals;
 
         void drawDemangler() {
@@ -496,6 +497,70 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void drawWikiExplainer() {
+        static hex::Net net;
+        static std::string searchString(0xFFF, 0x00);
+        static std::string resultTitle, resultExtract;
+        static std::future<Response<std::string>> searchProcess;
+        static bool extendedSearch = false;
+
+        constexpr static auto WikipediaApiUrl = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
+
+        ImGui::Header("hex.builtin.tools.file_uploader.control"_lang, true);
+
+        ImGui::BeginDisabled(searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready);
+
+        bool startSearch = ImGui::InputText("##search", searchString.data(), searchString.capacity(), ImGuiInputTextFlags_EnterReturnsTrue);
+        ImGui::SameLine();
+        startSearch = ImGui::Button("hex.builtin.tools.file_uploader.search"_lang) || startSearch;
+
+        ImGui::EndDisabled();
+
+        if (startSearch) {
+            searchProcess = net.getString(WikipediaApiUrl + "&exintro"s + "&titles="s + net.encode(searchString));
+        }
+
+        ImGui::Header("hex.builtin.tools.file_uploader.results"_lang);
+
+        if (ImGui::BeginChild("##summary", ImVec2(0, 300), true)) {
+            if (!resultTitle.empty() && !resultExtract.empty()) {
+                ImGui::HeaderColored(resultTitle.c_str(), ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight),true);
+                ImGui::TextWrapped("%s", resultExtract.c_str());
+            }
+        }
+        ImGui::EndChild();
+
+        if (searchProcess.valid() && searchProcess.wait_for(0s) == std::future_status::ready) {
+            try {
+                auto response = searchProcess.get();
+                if (response.code != 200) throw std::runtime_error("Invalid response");
+
+                auto json = nlohmann::json::parse(response.body);
+
+                resultTitle = json["query"]["pages"][0]["title"];
+                resultExtract = json["query"]["pages"][0]["extract"];
+
+                if (!extendedSearch && resultExtract.ends_with(':')) {
+                    extendedSearch = true;
+                    searchProcess = net.getString(WikipediaApiUrl + "&titles="s + net.encode(searchString));
+                    resultTitle.clear();
+                    resultExtract.clear();
+                } else {
+                    extendedSearch = false;
+                    searchString.clear();
+                }
+            } catch (...) {
+                resultTitle.clear();
+                resultExtract.clear();
+                extendedSearch = false;
+                searchProcess = { };
+
+                resultTitle = "???";
+                resultExtract = "hex.builtin.tools.file_uploader.invalid_response"_lang.get();
+            }
+        }
+    }
+
     void registerToolEntries() {
         ContentRegistry::Tools::add("hex.builtin.tools.demangler",         drawDemangler);
         ContentRegistry::Tools::add("hex.builtin.tools.ascii_table",       drawASCIITable);
@@ -505,6 +570,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.base_converter",    drawBaseConverter);
         ContentRegistry::Tools::add("hex.builtin.tools.permissions",       drawPermissionsCalculator);
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader",     drawFileUploader);
+        ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain",      drawWikiExplainer);
     }
 
 }

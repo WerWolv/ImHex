@@ -223,8 +223,8 @@ namespace hex {
 
                     this->m_shouldInvalidate = false;
                 }
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
         }
         ImGui::End();
     }
