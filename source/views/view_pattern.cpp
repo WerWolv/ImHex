@@ -262,7 +262,7 @@ namespace hex {
                 ImGui::EndChild();
                 ImGui::PopStyleColor(1);
 
-                ImGui::Disabled([this]{
+                ImGui::Disabled([this] {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
@@ -275,12 +275,15 @@ namespace hex {
 
                 ImGui::SameLine();
                 if (this->m_evaluatorRunning)
-                     ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
+                    ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
                 else
                     ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
 
-                if (this->m_textEditor.IsTextChanged() && this->m_runAutomatically) {
-                    this->parsePattern(this->m_textEditor.GetText().data());
+                if (this->m_textEditor.IsTextChanged()) {
+                    if (this->m_runAutomatically)
+                        this->parsePattern(this->m_textEditor.GetText().data());
+
+                    ProjectFile::markDirty();
                 }
             }
 
