@@ -15,6 +15,13 @@ namespace hex::plugin::builtin {
         using namespace std::literals::string_literals;
         using namespace std::literals::chrono_literals;
 
+        int updateStringSizeCallback(ImGuiInputTextCallbackData *data) {
+            auto &mathInput = *static_cast<std::string*>(data->UserData);
+
+            mathInput.resize(data->BufTextLen);
+            return 0;
+        }
+
         void drawDemangler() {
             static std::vector<char> mangledBuffer(0xF'FFFF, 0x00);
             static std::string demangledName;
@@ -114,7 +121,14 @@ namespace hex::plugin::builtin {
         void drawMathEvaluator() {
             static std::vector<long double> mathHistory;
             static std::string lastMathError;
-            static std::vector<char> mathInput(0xF'FFFF, 0x00);
+            static auto mathInput = []{
+                std::string s;
+                s.reserve(0xFFFF);
+                std::memset(s.data(), 0x00, s.capacity());
+
+                return s;
+            }();
+            bool evaluate = false;
 
             static MathEvaluator mathEvaluator = [&]{
                 MathEvaluator evaluator;
@@ -127,7 +141,7 @@ namespace hex::plugin::builtin {
                     lastMathError.clear();
                     mathEvaluator.getVariables().clear();
                     mathEvaluator.registerStandardVariables();
-                    std::memset(mathInput.data(), 0x00, mathInput.size());
+                    mathInput.clear();
 
                     return { };
                 }, 0, 0);
@@ -161,29 +175,6 @@ namespace hex::plugin::builtin {
                 return std::move(evaluator);
             }();
 
-            if (ImGui::InputText("hex.builtin.tools.input"_lang, mathInput.data(), mathInput.size(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-                ImGui::SetKeyboardFocusHere();
-                std::optional<long double> result;
-
-                try {
-                    result = mathEvaluator.evaluate(mathInput.data());
-                } catch (std::invalid_argument &e) {
-                    lastMathError = e.what();
-                }
-
-                if (result.has_value()) {
-                    mathHistory.push_back(result.value());
-                    std::memset(mathInput.data(), 0x00, mathInput.size());
-                    lastMathError.clear();
-                }
-
-            }
-
-            if (!lastMathError.empty())
-                ImGui::TextColored(ImColor(0xA00040FF), "hex.builtin.tools.error"_lang, lastMathError.c_str());
-            else
-                ImGui::NewLine();
-
             enum class MathDisplayType { Standard, Scientific, Engineering, Programmer } mathDisplayType;
             if (ImGui::BeginTabBar("##mathFormatTabBar")) {
                 if (ImGui::BeginTabItem("hex.builtin.tools.format.standard"_lang)) {
@@ -206,13 +197,81 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
 
-            if (ImGui::BeginTable("##mathWrapper", 2)) {
-                ImGui::TableSetupColumn("##results");
-                ImGui::TableSetupColumn("##variables", ImGuiTableColumnFlags_WidthStretch, 0.7);
+            if (ImGui::BeginTable("##mathWrapper", 3)) {
+                ImGui::TableSetupColumn("##keypad", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize);
+                ImGui::TableSetupColumn("##results", ImGuiTableColumnFlags_WidthStretch, 0.666);
+                ImGui::TableSetupColumn("##variables", ImGuiTableColumnFlags_WidthStretch, 0.666);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                if (ImGui::BeginTable("##mathHistory", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
+
+                auto buttonSize = ImVec2(3, 2) * ImGui::GetTextLineHeightWithSpacing();
+
+                if (ImGui::Button("Ans", buttonSize)) mathInput += "ans"; ImGui::SameLine();
+                if (ImGui::Button("Pi", buttonSize))  mathInput += "pi"; ImGui::SameLine();
+                if (ImGui::Button("e", buttonSize)) mathInput += "e"; ImGui::SameLine();
+                if (ImGui::Button("CE", buttonSize)) mathInput.clear(); ImGui::SameLine();
+                if (ImGui::Button(ICON_FA_BACKSPACE, buttonSize)) mathInput.clear(); ImGui::SameLine();
+                ImGui::NewLine();
+                switch (mathDisplayType) {
+                    case MathDisplayType::Standard:
+                    case MathDisplayType::Scientific:
+                    case MathDisplayType::Engineering:
+                        if (ImGui::Button("x²", buttonSize)) mathInput += "** 2"; ImGui::SameLine();
+                        if (ImGui::Button("1/x", buttonSize)) mathInput += "1/"; ImGui::SameLine();
+                        if (ImGui::Button("|x|", buttonSize)) mathInput += "abs"; ImGui::SameLine();
+                        if (ImGui::Button("exp", buttonSize)) mathInput += "e ** "; ImGui::SameLine();
+                        if (ImGui::Button("%", buttonSize)) mathInput += "%"; ImGui::SameLine();
+                        break;
+                    case MathDisplayType::Programmer:
+                        if (ImGui::Button("<<", buttonSize)) mathInput += "<<"; ImGui::SameLine();
+                        if (ImGui::Button(">>", buttonSize)) mathInput += ">>"; ImGui::SameLine();
+                        if (ImGui::Button("&", buttonSize)) mathInput += "&"; ImGui::SameLine();
+                        if (ImGui::Button("|", buttonSize)) mathInput += "|"; ImGui::SameLine();
+                        if (ImGui::Button("^", buttonSize)) mathInput += "^"; ImGui::SameLine();
+                        break;
+                }
+                ImGui::NewLine();
+                if (ImGui::Button("sqrt", buttonSize)) mathInput += "sqrt"; ImGui::SameLine();
+                if (ImGui::Button("(", buttonSize)) mathInput += "("; ImGui::SameLine();
+                if (ImGui::Button(")", buttonSize)) mathInput += ")"; ImGui::SameLine();
+                if (ImGui::Button("sign", buttonSize)) mathInput += "sign"; ImGui::SameLine();
+                if (ImGui::Button("÷", buttonSize)) mathInput += "/"; ImGui::SameLine();
+                ImGui::NewLine();
+                if (ImGui::Button("xª", buttonSize)) mathInput += "**"; ImGui::SameLine();
+                if (ImGui::Button("7", buttonSize)) mathInput += "7"; ImGui::SameLine();
+                if (ImGui::Button("8", buttonSize)) mathInput += "8"; ImGui::SameLine();
+                if (ImGui::Button("9", buttonSize)) mathInput += "9"; ImGui::SameLine();
+                if (ImGui::Button("×", buttonSize)) mathInput += "*"; ImGui::SameLine();
+                ImGui::NewLine();
+                if (ImGui::Button("log", buttonSize)) mathInput += "log"; ImGui::SameLine();
+                if (ImGui::Button("4", buttonSize)) mathInput += "4"; ImGui::SameLine();
+                if (ImGui::Button("5", buttonSize)) mathInput += "5"; ImGui::SameLine();
+                if (ImGui::Button("6", buttonSize)) mathInput += "6"; ImGui::SameLine();
+                if (ImGui::Button("-", buttonSize)) mathInput += "-"; ImGui::SameLine();
+                ImGui::NewLine();
+                if (ImGui::Button("ln", buttonSize)) mathInput += "ln"; ImGui::SameLine();
+                if (ImGui::Button("1", buttonSize)) mathInput += "1"; ImGui::SameLine();
+                if (ImGui::Button("2", buttonSize)) mathInput += "2"; ImGui::SameLine();
+                if (ImGui::Button("3", buttonSize)) mathInput += "3"; ImGui::SameLine();
+                if (ImGui::Button("+", buttonSize)) mathInput += "+"; ImGui::SameLine();
+                ImGui::NewLine();
+                if (ImGui::Button("lb", buttonSize)) mathInput += "lb"; ImGui::SameLine();
+                if (ImGui::Button("x=", buttonSize)) mathInput += "="; ImGui::SameLine();
+                if (ImGui::Button("0", buttonSize)) mathInput += "0"; ImGui::SameLine();
+                if (ImGui::Button(".", buttonSize)) mathInput += "."; ImGui::SameLine();
+
+                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButtonHovered));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButtonActive));
+                if (ImGui::Button("=", buttonSize)) evaluate = true; ImGui::SameLine();
+                ImGui::PopStyleColor(3);
+
+                ImGui::NewLine();
+
+                ImGui::TableNextColumn();
+
+                if (ImGui::BeginTable("##mathHistory", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 300))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.tools.history"_lang);
 
@@ -256,7 +315,7 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::TableNextColumn();
-                if (ImGui::BeginTable("##mathVariables", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
+                if (ImGui::BeginTable("##mathVariables", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 300))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.tools.name"_lang);
                     ImGui::TableSetupColumn("hex.builtin.tools.value"_lang);
@@ -289,6 +348,35 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
+
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            if (ImGui::InputText("##input", mathInput.data(), mathInput.capacity(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &mathInput)) {
+                ImGui::SetKeyboardFocusHere();
+                evaluate = true;
+            }
+            ImGui::PopItemWidth();
+
+            if (!lastMathError.empty())
+                ImGui::TextColored(ImColor(0xA00040FF), "%s", hex::format("hex.builtin.tools.error"_lang, lastMathError).c_str());
+            else
+                ImGui::NewLine();
+
+            if (evaluate) {
+                std::optional<long double> result;
+
+                try {
+                    result = mathEvaluator.evaluate(mathInput);
+                } catch (std::invalid_argument &e) {
+                    lastMathError = e.what();
+                }
+
+                if (result.has_value()) {
+                    mathHistory.push_back(result.value());
+                    mathInput.clear();
+                    lastMathError.clear();
+                }
+            }
+
         }
 
         void drawBaseConverter() {
