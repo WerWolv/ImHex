@@ -38,11 +38,11 @@ namespace hex {
 
     static void drawCodeSegment(const std::string &id, const std::string &code) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
-        ImGui::BeginChild(id.c_str(), ImVec2(-1, ImGui::CalcTextSize(code.c_str()).y));
+        if (ImGui::BeginChild(id.c_str(), ImVec2(-1, ImGui::CalcTextSize(code.c_str()).y))) {
+            ImGui::Text("%s", code.c_str());
+            ImGui::EndChild();
+        }
 
-        ImGui::Text("%s", code.c_str());
-
-        ImGui::EndChild();
         ImGui::NewLine();
         ImGui::PopStyleColor();
     };

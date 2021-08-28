@@ -186,10 +186,11 @@ namespace hex {
                 ImGui::TextUnformatted("hex.view.strings.demangle.title"_lang);
                 ImGui::Separator();
                 ImGui::TextWrapped("%s", this->m_demangledName.c_str());
-                ImGui::EndChild();
                 ImGui::NewLine();
                 if (ImGui::Button("hex.view.strings.demangle.copy"_lang))
                     ImGui::SetClipboardText(this->m_demangledName.c_str());
+
+                ImGui::EndChild();
             }
             ImGui::EndPopup();
         }

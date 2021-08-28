@@ -565,8 +565,8 @@ namespace hex {
             return true;
         }
 
+        ON_SCOPE_EXIT { ImGui::End(); };
         if (ImGui::Begin(View::toWindowName("hex.view.hexeditor.name").c_str())) {
-            ON_SCOPE_EXIT { ImGui::End(); };
 
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
                 if (ctrl && keys['Z']) {
