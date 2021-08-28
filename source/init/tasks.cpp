@@ -63,12 +63,15 @@ namespace hex::init {
         bool result = true;
 
         std::array paths = {
-                ImHexPath::Patterns,
-                ImHexPath::PatternsInclude,
-                ImHexPath::Magic,
-                ImHexPath::Plugins,
-                ImHexPath::Resources,
-                ImHexPath::Config
+            ImHexPath::Patterns,
+            ImHexPath::PatternsInclude,
+            ImHexPath::Magic,
+            ImHexPath::Plugins,
+            ImHexPath::Resources,
+            ImHexPath::Config,
+            ImHexPath::Constants,
+            ImHexPath::Yara,
+            ImHexPath::Python
         };
 
         for (auto path : paths) {
