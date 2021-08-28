@@ -525,7 +525,7 @@ namespace hex::plugin::builtin {
 
         ImGui::Header("hex.builtin.tools.file_uploader.recent"_lang);
 
-        if (ImGui::BeginTable("##links", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg, ImVec2(0, 400))) {
+        if (ImGui::BeginTable("##links", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg, ImVec2(0, 200))) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.common.file"_lang);
             ImGui::TableSetupColumn("hex.common.link"_lang);
@@ -587,28 +587,37 @@ namespace hex::plugin::builtin {
 
     void drawWikiExplainer() {
         static hex::Net net;
-        static std::string searchString(0xFFF, 0x00);
+
         static std::string resultTitle, resultExtract;
         static std::future<Response<std::string>> searchProcess;
         static bool extendedSearch = false;
 
+        static auto searchString = []{
+            std::string s;
+            s.reserve(0xFFFF);
+            std::memset(s.data(), 0x00, s.capacity());
+
+            return s;
+        }();
+
         constexpr static auto WikipediaApiUrl = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
 
-        ImGui::Header("hex.builtin.tools.file_uploader.control"_lang, true);
+        ImGui::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
 
-        ImGui::BeginDisabled(searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready);
+        bool startSearch;
 
-        bool startSearch = ImGui::InputText("##search", searchString.data(), searchString.capacity(), ImGuiInputTextFlags_EnterReturnsTrue);
+        startSearch = ImGui::InputText("##search", searchString.data(), searchString.capacity(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &searchString);
         ImGui::SameLine();
-        startSearch = ImGui::Button("hex.builtin.tools.file_uploader.search"_lang) || startSearch;
 
+        ImGui::BeginDisabled(searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready || searchString.empty());
+            startSearch = ImGui::Button("hex.builtin.tools.wiki_explain.search"_lang) || startSearch;
         ImGui::EndDisabled();
 
-        if (startSearch) {
+        if (startSearch && !searchString.empty()) {
             searchProcess = net.getString(WikipediaApiUrl + "&exintro"s + "&titles="s + net.encode(searchString));
         }
 
-        ImGui::Header("hex.builtin.tools.file_uploader.results"_lang);
+        ImGui::Header("hex.builtin.tools.wiki_explain.results"_lang);
 
         if (ImGui::BeginChild("##summary", ImVec2(0, 300), true)) {
             if (!resultTitle.empty() && !resultExtract.empty()) {
@@ -644,7 +653,7 @@ namespace hex::plugin::builtin {
                 searchProcess = { };
 
                 resultTitle = "???";
-                resultExtract = "hex.builtin.tools.file_uploader.invalid_response"_lang.get();
+                resultExtract = "hex.builtin.tools.wiki_explain.invalid_response"_lang.get();
             }
         }
     }
