@@ -1,0 +1,85 @@
+.sphinx-tabs {
+    margin-bottom: 1rem;
+}
+  
+[role="tablist"] {
+    border-bottom: 1px solid transparent;
+}
+  
+@media (prefers-color-scheme: light) {
+
+    .sphinx-tabs-tab {
+        position: relative;
+        font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+        color: rgb(19, 19, 19);
+        line-height: 24px;
+        margin: 0;
+        font-size: 16px;
+        font-weight: 400;
+        background-color: #e9e9e9;
+        border-radius: 5px 5px 0 0;
+        border: 0;
+        padding: 0.5rem 1.5rem;
+        margin-bottom: 0;
+    }
+    
+    .sphinx-tabs-tab[aria-selected="true"] {
+        font-weight: 700;
+        border: 1px solid transparent;
+        border-bottom: 1px solid transparent;
+        margin: -1px;
+        background-color: #f7f7f7;
+    }
+    
+    .sphinx-tabs-panel {
+        position: relative;
+        padding: 1rem;
+        border: 1px solid transparent;
+        margin: 0px -1px -1px -1px;
+        border-radius: 0 0 5px 5px;
+        border-top: 0;
+        background: #f7f7f7;
+        box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.05), 0 0 0.0625rem rgba(0, 0, 0, 0.1);
+        border-left: 0.2rem solid #378efa;
+    }
+
+}
+
+@media (prefers-color-scheme: dark) {
+
+    .sphinx-tabs-tab {
+        position: relative;
+        font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+        color: white;
+        line-height: 24px;
+        margin: 0;
+        font-size: 16px;
+        font-weight: 400;
+        background-color: #0f131a;
+        border-radius: 5px 5px 0 0;
+        border: 0;
+        padding: 0.5rem 1.5rem;
+        margin-bottom: 0;
+    }
+    
+    .sphinx-tabs-tab[aria-selected="true"] {
+        font-weight: 700;
+        border: 1px solid transparent;
+        border-bottom: 1px solid transparent;
+        margin: -1px;
+        background-color: #1c2430;
+    }
+    
+    .sphinx-tabs-panel {
+        position: relative;
+        padding: 1rem;
+        border: 1px solid transparent;
+        margin: 0px -1px -1px -1px;
+        border-radius: 0 0 5px 5px;
+        border-top: 0;
+        background: #18181a;
+        box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.05), 0 0 0.0625rem rgba(0, 0, 0, 0.1);
+        border-left: 0.2rem solid #378efa;
+    }
+
+}

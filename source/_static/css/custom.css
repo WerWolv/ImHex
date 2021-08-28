@@ -1,0 +1,13 @@
+img.align-center {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.content {
+    width: 54em;
+}
+
+.sidebar-drawer {
+	width: calc(50% - 35em);
+}
