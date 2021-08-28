@@ -5,7 +5,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include "views/view_hexeditor.hpp"
-#include "views/view_pattern.hpp"
+#include "views/view_pattern_editor.hpp"
 #include "views/view_pattern_data.hpp"
 #include "views/view_hashes.hpp"
 #include "views/view_information.hpp"
@@ -93,7 +93,7 @@ namespace hex::init {
     bool loadDefaultViews() {
 
         ContentRegistry::Views::add<ViewHexEditor>();
-        ContentRegistry::Views::add<ViewPattern>();
+        ContentRegistry::Views::add<ViewPatternEditor>();
         ContentRegistry::Views::add<ViewPatternData>();
         ContentRegistry::Views::add<ViewDataInspector>();
         ContentRegistry::Views::add<ViewHashes>();

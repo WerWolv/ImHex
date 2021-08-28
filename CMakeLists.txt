@@ -74,7 +74,7 @@ add_executable(imhex ${application_type}
         source/providers/file_provider.cpp
 
         source/views/view_hexeditor.cpp
-        source/views/view_pattern.cpp
+        source/views/view_pattern_editor.cpp
         source/views/view_pattern_data.cpp
         source/views/view_hashes.cpp
         source/views/view_information.cpp

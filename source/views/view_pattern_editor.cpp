@@ -1,4 +1,4 @@
-#include "views/view_pattern.hpp"
+#include "views/view_pattern_editor.hpp"
 
 #include "helpers/project_file_handler.hpp"
 #include <hex/helpers/utils.hpp>
@@ -73,7 +73,7 @@ namespace hex {
     }
 
 
-    ViewPattern::ViewPattern() : View("hex.view.pattern.name") {
+    ViewPatternEditor::ViewPatternEditor() : View("hex.view.pattern.name") {
         this->m_patternLanguageRuntime = new lang::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -200,7 +200,7 @@ namespace hex {
         }
     }
 
-    ViewPattern::~ViewPattern() {
+    ViewPatternEditor::~ViewPatternEditor() {
         delete this->m_patternLanguageRuntime;
 
         EventManager::unsubscribe<EventProjectFileStore>(this);
@@ -210,7 +210,7 @@ namespace hex {
         EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
-    void ViewPattern::drawMenu() {
+    void ViewPatternEditor::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.pattern.menu.file.load_pattern"_lang)) {
                 hex::openFileBrowser("hex.view.pattern.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
@@ -221,7 +221,7 @@ namespace hex {
         }
     }
 
-    void ViewPattern::drawContent() {
+    void ViewPatternEditor::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.view.pattern.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             auto provider = SharedData::currentProvider;
 
@@ -292,7 +292,7 @@ namespace hex {
         ImGui::End();
     }
 
-    void ViewPattern::drawAlwaysVisible() {
+    void ViewPatternEditor::drawAlwaysVisible() {
         if (ImGui::BeginPopupModal("hex.view.pattern.accept_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("hex.view.pattern.accept_pattern.desc"_lang);
 
@@ -329,7 +329,7 @@ namespace hex {
     }
 
 
-    void ViewPattern::loadPatternFile(std::string_view path) {
+    void ViewPatternEditor::loadPatternFile(std::string_view path) {
         FILE *file = fopen(path.data(), "rb");
 
         if (file != nullptr) {
@@ -353,7 +353,7 @@ namespace hex {
         }
     }
 
-    void ViewPattern::clearPatternData() {
+    void ViewPatternEditor::clearPatternData() {
         for (auto &data : SharedData::patternData)
             delete data;
 
@@ -361,7 +361,7 @@ namespace hex {
         lang::PatternData::resetPalette();
     }
 
-    void ViewPattern::parsePattern(char *buffer) {
+    void ViewPatternEditor::parsePattern(char *buffer) {
         this->m_evaluatorRunning = true;
 
         this->clearPatternData();

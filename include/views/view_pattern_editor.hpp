@@ -16,10 +16,10 @@
 
 namespace hex {
 
-    class ViewPattern : public View {
+    class ViewPatternEditor : public View {
     public:
-        ViewPattern();
-        ~ViewPattern() override;
+        ViewPatternEditor();
+        ~ViewPatternEditor() override;
 
         void drawMenu() override;
         void drawAlwaysVisible() override;
