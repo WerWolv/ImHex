@@ -47,21 +47,22 @@ jobs:
         # Prefix the list here with "+" to use these queries and those in the config file.
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v1
-
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 https://git.io/JvXDl
-
-    # ✏️ If the Autobuild fails above, remove it and uncomment the following three lines
-    #    and modify them (or add more) to build your code if your project
-    #    uses a compiled language
-
-    #- run: |
-    #   make bootstrap
-    #   make release
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo bash dist/get_deps_debian.sh
+    - name: Build
+      run: |
+        # Get path to magic db
+        MAGICDB_PATH=$(file --version | grep -oP "(?<=magic file from ).+")
+        mkdir build
+        cd build
+        CC=gcc-10 CXX=g++-10 cmake \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install" \
+          -DEXTRA_MAGICDBS="$MAGICDB_PATH" \
+          ..
+        make -j 4 install
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
