@@ -1090,6 +1090,7 @@ namespace hex::lang {
         }
 
         pattern->setVariableName(node->getName().data());
+        pattern->setEndian(this->getCurrentEndian());
 
         return this->evaluateAttributes(node, pattern);
     }

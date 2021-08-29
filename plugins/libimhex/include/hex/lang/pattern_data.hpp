@@ -21,9 +21,10 @@ namespace hex::lang {
 
     namespace {
 
-        std::string makeDisplayable(u8 *data, size_t size) {
+        template<typename T> requires requires { sizeof(T) == 1; }
+        std::string makeDisplayable(T *data, size_t size) {
             std::string result;
-            for (u8* c = data; c < (data + size); c++) {
+            for (T* c = data; c < (data + size); c++) {
                 if (iscntrl(*c) || *c > 0x7F)
                     result += " ";
                 else
@@ -517,6 +518,7 @@ namespace hex::lang {
         void createEntry(prv::Provider* &provider) override {
             char16_t character;
             provider->read(this->getOffset(), &character, 2);
+            character = hex::changeEndianess(character, this->getEndian());
 
             this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character)));
         }
@@ -536,9 +538,8 @@ namespace hex::lang {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            std::vector<u8> buffer(this->getSize() + 1, 0x00);
+            std::string buffer(this->getSize(), 0x00);
             provider->read(this->getOffset(), buffer.data(), this->getSize());
-            buffer[this->getSize()] = '\0';
 
             this->createDefaultEntry(hex::format("\"{0}\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
         }
@@ -558,9 +559,11 @@ namespace hex::lang {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            std::u16string buffer(this->getSize() + 1, 0x00);
+            std::u16string buffer(this->getSize(), 0x00);
             provider->read(this->getOffset(), buffer.data(), this->getSize());
-            buffer[this->getSize()] = '\0';
+
+            for (auto &c : buffer)
+                c = hex::changeEndianess(c, 2, this->getEndian());
 
             auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
 
