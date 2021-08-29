@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <atomic>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include <curl/curl.h>
 

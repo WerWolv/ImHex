@@ -388,7 +388,9 @@ namespace hex {
             currNodeOutput["attrs"] = json::array();
             currNodeOutput["id"] = id;
 
-            currNodeOutput["data"] = node->store();
+            json nodeData;
+            node->store(nodeData);
+            currNodeOutput["data"] = nodeData;
 
             u32 attrIndex = 0;
             for (auto &attr : node->getAttributes()) {

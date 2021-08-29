@@ -1,7 +1,11 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <windows.h>
 #include <psapi.h>
+
+#include <imgui.h>
+#include <imgui_imhex_extensions.h>
+#include <fontawesome_font.h>
 
 namespace hex::plugin::windows {
 

@@ -26,12 +26,16 @@
 
 #include <filesystem>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::init {
+
+    using namespace std::literals::string_literals;
 
     static bool checkForUpdates() {
         hex::Net net;
 
-        auto releases = net.getJson("https://api.github.com/repos/WerWolv/ImHex/releases/latest").get();
+        auto releases = net.getJson(GitHubApiURL + "/releases/latest"s).get();
         if (releases.code != 200)
             return false;
 
@@ -50,7 +54,7 @@ namespace hex::init {
     static bool downloadInformation() {
         hex::Net net;
 
-        auto tip = net.getString("https://api.werwolv.net/imhex/tip").get();
+        auto tip = net.getString(ImHexApiURL + "/tip"s).get();
         if (tip.code != 200)
             return false;
 

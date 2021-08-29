@@ -1,4 +1,4 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <hex/lang/ast_node.hpp>
 #include <hex/lang/log_console.hpp>

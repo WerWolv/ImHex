@@ -1,4 +1,7 @@
 #pragma once
+#include <hex.hpp>
+
+#include <string_view>
 
 namespace hex::dp {
 
@@ -16,14 +19,8 @@ namespace hex::dp {
             In, Out
         };
 
-        Attribute(IOType ioType, Type type, std::string_view unlocalizedName) : m_id(SharedData::dataProcessorAttrIdCounter++), m_ioType(ioType), m_type(type), m_unlocalizedName(unlocalizedName) {
-
-        }
-
-        ~Attribute() {
-            for (auto &[linkId, attr] : this->getConnectedAttributes())
-                attr->removeConnectedAttribute(linkId);
-        }
+        Attribute(IOType ioType, Type type, std::string_view unlocalizedName);
+        ~Attribute();
 
         [[nodiscard]] u32 getID() const { return this->m_id; }
         void setID(u32 id) { this->m_id = id; }

@@ -41,6 +41,10 @@ set(LIBIMHEX_SOURCES
     source/api/imhex_api.cpp
     source/api/content_registry.cpp
 
+    source/data_processor/attribute.cpp
+    source/data_processor/link.cpp
+    source/data_processor/node.cpp
+
     source/helpers/utils.cpp
     source/helpers/shared_data.cpp
     source/helpers/crypto.cpp

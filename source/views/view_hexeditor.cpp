@@ -4,12 +4,14 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/crypto.hpp>
 
-#include <GLFW/glfw3.h>
-
 #include "providers/file_provider.hpp"
 #include "helpers/patches.hpp"
 #include "helpers/project_file_handler.hpp"
 #include "helpers/loader_script_handler.hpp"
+
+#include <GLFW/glfw3.h>
+
+#include <nlohmann/json.hpp>
 
 #undef __STRICT_ANSI__
 #include <cstdio>

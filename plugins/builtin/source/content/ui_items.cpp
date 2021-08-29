@@ -1,8 +1,10 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #include <codicons_font.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin {
 

@@ -15,8 +15,9 @@
 
 #include <unistd.h>
 
-#include <future>
 #include <chrono>
+#include <future>
+#include <numeric>
 
 using namespace std::literals::chrono_literals;
 

@@ -1,4 +1,4 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::plugin::builtin {
 

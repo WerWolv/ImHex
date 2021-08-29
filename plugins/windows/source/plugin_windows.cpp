@@ -1,6 +1,4 @@
 #include <hex/plugin.hpp>
-#include <imgui.h>
-#include <imgui_internal.h>
 
 #include "views/view_tty_console.hpp"
 

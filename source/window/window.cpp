@@ -32,6 +32,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <nlohmann/json.hpp>
+
 namespace hex {
 
     using namespace std::literals::chrono_literals;

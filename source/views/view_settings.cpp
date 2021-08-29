@@ -2,6 +2,8 @@
 
 #include <hex/api/content_registry.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex {
 
     ViewSettings::ViewSettings() : View("hex.view.settings.name") {

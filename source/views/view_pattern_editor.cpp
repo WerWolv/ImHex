@@ -8,6 +8,8 @@
 
 #include <imgui_imhex_extensions.h>
 
+#include <nlohmann/json.hpp>
+
 namespace hex {
 
     static const TextEditor::LanguageDefinition& PatternLanguage() {

@@ -1,4 +1,4 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include "math_evaluator.hpp"
 
@@ -6,8 +6,8 @@ namespace hex::plugin::builtin {
 
     void registerCommandPaletteCommands() {
 
-        hex::ContentRegistry::CommandPaletteCommands::add(
-                hex::ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPaletteCommands::add(
+                ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
                 "#", "hex.builtin.command.calc.desc",
                 [](auto input) {
                     hex::MathEvaluator evaluator;
@@ -27,8 +27,8 @@ namespace hex::plugin::builtin {
                         return hex::format("#{0} = ???", input.data());
                 });
 
-        hex::ContentRegistry::CommandPaletteCommands::add(
-                hex::ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
+        ContentRegistry::CommandPaletteCommands::add(
+                ContentRegistry::CommandPaletteCommands::Type::KeywordCommand,
                 "/web", "hex.builtin.command.web.desc",
                 [](auto input) {
                     return hex::format("hex.builtin.command.web.result"_lang, input.data());
@@ -37,8 +37,8 @@ namespace hex::plugin::builtin {
                     hex::openWebpage(input);
                 });
 
-        hex::ContentRegistry::CommandPaletteCommands::add(
-                hex::ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ContentRegistry::CommandPaletteCommands::add(
+                ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
                 "$", "hex.builtin.command.cmd.desc",
                 [](auto input) {
                     return hex::format("hex.builtin.command.cmd.result"_lang, input.data());

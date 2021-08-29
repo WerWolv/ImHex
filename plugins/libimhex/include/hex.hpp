@@ -7,6 +7,9 @@
 #include <hex/helpers/logger.hpp>
 using namespace hex::lang_literals;
 
+constexpr static const auto ImHexApiURL = "https://api.werwolv.net/imhex";
+constexpr static const auto GitHubApiURL = "https://api.github.com/repos/WerWolv/ImHex";
+
 using u8    = std::uint8_t;
 using u16   = std::uint16_t;
 using u32   = std::uint32_t;

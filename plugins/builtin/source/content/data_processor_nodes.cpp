@@ -1,8 +1,14 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/data_processor/node.hpp>
 
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #include <cctype>
+
+#include <nlohmann/json.hpp>
+
+#include <imgui.h>
 
 namespace hex::plugin::builtin {
 
@@ -38,13 +44,11 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, this->m_buffer);
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["size"] = this->m_size;
-            output["data"] = this->m_buffer;
-
-            return output;
+            j["size"] = this->m_size;
+            j["data"] = this->m_buffer;
         }
 
         void load(nlohmann::json &j) override {
@@ -80,12 +84,10 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, output);
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["data"] = this->m_value;
-
-            return output;
+            j["data"] = this->m_value;
         }
 
         void load(nlohmann::json &j) override {
@@ -115,12 +117,10 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, data);
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["data"] = this->m_value;
-
-            return output;
+            j["data"] = this->m_value;
         }
 
         void load(nlohmann::json &j) override {
@@ -151,12 +151,10 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, data);
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["data"] = this->m_value;
-
-            return output;
+            j["data"] = this->m_value;
         }
 
         void load(nlohmann::json &j) override {
@@ -189,16 +187,14 @@ namespace hex::plugin::builtin {
 
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["data"] = nlohmann::json::object();
-            output["data"]["r"] = this->m_color.Value.x;
-            output["data"]["g"] = this->m_color.Value.y;
-            output["data"]["b"] = this->m_color.Value.z;
-            output["data"]["a"] = this->m_color.Value.w;
-
-            return output;
+            j["data"] = nlohmann::json::object();
+            j["data"]["r"] = this->m_color.Value.x;
+            j["data"]["g"] = this->m_color.Value.y;
+            j["data"]["b"] = this->m_color.Value.z;
+            j["data"]["a"] = this->m_color.Value.w;
         }
 
         void load(nlohmann::json &j) override {
@@ -223,12 +219,10 @@ namespace hex::plugin::builtin {
 
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["comment"] = this->m_comment;
-
-            return output;
+            j["comment"] = this->m_comment;
         }
 
         void load(nlohmann::json &j) override {
@@ -751,15 +745,12 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(4, output);
         }
 
-        nlohmann::json store() override {
-            auto output = nlohmann::json::object();
+        void store(nlohmann::json &j) override {
+            j = nlohmann::json::object();
 
-            output["data"] = nlohmann::json::object();
-            output["data"]["mode"] = this->m_mode;
-            output["data"]["key_length"] = this->m_keyLength;
-
-
-            return output;
+            j["data"] = nlohmann::json::object();
+            j["data"]["mode"] = this->m_mode;
+            j["data"]["key_length"] = this->m_keyLength;
         }
 
         void load(nlohmann::json &j) override {

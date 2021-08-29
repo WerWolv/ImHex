@@ -1,5 +1,7 @@
 #include <hex/helpers/shared_data.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex {
 
     std::vector<std::function<void()>> SharedData::deferredCalls;

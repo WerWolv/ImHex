@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <nlohmann/json.hpp>
+
 namespace hex {
 
     /* Settings */

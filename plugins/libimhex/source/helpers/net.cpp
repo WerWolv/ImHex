@@ -8,6 +8,8 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/error.h>
 
+#include <nlohmann/json.hpp>
+
 #include <hex/resources.hpp>
 
 namespace hex {

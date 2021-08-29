@@ -1,4 +1,9 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
+
+#include <imgui.h>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 

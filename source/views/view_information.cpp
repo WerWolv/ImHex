@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cmath>
 #include <filesystem>
+#include <numeric>
 #include <span>
 #include <thread>
 #include <vector>

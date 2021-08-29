@@ -1,12 +1,19 @@
-#include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/net.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #include <regex>
 #include <chrono>
 
 #include <llvm/Demangle/Demangle.h>
 #include "math_evaluator.hpp"
+
+#include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 
