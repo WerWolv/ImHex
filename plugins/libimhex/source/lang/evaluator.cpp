@@ -1,8 +1,10 @@
 #include <hex/lang/evaluator.hpp>
 
-#include <hex/lang/token.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/providers/provider.hpp>
+
+#include <hex/lang/token.hpp>
+#include <hex/lang/pattern_data.hpp>
 
 #include <bit>
 #include <algorithm>

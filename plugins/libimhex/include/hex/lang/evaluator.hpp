@@ -2,19 +2,20 @@
 
 #include <hex.hpp>
 
-#include <hex/providers/provider.hpp>
-#include <hex/helpers/utils.hpp>
-#include <hex/lang/pattern_data.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/lang/ast_node.hpp>
 #include <hex/lang/log_console.hpp>
 
 #include <bit>
-#include <span>
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
+namespace hex::prv { class Provider; }
+
 namespace hex::lang {
+
+    class PatternData;
 
     class Evaluator {
     public:

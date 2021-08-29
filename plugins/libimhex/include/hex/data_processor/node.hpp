@@ -2,7 +2,6 @@
 #include <hex.hpp>
 
 #include <hex/data_processor/attribute.hpp>
-#include <hex/helpers/utils.hpp>
 
 #include <set>
 #include <string_view>

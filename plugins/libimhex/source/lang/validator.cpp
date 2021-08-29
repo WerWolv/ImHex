@@ -1,9 +1,9 @@
 #include <hex/lang/validator.hpp>
 
+#include <hex/helpers/fmt.hpp>
+
 #include <unordered_set>
 #include <string>
-
-#include <hex/helpers/utils.hpp>
 
 namespace hex::lang {
 

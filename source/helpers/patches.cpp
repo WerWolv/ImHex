@@ -1,10 +1,10 @@
 #include "helpers/patches.hpp"
 
+#include <hex/helpers/utils.hpp>
+
 #include <cstring>
 #include <string_view>
 #include <type_traits>
-
-#include <hex/helpers/utils.hpp>
 
 namespace hex {
 

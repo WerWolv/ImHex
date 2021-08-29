@@ -1,6 +1,8 @@
 #include "views/view_bookmarks.hpp"
 
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/fmt.hpp>
+
 #include "helpers/project_file_handler.hpp"
 
 #include <cstring>

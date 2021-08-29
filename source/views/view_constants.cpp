@@ -1,5 +1,8 @@
 #include "views/view_constants.hpp"
 
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
+
 #include <fstream>
 #include <filesystem>
 #include <nlohmann/json.hpp>

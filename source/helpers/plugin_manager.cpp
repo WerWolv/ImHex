@@ -1,5 +1,7 @@
 #include "helpers/plugin_manager.hpp"
 
+#include <hex/helpers/logger.hpp>
+
 #include <filesystem>
 
 namespace hex {
@@ -17,7 +19,7 @@ namespace hex {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
 
         if (this->m_handle == nullptr) {
-            hex::log::error("dlopen failed: {}", dlerror());
+            log::error("dlopen failed: {}", dlerror());
             return;
         }
 

@@ -2,6 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <cstring>
 #include <cmath>

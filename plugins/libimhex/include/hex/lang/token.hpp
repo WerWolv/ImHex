@@ -2,8 +2,6 @@
 
 #include <hex.hpp>
 
-#include <hex/helpers/utils.hpp>
-
 #include <utility>
 #include <string>
 #include <variant>

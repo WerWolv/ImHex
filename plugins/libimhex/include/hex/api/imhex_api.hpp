@@ -1,9 +1,9 @@
 #pragma once
 
 #include <hex.hpp>
-#include <hex/helpers/utils.hpp>
 
 #include <list>
+#include <vector>
 
 namespace hex {
 

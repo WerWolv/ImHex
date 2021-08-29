@@ -1,5 +1,8 @@
 #include <hex.hpp>
 
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
+
 #include "window.hpp"
 
 #include "init/splash_window.hpp"

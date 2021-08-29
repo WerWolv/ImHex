@@ -1,7 +1,6 @@
 #include "init/tasks.hpp"
 
 #include <hex/helpers/net.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include "views/view_hexeditor.hpp"

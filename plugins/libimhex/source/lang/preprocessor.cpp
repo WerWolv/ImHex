@@ -1,5 +1,8 @@
 #include <hex/lang/preprocessor.hpp>
 
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
+
 #include <filesystem>
 
 namespace hex::lang {

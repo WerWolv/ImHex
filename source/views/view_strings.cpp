@@ -1,7 +1,6 @@
 #include "views/view_strings.hpp"
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/utils.hpp>
 
 #include <cstring>
 #include <thread>

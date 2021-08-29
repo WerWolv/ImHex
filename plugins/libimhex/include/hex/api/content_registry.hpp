@@ -1,8 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
-
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/concepts.hpp>
 
 #include <functional>
 #include <map>

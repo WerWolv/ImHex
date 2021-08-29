@@ -1,10 +1,11 @@
 #include <hex/api/content_registry.hpp>
 
+#include <hex/helpers/shared_data.hpp>
+#include <hex/helpers/fmt.hpp>
+
 #include <hex/lang/ast_node.hpp>
 #include <hex/lang/log_console.hpp>
 #include <hex/lang/evaluator.hpp>
-
-#include <hex/helpers/utils.hpp>
 
 #include <vector>
 

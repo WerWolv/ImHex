@@ -3,6 +3,7 @@
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/shared_data.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <cctype>
 

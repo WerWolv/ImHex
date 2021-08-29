@@ -1,6 +1,8 @@
 #include "init/splash_window.hpp"
 
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
+#include <hex/helpers/logger.hpp>
 #include <hex/helpers/shared_data.hpp>
 #include <hex/resources.hpp>
 
@@ -145,8 +147,7 @@ namespace hex::init {
 
     void WindowSplash::initGLFW() {
         glfwSetErrorCallback([](int error, const char *description) {
-            log::fatal("GLFW Error: {0} - {0}", error, description);
-            exit(EXIT_FAILURE);
+            log::error("GLFW Error [{}] : {}", error, desc);
         });
 
         if (!glfwInit()) {

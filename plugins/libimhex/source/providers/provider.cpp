@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <cmath>
+#include <cstring>
 #include <map>
 #include <optional>
 #include <string>

@@ -1,10 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <cstddef>
 
 #include <hex/helpers/lang.hpp>
-#include <hex/helpers/logger.hpp>
 using namespace hex::lang_literals;
 
 constexpr static const auto ImHexApiURL = "https://api.werwolv.net/imhex";
@@ -21,6 +19,11 @@ using s16   = std::int16_t;
 using s32   = std::int32_t;
 using s64   = std::int64_t;
 using s128  = __int128_t;
+
+struct Region {
+    u64 address;
+    size_t size;
+};
 
 #ifdef OS_WINDOWS
 #define MAGIC_PATH_SEPARATOR	";"

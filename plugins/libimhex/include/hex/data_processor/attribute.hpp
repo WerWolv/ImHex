@@ -2,6 +2,7 @@
 #include <hex.hpp>
 
 #include <string_view>
+#include <vector>
 
 namespace hex::dp {
 

@@ -5,6 +5,8 @@
 #include <locale>
 #include <filesystem>
 
+#include <hex/helpers/fmt.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shlobj.h>

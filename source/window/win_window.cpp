@@ -1,6 +1,9 @@
 #include "window.hpp"
 
+
 #if defined(OS_WINDOWS)
+
+    #include <hex/helpers/utils.hpp>
 
     #include <imgui.h>
     #include <imgui_internal.h>

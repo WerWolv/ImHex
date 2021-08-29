@@ -3,6 +3,7 @@
 #include <time.h>
 #include <cstring>
 
+#include <hex/helpers/utils.hpp>
 #include "helpers/project_file_handler.hpp"
 
 #if defined(OS_WINDOWS)

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hex/helpers/utils.hpp>
 #include <hex/views/view.hpp>
 #include "helpers/encoding_file.hpp"
 

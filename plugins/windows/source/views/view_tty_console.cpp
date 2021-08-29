@@ -3,6 +3,8 @@
 #include <imgui_imhex_extensions.h>
 #include <imgui_internal.h>
 
+#include <hex/helpers/utils.hpp>
+
 namespace hex::plugin::windows {
 
     ViewTTYConsole::ViewTTYConsole() : View("hex.windows.view.tty_console.name") {

@@ -1,14 +1,15 @@
 #include "window.hpp"
 
 #include <hex.hpp>
-#include <hex/api/content_registry.hpp>
+
 #include <hex/resources.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <chrono>
 #include <csignal>
 #include <iostream>
 #include <numeric>
-#include <typeinfo>
 #include <thread>
 
 #include <imgui.h>

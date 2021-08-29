@@ -5,8 +5,6 @@
 #include <vector>
 #include <list>
 
-#include <hex/helpers/utils.hpp>
-
 namespace hex {
 
     namespace prv { class Provider; }

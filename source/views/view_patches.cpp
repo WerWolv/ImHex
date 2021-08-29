@@ -2,7 +2,6 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <hex/helpers/utils.hpp>
 #include "helpers/project_file_handler.hpp"
 
 #include <string>

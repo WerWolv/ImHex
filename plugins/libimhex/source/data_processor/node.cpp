@@ -2,6 +2,8 @@
 
 #include <hex/helpers/shared_data.hpp>
 
+#include <hex/helpers/fmt.hpp>
+
 namespace hex::dp {
 
     Node::Node(std::string_view unlocalizedTitle, std::vector<Attribute> attributes) : m_id(SharedData::dataProcessorNodeIdCounter++), m_unlocalizedTitle(unlocalizedTitle), m_attributes(std::move(attributes)) {

@@ -1,5 +1,7 @@
 #include <hex/lang/parser.hpp>
 
+#include <hex/helpers/fmt.hpp>
+
 #include <optional>
 
 #define MATCHES(x) (begin() && x)

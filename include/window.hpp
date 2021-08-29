@@ -5,10 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <hex/helpers/utils.hpp>
 #include <hex/views/view.hpp>
-
-#include <imgui_imhex_extensions.h>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;

@@ -5,9 +5,10 @@
 #include <imgui.h>
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/lang/token.hpp>
 #include <hex/views/view.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <cstring>
 #include <codecvt>

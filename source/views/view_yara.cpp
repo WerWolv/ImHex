@@ -1,6 +1,7 @@
 #include "views/view_yara.hpp"
 
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <yara.h>
 #include <filesystem>

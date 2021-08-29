@@ -2,6 +2,8 @@
 
 #include <hex.hpp>
 
+#include <hex/helpers/concepts.hpp>
+
 #include <array>
 #include <cstring>
 #include <functional>
@@ -11,165 +13,14 @@
 #include <type_traits>
 #include <vector>
 
-#include <fmt/format.h>
-#include <fmt/chrono.h>
-
-#ifdef __MINGW32__
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#endif
-
 #include <nfd.hpp>
 
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(OS_MACOS)
     #define off64_t off_t
     #define fopen64 fopen
     #define fseeko64 fseek
     #define ftello64 ftell
 #endif
-
-namespace hex {
-    
-    template<typename>
-    struct is_integral_helper : public std::false_type { };
-
-    template<>
-    struct is_integral_helper<u8> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<s8> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<u16> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<s16> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<u32> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<s32> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<u64> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<s64> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<u128> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<s128> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<bool> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<char> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<char8_t> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<char16_t> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<char32_t> : public std::true_type { };
-
-    template<>
-    struct is_integral_helper<wchar_t> : public std::true_type { };
-
-    template<typename T>
-    struct is_integral : public is_integral_helper<std::remove_cvref_t<T>>::type { };
-
-    template<typename>
-    struct is_signed_helper : public std::false_type { };
-
-    template<>
-    struct is_signed_helper<s8> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<s16> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<s32> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<s64> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<s128> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<char> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<float> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<double> : public std::true_type { };
-
-    template<>
-    struct is_signed_helper<long double> : public std::true_type { };
-
-    template<typename T>
-    struct is_signed : public is_signed_helper<std::remove_cvref_t<T>>::type { };
-
-    template<typename>
-    struct is_floating_point_helper : public std::false_type { };
-
-    template<>
-    struct is_floating_point_helper<float> : public std::true_type { };
-
-    template<>
-    struct is_floating_point_helper<double> : public std::true_type { };
-
-    template<>
-    struct is_floating_point_helper<long double> : public std::true_type { };
-
-    template<typename T>
-    struct is_floating_point : public is_floating_point_helper<std::remove_cvref_t<T>>::type { };
-    
-}
-
-#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
-#if __has_include(<concepts>)
-// Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
-#include <concepts>
-#endif
-// libcxx 12 still doesn't have many default concepts implemented, as a result we need to define it ourself using clang built-ins.
-// [concept.derived] (patch from https://reviews.llvm.org/D74292)
-namespace hex {
-template<class _Dp, class _Bp>
-concept derived_from =
-  __is_base_of(_Bp, _Dp) && __is_convertible_to(const volatile _Dp*, const volatile _Bp*);
-}
-
-#else
-// Assume supported
-#include <concepts>
-namespace hex {
-    using std::derived_from;
-}
-#endif
-
-// [concepts.arithmetic]
-namespace hex {
-template<class _Tp>
-concept integral = hex::is_integral<_Tp>::value;
-
-template<class _Tp>
-concept signed_integral = integral<_Tp> && hex::is_signed<_Tp>::value;
-
-template<class _Tp>
-concept unsigned_integral = integral<_Tp> && !signed_integral<_Tp>;
-
-template<class _Tp>
-concept floating_point = std::is_floating_point<_Tp>::value;
-}
 
 #define TOKEN_CONCAT_IMPL(x, y) x ## y
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
@@ -186,25 +37,12 @@ namespace hex {
     void runCommand(const std::string &command);
     void openWebpage(std::string url);
 
-    template<typename ... Args>
-    inline std::string format(std::string_view format, Args ... args) {
-        return fmt::format(fmt::runtime(format), args...);
-    }
-
-    template<typename ... Args>
-    inline void print(std::string_view format, Args ... args) {
-        fmt::print(fmt::runtime(format), args...);
-    }
-
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
         using ValueType = std::remove_cvref_t<decltype(value)>;
         ValueType mask = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
 
         return (value & mask) >> to;
     }
-
-    template<typename T>
-    struct always_false : std::false_type {};
 
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
@@ -415,10 +253,5 @@ namespace hex {
         }
 
     }
-
-    struct Region {
-        u64 address;
-        size_t size;
-    };
 
 }

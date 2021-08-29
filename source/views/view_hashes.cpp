@@ -1,7 +1,6 @@
 #include "views/view_hashes.hpp"
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
 
 #include <vector>

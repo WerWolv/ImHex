@@ -8,7 +8,6 @@
 #include <string_view>
 #include <vector>
 
-#include <hex/lang/pattern_data.hpp>
 #include <hex/lang/log_console.hpp>
 
 namespace hex::prv { class Provider; }
@@ -20,6 +19,7 @@ namespace hex::lang {
     class Parser;
     class Validator;
     class Evaluator;
+    class PatternData;
 
     class PatternLanguage {
     public:

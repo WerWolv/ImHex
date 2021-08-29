@@ -1,11 +1,10 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include "token.hpp"
 #include "ast_node.hpp"
-
-#include <hex/helpers/utils.hpp>
 
 #include <unordered_map>
 #include <stdexcept>

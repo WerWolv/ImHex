@@ -1,6 +1,8 @@
 #pragma once
 
 #include <hex.hpp>
+
+#include <cstring>
 #include <future>
 #include <string>
 #include <filesystem>

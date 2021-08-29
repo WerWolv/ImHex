@@ -2,6 +2,8 @@
 
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/shared_data.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <regex>
 #include <chrono>
@@ -78,7 +80,7 @@ namespace hex::plugin::builtin {
                     ImGui::Text("0x%02x", i + 32 * tablePart);
 
                     ImGui::TableNextColumn();
-                    ImGui::Text("%s", makePrintable(i + 32 * tablePart).c_str());
+                    ImGui::Text("%s", hex::makePrintable(i + 32 * tablePart).c_str());
 
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
 
