@@ -146,7 +146,7 @@ namespace hex::init {
     }
 
     void WindowSplash::initGLFW() {
-        glfwSetErrorCallback([](int error, const char *description) {
+        glfwSetErrorCallback([](int error, const char *desc) {
             log::error("GLFW Error [{}] : {}", error, desc);
         });
 
