@@ -326,7 +326,7 @@ namespace hex {
         io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
         io.Fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0f * this->m_fontScale, &cfg, codiconsRange);
 
-        ImGuiFreeType::BuildFontAtlas(io.Fonts);
+        ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeTypeBuilderFlags_Bitmap);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
         // Create new font atlas

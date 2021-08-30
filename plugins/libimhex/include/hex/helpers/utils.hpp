@@ -32,7 +32,7 @@ namespace hex {
     std::string to_string(s128 value);
 
     std::string toByteString(u64 bytes);
-    std::string makePrintable(char c);
+    std::string makePrintable(u8 c);
 
     void runCommand(const std::string &command);
     void openWebpage(std::string url);

@@ -78,7 +78,7 @@ namespace hex {
         return result;
     }
 
-    std::string makePrintable(char c) {
+    std::string makePrintable(u8 c) {
         switch (c) {
             case 0:   return "NUL";
             case 1:   return "SOH";
@@ -114,7 +114,8 @@ namespace hex {
             case 31:  return "US";
             case 32:  return "Space";
             case 127: return "DEL";
-            default:  return std::string() + c;
+            case 128 ... 255: return " ";
+            default:  return std::string() + static_cast<char>(c);
         }
     }
 

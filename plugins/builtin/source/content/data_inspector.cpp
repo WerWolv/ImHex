@@ -5,6 +5,8 @@
 
 #include <cstring>
 #include <ctime>
+#include <codecvt>
+#include <locale>
 
 #include <imgui_internal.h>
 
@@ -95,9 +97,12 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(char16_t), [](auto buffer, auto endian, auto style) {
-            auto c = *reinterpret_cast<char16_t*>(buffer.data());
-            auto value = hex::format("'{0}'", c == 0 ? '\x01' : char16_t(hex::changeEndianess(c, endian)));
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(wchar_t), [](auto buffer, auto endian, auto style) {
+            auto c = hex::changeEndianess(*reinterpret_cast<wchar_t*>(buffer.data()), endian);
+
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+
+            auto value = hex::format("'{0}'", c <= 255 ? makePrintable(c) : converter.to_bytes(c));
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
@@ -109,10 +114,8 @@ namespace hex::plugin::builtin {
             std::memcpy(utf8Buffer, reinterpret_cast<char8_t*>(buffer.data()), 4);
             u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, utf8Buffer + 4);
 
-            std::memcpy(codepointString, &codepoint, std::min(codepointSize, u8(4)));
-            auto value = hex::format("'{0}' (U+0x{1:04X})",  codepoint == 0xFFFD ? "Invalid" :
-                                                        codepoint < 0xFF ? makePrintable(codepoint).c_str() :
-                                                        codepointString,
+            std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
+            auto value = hex::format("'{0}' (U+0x{1:04X})",  codepoint == 0xFFFD ? "Invalid" : codepointString,
                                      codepoint);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
