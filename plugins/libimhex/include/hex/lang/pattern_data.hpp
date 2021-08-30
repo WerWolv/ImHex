@@ -9,6 +9,7 @@
 #include <hex/views/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/concepts.hpp>
 
 #include <cstring>
 #include <codecvt>
@@ -22,7 +23,7 @@ namespace hex::lang {
 
     namespace {
 
-        template<typename T> requires requires { sizeof(T) == 1; }
+        template<hex::has_size<1> T>
         std::string makeDisplayable(T *data, size_t size) {
             std::string result;
             for (T* c = data; c < (data + size); c++) {

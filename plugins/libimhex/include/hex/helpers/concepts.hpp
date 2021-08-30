@@ -144,5 +144,13 @@ namespace hex {
     concept floating_point = std::is_floating_point<T>::value;
 }
 
-template<typename T>
-struct always_false : std::false_type {};
+namespace hex {
+
+    template<typename T>
+    struct always_false : std::false_type {};
+
+    template<typename T, size_t Size>
+    concept has_size = sizeof(T) == Size;
+
+}
+
