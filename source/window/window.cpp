@@ -26,6 +26,7 @@
 
 #include <fontawesome_font.h>
 #include <codicons_font.h>
+#include <unifont_font.h>
 
 #include "helpers/plugin_manager.hpp"
 #include "helpers/project_file_handler.hpp"
@@ -270,75 +271,6 @@ namespace hex {
         }
     }
 
-    void Window::setFont(const std::filesystem::path &path) {
-        auto &io = ImGui::GetIO();
-
-        // Load font data & build atlas
-        std::uint8_t *px;
-        int w, h;
-
-        ImVector<ImWchar> ranges;
-        ImFontGlyphRangesBuilder glyphRangesBuilder;
-
-        ImWchar fontAwesomeRange[] = {
-                ICON_MIN_FA, ICON_MAX_FA,
-                0
-        };
-
-        ImWchar codiconsRange[] = {
-                ICON_MIN_VS, ICON_MAX_VS,
-                0
-        };
-
-        ImFontConfig cfg;
-
-        if (!std::filesystem::exists(path)) {
-            // Load default font
-            io.Fonts->Clear();
-
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = 13.0f * this->m_fontScale;
-            io.Fonts->AddFontDefault(&cfg);
-        } else {
-            // Load custom font
-
-            // If we have a custom font, then rescaling is unnecessary and will make it blurry
-            io.FontGlobalScale = 1.0f;
-
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesKorean());
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesThai());
-            glyphRangesBuilder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
-            glyphRangesBuilder.BuildRanges(&ranges);
-
-
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = 13.0f * this->m_fontScale;
-
-            io.Fonts->AddFontFromFileTTF(path.string().c_str(), std::floor(14.0f * this->m_fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
-        }
-
-        cfg.MergeMode = true;
-
-        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * this->m_fontScale, &cfg, fontAwesomeRange);
-        io.Fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0f * this->m_fontScale, &cfg, codiconsRange);
-
-        ImGuiFreeType::BuildFontAtlas(io.Fonts, ImGuiFreeTypeBuilderFlags_Bitmap);
-        io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
-
-        // Create new font atlas
-        GLuint tex;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
-        io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
-    }
-
     void Window::frameBegin() {
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -431,7 +363,7 @@ namespace hex {
                 static char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
-                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * this->m_globalScale, 10 * this->m_globalScale));
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * SharedData::globalScale, 10 * SharedData::globalScale));
                     if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
                         this->drawWelcomeScreen();
                     }
@@ -525,8 +457,8 @@ namespace hex {
                 continue;
 
             auto minSize = view->getMinSize();
-            minSize.x *= this->m_globalScale;
-            minSize.y *= this->m_globalScale;
+            minSize.x *= SharedData::globalScale;
+            minSize.y *= SharedData::globalScale;
 
             ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
             view->drawContent();
@@ -567,7 +499,7 @@ namespace hex {
     void Window::drawWelcomeScreen() {
         const auto availableSpace = ImGui::GetContentRegionAvail();
 
-        ImGui::Image(this->m_bannerTexture, this->m_bannerTexture.size() / (2 * (1.0F / this->m_globalScale)));
+        ImGui::Image(this->m_bannerTexture, this->m_bannerTexture.size() / (2 * (1.0F / SharedData::globalScale)));
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
@@ -582,7 +514,7 @@ namespace hex {
 
 
             ImGui::UnderlinedText("hex.welcome.header.start"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * this->m_globalScale);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
             {
                 if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.welcome.start.create_file"_lang))
                     EventManager::post<RequestOpenWindow>("Create File");
@@ -595,7 +527,7 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
             ImGui::UnderlinedText("hex.welcome.start.recent"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * this->m_globalScale);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
             {
                 if (!SharedData::recentFilePaths.empty()) {
                     for (auto &path : SharedData::recentFilePaths) {
@@ -620,7 +552,7 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
             ImGui::UnderlinedText("hex.welcome.header.help"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * this->m_globalScale);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
             {
                 if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
                 if (ImGui::IconHyperlink(ICON_VS_ORGANIZATION, "hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
@@ -737,41 +669,13 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         #endif
 
-        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                this->m_globalScale = this->m_fontScale = -1.0F;
-                break;
-            case 1:
-                this->m_globalScale = this->m_fontScale = 0.5F;
-                break;
-            case 2:
-                this->m_globalScale = this->m_fontScale = 1.0F;
-                break;
-            case 3:
-                this->m_globalScale = this->m_fontScale = 1.5F;
-                break;
-            case 4:
-                this->m_globalScale = this->m_fontScale = 2.0F;
-                break;
-        }
-
-        if (auto *monitor = glfwGetPrimaryMonitor(); monitor) {
-            float xscale, yscale;
-            glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-
-            // In case the horizontal and vertical scale are different, fall back on the average
-            if (this->m_globalScale <= 0.0F)
-                this->m_globalScale = this->m_fontScale = std::midpoint(xscale, yscale);
-        }
-
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
         this->m_windowTitle = "ImHex";
-        this->m_window = glfwCreateWindow(1280 * this->m_globalScale, 720 * this->m_globalScale, this->m_windowTitle.c_str(), nullptr, nullptr);
+        this->m_window = glfwCreateWindow(1280 * SharedData::globalScale, 720 * SharedData::globalScale, this->m_windowTitle.c_str(), nullptr, nullptr);
 
         this->setupNativeWindow();
 
@@ -851,13 +755,13 @@ namespace hex {
             EventManager::post<EventWindowClosing>(window);
         });
 
-        glfwSetWindowSizeLimits(this->m_window, 720 * this->m_globalScale, 480 * this->m_globalScale, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(this->m_window, 720 * SharedData::globalScale, 480 * SharedData::globalScale, GLFW_DONT_CARE, GLFW_DONT_CARE);
     }
 
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
-        GImGui = ImGui::CreateContext();
+        GImGui = ImGui::CreateContext(SharedData::fontAtlas);
         GImPlot = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
 
@@ -872,6 +776,8 @@ namespace hex {
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         #endif
 
+        for (auto &entry : SharedData::fontAtlas->ConfigData)
+            io.Fonts->ConfigData.push_back(entry);
 
         io.ConfigViewportsNoTaskBarIcon = true;
         io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
@@ -907,17 +813,23 @@ namespace hex {
 
         io.UserData = new ImGui::ImHexCustomData();
 
-        style.ScaleAllSizes(this->m_globalScale);
+        style.ScaleAllSizes(SharedData::globalScale);
 
-        std::string fontFile;
-        for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
-            fontFile = dir + "/font.ttf";
-            if (std::filesystem::exists(fontFile))
-                break;
+        {
+            GLsizei width, height;
+            u8 *fontData;
+
+            io.Fonts->GetTexDataAsRGBA32(&fontData, &width, &height);
+
+            // Create new font atlas
+            GLuint tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA8, GL_UNSIGNED_INT, fontData);
+            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
         }
-
-        this->setFont(fontFile);
-
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing = 10.0F;

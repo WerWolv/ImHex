@@ -115,7 +115,8 @@ namespace hex::plugin::builtin {
             u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, utf8Buffer + 4);
 
             std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
-            auto value = hex::format("'{0}' (U+0x{1:04X})",  codepoint == 0xFFFD ? "Invalid" : codepointString,
+            auto value = hex::format("'{0}' (U+0x{1:04X})",
+                                     codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
                                      codepoint);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };

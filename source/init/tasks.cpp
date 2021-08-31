@@ -1,7 +1,14 @@
 #include "init/tasks.hpp"
 
+#include <imgui.h>
+#include <imgui_freetype.h>
+
 #include <hex/helpers/net.hpp>
 #include <hex/api/content_registry.hpp>
+
+#include <fontawesome_font.h>
+#include <codicons_font.h>
+#include <unifont_font.h>
 
 #include "views/view_hexeditor.hpp"
 #include "views/view_pattern_editor.hpp"
@@ -91,6 +98,75 @@ namespace hex::init {
             getInitArguments().push_back({ "folder-creation-error", { } });
 
         return result;
+    }
+
+    bool loadFonts() {
+        auto &fonts = SharedData::fontAtlas;
+        auto &cfg = SharedData::fontConfig;
+
+        fonts = IM_NEW(ImFontAtlas)();
+        cfg = { };
+
+        std::string fontFile;
+        for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
+            fontFile = dir + "/font.ttf";
+            if (std::filesystem::exists(fontFile))
+                break;
+        }
+
+        ImVector<ImWchar> ranges;
+        {
+            ImFontGlyphRangesBuilder glyphRangesBuilder;
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesCyrillic());
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
+            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
+            glyphRangesBuilder.BuildRanges(&ranges);
+        }
+
+        ImWchar fontAwesomeRange[] = {
+                ICON_MIN_FA, ICON_MAX_FA,
+                0
+        };
+
+        ImWchar codiconsRange[] = {
+                ICON_MIN_VS, ICON_MAX_VS,
+                0
+        };
+
+        ImWchar unifontRange[] = {
+                0x0020, 0xFFF0,
+                0
+        };
+
+        if (!std::filesystem::exists(fontFile)) {
+            // Load default font
+            fonts->Clear();
+
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = 13.0f * SharedData::fontScale;
+            fonts->AddFontDefault(&cfg);
+        } else {
+            // Load custom font
+
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = 13.0f * SharedData::fontScale;
+
+            fonts->AddFontFromFileTTF(fontFile.c_str(), std::floor(14.0f * SharedData::fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+        }
+
+        cfg.MergeMode = true;
+
+        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * SharedData::fontScale, &cfg, fontAwesomeRange);
+        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0f * SharedData::fontScale, &cfg, codiconsRange);
+        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 13.0f * SharedData::fontScale, &cfg, unifontRange);
+
+        ImGuiFreeType::BuildFontAtlas(fonts);
+
+        return true;
     }
 
     bool loadDefaultViews() {
@@ -188,6 +264,25 @@ namespace hex::init {
             return false;
         }
 
+        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
+            default:
+            case 0:
+                // Native scaling
+                break;
+            case 1:
+                SharedData::globalScale = SharedData::fontScale = 0.5F;
+                break;
+            case 2:
+                SharedData::globalScale = SharedData::fontScale = 1.0F;
+                break;
+            case 3:
+                SharedData::globalScale = SharedData::fontScale = 1.5F;
+                break;
+            case 4:
+                SharedData::globalScale = SharedData::fontScale = 2.0F;
+                break;
+        }
+
         return true;
     }
 
@@ -208,6 +303,7 @@ namespace hex::init {
                 { "Loading default views...",   loadDefaultViews    },
                 { "Loading plugins...",         loadPlugins         },
                 { "Loading settings...",        loadSettings        },
+                { "Loading fonts...",           loadFonts           },
         };
     }
 

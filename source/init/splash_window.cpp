@@ -82,6 +82,8 @@ namespace hex::init {
 
         auto tasksSucceeded = processTasksAsync();
 
+        auto scale = SharedData::globalScale;
+
         while (!glfwWindowShouldClose(this->m_window)) {
             glfwPollEvents();
 
@@ -94,18 +96,18 @@ namespace hex::init {
 
                 auto drawList = ImGui::GetForegroundDrawList();
 
-                drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.size() * this->m_globalScale);
+                drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.size() * scale);
 
-                drawList->AddText(ImVec2(15, 120) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
+                drawList->AddText(ImVec2(15, 120) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
 
                 #if defined(DEBUG)
-                    drawList->AddText(ImVec2(15, 140) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0} : {1} {2}@{3}", IMHEX_VERSION, ICON_FA_CODE_BRANCH, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
+                    drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0} : {1} {2}@{3}", IMHEX_VERSION, ICON_FA_CODE_BRANCH, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
                 #else
-                    drawList->AddText(ImVec2(15, 140) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
+                    drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
                 #endif
 
-                drawList->AddRectFilled(ImVec2(0, splashTexture.size().y - 5) * this->m_globalScale, ImVec2(splashTexture.size().x * this->m_progress, splashTexture.size().y) * this->m_globalScale, 0xFFFFFFFF);
-                drawList->AddText(ImVec2(15, splashTexture.size().y - 25) * this->m_globalScale, ImColor(0xFF, 0xFF, 0xFF, 0xFF),
+                drawList->AddRectFilled(ImVec2(0, splashTexture.size().y - 5) * scale, ImVec2(splashTexture.size().x * this->m_progress, splashTexture.size().y) * scale, 0xFFFFFFFF);
+                drawList->AddText(ImVec2(15, splashTexture.size().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF),
                                   hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
             }
 
@@ -155,7 +157,6 @@ namespace hex::init {
             exit(EXIT_FAILURE);
         }
 
-
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -170,10 +171,10 @@ namespace hex::init {
             float xscale, yscale;
             glfwGetMonitorContentScale(monitor, &xscale, &yscale);
 
-            this->m_globalScale = std::midpoint(xscale, yscale);
+            SharedData::globalScale = SharedData::fontScale = std::midpoint(xscale, yscale);
         }
 
-        this->m_window = glfwCreateWindow(640 * this->m_globalScale, 400 * this->m_globalScale, "ImHex", nullptr, nullptr);
+        this->m_window = glfwCreateWindow(640 * SharedData::globalScale, 400 * SharedData::globalScale, "ImHex", nullptr, nullptr);
         if (this->m_window == nullptr) {
             log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);
@@ -195,13 +196,13 @@ namespace hex::init {
 
         auto &io = ImGui::GetIO();
 
-        ImGui::GetStyle().ScaleAllSizes(this->m_globalScale);
+        ImGui::GetStyle().ScaleAllSizes(SharedData::globalScale);
 
         io.Fonts->Clear();
 
         ImFontConfig cfg;
         cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-        cfg.SizePixels = 13.0f * this->m_globalScale;
+        cfg.SizePixels = 13.0f * SharedData::globalScale;
         io.Fonts->AddFontDefault(&cfg);
 
         cfg.MergeMode = true;
@@ -212,7 +213,7 @@ namespace hex::init {
         };
         std::uint8_t *px;
         int w, h;
-        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * this->m_globalScale, &cfg, fontAwesomeRange);
+        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * SharedData::globalScale, &cfg, fontAwesomeRange);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
         // Create new font atlas

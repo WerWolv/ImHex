@@ -84,8 +84,13 @@ namespace hex {
         static int mainArgc;
         static char **mainArgv;
 
+        static ImFontAtlas *fontAtlas;
+        static ImFontConfig fontConfig;
         static ImVec2 windowPos;
         static ImVec2 windowSize;
+
+        static float globalScale;
+        static float fontScale;
 
     private:
         static std::map<std::string, std::any> sharedVariables;

@@ -23,7 +23,6 @@
         static LONG_PTR oldWndProc;
         static float titleBarHeight;
         static ImGuiMouseCursor mouseCursorIcon;
-        static float borderScaling;
 
         static bool isTaskbarAutoHideEnabled(UINT edge, RECT monitor) {
             APPBARDATA data = { .cbSize = sizeof(APPBARDATA), .uEdge = edge, .rc = monitor };
@@ -97,8 +96,8 @@
                     POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                     const POINT border{
-                        static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * borderScaling / 2.0F),
-                        static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * borderScaling / 2.0F)
+                        static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 2.0F),
+                        static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 2.0F)
                     };
 
                     RECT window;
@@ -177,7 +176,6 @@
 
         void Window::updateNativeWindow() {
             titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
-            borderScaling = this->m_globalScale;
 
             if (mouseCursorIcon != ImGuiMouseCursor_None)
                 ImGui::SetMouseCursor(mouseCursorIcon);

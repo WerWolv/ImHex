@@ -43,11 +43,8 @@ namespace hex {
         friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
         friend void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
 
-        void setFont(const std::filesystem::path &font_path);
-
         GLFWwindow* m_window = nullptr;
 
-        float m_globalScale = 1.0F, m_fontScale = 1.0F;
         double m_targetFps = 60.0;
         bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;

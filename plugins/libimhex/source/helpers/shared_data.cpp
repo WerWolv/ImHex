@@ -36,8 +36,13 @@ namespace hex {
     int SharedData::mainArgc;
     char **SharedData::mainArgv;
 
+    ImFontAtlas *SharedData::fontAtlas;
+    ImFontConfig SharedData::fontConfig;
     ImVec2 SharedData::windowPos;
     ImVec2 SharedData::windowSize;
+
+    float SharedData::globalScale;
+    float SharedData::fontScale;
 
     std::map<std::string, std::any> SharedData::sharedVariables;
 }
