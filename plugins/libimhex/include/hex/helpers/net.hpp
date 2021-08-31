@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <future>
+#include <optional>
 #include <string>
 #include <filesystem>
 #include <atomic>

@@ -5,6 +5,7 @@
 #include "token.hpp"
 
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>

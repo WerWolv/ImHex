@@ -1,6 +1,7 @@
 #pragma once
 #include <hex.hpp>
 
+#include <optional>
 #include <string_view>
 #include <vector>
 
