@@ -82,6 +82,11 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.float16", sizeof(u16), [](auto buffer, auto endian, auto style) {
+            auto value = hex::format("{0:G}", hex::changeEndianess(float16ToFloat32(*reinterpret_cast<u16*>(buffer.data())), endian));
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+        });
+
         ContentRegistry::DataInspector::add("hex.builtin.inspector.float", sizeof(float), [](auto buffer, auto endian, auto style) {
             auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<float*>(buffer.data()), endian));
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };

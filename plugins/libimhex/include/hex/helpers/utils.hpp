@@ -179,6 +179,8 @@ namespace hex {
 
     void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
 
+    float float16ToFloat32(u16 float16);
+
     namespace scope_guard {
 
         #define SCOPE_GUARD ::hex::scope_guard::ScopeGuardOnExit() + [&]()

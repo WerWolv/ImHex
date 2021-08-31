@@ -313,6 +313,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.s32", "int32_t" },
                 { "hex.builtin.inspector.u64", "uint64_t" },
                 { "hex.builtin.inspector.s64", "int64_t" },
+                { "hex.builtin.inspector.float16", "half float (16 bit)" },
                 { "hex.builtin.inspector.float", "float (32 bit)" },
                 { "hex.builtin.inspector.double", "double (64 bit)" },
                 { "hex.builtin.inspector.ascii", "ASCII Zeichen" },
