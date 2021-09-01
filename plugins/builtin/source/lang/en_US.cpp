@@ -319,6 +319,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.ascii", "ASCII Character" },
                 { "hex.builtin.inspector.wide", "Wide Character" },
                 { "hex.builtin.inspector.utf8", "UTF-8 code point" },
+                { "hex.builtin.inspector.string", "String" },
                 { "hex.builtin.inspector.time32", "__time32_t" },
                 { "hex.builtin.inspector.time64", "__time64_t" },
                 { "hex.builtin.inspector.time", "time_t" },

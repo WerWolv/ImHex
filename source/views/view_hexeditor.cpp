@@ -208,7 +208,10 @@ namespace hex {
         });
 
         EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
-            region = Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1 };
+            u64 address = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+            size_t size = std::abs(s64(this->m_memoryEditor.DataPreviewAddrEnd) - s64(this->m_memoryEditor.DataPreviewAddr)) + 1;
+
+            region = Region { address, size };
         });
     }
 

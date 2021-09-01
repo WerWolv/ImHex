@@ -2,11 +2,15 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/shared_data.hpp>
+#include <hex/api/event.hpp>
 
 #include <cstring>
 #include <ctime>
 #include <codecvt>
 #include <locale>
+#include <string>
+#include <vector>
 
 #include <imgui_internal.h>
 
@@ -123,6 +127,27 @@ namespace hex::plugin::builtin {
             auto value = hex::format("'{0}' (U+0x{1:04X})",
                                      codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
                                      codepoint);
+
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+        });
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 0, [](auto buffer, auto endian, auto style) {
+            Region currSelection = { 0 };
+            EventManager::post<QuerySelection>(currSelection);
+
+            constexpr static auto MaxStringLength = 32;
+
+            std::string stringBuffer(std::min<ssize_t>(MaxStringLength, currSelection.size), 0x00);
+            SharedData::currentProvider->read(currSelection.address, stringBuffer.data(), stringBuffer.size());
+            if (currSelection.size > MaxStringLength)
+                stringBuffer += "...";
+
+            for (auto &c : stringBuffer)
+                if (c < 0x20 || c == '\n' || c == '\r')
+                    c = ' ';
+
+
+            auto value = hex::format("\"{0}\"", stringBuffer);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
