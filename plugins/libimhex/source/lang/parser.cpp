@@ -667,19 +667,15 @@ namespace hex::lang {
                 variables.push_back(new ASTNodeVariableDecl(getValue<std::string>(-1), type->clone()));
             } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
 
-            delete type;
-
             variableCleanup.release();
 
             return new ASTNodeMultiVariableDecl(variables);
         } else
-            return new ASTNodeVariableDecl(getValue<std::string>(-1), type);
+            return new ASTNodeVariableDecl(getValue<std::string>(-1), type->clone());
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]
     ASTNode* Parser::parseMemberArrayVariable(ASTNodeTypeDecl *type) {
-        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
-
         auto name = getValue<std::string>(-2);
 
         ASTNode *size = nullptr;
@@ -697,7 +693,7 @@ namespace hex::lang {
 
         sizeCleanup.release();
 
-        return new ASTNodeArrayVariableDecl(name, type, size);
+        return new ASTNodeArrayVariableDecl(name, type->clone(), size);
     }
 
     // (parseType) *Identifier : (parseType)
@@ -713,7 +709,7 @@ namespace hex::lang {
                 throwParseError("invalid type used for pointer size", -1);
         }
 
-        return new ASTNodePointerVariableDecl(name, type, sizeType);
+        return new ASTNodePointerVariableDecl(name, type->clone(), sizeType);
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
@@ -725,6 +721,7 @@ namespace hex::lang {
             // Some kind of variable definition
 
             auto type = parseType();
+            ON_SCOPE_EXIT { delete type; };
 
             if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN))
                 member = parseMemberArrayVariable(type);
@@ -759,9 +756,6 @@ namespace hex::lang {
         const auto &typeName = getValue<std::string>(-2);
         auto structGuard = SCOPE_GUARD { delete structNode; };
 
-        if (this->m_types.contains(typeName))
-            throwParseError(hex::format("redefinition of type '{}'", typeName));
-
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             structNode->addMember(parseMember());
         }
@@ -776,9 +770,6 @@ namespace hex::lang {
         const auto unionNode = new ASTNodeUnion();
         const auto &typeName = getValue<std::string>(-2);
         auto unionGuard = SCOPE_GUARD { delete unionNode; };
-
-        if (this->m_types.contains(typeName))
-            throwParseError(hex::format("redefinition of type '{}'", typeName));
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             unionNode->addMember(parseMember());
@@ -798,9 +789,6 @@ namespace hex::lang {
 
         const auto enumNode = new ASTNodeEnum(underlyingType);
         auto enumGuard = SCOPE_GUARD { delete enumNode; };
-
-        if (this->m_types.contains(typeName))
-            throwParseError(hex::format("redefinition of type '{}'", typeName));
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
             throwParseError("expected '{' after enum definition", -1);
@@ -848,9 +836,6 @@ namespace hex::lang {
 
         const auto bitfieldNode = new ASTNodeBitfield();
         auto enumGuard = SCOPE_GUARD { delete bitfieldNode; };
-
-        if (this->m_types.contains(typeName))
-            throwParseError(hex::format("redefinition of type '{}'", typeName));
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
@@ -1023,6 +1008,9 @@ namespace hex::lang {
 
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(statement); typeDecl != nullptr) {
             auto typeName = getNamespacePrefixedName(typeDecl->getName().data());
+
+            if (this->m_types.contains(typeName))
+                throwParseError(hex::format("redefinition of type '{}'", typeName));
 
             typeDecl->setName(typeName);
             this->m_types.insert({ typeName, typeDecl });

@@ -771,8 +771,8 @@ namespace hex::lang {
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, true);
-            structPattern->setMembers(memberPatterns);
         }
+        structPattern->setMembers(memberPatterns);
         structPattern->setSize(this->m_currOffset - startOffset);
 
         this->m_currRecursionDepth--;
@@ -801,8 +801,8 @@ namespace hex::lang {
 
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, false);
-            unionPattern->setMembers(memberPatterns);
         }
+        unionPattern->setMembers(memberPatterns);
 
         this->m_currRecursionDepth--;
 
