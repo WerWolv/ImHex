@@ -1,6 +1,6 @@
 #include "views/view_constants.hpp"
 
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <fstream>

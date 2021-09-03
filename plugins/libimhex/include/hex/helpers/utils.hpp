@@ -157,20 +157,6 @@ namespace hex {
         trimRight(s);
     }
 
-    enum class ImHexPath {
-        Patterns,
-        PatternsInclude,
-        Magic,
-        Python,
-        Plugins,
-        Yara,
-        Config,
-        Resources,
-        Constants
-    };
-
-    std::vector<std::string> getPath(ImHexPath path);
-
     enum class DialogMode {
         Open,
         Save,

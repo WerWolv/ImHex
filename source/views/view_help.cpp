@@ -1,4 +1,5 @@
 #include "views/view_help.hpp"
+#include <hex/helpers/paths.hpp>
 
 #include <imgui_imhex_extensions.h>
 

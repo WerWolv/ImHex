@@ -3,7 +3,7 @@
 #include "helpers/project_file_handler.hpp"
 #include <hex/lang/preprocessor.hpp>
 #include <hex/lang/pattern_data.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <magic.h>
 

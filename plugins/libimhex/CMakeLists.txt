@@ -46,6 +46,7 @@ set(LIBIMHEX_SOURCES
     source/data_processor/node.cpp
 
     source/helpers/utils.cpp
+    source/helpers/paths.cpp
     source/helpers/shared_data.cpp
     source/helpers/crypto.cpp
     source/helpers/lang.cpp
@@ -74,7 +75,7 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_mac.mm)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm)
 endif ()
 
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})

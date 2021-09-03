@@ -1,7 +1,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/shared_data.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <filesystem>
 #include <fstream>

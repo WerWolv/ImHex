@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(OS_MACOS)
-    #include <hex/helpers/utils.hpp>
+    #include <hex/helpers/paths.hpp>
 
     namespace hex {
         std::string getPathForMac(ImHexPath path);

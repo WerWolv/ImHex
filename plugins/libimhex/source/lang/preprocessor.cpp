@@ -1,7 +1,7 @@
 #include <hex/lang/preprocessor.hpp>
 
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <filesystem>
 
