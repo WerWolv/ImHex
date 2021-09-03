@@ -314,9 +314,6 @@ namespace hex::lang {
                 } else if (c == '=') {
                     tokens.emplace_back(TOKEN(Operator, Assignment));
                     offset += 1;
-                } else if (code.substr(offset, 2) == "::") {
-                    tokens.emplace_back(TOKEN(Separator, ScopeResolution));
-                    offset += 2;
                 } else if (c == ':') {
                     tokens.emplace_back(TOKEN(Operator, Inherit));
                     offset += 1;

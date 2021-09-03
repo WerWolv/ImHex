@@ -104,7 +104,6 @@ namespace hex::lang {
             SquareBracketClose,
             Comma,
             Dot,
-            ScopeResolution,
             EndOfExpression,
             EndOfProgram
         };
@@ -260,6 +259,5 @@ namespace hex::lang {
 #define SEPARATOR_SQUAREBRACKETCLOSE        COMPONENT(Separator, SquareBracketClose)
 #define SEPARATOR_COMMA                     COMPONENT(Separator, Comma)
 #define SEPARATOR_DOT                       COMPONENT(Separator, Dot)
-#define SEPARATOR_SCOPE_RESOLUTION          COMPONENT(Separator, ScopeResolution)
 #define SEPARATOR_ENDOFEXPRESSION           COMPONENT(Separator, EndOfExpression)
 #define SEPARATOR_ENDOFPROGRAM              COMPONENT(Separator, EndOfProgram)

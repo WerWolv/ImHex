@@ -64,7 +64,8 @@ namespace hex::lang {
 
         ASTNode* parseFunctionCall();
         ASTNode* parseStringLiteral();
-        std::string parseScopeResolution();
+        std::string parseNamespaceResolution();
+        ASTNode* parseScopeResolution();
         ASTNode* parseRValue(ASTNodeRValue::Path &path);
         ASTNode* parseFactor();
         ASTNode* parseUnaryExpression();

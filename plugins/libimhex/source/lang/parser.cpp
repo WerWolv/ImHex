@@ -21,7 +21,7 @@ namespace hex::lang {
 
     // Identifier([(parseMathematicalExpression)|<(parseMathematicalExpression),...>(parseMathematicalExpression)]
     ASTNode* Parser::parseFunctionCall() {
-        std::string functionName = parseScopeResolution();
+        std::string functionName = parseNamespaceResolution();
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN)))
             throwParseError("expected '(' after function name");
@@ -56,7 +56,7 @@ namespace hex::lang {
         return new ASTNodeStringLiteral(getValue<std::string>(-1));
     }
 
-    std::string Parser::parseScopeResolution() {
+    std::string Parser::parseNamespaceResolution() {
         std::string name;
 
         while (true) {
@@ -71,6 +71,27 @@ namespace hex::lang {
         }
 
         return name;
+    }
+
+    ASTNode* Parser::parseScopeResolution() {
+        std::string typeName;
+
+        while (true) {
+            typeName += getValue<std::string>(-1);
+
+            if (MATCHES(sequence(OPERATOR_SCOPERESOLUTION, IDENTIFIER))) {
+                if (peek(OPERATOR_SCOPERESOLUTION, 0) && peek(IDENTIFIER, 1)) {
+                    typeName += "::";
+                   continue;
+                } else {
+                    return new ASTNodeScopeResolution({ typeName, getValue<std::string>(-1) });
+                }
+            }
+            else
+                break;
+        }
+
+        throwParseError("failed to parse scope resolution. Expected 'TypeName::Identifier'");
     }
 
     // <Identifier[.]...>
@@ -108,14 +129,16 @@ namespace hex::lang {
             return node;
         } else if (MATCHES(sequence(IDENTIFIER))) {
             auto originalPos = this->m_curr;
-            parseScopeResolution();
+            parseNamespaceResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
             this->m_curr = originalPos;
 
+
             if (isFunction) {
-                return TO_NUMERIC_EXPRESSION(parseFunctionCall());
-            }
-            else {
+                return TO_NUMERIC_EXPRESSION(this->parseFunctionCall());
+            } else if (peek(OPERATOR_SCOPERESOLUTION, 0)) {
+                return TO_NUMERIC_EXPRESSION(this->parseScopeResolution());
+            } else {
                 ASTNodeRValue::Path path;
                 return TO_NUMERIC_EXPRESSION(this->parseRValue(path));
             }
@@ -431,7 +454,7 @@ namespace hex::lang {
             needsSemicolon = false;
         } else if (MATCHES(sequence(IDENTIFIER))) {
             auto originalPos = this->m_curr;
-            parseScopeResolution();
+            parseNamespaceResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
             this->m_curr = originalPos;
 
@@ -598,7 +621,7 @@ namespace hex::lang {
             endian = std::endian::big;
 
         if (MATCHES(sequence(IDENTIFIER))) { // Custom type
-            std::string typeName = parseScopeResolution();
+            std::string typeName = parseNamespaceResolution();
 
             if (this->m_types.contains(typeName))
                 return new ASTNodeTypeDecl({ }, this->m_types[typeName]->clone(), endian);
@@ -768,7 +791,7 @@ namespace hex::lang {
 
     // enum Identifier : (parseType) { <<Identifier|Identifier = (parseMathematicalExpression)[,]>...> }
     ASTNode* Parser::parseEnum() {
-        auto typeName = getNamespacePrefixedName(getValue<std::string>(-2));
+        auto typeName = getValue<std::string>(-2);
 
         auto underlyingType = parseType();
         if (underlyingType->getEndian().has_value()) throwParseError("underlying type may not have an endian specification", -2);
@@ -778,6 +801,9 @@ namespace hex::lang {
 
         if (this->m_types.contains(typeName))
             throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
+            throwParseError("expected '{' after enum definition", -1);
 
         ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -962,7 +988,7 @@ namespace hex::lang {
         else if (peek(IDENTIFIER)) {
             auto originalPos = this->m_curr;
             this->m_curr++;
-            parseScopeResolution();
+            parseNamespaceResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
             this->m_curr = originalPos;
 
