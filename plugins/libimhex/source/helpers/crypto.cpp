@@ -1,9 +1,11 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <mbedtls/version.h>
 #include <mbedtls/base64.h>
+#include <mbedtls/bignum.h>
 #include <mbedtls/md5.h>
 #include <mbedtls/sha1.h>
 #include <mbedtls/sha256.h>
@@ -131,6 +133,21 @@ namespace hex::crypt {
         return result;
     }
 
+    std::array<u8, 16> md5(const std::vector<u8> &data) {
+        std::array<u8, 16> result = { 0 };
+
+        mbedtls_md5_context ctx;
+        mbedtls_md5_init(&ctx);
+
+        mbedtls_md5_starts(&ctx);
+        mbedtls_md5_update(&ctx, data.data(), data.size());
+        mbedtls_md5_finish(&ctx, result.data());
+
+        mbedtls_md5_free(&ctx);
+
+        return result;
+    }
+
     std::array<u8, 20> sha1(prv::Provider* &data, u64 offset, size_t size) {
         std::array<u8, 20> result = { 0 };
 
@@ -146,6 +163,21 @@ namespace hex::crypt {
             mbedtls_sha1_update(&ctx, buffer.data(), readSize);
         }
 
+        mbedtls_sha1_finish(&ctx, result.data());
+
+        mbedtls_sha1_free(&ctx);
+
+        return result;
+    }
+
+    std::array<u8, 20> sha1(const std::vector<u8> &data) {
+        std::array<u8, 20> result = { 0 };
+
+        mbedtls_sha1_context ctx;
+        mbedtls_sha1_init(&ctx);
+
+        mbedtls_sha1_starts(&ctx);
+        mbedtls_sha1_update(&ctx, data.data(), data.size());
         mbedtls_sha1_finish(&ctx, result.data());
 
         mbedtls_sha1_free(&ctx);
@@ -175,6 +207,21 @@ namespace hex::crypt {
         return result;
     }
 
+    std::array<u8, 28> sha224(const std::vector<u8> &data) {
+        std::array<u8, 28> result = { 0 };
+
+        mbedtls_sha256_context ctx;
+        mbedtls_sha256_init(&ctx);
+
+        mbedtls_sha256_starts(&ctx, true);
+        mbedtls_sha256_update(&ctx, data.data(), data.size());
+        mbedtls_sha256_finish(&ctx, result.data());
+
+        mbedtls_sha256_free(&ctx);
+
+        return result;
+    }
+
     std::array<u8, 32> sha256(prv::Provider* &data, u64 offset, size_t size) {
         std::array<u8, 32> result = { 0 };
 
@@ -190,6 +237,21 @@ namespace hex::crypt {
             mbedtls_sha256_update(&ctx, buffer.data(), readSize);
         }
 
+        mbedtls_sha256_finish(&ctx, result.data());
+
+        mbedtls_sha256_free(&ctx);
+
+        return result;
+    }
+
+    std::array<u8, 32> sha256(const std::vector<u8> &data) {
+        std::array<u8, 32> result = { 0 };
+
+        mbedtls_sha256_context ctx;
+        mbedtls_sha256_init(&ctx);
+
+        mbedtls_sha256_starts(&ctx, false);
+        mbedtls_sha256_update(&ctx, data.data(), data.size());
         mbedtls_sha256_finish(&ctx, result.data());
 
         mbedtls_sha256_free(&ctx);
@@ -219,6 +281,21 @@ namespace hex::crypt {
         return result;
     }
 
+    std::array<u8, 48> sha384(const std::vector<u8> &data) {
+        std::array<u8, 48> result = { 0 };
+
+        mbedtls_sha512_context ctx;
+        mbedtls_sha512_init(&ctx);
+
+        mbedtls_sha512_starts(&ctx, true);
+        mbedtls_sha512_update(&ctx, data.data(), data.size());
+        mbedtls_sha512_finish(&ctx, result.data());
+
+        mbedtls_sha512_free(&ctx);
+
+        return result;
+    }
+
     std::array<u8, 64> sha512(prv::Provider* &data, u64 offset, size_t size) {
         std::array<u8, 64> result = { 0 };
 
@@ -241,6 +318,22 @@ namespace hex::crypt {
         return result;
     }
 
+    std::array<u8, 64> sha512(const std::vector<u8> &data) {
+        std::array<u8, 64> result = { 0 };
+
+        mbedtls_sha512_context ctx;
+        mbedtls_sha512_init(&ctx);
+
+        mbedtls_sha512_starts(&ctx, false);
+        mbedtls_sha512_update(&ctx, data.data(), data.size());
+        mbedtls_sha512_finish(&ctx, result.data());
+
+        mbedtls_sha512_free(&ctx);
+
+        return result;
+    }
+
+
     std::vector<u8> decode64(const std::vector<u8> &input) {
         size_t outputSize = (3 * input.size()) / 4;
         std::vector<u8> output(outputSize + 1, 0x00);
@@ -258,6 +351,41 @@ namespace hex::crypt {
 
         size_t written = 0;
         if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
+            return { };
+
+        return output;
+    }
+
+    std::vector<u8> decode16(const std::string &input) {
+        std::vector<u8> output(input.length() / 2, 0x00);
+
+        mbedtls_mpi ctx;
+        mbedtls_mpi_init(&ctx);
+
+        ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
+
+        if (mbedtls_mpi_read_string(&ctx, 16, input.c_str()))
+            return { };
+
+        if (mbedtls_mpi_write_binary(&ctx, output.data(), output.size()))
+            return { };
+
+        return output;
+    }
+
+    std::string encode16(const std::vector<u8> &input) {
+        std::string output(input.size() * 2 + 1, 0x00);
+
+        mbedtls_mpi ctx;
+        mbedtls_mpi_init(&ctx);
+
+        ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
+
+        if (mbedtls_mpi_read_binary(&ctx, input.data(), input.size()))
+            return { };
+
+        size_t written = 0;
+        if (mbedtls_mpi_write_string(&ctx, 16, output.data(), output.size(), &written))
             return { };
 
         return output;

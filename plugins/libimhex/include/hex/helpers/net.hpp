@@ -21,6 +21,11 @@ namespace hex {
         T body;
     };
 
+    template<>
+    struct Response<void> {
+        s32 code;
+    };
+
     class Net {
     public:
         Net();
@@ -30,6 +35,7 @@ namespace hex {
         std::future<Response<nlohmann::json>> getJson(const std::string &url);
 
         std::future<Response<std::string>> uploadFile(const std::string &url, const std::filesystem::path &filePath);
+        std::future<Response<void>> downloadFile(const std::string &url, const std::filesystem::path &filePath);
 
         [[nodiscard]]
         std::string encode(const std::string &input) {

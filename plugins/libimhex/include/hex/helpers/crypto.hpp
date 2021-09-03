@@ -24,8 +24,17 @@ namespace hex::crypt {
     std::array<u8, 48> sha384(prv::Provider* &data, u64 offset, size_t size);
     std::array<u8, 64> sha512(prv::Provider* &data, u64 offset, size_t size);
 
+    std::array<u8, 16> md5(const std::vector<u8> &data);
+    std::array<u8, 20> sha1(const std::vector<u8> &data);
+    std::array<u8, 28> sha224(const std::vector<u8> &data);
+    std::array<u8, 32> sha256(const std::vector<u8> &data);
+    std::array<u8, 48> sha384(const std::vector<u8> &data);
+    std::array<u8, 64> sha512(const std::vector<u8> &data);
+
     std::vector<u8> decode64(const std::vector<u8> &input);
     std::vector<u8> encode64(const std::vector<u8> &input);
+    std::vector<u8> decode16(const std::string &input);
+    std::string encode16(const std::vector<u8> &input);
 
     enum class AESMode : u8 {
         ECB     = 0,

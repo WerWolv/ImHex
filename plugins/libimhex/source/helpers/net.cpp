@@ -42,6 +42,12 @@ namespace hex {
         return fread(contents, size, nmemb, file);
     }
 
+    static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata) {
+        FILE *file = static_cast<FILE*>(userdata);
+
+        return fwrite(contents, size, nmemb, file);
+    }
+
     static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userdata) {
         auto* cfg = static_cast<mbedtls_ssl_config*>(sslctx);
 
@@ -200,6 +206,30 @@ namespace hex {
             auto responseCode = execute();
 
             return Response<std::string> { responseCode.value_or(0), response };
+        });
+    }
+
+    std::future<Response<void>> Net::downloadFile(const std::string &url, const std::filesystem::path &filePath) {
+        this->m_transmissionActive.lock();
+
+        return std::async(std::launch::async, [=, this]{
+            std::string response;
+
+            ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
+
+            FILE *file = fopen(filePath.string().c_str(), "wb");
+            if (file == nullptr)
+                return Response<void> { 400 };
+
+            ON_SCOPE_EXIT { fclose(file); };
+
+            setCommonSettings(response, url, {});
+            curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
+            curl_easy_setopt(this->m_ctx, CURLOPT_WRITEFUNCTION, writeToFile);
+            curl_easy_setopt(this->m_ctx, CURLOPT_WRITEDATA, file);
+            auto responseCode = execute();
+
+            return Response<void> { responseCode.value_or(0) };
         });
     }
 

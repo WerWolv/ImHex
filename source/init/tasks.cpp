@@ -27,6 +27,7 @@
 #include "views/view_data_processor.hpp"
 #include "views/view_yara.hpp"
 #include "views/view_constants.hpp"
+#include "views/view_store.hpp"
 
 #include "helpers/plugin_manager.hpp"
 
@@ -188,6 +189,7 @@ namespace hex::init {
         ContentRegistry::Views::add<ViewDataProcessor>();
         ContentRegistry::Views::add<ViewYara>();
         ContentRegistry::Views::add<ViewConstants>();
+        ContentRegistry::Views::add<ViewStore>();
 
         return true;
     }
