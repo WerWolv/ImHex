@@ -24,9 +24,3 @@ struct Region {
     u64 address;
     size_t size;
 };
-
-#ifdef OS_WINDOWS
-#define MAGIC_PATH_SEPARATOR	";"
-#else
-#define MAGIC_PATH_SEPARATOR	":"
-#endif

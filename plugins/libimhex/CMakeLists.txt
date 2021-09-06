@@ -47,6 +47,7 @@ set(LIBIMHEX_SOURCES
 
     source/helpers/utils.cpp
     source/helpers/paths.cpp
+    source/helpers/magic.cpp
     source/helpers/shared_data.cpp
     source/helpers/crypto.cpp
     source/helpers/lang.cpp
@@ -93,9 +94,9 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (APPLE)
     find_library(FOUNDATION NAMES Foundation)
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FOUNDATION} nfd fmt-header-only libcurl)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FOUNDATION} nfd fmt-header-only libcurl magic)
 else ()
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd)
+    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd magic)
 
     if (NOT USE_SYSTEM_FMT)
         target_link_libraries(libimhex PUBLIC fmt-header-only)

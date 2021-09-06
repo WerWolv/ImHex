@@ -3,6 +3,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/literals.hpp>
 
 #include <cstring>
 #include <cmath>
@@ -12,12 +13,14 @@
 #include <thread>
 #include <vector>
 
-#include <magic.h>
+#include <hex/helpers/magic.hpp>
 
 #include <imgui_imhex_extensions.h>
 #include <implot.h>
 
 namespace hex {
+
+    using namespace hex::literals;
 
     ViewInformation::ViewInformation() : View("hex.view.information.name") {
         EventManager::subscribe<EventDataChanged>(this, [this]() {
@@ -93,47 +96,9 @@ namespace hex {
             }
 
             {
-                std::vector<u8> buffer(provider->getSize(), 0x00);
-                provider->readRelative(0x00, buffer.data(), buffer.size());
-
-                this->m_fileDescription.clear();
-                this->m_mimeType.clear();
-
-                std::string magicFiles;
-
-                std::error_code error;
-                for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
-                    for (const auto &entry : std::filesystem::directory_iterator(dir, error)) {
-                        if (entry.is_regular_file() && entry.path().extension() == ".mgc")
-                            magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
-                    }
-                }
-
-                if (!error) {
-                    magicFiles.pop_back();
-
-                    {
-                        magic_t cookie = magic_open(MAGIC_NONE);
-                        if (magic_load(cookie, magicFiles.c_str()) != -1)
-                            this->m_fileDescription = magic_buffer(cookie, buffer.data(), buffer.size());
-                        else
-                            this->m_fileDescription = "";
-
-                        magic_close(cookie);
-                    }
-
-                    {
-                        magic_t cookie = magic_open(MAGIC_MIME);
-                        if (magic_load(cookie, magicFiles.c_str()) != -1)
-                            this->m_mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
-                        else
-                            this->m_mimeType = "";
-
-                        magic_close(cookie);
-                    }
-
-                    this->m_dataValid = true;
-                }
+                this->m_fileDescription = magic::getDescription(provider);
+                this->m_mimeType = magic::getMIMEType(provider);
+                this->m_dataValid = true;
             }
 
             this->m_analyzing = false;

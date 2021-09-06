@@ -5,13 +5,16 @@
 #include <hex/lang/pattern_data.hpp>
 #include <hex/helpers/paths.hpp>
 
-#include <magic.h>
+#include <hex/helpers/magic.hpp>
+#include <hex/helpers/literals.hpp>
 
 #include <imgui_imhex_extensions.h>
 
 #include <nlohmann/json.hpp>
 
 namespace hex {
+
+    using namespace hex::literals;
 
     static const TextEditor::LanguageDefinition& PatternLanguage() {
         static bool initialized = false;
@@ -101,37 +104,12 @@ namespace hex {
                 return;
 
             lang::Preprocessor preprocessor;
-            std::string magicFiles;
-
-            std::error_code error;
-            for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
-                if (!std::filesystem::is_directory(dir))
-                    continue;
-
-                for (const auto &entry : std::filesystem::directory_iterator(dir, error)) {
-                    if (entry.is_regular_file() && entry.path().extension() == ".mgc")
-                        magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
-                }
-            }
-
-            if (error)
-                return;
-
             auto provider = SharedData::currentProvider;
 
             if (provider == nullptr)
                 return;
 
-            std::vector<u8> buffer(std::min(provider->getSize(), size_t(0xFFFF)), 0x00);
-            provider->readRelative(0, buffer.data(), buffer.size());
-
-            std::string mimeType;
-
-            magic_t cookie = magic_open(MAGIC_MIME_TYPE);
-            if (magic_load(cookie, magicFiles.c_str()) != -1)
-                mimeType = magic_buffer(cookie, buffer.data(), buffer.size());
-
-            magic_close(cookie);
+            std::string mimeType = magic::getMIMEType(provider);
 
             bool foundCorrectType = false;
             preprocessor.addPragmaHandler("MIME", [&mimeType, &foundCorrectType](std::string value) {
