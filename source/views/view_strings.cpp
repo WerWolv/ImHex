@@ -17,18 +17,25 @@ namespace hex {
             this->m_foundStrings.clear();
         });
 
-        this->m_filter.resize(0xFFFF, 0x00);
+        this->m_filter.reserve(0xFFFF);
+        std::memset(this->m_filter.data(), 0x00, this->m_filter.capacity());
     }
 
     ViewStrings::~ViewStrings() {
         EventManager::unsubscribe<EventDataChanged>(this);
     }
 
+    std::string readString(const FoundString &foundString) {
+        std::string string(foundString.size + 1, '\0');
+        SharedData::currentProvider->read(foundString.offset, string.data(), foundString.size);
+
+        return string;
+    }
 
     void ViewStrings::createStringContextMenu(const FoundString &foundString) {
         if (ImGui::TableGetColumnFlags(2) == ImGuiTableColumnFlags_IsHovered && ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
             ImGui::OpenPopup("StringContextMenu");
-            this->m_selectedString = foundString.string;
+            this->m_selectedString = readString(foundString);
         }
         if (ImGui::BeginPopup("StringContextMenu")) {
             if (ImGui::MenuItem("hex.view.strings.copy"_lang)) {
@@ -46,6 +53,7 @@ namespace hex {
 
     void ViewStrings::searchStrings() {
         this->m_foundStrings.clear();
+        this->m_filterIndices.clear();
         this->m_searching = true;
 
         std::thread([this] {
@@ -59,19 +67,17 @@ namespace hex {
                 provider->readRelative(offset,  buffer.data(), readSize);
 
                 for (u32 i = 0; i < readSize; i++) {
-                    if (buffer[i] >= 0x20 && buffer[i] <= 0x7E)
+                    if (buffer[i] >= ' ' && buffer[i] <= '~' && offset < provider->getSize() - 1)
                         foundCharacters++;
                     else {
                         if (foundCharacters >= this->m_minimumLength) {
-                            FoundString foundString;
-
-                            foundString.offset = offset + i - foundCharacters + provider->getBaseAddress();
-                            foundString.size = foundCharacters;
-                            foundString.string.reserve(foundCharacters);
-                            foundString.string.resize(foundCharacters);
-                            provider->read(foundString.offset, foundString.string.data(), foundCharacters);
+                            FoundString foundString = {
+                                offset + i - foundCharacters + provider->getBaseAddress(),
+                                foundCharacters
+                            };
 
                             this->m_foundStrings.push_back(foundString);
+                            this->m_filterIndices.push_back(this->m_foundStrings.size() - 1);
                         }
 
                         foundCharacters = 0;
@@ -93,7 +99,19 @@ namespace hex {
                     if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                         this->m_foundStrings.clear();
 
-                    ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.size());
+                    ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
+                        auto &view = *static_cast<ViewStrings*>(data->UserData);
+                        view.m_filter.resize(data->BufTextLen);
+
+                        view.m_filterIndices.clear();
+                        for (u64 i = 0; i < view.m_foundStrings.size(); i++) {
+                            if (readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos)
+                                view.m_filterIndices.push_back(i);
+                        }
+
+                        return 0;
+                    }, this);
+
                     if (ImGui::Button("hex.view.strings.extract"_lang))
                         this->searchStrings();
                 }, this->m_searching);
@@ -132,9 +150,9 @@ namespace hex {
                                               return left.size < right.size;
                                       } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("string")) {
                                           if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                              return left.string > right.string;
+                                              return readString(left) > readString(right);
                                           else
-                                              return left.string < right.string;
+                                              return readString(left) < readString(right);
                                       }
 
                                       return false;
@@ -146,15 +164,12 @@ namespace hex {
                     ImGui::TableHeadersRow();
 
                     ImGuiListClipper clipper;
-                    clipper.Begin(this->m_foundStrings.size());
+                    clipper.Begin(this->m_filterIndices.size());
 
                     while (clipper.Step()) {
                         for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &foundString = this->m_foundStrings[i];
-
-                            if (strlen(this->m_filter.data()) != 0 &&
-                                foundString.string.find(this->m_filter.data()) == std::string::npos)
-                                continue;
+                            auto &foundString = this->m_foundStrings[this->m_filterIndices[i]];
+                            auto string = readString(foundString);
 
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
@@ -169,7 +184,8 @@ namespace hex {
                             ImGui::TableNextColumn();
                             ImGui::Text("0x%04lx", foundString.size);
                             ImGui::TableNextColumn();
-                            ImGui::Text("%s", foundString.string.c_str());
+
+                            ImGui::Text("%s", string.c_str());
                         }
                     }
                     clipper.End();

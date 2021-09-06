@@ -10,7 +10,6 @@ namespace hex {
     namespace prv { class Provider; }
 
     struct FoundString {
-        std::string string;
         u64 offset;
         size_t size;
     };
@@ -27,8 +26,9 @@ namespace hex {
         bool m_searching = false;
 
         std::vector<FoundString> m_foundStrings;
+        std::vector<size_t> m_filterIndices;
         int m_minimumLength = 5;
-        std::vector<char> m_filter;
+        std::string m_filter;
 
         std::string m_selectedString;
         std::string m_demangledName;
