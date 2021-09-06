@@ -1,6 +1,6 @@
 #include "views/view_command_palette.hpp"
 
-#include <GLFW/glfw3.h>
+#include <cstring>
 
 namespace hex {
 

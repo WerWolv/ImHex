@@ -3,6 +3,9 @@
 
 #include <imgui_imhex_extensions.h>
 
+#include <hex/helpers/fmt.hpp>
+#include <hex/helpers/utils.hpp>
+
 namespace hex {
 
     ViewHelp::ViewHelp() : View("hex.view.help.about.name") {

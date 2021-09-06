@@ -7,11 +7,12 @@
 #include <hex/lang/parser.hpp>
 #include <hex/lang/validator.hpp>
 #include <hex/lang/evaluator.hpp>
-#include <hex/lang/pattern_data.hpp>
 
 #include <unistd.h>
 
 namespace hex::lang {
+
+    class PatternData;
 
     PatternLanguage::PatternLanguage() {
         this->m_preprocessor = new Preprocessor();

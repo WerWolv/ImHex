@@ -4,7 +4,6 @@
 #include <hex/views/view.hpp>
 
 #include <imgui.h>
-#include <hex/lang/pattern_data.hpp>
 
 #include <vector>
 #include <tuple>

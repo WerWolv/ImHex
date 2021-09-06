@@ -55,12 +55,15 @@ namespace hex::lang {
             if (SharedData::patternPaletteOffset >= (sizeof(Palette) / sizeof(u32)))
                 SharedData::patternPaletteOffset = 0;
         }
+
+        PatternData(const PatternData &other) = default;
+
         virtual ~PatternData() = default;
 
         virtual PatternData* clone() = 0;
 
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
-        void setOffset(u64 offset) { this->m_offset = offset; }
+        virtual void setOffset(u64 offset) { this->m_offset = offset; }
 
         [[nodiscard]] size_t getSize() const { return this->m_size; }
         void setSize(size_t size) { this->m_size = size; }
@@ -102,6 +105,10 @@ namespace hex::lang {
             }
 
             return this->m_highlightedAddresses;
+        }
+
+        virtual void clearHighlightedAddresses() {
+            this->m_highlightedAddresses.clear();
         }
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
@@ -253,7 +260,7 @@ namespace hex::lang {
         : PatternData(offset, size, color), m_pointedAt(nullptr) {
         }
 
-        PatternDataPointer(const PatternDataPointer &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+        PatternDataPointer(const PatternDataPointer &other) : PatternData(other) {
             this->m_pointedAt = other.m_pointedAt->clone();
         }
 
@@ -577,13 +584,13 @@ namespace hex::lang {
         }
     };
 
-    class PatternDataArray : public PatternData {
+    class PatternDataDynamicArray : public PatternData {
     public:
-        PatternDataArray(u64 offset, size_t size, u32 color = 0)
+        PatternDataDynamicArray(u64 offset, size_t size, u32 color = 0)
             : PatternData(offset, size, color) {
         }
 
-        PatternDataArray(const PatternDataArray &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+        PatternDataDynamicArray(const PatternDataDynamicArray &other) : PatternData(other) {
             std::vector<PatternData*> entries;
             for (const auto &entry : other.m_entries)
                 entries.push_back(entry->clone());
@@ -591,13 +598,21 @@ namespace hex::lang {
             this->setEntries(entries);
         }
 
-        ~PatternDataArray() override {
+        ~PatternDataDynamicArray() override {
             for (const auto &entry : this->m_entries)
                 delete entry;
         }
 
         PatternData* clone() override {
-            return new PatternDataArray(*this);
+            return new PatternDataDynamicArray(*this);
+        }
+
+        void setOffset(u64 offset) override {
+            for (auto &entry : this->m_entries) {
+                entry->setOffset(offset + (entry->getOffset() - this->getOffset()));
+            }
+
+            PatternData::setOffset(offset);
         }
 
         void createEntry(prv::Provider* &provider) override {
@@ -654,6 +669,12 @@ namespace hex::lang {
             return this->m_highlightedAddresses;
         }
 
+        void clearHighlightedAddresses() override {
+            for (auto &entry : this->m_entries)
+                entry->clearHighlightedAddresses();
+            PatternData::clearHighlightedAddresses();
+        }
+
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
@@ -675,14 +696,137 @@ namespace hex::lang {
         std::vector<PatternData*> m_entries;
     };
 
+    class PatternDataStaticArray : public PatternData {
+    public:
+        PatternDataStaticArray(u64 offset, size_t size, u32 color = 0)
+                : PatternData(offset, size, color) {
+        }
+
+        PatternDataStaticArray(const PatternDataStaticArray &other) : PatternData(other) {
+            this->setEntries(other.getTemplate()->clone(), other.getEntryCount());
+        }
+
+        ~PatternDataStaticArray() override {
+            delete this->m_template;
+        }
+
+        PatternData* clone() override {
+            return new PatternDataStaticArray(*this);
+        }
+
+        void createEntry(prv::Provider* &provider) override {
+            if (this->getEntryCount() == 0)
+                return;
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->drawCommentTooltip();
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TableNextColumn();
+            ImGui::Text("0x%04llX", this->getSize());
+            ImGui::TableNextColumn();
+            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_template->getTypeName().c_str());
+            ImGui::SameLine(0, 0);
+
+            ImGui::TextUnformatted("[");
+            ImGui::SameLine(0, 0);
+            ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entryCount);
+            ImGui::SameLine(0, 0);
+            ImGui::TextUnformatted("]");
+
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", "{ ... }");
+
+            if (open) {
+                auto entry = this->m_template->clone();
+                for (u64 index = 0; index < this->m_entryCount; index++) {
+                    entry->setVariableName(hex::format("[{0}]", index));
+                    entry->setOffset(this->getOffset() + index * this->m_template->getSize());
+                    entry->draw(provider);
+                }
+                delete entry;
+
+                ImGui::TreePop();
+            }
+        }
+
+        std::optional<u32> highlightBytes(size_t offset) override{
+            auto entry = this->m_template->clone();
+
+            for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += this->m_template->getSize()) {
+                entry->setOffset(address);
+                if (auto color = entry->highlightBytes(offset); color.has_value())
+                    return color.value();
+            }
+
+            delete entry;
+
+            return { };
+        }
+
+        std::map<u64, u32> getHighlightedAddresses() override {
+            if (this->m_highlightedAddresses.empty()) {
+                auto entry = this->m_template->clone();
+
+                for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += this->m_template->getSize()) {
+                    entry->setOffset(address);
+                    entry->clearHighlightedAddresses();
+                    this->m_highlightedAddresses.merge(entry->getHighlightedAddresses());
+                }
+
+                delete entry;
+            }
+
+            return this->m_highlightedAddresses;
+        }
+
+        void clearHighlightedAddresses() override {
+            this->m_template->clearHighlightedAddresses();
+            PatternData::clearHighlightedAddresses();
+        }
+
+        [[nodiscard]] std::string getFormattedName() const override {
+            return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
+        }
+
+        [[nodiscard]] PatternData* getTemplate() const {
+            return this->m_template;
+        }
+
+        [[nodiscard]] size_t getEntryCount() const {
+            return this->m_entryCount;
+        }
+
+        void setEntryCount(size_t count) {
+            this->m_entryCount = count;
+        }
+
+        void setEntries(PatternData* templ, size_t count) {
+            this->m_template = templ;
+            this->m_entryCount = count;
+
+            this->m_template->setColor(this->getColor());
+            this->m_template->setParent(this);
+        }
+
+    private:
+        PatternData *m_template;
+        size_t m_entryCount;
+    };
+
     class PatternDataStruct : public PatternData {
     public:
         PatternDataStruct(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color){
         }
 
-        PatternDataStruct(const PatternDataStruct &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+        PatternDataStruct(const PatternDataStruct &other) : PatternData(other) {
             for (const auto &member : other.m_members)
                 this->m_members.push_back(member->clone());
+            this->m_sortedMembers = this->m_members;
         }
 
         ~PatternDataStruct() override {
@@ -692,6 +836,14 @@ namespace hex::lang {
 
         PatternData* clone() override {
             return new PatternDataStruct(*this);
+        }
+
+        void setOffset(u64 offset) override {
+            for (auto &member : this->m_members) {
+                member->setOffset(offset + (member->getOffset() - this->getOffset()));
+            }
+
+            PatternData::setOffset(offset);
         }
 
         void createEntry(prv::Provider* &provider) override {
@@ -737,6 +889,12 @@ namespace hex::lang {
             return this->m_highlightedAddresses;
         }
 
+        void clearHighlightedAddresses() override {
+            for (auto &member : this->m_members)
+                member->clearHighlightedAddresses();
+            PatternData::clearHighlightedAddresses();
+        }
+
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
             this->m_sortedMembers = this->m_members;
 
@@ -780,9 +938,10 @@ namespace hex::lang {
 
         }
 
-        PatternDataUnion(const PatternDataUnion &other) : PatternData(other.getOffset(), other.getSize(), other.getColor()) {
+        PatternDataUnion(const PatternDataUnion &other) : PatternData(other) {
             for (const auto &member : other.m_members)
                 this->m_members.push_back(member->clone());
+            this->m_sortedMembers = this->m_members;
         }
 
         ~PatternDataUnion() override {
@@ -792,6 +951,14 @@ namespace hex::lang {
 
         PatternData* clone() override {
             return new PatternDataUnion(*this);
+        }
+
+        void setOffset(u64 offset) override {
+            for (auto &member : this->m_members) {
+                member->setOffset(offset + (member->getOffset() - this->getOffset()));
+            }
+
+            PatternData::setOffset(offset);
         }
 
         void createEntry(prv::Provider* &provider) override {
@@ -836,6 +1003,12 @@ namespace hex::lang {
             }
 
             return this->m_highlightedAddresses;
+        }
+
+        void clearHighlightedAddresses() override {
+            for (auto &member : this->m_members)
+                member->clearHighlightedAddresses();
+            PatternData::clearHighlightedAddresses();
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {

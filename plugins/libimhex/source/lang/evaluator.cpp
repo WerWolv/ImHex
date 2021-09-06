@@ -61,8 +61,12 @@ namespace hex::lang {
                         else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield*>(currPattern); bitfieldPattern != nullptr) {
                             currMembers = bitfieldPattern->getFields();
                         }
-                        else if (auto arrayPattern = dynamic_cast<PatternDataArray*>(currPattern); arrayPattern != nullptr) {
-                            currMembers = arrayPattern->getEntries();
+                        else if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern); dynamicArrayPattern != nullptr) {
+                            currMembers = dynamicArrayPattern->getEntries();
+                            continue;
+                        }
+                        else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(currPattern); staticArrayPattern != nullptr) {
+                            currMembers = { staticArrayPattern->getTemplate() };
                             continue;
                         }
                         else
@@ -84,15 +88,30 @@ namespace hex::lang {
                     ON_SCOPE_EXIT { delete arrayIndexNode; };
 
                     if (currPattern != nullptr) {
-                        if (auto arrayPattern = dynamic_cast<PatternDataArray*>(currPattern); arrayPattern != nullptr) {
+                        if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern); dynamicArrayPattern != nullptr) {
                             std::visit([this](auto &&arrayIndex) {
                                 if (std::is_floating_point_v<decltype(arrayIndex)>)
                                     this->getConsole().abortEvaluation("cannot use float to index into array");
                             }, arrayIndexNode->getValue());
 
                             std::visit([&](auto &&arrayIndex){
-                                if (arrayIndex >= 0 && arrayIndex < arrayPattern->getEntries().size())
-                                    currPattern = arrayPattern->getEntries()[arrayIndex];
+                                if (arrayIndex >= 0 && arrayIndex < dynamicArrayPattern->getEntries().size())
+                                    currPattern = dynamicArrayPattern->getEntries()[arrayIndex];
+                                else
+                                    this->getConsole().abortEvaluation(hex::format("tried to access out of bounds index {} of '{}'", arrayIndex, currPattern->getVariableName()));
+                            }, arrayIndexNode->getValue());
+
+                        } else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(currPattern); staticArrayPattern != nullptr) {
+                            std::visit([this](auto &&arrayIndex) {
+                                if (std::is_floating_point_v<decltype(arrayIndex)>)
+                                    this->getConsole().abortEvaluation("cannot use float to index into array");
+                            }, arrayIndexNode->getValue());
+
+                            std::visit([&](auto &&arrayIndex){
+                                if (arrayIndex >= 0 && arrayIndex < staticArrayPattern->getEntryCount()) {
+                                    currPattern = staticArrayPattern->getTemplate();
+                                    currPattern->setOffset(staticArrayPattern->getOffset() + arrayIndex * staticArrayPattern->getSize());
+                                }
                                 else
                                     this->getConsole().abortEvaluation(hex::format("tried to access out of bounds index {} of '{}'", arrayIndex, currPattern->getVariableName()));
                             }, arrayIndexNode->getValue());
@@ -960,7 +979,6 @@ namespace hex::lang {
     }
 
     PatternData* Evaluator::evaluateArray(ASTNodeArrayVariableDecl *node) {
-
         // Evaluate placement of array
         if (auto offset = dynamic_cast<ASTNodeNumericExpression*>(node->getPlacementOffset()); offset != nullptr) {
             auto valueNode = evaluateMathematicalExpression(offset);
@@ -982,6 +1000,112 @@ namespace hex::lang {
                 return nullptr;
         }
 
+
+        auto type = static_cast<ASTNodeTypeDecl*>(node->getType())->getType();
+
+        if (dynamic_cast<ASTNodeBuiltinType*>(type) != nullptr)
+            return this->evaluateStaticArray(node);
+
+        auto attributes = dynamic_cast<Attributable*>(type)->getAttributes();
+
+        bool isStaticType = std::any_of(attributes.begin(), attributes.end(), [](ASTNodeAttribute *attribute) {
+            return attribute->getAttribute() == "static" && !attribute->getValue().has_value();
+        });
+
+        if (isStaticType)
+            return this->evaluateStaticArray(node);
+        else
+            return this->evaluateDynamicArray(node);
+    }
+
+    PatternData* Evaluator::evaluateStaticArray(ASTNodeArrayVariableDecl *node) {
+        std::optional<u32> color;
+
+        size_t arraySize = 0;
+
+        auto startOffset = this->m_currOffset;
+        PatternData *templatePattern;
+        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
+            templatePattern = this->evaluateType(typeDecl);
+        else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
+            templatePattern = this->evaluateBuiltinType(builtinTypeDecl);
+        else
+            this->getConsole().abortEvaluation("ASTNodeVariableDecl had an invalid type. This is a bug!");
+
+        auto entrySize = this->m_currOffset - startOffset;
+
+        ON_SCOPE_EXIT { delete templatePattern; };
+
+        auto sizeNode = node->getSize();
+        if (auto numericExpression = dynamic_cast<ASTNodeNumericExpression*>(sizeNode); numericExpression != nullptr) {
+            // Parse explicit size of array
+            auto valueNode = this->evaluateMathematicalExpression(numericExpression);
+            ON_SCOPE_EXIT { delete valueNode; };
+
+            arraySize = std::visit([this] (auto &&value) {
+                using Type = std::remove_cvref_t<decltype(value)>;
+                if constexpr (std::is_floating_point_v<Type>)
+                    this->getConsole().abortEvaluation("bitfield entry size must be an integer value");
+                return static_cast<u64>(value);
+            }, valueNode->getValue());
+        } else if (auto whileLoopExpression = dynamic_cast<ASTNodeWhileStatement*>(sizeNode); whileLoopExpression != nullptr) {
+            // Parse while loop based size of array
+            auto conditionNode = this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(whileLoopExpression->getCondition()));
+            ON_SCOPE_EXIT { delete conditionNode; };
+
+            while (std::visit([](auto &&value) { return value != 0; }, conditionNode->getValue())) {
+                arraySize++;
+
+                delete conditionNode;
+                conditionNode = this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(whileLoopExpression->getCondition()));
+            }
+        } else {
+            // Parse unsized array
+
+            if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
+                if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
+                    std::vector<u8> bytes(Token::getTypeSize(builtinType->getType()), 0x00);
+                    u64 offset = startOffset;
+
+                    do {
+                        this->m_provider->read(offset, bytes.data(), bytes.size());
+                        offset += bytes.size();
+                        arraySize++;
+                    } while (!std::all_of(bytes.begin(), bytes.end(), [](u8 byte){ return byte == 0x00; }) && offset < this->m_provider->getSize());
+                }
+            }
+        }
+
+        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
+            if (auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(typeDecl->getType()); builtinType != nullptr) {
+                if (builtinType->getType() == Token::ValueType::Padding)
+                    return new PatternDataPadding(startOffset, entrySize * arraySize);
+            }
+        }
+
+        PatternData *pattern;
+        if (dynamic_cast<PatternDataCharacter*>(templatePattern) != nullptr)
+            pattern = new PatternDataString(startOffset, entrySize * arraySize, color.value_or(0));
+        else if (dynamic_cast<PatternDataCharacter16*>(templatePattern) != nullptr)
+            pattern = new PatternDataString16(startOffset, entrySize * arraySize, color.value_or(0));
+        else {
+            auto arrayPattern = new PatternDataStaticArray(startOffset, entrySize * arraySize, color.value_or(0));
+            arrayPattern->setTypeName(templatePattern->getTypeName());
+            arrayPattern->setEntries(templatePattern->clone(), arraySize);
+
+            pattern = arrayPattern;
+        }
+
+        pattern->setVariableName(node->getName().data());
+        pattern->setEndian(this->getCurrentEndian());
+
+        this->m_currOffset = startOffset + entrySize * arraySize;
+
+        return this->evaluateAttributes(node, pattern);
+
+    }
+
+    PatternData* Evaluator::evaluateDynamicArray(ASTNodeArrayVariableDecl *node) {
         auto startOffset = this->m_currOffset;
 
         std::vector<PatternData*> entries;
@@ -991,8 +1115,6 @@ namespace hex::lang {
             PatternData *entry;
             if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr)
                 entry = this->evaluateType(typeDecl);
-            else if (auto builtinTypeDecl = dynamic_cast<ASTNodeBuiltinType*>(node->getType()); builtinTypeDecl != nullptr)
-                entry = this->evaluateBuiltinType(builtinTypeDecl);
             else
                 this->getConsole().abortEvaluation("ASTNodeVariableDecl had an invalid type. This is a bug!");
 
@@ -1042,23 +1164,6 @@ namespace hex::lang {
                 delete conditionNode;
                 conditionNode = this->evaluateMathematicalExpression(static_cast<ASTNodeNumericExpression*>(whileLoopExpression->getCondition()));
             }
-        } else {
-            // Parse unsized array
-
-            if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
-                if (auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(typeDecl->getType()); builtinType != nullptr) {
-                    std::vector<u8> bytes(Token::getTypeSize(builtinType->getType()), 0x00);
-                    u64 offset = startOffset;
-
-                    u64 index = 0;
-                    do {
-                        this->m_provider->read(offset, bytes.data(), bytes.size());
-                        offset += bytes.size();
-                        addEntry(index);
-                        index++;
-                    } while (!std::all_of(bytes.begin(), bytes.end(), [](u8 byte){ return byte == 0x00; }) && offset < this->m_provider->getSize());
-                }
-            }
         }
 
         auto deleteEntries = SCOPE_GUARD {
@@ -1066,31 +1171,13 @@ namespace hex::lang {
                 delete entry;
         };
 
-        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
-            if (auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(typeDecl->getType()); builtinType != nullptr) {
-                if (builtinType->getType() == Token::ValueType::Padding)
-                    return new PatternDataPadding(startOffset, this->m_currOffset - startOffset);
-            }
-        }
+        if (node->getSize() == nullptr)
+            this->getConsole().abortEvaluation("no bounds provided for array");
+        auto pattern = new PatternDataDynamicArray(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
 
-        PatternData *pattern;
-        if (entries.empty())
-            pattern = new PatternDataPadding(startOffset, 0);
-        else if (dynamic_cast<PatternDataCharacter*>(entries[0]) != nullptr)
-            pattern = new PatternDataString(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
-        else if (dynamic_cast<PatternDataCharacter16*>(entries[0]) != nullptr)
-            pattern = new PatternDataString16(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
-        else {
-            if (node->getSize() == nullptr)
-                this->getConsole().abortEvaluation("no bounds provided for array");
-            auto arrayPattern = new PatternDataArray(startOffset, (this->m_currOffset - startOffset), color.value_or(0));
+        deleteEntries.release();
 
-            arrayPattern->setEntries(entries);
-            deleteEntries.release();
-
-            pattern = arrayPattern;
-        }
-
+        pattern->setEntries(entries);
         pattern->setVariableName(node->getName().data());
         pattern->setEndian(this->getCurrentEndian());
 

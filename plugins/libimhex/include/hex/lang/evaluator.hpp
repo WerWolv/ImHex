@@ -82,6 +82,8 @@ namespace hex::lang {
         PatternData* evaluateType(ASTNodeTypeDecl *node);
         PatternData* evaluateVariable(ASTNodeVariableDecl *node);
         PatternData* evaluateArray(ASTNodeArrayVariableDecl *node);
+        PatternData* evaluateStaticArray(ASTNodeArrayVariableDecl *node);
+        PatternData* evaluateDynamicArray(ASTNodeArrayVariableDecl *node);
         PatternData* evaluatePointer(ASTNodePointerVariableDecl *node);
     };
 

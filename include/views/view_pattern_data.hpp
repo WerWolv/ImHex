@@ -4,7 +4,6 @@
 
 #include <imgui.h>
 #include <hex/views/view.hpp>
-#include <hex/lang/pattern_data.hpp>
 
 #include <vector>
 #include <tuple>
@@ -13,6 +12,7 @@
 namespace hex {
 
     namespace prv { class Provider; }
+    namespace lang { class PatternData; }
 
     class ViewPatternData : public View {
     public:

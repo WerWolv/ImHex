@@ -10,8 +10,6 @@
 #include <random>
 #include <vector>
 
-#include <hex/lang/pattern_data.hpp>
-
 namespace hex {
 
     namespace prv { class Provider; }

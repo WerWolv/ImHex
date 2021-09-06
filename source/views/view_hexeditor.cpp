@@ -1,8 +1,9 @@
 #include "views/view_hexeditor.hpp"
 
-#include <hex/providers/provider.hpp>
 #include <hex/api/imhex_api.hpp>
+#include <hex/providers/provider.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/lang/pattern_data.hpp>
 
 #include "providers/file_provider.hpp"
 #include "helpers/patches.hpp"

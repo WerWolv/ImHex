@@ -4,6 +4,7 @@
 #include <hex/lang/preprocessor.hpp>
 #include <hex/lang/pattern_data.hpp>
 #include <hex/helpers/paths.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/literals.hpp>
