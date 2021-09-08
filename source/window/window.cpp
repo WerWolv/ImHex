@@ -400,8 +400,11 @@ namespace hex {
             ImGui::TextWrapped("%s", this->m_tipOfTheDay.c_str());
             ImGui::NewLine();
 
-            if (ImGui::Checkbox("hex.common.dont_show_again"_lang, &this->m_showTipOfTheDay))
+            bool dontShowAgain = !this->m_showTipOfTheDay;
+            if (ImGui::Checkbox("hex.common.dont_show_again"_lang, &dontShowAgain)) {
+                this->m_showTipOfTheDay = !dontShowAgain;
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", this->m_showTipOfTheDay);
+            }
 
             ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
 
