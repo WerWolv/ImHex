@@ -7,9 +7,11 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/magic.hpp>
 
 #include <fstream>
 #include <filesystem>
+#include <functional>
 #include <nlohmann/json.hpp>
 
 namespace hex {
@@ -26,24 +28,24 @@ namespace hex {
     ViewStore::~ViewStore() { }
 
     void ViewStore::drawStore() {
-        ImGui::Header("ImHex content store", true);
+        ImGui::Header("hex.view.store.desc"_lang, true);
 
-        if (ImGui::Button("Reload")) {
+        if (ImGui::Button("hex.view.store.reload"_lang)) {
             this->refresh();
         }
 
-        auto drawTab = [this](auto title, ImHexPath pathType, auto &content) {
+        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, std::function<void()> downloadDoneCallback) {
             if (ImGui::BeginTabItem(title)) {
-                if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) {
+                if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_None, 1.0);
-                    ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_None, 3.0);
-                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_None, 1.0);
+                    ImGui::TableSetupColumn("hex.view.store.name"_lang, ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("hex.view.store.description"_lang, ImGuiTableColumnFlags_None);
+                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                     ImGui::TableHeadersRow();
 
                     for (auto &entry : content) {
-                        ImGui::TableNextRow();
+                        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeight() + 4.0F * ImGui::GetStyle().FramePadding.y);
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(entry.name.c_str());
                         ImGui::TableNextColumn();
@@ -53,7 +55,7 @@ namespace hex {
                         ImGui::BeginDisabled(this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready);
                         {
                             if (entry.downloading) {
-                                ImGui::TextSpinner("Downloading...");
+                                ImGui::TextSpinner("");
 
                                 if (this->m_download.valid() && this->m_download.wait_for(0s) == std::future_status::ready) {
                                     entry.downloading = false;
@@ -62,6 +64,7 @@ namespace hex {
                                     if (response.code == 200) {
                                        entry.installed = true;
                                        entry.hasUpdate = false;
+                                       downloadDoneCallback();
                                     } else
                                         log::error("Download failed!");
 
@@ -70,17 +73,17 @@ namespace hex {
                                 }
 
                             } else if (entry.hasUpdate) {
-                                if (ImGui::Button("Update")) {
+                                if (ImGui::Button("hex.view.store.update"_lang)) {
                                     this->download(pathType, entry.fileName, entry.link, true);
                                     entry.downloading = true;
                                 }
                             } else if (!entry.installed) {
-                                if (ImGui::Button("Download")) {
+                                if (ImGui::Button("hex.view.store.download"_lang)) {
                                     this->download(pathType, entry.fileName, entry.link, false);
                                     entry.downloading = true;
                                 }
                             } else {
-                                if (ImGui::Button("Remove")) {
+                                if (ImGui::Button("hex.view.store.remove"_lang)) {
                                     this->remove(pathType, entry.fileName);
                                     entry.installed = false;
                                 }
@@ -96,9 +99,11 @@ namespace hex {
         };
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            drawTab("Patterns", ImHexPath::Patterns, this->m_patterns);
-            drawTab("Libraries", ImHexPath::PatternsInclude, this->m_includes);
-            drawTab("Magic", ImHexPath::Magic, this->m_magics);
+            drawTab("hex.view.store.tab.patterns"_lang, ImHexPath::Patterns, this->m_patterns, []{});
+            drawTab("hex.view.store.tab.libraries"_lang, ImHexPath::PatternsInclude, this->m_includes, []{});
+            drawTab("hex.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, []{
+                magic::compile();
+            });
 
             ImGui::EndTabBar();
         }
@@ -114,9 +119,7 @@ namespace hex {
 
     void ViewStore::parseResponse() {
         auto response = this->m_apiRequest.get();
-        if (response.code != 200)
-            ImGui::TextUnformatted("Invalid response from store API");
-        else {
+        if (response.code == 200) {
             auto json = nlohmann::json::parse(response.body);
 
             auto parseStoreEntries = [](auto storeJson, const std::string &name, ImHexPath pathType, std::vector<StoreEntry> &results) {
@@ -157,13 +160,11 @@ namespace hex {
                 }
             };
 
-            parseStoreEntries(json, "pattern_language", ImHexPath::Patterns, this->m_patterns);
+            parseStoreEntries(json, "patterns", ImHexPath::Patterns, this->m_patterns);
             parseStoreEntries(json, "includes", ImHexPath::PatternsInclude, this->m_includes);
             parseStoreEntries(json, "magic", ImHexPath::Magic, this->m_magics);
-
-
-            this->m_apiRequest = { };
         }
+        this->m_apiRequest = { };
 
     }
 
@@ -172,7 +173,7 @@ namespace hex {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.view.store.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
             if (this->m_apiRequest.valid()) {
                 if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
-                    ImGui::TextSpinner("Loading store content...");
+                    ImGui::TextSpinner("hex.view.store.loading"_lang);
                 else
                     this->parseResponse();
             }

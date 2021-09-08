@@ -297,6 +297,19 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.constants.name", "Konstanten" },
 
+                { "hex.view.store.name", "Content Store" },
+                    { "hex.view.store.desc", "Downloade extra Content von ImHex' online Datenbank" },
+                    { "hex.view.store.reload", "Neu laden" },
+                    { "hex.view.store.name", "Name" },
+                    { "hex.view.store.description", "Beschreibung" },
+                    { "hex.view.store.download", "Download" },
+                    { "hex.view.store.update", "Update" },
+                    { "hex.view.store.remove", "Entfernen" },
+                    { "hex.view.store.tab.patterns", "Patterns" },
+                    { "hex.view.store.tab.libraries", "Libraries" },
+                    { "hex.view.store.tab.magics", "Magic Files" },
+                    { "hex.view.store.loading", "Store inhalt wird geladen..." },
+
             /* Builtin plugin features */
 
                 { "hex.builtin.command.calc.desc", "Rechner" },
