@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstddef>
+#include <hex.hpp>
+
 #include <type_traits>
 
 namespace hex {
@@ -59,53 +60,55 @@ namespace hex {
     template<typename T>
     struct is_integral : public is_integral_helper<std::remove_cvref_t<T>>::type { };
 
-template<typename>
-struct is_signed_helper : public std::false_type { };
 
-template<>
-struct is_signed_helper<s8> : public std::true_type { };
+    template<typename>
+    struct is_signed_helper : public std::false_type { };
 
-template<>
-struct is_signed_helper<s16> : public std::true_type { };
+    template<>
+    struct is_signed_helper<s8> : public std::true_type { };
 
-template<>
-struct is_signed_helper<s32> : public std::true_type { };
+    template<>
+    struct is_signed_helper<s16> : public std::true_type { };
 
-template<>
-struct is_signed_helper<s64> : public std::true_type { };
+    template<>
+    struct is_signed_helper<s32> : public std::true_type { };
 
-template<>
-struct is_signed_helper<s128> : public std::true_type { };
+    template<>
+    struct is_signed_helper<s64> : public std::true_type { };
 
-template<>
-struct is_signed_helper<char> : public std::true_type { };
+    template<>
+    struct is_signed_helper<s128> : public std::true_type { };
 
-template<>
-struct is_signed_helper<float> : public std::true_type { };
+    template<>
+    struct is_signed_helper<char> : public std::true_type { };
 
-template<>
-struct is_signed_helper<double> : public std::true_type { };
+    template<>
+    struct is_signed_helper<float> : public std::true_type { };
 
-template<>
-struct is_signed_helper<long double> : public std::true_type { };
+    template<>
+    struct is_signed_helper<double> : public std::true_type { };
 
-template<typename T>
-struct is_signed : public is_signed_helper<std::remove_cvref_t<T>>::type { };
+    template<>
+    struct is_signed_helper<long double> : public std::true_type { };
 
-template<typename>
-struct is_floating_point_helper : public std::false_type { };
+    template<typename T>
+    struct is_signed : public is_signed_helper<std::remove_cvref_t<T>>::type { };
 
-template<>
-struct is_floating_point_helper<float> : public std::true_type { };
 
-template<>
-struct is_floating_point_helper<double> : public std::true_type { };
+    template<typename>
+    struct is_floating_point_helper : public std::false_type { };
 
-template<>
-struct is_floating_point_helper<long double> : public std::true_type { };
+    template<>
+    struct is_floating_point_helper<float> : public std::true_type { };
 
-template<typename T>
-struct is_floating_point : public is_floating_point_helper<std::remove_cvref_t<T>>::type { };
+    template<>
+    struct is_floating_point_helper<double> : public std::true_type { };
+
+    template<>
+    struct is_floating_point_helper<long double> : public std::true_type { };
+
+    template<typename T>
+    struct is_floating_point : public is_floating_point_helper<std::remove_cvref_t<T>>::type { };
 
 }
 
@@ -132,6 +135,7 @@ namespace hex {
 
 // [concepts.arithmetic]
 namespace hex {
+
     template<class T>
     concept integral = hex::is_integral<T>::value;
 
@@ -143,6 +147,7 @@ namespace hex {
 
     template<class T>
     concept floating_point = std::is_floating_point<T>::value;
+
 }
 
 namespace hex {

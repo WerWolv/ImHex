@@ -231,7 +231,7 @@ struct MemoryEditor
         if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs))
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
-                Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd) + base_display_addr, std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
+                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd) + base_display_addr, std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
                 hex::EventManager::post<hex::EventRegionSelected>(selectionRegion);
             }
 

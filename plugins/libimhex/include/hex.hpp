@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 constexpr static const auto ImHexApiURL = "https://api.werwolv.net/imhex";
 constexpr static const auto GitHubApiURL = "https://api.github.com/repos/WerWolv/ImHex";
@@ -17,7 +18,12 @@ using s32   = std::int32_t;
 using s64   = std::int64_t;
 using s128  = __int128_t;
 
-struct Region {
-    u64 address;
-    size_t size;
-};
+namespace hex {
+
+    struct Region {
+        u64 address;
+        size_t size;
+    };
+
+}
+
