@@ -44,6 +44,7 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
+                    u32 id = 1;
                     for (auto &entry : content) {
                         ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeight() + 4.0F * ImGui::GetStyle().FramePadding.y);
                         ImGui::TableNextColumn();
@@ -52,6 +53,7 @@ namespace hex {
                         ImGui::TextUnformatted(entry.description.c_str());
                         ImGui::TableNextColumn();
 
+                        ImGui::PushID(id);
                         ImGui::BeginDisabled(this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready);
                         {
                             if (entry.downloading) {
@@ -90,6 +92,8 @@ namespace hex {
                             }
                         }
                         ImGui::EndDisabled();
+                        ImGui::PopID();
+                        id++;
                     }
 
                     ImGui::EndTable();
