@@ -8,11 +8,11 @@
 #include <string_view>
 #include <vector>
 
-#include <hex/lang/log_console.hpp>
+#include <hex/pattern_language/log_console.hpp>
 
 namespace hex::prv { class Provider; }
 
-namespace hex::lang {
+namespace hex::pl {
 
     class Preprocessor;
     class Lexer;
@@ -26,8 +26,8 @@ namespace hex::lang {
         PatternLanguage();
         ~PatternLanguage();
 
-        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, std::string_view string);
-        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, std::string_view path);
+        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, const std::string &string);
+        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const std::string &path);
 
         const std::vector<std::pair<LogConsole::Level, std::string>>& getConsoleLog();
         const std::optional<std::pair<u32, std::string>>& getError();

@@ -10,6 +10,8 @@ struct GLFWwindow;
 
 namespace hex::init {
 
+    using TaskFunction = std::function<bool()>;
+
     class WindowSplash {
     public:
         WindowSplash(int &argc, char **&argv);
@@ -17,7 +19,7 @@ namespace hex::init {
 
         bool loop();
 
-        void addStartupTask(std::string_view taskName, const std::function<bool()> &task) {
+        void addStartupTask(const std::string &taskName, const TaskFunction &task) {
             this->m_tasks.emplace_back(taskName, task);
         }
 
@@ -35,7 +37,7 @@ namespace hex::init {
 
         std::future<bool> processTasksAsync();
 
-        std::vector<std::pair<std::string, std::function<bool()>>> m_tasks;
+        std::vector<std::pair<std::string, TaskFunction>> m_tasks;
     };
 
 }

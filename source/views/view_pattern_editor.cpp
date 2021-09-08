@@ -1,10 +1,11 @@
 #include "views/view_pattern_editor.hpp"
 
 #include "helpers/project_file_handler.hpp"
-#include <hex/lang/preprocessor.hpp>
-#include <hex/lang/pattern_data.hpp>
+#include <hex/pattern_language/preprocessor.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/literals.hpp>
@@ -81,7 +82,7 @@ namespace hex {
 
 
     ViewPatternEditor::ViewPatternEditor() : View("hex.view.pattern.name") {
-        this->m_patternLanguageRuntime = new lang::PatternLanguage();
+        this->m_patternLanguageRuntime = new pl::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
@@ -104,7 +105,7 @@ namespace hex {
             if (this->m_textEditor.GetText().find_first_not_of(" \f\n\r\t\v") != std::string::npos)
                 return;
 
-            lang::Preprocessor preprocessor;
+            pl::Preprocessor preprocessor;
             auto provider = SharedData::currentProvider;
 
             if (provider == nullptr)
@@ -130,20 +131,11 @@ namespace hex {
                     if (!entry.is_regular_file())
                         continue;
 
-                    FILE *file = fopen(entry.path().string().c_str(), "r");
-
-                    if (file == nullptr)
+                    File file(entry.path().string(), File::Mode::Read);
+                    if (!file.isValid())
                         continue;
 
-                    fseek(file, 0, SEEK_END);
-                    size_t size = ftell(file);
-                    rewind(file);
-
-                    std::vector<char> patternBuffer( size + 1, 0x00);
-                    fread(patternBuffer.data(), 1, size, file);
-                    fclose(file);
-
-                    preprocessor.preprocess(patternBuffer.data());
+                    preprocessor.preprocess(file.readString());
 
                     if (foundCorrectType)
                         this->m_possiblePatternFiles.push_back(entry.path().string());
@@ -220,16 +212,16 @@ namespace hex {
                 if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
                     for (auto &[level, message] : this->m_console) {
                         switch (level) {
-                            case lang::LogConsole::Level::Debug:
+                            case pl::LogConsole::Level::Debug:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
                                 break;
-                            case lang::LogConsole::Level::Info:
+                            case pl::LogConsole::Level::Info:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
                                 break;
-                            case lang::LogConsole::Level::Warning:
+                            case pl::LogConsole::Level::Warning:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
                                 break;
-                            case lang::LogConsole::Level::Error:
+                            case pl::LogConsole::Level::Error:
                                 ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                                 break;
                             default: continue;
@@ -285,7 +277,7 @@ namespace hex {
                 entries[i] = std::filesystem::path(this->m_possiblePatternFiles[i]).filename().string();
             }
 
-            ImGui::ListBox("hex.view.pattern.accept_pattern.patterns"_lang, &this->m_selectedPatternFile, [](void *data, int id, const char** outText) -> bool {
+            ImGui::ListBox("hex.view.pattern.accept_pattern.pattern_language"_lang, &this->m_selectedPatternFile, [](void *data, int id, const char** outText) -> bool {
                 auto &entries = *static_cast<std::vector<std::string>*>(data);
 
                 *outText = entries[id].c_str();
@@ -311,8 +303,8 @@ namespace hex {
     }
 
 
-    void ViewPatternEditor::loadPatternFile(std::string_view path) {
-        FILE *file = fopen(path.data(), "rb");
+    void ViewPatternEditor::loadPatternFile(const std::string &path) {
+        FILE *file = fopen(path.c_str(), "rb");
 
         if (file != nullptr) {
             char *buffer;
@@ -340,7 +332,7 @@ namespace hex {
             delete data;
 
         SharedData::patternData.clear();
-        lang::PatternData::resetPalette();
+        pl::PatternData::resetPalette();
     }
 
     void ViewPatternEditor::parsePattern(char *buffer) {

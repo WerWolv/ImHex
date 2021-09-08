@@ -6,7 +6,7 @@
 
 namespace hex::dp {
 
-    Node::Node(std::string_view unlocalizedTitle, std::vector<Attribute> attributes) : m_id(SharedData::dataProcessorNodeIdCounter++), m_unlocalizedTitle(unlocalizedTitle), m_attributes(std::move(attributes)) {
+    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(SharedData::dataProcessorNodeIdCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
         for (auto &attr : this->m_attributes)
             attr.setParentNode(this);
     }

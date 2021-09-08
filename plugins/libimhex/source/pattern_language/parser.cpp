@@ -1,4 +1,4 @@
-#include <hex/lang/parser.hpp>
+#include <hex/pattern_language/parser.hpp>
 
 #include <hex/helpers/fmt.hpp>
 
@@ -15,7 +15,7 @@
 // <A...>       : One or more of A
 // A B C        : Sequence of tokens A then B then C
 // (parseXXXX)  : Parsing handled by other function
-namespace hex::lang {
+namespace hex::pl {
 
     /* Mathematical expressions */
 

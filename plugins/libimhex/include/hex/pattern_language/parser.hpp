@@ -3,15 +3,15 @@
 #include <hex.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include "token.hpp"
-#include "ast_node.hpp"
+#include <hex/pattern_language/token.hpp>
+#include <hex/pattern_language/ast_node.hpp>
 
 #include <unordered_map>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class Parser {
     public:
@@ -130,8 +130,8 @@ namespace hex::lang {
             return program;
         }
 
-        [[noreturn]] void throwParseError(std::string_view error, s32 token = -1) const {
-            throw ParseError(this->m_curr[token].lineNumber, "Parser: " + std::string(error));
+        [[noreturn]] void throwParseError(const std::string &error, s32 token = -1) const {
+            throw ParseError(this->m_curr[token].lineNumber, "Parser: " + error);
         }
 
         /* Token consuming */

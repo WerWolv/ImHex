@@ -1,13 +1,14 @@
 #include "helpers/encoding_file.hpp"
 
+#include <ranges>
 #include <hex/helpers/utils.hpp>
 
 #include <fstream>
 
 namespace hex {
 
-    EncodingFile::EncodingFile(Type type, std::string_view path) {
-        std::ifstream encodingFile(path.data());
+    EncodingFile::EncodingFile(Type type, const std::string &path) {
+        std::ifstream encodingFile(path.c_str());
 
         switch (type) {
             case Type::Thingy: parseThingyFile(encodingFile); break;
@@ -16,9 +17,7 @@ namespace hex {
     }
 
     std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(const std::vector<u8> &buffer) const {
-        for (auto iter = this->m_mapping.rbegin(); iter != this->m_mapping.rend(); iter++) {
-            auto &[size, mapping] = *iter;
-
+        for (const auto &[size, mapping] : this->m_mapping | std::views::reverse) {
             if (size > buffer.size()) continue;
 
             auto key = std::vector<u8>(buffer.begin(), buffer.begin() + size);

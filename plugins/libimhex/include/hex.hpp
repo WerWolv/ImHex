@@ -2,9 +2,6 @@
 
 #include <cstdint>
 
-#include <hex/helpers/lang.hpp>
-using namespace hex::lang_literals;
-
 constexpr static const auto ImHexApiURL = "https://api.werwolv.net/imhex";
 constexpr static const auto GitHubApiURL = "https://api.github.com/repos/WerWolv/ImHex";
 

@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/lang.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -250,7 +251,7 @@ namespace hex::plugin::builtin {
                 { "hex.view.pattern.name", "Editor dei Pattern" },
                 { "hex.view.pattern.accept_pattern", "Accetta pattern" },
                     { "hex.view.pattern.accept_pattern.desc", "Uno o più pattern compatibili con questo tipo di dati sono stati trovati!" },
-                    { "hex.view.pattern.accept_pattern.patterns", "Pattern" },
+                    { "hex.view.pattern.accept_pattern.pattern_language", "Pattern" },
                     { "hex.view.pattern.accept_pattern.question", "Vuoi applicare i patter selezionati" },
                 { "hex.view.pattern.menu.file.load_pattern", "Caricamento dei pattern..." },
                 { "hex.view.pattern.open_pattern", "Apri pattern" },

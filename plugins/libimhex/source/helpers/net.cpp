@@ -1,6 +1,7 @@
 #include <hex/helpers/net.hpp>
 
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <filesystem>
 #include <cstdio>
@@ -170,19 +171,15 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            FILE *file = fopen(filePath.string().c_str(), "rb");
-            if (file == nullptr)
+            File file(filePath.string(), File::Mode::Read);
+            if (!file.isValid())
                 return Response<std::string> { 400, { } };
-
-            fseek(file, 0, SEEK_END);
-            size_t fileSize = ftell(file);
-            rewind(file);
 
             curl_mime *mime = curl_mime_init(this->m_ctx);
             curl_mimepart *part = curl_mime_addpart(mime);
 
             auto fileName = filePath.filename().string();
-            curl_mime_data_cb(part, fileSize,
+            curl_mime_data_cb(part, file.getSize(),
                 [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
                     auto file = static_cast<FILE*>(arg);
                     return fread(buffer, size, nitems, file);
@@ -195,7 +192,7 @@ namespace hex {
                 [](void *arg) {
                     auto file = static_cast<FILE*>(arg);
                     fclose(file);
-                }, file);
+                }, file.getHandle());
             curl_mime_filename(part, fileName.c_str());
             curl_mime_name(part, "file");
 
@@ -217,16 +214,14 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            FILE *file = fopen(filePath.string().c_str(), "wb");
-            if (file == nullptr)
+            File file(filePath.string(), File::Mode::Create);
+            if (!file.isValid())
                 return Response<void> { 400 };
-
-            ON_SCOPE_EXIT { fclose(file); };
 
             setCommonSettings(response, url, {});
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
             curl_easy_setopt(this->m_ctx, CURLOPT_WRITEFUNCTION, writeToFile);
-            curl_easy_setopt(this->m_ctx, CURLOPT_WRITEDATA, file);
+            curl_easy_setopt(this->m_ctx, CURLOPT_WRITEDATA, file.getHandle());
             auto responseCode = execute();
 
             return Response<void> { responseCode.value_or(0) };

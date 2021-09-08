@@ -2,8 +2,6 @@
 
 #include <hex.hpp>
 
-#include "token.hpp"
-
 #include <functional>
 #include <optional>
 #include <set>
@@ -11,7 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class Preprocessor {
     public:
@@ -27,8 +25,8 @@ namespace hex::lang {
     private:
         using PreprocessorError = std::pair<u32, std::string>;
 
-        [[noreturn]] void throwPreprocessorError(std::string_view error, u32 lineNumber) const {
-            throw PreprocessorError(lineNumber, "Preprocessor: " + std::string(error));
+        [[noreturn]] void throwPreprocessorError(const std::string &error, u32 lineNumber) const {
+            throw PreprocessorError(lineNumber, "Preprocessor: " + error);
         }
 
         std::unordered_map<std::string, std::function<bool(std::string)>> m_pragmaHandlers;

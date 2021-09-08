@@ -1,11 +1,13 @@
-#include <hex/lang/validator.hpp>
+#include <hex/pattern_language/validator.hpp>
+
+#include <hex/pattern_language/ast_node.hpp>
 
 #include <hex/helpers/fmt.hpp>
 
 #include <unordered_set>
 #include <string>
 
-namespace hex::lang {
+namespace hex::pl {
 
     Validator::Validator() {
 

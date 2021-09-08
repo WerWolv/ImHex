@@ -2,6 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <yara.h>
 #include <filesystem>
@@ -137,11 +138,10 @@ namespace hex {
             YR_COMPILER *compiler = nullptr;
             yr_compiler_create(&compiler);
 
-            FILE *file = fopen(this->m_rules[this->m_selectedRule].c_str(), "r");
-            if (file == nullptr) return;
-            ON_SCOPE_EXIT { fclose(file); };
+            File file(this->m_rules[this->m_selectedRule], File::Mode::Read);
+            if (!file.isValid()) return;
 
-            if (yr_compiler_add_file(compiler, file, nullptr, nullptr) != 0) {
+            if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
                 this->m_errorMessage.resize(0xFFFF);
                 yr_compiler_get_error_message(compiler, this->m_errorMessage.data(), this->m_errorMessage.size());
                 this->m_matching = false;

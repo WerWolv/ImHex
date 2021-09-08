@@ -2,7 +2,9 @@
 #include <hex.hpp>
 
 #include <optional>
+#include <string>
 #include <string_view>
+#include <map>
 #include <vector>
 
 namespace hex::dp {
@@ -21,7 +23,7 @@ namespace hex::dp {
             In, Out
         };
 
-        Attribute(IOType ioType, Type type, std::string_view unlocalizedName);
+        Attribute(IOType ioType, Type type, std::string unlocalizedName);
         ~Attribute();
 
         [[nodiscard]] u32 getID() const { return this->m_id; }
@@ -29,7 +31,7 @@ namespace hex::dp {
 
         [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
-        [[nodiscard]] std::string_view getUnlocalizedName() const { return this->m_unlocalizedName; }
+        [[nodiscard]] const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
 
         void addConnectedAttribute(u32 linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
         void removeConnectedAttribute(u32 linkId) { this->m_connectedAttributes.erase(linkId); }
@@ -44,7 +46,7 @@ namespace hex::dp {
         Type m_type;
         std::string m_unlocalizedName;
         std::map<u32, Attribute*> m_connectedAttributes;
-        Node *m_parentNode;
+        Node *m_parentNode = nullptr;
 
         std::optional<std::vector<u8>> m_outputData;
 

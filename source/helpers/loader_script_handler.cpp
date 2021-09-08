@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/paths.hpp>
+#include <hex/helpers/file.hpp>
 #include <hex/views/view.hpp>
 #include <hex/providers/provider.hpp>
 
@@ -177,7 +178,7 @@ namespace hex {
         return createStructureType("union", args);
     }
 
-    bool LoaderScript::processFile(std::string_view scriptPath) {
+    bool LoaderScript::processFile(const std::string &scriptPath) {
         Py_SetProgramName(Py_DecodeLocale((SharedData::mainArgv)[0], nullptr));
 
         for (const auto &dir : hex::getPath(ImHexPath::Python)) {
@@ -218,10 +219,8 @@ namespace hex {
             PyList_Insert(sysPath, 0, path);
         }
 
-        FILE *scriptFile = fopen(scriptPath.data(), "r");
-        PyRun_SimpleFile(scriptFile, scriptPath.data());
-
-        fclose(scriptFile);
+        File scriptFile(scriptPath, File::Mode::Read);
+        PyRun_SimpleFile(scriptFile.getHandle(), scriptPath.c_str());
 
         Py_Finalize();
 

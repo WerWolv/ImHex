@@ -34,7 +34,7 @@ namespace hex {
 
         auto drawTab = [this](auto title, ImHexPath pathType, auto &content) {
             if (ImGui::BeginTabItem(title)) {
-                if (ImGui::BeginTable("##patterns", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) {
+                if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_None, 1.0);
                     ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_None, 3.0);
@@ -157,7 +157,7 @@ namespace hex {
                 }
             };
 
-            parseStoreEntries(json, "patterns", ImHexPath::Patterns, this->m_patterns);
+            parseStoreEntries(json, "pattern_language", ImHexPath::Patterns, this->m_patterns);
             parseStoreEntries(json, "includes", ImHexPath::PatternsInclude, this->m_includes);
             parseStoreEntries(json, "magic", ImHexPath::Magic, this->m_magics);
 

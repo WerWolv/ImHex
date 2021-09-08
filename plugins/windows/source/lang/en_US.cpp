@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/lang.hpp>
 
 namespace hex::plugin::windows {
 

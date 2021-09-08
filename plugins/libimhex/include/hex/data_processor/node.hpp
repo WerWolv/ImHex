@@ -15,17 +15,17 @@ namespace hex::dp {
 
     class Node {
     public:
-        Node(std::string_view unlocalizedTitle, std::vector<Attribute> attributes);
+        Node(std::string unlocalizedTitle, std::vector<Attribute> attributes);
 
         virtual ~Node() = default;
 
         [[nodiscard]] u32 getID() const { return this->m_id; }
         void setID(u32 id) { this->m_id = id; }
 
-        [[nodiscard]] std::string_view getUnlocalizedName() const { return this->m_unlocalizedName; }
-        void setUnlocalizedName(std::string_view unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
+        [[nodiscard]] const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
+        void setUnlocalizedName(const std::string &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
 
-        [[nodiscard]] std::string_view getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
+        [[nodiscard]] const std::string& getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
         [[nodiscard]] std::vector<Attribute>& getAttributes() { return this->m_attributes; }
 
         void setCurrentOverlay(prv::Overlay *overlay) {
@@ -76,7 +76,7 @@ namespace hex::dp {
 
     protected:
 
-        [[noreturn]] void throwNodeError(std::string_view message) {
+        [[noreturn]] void throwNodeError(const std::string &message) {
             throw NodeError(this, message);
         }
 

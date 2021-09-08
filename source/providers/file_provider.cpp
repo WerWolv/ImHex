@@ -1,19 +1,15 @@
 #include "providers/file_provider.hpp"
 
-#include <time.h>
+#include <ctime>
 #include <cstring>
 
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/file.hpp>
 #include "helpers/project_file_handler.hpp"
-
-#if defined(OS_WINDOWS)
-#include <locale>
-#include <codecvt>
-#endif
 
 namespace hex::prv {
 
-    FileProvider::FileProvider(std::string_view path) : Provider(), m_path(path) {
+    FileProvider::FileProvider(std::string path) : Provider(), m_path(std::move(path)) {
         this->open();
     }
 
@@ -92,13 +88,11 @@ namespace hex::prv {
     }
 
     void FileProvider::saveAs(const std::string &path) {
-        FILE *file = fopen(path.c_str(), "wb");
+        File file(path, File::Mode::Create);
 
-        if (file != nullptr) {
-            std::vector<u8> buffer(0xFF'FFFF, 0x00);
+        if (file.isValid()) {
+            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, file.getSize()), 0x00);
             size_t bufferSize = buffer.size();
-
-            fseek(file, 0, SEEK_SET);
 
             auto provider = SharedData::currentProvider;
             for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
@@ -106,10 +100,8 @@ namespace hex::prv {
                     bufferSize = provider->getActualSize() - offset;
 
                 provider->readRelative(offset, buffer.data(), bufferSize);
-                fwrite(buffer.data(), 1, bufferSize, file);
+                file.write(buffer);
             }
-
-            fclose(file);
         }
     }
 
@@ -175,7 +167,7 @@ namespace hex::prv {
         {
             auto length = this->m_path.length() + 1;
             auto wideLength = MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, 0, 0);
-            wchar_t* buffer = new wchar_t[wideLength];
+            auto buffer = new wchar_t[wideLength];
             MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, buffer, wideLength);
             widePath = buffer;
             delete[] buffer;

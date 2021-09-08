@@ -6,7 +6,7 @@
 #include <string>
 #include <variant>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class Token {
     public:
@@ -131,7 +131,7 @@ namespace hex::lang {
             return static_cast<u32>(type) >> 4;
         }
 
-        [[nodiscard]] constexpr static auto getTypeName(const lang::Token::ValueType type) {
+        [[nodiscard]] constexpr static auto getTypeName(const pl::Token::ValueType type) {
             switch (type) {
                 case ValueType::Signed8Bit:     return "s8";
                 case ValueType::Signed16Bit:    return "s16";
@@ -192,7 +192,7 @@ namespace hex::lang {
 
 }
 
-#define COMPONENT(type, value) hex::lang::Token::Type::type, hex::lang::Token::type::value
+#define COMPONENT(type, value) hex::pl::Token::Type::type, hex::pl::Token::type::value
 
 #define KEYWORD_STRUCT                      COMPONENT(Keyword, Struct)
 #define KEYWORD_UNION                       COMPONENT(Keyword, Union)
@@ -209,9 +209,9 @@ namespace hex::lang {
 #define KEYWORD_RETURN                      COMPONENT(Keyword, Return)
 #define KEYWORD_NAMESPACE                   COMPONENT(Keyword, Namespace)
 
-#define INTEGER                             hex::lang::Token::Type::Integer, hex::lang::Token::IntegerLiteral(u64(0))
-#define IDENTIFIER                          hex::lang::Token::Type::Identifier, ""
-#define STRING                              hex::lang::Token::Type::String, ""
+#define INTEGER                             hex::pl::Token::Type::Integer, hex::pl::Token::IntegerLiteral(u64(0))
+#define IDENTIFIER                          hex::pl::Token::Type::Identifier, ""
+#define STRING                              hex::pl::Token::Type::String, ""
 
 #define OPERATOR_AT                         COMPONENT(Operator, AtDeclaration)
 #define OPERATOR_ASSIGNMENT                 COMPONENT(Operator, Assignment)

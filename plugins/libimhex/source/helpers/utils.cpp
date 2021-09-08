@@ -110,12 +110,12 @@ namespace hex {
         }
     }
 
-    std::vector<std::string> splitString(std::string_view string, std::string_view delimiter) {
+    std::vector<std::string> splitString(const std::string &string, const std::string &delimiter) {
         size_t start = 0, end;
         std::string token;
         std::vector<std::string> res;
 
-        while ((end = string.find (delimiter, start)) != std::string::npos) {
+        while ((end = string.find(delimiter, start)) != std::string::npos) {
             token = string.substr(start, end - start);
             start = end + delimiter.length();
             res.push_back(token);
@@ -125,7 +125,7 @@ namespace hex {
         return res;
     }
 
-    std::string combineStrings(const std::vector<std::string> &strings, std::string_view delimiter) {
+    std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter) {
         std::string result;
         for (const auto &string : strings) {
             result += string;
@@ -151,22 +151,6 @@ namespace hex {
         }
 
         return std::to_string(value).substr(0, 5) + Suffixes[suffixIndex];
-    }
-
-    std::vector<u8> readFile(std::string_view path) {
-        FILE *file = fopen(path.data(), "rb");
-
-        if (file == nullptr) return { };
-
-        std::vector<u8> result;
-
-        fseek(file, 0, SEEK_END);
-        result.resize(ftell(file));
-        rewind(file);
-
-        fread(result.data(), 1, result.size(), file);
-
-        return result;
     }
 
     void runCommand(const std::string &command) {
@@ -200,7 +184,7 @@ namespace hex {
 
     }
 
-    void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback) {
+    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback) {
         NFD::Init();
 
         nfdchar_t *outPath;

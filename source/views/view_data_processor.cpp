@@ -412,7 +412,7 @@ namespace hex {
         return output.dump();
     }
 
-    void ViewDataProcessor::loadNodes(std::string_view data) {
+    void ViewDataProcessor::loadNodes(const std::string &data) {
         using json = nlohmann::json;
 
         json input = json::parse(data);

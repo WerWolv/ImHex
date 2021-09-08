@@ -80,8 +80,8 @@ namespace hex {
         return false;
     }
 
-    std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(std::string_view input) {
-        constexpr auto MatchCommand = [](std::string_view currCommand, std::string_view commandToMatch) -> std::pair<MatchType, std::string_view> {
+    std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(const std::string &input) {
+        constexpr auto MatchCommand = [](const std::string &currCommand, const std::string &commandToMatch) -> std::pair<MatchType, std::string_view> {
             if (currCommand.empty()) {
                 return { MatchType::InfoMatch, "" };
             }
@@ -114,7 +114,7 @@ namespace hex {
                     if (match != MatchType::PerfectMatch)
                         results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
-                        auto matchedCommand = input.substr(command.length()).data();
+                        auto matchedCommand = input.substr(command.length());
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
                 }
@@ -123,7 +123,7 @@ namespace hex {
                     if (match != MatchType::PerfectMatch)
                         results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
-                        auto matchedCommand = input.substr(command.length() + 1).data();
+                        auto matchedCommand = input.substr(command.length() + 1);
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
                 }

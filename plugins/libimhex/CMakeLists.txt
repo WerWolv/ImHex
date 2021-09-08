@@ -52,13 +52,15 @@ set(LIBIMHEX_SOURCES
     source/helpers/crypto.cpp
     source/helpers/lang.cpp
     source/helpers/net.cpp
+    source/helpers/file.cpp
 
-    source/lang/pattern_language.cpp
-    source/lang/preprocessor.cpp
-    source/lang/lexer.cpp
-    source/lang/parser.cpp
-    source/lang/validator.cpp
-    source/lang/evaluator.cpp
+    source/pattern_language/pattern_language.cpp
+    source/pattern_language/preprocessor.cpp
+    source/pattern_language/lexer.cpp
+    source/pattern_language/parser.cpp
+    source/pattern_language/validator.cpp
+    source/pattern_language/evaluator.cpp
+
     source/providers/provider.cpp
 
     source/views/view.cpp
@@ -76,7 +78,7 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm include/hex/helpers/file.hpp)
 endif ()
 
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})

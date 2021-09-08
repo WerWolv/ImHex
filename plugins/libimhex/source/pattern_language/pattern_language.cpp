@@ -1,16 +1,17 @@
-#include <hex/lang/pattern_language.hpp>
+#include <hex/pattern_language/pattern_language.hpp>
 
+#include <hex/helpers/file.hpp>
 #include <hex/providers/provider.hpp>
 
-#include <hex/lang/preprocessor.hpp>
-#include <hex/lang/lexer.hpp>
-#include <hex/lang/parser.hpp>
-#include <hex/lang/validator.hpp>
-#include <hex/lang/evaluator.hpp>
+#include <hex/pattern_language/preprocessor.hpp>
+#include <hex/pattern_language/lexer.hpp>
+#include <hex/pattern_language/parser.hpp>
+#include <hex/pattern_language/validator.hpp>
+#include <hex/pattern_language/evaluator.hpp>
 
 #include <unistd.h>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class PatternData;
 
@@ -64,12 +65,12 @@ namespace hex::lang {
     }
 
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, std::string_view string) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, const std::string &string) {
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
 
-        auto preprocessedCode = this->m_preprocessor->preprocess(string.data());
+        auto preprocessedCode = this->m_preprocessor->preprocess(string);
         if (!preprocessedCode.has_value()) {
             this->m_currError = this->m_preprocessor->getError();
             return { };
@@ -108,21 +109,10 @@ namespace hex::lang {
         return patternData.value();
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, std::string_view path) {
-        FILE *file = fopen(path.data(), "r");
-        if (file == nullptr)
-            return { };
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const std::string &path) {
+        File file(path, File::Mode::Read);
 
-        fseek(file, 0, SEEK_END);
-        size_t size = ftell(file);
-        rewind(file);
-
-        std::string code(size + 1, 0x00);
-        fread(code.data(), size, 1, file);
-
-        fclose(file);
-
-        return this->executeString(provider, code);
+        return this->executeString(provider, file.readString());
     }
 
 

@@ -1,16 +1,14 @@
-#include <hex/lang/lexer.hpp>
+#include <hex/pattern_language/lexer.hpp>
 
 #include <algorithm>
 #include <functional>
 #include <optional>
 #include <vector>
 
-namespace hex::lang {
+namespace hex::pl {
 
 #define TOKEN(type, value) Token::Type::type, Token::type::value, lineNumber
 #define VALUE_TOKEN(type, value) Token::Type::type, value, lineNumber
-
-    Lexer::Lexer() { }
 
     std::string matchTillInvalid(const char* characters, std::function<bool(char)> predicate) {
         std::string ret;
@@ -26,18 +24,18 @@ namespace hex::lang {
         return ret;
     }
 
-    size_t getIntegerLiteralLength(std::string_view string) {
+    size_t getIntegerLiteralLength(const std::string &string) {
         return string.find_first_not_of("0123456789ABCDEFabcdef.xUL");
     }
 
-    std::optional<Token::IntegerLiteral> parseIntegerLiteral(std::string_view string) {
+    std::optional<Token::IntegerLiteral> parseIntegerLiteral(const std::string &string) {
         Token::ValueType type = Token::ValueType::Any;
         Token::IntegerLiteral result;
 
         u8 base;
 
         auto endPos = getIntegerLiteralLength(string);
-        std::string_view numberData = string.substr(0, endPos);
+        auto numberData = std::string_view(string).substr(0, endPos);
 
         if (numberData.ends_with('U')) {
             type = Token::ValueType::Unsigned32Bit;
@@ -143,7 +141,7 @@ namespace hex::lang {
         return { };
     }
 
-    std::optional<std::pair<char, size_t>> getCharacter(std::string_view string) {
+    std::optional<std::pair<char, size_t>> getCharacter(const std::string &string) {
 
         if (string.length() < 1)
             return { };
@@ -194,7 +192,7 @@ namespace hex::lang {
         } else return {{ string[0], 1 }};
     }
 
-    std::optional<std::pair<std::string, size_t>> getStringLiteral(std::string_view string) {
+    std::optional<std::pair<std::string, size_t>> getStringLiteral(const std::string &string) {
         if (!string.starts_with('\"'))
             return { };
 
@@ -219,7 +217,7 @@ namespace hex::lang {
         return {{ result, size + 1 }};
     }
 
-    std::optional<std::pair<char, size_t>> getCharacterLiteral(std::string_view string) {
+    std::optional<std::pair<char, size_t>> getCharacterLiteral(const std::string &string) {
         if (string.empty())
             return { };
 

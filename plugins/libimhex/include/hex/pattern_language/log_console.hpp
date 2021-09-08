@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class LogConsole {
     public:
@@ -22,17 +22,17 @@ namespace hex::lang {
 
         using EvaluateError = std::string;
 
-        void log(Level level, std::string_view message) {
+        void log(Level level, const std::string &message) {
             switch (level) {
                 default:
-                case Level::Debug:   this->m_consoleLog.emplace_back(level, "[-] " + std::string(message)); break;
-                case Level::Info:    this->m_consoleLog.emplace_back(level, "[i] " + std::string(message)); break;
-                case Level::Warning: this->m_consoleLog.emplace_back(level, "[*] " + std::string(message)); break;
-                case Level::Error:   this->m_consoleLog.emplace_back(level, "[!] " + std::string(message)); break;
+                case Level::Debug:   this->m_consoleLog.emplace_back(level, "[-] " + message); break;
+                case Level::Info:    this->m_consoleLog.emplace_back(level, "[i] " + message); break;
+                case Level::Warning: this->m_consoleLog.emplace_back(level, "[*] " + message); break;
+                case Level::Error:   this->m_consoleLog.emplace_back(level, "[!] " + message); break;
             }
         }
 
-        [[noreturn]] void abortEvaluation(std::string_view message) {
+        [[noreturn]] void abortEvaluation(const std::string &message) {
             throw EvaluateError(message);
         }
 

@@ -23,7 +23,7 @@ namespace hex {
         void drawMenu() override;
 
     private:
-        std::vector<lang::PatternData*> m_sortedPatternData;
+        std::vector<pl::PatternData*> m_sortedPatternData;
     };
 
 }

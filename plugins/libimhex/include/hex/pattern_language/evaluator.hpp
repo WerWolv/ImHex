@@ -3,8 +3,8 @@
 #include <hex.hpp>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/lang/ast_node.hpp>
-#include <hex/lang/log_console.hpp>
+#include <hex/pattern_language/ast_node.hpp>
+#include <hex/pattern_language/log_console.hpp>
 
 #include <bit>
 #include <string>
@@ -13,7 +13,7 @@
 
 namespace hex::prv { class Provider; }
 
-namespace hex::lang {
+namespace hex::pl {
 
     class PatternData;
 
@@ -57,8 +57,8 @@ namespace hex::lang {
         u32 m_recursionLimit;
         u32 m_currRecursionDepth;
 
-        void createLocalVariable(std::string_view varName, PatternData *pattern);
-        void setLocalVariableValue(std::string_view varName, const void *value, size_t size);
+        void createLocalVariable(const std::string &varName, PatternData *pattern);
+        void setLocalVariableValue(const std::string &varName, const void *value, size_t size);
 
         ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
         ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);

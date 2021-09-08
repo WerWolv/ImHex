@@ -1,6 +1,9 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 
+#include <hex/helpers/lang.hpp>
+using namespace hex::lang_literals;
+
 #include <imgui.h>
 
 #include <nlohmann/json.hpp>

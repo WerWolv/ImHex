@@ -15,15 +15,15 @@ namespace hex {
 
     class Plugin {
     public:
-        Plugin(std::string_view path);
+        Plugin(const std::string &path);
         Plugin(const Plugin&) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
 
         void initializePlugin() const;
-        std::string getPluginName() const;
-        std::string getPluginAuthor() const;
-        std::string getPluginDescription() const;
+        [[nodiscard]] std::string getPluginName() const;
+        [[nodiscard]] std::string getPluginAuthor() const;
+        [[nodiscard]] std::string getPluginDescription() const;
         void setImGuiContext(ImGuiContext *ctx) const;
 
 
@@ -43,7 +43,7 @@ namespace hex {
         SetImGuiContextFunc m_setImGuiContextFunction               = nullptr;
 
         template<typename T>
-        auto getPluginFunction(std::string_view pluginName, std::string_view symbol) {
+        auto getPluginFunction(const std::string &pluginName, const std::string &symbol) {
             auto symbolName = hex::format(symbol.data(), pluginName.length(), pluginName.data());
             return reinterpret_cast<T>(dlsym(this->m_handle, symbolName.c_str()));
         };
@@ -53,7 +53,7 @@ namespace hex {
     public:
         PluginManager() = delete;
 
-        static bool load(std::string_view pluginFolder);
+        static bool load(const std::string &pluginFolder);
         static void unload();
         static void reload();
 

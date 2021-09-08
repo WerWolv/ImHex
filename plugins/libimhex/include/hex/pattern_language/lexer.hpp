@@ -2,19 +2,19 @@
 
 #include <hex.hpp>
 
-#include "token.hpp"
+#include <hex/pattern_language/token.hpp>
 
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class Lexer {
     public:
         using LexerError = std::pair<u32, std::string>;
 
-        Lexer();
+        Lexer() = default;
 
         std::optional<std::vector<Token>> lex(const std::string& code);
         const LexerError& getError() { return this->m_error; }
@@ -22,8 +22,8 @@ namespace hex::lang {
     private:
         LexerError m_error;
 
-        [[noreturn]] void throwLexerError(std::string_view error, u32 lineNumber) const {
-            throw LexerError(lineNumber, "Lexer: " + std::string(error));
+        [[noreturn]] void throwLexerError(const std::string &error, u32 lineNumber) const {
+            throw LexerError(lineNumber, "Lexer: " + error);
         }
     };
 

@@ -15,7 +15,7 @@ namespace hex {
     constexpr auto GetPluginDescriptionSymbol   = "_ZN3hex6plugin{0}{1}8internal20getPluginDescriptionEv";
     constexpr auto SetImGuiContextSymbol        = "_ZN3hex6plugin{0}{1}8internal15setImGuiContextEP12ImGuiContext";
 
-    Plugin::Plugin(std::string_view path) {
+    Plugin::Plugin(const std::string &path) {
         this->m_handle = dlopen(path.data(), RTLD_LAZY);
 
         if (this->m_handle == nullptr) {
@@ -84,7 +84,7 @@ namespace hex {
             this->m_setImGuiContextFunction(ctx);
     }
 
-    bool PluginManager::load(std::string_view pluginFolder) {
+    bool PluginManager::load(const std::string &pluginFolder) {
         if (!std::filesystem::exists(pluginFolder))
             return false;
 

@@ -8,10 +8,8 @@
 
 namespace hex {
 
-    static void pushBytesBack(std::vector<u8> &buffer, const char* bytes) {
-        std::string_view string(bytes);
-        buffer.resize(buffer.size() + string.length());
-        std::memcpy((&buffer.back() - string.length()) + 1, string.begin(), string.length());
+    static void pushBytesBack(std::vector<u8> &buffer, const std::string &string) {
+        std::copy(string.begin(), string.end(), std::back_inserter(buffer));
     }
 
     template<typename T>

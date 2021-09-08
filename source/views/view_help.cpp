@@ -87,7 +87,7 @@ namespace hex {
             }
             ImGui::NewLine();
 
-            const auto Link = [](std::string_view label, std::string_view url) {
+            const auto Link = [](const std::string &label, const std::string &url) {
                 if (ImGui::BulletHyperlink(label.data()))
                     hex::openWebpage(url.data());
             };

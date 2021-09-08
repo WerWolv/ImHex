@@ -1,11 +1,12 @@
-#include <hex/lang/preprocessor.hpp>
+#include <hex/pattern_language/preprocessor.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/paths.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <filesystem>
 
-namespace hex::lang {
+namespace hex::pl {
 
     Preprocessor::Preprocessor() {
 
@@ -62,19 +63,11 @@ namespace hex::lang {
                             includeFile = tempPath;
                         }
 
-                        FILE *file = fopen(includeFile.c_str(), "r");
-                        if (file == nullptr)
+                        File file(includeFile, File::Mode::Read);
+                        if (!file.isValid())
                             throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
 
-                        fseek(file, 0, SEEK_END);
-                        size_t size = ftell(file);
-                        char *buffer = new char[size + 1];
-                        rewind(file);
-
-                        fread(buffer, size, 1, file);
-                        buffer[size] = 0x00;
-
-                        auto preprocessedInclude = this->preprocess(buffer, false);
+                        auto preprocessedInclude = this->preprocess(file.readString(), false);
                         if (!preprocessedInclude.has_value())
                             throw this->m_error;
 
@@ -84,10 +77,6 @@ namespace hex::lang {
                         std::replace(content.begin(), content.end(), '\r', ' ');
 
                         output += content;
-
-                        delete[] buffer;
-
-                        fclose(file);
                     } else if (code.substr(offset, 6) == "define") {
                         offset += 6;
 

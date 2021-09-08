@@ -14,8 +14,8 @@
 namespace hex {
 
     class View;
-    namespace lang { class ASTNode; }
-    namespace lang { class Evaluator; }
+    class LanguageDefinition;
+    namespace pl { class ASTNode; class Evaluator; }
     namespace dp { class Node; }
 
     /*
@@ -30,27 +30,29 @@ namespace hex {
         struct Settings {
             Settings() = delete;
 
+            using Callback = std::function<bool(const std::string&, nlohmann::json&)>;
+
             struct Entry {
                 std::string name;
-                std::function<bool(std::string_view, nlohmann::json&)> callback;
+                Callback callback;
             };
 
             static void load();
             static void store();
 
-            static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback);
-            static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback);
+            static void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const Callback &callback);
+            static void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
 
-            static void write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 value);
-            static void write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view value);
-            static void write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& value);
+            static void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 value);
+            static void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
+            static void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value);
 
-            static s64 read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue);
-            static std::string read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue);
-            static std::vector<std::string> read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& defaultValue = { });
+            static s64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue);
+            static std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
+            static std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue = { });
 
             static std::map<std::string, std::vector<Entry>>& getEntries();
-            static nlohmann::json getSetting(std::string_view unlocalizedCategory, std::string_view unlocalizedName);
+            static nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
             static nlohmann::json& getSettingsData();
         };
 
@@ -63,15 +65,18 @@ namespace hex {
                 KeywordCommand
             };
 
+            using DisplayCallback = std::function<std::string(std::string)>;
+            using ExecuteCallback = std::function<void(std::string)>;
+
             struct Entry {
                 Type type;
                 std::string command;
                 std::string unlocalizedDescription;
-                std::function<std::string(std::string)> displayCallback;
-                std::function<void(std::string)> executeCallback;
+                DisplayCallback displayCallback;
+                ExecuteCallback executeCallback;
             };
 
-            static void add(Type type, std::string_view command, std::string_view unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback = [](auto){});
+            static void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto){});
             static std::vector<Entry>& getEntries();
         };
 
@@ -85,13 +90,14 @@ namespace hex {
             constexpr static u32 NoParameters          = 0x0000'0000;
 
             using Namespace = std::vector<std::string>;
+            using Callback = std::function<hex::pl::ASTNode*(hex::pl::Evaluator&, std::vector<hex::pl::ASTNode*>&)>;
 
             struct Function {
                 u32 parameterCount;
-                std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> func;
+                Callback func;
             };
 
-            static void add(const Namespace &ns, const std::string &name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func);
+            static void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
             static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
         };
 
@@ -116,12 +122,14 @@ namespace hex {
         struct Tools {
             Tools() = delete;
 
+            using Callback = std::function<void()>;
+
             struct Entry {
                 std::string name;
-                std::function<void()> function;
+                Callback function;
             };
 
-            static void add(std::string_view unlocalizedName, const std::function<void()> &function);
+            static void add(const std::string &unlocalizedName, const Callback &function);
 
             static std::vector<Entry>& getEntries();
         };
@@ -145,7 +153,7 @@ namespace hex {
                 GeneratorFunction generatorFunction;
             };
 
-            static void add(std::string_view unlocalizedName, size_t requiredSize, GeneratorFunction function);
+            static void add(const std::string &unlocalizedName, size_t requiredSize, GeneratorFunction function);
 
             static std::vector<Entry>& getEntries();
         };
@@ -160,11 +168,11 @@ namespace hex {
             };
 
             template<hex::derived_from<dp::Node> T, typename ... Args>
-            static void add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, Args&& ... args) {
-                add(Entry{ unlocalizedCategory.data(), unlocalizedName.data(),
-                   [args..., name = std::string(unlocalizedName)]{
+            static void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args&& ... args) {
+                add(Entry{ unlocalizedCategory.c_str(), unlocalizedName.c_str(),
+                   [=]{
                         auto node = new T(std::forward<Args>(args)...);
-                        node->setUnlocalizedName(name);
+                        node->setUnlocalizedName(unlocalizedName);
                         return node;
                    }
                 });
@@ -179,8 +187,8 @@ namespace hex {
 
         /* Language Registry. Allows together with the LangEntry class and the _lang user defined literal to add new languages */
         struct Language {
-            static void registerLanguage(std::string_view name, std::string_view languageCode);
-            static void addLocalizations(std::string_view languageCode, const LanguageDefinition &definition);
+            static void registerLanguage(const std::string &name, const std::string &languageCode);
+            static void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition);
 
             static std::map<std::string, std::string>& getLanguages();
             static std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();

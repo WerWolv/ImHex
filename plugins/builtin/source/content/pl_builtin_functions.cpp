@@ -3,9 +3,9 @@
 #include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <hex/lang/ast_node.hpp>
-#include <hex/lang/log_console.hpp>
-#include <hex/lang/evaluator.hpp>
+#include <hex/pattern_language/ast_node.hpp>
+#include <hex/pattern_language/log_console.hpp>
+#include <hex/pattern_language/evaluator.hpp>
 
 #include <vector>
 
@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
     #define AS_TYPE(type, value) ctx.template asType<type>(value)
 
     void registerPatternLanguageFunctions() {
-        using namespace hex::lang;
+        using namespace hex::pl;
 
         ContentRegistry::PatternLanguageFunctions::Namespace nsStd = { "std" };
         {

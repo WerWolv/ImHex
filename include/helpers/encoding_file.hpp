@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <map>
+#include <string_view>
 #include <vector>
 
 namespace hex {
@@ -22,10 +23,10 @@ namespace hex {
         };
 
         EncodingFile() = default;
-        EncodingFile(Type type, std::string_view path);
+        EncodingFile(Type type, const std::string &path);
 
-        std::pair<std::string_view, size_t> getEncodingFor(const std::vector<u8> &buffer) const;
-        size_t getLongestSequence() const { return this->m_longestSequence; }
+        [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(const std::vector<u8> &buffer) const;
+        [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
 
     private:
         void parseThingyFile(std::ifstream &content);

@@ -9,11 +9,11 @@
 
 #include <hex/api/imhex_api.hpp>
 
-#define EVENT_DEF(event_name, ...)                                  \
-    struct event_name final : public hex::Event<__VA_ARGS__> {      \
-        constexpr static auto id = [] { return hex::EventId(); }(); \
-        event_name(Callback func) noexcept : Event(func) { }        \
-    };
+#define EVENT_DEF(event_name, ...)                                                  \
+    struct event_name final : public hex::Event<__VA_ARGS__> {                      \
+        constexpr static auto id = [] { return hex::EventId(); }();                 \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }    \
+    }
 
 class GLFWwindow;
 
@@ -100,7 +100,6 @@ namespace hex {
     EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
     EVENT_DEF(EventPatternChanged);
-    EVENT_DEF(EventFileDropped, std::string);
     EVENT_DEF(EventWindowClosing, GLFWwindow*);
     EVENT_DEF(EventRegionSelected, Region);
     EVENT_DEF(EventProjectFileStore);
@@ -114,6 +113,7 @@ namespace hex {
     EVENT_DEF(RequestAppendPatternLanguageCode, std::string);
     EVENT_DEF(RequestChangeWindowTitle, std::string);
     EVENT_DEF(RequestCloseImHex, bool);
+    EVENT_DEF(RequestOpenFile, std::string);
 
     EVENT_DEF(QuerySelection, Region&);
 

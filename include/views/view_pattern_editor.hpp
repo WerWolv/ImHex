@@ -1,8 +1,8 @@
 #pragma once
 
 #include <hex/views/view.hpp>
-#include <hex/lang/evaluator.hpp>
-#include <hex/lang/pattern_language.hpp>
+#include <hex/pattern_language/evaluator.hpp>
+#include <hex/pattern_language/pattern_language.hpp>
 
 #include <hex/providers/provider.hpp>
 
@@ -26,16 +26,16 @@ namespace hex {
         void drawContent() override;
 
     private:
-        lang::PatternLanguage *m_patternLanguageRuntime;
+        pl::PatternLanguage *m_patternLanguageRuntime;
         std::vector<std::string> m_possiblePatternFiles;
         int m_selectedPatternFile = 0;
         bool m_runAutomatically = false;
         bool m_evaluatorRunning = false;
 
         TextEditor m_textEditor;
-        std::vector<std::pair<lang::LogConsole::Level, std::string>> m_console;
+        std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;
 
-        void loadPatternFile(std::string_view path);
+        void loadPatternFile(const std::string &path);
         void clearPatternData();
         void parsePattern(char *buffer);
     };

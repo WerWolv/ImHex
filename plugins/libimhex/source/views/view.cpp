@@ -10,7 +10,6 @@
 
 namespace hex {
 
-
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
     void View::drawMenu() { }
@@ -48,13 +47,13 @@ namespace hex {
         }
     }
 
-    void View::showErrorPopup(std::string_view errorMessage) {
+    void View::showErrorPopup(const std::string &errorMessage) {
         SharedData::errorPopupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
     }
 
-    void View::showFatalPopup(std::string_view errorMessage) {
+    void View::showFatalPopup(const std::string &errorMessage) {
         SharedData::errorPopupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
@@ -77,7 +76,7 @@ namespace hex {
         return this->m_windowOpen;
     }
 
-    std::string_view View::getUnlocalizedName() const {
+    const std::string& View::getUnlocalizedName() const {
         return this->m_unlocalizedViewName;
     }
 
@@ -90,14 +89,14 @@ namespace hex {
         SharedData::deferredCalls.push_back(function);
     }
 
-    void View::confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn) {
+    void View::confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn) {
         auto width = ImGui::GetWindowWidth();
         ImGui::SetCursorPosX(width / 9);
-        if (ImGui::Button(textLeft, ImVec2(width / 3, 0)))
+        if (ImGui::Button(textLeft.c_str(), ImVec2(width / 3, 0)))
             leftButtonFn();
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button(textRight, ImVec2(width / 3, 0)))
+        if (ImGui::Button(textRight.c_str(), ImVec2(width / 3, 0)))
             rightButtonFn();
     }
 

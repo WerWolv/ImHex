@@ -16,7 +16,7 @@ namespace hex {
     u32 SharedData::patternPaletteOffset;
     std::string SharedData::errorPopupMessage;
     std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
-    std::vector<lang::PatternData*> SharedData::patternData;
+    std::vector<pl::PatternData*> SharedData::patternData;
 
     std::map<std::string, std::string> SharedData::languageNames;
     std::map<std::string, std::vector<LanguageDefinition>> SharedData::languageDefinitions;

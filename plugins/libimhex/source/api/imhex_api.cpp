@@ -19,7 +19,7 @@ namespace hex {
     }
 
 
-    void ImHexApi::Bookmarks::add(Region region, std::string_view name, std::string_view comment, u32 color) {
+    void ImHexApi::Bookmarks::add(Region region, const std::string &name, const std::string &comment, u32 color) {
         Entry entry;
 
         entry.region = region;
@@ -35,7 +35,7 @@ namespace hex {
         EventManager::post<RequestAddBookmark>(entry);
     }
 
-    void ImHexApi::Bookmarks::add(u64 addr, size_t size, std::string_view name, std::string_view comment, u32 color) {
+    void ImHexApi::Bookmarks::add(u64 addr, size_t size, const std::string &name, const std::string &comment, u32 color) {
         Bookmarks::add(Region{addr, size}, name, comment, color);
     }
 

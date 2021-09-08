@@ -5,7 +5,7 @@
 
 #include <hex/helpers/net.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/lang/pattern_data.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 
 #include <fontawesome_font.h>
 #include <codicons_font.h>

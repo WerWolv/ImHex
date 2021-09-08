@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/lang.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -43,7 +44,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.latest.desc", "Read ImHex' current changelog" },
                     { "hex.welcome.learn.latest.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                     { "hex.welcome.learn.pattern.title", "Pattern Language Documentation" },
-                    { "hex.welcome.learn.pattern.desc", "Learn how to write ImHex patterns with our extensive documentation" },
+                    { "hex.welcome.learn.pattern.desc", "Learn how to write ImHex pattern_language with our extensive documentation" },
                     { "hex.welcome.learn.pattern.link", "https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide" },
                     { "hex.welcome.learn.plugins.title", "Plugins API" },
                     { "hex.welcome.learn.plugins.desc", "Extend ImHex with additional features using plugins" },
@@ -250,8 +251,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.pattern.name", "Pattern editor" },
                 { "hex.view.pattern.accept_pattern", "Accept pattern" },
-                    { "hex.view.pattern.accept_pattern.desc", "One or more patterns compatible with this data type has been found" },
-                    { "hex.view.pattern.accept_pattern.patterns", "Patterns" },
+                    { "hex.view.pattern.accept_pattern.desc", "One or more pattern_language compatible with this data type has been found" },
+                    { "hex.view.pattern.accept_pattern.pattern_language", "Patterns" },
                     { "hex.view.pattern.accept_pattern.question", "Do you want to apply the selected pattern?" },
                 { "hex.view.pattern.menu.file.load_pattern", "Load pattern..." },
                 { "hex.view.pattern.open_pattern", "Open pattern" },

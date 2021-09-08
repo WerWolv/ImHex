@@ -5,7 +5,7 @@
 #include <imgui.h>
 
 #include <hex/providers/provider.hpp>
-#include <hex/lang/token.hpp>
+#include <hex/pattern_language/token.hpp>
 #include <hex/views/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -17,7 +17,7 @@
 #include <random>
 #include <string>
 
-namespace hex::lang {
+namespace hex::pl {
 
     using namespace ::std::literals::string_literals;
 
@@ -113,7 +113,7 @@ namespace hex::lang {
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
 
-        static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, lang::PatternData* left, lang::PatternData* right) {
+        static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, pl::PatternData* left, pl::PatternData* right) {
             if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getVariableName() > right->getVariableName();
@@ -190,7 +190,7 @@ namespace hex::lang {
         }
 
     protected:
-        void createDefaultEntry(std::string_view value) const {
+        void createDefaultEntry(const std::string &value) const {
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
@@ -209,7 +209,7 @@ namespace hex::lang {
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", value.data());
+            ImGui::Text("%s", value.c_str());
         }
 
         void drawCommentTooltip() const {

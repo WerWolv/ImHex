@@ -8,7 +8,7 @@ add_library(${PROJECT_NAME} SHARED
 
         source/content/command_palette_commands.cpp
         source/content/data_inspector.cpp
-        source/content/lang_builtin_functions.cpp
+        source/content/pl_builtin_functions.cpp
         source/content/settings_entries.cpp
         source/content/tools_entries.cpp
         source/content/data_processor_nodes.cpp

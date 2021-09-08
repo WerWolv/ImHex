@@ -27,13 +27,13 @@ namespace hex {
     }
 
 
-    bool ProjectFile::load(std::string_view filePath) {
+    bool ProjectFile::load(const std::string &filePath) {
         ProjectFile::s_hasUnsavedChanged = false;
 
         json projectFileData;
 
         try {
-            std::ifstream projectFile(filePath.data());
+            std::ifstream projectFile(filePath.c_str());
             projectFile >> projectFileData;
 
             ProjectFile::s_filePath             = projectFileData["filePath"];
@@ -56,7 +56,7 @@ namespace hex {
         return true;
     }
 
-    bool ProjectFile::store(std::string_view filePath) {
+    bool ProjectFile::store(std::string filePath) {
         EventManager::post<EventProjectFileStore>();
 
         json projectFileData;
@@ -74,7 +74,7 @@ namespace hex {
                 projectFileData["bookmarks"].push_back(bookmark);
             }
 
-            std::ofstream projectFile(filePath.data(), std::fstream::trunc);
+            std::ofstream projectFile(filePath.c_str(), std::fstream::trunc);
             projectFile << projectFileData;
         } catch (json::exception &e) {
             return false;

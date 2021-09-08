@@ -154,7 +154,7 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
+        EventManager::subscribe<EventFileLoaded>(this, [](const std::string &path){
             SharedData::recentFilePaths.push_front(path);
 
             {
@@ -167,7 +167,7 @@ namespace hex {
                             exists = true;
                     }
 
-                    if (!exists)
+                    if (!exists && !file.empty())
                         uniques.push_back(file);
 
                     if (uniques.size() > 5)
@@ -184,6 +184,10 @@ namespace hex {
             }
         });
 
+        EventManager::subscribe<EventFileUnloaded>(this, []{
+            EventManager::post<RequestChangeWindowTitle>("");
+        });
+
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, true);
 
@@ -193,11 +197,14 @@ namespace hex {
 
         EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
             std::string title = "ImHex";
-            if (!windowTitle.empty())
-                title += " - " + windowTitle;
 
-            if (ProjectFile::hasUnsavedChanges())
-                title += " (*)";
+            if (SharedData::currentProvider != nullptr) {
+                if (!windowTitle.empty())
+                    title += " - " + windowTitle;
+
+                if (ProjectFile::hasUnsavedChanges())
+                    title += " (*)";
+            }
 
             this->m_windowTitle = title;
             glfwSetWindowTitle(this->m_window, title.c_str());
@@ -250,8 +257,10 @@ namespace hex {
 
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
+        EventManager::unsubscribe<EventAbnormalTermination>(this);
 
         ImGui::UnloadImage(this->m_bannerTexture);
         ImGui::UnloadImage(this->m_logoTexture);
@@ -533,7 +542,7 @@ namespace hex {
                 if (!SharedData::recentFilePaths.empty()) {
                     for (auto &path : SharedData::recentFilePaths) {
                         if (ImGui::BulletHyperlink(std::filesystem::path(path).filename().string().c_str())) {
-                            EventManager::post<EventFileDropped>(path);
+                            EventManager::post<RequestOpenFile>(path);
                             break;
                         }
                     }
@@ -749,7 +758,7 @@ namespace hex {
             if (count != 1)
                 return;
 
-            EventManager::post<EventFileDropped>(paths[0]);
+            EventManager::post<RequestOpenFile>(paths[0]);
         });
 
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {

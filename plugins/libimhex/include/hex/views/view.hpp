@@ -12,12 +12,16 @@
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
 
+#include <hex/helpers/lang.hpp>
+
 #include <functional>
 #include <string>
 #include <vector>
 
 
 namespace hex {
+
+    using namespace hex::lang_literals;
 
     class View {
     public:
@@ -36,8 +40,8 @@ namespace hex {
 
         static void drawCommonInterfaces();
 
-        static void showErrorPopup(std::string_view errorMessage);
-        static void showFatalPopup(std::string_view errorMessage);
+        static void showErrorPopup(const std::string &errorMessage);
+        static void showFatalPopup(const std::string &errorMessage);
 
         virtual bool hasViewMenuItemEntry();
         virtual ImVec2 getMinSize();
@@ -45,15 +49,15 @@ namespace hex {
 
         bool& getWindowOpenState();
 
-        std::string_view getUnlocalizedName() const;
+        const std::string& getUnlocalizedName() const;
 
     protected:
         void discardNavigationRequests();
 
-        void confirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
+        void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
 
-        static inline std::string toWindowName(std::string_view unlocalizedName) {
-            return LangEntry(unlocalizedName) + "##" + std::string(unlocalizedName);
+        static inline std::string toWindowName(const std::string &unlocalizedName) {
+            return LangEntry(unlocalizedName) + "##" + unlocalizedName;
         }
 
     private:

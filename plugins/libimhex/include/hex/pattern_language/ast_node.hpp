@@ -8,7 +8,7 @@
 #include <variant>
 #include <vector>
 
-namespace hex::lang {
+namespace hex::pl {
 
     class ASTNodeAttribute;
 
@@ -141,8 +141,8 @@ namespace hex::lang {
 
     class ASTNodeTypeDecl : public ASTNode, public Attributable {
     public:
-        ASTNodeTypeDecl(std::string_view name, ASTNode *type, std::optional<std::endian> endian = { })
-                : ASTNode(), m_name(name), m_type(type), m_endian(endian) { }
+        ASTNodeTypeDecl(std::string name, ASTNode *type, std::optional<std::endian> endian = std::nullopt)
+                : ASTNode(), m_name(std::move(name)), m_type(type), m_endian(endian) { }
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -162,7 +162,7 @@ namespace hex::lang {
         }
 
         void setName(const std::string &name) { this->m_name = name; }
-        [[nodiscard]] std::string_view getName() const { return this->m_name; }
+        [[nodiscard]] const std::string& getName() const { return this->m_name; }
         [[nodiscard]] ASTNode* getType() { return this->m_type; }
         [[nodiscard]] std::optional<std::endian> getEndian() const { return this->m_endian; }
 
@@ -174,8 +174,8 @@ namespace hex::lang {
 
     class ASTNodeVariableDecl : public ASTNode, public Attributable {
     public:
-        ASTNodeVariableDecl(std::string_view name, ASTNode *type, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(name), m_type(type), m_placementOffset(placementOffset) { }
+        ASTNodeVariableDecl(std::string name, ASTNode *type, ASTNode *placementOffset = nullptr)
+                : ASTNode(), m_name(std::move(name)), m_type(type), m_placementOffset(placementOffset) { }
 
         ASTNodeVariableDecl(const ASTNodeVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -196,7 +196,7 @@ namespace hex::lang {
             return new ASTNodeVariableDecl(*this);
         }
 
-        [[nodiscard]] std::string_view getName() const { return this->m_name; }
+        [[nodiscard]] const std::string& getName() const { return this->m_name; }
         [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
 
@@ -208,8 +208,8 @@ namespace hex::lang {
 
     class ASTNodeArrayVariableDecl : public ASTNode, public Attributable {
     public:
-        ASTNodeArrayVariableDecl(std::string_view name, ASTNode *type, ASTNode *size, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(name), m_type(type), m_size(size), m_placementOffset(placementOffset) { }
+        ASTNodeArrayVariableDecl(std::string name, ASTNode *type, ASTNode *size, ASTNode *placementOffset = nullptr)
+                : ASTNode(), m_name(std::move(name)), m_type(type), m_size(size), m_placementOffset(placementOffset) { }
 
         ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -235,7 +235,7 @@ namespace hex::lang {
             return new ASTNodeArrayVariableDecl(*this);
         }
 
-        [[nodiscard]] std::string_view getName() const { return this->m_name; }
+        [[nodiscard]] const std::string& getName() const { return this->m_name; }
         [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
         [[nodiscard]] constexpr ASTNode* getSize() const { return this->m_size; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
@@ -249,8 +249,8 @@ namespace hex::lang {
 
     class ASTNodePointerVariableDecl : public ASTNode, public Attributable {
     public:
-        ASTNodePointerVariableDecl(std::string_view name, ASTNode *type, ASTNode *sizeType, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(name), m_type(type), m_sizeType(sizeType), m_placementOffset(placementOffset) { }
+        ASTNodePointerVariableDecl(std::string name, ASTNode *type, ASTNode *sizeType, ASTNode *placementOffset = nullptr)
+                : ASTNode(), m_name(std::move(name)), m_type(type), m_sizeType(sizeType), m_placementOffset(placementOffset) { }
 
         ASTNodePointerVariableDecl(const ASTNodePointerVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -273,7 +273,7 @@ namespace hex::lang {
             return new ASTNodePointerVariableDecl(*this);
         }
 
-        [[nodiscard]] std::string_view getName() const { return this->m_name; }
+        [[nodiscard]] const std::string& getName() const { return this->m_name; }
         [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
         [[nodiscard]] constexpr ASTNode* getSizeType() const { return this->m_sizeType; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
@@ -540,8 +540,8 @@ namespace hex::lang {
 
     class ASTNodeFunctionCall : public ASTNode {
     public:
-        explicit ASTNodeFunctionCall(std::string_view functionName, std::vector<ASTNode*> params)
-                : ASTNode(), m_functionName(functionName), m_params(std::move(params)) { }
+        explicit ASTNodeFunctionCall(std::string functionName, std::vector<ASTNode*> params)
+                : ASTNode(), m_functionName(std::move(functionName)), m_params(std::move(params)) { }
 
         ~ASTNodeFunctionCall() override {
             for (auto &param : this->m_params)
@@ -559,7 +559,7 @@ namespace hex::lang {
             return new ASTNodeFunctionCall(*this);
         }
 
-        [[nodiscard]] std::string_view getFunctionName() {
+        [[nodiscard]] const std::string& getFunctionName() {
             return this->m_functionName;
         }
 
@@ -574,7 +574,7 @@ namespace hex::lang {
 
     class ASTNodeStringLiteral : public ASTNode {
     public:
-        explicit ASTNodeStringLiteral(std::string_view string) : ASTNode(), m_string(string) { }
+        explicit ASTNodeStringLiteral(std::string string) : ASTNode(), m_string(std::move(string)) { }
 
         ~ASTNodeStringLiteral() override = default;
 
@@ -586,7 +586,7 @@ namespace hex::lang {
             return new ASTNodeStringLiteral(*this);
         }
 
-        [[nodiscard]] std::string_view getString() {
+        [[nodiscard]] const std::string& getString() {
             return this->m_string;
         }
 
@@ -596,8 +596,8 @@ namespace hex::lang {
 
     class ASTNodeAttribute : public ASTNode {
     public:
-        explicit ASTNodeAttribute(std::string_view attribute, std::optional<std::string_view> value = { })
-            : ASTNode(), m_attribute(attribute), m_value(value) { }
+        explicit ASTNodeAttribute(std::string attribute, std::optional<std::string> value = std::nullopt)
+            : ASTNode(), m_attribute(std::move(attribute)), m_value(std::move(value)) { }
 
         ~ASTNodeAttribute() override = default;
 
@@ -610,7 +610,7 @@ namespace hex::lang {
             return new ASTNodeAttribute(*this);
         }
 
-        [[nodiscard]] std::string_view getAttribute() const {
+        [[nodiscard]] const std::string& getAttribute() const {
             return this->m_attribute;
         }
 
@@ -680,7 +680,7 @@ namespace hex::lang {
                 delete statement;
         }
 
-        [[nodiscard]] std::string_view getName() const {
+        [[nodiscard]] const std::string& getName() const {
             return this->m_name;
         }
 
@@ -717,7 +717,7 @@ namespace hex::lang {
             delete this->m_rvalue;
         }
 
-        [[nodiscard]] std::string_view getLValueName() const {
+        [[nodiscard]] const std::string& getLValueName() const {
             return this->m_lvalueName;
         }
 

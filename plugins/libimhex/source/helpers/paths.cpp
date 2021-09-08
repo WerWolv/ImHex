@@ -33,7 +33,7 @@ namespace hex {
 
             switch (path) {
                 case ImHexPath::Patterns:
-                    return { (parentDir / "patterns").string() };
+                    return { (parentDir / "pattern_language").string() };
                 case ImHexPath::PatternsInclude:
                     return { (parentDir / "includes").string() };
                 case ImHexPath::Magic:

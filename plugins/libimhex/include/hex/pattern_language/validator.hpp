@@ -2,13 +2,12 @@
 
 #include <hex.hpp>
 
-#include "token.hpp"
-#include "ast_node.hpp"
-
 #include <string>
 #include <vector>
 
-namespace hex::lang {
+namespace hex::pl {
+
+    class ASTNode;
 
     class Validator {
     public:

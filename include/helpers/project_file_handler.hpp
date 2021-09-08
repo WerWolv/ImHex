@@ -16,8 +16,8 @@ namespace hex {
     public:
         ProjectFile() = delete;
 
-        static bool load(std::string_view filePath);
-        static bool store(std::string_view filePath = "");
+        static bool load(const std::string &filePath);
+        static bool store(std::string filePath = "");
 
         [[nodiscard]] static bool hasUnsavedChanges() {
             return ProjectFile::s_hasUnsavedChanged;
@@ -32,7 +32,7 @@ namespace hex {
                 EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(getFilePath()).filename().string());
         }
 
-        [[nodiscard]] static std::string getProjectFilePath() {
+        [[nodiscard]] static const std::string& getProjectFilePath() {
             return ProjectFile::s_currProjectFilePath;
         }
 
@@ -41,22 +41,22 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static std::string getFilePath() {
+        [[nodiscard]] static const std::string& getFilePath() {
             return ProjectFile::s_filePath;
         }
 
-        static void setFilePath(std::string_view filePath) {
+        static void setFilePath(const std::string &filePath) {
             ProjectFile::s_filePath = filePath;
 
             EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(filePath).filename().string());
         }
 
 
-        [[nodiscard]] static std::string getPattern() {
+        [[nodiscard]] static const std::string& getPattern() {
             return ProjectFile::s_pattern;
         }
 
-        static void setPattern(std::string_view pattern) {
+        static void setPattern(const std::string &pattern) {
             markDirty();
             ProjectFile::s_pattern = pattern;
         }
@@ -82,11 +82,11 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const std::string_view getDataProcessorContent() {
+        [[nodiscard]] static const std::string& getDataProcessorContent() {
             return ProjectFile::s_dataProcessorContent;
         }
 
-        static void setDataProcessorContent(std::string_view json) {
+        static void setDataProcessorContent(const std::string &json) {
             markDirty();
             ProjectFile::s_dataProcessorContent = json;
         }

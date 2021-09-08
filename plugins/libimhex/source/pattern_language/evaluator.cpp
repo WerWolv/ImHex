@@ -1,17 +1,17 @@
-#include <hex/lang/evaluator.hpp>
+#include <hex/pattern_language/evaluator.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/providers/provider.hpp>
 
-#include <hex/lang/token.hpp>
-#include <hex/lang/pattern_data.hpp>
+#include <hex/pattern_language/token.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 
 #include <bit>
 #include <algorithm>
 
 #include <unistd.h>
 
-namespace hex::lang {
+namespace hex::pl {
 
     ASTNodeIntegerLiteral* Evaluator::evaluateScopeResolution(ASTNodeScopeResolution *node) {
         ASTNode *currScope = nullptr;
@@ -471,7 +471,7 @@ namespace hex::lang {
         return evaluateOperator(leftInteger, rightInteger, node->getOperator());
     }
 
-    void Evaluator::createLocalVariable(std::string_view varName, PatternData *pattern) {
+    void Evaluator::createLocalVariable(const std::string &varName, PatternData *pattern) {
         auto startOffset = this->m_currOffset;
         ON_SCOPE_EXIT { this->m_currOffset = startOffset; };
 
@@ -492,7 +492,7 @@ namespace hex::lang {
 
     }
 
-    void Evaluator::setLocalVariableValue(std::string_view varName, const void *value, size_t size) {
+    void Evaluator::setLocalVariableValue(const std::string &varName, const void *value, size_t size) {
         PatternData *varPattern = nullptr;
         for (auto &var : *this->m_localVariables.back()) {
             if (var->getVariableName() == varName)

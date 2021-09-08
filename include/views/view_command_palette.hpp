@@ -55,7 +55,7 @@ namespace hex {
             this->m_focusInputTextBox = true;
         }
 
-        std::vector<CommandResult> getCommandResults(std::string_view command);
+        std::vector<CommandResult> getCommandResults(const std::string &command);
     };
 
 }

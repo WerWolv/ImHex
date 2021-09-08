@@ -18,7 +18,7 @@ namespace hex::prv {
 
     class FileProvider : public Provider {
     public:
-        explicit FileProvider(std::string_view path);
+        explicit FileProvider(std::string path);
         ~FileProvider() override;
 
         bool isAvailable() override;
@@ -42,20 +42,20 @@ namespace hex::prv {
 
     private:
         #if defined(OS_WINDOWS)
-        HANDLE m_file;
-        HANDLE m_mapping;
+        HANDLE m_file = INVALID_HANDLE_VALUE;
+        HANDLE m_mapping = INVALID_HANDLE_VALUE;
         #else
-        int m_file;
+        int m_file = -1;
         #endif
 
         std::string m_path;
-        void *m_mappedFile;
-        size_t m_fileSize;
+        void *m_mappedFile = nullptr;
+        size_t m_fileSize = 0;
 
         bool m_fileStatsValid = false;
         struct stat m_fileStats = { 0 };
 
-        bool m_readable, m_writable;
+        bool m_readable = false, m_writable = false;
 
         void open();
         void close();

@@ -8,6 +8,8 @@
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
+#include <hex/helpers/file.hpp>
+
 int main(int argc, char **argv) {
     using namespace hex;
 
@@ -37,7 +39,7 @@ int main(int argc, char **argv) {
         if (argc == 1)
             ; // No arguments provided
         else if (argc == 2)
-            EventManager::post<EventFileDropped>(argv[1]);
+            EventManager::post<RequestOpenFile>(argv[1]);
         else {
             hex::log::fatal("Usage: imhex [file_name]");
             return EXIT_FAILURE;

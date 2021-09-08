@@ -39,87 +39,87 @@ namespace hex {
         }
     }
 
-    void ContentRegistry::Settings::add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback) {
-        ContentRegistry::Settings::getEntries()[unlocalizedCategory.data()].emplace_back(Entry{ unlocalizedName.data(), callback });
+    void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const ContentRegistry::Settings::Callback &callback) {
+        ContentRegistry::Settings::getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry{ unlocalizedName.c_str(), callback });
 
         auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory.data()))
-            json[unlocalizedCategory.data()] = nlohmann::json::object();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()) || !json[unlocalizedCategory.data()][unlocalizedName.data()].is_number())
-            json[unlocalizedCategory.data()][unlocalizedName.data()] = int(defaultValue);
+        if (!json.contains(unlocalizedCategory))
+            json[unlocalizedCategory] = nlohmann::json::object();
+        if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number())
+            json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
     }
 
-    void ContentRegistry::Settings::add(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue, const std::function<bool(std::string_view, nlohmann::json&)> &callback) {
-        ContentRegistry::Settings::getEntries()[unlocalizedCategory.data()].emplace_back(Entry{ unlocalizedName.data(), callback });
+    void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const ContentRegistry::Settings::Callback &callback) {
+        ContentRegistry::Settings::getEntries()[unlocalizedCategory].emplace_back(Entry{ unlocalizedName, callback });
 
         auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory.data()))
-            json[unlocalizedCategory.data()] = nlohmann::json::object();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()) || !json[unlocalizedCategory.data()][unlocalizedName.data()].is_string())
-            json[unlocalizedCategory.data()][unlocalizedName.data()] = std::string(defaultValue);
+        if (!json.contains(unlocalizedCategory))
+            json[unlocalizedCategory] = nlohmann::json::object();
+        if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_string())
+            json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
     }
 
-    void ContentRegistry::Settings::write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 value) {
+    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 value) {
         auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory.data()))
-            json[unlocalizedCategory.data()] = nlohmann::json::object();
+        if (!json.contains(unlocalizedCategory))
+            json[unlocalizedCategory] = nlohmann::json::object();
 
-        json[unlocalizedCategory.data()][unlocalizedName.data()] = value;
+        json[unlocalizedCategory][unlocalizedName] = value;
     }
 
-    void ContentRegistry::Settings::write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view value) {
+    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value) {
         auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory.data()))
-            json[unlocalizedCategory.data()] = nlohmann::json::object();
+        if (!json.contains(unlocalizedCategory))
+            json[unlocalizedCategory] = nlohmann::json::object();
 
-        json[unlocalizedCategory.data()][unlocalizedName.data()] = value;
+        json[unlocalizedCategory][unlocalizedName] = value;
     }
 
-    void ContentRegistry::Settings::write(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& value) {
+    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value) {
         auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory.data()))
-            json[unlocalizedCategory.data()] = nlohmann::json::object();
+        if (!json.contains(unlocalizedCategory))
+            json[unlocalizedCategory] = nlohmann::json::object();
 
-        json[unlocalizedCategory.data()][unlocalizedName.data()] = value;
+        json[unlocalizedCategory][unlocalizedName] = value;
     }
 
 
-    s64 ContentRegistry::Settings::read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, s64 defaultValue) {
+    s64 ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue) {
         auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory.data()))
+        if (!json.contains(unlocalizedCategory))
             return defaultValue;
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
-            return defaultValue;
-
-        return json[unlocalizedCategory.data()][unlocalizedName.data()].get<s64>();
-    }
-
-    std::string ContentRegistry::Settings::read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, std::string_view defaultValue) {
-        auto &json = getSettingsData();
-
-        if (!json.contains(unlocalizedCategory.data()))
-            return defaultValue.data();
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
-            return defaultValue.data();
-
-        return json[unlocalizedCategory.data()][unlocalizedName.data()].get<std::string>();
-    }
-
-    std::vector<std::string> ContentRegistry::Settings::read(std::string_view unlocalizedCategory, std::string_view unlocalizedName, const std::vector<std::string>& defaultValue) {
-        auto &json = getSettingsData();
-
-        if (!json.contains(unlocalizedCategory.data()))
-            return defaultValue;
-        if (!json[unlocalizedCategory.data()].contains(unlocalizedName.data()))
+        if (!json[unlocalizedCategory].contains(unlocalizedName))
             return defaultValue;
 
-        return json[unlocalizedCategory.data()][unlocalizedName.data()].get<std::vector<std::string>>();
+        return json[unlocalizedCategory][unlocalizedName].get<s64>();
+    }
+
+    std::string ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(unlocalizedCategory))
+            return defaultValue;
+        if (!json[unlocalizedCategory].contains(unlocalizedName))
+            return defaultValue;
+
+        return json[unlocalizedCategory][unlocalizedName].get<std::string>();
+    }
+
+    std::vector<std::string> ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue) {
+        auto &json = getSettingsData();
+
+        if (!json.contains(unlocalizedCategory))
+            return defaultValue;
+        if (!json[unlocalizedCategory].contains(unlocalizedName))
+            return defaultValue;
+
+        return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
     }
 
 
@@ -127,13 +127,13 @@ namespace hex {
         return SharedData::settingsEntries;
     }
 
-    nlohmann::json ContentRegistry::Settings::getSetting(std::string_view unlocalizedCategory, std::string_view unlocalizedName) {
+    nlohmann::json ContentRegistry::Settings::getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
         auto &settings = getSettingsData();
 
         if (!settings.contains(unlocalizedCategory)) return { };
-        if (!settings[unlocalizedCategory.data()].contains(unlocalizedName)) return { };
+        if (!settings[unlocalizedCategory].contains(unlocalizedName)) return { };
 
-        return settings[unlocalizedCategory.data()][unlocalizedName.data()];
+        return settings[unlocalizedCategory][unlocalizedName];
     }
 
     nlohmann::json& ContentRegistry::Settings::getSettingsData() {
@@ -143,8 +143,8 @@ namespace hex {
 
     /* Command Palette Commands */
 
-    void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, std::string_view command, std::string_view unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
-        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command.data(), unlocalizedDescription.data(), displayCallback, executeCallback });
+    void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, const std::string &command, const std::string &unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
+        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command, unlocalizedDescription, displayCallback, executeCallback });
     }
 
     std::vector<ContentRegistry::CommandPaletteCommands::Entry>& ContentRegistry::CommandPaletteCommands::getEntries() {
@@ -155,7 +155,7 @@ namespace hex {
     /* Pattern Language Functions */
 
 
-    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const std::function<hex::lang::ASTNode*(hex::lang::Evaluator&, std::vector<hex::lang::ASTNode*>&)> &func) {
+    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const std::function<hex::pl::ASTNode*(hex::pl::Evaluator&, std::vector<hex::pl::ASTNode*>&)> &func) {
         std::string functionName;
         for (auto &scope : ns)
             functionName += scope + "::";
@@ -183,8 +183,8 @@ namespace hex {
 
     /* Tools */
 
-    void ContentRegistry::Tools:: add(std::string_view unlocalizedName, const std::function<void()> &function) {
-        getEntries().emplace_back(Entry{ unlocalizedName.data(), function });
+    void ContentRegistry::Tools:: add(const std::string &unlocalizedName, const std::function<void()> &function) {
+        getEntries().emplace_back(Entry{ unlocalizedName, function });
     }
 
     std::vector<ContentRegistry::Tools::Entry>& ContentRegistry::Tools::getEntries() {
@@ -194,8 +194,8 @@ namespace hex {
 
     /* Data Inspector */
 
-    void ContentRegistry::DataInspector::add(std::string_view unlocalizedName, size_t requiredSize, ContentRegistry::DataInspector::GeneratorFunction function) {
-        getEntries().push_back({ unlocalizedName.data(), requiredSize, std::move(function) });
+    void ContentRegistry::DataInspector::add(const std::string &unlocalizedName, size_t requiredSize, ContentRegistry::DataInspector::GeneratorFunction function) {
+        getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
     }
 
     std::vector<ContentRegistry::DataInspector::Entry>& ContentRegistry::DataInspector::getEntries() {
@@ -218,12 +218,12 @@ namespace hex {
 
     /* Languages */
 
-    void ContentRegistry::Language::registerLanguage(std::string_view name, std::string_view languageCode) {
-        getLanguages().insert({ languageCode.data(), name.data() });
+    void ContentRegistry::Language::registerLanguage(const std::string &name, const std::string &languageCode) {
+        getLanguages().insert({ languageCode, name });
     }
 
-    void ContentRegistry::Language::addLocalizations(std::string_view languageCode, const LanguageDefinition &definition) {
-        getLanguageDefinitions()[languageCode.data()].push_back(definition);
+    void ContentRegistry::Language::addLocalizations(const std::string &languageCode, const LanguageDefinition &definition) {
+        getLanguageDefinitions()[languageCode].push_back(definition);
     }
 
     std::map<std::string, std::string>& ContentRegistry::Language::getLanguages() {

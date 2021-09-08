@@ -14,9 +14,9 @@ namespace hex {
     public:
         LoaderScript() = delete;
 
-        static bool processFile(std::string_view scriptPath);
+        static bool processFile(const std::string &scriptPath);
 
-        static void setFilePath(std::string_view filePath) { LoaderScript::s_filePath = filePath; }
+        static void setFilePath(const std::string &filePath) { LoaderScript::s_filePath = filePath; }
         static void setDataProvider(prv::Provider* provider) { LoaderScript::s_dataProvider = provider; }
     private:
         static inline std::string s_filePath;

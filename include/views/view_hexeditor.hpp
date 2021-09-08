@@ -57,18 +57,18 @@ namespace hex {
         void drawGotoPopup();
         void drawEditPopup();
 
-        bool createFile(std::string_view path);
-        void openFile(std::string_view path);
-        bool saveToFile(std::string_view path, const std::vector<u8>& data);
-        bool loadFromFile(std::string_view path, std::vector<u8>& data);
+        bool createFile(const std::string &path);
+        void openFile(const std::string &path);
+        bool saveToFile(const std::string &path, const std::vector<u8>& data);
+        bool loadFromFile(const std::string &path, std::vector<u8>& data);
 
         enum class Language { C, Cpp, CSharp, Rust, Python, Java, JavaScript };
-        void copyBytes();
-        void pasteBytes();
-        void copyString();
-        void copyLanguageArray(Language language);
-        void copyHexView();
-        void copyHexViewHTML();
+        void copyBytes() const;
+        void pasteBytes() const;
+        void copyString() const;
+        void copyLanguageArray(Language language) const;
+        void copyHexView() const;
+        void copyHexViewHTML() const;
 
     };
 

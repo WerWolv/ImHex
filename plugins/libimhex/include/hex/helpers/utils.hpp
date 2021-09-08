@@ -15,13 +15,6 @@
 
 #include <nfd.hpp>
 
-#if defined(OS_MACOS)
-    #define off64_t off_t
-    #define fopen64 fopen
-    #define fseeko64 fseek
-    #define ftello64 ftell
-#endif
-
 #define TOKEN_CONCAT_IMPL(x, y) x ## y
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
 #define ANONYMOUS_VARIABLE(prefix) TOKEN_CONCAT(prefix, __COUNTER__)
@@ -98,12 +91,10 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
-    std::vector<std::string> splitString(std::string_view string, std::string_view delimiter);
-    std::string combineStrings(const std::vector<std::string> &strings, std::string_view delimiter = "");
+    std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
+    std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
 
     std::string toEngineeringString(double value);
-
-    std::vector<u8> readFile(std::string_view path);
 
     template<typename T>
     std::vector<u8> toBytes(T value) {
@@ -113,7 +104,7 @@ namespace hex {
         return bytes;
     }
 
-    inline std::vector<u8> parseByteString(std::string_view string) {
+    inline std::vector<u8> parseByteString(const std::string &string) {
         auto byteString = std::string(string);
         byteString.erase(std::remove(byteString.begin(), byteString.end(), ' '), byteString.end());
 
@@ -163,7 +154,7 @@ namespace hex {
         Folder
     };
 
-    void openFileBrowser(std::string_view title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
+    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
 
     float float16ToFloat32(u16 float16);
 

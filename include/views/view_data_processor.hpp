@@ -39,7 +39,7 @@ namespace hex {
         void processNodes();
 
         std::string saveNodes();
-        void loadNodes(std::string_view data);
+        void loadNodes(const std::string &data);
     };
 
 }
