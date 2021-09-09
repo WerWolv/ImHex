@@ -15,11 +15,11 @@ Placing it into memory using the placement syntax will place all members of the 
 
 .. image:: assets/structs/hex.png
   :width: 100%
-  :alt: Highlighing
+  :alt: Struct Highlighing
 
 .. image:: assets/structs/data.png
   :width: 100%
-  :alt: Decoding
+  :alt: Struct Decoding
 
 Padding
 ^^^^^^^
