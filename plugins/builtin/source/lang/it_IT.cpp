@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.latest.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                     { "hex.welcome.learn.pattern.title", "Documentazione dei Pattern" },
                     { "hex.welcome.learn.pattern.desc", "Scopri come scrivere pattern per ImHex con la nostra dettagliata documentazione" },
-                    { "hex.welcome.learn.pattern.link", "https://github.com/WerWolv/ImHex/wiki/Pattern-Language-Guide" },
+                    { "hex.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs/pattern_language/pattern_language.html" },
                     { "hex.welcome.learn.plugins.title", "Plugins API" },
                     { "hex.welcome.learn.plugins.desc", "Espandi l'utilizzo di ImHex con i Plugin" },
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
@@ -149,6 +149,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.help.about.thanks", "Se ti piace il mio lavoro, per favore considera di fare una donazione. Grazie mille <3" },
                         { "hex.view.help.about.libs", "Librerie usate" },
                         { "hex.view.help.about.paths", "ImHex cartelle" },
+                    //{ "hex.view.help.documentation", "ImHex Documentation" },
                     { "hex.view.help.pattern_cheat_sheet", "Pattern Language Cheat Sheet"},
                     { "hex.view.help.calc_cheat_sheet", "Calcolatrice Cheat Sheet" },
 

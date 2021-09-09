@@ -452,6 +452,9 @@ namespace hex {
                 this->m_aboutWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
+            if (ImGui::MenuItem("hex.view.help.documentation"_lang, "")) {
+                hex::openWebpage("https://imhex.werwolv.net/docs");
+            }
             ImGui::Separator();
             if (ImGui::MenuItem("hex.view.help.pattern_cheat_sheet"_lang, "")) {
                 this->m_patternHelpWindowOpen = true;
@@ -461,6 +464,7 @@ namespace hex {
                 this->m_mathHelpWindowOpen = true;
                 this->getWindowOpenState() = true;
             }
+            ImGui::Separator();
             ImGui::EndMenu();
         }
     }
