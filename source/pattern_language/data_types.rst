@@ -52,7 +52,7 @@ The simplest available types are the built-in standard types:
 
 .. table::
     :align: left
-    
+
     ========== ==========
     Special
     ---------------------
@@ -124,3 +124,31 @@ The following code creates a new type called ``Offset`` which is a big endian 32
 .. code-block:: hexpat
 
     using Offset = be u32;
+
+Literals
+^^^^^^^^
+
+Literals are fixed values representing a specific constant. The following literals are available:
+
+.. table::
+    :align: left
+
+    =========================== ===========================
+    Type                        Example   
+    =========================== ===========================
+    Decimal Integer             ``42``, ``-1337``
+    Unsigned 32 bit integer     ``69U``
+    Unsigned 64 bit integer     ``666UL``
+    Unsigned 128 bit integer    ``9000ULL``
+    Signed 32 bit integer       ``69``
+    Signed 64 bit integer       ``-666L``
+    Signed 128 bit integer      ``-12345LL``
+    Hexadecimal Integer         ``0xDEAD``
+    Binary Integer              ``0b00100101``
+    Octal Integer               ``0o644``
+    Float                       ``1.414F``
+    Double                      ``3.14159``, ``1.414D``
+    Boolean                     ``true``, ``false``
+    Character                   ``'A'``
+    String                      ``"Hello World"``
+    =========================== ===========================
