@@ -19,3 +19,4 @@ The Pattern Language is ImHex' custom C-like language for defining patterns and 
    bitfields
    conditionals
    namespaces
+   standard_library/standard_library
