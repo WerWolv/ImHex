@@ -14,3 +14,6 @@ The Pattern Language is ImHex' custom C-like language for defining patterns and 
    data_types
    placement
    structs
+   unions
+   enums
+   bitfields
