@@ -8,48 +8,60 @@ Built-in Types
 
 The simplest available types are the built-in standard types:
 
-======== ==========
-Unsigned Integers
--------------------
-Name     Size   
-======== ==========
-``u8``   1 Byte
-``u16``  2 Bytes
-``u32``  4 Bytes
-``u64``  8 Bytes
-``u128`` 16 Bytes
-======== ==========
+.. table::
+    :align: left
 
-======== ==========
-Signed Integers
--------------------
-Name     Size   
-======== ==========
-``s8``   1 Byte
-``s16``  2 Bytes
-``s32``  4 Bytes
-``s64``  8 Bytes
-``s128`` 16 Bytes
-======== ==========
+    ======== ==========
+    Unsigned Integers
+    -------------------
+    Name     Size   
+    ======== ==========
+    ``u8``   1 Byte
+    ``u16``  2 Bytes
+    ``u32``  4 Bytes
+    ``u64``  8 Bytes
+    ``u128`` 16 Bytes
+    ======== ==========
 
-========== ==========
-Floating Point
----------------------
-Name       Size   
-========== ==========
-``float``  4 Bytes
-``double`` 8 Bytes
-========== ==========
+.. table::
+    :align: left
 
-========== ==========
-Special
----------------------
-Name       Size   
-========== ==========
-``char``   1 Bytes
-``char16`` 2 Bytes
-``bool``   1 Byte
-========== ==========
+    ======== ==========
+    Signed Integers
+    -------------------
+    Name     Size   
+    ======== ==========
+    ``s8``   1 Byte
+    ``s16``  2 Bytes
+    ``s32``  4 Bytes
+    ``s64``  8 Bytes
+    ``s128`` 16 Bytes
+    ======== ==========
+
+.. table::
+    :align: left
+
+    ========== ==========
+    Floating Point
+    ---------------------
+    Name       Size   
+    ========== ==========
+    ``float``  4 Bytes
+    ``double`` 8 Bytes
+    ========== ==========
+
+.. table::
+    :align: left
+    
+    ========== ==========
+    Special
+    ---------------------
+    Name       Size   
+    ========== ==========
+    ``char``   1 Bytes
+    ``char16`` 2 Bytes
+    ``bool``   1 Byte
+    ========== ==========
 
 * Unsigned integer types are displayed as a number ranging from ``0`` to ``((1 << bits) - 1)``.
 * Signed integer types are displayed in decimal as a number in Two's complement ranging from ``-(1 << (bits - 1))`` to ``(1 << (bits - 1)) - 1``

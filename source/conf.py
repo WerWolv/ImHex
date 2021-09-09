@@ -120,7 +120,7 @@ class PatternLanguageLexer(RegexLexer):
         'root': [
             (r'(?<![a-zA-Z0-9_])(using|struct|union|enum|bitfield|be|le|fn|return)(?![a-zA-Z0-9_])', token.Keyword.Reserved),
             (r'(?<![a-zA-Z0-9_])(u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double|char|char16|bool)(?![a-zA-Z0-9_])', token.Keyword.Type),
-            (r'(?<![a-zA-Z0-9_])(padding|while|if|else|true|false|parent|addressof|sizeof|\$)(?![a-zA-Z0-9_])', token.Keyword.Type),
+            (r'(?<![a-zA-Z0-9_])(padding|while|if|else|true|false|parent|addressof|sizeof|namespace|\$)(?![a-zA-Z0-9_])', token.Keyword.Type),
             (r'[\{\}\[\]\;\:\=\.\,\@\(\)]', token.Punctuation),
             (r'(#.+)', token.Comment.Preproc),
             (r'[a-zA-Z_][0-9A-Za-z_]*', token.Name),
