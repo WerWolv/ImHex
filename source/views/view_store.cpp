@@ -38,8 +38,8 @@ namespace hex {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("hex.view.store.name"_lang, ImGuiTableColumnFlags_WidthFixed);
-                    ImGui::TableSetupColumn("hex.view.store.description"_lang, ImGuiTableColumnFlags_None);
+                    ImGui::TableSetupColumn("hex.view.store.table.name"_lang, ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("hex.view.store.table.description"_lang, ImGuiTableColumnFlags_None);
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                     ImGui::TableHeadersRow();
