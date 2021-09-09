@@ -297,7 +297,7 @@ namespace hex::plugin::builtin {
                 // { "hex.view.constants.name", "Constants" },
 
                 //{ "hex.view.store.name", "Content Store" },
-                //    { "hex.view.store.desc", "Download new content from ImHex' online database" },
+                //    { "hex.view.store.desc", "Download new content from ImHex's online database" },
                 //    { "hex.view.store.reload", "Reload" },
                 //    { "hex.view.store.table.name", "Name" },
                 //    { "hex.view.store.table.description", "Description" },

@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.plugins.desc", "Beschreibung" },
                 { "hex.welcome.header.customize", "Anpassen" },
                     { "hex.welcome.customize.settings.title", "Einstellungen" },
-                    { "hex.welcome.customize.settings.desc", "Ändere ImHex' Einstellungen" },
+                    { "hex.welcome.customize.settings.desc", "Ändere ImHex's Einstellungen" },
                 { "hex.welcome.header.update", "Updates" },
                     { "hex.welcome.update.title", "Neues Update verfügbar!" },
                     { "hex.welcome.update.desc", "ImHex {0} wurde gerade released! Downloade die neue version hier" },
@@ -293,12 +293,12 @@ namespace hex::plugin::builtin {
                     { "hex.view.yara.header.matches", "Funde" },
                         { "hex.view.yara.matches.identifier", "Kennung" },
                         { "hex.view.yara.whole_data", "Gesammte Daten Übereinstimmung!" },
-                        { "hex.view.yara.no_rules", "Keine Yara Regeln gefunden. Platziere sie in ImHex' 'yara' Ordner" },
+                        { "hex.view.yara.no_rules", "Keine Yara Regeln gefunden. Platziere sie in ImHex's 'yara' Ordner" },
 
                 { "hex.view.constants.name", "Konstanten" },
 
                 { "hex.view.store.name", "Content Store" },
-                    { "hex.view.store.desc", "Downloade extra Content von ImHex' online Datenbank" },
+                    { "hex.view.store.desc", "Downloade extra Content von ImHex's online Datenbank" },
                     { "hex.view.store.reload", "Neu laden" },
                     { "hex.view.store.table.name", "Name" },
                     { "hex.view.store.table.description", "Beschreibung" },

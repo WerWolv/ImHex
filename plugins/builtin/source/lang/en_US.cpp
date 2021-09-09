@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.update.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                 { "hex.welcome.header.learn", "Learn" },
                     { "hex.welcome.learn.latest.title", "Latest Release" },
-                    { "hex.welcome.learn.latest.desc", "Read ImHex' current changelog" },
+                    { "hex.welcome.learn.latest.desc", "Read ImHex's current changelog" },
                     { "hex.welcome.learn.latest.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                     { "hex.welcome.learn.pattern.title", "Pattern Language Documentation" },
                     { "hex.welcome.learn.pattern.desc", "Learn how to write ImHex pattern_language with our extensive documentation" },
@@ -293,12 +293,12 @@ namespace hex::plugin::builtin {
                     { "hex.view.yara.header.matches", "Matches" },
                         { "hex.view.yara.matches.identifier", "Identifier" },
                         { "hex.view.yara.whole_data", "Whole file matches!" },
-                        { "hex.view.yara.no_rules", "No YARA rules found. Put them in ImHex' 'yara' folder" },
+                        { "hex.view.yara.no_rules", "No YARA rules found. Put them in ImHex's 'yara' folder" },
 
                 { "hex.view.constants.name", "Constants" },
 
                 { "hex.view.store.name", "Content Store" },
-                    { "hex.view.store.desc", "Download new content from ImHex' online database" },
+                    { "hex.view.store.desc", "Download new content from ImHex's online database" },
                     { "hex.view.store.reload", "Reload" },
                     { "hex.view.store.table.name", "Name" },
                     { "hex.view.store.table.description", "Description" },
