@@ -19,88 +19,6 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguageFunctions::Namespace nsStd = { "std" };
         {
-            /* findSequence(occurrenceIndex, byte...) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "findSequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](auto &ctx, auto params) {
-               auto& occurrenceIndex = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-               std::vector<u8> sequence;
-               for (u32 i = 1; i < params.size(); i++) {
-                   sequence.push_back(std::visit([&](auto &&value) -> u8 {
-                       if (value <= 0xFF)
-                           return value;
-                       else
-                           ctx.getConsole().abortEvaluation("sequence bytes need to fit into 1 byte");
-                   }, AS_TYPE(ASTNodeIntegerLiteral, params[i])->getValue()));
-               }
-
-               std::vector<u8> bytes(sequence.size(), 0x00);
-               u32 occurrences = 0;
-               for (u64 offset = 0; offset < SharedData::currentProvider->getSize() - sequence.size(); offset++) {
-                   SharedData::currentProvider->read(offset, bytes.data(), bytes.size());
-
-                   if (bytes == sequence) {
-                       if (LITERAL_COMPARE(occurrenceIndex, occurrences < occurrenceIndex)) {
-                           occurrences++;
-                           continue;
-                       }
-
-                       return new ASTNodeIntegerLiteral(offset);
-                   }
-               }
-
-               ctx.getConsole().abortEvaluation("failed to find sequence");
-           });
-
-            /* readUnsigned(address, size) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "readUnsigned", 2, [](auto &ctx, auto params) {
-                auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
-
-                if (LITERAL_COMPARE(address, address >= SharedData::currentProvider->getActualSize()))
-                    ctx.getConsole().abortEvaluation("address out of range");
-
-                return std::visit([&](auto &&address, auto &&size) {
-                    if (size <= 0 || size > 16)
-                        ctx.getConsole().abortEvaluation("invalid read size");
-
-                    u8 value[(u8)size];
-                    SharedData::currentProvider->read(address, value, size);
-
-                    switch ((u8)size) {
-                        case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u8*>(value));
-                        case 2:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u16*>(value));
-                        case 4:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u32*>(value));
-                        case 8:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u64*>(value));
-                        case 16: return new ASTNodeIntegerLiteral(*reinterpret_cast<u128*>(value));
-                        default: ctx.getConsole().abortEvaluation("invalid read size");
-                    }
-                }, address, size);
-            });
-
-            /* readSigned(address, size) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "readSigned", 2, [](auto &ctx, auto params) {
-                auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
-
-                if (LITERAL_COMPARE(address, address >= SharedData::currentProvider->getActualSize()))
-                    ctx.getConsole().abortEvaluation("address out of range");
-
-                return std::visit([&](auto &&address, auto &&size) {
-                    if (size <= 0 || size > 16)
-                        ctx.getConsole().abortEvaluation("invalid read size");
-
-                    u8 value[(u8)size];
-                    SharedData::currentProvider->read(address, value, size);
-
-                    switch ((u8)size) {
-                        case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s8*>(value));
-                        case 2:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s16*>(value));
-                        case 4:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s32*>(value));
-                        case 8:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s64*>(value));
-                        case 16: return new ASTNodeIntegerLiteral(*reinterpret_cast<s128*>(value));
-                        default: ctx.getConsole().abortEvaluation("invalid read size");
-                    }
-                }, address, size);
-            });
 
             /* assert(condition, message) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](auto &ctx, auto params) {
@@ -108,18 +26,18 @@ namespace hex::plugin::builtin {
                 auto message = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
 
                 if (LITERAL_COMPARE(condition, condition == 0))
-                    ctx.getConsole().abortEvaluation(hex::format("assert failed \"{0}\"", message.data()));
+                    ctx.getConsole().abortEvaluation(hex::format("assertion failed \"{0}\"", message.data()));
 
                 return nullptr;
             });
 
-            /* warnAssert(condition, message) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "warnAssert", 2, [](auto ctx, auto params) {
+            /* assert_warn(condition, message) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto ctx, auto params) {
                 auto condition = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
                 auto message = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
 
                 if (LITERAL_COMPARE(condition, condition == 0))
-                    ctx.getConsole().log(LogConsole::Level::Warning, hex::format("assert failed \"{0}\"", message));
+                    ctx.getConsole().log(LogConsole::Level::Warning, hex::format("assertion failed \"{0}\"", message));
 
                 return nullptr;
             });
@@ -154,23 +72,117 @@ namespace hex::plugin::builtin {
                 return nullptr;
             });
 
-            /* alignTo(alignment, value) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "alignTo", 2, [](auto &ctx, auto params) -> ASTNode* {
+        }
+
+        ContentRegistry::PatternLanguageFunctions::Namespace nsStdMem = { "std", "mem" };
+        {
+
+            /* align_to(alignment, value) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "align_to", 2, [](auto &ctx, auto params) -> ASTNode* {
                 auto alignment = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
                 auto value = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
 
                 auto result = std::visit([](auto &&alignment, auto &&value) {
                     u64 remainder = u64(value) % u64(alignment);
                     return remainder != 0 ? u64(value) + (u64(alignment) - remainder) : u64(value);
-                }, alignment, value);
+                    }, alignment, value);
 
                 return new ASTNodeIntegerLiteral(u64(result));
             });
 
-            /* dataSize() */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "dataSize", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
+            /* base_address() */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "base_address", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
+                return new ASTNodeIntegerLiteral(u64(SharedData::currentProvider->getBaseAddress()));
+            });
+
+            /* size() */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "size", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
                 return new ASTNodeIntegerLiteral(u64(SharedData::currentProvider->getActualSize()));
             });
+
+            /* find_sequence(occurrence_index, bytes...) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "find_sequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](auto &ctx, auto params) {
+                auto& occurrenceIndex = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
+                std::vector<u8> sequence;
+                for (u32 i = 1; i < params.size(); i++) {
+                    sequence.push_back(std::visit([&](auto &&value) -> u8 {
+                        if (value <= 0xFF)
+                            return value;
+                        else
+                            ctx.getConsole().abortEvaluation("sequence bytes need to fit into 1 byte");
+                        }, AS_TYPE(ASTNodeIntegerLiteral, params[i])->getValue()));
+                }
+
+                std::vector<u8> bytes(sequence.size(), 0x00);
+                u32 occurrences = 0;
+                for (u64 offset = 0; offset < SharedData::currentProvider->getSize() - sequence.size(); offset++) {
+                    SharedData::currentProvider->read(offset, bytes.data(), bytes.size());
+
+                    if (bytes == sequence) {
+                        if (LITERAL_COMPARE(occurrenceIndex, occurrences < occurrenceIndex)) {
+                            occurrences++;
+                            continue;
+                        }
+
+                        return new ASTNodeIntegerLiteral(offset);
+                    }
+                }
+
+                ctx.getConsole().abortEvaluation("failed to find sequence");
+            });
+
+            /* read_unsigned(address, size) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_unsigned", 2, [](auto &ctx, auto params) {
+                auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
+                auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
+
+                if (LITERAL_COMPARE(address, address >= SharedData::currentProvider->getActualSize()))
+                    ctx.getConsole().abortEvaluation("address out of range");
+
+                return std::visit([&](auto &&address, auto &&size) {
+                    if (size <= 0 || size > 16)
+                        ctx.getConsole().abortEvaluation("invalid read size");
+
+                    u8 value[(u8)size];
+                    SharedData::currentProvider->read(address, value, size);
+
+                    switch ((u8)size) {
+                        case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u8*>(value));
+                        case 2:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u16*>(value));
+                        case 4:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u32*>(value));
+                        case 8:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u64*>(value));
+                        case 16: return new ASTNodeIntegerLiteral(*reinterpret_cast<u128*>(value));
+                        default: ctx.getConsole().abortEvaluation("invalid read size");
+                    }
+                    }, address, size);
+            });
+
+            /* read_signed(address, size) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_signed", 2, [](auto &ctx, auto params) {
+                auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
+                auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
+
+                if (LITERAL_COMPARE(address, address >= SharedData::currentProvider->getActualSize()))
+                    ctx.getConsole().abortEvaluation("address out of range");
+
+                return std::visit([&](auto &&address, auto &&size) {
+                    if (size <= 0 || size > 16)
+                        ctx.getConsole().abortEvaluation("invalid read size");
+
+                    u8 value[(u8)size];
+                    SharedData::currentProvider->read(address, value, size);
+
+                    switch ((u8)size) {
+                        case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s8*>(value));
+                        case 2:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s16*>(value));
+                        case 4:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s32*>(value));
+                        case 8:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s64*>(value));
+                        case 16: return new ASTNodeIntegerLiteral(*reinterpret_cast<s128*>(value));
+                        default: ctx.getConsole().abortEvaluation("invalid read size");
+                    }
+                    }, address, size);
+            });
+
         }
 
         ContentRegistry::PatternLanguageFunctions::Namespace nsStdStr = { "std", "str" };
