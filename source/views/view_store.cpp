@@ -38,8 +38,8 @@ namespace hex {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("hex.view.store.table.name"_lang, ImGuiTableColumnFlags_WidthFixed);
-                    ImGui::TableSetupColumn("hex.view.store.table.description"_lang, ImGuiTableColumnFlags_None);
+                    ImGui::TableSetupColumn("hex.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("hex.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                     ImGui::TableHeadersRow();
@@ -108,6 +108,7 @@ namespace hex {
             drawTab("hex.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, []{
                 magic::compile();
             });
+            drawTab("hex.view.store.tab.constants"_lang, ImHexPath::Constants, this->m_constants, []{});
 
             ImGui::EndTabBar();
         }
@@ -139,7 +140,7 @@ namespace hex {
                             StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], false, false, false };
 
                             // Check if file is installed already or has an update available
-                            for (auto folder : hex::getPath(pathType)) {
+                            for (const auto &folder : hex::getPath(pathType)) {
 
                                 auto path = folder / fs::path(storeEntry.fileName);
 
@@ -167,6 +168,8 @@ namespace hex {
             parseStoreEntries(json, "patterns", ImHexPath::Patterns, this->m_patterns);
             parseStoreEntries(json, "includes", ImHexPath::PatternsInclude, this->m_includes);
             parseStoreEntries(json, "magic", ImHexPath::Magic, this->m_magics);
+            parseStoreEntries(json, "constants", ImHexPath::Constants, this->m_constants);
+
         }
         this->m_apiRequest = { };
 

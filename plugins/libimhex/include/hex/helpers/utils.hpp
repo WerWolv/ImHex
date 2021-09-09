@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstring>
+#include <cctype>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -157,6 +158,20 @@ namespace hex {
     void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback);
 
     float float16ToFloat32(u16 float16);
+
+    inline bool equalsIgnoreCase(const std::string &left, const std::string &right) {
+        return std::equal(left.begin(), left.end(), right.begin(), right.end(), [](char a, char b) {
+            return tolower(a) == tolower(b);
+        });
+    }
+
+    inline bool containsIgnoreCase(const std::string &a, const std::string &b) {
+        auto iter = std::search(a.begin(), a.end(), b.begin(),   b.end(), [](char ch1, char ch2) {
+            return std::toupper(ch1) == std::toupper(ch2);
+        });
+
+        return iter != a.end();
+    }
 
     namespace scope_guard {
 

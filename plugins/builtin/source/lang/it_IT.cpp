@@ -295,18 +295,22 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.no_rules", "Nessuna regola di YARA. Aggiungile in nella cartella 'yara' di 'ImHex'" },
 
                 // { "hex.view.constants.name", "Constants" },
-
+                    //{ "hex.view.constants.row.category", "Category" },
+                    //{ "hex.view.constants.row.name", "Name" },
+                    //{ "hex.view.constants.row.desc", "Description" },
+                    //{ "hex.view.constants.row.value", "Value" },
                 //{ "hex.view.store.name", "Content Store" },
                 //    { "hex.view.store.desc", "Download new content from ImHex's online database" },
                 //    { "hex.view.store.reload", "Reload" },
-                //    { "hex.view.store.table.name", "Name" },
-                //    { "hex.view.store.table.description", "Description" },
+                //    { "hex.view.store.row.name", "Name" },
+                //    { "hex.view.store.row.description", "Description" },
                 //    { "hex.view.store.download", "Download" },
                 //    { "hex.view.store.update", "Update" },
                 //    { "hex.view.store.remove", "Remove" },
                 //    { "hex.view.store.tab.patterns", "Patterns" },
                 //    { "hex.view.store.tab.libraries", "Libraries" },
                 //    { "hex.view.store.tab.magics", "Magic Files" },
+                //    { "hex.view.store.tab.constants", "Constants" },
                 //    { "hex.view.store.loading", "Loading store content..." },
 
 

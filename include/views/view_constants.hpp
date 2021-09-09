@@ -32,8 +32,8 @@ namespace hex {
         void reloadConstants();
 
         std::vector<Constant> m_constants;
-        std::vector<Constant*> m_filteredConstants;
-        std::string m_search;
+        std::vector<size_t> m_filterIndices;
+        std::string m_filter;
     };
 
 }

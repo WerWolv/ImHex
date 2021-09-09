@@ -40,7 +40,7 @@ namespace hex {
         std::future<Response<std::string>> m_apiRequest;
         std::future<Response<void>> m_download;
 
-        std::vector<StoreEntry> m_patterns, m_magics, m_includes;
+        std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants;
 
         void drawStore();
 

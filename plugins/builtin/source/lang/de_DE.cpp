@@ -296,18 +296,23 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.no_rules", "Keine Yara Regeln gefunden. Platziere sie in ImHex's 'yara' Ordner" },
 
                 { "hex.view.constants.name", "Konstanten" },
+                    { "hex.view.constants.row.category", "Kategorie" },
+                    { "hex.view.constants.row.name", "Name" },
+                    { "hex.view.constants.row.desc", "Beschreibung" },
+                    { "hex.view.constants.row.value", "Wert" },
 
                 { "hex.view.store.name", "Content Store" },
-                    { "hex.view.store.desc", "Downloade extra Content von ImHex's online Datenbank" },
+                    { "hex.view.store.desc", "Downloade zusätzlichen Content von ImHex's online Datenbank" },
                     { "hex.view.store.reload", "Neu laden" },
-                    { "hex.view.store.table.name", "Name" },
-                    { "hex.view.store.table.description", "Beschreibung" },
+                    { "hex.view.store.row.name", "Name" },
+                    { "hex.view.store.row.description", "Beschreibung" },
                     { "hex.view.store.download", "Download" },
                     { "hex.view.store.update", "Update" },
                     { "hex.view.store.remove", "Entfernen" },
                     { "hex.view.store.tab.patterns", "Patterns" },
                     { "hex.view.store.tab.libraries", "Libraries" },
                     { "hex.view.store.tab.magics", "Magic Files" },
+                    { "hex.view.store.tab.constants", "Konstanten" },
                     { "hex.view.store.loading", "Store inhalt wird geladen..." },
 
             /* Builtin plugin features */
