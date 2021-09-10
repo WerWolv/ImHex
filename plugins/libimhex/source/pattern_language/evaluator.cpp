@@ -38,7 +38,7 @@ namespace hex::pl {
             if (auto stringPart = std::get_if<std::string>(&part); stringPart != nullptr) {
                 if (*stringPart == "parent") {
                     if (currPattern == nullptr) {
-                        if (!currMembers.empty())
+                        if (!this->m_currMemberScope.empty())
                             currPattern = this->m_currMemberScope.back();
 
                         if (currPattern == nullptr)
@@ -790,8 +790,8 @@ namespace hex::pl {
         auto startOffset = this->m_currOffset;
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, true);
+            structPattern->setMembers(memberPatterns);
         }
-        structPattern->setMembers(memberPatterns);
         structPattern->setSize(this->m_currOffset - startOffset);
 
         this->m_currRecursionDepth--;
@@ -820,8 +820,8 @@ namespace hex::pl {
 
         for (auto &member : node->getMembers()) {
             this->evaluateMember(member, memberPatterns, false);
+            unionPattern->setMembers(memberPatterns);
         }
-        unionPattern->setMembers(memberPatterns);
 
         this->m_currRecursionDepth--;
 
