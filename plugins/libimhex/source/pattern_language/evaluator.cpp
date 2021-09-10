@@ -1079,18 +1079,13 @@ namespace hex::pl {
         if (arraySize < 0)
             this->getConsole().abortEvaluation("array size cannot be negative");
 
-        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
-            if (auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(typeDecl->getType()); builtinType != nullptr) {
-                if (builtinType->getType() == Token::ValueType::Padding)
-                    return new PatternDataPadding(startOffset, entrySize * arraySize);
-            }
-        }
-
         PatternData *pattern;
         if (dynamic_cast<PatternDataCharacter*>(templatePattern) != nullptr)
             pattern = new PatternDataString(startOffset, entrySize * arraySize, color.value_or(0));
         else if (dynamic_cast<PatternDataCharacter16*>(templatePattern) != nullptr)
             pattern = new PatternDataString16(startOffset, entrySize * arraySize, color.value_or(0));
+        else if (dynamic_cast<PatternDataPadding*>(templatePattern) != nullptr)
+            pattern = new PatternDataPadding(startOffset, entrySize * arraySize);
         else {
             auto arrayPattern = new PatternDataStaticArray(startOffset, entrySize * arraySize, color.value_or(0));
             arrayPattern->setTypeName(templatePattern->getTypeName());
