@@ -118,6 +118,7 @@ namespace hex {
         this->m_patterns.clear();
         this->m_includes.clear();
         this->m_magics.clear();
+        this->m_constants.clear();
 
         this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s);
     }
