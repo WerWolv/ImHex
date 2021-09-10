@@ -1021,7 +1021,7 @@ namespace hex::pl {
     PatternData* Evaluator::evaluateStaticArray(ASTNodeArrayVariableDecl *node) {
         std::optional<u32> color;
 
-        size_t arraySize = 0;
+        ssize_t arraySize = 0;
 
         auto startOffset = this->m_currOffset;
         PatternData *templatePattern;
@@ -1075,6 +1075,9 @@ namespace hex::pl {
                 }
             }
         }
+
+        if (arraySize < 0)
+            this->getConsole().abortEvaluation("array size cannot be negative");
 
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(node->getType()); typeDecl != nullptr) {
             if (auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(typeDecl->getType()); builtinType != nullptr) {
@@ -1143,8 +1146,11 @@ namespace hex::pl {
                 using Type = std::remove_cvref_t<decltype(value)>;
                 if constexpr (std::is_floating_point_v<Type>)
                     this->getConsole().abortEvaluation("bitfield entry size must be an integer value");
-                return static_cast<u64>(value);
+                return static_cast<ssize_t>(value);
             }, valueNode->getValue());
+
+            if (arraySize < 0)
+                this->getConsole().abortEvaluation("array size cannot be negative");
 
             for (u64 i = 0; i < arraySize; i++) {
                 addEntry(i);
