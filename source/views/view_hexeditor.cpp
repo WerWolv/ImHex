@@ -421,6 +421,10 @@ namespace hex {
                 SharedData::currentProvider = nullptr;
             }
 
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.quit"_lang, "", false)) {
+                ImHexApi::Common::closeImHex();
+            }
+
             ImGui::Separator();
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_project"_lang, "")) {

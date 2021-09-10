@@ -177,6 +177,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.menu.file.save", "Salva" },
                     { "hex.view.hexeditor.menu.file.save_as", "Salva come..." },
                     { "hex.view.hexeditor.menu.file.close", "Chiudi" },
+                    { "hex.view.hexeditor.menu.file.quit", "Uscita ImHex" },
                     { "hex.view.hexeditor.menu.file.open_project", "Apri un Progetto..." },
                     { "hex.view.hexeditor.menu.file.save_project", "Salva Progetto..." },
                     { "hex.view.hexeditor.menu.file.load_encoding_file", "Carica una codifica personalizzata..." },

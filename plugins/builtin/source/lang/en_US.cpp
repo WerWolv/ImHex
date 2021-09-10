@@ -178,6 +178,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.hexeditor.menu.file.save", "Save" },
                     { "hex.view.hexeditor.menu.file.save_as", "Save As..." },
                     { "hex.view.hexeditor.menu.file.close", "Close" },
+                    { "hex.view.hexeditor.menu.file.quit", "Quit ImHex" },
                     { "hex.view.hexeditor.menu.file.open_project", "Open Project..." },
                     { "hex.view.hexeditor.menu.file.save_project", "Save Project..." },
                     { "hex.view.hexeditor.menu.file.load_encoding_file", "Load custom encoding..." },
