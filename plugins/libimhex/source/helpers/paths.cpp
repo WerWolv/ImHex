@@ -6,6 +6,7 @@
     #include <shlobj.h>
 #elif defined(OS_LINUX)
     #include <xdg.hpp>
+    #include <linux/limits.h>
 #endif
 
 #include <algorithm>
@@ -61,47 +62,56 @@ namespace hex {
             configDirs.insert(configDirs.begin(), xdg::ConfigHomeDir());
             dataDirs.insert(dataDirs.begin(), xdg::DataHomeDir());
 
+            for (auto &dir : dataDirs)
+                dir = dir / "imhex";
+
+            std::array<char, PATH_MAX> executablePath = { 0 };
+            if (readlink("/proc/self/exe", executablePath.data(), PATH_MAX) != -1)
+                dataDirs.emplace(dataDirs.begin(), std::filesystem::path(executablePath.data()).parent_path());
+
             std::vector<std::string> result;
 
             switch (path) {
                 case ImHexPath::Patterns:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "patterns").string(); });
-                    return result;
+                        [](auto p) { return (p / "patterns").string(); });
+                    break;
                 case ImHexPath::PatternsInclude:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "includes").string(); });
-                    return result;
+                        [](auto p) { return (p / "includes").string(); });
+                    break;
                 case ImHexPath::Magic:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "magic").string(); });
-                    return result;
+                        [](auto p) { return (p / "magic").string(); });
+                    break;
                 case ImHexPath::Python:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex").string(); });
-                    return result;
+                        [](auto p) { return (p).string(); });
+                    break;
                 case ImHexPath::Plugins:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "plugins").string(); });
-                    return result;
+                        [](auto p) { return (p / "plugins").string(); });
+                    break;
                 case ImHexPath::Yara:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "yara").string(); });
-                    return result;
+                        [](auto p) { return (p / "yara").string(); });
+                    break;
                 case ImHexPath::Config:
                     std::transform(configDirs.begin(), configDirs.end(), std::back_inserter(result),
                         [](auto p) { return (p / "imhex").string(); });
-                    return result;
+                    break;
                 case ImHexPath::Resources:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "resources").string(); });
-                    return result;
+                        [](auto p) { return (p / "resources").string(); });
+                    break;
                 case ImHexPath::Constants:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
-                        [](auto p) { return (p / "imhex" / "constants").string(); });
-                    return result;
+                        [](auto p) { return (p / "constants").string(); });
+                    break;
                 default: __builtin_unreachable();
             }
+
+            return result;
         #endif
     }
 
