@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(wchar_t), [](auto buffer, auto endian, auto style) {
             auto c = hex::changeEndianess(*reinterpret_cast<wchar_t*>(buffer.data()), endian);
 
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
 
             auto value = hex::format("'{0}'", c <= 255 ? makePrintable(c) : converter.to_bytes(c));
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
