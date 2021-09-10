@@ -26,7 +26,7 @@ body:
     description: Include a detailed step by step process for recreating your issue.
   validations:
     required: true
-- type: textarea
+- type: input
   attributes:
     label: ImHex Version
     description: |
