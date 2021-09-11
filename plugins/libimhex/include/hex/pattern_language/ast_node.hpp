@@ -4,7 +4,7 @@
 
 #include <bit>
 #include <optional>
-#include <unordered_map>
+#include <map>
 #include <variant>
 #include <vector>
 
@@ -381,13 +381,13 @@ namespace hex::pl {
             return new ASTNodeEnum(*this);
         }
 
-        [[nodiscard]] const std::unordered_map<std::string, ASTNode*>& getEntries() const { return this->m_entries; }
+        [[nodiscard]] const std::map<std::string, ASTNode*>& getEntries() const { return this->m_entries; }
         void addEntry(const std::string &name, ASTNode* expression) { this->m_entries.insert({ name, expression }); }
 
         [[nodiscard]] ASTNode *getUnderlyingType() { return this->m_underlyingType; }
 
     private:
-        std::unordered_map<std::string, ASTNode*> m_entries;
+        std::map<std::string, ASTNode*> m_entries;
         ASTNode *m_underlyingType;
     };
 

@@ -808,7 +808,7 @@ namespace hex::pl {
                 if (enumNode->getEntries().empty())
                     valueExpr = lastEntry = TO_NUMERIC_EXPRESSION(new ASTNodeIntegerLiteral(u8(0)));
                 else
-                    valueExpr = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral(s32(1)), Token::Operator::Plus);
+                    valueExpr = lastEntry = new ASTNodeNumericExpression(lastEntry->clone(), new ASTNodeIntegerLiteral(s32(1)), Token::Operator::Plus);
 
                 enumNode->addEntry(name, valueExpr);
             }

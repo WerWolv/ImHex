@@ -11,9 +11,6 @@
 
 namespace hex::plugin::builtin {
 
-    #define LITERAL_COMPARE(literal, cond) std::visit([&](auto &&literal) { return (cond) != 0; }, literal)
-    #define AS_TYPE(type, value) ctx.template asType<type>(value)
-
     void registerPatternLanguageFunctions() {
         using namespace hex::pl;
 

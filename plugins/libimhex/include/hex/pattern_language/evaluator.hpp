@@ -11,6 +11,9 @@
 #include <map>
 #include <vector>
 
+#define LITERAL_COMPARE(literal, cond) std::visit([&](auto &&literal) { return (cond) != 0; }, literal)
+#define AS_TYPE(type, value) ctx.template asType<type>(value)
+
 namespace hex::prv { class Provider; }
 
 namespace hex::pl {
