@@ -25,7 +25,7 @@ jobs:
         sudo apt update
         sudo bash dist/get_deps_debian.sh
 
-    - name: ✋ Build
+    - name: 🛠️ Build
       run: |
         mkdir build
         cd build
@@ -35,7 +35,7 @@ jobs:
           ..
         make -j 4 install
 
-    - name: ✋ Bundle Flatpak
+    - name: 📦 Bundle Flatpak
       run: |
         sudo apt install flatpak flatpak-builder
         flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -44,14 +44,14 @@ jobs:
         flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml
         flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
 
-    - name: 📦 Upload ELF
+    - name: ⬆️ Upload ELF
       uses: actions/upload-artifact@v2
       with:
         name: Linux ELF
         path: |
           build/install/*
 
-    - name: 📦 Upload Flatpak
+    - name: ⬆️ Upload Flatpak
       uses: actions/upload-artifact@v2
       with:
         name: Linux Flatpak
@@ -76,7 +76,7 @@ jobs:
       run: |
           bash dist/get_deps_msys2.sh
 
-    - name: ✋ Build
+    - name: 🛠️ Build
       run: |
         mkdir build
         cd build
@@ -94,14 +94,14 @@ jobs:
         mingw32-make install
         cpack
 
-    - name: 📦 Upload Portable ZIP
+    - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v2
       with:
         name: Windows Portable ZIP
         path: |
           build/install/*
 
-    - name: 📦 Upload Windows Installer
+    - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v2
       with:
         name: Windows Installer
@@ -124,7 +124,7 @@ jobs:
       run: |
         brew bundle --no-lock --file dist/Brewfile
 
-    - name: ✋ Build
+    - name: 🛠️ Build
       run: |
         mkdir build
         cd build
@@ -139,7 +139,7 @@ jobs:
           ..
         make -j 4 package
 
-    - name: 📦 Upload DMG
+    - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v2
       with:
         name: macOS DMG

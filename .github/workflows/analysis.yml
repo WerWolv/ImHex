@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
+    name: 🐛 Analyze
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -22,23 +22,23 @@ jobs:
       matrix:
         language: [ 'cpp' ]
     steps:
-    - name: Checkout repository
+    - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
         submodules: recursive
 
-    - name: Initialize CodeQL
+    - name: ✋ Initialize CodeQL
       uses: github/codeql-action/init@v1
       with:
         languages: ${{ matrix.language }}
 
-    - name: Install dependencies
+    - name: ⬇️ Install dependencies
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
 
-    - name: Build
+    - name: 🛠️ Build
       run: |
         mkdir build
         cd build
@@ -48,13 +48,10 @@ jobs:
           ..
         make -j 4 install
 
-    - name: Perform CodeQL Analysis
+    - name: 🧪 Perform Unit Tests
+      run: |
+        cd build
+        ctest
+
+    - name: 🗯️ Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
-      
-    - name: Run unit tests
-      uses: HorstBaerbel/action-ctest@1.1
-      with:
-        sourcedir: '.'
-        builddir: 'build'
-        cmakeoptions: '--config Release'
-        ctestoptions: ''
