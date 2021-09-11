@@ -94,8 +94,10 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/magic/magic.c)
 
 # Add mbedtls crypto wrappers
-file(READ crypto_mbedtls.h MBEDTLS_CRYPTO_H)
-file(WRITE ${LIBYARA_SOURCE_PATH}/crypto.h "${MBEDTLS_CRYPTO_H}")
+add_custom_command(
+        OUTPUT ${LIBYARA_SOURCE_PATH}/crypto.h
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/crypto_mbedtls.h ${LIBYARA_SOURCE_PATH}/crypto.h
+        MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/crypto_mbedtls.h)
 add_compile_definitions("HAVE_MBEDTLS")
 
 add_compile_definitions("USE_NO_PROC")
