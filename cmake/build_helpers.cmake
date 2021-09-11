@@ -206,34 +206,6 @@ macro(createPackage)
     ]])
     endif()
 
-    if (UNIX AND NOT APPLE)
-        string(REPLACE ":" ";" EXTRA_MAGICDBS "${EXTRA_MAGICDBS}")
-    endif ()
-
-    if (NOT EXTRA_MAGICDBS STREQUAL "")
-        list(GET EXTRA_MAGICDBS -1 EXTRA_MAGICDBS)
-
-        if (NOT EXTRA_MAGICDBS STREQUAL "NOTFOUND")
-            if (EXTRA_MAGICDBS MATCHES ".*\\.mgc")
-                install(FILES "${EXTRA_MAGICDBS}" DESTINATION ${MAGIC_INSTALL_LOCATION})
-            else ()
-                install(FILES "${EXTRA_MAGICDBS}.mgc" DESTINATION ${MAGIC_INSTALL_LOCATION})
-            endif ()
-        endif ()
-    endif ()
-
-    # Compile the imhex-specific magicdb
-    add_custom_target(magic_dbs ALL
-            SOURCES ${MAGICDBS}
-            )
-    add_custom_command(TARGET magic_dbs
-            COMMAND file -C -m ${CMAKE_SOURCE_DIR}/magic_dbs
-            )
-
-
-    # Install the magicdb files.
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/magic_dbs.mgc DESTINATION ${MAGIC_INSTALL_LOCATION} RENAME imhex.mgc)
-
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
 
