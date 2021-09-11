@@ -4,20 +4,34 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/fmt.hpp>
 #include <hex/pattern_language/pattern_language.hpp>
+#include <hex/pattern_language/evaluator.hpp>
+#include <hex/pattern_language/ast_node.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include "test_provider.hpp"
-#include "test_patterns/test_pattern_placement.hpp"
+#include "test_patterns/test_pattern.hpp"
 
 using namespace hex::test;
 
-static std::map<std::string, TestPattern*> testPatterns {
-        { "Placement", new TestPatternPlacement() }
-};
+void addFunctions() {
+    hex::ContentRegistry::PatternLanguageFunctions::Namespace nsStd = { "std" };
+    hex::ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](auto &ctx, auto params) {
+        auto condition = AS_TYPE(hex::pl::ASTNodeIntegerLiteral, params[0])->getValue();
+        auto message = AS_TYPE(hex::pl::ASTNodeStringLiteral, params[1])->getString();
 
-int main(int argc, char **argv) {
+        if (LITERAL_COMPARE(condition, condition == 0))
+            ctx.getConsole().abortEvaluation(hex::format("assertion failed \"{0}\"", message.data()));
+
+        return nullptr;
+    });
+}
+
+int test(int argc, char **argv) {
+    auto &testPatterns = TestPattern::getTests();
     ON_SCOPE_EXIT {
-        for (auto &[key, value] : testPatterns)
+        for (auto &[key, value] : TestPattern::getTests())
             delete value;
     };
 
@@ -35,6 +49,7 @@ int main(int argc, char **argv) {
     }
 
     const auto &currTest = testPatterns[testName];
+    bool failing = currTest->getMode() == Mode::Failing;
 
     auto provider = new TestProvider();
     ON_SCOPE_EXIT { delete provider; };
@@ -44,14 +59,24 @@ int main(int argc, char **argv) {
     }
 
     hex::pl::PatternLanguage language;
+    addFunctions();
 
     // Check if compilation succeeded
     auto patterns = language.executeString(provider, testPatterns[testName]->getSourceCode());
     if (!patterns.has_value()) {
         hex::log::fatal("Error during compilation!");
-        for (auto &[level, line] : language.getConsoleLog())
-            hex::log::info("PL: {}", line);
 
+        if (auto error = language.getError(); error.has_value())
+            hex::log::info("Compile error: {}:{}", error->first, error->second);
+        else
+            for (auto &[level, message] : language.getConsoleLog())
+                hex::log::info("Evaluate error: {}", message);
+
+        return failing ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if (failing) {
+        hex::log::fatal("Failing test succeeded!");
         return EXIT_FAILURE;
     }
 
@@ -77,7 +102,16 @@ int main(int argc, char **argv) {
         }
     }
 
-    hex::log::info("Success!");
-
     return EXIT_SUCCESS;
+}
+
+int main(int argc, char **argv) {
+    auto result = test(argc, argv);
+
+    if (result == EXIT_SUCCESS)
+        hex::log::info("Success!");
+    else
+        hex::log::info("Failed!");
+
+    return result;
 }

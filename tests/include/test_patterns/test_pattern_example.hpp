@@ -6,7 +6,7 @@ namespace hex::test {
 
     class TestPatternExample : public TestPattern {
     public:
-        TestPatternExample() {
+        TestPatternExample() : TestPattern("")  {
 
         }
         ~TestPatternExample() override = default;

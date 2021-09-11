@@ -6,11 +6,18 @@ project(unit_tests)
 # Add new tests here #
 set(AVAILABLE_TESTS
         Placement
+        Structs
+        Unions
+        Enums
+        Literals
+        Padding
+        SucceedingAssert
+        FailingAssert
 )
 
 
 
-add_executable(unit_tests source/main.cpp)
+add_executable(unit_tests source/main.cpp source/tests.cpp)
 target_include_directories(unit_tests PRIVATE include)
 target_link_libraries(unit_tests libimhex)
 
