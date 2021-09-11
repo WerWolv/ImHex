@@ -16,6 +16,7 @@
 #include <locale>
 #include <random>
 #include <string>
+#include <type_traits>
 
 namespace hex::pl {
 
@@ -189,6 +190,23 @@ namespace hex::pl {
             return this->m_local;
         }
 
+        [[nodiscard]] virtual bool operator!=(const PatternData &other) const final { return !operator==(other); }
+        [[nodiscard]] virtual bool operator==(const PatternData &other) const = 0;
+
+        template<typename T>
+        [[nodiscard]] bool areCommonPropertiesEqual(const PatternData &other) const {
+            return
+                typeid(other) == typeid(std::remove_cvref_t<T>) &&
+                this->m_offset == other.m_offset &&
+                this->m_size == other.m_size &&
+                this->m_hidden == other.m_hidden &&
+                this->m_endian == other.m_endian &&
+                this->m_variableName == other.m_variableName &&
+                this->m_typeName == other.m_typeName &&
+                this->m_comment == other.m_comment &&
+                this->m_local == other.m_local;
+        }
+
     protected:
         void createDefaultEntry(const std::string &value) const {
             ImGui::TableNextRow();
@@ -252,6 +270,8 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
             return "";
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataPointer : public PatternData {
@@ -341,6 +361,11 @@ namespace hex::pl {
             return this->m_pointedAt;
         }
 
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            return areCommonPropertiesEqual<decltype(*this)>(other) &&
+            *static_cast<const PatternDataPointer*>(&other)->m_pointedAt == *this->m_pointedAt;
+        }
+
     private:
         PatternData *m_pointedAt;
     };
@@ -372,6 +397,8 @@ namespace hex::pl {
                 default:    return "Unsigned data";
             }
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataSigned : public PatternData {
@@ -432,6 +459,8 @@ namespace hex::pl {
                 default:    return "Signed data";
             }
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataFloat : public PatternData {
@@ -466,6 +495,8 @@ namespace hex::pl {
                 default:    return "Floating point data";
             }
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataBoolean : public PatternData {
@@ -492,6 +523,8 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
             return "bool";
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataCharacter : public PatternData {
@@ -513,6 +546,8 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
             return "char";
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataCharacter16 : public PatternData {
@@ -535,6 +570,8 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
             return "char16";
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataString : public PatternData {
@@ -556,6 +593,8 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
            return "String";
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataString16 : public PatternData {
@@ -582,6 +621,8 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
             return "String16";
         }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
     class PatternDataDynamicArray : public PatternData {
@@ -690,6 +731,22 @@ namespace hex::pl {
                 entry->setColor(this->getColor());
                 entry->setParent(this);
             }
+        }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherArray = *static_cast<const PatternDataDynamicArray*>(&other);
+            if (this->m_entries.size() != otherArray.m_entries.size())
+                return false;
+
+            for (u64 i = 0; i < this->m_entries.size(); i++) {
+                if (*this->m_entries[i] != *otherArray.m_entries[i])
+                    return false;
+            }
+
+            return true;
         }
 
     private:
@@ -813,6 +870,14 @@ namespace hex::pl {
             this->m_template->setParent(this);
         }
 
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherArray = *static_cast<const PatternDataStaticArray*>(&other);
+            return *this->m_template == *otherArray.m_template && this->m_entryCount == otherArray.m_entryCount;
+        }
+
     private:
         PatternData *m_template;
         size_t m_entryCount;
@@ -925,6 +990,22 @@ namespace hex::pl {
             }
 
             this->m_sortedMembers = this->m_members;
+        }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherStruct = *static_cast<const PatternDataStruct*>(&other);
+            if (this->m_members.size() != otherStruct.m_members.size())
+                return false;
+
+            for (u64 i = 0; i < this->m_members.size(); i++) {
+                if (*this->m_members[i] != *otherStruct.m_members[i])
+                    return false;
+            }
+
+            return true;
         }
 
     private:
@@ -1042,6 +1123,22 @@ namespace hex::pl {
             this->m_sortedMembers = this->m_members;
         }
 
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherUnion = *static_cast<const PatternDataUnion*>(&other);
+            if (this->m_members.size() != otherUnion.m_members.size())
+                return false;
+
+            for (u64 i = 0; i < this->m_members.size(); i++) {
+                if (*this->m_members[i] != *otherUnion.m_members[i])
+                    return false;
+            }
+
+            return true;
+        }
+
     private:
         std::vector<PatternData*> m_members;
         std::vector<PatternData*> m_sortedMembers;
@@ -1115,6 +1212,22 @@ namespace hex::pl {
             this->m_enumValues = enumValues;
         }
 
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherEnum = *static_cast<const PatternDataEnum*>(&other);
+            if (this->m_enumValues.size() != otherEnum.m_enumValues.size())
+                return false;
+
+            for (u64 i = 0; i < this->m_enumValues.size(); i++) {
+                if (this->m_enumValues[i] != otherEnum.m_enumValues[i])
+                    return false;
+            }
+
+            return true;
+        }
+
     private:
         std::vector<std::pair<Token::IntegerLiteral, std::string>> m_enumValues;
     };
@@ -1173,6 +1286,14 @@ namespace hex::pl {
 
         [[nodiscard]] u8 getBitSize() const {
             return this->m_bitSize;
+        }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherBitfieldField = *static_cast<const PatternDataBitfieldField*>(&other);
+            return this->m_bitOffset == otherBitfieldField.m_bitOffset && this->m_bitSize == otherBitfieldField.m_bitSize;
         }
 
     private:
@@ -1244,6 +1365,22 @@ namespace hex::pl {
 
             for (auto &field : this->m_fields)
                 field->setSize(this->getSize());
+        }
+
+        [[nodiscard]] bool operator==(const PatternData &other) const override {
+            if (!areCommonPropertiesEqual<decltype(*this)>(other))
+                return false;
+
+            auto &otherBitfield = *static_cast<const PatternDataBitfield*>(&other);
+            if (this->m_fields.size() != otherBitfield.m_fields.size())
+                return false;
+
+            for (u64 i = 0; i < this->m_fields.size(); i++) {
+                if (this->m_fields[i] != otherBitfield.m_fields[i])
+                    return false;
+            }
+
+            return true;
         }
 
     private:

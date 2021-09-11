@@ -24,15 +24,18 @@ namespace hex {
         };
 
         explicit File(const std::string &path, Mode mode);
+        File();
         ~File();
 
         bool isValid() { return this->m_file != nullptr; }
 
         void seek(u64 offset);
 
+        size_t readBuffer(u8 *buffer, size_t size);
         std::vector<u8> readBytes(size_t numBytes = 0);
         std::string readString(size_t numBytes = 0);
 
+        void write(const u8 *buffer, size_t size);
         void write(const std::vector<u8> &bytes);
         void write(const std::string &string);
 

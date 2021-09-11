@@ -51,6 +51,9 @@ if (USE_SYSTEM_YARA)
     include_directories(include ${YARA_INCLUDE_DIRS})
 endif()
 
+enable_testing()
+add_subdirectory(tests)
+
 addVersionDefines()
 configurePackageCreation()
 

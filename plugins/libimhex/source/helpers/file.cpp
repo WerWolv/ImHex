@@ -13,6 +13,10 @@ namespace hex {
             this->m_file = fopen64(path.c_str(), "w+b");
     }
 
+    File::File() {
+        this->m_file = nullptr;
+    }
+
     File::~File() {
         if (isValid())
             fclose(this->m_file);
@@ -22,7 +26,15 @@ namespace hex {
         fseeko64(this->m_file, offset, SEEK_SET);
     }
 
+    size_t File::readBuffer(u8 *buffer, size_t size) {
+        if (!isValid()) return 0;
+
+        return fread(buffer, size, 1, this->m_file);
+    }
+
     std::vector<u8> File::readBytes(size_t numBytes) {
+        if (!isValid()) return { };
+
         std::vector<u8> bytes(numBytes ?: getSize());
         auto bytesRead = fread(bytes.data(), bytes.size(), 1, this->m_file);
 
@@ -32,18 +44,32 @@ namespace hex {
     }
 
     std::string File::readString(size_t numBytes) {
+        if (!isValid()) return { };
+
         return reinterpret_cast<char*>(readBytes(numBytes).data());
     }
 
+    void File::write(const u8 *buffer, size_t size) {
+        if (!isValid()) return;
+
+        fwrite(buffer, size, 1, this->m_file);
+    }
+
     void File::write(const std::vector<u8> &bytes) {
+        if (!isValid()) return;
+
         fwrite(bytes.data(), bytes.size(), 1, this->m_file);
     }
 
     void File::write(const std::string &string) {
+        if (!isValid()) return;
+
         fwrite(string.data(), string.size(), 1, this->m_file);
     }
 
     size_t File::getSize() {
+        if (!isValid()) return 0;
+
         auto startPos = ftello64(this->m_file);
         fseeko64(this->m_file, 0, SEEK_END);
         size_t size = ftello64(this->m_file);
@@ -53,6 +79,8 @@ namespace hex {
     }
 
     void File::setSize(u64 size) {
+        if (!isValid()) return;
+
         ftruncate64(fileno(this->m_file), size);
     }
 

@@ -4,20 +4,29 @@
 
 namespace hex::test {
 
-    class TestPatternExample : public TestPattern {
+    class TestPatternPlacement : public TestPattern {
     public:
-        TestPatternExample() {
-            auto placementTest = new pl::PatternDataSigned(0x00, sizeof(u32));
-            placementTest->setTypeName("u32");
-            placementTest->setVariableName("placementTest");
-            addPattern(placementTest);
+        TestPatternPlacement() {
+            // placementVar
+            {
+                addPattern(createVariablePattern<pl::PatternDataUnsigned>(0x00, sizeof(u32), "u32", "placementVar"));
+            }
+
+            // placementArray
+            {
+                auto placementArray = createVariablePattern<pl::PatternDataStaticArray>(0x10, sizeof(u8) * 10, "u8", "placementArray");
+                placementArray->setEntries(createVariablePattern<pl::PatternDataUnsigned>(0x10, sizeof(u8), "u8", ""), 10);
+                addPattern(placementArray);
+            }
+
         }
-        ~TestPatternExample() override = default;
+        ~TestPatternPlacement() override = default;
 
         [[nodiscard]]
         std::string getSourceCode() const override {
             return R"(
-                u32 placementTest @ 0x00;
+                u32 placementVar @ 0x00;
+                u8 placementArray[10] @ 0x10;
             )";
         }
 
