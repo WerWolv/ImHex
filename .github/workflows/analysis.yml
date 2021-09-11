@@ -1,21 +1,9 @@
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-#
-# ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
-name: "CodeQL"
+name: "CodeQL and Unit Tests"
 
 on:
   push:
     branches: [ master ]
   pull_request:
-    # The branches below must be a subset of the branches above
     branches: [ master ]
   schedule:
     - cron: '21 0 * * 2'
@@ -40,20 +28,16 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
-    # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v1
       with:
         languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
-        # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
     - name: Install dependencies
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
+
     - name: Build
       run: |
         mkdir build
@@ -66,3 +50,11 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
+      
+    - name: Run unit tests
+      uses: HorstBaerbel/action-ctest@1.1
+      with:
+        sourcedir: '.'
+        builddir: 'build'
+        cmakeoptions: '--config Release'
+        ctestoptions: ''
