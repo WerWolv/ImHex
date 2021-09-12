@@ -1382,7 +1382,7 @@ namespace hex::pl {
                 return false;
 
             for (u64 i = 0; i < this->m_fields.size(); i++) {
-                if (this->m_fields[i] != otherBitfield.m_fields[i])
+                if (*this->m_fields[i] != *otherBitfield.m_fields[i])
                     return false;
             }
 

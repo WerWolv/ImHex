@@ -250,19 +250,13 @@ namespace hex::pl {
                 default: this->getConsole().abortEvaluation("invalid rvalue size");
             }
         } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(currPattern); bitfieldFieldPattern != nullptr) {
-            u8 value[bitfieldFieldPattern->getSize()];
+            std::vector<u8> value(bitfieldFieldPattern->getSize());
             if (currPattern->isLocal())
-                std::memcpy(value, this->m_localStack.data() + bitfieldFieldPattern->getOffset(), bitfieldFieldPattern->getSize());
+                std::memcpy(value.data(), this->m_localStack.data() + bitfieldFieldPattern->getOffset(), value.size());
             else
-                this->m_provider->read(bitfieldFieldPattern->getOffset(), value, bitfieldFieldPattern->getSize());
+                this->m_provider->read(bitfieldFieldPattern->getOffset(), value.data(), value.size());
 
-            u8 bitOffset = bitfieldFieldPattern->getBitOffset();
-            u8 bitSize = bitfieldFieldPattern->getBitSize();
-
-            u128 fieldValue = 0;
-            std::memcpy(&fieldValue, value + (bitOffset / 8), (bitSize / 8) + 1);
-
-            return new ASTNodeIntegerLiteral(hex::extract((bitOffset + bitSize) - 1 - ((bitOffset / 8) * 8), bitOffset - ((bitOffset / 8) * 8), fieldValue));
+            return new ASTNodeIntegerLiteral(hex::extract(bitfieldFieldPattern->getBitOffset() + (bitfieldFieldPattern->getBitSize() - 1), bitfieldFieldPattern->getBitOffset(), value));
         } else
             this->getConsole().abortEvaluation("tried to use non-integer value in numeric expression");
     }
