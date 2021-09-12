@@ -176,7 +176,7 @@ macro(createPackage)
 
         # Grab all dynamically linked dependencies.
         INSTALL(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
-        INSTALL(CODE "get_filename_component(PY_PARENT ${Python_LIBRARIES} DIRECTORY)")
+        INSTALL(CODE "get_filename_component(PY_PARENT \"${Python_LIBRARIES}\" DIRECTORY)")
         INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
