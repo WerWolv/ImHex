@@ -86,13 +86,13 @@ int test(int argc, char **argv) {
     };
 
     // Check if the right number of patterns have been produced
-    if (patterns->size() != currTest->getPatterns().size()) {
+    if (patterns->size() != currTest->getPatterns().size() && !currTest->getPatterns().empty()) {
         hex::log::fatal("Source didn't produce expected number of patterns");
         return EXIT_FAILURE;
     }
 
     // Check if the produced patterns are the ones expected
-    for (u32 i = 0; i < patterns->size(); i++) {
+    for (u32 i = 0; i < currTest->getPatterns().size(); i++) {
         auto &left = *patterns->at(i);
         auto &right = *currTest->getPatterns().at(i);
 

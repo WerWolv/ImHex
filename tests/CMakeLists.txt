@@ -14,6 +14,7 @@ set(AVAILABLE_TESTS
         SucceedingAssert
         FailingAssert
         Bitfields
+        Math
 )
 
 
@@ -26,7 +27,7 @@ set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BIN
 
 add_custom_command(TARGET unit_tests
         POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/test_data" ${CMAKE_BINARY_DIR})
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/test_data" ${CMAKE_BINARY_DIR})
 
 foreach (test IN LISTS AVAILABLE_TESTS)
     add_test(NAME "${test}" COMMAND unit_tests "${test}" WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
