@@ -7,7 +7,7 @@ namespace hex::test {
     class TestPatternEnums : public TestPattern {
     public:
         TestPatternEnums() : TestPattern("Enums"){
-            auto testEnum = create<PatternDataEnum>(0x120, sizeof(u32), "TestEnum", "testEnum");
+            auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x120, sizeof(u32));
             testEnum->setEnumValues({
                 { s32(0x0000), "A" },
                 { s32(0x1234), "B" },

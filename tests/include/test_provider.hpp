@@ -9,9 +9,8 @@ namespace hex::test {
 
     class TestProvider : public prv::Provider {
     public:
-        TestProvider() : Provider() {
-            this->m_testFile = File("test_data", File::Mode::Read);
-            if (!this->m_testFile.isValid()) {
+        TestProvider() : Provider(), m_testFile(File("test_data", File::Mode::Read)) {
+            if (!this->m_testFile.isValid() || this->m_testFile.getSize() == 0) {
                 hex::log::fatal("Failed to open test data!");
                 throw std::runtime_error("");
             }

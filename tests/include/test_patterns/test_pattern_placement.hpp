@@ -9,13 +9,13 @@ namespace hex::test {
         TestPatternPlacement() : TestPattern("Placement")  {
             // placementVar
             {
-                addPattern(create<PatternDataUnsigned>(0x00, sizeof(u32), "u32", "placementVar"));
+                addPattern(create<PatternDataUnsigned>("u32", "placementVar", 0x00, sizeof(u32)));
             }
 
             // placementArray
             {
-                auto placementArray = create<PatternDataStaticArray>(0x10, sizeof(u8) * 10, "u8", "placementArray");
-                placementArray->setEntries(create<PatternDataUnsigned>(0x10, sizeof(u8), "u8", ""), 10);
+                auto placementArray = create<PatternDataStaticArray>("u8", "placementArray", 0x10, sizeof(u8) * 10);
+                placementArray->setEntries(create<PatternDataUnsigned>("u8", "", 0x10, sizeof(u8)), 10);
                 addPattern(placementArray);
             }
 

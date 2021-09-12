@@ -28,8 +28,8 @@ namespace hex::test {
         }
 
         template<typename T>
-        static T* create(u64 offset, size_t size, const std::string &typeName, const std::string &varName) {
-            auto pattern = new T(offset, size);
+        static T* create(const std::string &typeName, const std::string &varName, auto ... args) {
+            auto pattern = new T(args...);
             pattern->setTypeName(typeName);
             pattern->setVariableName(varName);
 

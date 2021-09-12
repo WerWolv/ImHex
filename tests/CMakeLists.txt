@@ -13,6 +13,7 @@ set(AVAILABLE_TESTS
         Padding
         SucceedingAssert
         FailingAssert
+        Bitfields
 )
 
 

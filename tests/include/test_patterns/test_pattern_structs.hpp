@@ -7,11 +7,11 @@ namespace hex::test {
     class TestPatternStructs : public TestPattern {
     public:
         TestPatternStructs() : TestPattern("Structs")  {
-            auto testStruct = create<PatternDataStruct>(0x100, sizeof(s32) + sizeof(u8[0x10]), "TestStruct", "testStruct");
+            auto testStruct = create<PatternDataStruct>("TestStruct", "testStruct", 0x100, sizeof(s32) + sizeof(u8[0x10]));
 
-            auto variable = create<PatternDataSigned>(0x100, sizeof(s32), "s32", "variable");
-            auto array = create<PatternDataStaticArray>(0x100 + sizeof(s32), sizeof(u8[0x10]), "u8", "array");
-            array->setEntries(create<PatternDataUnsigned>(0x100 + sizeof(s32), sizeof(u8), "u8", ""), 0x10);
+            auto variable = create<PatternDataSigned>("s32", "variable", 0x100, sizeof(s32));
+            auto array = create<PatternDataStaticArray>("u8", "array", 0x100 + sizeof(s32), sizeof(u8[0x10]));
+            array->setEntries(create<PatternDataUnsigned>("u8", "", 0x100 + sizeof(s32), sizeof(u8)), 0x10);
 
             testStruct->setMembers({ variable, array });
 

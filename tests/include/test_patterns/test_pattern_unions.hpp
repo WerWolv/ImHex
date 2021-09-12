@@ -7,11 +7,11 @@ namespace hex::test {
     class TestPatternUnions : public TestPattern {
     public:
         TestPatternUnions() : TestPattern("Unions")  {
-            auto testUnion = create<PatternDataUnion>(0x200, sizeof(u128), "TestUnion", "testUnion");
+            auto testUnion = create<PatternDataUnion>("TestUnion", "testUnion", 0x200, sizeof(u128));
 
-            auto array = create<PatternDataStaticArray>(0x200, sizeof(s32[2]), "s32", "array");
-            array->setEntries(create<PatternDataSigned>(0x200, sizeof(s32), "s32", ""), 2);
-            auto variable = create<PatternDataUnsigned>(0x200, sizeof(u128), "u128", "variable");
+            auto array = create<PatternDataStaticArray>("s32", "array", 0x200, sizeof(s32[2]));
+            array->setEntries(create<PatternDataSigned>("s32", "", 0x200, sizeof(s32)), 2);
+            auto variable = create<PatternDataUnsigned>("u128", "variable", 0x200, sizeof(u128));
 
             testUnion->setMembers({ array, variable });
 

@@ -8,6 +8,7 @@
 #include "test_patterns/test_pattern_padding.hpp"
 #include "test_patterns/test_pattern_succeeding_assert.hpp"
 #include "test_patterns/test_pattern_failing_assert.hpp"
+#include "test_patterns/test_pattern_bitfields.hpp"
 
 std::array Tests = {
         TEST(Placement),
@@ -17,5 +18,6 @@ std::array Tests = {
         TEST(Literals),
         TEST(Padding),
         TEST(SucceedingAssert),
-        TEST(FailingAssert)
+        TEST(FailingAssert),
+        TEST(Bitfields)
 };
