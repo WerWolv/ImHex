@@ -25,6 +25,9 @@ namespace hex {
 
         explicit File(const std::string &path, Mode mode);
         File();
+        File(const File&) = delete;
+        File(File &&other) noexcept;
+
         ~File();
 
         bool isValid() { return this->m_file != nullptr; }

@@ -17,6 +17,11 @@ namespace hex {
         this->m_file = nullptr;
     }
 
+    File::File(File &&other) noexcept {
+        this->m_file = other.m_file;
+        other.m_file = nullptr;
+    }
+
     File::~File() {
         if (isValid())
             fclose(this->m_file);
