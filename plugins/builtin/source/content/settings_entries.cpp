@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
         /* General */
 
         ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1, [](auto name, nlohmann::json &setting) {
-            static bool enabled = setting.is_number() ? static_cast<int>(setting) : 1;
+            static bool enabled = static_cast<int>(setting);
 
             if (ImGui::Checkbox(name.data(), &enabled)) {
                 setting = static_cast<int>(enabled);
@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
         /* Interface */
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
-            static int selection = setting.is_number() ? static_cast<int>(setting) : 0;
+            static int selection = static_cast<int>(setting);
 
             const char* themes[] = {
                     "hex.builtin.setting.interface.color.dark"_lang,
@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0, [](auto name, nlohmann::json &setting) {
-            static int selection = setting.is_number() ? static_cast<int>(setting) : 0;
+            static int selection = static_cast<int>(setting);
 
             const char* scaling[] = {
                     "hex.builtin.setting.interface.scaling.native"_lang,
@@ -81,7 +81,7 @@ namespace hex::plugin::builtin {
             }();
 
             static auto languageNames = [&]() {
-                std::vector<const char*> result;
+                std::vector<const char*> result(languages.size());
                 for (auto &[languageCode, languageName] : languages)
                     result.push_back(languageName.c_str());
 
@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60, [](auto name, nlohmann::json &setting) {
-            static int fps = setting.is_number() ? static_cast<int>(setting) : 60;
+            static int fps = static_cast<int>(setting);
 
             if (ImGui::SliderInt(name.data(), &fps, 15, 60)) {
                 setting = fps;
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha", 0x80, [](auto name, nlohmann::json &setting) {
-            static int alpha = setting.is_number() ? static_cast<int>(setting) : 0x80;
+            static int alpha = static_cast<int>(setting);
 
             if (ImGui::SliderInt(name.data(), &alpha, 0x00, 0xFF)) {
                 setting = alpha;

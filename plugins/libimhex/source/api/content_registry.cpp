@@ -97,6 +97,9 @@ namespace hex {
         if (!json[unlocalizedCategory].contains(unlocalizedName))
             return defaultValue;
 
+        if (!json[unlocalizedCategory][unlocalizedName].is_number())
+            json[unlocalizedCategory][unlocalizedName] = defaultValue;
+
         return json[unlocalizedCategory][unlocalizedName].get<s64>();
     }
 
@@ -108,6 +111,9 @@ namespace hex {
         if (!json[unlocalizedCategory].contains(unlocalizedName))
             return defaultValue;
 
+        if (!json[unlocalizedCategory][unlocalizedName].is_string())
+            json[unlocalizedCategory][unlocalizedName] = defaultValue;
+
         return json[unlocalizedCategory][unlocalizedName].get<std::string>();
     }
 
@@ -118,6 +124,9 @@ namespace hex {
             return defaultValue;
         if (!json[unlocalizedCategory].contains(unlocalizedName))
             return defaultValue;
+
+        if (!json[unlocalizedCategory][unlocalizedName].is_number())
+            json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
         return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
     }

@@ -304,8 +304,8 @@ namespace hex::init {
                 { "Downloading information...", downloadInformation },
                 { "Creating directories...",    createDirectories   },
                 { "Loading default views...",   loadDefaultViews    },
-                { "Loading plugins...",         loadPlugins         },
                 { "Loading settings...",        loadSettings        },
+                { "Loading plugins...",         loadPlugins         },
                 { "Loading fonts...",           loadFonts           },
         };
     }

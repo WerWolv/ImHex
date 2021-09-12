@@ -248,6 +248,7 @@ namespace hex {
 
         this->m_logoTexture = ImGui::LoadImageFromMemory(imhex_logo, imhex_logo_size);
 
+        ContentRegistry::Settings::store();
         EventManager::post<EventSettingsChanged>();
     }
 
