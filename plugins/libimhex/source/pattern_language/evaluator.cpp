@@ -895,6 +895,7 @@ namespace hex::pl {
 
             auto fieldPattern = new PatternDataBitfieldField(startOffset, bits, fieldBits);
             fieldPattern->setVariableName(name);
+            fieldPattern->setEndian(this->getCurrentEndian());
             entryPatterns.push_back(fieldPattern);
 
             bits += fieldBits;

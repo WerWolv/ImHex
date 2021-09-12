@@ -1244,11 +1244,19 @@ namespace hex::pl {
             return new PatternDataBitfieldField(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
-            std::vector<u8> value(this->getSize(), 0);
-            provider->read(this->getOffset(), &value[0], value.size());
+        template<typename T>
+        T extractValue(const std::vector<u8> &value) {
+            T fieldValue = 0;
+            std::memcpy(&fieldValue, value.data(), value.size());
 
-            if (this->m_endian != std::endian::native)
+            return hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, fieldValue);
+        }
+
+        void createEntry(prv::Provider* &provider) override {
+            std::vector<u8> value(this->getParent()->getSize(), 0);
+            provider->read(this->getParent()->getOffset(), &value[0], value.size());
+
+            if (this->getParent()->getEndian() == std::endian::little)
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
@@ -1258,7 +1266,10 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset() + (this->m_bitOffset >> 3), this->getOffset() + ((this->m_bitOffset + this->m_bitSize) >> 3));
+            if (this->m_bitSize == 1)
+                ImGui::Text("0x%08llX bit %u", this->getOffset() + this->m_bitOffset / 8, (this->m_bitOffset + (this->m_bitSize - 1)) % 8);
+            else
+                ImGui::Text("0x%08llX bits %u - %u", this->getOffset() + this->m_bitOffset / 8, this->m_bitOffset % 8, this->m_bitOffset % 8 + (this->m_bitSize - 1) % 8);
             ImGui::TableNextColumn();
             if (this->m_bitSize == 1)
                 ImGui::Text("%u bit", this->m_bitSize);
@@ -1268,10 +1279,27 @@ namespace hex::pl {
             ImGui::TextColored(ImColor(0xFF9BC64D), "bits");
             ImGui::TableNextColumn();
             {
-                u128 fieldValue = 0;
-                std::memcpy(&fieldValue, value.data() + (this->m_bitOffset / 8), (this->m_bitSize / 8) + 1);
-                u64 maskedValue = hex::extract((this->m_bitOffset + this->m_bitSize) - 1 - ((this->m_bitOffset / 8) * 8), this->m_bitOffset - ((this->m_bitOffset / 8) * 8), fieldValue);
-                ImGui::Text("%llu (0x%llX)", maskedValue, maskedValue);
+                u8 numBytes = (this->m_bitSize / 8) + 1;
+
+                u64 extractedValue;
+                switch (this->getSize()) {
+                    case 1:
+                        extractedValue = extractValue<u8>(value);
+                        break;
+                    case 2:
+                        extractedValue = extractValue<u16>(value);
+                        break;
+                    case 4:
+                        extractedValue = extractValue<u32>(value);
+                        break;
+                    case 8:
+                        extractedValue = extractValue<u64>(value);
+                        break;
+                    default:
+                        extractedValue = 0;
+                }
+
+                ImGui::Text("%llu (0x%llX)", extractedValue, extractedValue);
             }
 
         }
@@ -1319,7 +1347,7 @@ namespace hex::pl {
             std::vector<u8> value(this->getSize(), 0);
             provider->read(this->getOffset(), &value[0], value.size());
 
-            if (this->m_endian != std::endian::native)
+            if (this->m_endian == std::endian::little)
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
@@ -1363,8 +1391,11 @@ namespace hex::pl {
         void setFields(const std::vector<PatternData*> &fields) {
             this->m_fields = fields;
 
-            for (auto &field : this->m_fields)
+            for (auto &field : this->m_fields) {
                 field->setSize(this->getSize());
+                field->setColor(this->getColor());
+                field->setParent(this);
+            }
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
