@@ -1244,14 +1244,6 @@ namespace hex::pl {
             return new PatternDataBitfieldField(*this);
         }
 
-        template<typename T>
-        T extractValue(const std::vector<u8> &value) {
-            T fieldValue = 0;
-            std::memcpy(&fieldValue, value.data(), value.size());
-
-            return hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, fieldValue);
-        }
-
         void createEntry(prv::Provider* &provider) override {
             std::vector<u8> value(this->getParent()->getSize(), 0);
             provider->read(this->getParent()->getOffset(), &value[0], value.size());
@@ -1281,24 +1273,7 @@ namespace hex::pl {
             {
                 u8 numBytes = (this->m_bitSize / 8) + 1;
 
-                u64 extractedValue;
-                switch (this->getSize()) {
-                    case 1:
-                        extractedValue = extractValue<u8>(value);
-                        break;
-                    case 2:
-                        extractedValue = extractValue<u16>(value);
-                        break;
-                    case 4:
-                        extractedValue = extractValue<u32>(value);
-                        break;
-                    case 8:
-                        extractedValue = extractValue<u64>(value);
-                        break;
-                    default:
-                        extractedValue = 0;
-                }
-
+                u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
                 ImGui::Text("%llu (0x%llX)", extractedValue, extractedValue);
             }
 

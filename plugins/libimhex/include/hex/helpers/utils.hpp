@@ -38,6 +38,24 @@ namespace hex {
         return (value & mask) >> to;
     }
 
+    [[nodiscard]] inline u64 extract(u32 from, u32 to, const std::vector<u8> &bytes) {
+        u8 index = 0;
+        while(from > 32 && to > 32) {
+            if (from - 8 < 0 || to - 8 < 0)
+                return 0;
+
+            from -= 8;
+            to -= 8;
+            index++;
+        }
+
+        u64 value = 0;
+        std::memcpy(&value, &bytes[index], std::min(sizeof(value), bytes.size() - index));
+        u64 mask = (std::numeric_limits<u64>::max() >> (64 - (from + 1)));
+
+        return (value & mask) >> to;
+    }
+
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
