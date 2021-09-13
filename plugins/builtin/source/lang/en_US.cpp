@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.latest.desc", "Read ImHex's current changelog" },
                     { "hex.welcome.learn.latest.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                     { "hex.welcome.learn.pattern.title", "Pattern Language Documentation" },
-                    { "hex.welcome.learn.pattern.desc", "Learn how to write ImHex pattern_language with our extensive documentation" },
+                    { "hex.welcome.learn.pattern.desc", "Learn how to write ImHex patterns with our extensive documentation" },
                     { "hex.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs/pattern_language/pattern_language.html" },
                     { "hex.welcome.learn.plugins.title", "Plugins API" },
                     { "hex.welcome.learn.plugins.desc", "Extend ImHex with additional features using plugins" },

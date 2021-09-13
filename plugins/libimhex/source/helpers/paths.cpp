@@ -32,27 +32,56 @@ namespace hex {
                 CoTaskMemFree(wAppDataPath);
             }
 
+            std::vector<std::filesystem::path> paths = { parentDir, appDataDir / "imhex" };
+            std::vector<std::string> results;
+
             switch (path) {
                 case ImHexPath::Patterns:
-                    return { (parentDir / "pattern_language").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "patterns").string();
+                    });
+                    break;
                 case ImHexPath::PatternsInclude:
-                    return { (parentDir / "includes").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "includes").string();
+                    });
+                    break;
                 case ImHexPath::Magic:
-                    return { (parentDir / "magic").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "magic").string();
+                    });
+                    break;
                 case ImHexPath::Python:
-                    return { parentDir.string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "python").string();
+                    });
+                    break;
                 case ImHexPath::Plugins:
-                    return { (parentDir / "plugins").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "plugins").string();
+                    });
+                    break;
                 case ImHexPath::Yara:
-                    return { (parentDir / "yara").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "yara").string();
+                    });
+                    break;
                 case ImHexPath::Config:
                     return { (appDataDir / "imhex" / "config").string() };
                 case ImHexPath::Resources:
-                    return { (parentDir / "resources").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "resources").string();
+                    });
+                    break;
                 case ImHexPath::Constants:
-                    return { (parentDir / "constants").string() };
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                        return (path / "constants").string();
+                    });
+                    break;
                 default: __builtin_unreachable();
             }
+
+            return results;
         #elif defined(OS_MACOS)
             return { getPathForMac(path) };
         #else
