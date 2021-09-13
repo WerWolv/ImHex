@@ -56,14 +56,18 @@ namespace hex::test {
                 std::assert(sizeof(typeTest) == 3 * 4, "sizeof operator error");
 
                 // Properties
-                std::assert(100 * 200 == 200 * 100, "+ operator commutativity error");
+                std::assert(100 + 200 == 200 + 100, "+ operator commutativity error");
+                std::assert(100 - 200 != 200 - 100, "- operator commutativity error");
                 std::assert(100 * 200 == 200 * 100, "* operator commutativity error");
-                std::assert(100 * 200 == 200 * 100, "* operator commutativity error");
+                std::assert(100F / 200F != 200F / 100F, "/ operator commutativity error");
 
                 std::assert(10 + (20 + 30) == (10 + 20) + 30, "+ operator associativity error");
+                std::assert(10 - (20 - 30) != (10 - 20) - 30, "- operator associativity error");
                 std::assert(10 * (20 * 30) == (10 * 20) * 30, "* operator associativity error");
+                std::assert(10F / (20F / 30F) != (10F / 20F) / 30F, "/ operator associativity error");
 
-                std::assert(10 * (20 + 30) == 10 * 20 + 10 * 30, "Operator distributivity error");
+                std::assert(10 * (20 + 30) == 10 * 20 + 10 * 30, "* operator distributivity error");
+                std::assert(10F / (20F + 30F) != 10F / 20F + 10F / 30F, "/ operator distributivity error");
             )";
         }
 

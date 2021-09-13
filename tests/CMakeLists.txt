@@ -15,6 +15,9 @@ set(AVAILABLE_TESTS
         FailingAssert
         Bitfields
         Math
+        RValues
+        Namespaces
+        ExtraSemicolon
 )
 
 
