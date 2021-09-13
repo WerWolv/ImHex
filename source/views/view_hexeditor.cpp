@@ -1276,8 +1276,8 @@ R"(
         }
 
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.resize"_lang, nullptr, false, provider != nullptr && provider->isResizable())) {
-            View::doLater([this, &provider]{
-                this->m_resizeSize = provider->getActualSize();
+            View::doLater([this]{
+                this->m_resizeSize = SharedData::currentProvider->getActualSize();
                 ImGui::OpenPopup("hex.view.hexeditor.menu.edit.resize"_lang);
             });
         }
