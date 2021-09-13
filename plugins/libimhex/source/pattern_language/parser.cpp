@@ -480,6 +480,9 @@ namespace hex::pl {
             throwParseError("missing ';' at end of expression", -1);
         }
 
+        // Consume superfluous semicolons
+        while (needsSemicolon && MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+
         return statement;
     }
 
@@ -747,6 +750,9 @@ namespace hex::pl {
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
             throwParseError("missing ';' at end of expression", -1);
 
+        // Consume superfluous semicolons
+        while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+
         return member;
     }
 
@@ -847,9 +853,11 @@ namespace hex::pl {
             else
                 throwParseError("invalid bitfield member", 0);
 
-            if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION))) {
+            if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
                 throwParseError("missing ';' at end of expression", -1);
-            }
+
+            // Consume superfluous semicolons
+            while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
         }
 
         enumGuard.release();
@@ -966,7 +974,7 @@ namespace hex::pl {
 
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
     std::vector<ASTNode*> Parser::parseStatements() {
-        ASTNode *statement;
+        ASTNode *statement = nullptr;
 
         if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT)))
             statement = parseUsingDeclaration();
@@ -1005,6 +1013,9 @@ namespace hex::pl {
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
             throwParseError("missing ';' at end of expression", -1);
+
+        // Consume superfluous semicolons
+        while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
 
         if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(statement); typeDecl != nullptr) {
             auto typeName = getNamespacePrefixedName(typeDecl->getName().data());
