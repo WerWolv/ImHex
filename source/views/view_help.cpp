@@ -17,7 +17,7 @@ namespace hex {
 
 
     static void drawTitle(const std::string &title) {
-        ImGui::TextColored(ImVec4(0.6F, 0.6F, 1.0F, 1.0F), title.c_str());
+        ImGui::TextColored(ImVec4(0.6F, 0.6F, 1.0F, 1.0F), "%s", title.c_str());
     }
 
     static void drawBuiltinFunction(
@@ -27,9 +27,9 @@ namespace hex {
         const std::string &description
     ) {
         ImGui::Bullet();
-        ImGui::TextColored(ImVec4(0.3F, 0.7F, 0.2F, 1.0F), return_type.c_str());
+        ImGui::TextColored(ImVec4(0.3F, 0.7F, 0.2F, 1.0F), "%s", return_type.c_str());
         ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.57F, 0.24F, 0.69F, 1.0F), name.c_str());
+        ImGui::TextColored(ImVec4(0.57F, 0.24F, 0.69F, 1.0F), "%s", name.c_str());
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(0.71F, 0.19F, 0.31F, 1.0F), "(");
         ImGui::SameLine();
@@ -77,7 +77,7 @@ namespace hex {
 
             constexpr const char* Links[] = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
 
-            ImGui::TextWrapped("hex.view.help.about.thanks"_lang);
+            ImGui::TextWrapped("%s", static_cast<const char *>("hex.view.help.about.thanks"_lang));
 
             ImGui::NewLine();
 

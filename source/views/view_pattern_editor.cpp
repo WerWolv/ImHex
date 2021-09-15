@@ -268,7 +268,7 @@ namespace hex {
 
     void ViewPatternEditor::drawAlwaysVisible() {
         if (ImGui::BeginPopupModal("hex.view.pattern.accept_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("hex.view.pattern.accept_pattern.desc"_lang);
+            ImGui::TextWrapped("%s", static_cast<const char *>("hex.view.pattern.accept_pattern.desc"_lang));
 
             std::vector<std::string> entries;
             entries.resize(this->m_possiblePatternFiles.size());
@@ -286,7 +286,7 @@ namespace hex {
             }, &entries, entries.size(), 4);
 
             ImGui::NewLine();
-            ImGui::Text("hex.view.pattern.accept_pattern.question"_lang);
+            ImGui::Text("%s", static_cast<const char *>("hex.view.pattern.accept_pattern.question"_lang));
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
                 this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile]);
