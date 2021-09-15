@@ -308,7 +308,7 @@ namespace hex {
 
         if (ImGui::BeginPopupModal("hex.view.hexeditor.script.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::SetCursorPosX(10);
-            ImGui::TextWrapped("hex.view.hexeditor.script.desc"_lang);
+            ImGui::TextWrapped("%s", static_cast<const char *>("hex.view.hexeditor.script.desc"_lang));
 
             ImGui::NewLine();
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
