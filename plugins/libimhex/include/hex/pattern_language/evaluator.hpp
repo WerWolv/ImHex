@@ -1,93 +1,70 @@
 #pragma once
 
-#include <hex.hpp>
-
-#include <hex/api/content_registry.hpp>
-#include <hex/pattern_language/ast_node.hpp>
-#include <hex/pattern_language/log_console.hpp>
-
 #include <bit>
-#include <string>
-#include <map>
+#include <optional>
 #include <vector>
 
-#define LITERAL_COMPARE(literal, cond) std::visit([&](auto &&literal) { return (cond) != 0; }, literal)
-#define AS_TYPE(type, value) ctx.template asType<type>(value)
+#include <hex/pattern_language/log_console.hpp>
 
 namespace hex::prv { class Provider; }
 
 namespace hex::pl {
 
     class PatternData;
+    class ASTNode;
 
     class Evaluator {
     public:
         Evaluator() = default;
 
-        std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*>& ast);
+        std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*> &ast);
 
-        LogConsole& getConsole() { return this->m_console; }
-
-        void setDefaultEndian(std::endian endian) { this->m_defaultDataEndian = endian; }
-        void setRecursionLimit(u32 limit) { this->m_recursionLimit = limit; }
-        void setProvider(prv::Provider *provider) { this->m_provider = provider; }
-        [[nodiscard]] std::endian getCurrentEndian() const { return this->m_endianStack.back(); }
-
-        PatternData* patternFromName(const ASTNodeRValue::Path &name);
-
-        template<typename T>
-        T* asType(ASTNode *param) {
-            if (auto evaluatedParam = dynamic_cast<T*>(param); evaluatedParam != nullptr)
-                return evaluatedParam;
-            else
-                this->getConsole().abortEvaluation("function got wrong type of parameter");
+        [[nodiscard]]
+        LogConsole& getConsole() {
+            return this->m_console;
         }
 
+        void pushScope(std::vector<PatternData*> &scope) { this->m_currScope.push_back(&scope); }
+        void popScope() { this->m_currScope.pop_back(); }
+        const std::vector<PatternData*>& getScope(s32 index) {
+            static std::vector<PatternData*> empty;
+
+            if (index > 0 || -index >= this->m_currScope.size()) return empty;
+            return *this->m_currScope[this->m_currScope.size() - 1 + index];
+        }
+
+        const std::vector<PatternData*>& getGlobalScope() {
+            return *this->m_currScope.front();
+        }
+
+        void setProvider(prv::Provider *provider) {
+            this->m_provider = provider;
+        }
+
+        [[nodiscard]]
+        prv::Provider *getProvider() const {
+            return this->m_provider;
+        }
+
+        void setDefaultEndian(std::endian endian) {
+            this->m_defaultEndian = endian;
+        }
+
+        [[nodiscard]]
+        std::endian getDefaultEndian() const {
+            return this->m_defaultEndian;
+        }
+
+        u64& dataOffset() { return this->m_currOffset; }
+
     private:
-        std::map<std::string, ASTNode*> m_types;
-        prv::Provider* m_provider = nullptr;
-        std::endian m_defaultDataEndian = std::endian::native;
-        u64 m_currOffset = 0;
-        std::vector<std::endian> m_endianStack;
-        std::vector<PatternData*> m_globalMembers;
-        std::vector<std::vector<PatternData*>*> m_currMembers;
-        std::vector<std::vector<PatternData*>*> m_localVariables;
-        std::vector<PatternData*> m_currMemberScope;
-        std::vector<u8> m_localStack;
-        std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_definedFunctions;
+        u64 m_currOffset;
+        prv::Provider *m_provider = nullptr;
         LogConsole m_console;
 
-        u32 m_recursionLimit;
-        u32 m_currRecursionDepth;
+        std::endian m_defaultEndian = std::endian::native;
 
-        void createLocalVariable(const std::string &varName, PatternData *pattern);
-        void setLocalVariableValue(const std::string &varName, const void *value, size_t size);
-
-        ASTNodeIntegerLiteral* evaluateScopeResolution(ASTNodeScopeResolution *node);
-        ASTNodeIntegerLiteral* evaluateRValue(ASTNodeRValue *node);
-        ASTNode* evaluateFunctionCall(ASTNodeFunctionCall *node);
-        ASTNodeIntegerLiteral* evaluateTypeOperator(ASTNodeTypeOperator *typeOperatorNode);
-        ASTNodeIntegerLiteral* evaluateOperator(ASTNodeIntegerLiteral *left, ASTNodeIntegerLiteral *right, Token::Operator op);
-        ASTNodeIntegerLiteral* evaluateOperand(ASTNode *node);
-        ASTNodeIntegerLiteral* evaluateTernaryExpression(ASTNodeTernaryExpression *node);
-        ASTNodeIntegerLiteral* evaluateMathematicalExpression(ASTNodeNumericExpression *node);
-        void evaluateFunctionDefinition(ASTNodeFunctionDefinition *node);
-        std::optional<ASTNode*> evaluateFunctionBody(const std::vector<ASTNode*> &body);
-
-        PatternData* findPattern(std::vector<PatternData*> currMembers, const ASTNodeRValue::Path &path);
-        PatternData* evaluateAttributes(ASTNode *currNode, PatternData *currPattern);
-        PatternData* evaluateBuiltinType(ASTNodeBuiltinType *node);
-        void evaluateMember(ASTNode *node, std::vector<PatternData*> &currMembers, bool increaseOffset);
-        PatternData* evaluateStruct(ASTNodeStruct *node);
-        PatternData* evaluateUnion(ASTNodeUnion *node);
-        PatternData* evaluateEnum(ASTNodeEnum *node);
-        PatternData* evaluateBitfield(ASTNodeBitfield *node);
-        PatternData* evaluateType(ASTNodeTypeDecl *node);
-        PatternData* evaluateVariable(ASTNodeVariableDecl *node);
-        PatternData* evaluateArray(ASTNodeArrayVariableDecl *node);
-        PatternData* evaluateStaticArray(ASTNodeArrayVariableDecl *node);
-        PatternData* evaluateDynamicArray(ASTNodeArrayVariableDecl *node);
-        PatternData* evaluatePointer(ASTNodePointerVariableDecl *node);
+        std::vector<std::vector<PatternData*>*> m_currScope;
     };
 
 }

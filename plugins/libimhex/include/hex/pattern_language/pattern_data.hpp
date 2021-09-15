@@ -10,6 +10,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <cstring>
 #include <codecvt>
@@ -867,6 +868,7 @@ namespace hex::pl {
             this->m_entryCount = count;
 
             this->m_template->setColor(this->getColor());
+            this->m_template->setEndian(templ->getEndian());
             this->m_template->setParent(this);
         }
 
@@ -1163,14 +1165,17 @@ namespace hex::pl {
 
             bool foundValue = false;
             for (auto &[entryValueLiteral, entryName] : this->m_enumValues) {
-                bool matches = std::visit([&, name = entryName](auto &&entryValue) {
-                    if (value == entryValue) {
-                        valueString += name;
-                        foundValue = true;
-                        return true;
-                    }
+                bool matches = std::visit(overloaded {
+                    [&, name = entryName](auto &&entryValue) {
+                        if (value == entryValue) {
+                            valueString += name;
+                            foundValue = true;
+                            return true;
+                        }
 
-                    return false;
+                        return false;
+                    },
+                    [](std::string) { return false; }
                 }, entryValueLiteral);
                 if (matches)
                     break;
@@ -1208,7 +1213,7 @@ namespace hex::pl {
             return this->m_enumValues;
         }
 
-        void setEnumValues(const std::vector<std::pair<Token::IntegerLiteral, std::string>> &enumValues) {
+        void setEnumValues(const std::vector<std::pair<Token::Literal, std::string>> &enumValues) {
             this->m_enumValues = enumValues;
         }
 
@@ -1229,7 +1234,7 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<std::pair<Token::IntegerLiteral, std::string>> m_enumValues;
+        std::vector<std::pair<Token::Literal, std::string>> m_enumValues;
     };
 
 
@@ -1307,6 +1312,11 @@ namespace hex::pl {
     public:
         PatternDataBitfield(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
 
+        }
+
+        PatternDataBitfield(const PatternDataBitfield &other) : PatternData(other) {
+            for (auto &field : other.m_fields)
+                this->m_fields.push_back(field->clone());
         }
 
         ~PatternDataBitfield() override {

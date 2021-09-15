@@ -6,6 +6,8 @@
 #include <string>
 #include <variant>
 
+#include <hex/helpers/utils.hpp>
+
 namespace hex::pl {
 
     class Token {
@@ -38,6 +40,7 @@ namespace hex::pl {
         };
 
         enum class Operator {
+            None,
             AtDeclaration,
             Assignment,
             Inherit,
@@ -108,8 +111,21 @@ namespace hex::pl {
             EndOfProgram
         };
 
-        using IntegerLiteral = std::variant<char, bool, u8, s8, u16, s16, u32, s32, u64, s64, u128, s128, float, double>;
-        using ValueTypes = std::variant<Keyword, std::string, Operator, IntegerLiteral, ValueType, Separator>;
+        struct Identifier {
+            explicit Identifier(std::string identifier) : m_identifier(std::move(identifier)) { }
+
+            [[nodiscard]]
+            const std::string &get() const { return this->m_identifier; }
+
+            auto operator<=>(const Identifier&) const = default;
+            bool operator==(const Identifier&) const = default;
+
+        private:
+            std::string m_identifier;
+        };
+
+        using Literal = std::variant<char, bool, u128, s128, double, std::string>;
+        using ValueTypes = std::variant<Keyword, Identifier, Operator, Literal, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
 
@@ -131,6 +147,52 @@ namespace hex::pl {
             return static_cast<u32>(type) >> 4;
         }
 
+        static u128 literalToUnsigned(const pl::Token::Literal &literal) {
+            return std::visit(overloaded {
+                                      [](std::string) -> u128 { throw std::string("expected integral type, got string"); },
+                                      [](auto &&value) -> u128 { return value; }
+                              },
+                              literal);
+        }
+
+        static s128 literalToSigned(const pl::Token::Literal &literal) {
+            return std::visit(overloaded {
+                                      [](std::string) -> s128 { throw std::string("expected integral type, got string"); },
+                                      [](auto &&value) -> s128 { return value; }
+                              },
+                              literal);
+        }
+
+        static double literalToFloatingPoint(const pl::Token::Literal &literal) {
+            return std::visit(overloaded {
+                                      [](std::string) -> double { throw std::string("expected integral type, got string"); },
+                                      [](auto &&value) -> double { return value; }
+                              },
+                              literal);
+        }
+
+        static bool literalToBoolean(const pl::Token::Literal &literal) {
+            return std::visit(overloaded {
+                                      [](std::string) -> bool { throw std::string("expected integral type, got string"); },
+                                      [](auto &&value) -> bool { return value != 0; }
+                              },
+                              literal);
+        }
+
+        static std::string literalToString(const pl::Token::Literal &literal, bool cast) {
+            if (!cast && std::get_if<std::string>(&literal) == nullptr)
+                throw std::string("expected string type, got integral");
+
+            return std::visit(overloaded {
+                                      [](std::string value) -> std::string { return value; },
+                                      [](u128 value) -> std::string { return std::to_string(u64(value)); },
+                                      [](s128 value) -> std::string { return std::to_string(s64(value)); },
+                                      [](char value) -> std::string { return std::string() + value; },
+                                      [](auto &&value) -> std::string { return std::to_string(value); }
+                              },
+                              literal);
+        }
+
         [[nodiscard]] constexpr static auto getTypeName(const pl::Token::ValueType type) {
             switch (type) {
                 case ValueType::Signed8Bit:     return "s8";
@@ -147,6 +209,7 @@ namespace hex::pl {
                 case ValueType::Double:         return "double";
                 case ValueType::Character:      return "char";
                 case ValueType::Character16:    return "char16";
+                case ValueType::Padding:        return "padding";
                 default:                        return "< ??? >";
             }
         }
@@ -209,9 +272,9 @@ namespace hex::pl {
 #define KEYWORD_RETURN                      COMPONENT(Keyword, Return)
 #define KEYWORD_NAMESPACE                   COMPONENT(Keyword, Namespace)
 
-#define INTEGER                             hex::pl::Token::Type::Integer, hex::pl::Token::IntegerLiteral(u64(0))
+#define INTEGER                             hex::pl::Token::Type::Integer, hex::pl::Token::Literal(u128(0))
 #define IDENTIFIER                          hex::pl::Token::Type::Identifier, ""
-#define STRING                              hex::pl::Token::Type::String, ""
+#define STRING                              hex::pl::Token::Type::String, hex::pl::Token::Literal("")
 
 #define OPERATOR_AT                         COMPONENT(Operator, AtDeclaration)
 #define OPERATOR_ASSIGNMENT                 COMPONENT(Operator, Assignment)

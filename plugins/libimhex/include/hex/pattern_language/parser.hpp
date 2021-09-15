@@ -37,6 +37,11 @@ namespace hex::pl {
             return this->m_curr[index].lineNumber;
         }
 
+        auto* create(auto *node) {
+            node->setLineNumber(this->getLineNumber(-1));
+            return node;
+        }
+
         template<typename T>
         const T& getValue(s32 index) const {
             auto value = std::get_if<T>(&this->m_curr[index].value);
@@ -83,7 +88,7 @@ namespace hex::pl {
         ASTNode* parseTernaryConditional();
         ASTNode* parseMathematicalExpression();
 
-        ASTNode* parseFunctionDefintion();
+        ASTNode* parseFunctionDefinition();
         ASTNode* parseFunctionStatement();
         ASTNode* parseFunctionVariableAssignment();
         ASTNode* parseFunctionReturnStatement();
@@ -236,12 +241,6 @@ namespace hex::pl {
 
         bool peek(Token::Type type, auto value, s32 index = 0) {
             return this->m_curr[index].type == type && this->m_curr[index] == value;
-        }
-
-        bool peekOptional(Token::Type type, auto value, u32 index = 0) {
-            if (index >= this->m_matchedOptionals.size())
-                return false;
-            return peek(type, value, std::distance(this->m_curr, this->m_matchedOptionals[index]));
         }
 
     };
