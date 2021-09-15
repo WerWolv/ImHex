@@ -121,6 +121,7 @@ namespace hex::pl {
         [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
             auto *left = dynamic_cast<ASTNodeLiteral*>(this->getLeftOperand()->evaluate(evaluator));
             auto *right = dynamic_cast<ASTNodeLiteral*>(this->getRightOperand()->evaluate(evaluator));
+            ON_SCOPE_EXIT { delete left; delete right; };
 
             return std::visit(overloaded {
                 [this](std::string left, auto right) -> ASTNode* {
@@ -409,11 +410,12 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
+                ON_SCOPE_EXIT { delete offset; };
+
                 evaluator->dataOffset() = std::visit(overloaded {
                     [this](std::string){ LogConsole::abortEvaluation("placement offset cannot be a string", this); return u64(0); },
                     [](auto &&offset) { return u64(offset); }
                 }, offset->getValue());
-                delete offset;
             }
 
             auto pattern = this->m_type->createPatterns(evaluator).front();
@@ -461,15 +463,17 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral*>(this->m_placementOffset->evaluate(evaluator));
+                ON_SCOPE_EXIT { delete offset; };
+
                 evaluator->dataOffset() = std::visit(overloaded {
                         [this](std::string){ LogConsole::abortEvaluation("placement offset cannot be a string", this); return u64(0); },
                         [](auto &&offset) { return u64(offset); }
                 }, offset->getValue());
-                delete offset;
             }
 
             auto type = this->m_type->evaluate(evaluator);
             ON_SCOPE_EXIT { delete type; };
+
             if (dynamic_cast<ASTNodeBuiltinType*>(type))
                 return { createStaticArray(evaluator) };
             else if (auto attributable = dynamic_cast<Attributable*>(type)) {
@@ -507,8 +511,10 @@ namespace hex::pl {
 
             u128 entryCount = 0;
 
+            // TODO: Implement while and unsized arrays
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
+                ON_SCOPE_EXIT { delete sizeNode; };
 
                 if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
                     entryCount = std::visit(overloaded {
@@ -516,8 +522,6 @@ namespace hex::pl {
                             [](auto &&size) { return u128(size); }
                     }, literal->getValue());
                 }
-
-                delete sizeNode;
             }
 
             PatternData *outputPattern;
@@ -548,8 +552,10 @@ namespace hex::pl {
             auto arrayPattern = new PatternDataDynamicArray(evaluator->dataOffset(), 0);
             arrayPattern->setVariableName(this->m_name);
 
+            // TODO: Implement while and unsized arrays
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
+                ON_SCOPE_EXIT { delete sizeNode; };
 
                 if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
                     auto entryCount = std::visit(overloaded {
@@ -559,9 +565,10 @@ namespace hex::pl {
 
                     {
                         auto templatePattern = this->m_type->createPatterns(evaluator).front();
+                        ON_SCOPE_EXIT { delete templatePattern; };
+
                         arrayPattern->setTypeName(templatePattern->getTypeName());
                         evaluator->dataOffset() -= templatePattern->getSize();
-                        delete templatePattern;
                     }
 
                     std::vector<PatternData*> entries;
@@ -579,8 +586,6 @@ namespace hex::pl {
                     arrayPattern->setEntries(entries);
                     arrayPattern->setSize(size);
                 }
-
-                delete sizeNode;
             }
 
             return arrayPattern;
@@ -621,11 +626,12 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
+                ON_SCOPE_EXIT { delete offset; };
+
                 evaluator->dataOffset() = std::visit(overloaded {
                         [this](std::string){ LogConsole::abortEvaluation("placement offset cannot be a string", this); return u64(0); },
                         [](auto &&offset) { return u64(offset); }
                 }, offset->getValue());
-                delete offset;
             }
 
             auto sizePattern = this->m_sizeType->createPatterns(evaluator).front();
@@ -802,8 +808,9 @@ namespace hex::pl {
             std::vector<std::pair<Token::Literal, std::string>> enumEntries;
             for (const auto &[name, value] : this->m_entries) {
                 auto literal = dynamic_cast<ASTNodeLiteral*>(value->evaluate(evaluator));
+                ON_SCOPE_EXIT { delete literal; };
+
                 enumEntries.emplace_back(literal->getValue(), name);
-                delete literal;
             }
 
             pattern->setEnumValues(enumEntries);
@@ -854,10 +861,13 @@ namespace hex::pl {
             std::vector<PatternData*> fields;
             evaluator->pushScope(fields);
             for (auto [name, bitSizeNode] : this->m_entries) {
+                auto literal = bitSizeNode->evaluate(evaluator);
+                ON_SCOPE_EXIT { delete literal; };
+
                 u8 bitSize = std::visit(overloaded {
                         [](std::string){ return static_cast<u8>(0); },
                         [](auto &&offset) { return static_cast<u8>(offset); }
-                }, dynamic_cast<ASTNodeLiteral*>(bitSizeNode->evaluate(evaluator))->getValue());
+                }, dynamic_cast<ASTNodeLiteral*>(literal)->getValue());
 
                 auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize);
                 field->setVariableName(name);
@@ -911,6 +921,7 @@ namespace hex::pl {
             }
 
             auto pattern = this->createPatterns(evaluator).front();
+            ON_SCOPE_EXIT { delete pattern; };
 
             Token::Literal literal;
             if (dynamic_cast<PatternDataUnsigned*>(pattern)) {
@@ -992,6 +1003,7 @@ namespace hex::pl {
                 } else {
                     // Array indexing
                     auto index = dynamic_cast<ASTNodeLiteral*>(std::get<ASTNode*>(part)->evaluate(evaluator));
+                    ON_SCOPE_EXIT { delete index; };
 
                     std::visit(overloaded {
                         [](std::string) { },
@@ -1121,12 +1133,13 @@ namespace hex::pl {
     private:
         [[nodiscard]]
         bool evaluateCondition(Evaluator *evaluator) const {
-            auto value = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator))->getValue();
+            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator));
+            ON_SCOPE_EXIT { delete literal; };
 
             return std::visit(overloaded {
                 [](std::string) { return false; },
                 [](auto &&value) { return value != 0; }
-                }, value);
+                }, literal->getValue());
         }
 
         ASTNode *m_condition;
@@ -1199,10 +1212,9 @@ namespace hex::pl {
             std::vector<Token::Literal> evaluatedParams;
             for (auto param : this->m_params) {
                 auto literal = dynamic_cast<ASTNodeLiteral*>(param->evaluate(evaluator));
+                ON_SCOPE_EXIT { delete literal; };
 
                 evaluatedParams.push_back(literal->getValue());
-
-                delete literal;
             }
 
             auto &functions = ContentRegistry::PatternLanguageFunctions::getEntries();
@@ -1269,9 +1281,7 @@ namespace hex::pl {
         [[nodiscard]]
         ASTNode* evaluate(Evaluator *evaluator) const override {
             auto pattern = this->m_expression->createPatterns(evaluator).front();
-            ON_SCOPE_EXIT {
-                delete pattern;
-            };
+            ON_SCOPE_EXIT { delete pattern; };
 
             switch (this->getOperator()) {
                 case Token::Operator::AddressOf:
@@ -1291,6 +1301,7 @@ namespace hex::pl {
 
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
+        // TODO: Implement this
         ASTNodeFunctionDefinition(std::string name, std::vector<std::string> params, std::vector<ASTNode*> body)
             : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
 
@@ -1334,6 +1345,7 @@ namespace hex::pl {
 
     class ASTNodeAssignment : public ASTNode {
     public:
+        // TODO: Implement this
         ASTNodeAssignment(std::string lvalueName, ASTNode *rvalue) : m_lvalueName(std::move(lvalueName)), m_rvalue(rvalue) {
 
         }
@@ -1366,6 +1378,7 @@ namespace hex::pl {
 
     class ASTNodeReturnStatement : public ASTNode {
     public:
+        // TODO: Implement this
         explicit ASTNodeReturnStatement(ASTNode *rvalue) : m_rvalue(rvalue) {
 
         }
