@@ -582,6 +582,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.general.show_tips", "Mostra consigli all'avvio" },
                 { "hex.builtin.setting.interface", "Interfaccia" },
                     { "hex.builtin.setting.interface.color", "Colore del Tema" },
+                        { "hex.builtin.setting.interface.color.system", "Sistema" },
                         { "hex.builtin.setting.interface.color.dark", "Scuro" },
                         { "hex.builtin.setting.interface.color.light", "Chiaro" },
                         { "hex.builtin.setting.interface.color.classic", "Classico" },

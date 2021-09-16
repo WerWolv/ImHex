@@ -4,10 +4,13 @@
 #if defined(OS_WINDOWS)
 
     #include <hex/helpers/utils.hpp>
+    #include <hex/helpers/logger.hpp>
 
     #include <imgui.h>
     #include <imgui_internal.h>
     #include <codicons_font.h>
+
+    #include <nlohmann/json.hpp>
 
     #include <GLFW/glfw3.h>
     #define GLFW_EXPOSE_NATIVE_WIN32
@@ -140,6 +143,15 @@
                                 return HTCAPTION;
                             else break;
                     }
+                    break;
+                }
+                case WM_SETTINGCHANGE:
+                {
+                    if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
+                        EventManager::post<EventOSThemeChanged>();
+                    }
+
+                    break;
                 }
                 default: break;
             }
@@ -172,6 +184,25 @@
 
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU);
+
+            bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
+            EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem]{
+                if (!themeFollowSystem) return;
+
+                HKEY hkey;
+                if (RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", &hkey) == ERROR_SUCCESS) {
+                    DWORD value = 0;
+                    DWORD size = sizeof(DWORD);
+
+                    auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
+                    if (error == ERROR_SUCCESS) {
+                        EventManager::post<RequestChangeTheme>(value == 0 ? 1 : 2);
+                    }
+                }
+            });
+
+            if (themeFollowSystem)
+                EventManager::post<EventOSThemeChanged>();
         }
 
         void Window::updateNativeWindow() {

@@ -152,22 +152,18 @@ namespace hex {
         /* Settings */
         {
 
-            EventManager::subscribe<EventSettingsChanged>(this, [this]() {
-                auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
-
-                if (theme.is_number()) {
-                    switch (static_cast<int>(theme)) {
-                        default:
-                        case 0: /* Dark theme */
-                            this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
-                            break;
-                        case 1: /* Light theme */
-                            this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
-                            break;
-                        case 2: /* Classic theme */
-                            this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
-                            break;
-                    }
+            EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
+                switch (theme) {
+                    default:
+                    case 1: /* Dark theme */
+                        this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
+                        break;
+                    case 2: /* Light theme */
+                        this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
+                        break;
+                    case 3: /* Classic theme */
+                        this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
+                        break;
                 }
             });
 
@@ -181,7 +177,7 @@ namespace hex {
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<RequestAppendPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<RequestChangeTheme>(this);
     }
 
     void ViewPatternEditor::drawMenu() {

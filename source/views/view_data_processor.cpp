@@ -9,25 +9,21 @@
 namespace hex {
 
     ViewDataProcessor::ViewDataProcessor() : View("hex.view.data_processor.name") {
-        EventManager::subscribe<EventSettingsChanged>(this, [] {
-            auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
-
-            if (theme.is_number()) {
-                switch (static_cast<int>(theme)) {
-                    default:
-                    case 0: /* Dark theme */
-                        ImNodes::StyleColorsDark();
-                        break;
-                    case 1: /* Light theme */
-                        ImNodes::StyleColorsLight();
-                        break;
-                    case 2: /* Classic theme */
-                        ImNodes::StyleColorsClassic();
-                        break;
-                }
-
-                ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
+        EventManager::subscribe<RequestChangeTheme>(this, [](u32 theme) {
+            switch (theme) {
+                default:
+                case 1: /* Dark theme */
+                    ImNodes::StyleColorsDark();
+                    break;
+                case 2: /* Light theme */
+                    ImNodes::StyleColorsLight();
+                    break;
+                case 3: /* Classic theme */
+                    ImNodes::StyleColorsClassic();
+                    break;
             }
+
+            ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
         });
 
         EventManager::subscribe<EventProjectFileStore>(this, [this] {
@@ -50,7 +46,7 @@ namespace hex {
         for (auto &node : this->m_nodes)
             delete node;
 
-        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);

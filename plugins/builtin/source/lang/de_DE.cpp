@@ -583,6 +583,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.general.show_tips", "Tipps beim start anzeigen" },
                 { "hex.builtin.setting.interface", "Aussehen" },
                     { "hex.builtin.setting.interface.color", "Farbthema" },
+                        { "hex.builtin.setting.interface.color.system", "System" },
                         { "hex.builtin.setting.interface.color.dark", "Dunkel" },
                         { "hex.builtin.setting.interface.color.light", "Hell" },
                         { "hex.builtin.setting.interface.color.classic", "Klassisch" },

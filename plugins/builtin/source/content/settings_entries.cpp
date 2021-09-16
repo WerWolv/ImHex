@@ -31,6 +31,7 @@ namespace hex::plugin::builtin {
             static int selection = static_cast<int>(setting);
 
             const char* themes[] = {
+                    "hex.builtin.setting.interface.color.system"_lang,
                     "hex.builtin.setting.interface.color.dark"_lang,
                     "hex.builtin.setting.interface.color.light"_lang,
                     "hex.builtin.setting.interface.color.classic"_lang

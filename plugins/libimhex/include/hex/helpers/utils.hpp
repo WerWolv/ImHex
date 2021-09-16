@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cctype>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>

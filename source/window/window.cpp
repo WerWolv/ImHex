@@ -85,47 +85,12 @@ namespace hex {
 
         this->initGLFW();
         this->initImGui();
+        this->setupNativeWindow();
 
         EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
-
-                if (this->m_bannerTexture.valid())
-                    ImGui::UnloadImage(this->m_bannerTexture);
-
-                if (theme.is_number()) {
-                    switch (static_cast<int>(theme)) {
-                        default:
-                        case 0: /* Dark theme */
-                            ImGui::StyleColorsDark();
-                            ImGui::StyleCustomColorsDark();
-                            ImPlot::StyleColorsDark();
-                            this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
-                            break;
-                        case 1: /* Light theme */
-                            ImGui::StyleColorsLight();
-                            ImGui::StyleCustomColorsLight();
-                            ImPlot::StyleColorsLight();
-                            this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_light, banner_light_size);
-                            break;
-                        case 2: /* Classic theme */
-                            ImGui::StyleColorsClassic();
-                            ImGui::StyleCustomColorsClassic();
-                            ImPlot::StyleColorsClassic();
-                            this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
-                            break;
-                    }
-
-                    ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-                    ImGui::GetStyle().Colors[ImGuiCol_TitleBg] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-                    ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-                    ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-
-                    if (!this->m_bannerTexture.valid()) {
-                        log::fatal("Failed to load banner texture!");
-                        exit(EXIT_FAILURE);
-                    }
-                }
+                EventManager::post<RequestChangeTheme>(theme.get<int>());
             }
 
             {
@@ -151,6 +116,43 @@ namespace hex {
                     this->m_layoutConfigured = true;
                 else
                     ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
+            }
+        });
+
+        EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
+            if (this->m_bannerTexture.valid())
+                ImGui::UnloadImage(this->m_bannerTexture);
+
+            switch (theme) {
+                default:
+                case 1: /* Dark theme */
+                    ImGui::StyleColorsDark();
+                    ImGui::StyleCustomColorsDark();
+                    ImPlot::StyleColorsDark();
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+                    break;
+                case 2: /* Light theme */
+                    ImGui::StyleColorsLight();
+                    ImGui::StyleCustomColorsLight();
+                    ImPlot::StyleColorsLight();
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_light, banner_light_size);
+                    break;
+                case 3: /* Classic theme */
+                    ImGui::StyleColorsClassic();
+                    ImGui::StyleCustomColorsClassic();
+                    ImPlot::StyleColorsClassic();
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+                    break;
+            }
+
+            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+            ImGui::GetStyle().Colors[ImGuiCol_TitleBg] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+            ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+            ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+
+            if (!this->m_bannerTexture.valid()) {
+                log::fatal("Failed to load banner texture!");
+                std::abort();
             }
         });
 
@@ -262,6 +264,7 @@ namespace hex {
         EventManager::unsubscribe<RequestCloseImHex>(this);
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
         EventManager::unsubscribe<EventAbnormalTermination>(this);
+        EventManager::unsubscribe<RequestChangeTheme>(this);
 
         ImGui::UnloadImage(this->m_bannerTexture);
         ImGui::UnloadImage(this->m_logoTexture);
@@ -690,8 +693,6 @@ namespace hex {
 
         this->m_windowTitle = "ImHex";
         this->m_window = glfwCreateWindow(1280 * SharedData::globalScale, 720 * SharedData::globalScale, this->m_windowTitle.c_str(), nullptr, nullptr);
-
-        this->setupNativeWindow();
 
         glfwSetWindowUserPointer(this->m_window, this);
 
