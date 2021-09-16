@@ -1420,30 +1420,59 @@ namespace hex::pl {
             evaluator->addCustomFunction(this->m_name, this->m_params.size(), [this](Evaluator *ctx, const std::vector<Token::Literal>& params) -> std::optional<Token::Literal> {
                 std::vector<PatternData*> variables;
 
-                ctx->pushScope(variables);
+                auto createVariable = [&](const std::string &name, ASTNode *type) {
+                    for (auto &variable : variables) {
+                        if (variable->getVariableName() == name) {
+                            LogConsole::abortEvaluation(hex::format("variable with name '{}' already exists", name));
+                        }
+                    }
 
-                u32 paramIndex = 0;
-                for (const auto &[name, type] : this->m_params) {
                     auto pattern = type->createPatterns(ctx).front();
 
                     pattern->setVariableName(name);
                     pattern->setOffset(ctx->getStack().size());
                     pattern->setLocal(true);
 
-                    std::visit(overloaded {
-                        [&](std::string value) {
-                            pattern->setSize(value.length());
-                            ctx->getStack().resize(ctx->getStack().size() + pattern->getSize());
-                            memcpy(&ctx->getStack()[pattern->getOffset()], &value, pattern->getSize());
-                        },
-                        [&](auto &&value) {
-                            ctx->getStack().resize(ctx->getStack().size() + pattern->getSize());
-                            memcpy(&ctx->getStack()[pattern->getOffset()], &value, pattern->getSize());
+                    variables.push_back(pattern);
+                };
+
+                auto setVariable = [&](const std::string &name, const Token::Literal& value) {
+                    PatternData *pattern = nullptr;
+                    for (auto &variable : variables) {
+                        if (variable->getVariableName() == name) {
+                            pattern = variable;
+                            break;
                         }
-                    }, params[paramIndex]);
+                    }
+
+                    if (pattern == nullptr)
+                        LogConsole::abortEvaluation(hex::format("no variable with name '{}' found", name), this);
+
+                    std::visit(overloaded {
+                            [&](std::string value) {
+                                auto size = value.length();
+
+                                pattern->setSize(size);
+                                ctx->getStack().resize(ctx->getStack().size() + size);
+                                std::memcpy(&ctx->getStack()[pattern->getOffset()], &value, size);
+                            },
+                            [&](auto &&value) {
+                                auto size = std::min(sizeof(value), pattern->getSize());
+
+                                ctx->getStack().resize(ctx->getStack().size() + size);
+                                std::memcpy(&ctx->getStack()[pattern->getOffset()], &value, size);
+                            }
+                    }, value);
+                };
+
+                ctx->pushScope(variables);
+
+                u32 paramIndex = 0;
+                for (const auto &[name, type] : this->m_params) {
+                    createVariable(name, type);
+                    setVariable(name, params[paramIndex]);
 
                     paramIndex++;
-                    variables.push_back(pattern);
                 }
 
                 for (auto statement : this->m_body) {
@@ -1458,6 +1487,15 @@ namespace hex::pl {
 
                             return literal->getValue();
                         }
+                    } else if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(statement)) {
+                        createVariable(variableDeclNode->getName(), variableDeclNode->getType());
+                    } else if (auto assignmentNode = dynamic_cast<ASTNodeAssignment*>(statement)) {
+                        auto literal = dynamic_cast<ASTNodeLiteral*>(assignmentNode->getRValue()->evaluate(ctx));
+                        ON_SCOPE_EXIT { delete literal; };
+
+                        setVariable(assignmentNode->getLValueName(), literal->getValue());
+                    } else {
+                        LogConsole::abortEvaluation("invalid expression in function body", statement);
                     }
 
                 }
