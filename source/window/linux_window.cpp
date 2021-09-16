@@ -2,6 +2,7 @@
 
 #if defined(OS_LINUX)
 
+    #include <hex/helpers/utils.hpp>
     #include <nlohmann/json.hpp>
     #include <sys/wait.h>
 
