@@ -1,10 +1,12 @@
 #pragma once
 
 #include <bit>
+#include <map>
 #include <optional>
 #include <vector>
 
 #include <hex/pattern_language/log_console.hpp>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::prv { class Provider; }
 
@@ -57,6 +59,22 @@ namespace hex::pl {
 
         u64& dataOffset() { return this->m_currOffset; }
 
+        bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguageFunctions::Callback &function) {
+            const auto [iter, inserted] = this->m_customFunctions.insert({ name, { numParams, function } });
+
+            return inserted;
+        }
+
+        [[nodiscard]]
+        const std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getCustomFunctions() const {
+            return this->m_customFunctions;
+        }
+
+        [[nodiscard]]
+        std::vector<u8>& getStack() {
+            return this->m_stack;
+        }
+
     private:
         u64 m_currOffset;
         prv::Provider *m_provider = nullptr;
@@ -65,6 +83,8 @@ namespace hex::pl {
         std::endian m_defaultEndian = std::endian::native;
 
         std::vector<std::vector<PatternData*>*> m_currScope;
+        std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
+        std::vector<u8> m_stack;
     };
 
 }

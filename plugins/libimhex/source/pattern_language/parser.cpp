@@ -395,14 +395,22 @@ namespace hex::pl {
 
     ASTNode* Parser::parseFunctionDefinition() {
         const auto &functionName = getValue<Token::Identifier>(-2).get();
-        std::vector<std::string> params;
+        std::map<std::string, ASTNode*> params;
 
         // Parse parameter list
-        bool hasParams = MATCHES(sequence(IDENTIFIER));
+        bool hasParams = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
+        u32 unnamedParamCount = 0;
         while (hasParams) {
-            params.push_back(getValue<Token::Identifier>(-1).get());
+            auto type = parseType();
 
-            if (!MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER))) {
+            if (MATCHES(sequence(IDENTIFIER)))
+                params.emplace(getValue<Token::Identifier>(-1).get(), type);
+            else {
+                params.emplace(std::to_string(unnamedParamCount), type);
+                unnamedParamCount++;
+            }
+
+            if (!MATCHES(sequence(SEPARATOR_COMMA))) {
                 if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                     break;
                 else

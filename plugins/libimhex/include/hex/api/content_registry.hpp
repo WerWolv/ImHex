@@ -91,7 +91,7 @@ namespace hex {
             constexpr static u32 NoParameters          = 0x0000'0000;
 
             using Namespace = std::vector<std::string>;
-            using Callback = std::function<hex::pl::Token::Literal(hex::pl::Evaluator*, const std::vector<hex::pl::Token::Literal>&)>;
+            using Callback = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator*, const std::vector<hex::pl::Token::Literal>&)>;
 
             struct Function {
                 u32 parameterCount;

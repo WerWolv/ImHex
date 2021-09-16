@@ -9,16 +9,17 @@ namespace hex::pl {
         try {
             pushScope(patterns);
             for (auto node : ast) {
-                // Don't create patterns out of type declarations
-                if (dynamic_cast<ASTNodeTypeDecl*>(node))
-                    continue;
-                else if (dynamic_cast<ASTNodeFunctionCall*>(node)) {
+                if (dynamic_cast<ASTNodeTypeDecl*>(node)) {
+                    ;// Don't create patterns from type declarations
+                } else if (dynamic_cast<ASTNodeFunctionCall*>(node)) {
                     delete node->evaluate(this);
-                    continue;
+                } else if (dynamic_cast<ASTNodeFunctionDefinition*>(node)) {
+                    delete node->evaluate(this);
+                } else {
+                    auto newPatterns = node->createPatterns(this);
+                    patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
                 }
 
-                auto newPatterns = node->createPatterns(this);
-                patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
             }
             popScope();
         } catch (const LogConsole::EvaluateError &error) {

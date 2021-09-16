@@ -40,7 +40,6 @@ namespace hex::pl {
         };
 
         enum class Operator {
-            None,
             AtDeclaration,
             Assignment,
             Inherit,

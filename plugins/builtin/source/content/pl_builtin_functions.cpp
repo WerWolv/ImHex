@@ -21,29 +21,29 @@ namespace hex::plugin::builtin {
         {
 
             /* assert(condition, message) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto condition =Token::literalToBoolean(params[0]);
                 auto message = std::get<std::string>(params[1]);
 
                 if (!condition)
                     LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
 
-                return { };
+                return std::nullopt;
             });
 
             /* assert_warn(condition, message) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto *ctx, auto params) -> std::optional<Token::Literal> {
                 auto condition =Token::literalToBoolean(params[0]);
                 auto message = std::get<std::string>(params[1]);
 
                 if (!condition)
                     ctx->getConsole().log(LogConsole::Level::Warning, hex::format("assertion failed \"{0}\"", message));
 
-                return { };
+                return std::nullopt;
             });
 
             /* print(format, args...) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto format =Token::literalToString(params[0], true);
                 std::string message;
 
@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
 
                 ctx->getConsole().log(LogConsole::Level::Info, message);
 
-                return { };
+                return std::nullopt;
             });
 
         }
@@ -120,7 +120,7 @@ namespace hex::plugin::builtin {
         {
 
             /* align_to(alignment, value) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "align_to", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "align_to", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto alignment =Token::literalToUnsigned(params[0]);
                 auto value =Token::literalToUnsigned(params[1]);
 
@@ -130,17 +130,17 @@ namespace hex::plugin::builtin {
             });
 
             /* base_address() */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "base_address", ContentRegistry::PatternLanguageFunctions::NoParameters, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "base_address", ContentRegistry::PatternLanguageFunctions::NoParameters, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 return u128(ctx->getProvider()->getBaseAddress());
             });
 
             /* size() */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "size", ContentRegistry::PatternLanguageFunctions::NoParameters, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "size", ContentRegistry::PatternLanguageFunctions::NoParameters, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 return u128(ctx->getProvider()->getActualSize());
             });
 
             /* find_sequence(occurrence_index, bytes...) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "find_sequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "find_sequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto occurrenceIndex =Token::literalToUnsigned(params[0]);
 
                 std::vector<u8> sequence;
@@ -172,7 +172,7 @@ namespace hex::plugin::builtin {
             });
 
             /* read_unsigned(address, size) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_unsigned", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_unsigned", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address =Token::literalToUnsigned(params[0]);
                 auto size =Token::literalToUnsigned(params[1]);
 
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
             });
 
             /* read_signed(address, size) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_signed", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_signed", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address =Token::literalToUnsigned(params[0]);
                 auto size =Token::literalToUnsigned(params[1]);
 
@@ -206,14 +206,14 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguageFunctions::Namespace nsStdStr = { "std", "str" };
         {
             /* length(string) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "length", 1, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "length", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string =Token::literalToString(params[0], false);
 
                 return u128(string.length());
             });
 
             /* at(string, index) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "at", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "at", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string =Token::literalToString(params[0], false);
                 auto index =Token::literalToSigned(params[1]);
 
@@ -227,7 +227,7 @@ namespace hex::plugin::builtin {
             });
 
             /* substr(string, pos, count) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "substr", 3, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "substr", 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string =Token::literalToString(params[0], false);
                 auto pos =Token::literalToUnsigned(params[1]);
                 auto size =Token::literalToUnsigned(params[2]);
@@ -239,7 +239,7 @@ namespace hex::plugin::builtin {
             });
 
             /* compare(left, right) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "compare", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "compare", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto left =Token::literalToString(params[0], false);
                 auto right =Token::literalToString(params[1], false);
 
