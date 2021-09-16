@@ -867,7 +867,7 @@ namespace hex::pl {
             this->m_template = templ;
             this->m_entryCount = count;
 
-            this->m_template->setColor(this->getColor());
+            this->setColor(this->m_template->getColor());
             this->m_template->setEndian(templ->getEndian());
             this->m_template->setParent(this);
         }

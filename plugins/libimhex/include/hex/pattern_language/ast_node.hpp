@@ -64,7 +64,7 @@ namespace hex::pl {
     };
 
     class ASTNodeMathematicalExpression : public ASTNode {
-    #define FLOAT_BIT_OPERATION(name) \
+        #define FLOAT_BIT_OPERATION(name) \
             auto name(hex::floating_point auto left, auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
             auto name(auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
             auto name(hex::floating_point auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
@@ -136,10 +136,9 @@ namespace hex::pl {
                         }
                         default:
                             LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                            return nullptr;
                     }
                 },
-                [this](auto left, std::string right) -> ASTNode* { return nullptr; },
+                [this](auto left, std::string right) -> ASTNode* { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                 [this](std::string left, std::string right) -> ASTNode* {
                     switch (this->getOperator()) {
                         case Token::Operator::None:
@@ -160,7 +159,6 @@ namespace hex::pl {
                             return new ASTNodeLiteral(left <= right);
                         default:
                             LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                            return nullptr;
                     }
                 },
                 [this](auto &&left, auto &&right) -> ASTNode* {
@@ -213,7 +211,6 @@ namespace hex::pl {
                             return new ASTNodeLiteral(!right);
                         default:
                             LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                            return nullptr;
                     }
                 }
             }, left->getValue(), right->getValue());
@@ -257,20 +254,20 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete first; delete second; delete third; };
 
             return std::visit(overloaded {
-                [this](std::string first, auto &&second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
-                [this](std::string first, std::string second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
-                [this](std::string first, auto &&second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
-                [this](std::string first, std::string second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
-                [this](auto &&first, std::string second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
-                [this](auto &&first, auto &&second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
-                [this](auto &&first, std::string second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); return nullptr; },
+                [this](std::string first, auto &&second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+                [this](std::string first, std::string second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+                [this](std::string first, auto &&second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+                [this](std::string first, std::string second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+                [this](auto &&first, std::string second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+                [this](auto &&first, auto &&second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+                [this](auto &&first, std::string second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
 
                 [this](auto &&first, auto &&second, auto &&third) -> ASTNode * {
                     switch (this->getOperator()) {
                     case Token::Operator::TernaryConditional:
                         return new ASTNodeLiteral(first ? second : third);
                     default:
-                        return nullptr;
+                        LogConsole::abortEvaluation("invalid ternary operator used in mathematical expression");
                     }
                 }
             }, first->getValue(), second->getValue(), third->getValue());
@@ -313,9 +310,9 @@ namespace hex::pl {
             else if (this->m_type == Token::ValueType::Boolean)
                 pattern = new PatternDataBoolean(offset, size);
             else if (this->m_type == Token::ValueType::Character)
-                pattern = new PatternDataCharacter(offset, size);
+                pattern = new PatternDataCharacter(offset);
             else if (this->m_type == Token::ValueType::Character16)
-                pattern = new PatternDataCharacter16(offset, size);
+                pattern = new PatternDataCharacter16(offset);
             else if (this->m_type == Token::ValueType::Padding)
                 pattern = new PatternDataPadding(offset, 1);
             else
@@ -955,7 +952,7 @@ namespace hex::pl {
                 evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
                 literal = value;
             } else if (dynamic_cast<PatternDataString*>(pattern)) {
-                std::string value(pattern->getSize() + 1, '\x00');
+                std::string value(pattern->getSize(), '\x00');
                 evaluator->getProvider()->read(pattern->getOffset(), value.data(), pattern->getSize());
                 literal = value;
             } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(pattern)) {

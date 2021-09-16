@@ -4,8 +4,6 @@
 
 #define MATCHES(x) (begin() && x)
 
-#define TO_MATHEMATICAL_EXPRESSION(node) create(new ASTNodeMathematicalExpression(create(node), create(new ASTNodeLiteral(s32(0))), Token::Operator::None))
-
 // Definition syntax:
 // [A]          : Either A or no token
 // [A|B]        : Either A, B or no token
@@ -114,7 +112,7 @@ namespace hex::pl {
     // <Integer|((parseMathematicalExpression))>
     ASTNode* Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
-            return TO_MATHEMATICAL_EXPRESSION(new ASTNodeLiteral(getValue<Token::Literal>(-1)));
+            return new ASTNodeLiteral(getValue<Token::Literal>(-1));
         else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto node = this->parseMathematicalExpression();
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
@@ -130,18 +128,18 @@ namespace hex::pl {
 
 
             if (isFunction) {
-                return TO_MATHEMATICAL_EXPRESSION(this->parseFunctionCall());
+                return this->parseFunctionCall();
             } else if (peek(OPERATOR_SCOPERESOLUTION, 0)) {
-                return TO_MATHEMATICAL_EXPRESSION(this->parseScopeResolution());
+                return this->parseScopeResolution();
             } else {
                 ASTNodeRValue::Path path;
-                return TO_MATHEMATICAL_EXPRESSION(this->parseRValue(path));
+                return this->parseRValue(path);
             }
         } else if (MATCHES(oneOf(KEYWORD_PARENT))) {
             ASTNodeRValue::Path path;
-            return TO_MATHEMATICAL_EXPRESSION(this->parseRValue(path));
+            return this->parseRValue(path);
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
-            return TO_MATHEMATICAL_EXPRESSION(new ASTNodeRValue({ "$" }));
+            return new ASTNodeRValue({ "$" });
         } else if (MATCHES(oneOf(OPERATOR_ADDRESSOF, OPERATOR_SIZEOF) && sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto op = getValue<Token::Operator>(-2);
 
@@ -155,7 +153,7 @@ namespace hex::pl {
                 delete node;
                 throwParseError("expected closing parenthesis");
             }
-            return TO_MATHEMATICAL_EXPRESSION(node);
+            return node;
         } else
             throwParseError("expected integer or parenthesis");
     }
@@ -356,7 +354,7 @@ namespace hex::pl {
                 throwParseError("expected ':' in ternary expression");
 
             auto third = this->parseBooleanOr();
-            node = TO_MATHEMATICAL_EXPRESSION(create(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional)));
+            node = create(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional));
         }
 
         nodeCleanup.release();
@@ -809,9 +807,9 @@ namespace hex::pl {
                 ASTNode *valueExpr;
                 auto name = getValue<Token::Identifier>(-1).get();
                 if (enumNode->getEntries().empty())
-                    valueExpr = lastEntry = TO_MATHEMATICAL_EXPRESSION(create(new ASTNodeLiteral(u128(0))));
+                    valueExpr = lastEntry = create(new ASTNodeLiteral(u128(0)));
                 else
-                    valueExpr = lastEntry = create(new ASTNodeMathematicalExpression(lastEntry->clone(), new ASTNodeLiteral(s32(1)), Token::Operator::Plus));
+                    valueExpr = lastEntry = create(new ASTNodeMathematicalExpression(lastEntry->clone(), new ASTNodeLiteral(u128(1)), Token::Operator::Plus));
 
                 enumNode->addEntry(name, valueExpr);
             }

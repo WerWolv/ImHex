@@ -185,9 +185,10 @@ namespace hex::pl {
 
             return std::visit(overloaded {
                                       [](std::string value) -> std::string { return value; },
-                                      [](u128 value) -> std::string { return std::to_string(u64(value)); },
-                                      [](s128 value) -> std::string { return std::to_string(s64(value)); },
-                                      [](char value) -> std::string { return std::string() + value; },
+                                      [](u128 value)   -> std::string { return std::to_string(u64(value)); },
+                                      [](s128 value)   -> std::string { return std::to_string(s64(value)); },
+                                      [](bool value)   -> std::string { return value ? "true" : "false"; },
+                                      [](char value)   -> std::string { return std::string() + value; },
                                       [](auto &&value) -> std::string { return std::to_string(value); }
                               },
                               literal);
