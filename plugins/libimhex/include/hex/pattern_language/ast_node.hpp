@@ -63,7 +63,7 @@ namespace hex::pl {
         Token::Literal m_literal;
     };
 
-    class ASTNodeNumericExpression : public ASTNode {
+    class ASTNodeMathematicalExpression : public ASTNode {
     #define FLOAT_BIT_OPERATION(name) \
             auto name(hex::floating_point auto left, auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
             auto name(auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
@@ -100,22 +100,22 @@ namespace hex::pl {
 
     #undef FLOAT_BIT_OPERATION
     public:
-        ASTNodeNumericExpression(ASTNode *left, ASTNode *right, Token::Operator op)
+        ASTNodeMathematicalExpression(ASTNode *left, ASTNode *right, Token::Operator op)
                 : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
 
-        ~ASTNodeNumericExpression() override {
+        ~ASTNodeMathematicalExpression() override {
             delete this->m_left;
             delete this->m_right;
         }
 
-        ASTNodeNumericExpression(const ASTNodeNumericExpression &other) : ASTNode(other) {
+        ASTNodeMathematicalExpression(const ASTNodeMathematicalExpression &other) : ASTNode(other) {
             this->m_operator = other.m_operator;
             this->m_left = other.m_left->clone();
             this->m_right = other.m_right->clone();
         }
 
         [[nodiscard]] ASTNode* clone() const override {
-            return new ASTNodeNumericExpression(*this);
+            return new ASTNodeMathematicalExpression(*this);
         }
 
         [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
