@@ -408,11 +408,16 @@ namespace hex::pl {
 
             while (evaluateCondition(evaluator)) {
                 std::vector<PatternData*> variables = evaluator->getScope(0);
-                u32 startSize = variables.size();
+                u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
-                                  for (u32 i = startSize; i < variables.size(); i++)
-                                      delete variables[i];
-                              };
+                    s64 stackSize = evaluator->getStack().size();
+                    for (u32 i = startVariableCount; i < variables.size(); i++) {
+                        stackSize -= variables[i]->getSize();
+                        delete variables[i];
+                    }
+                    if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                    evaluator->getStack().resize(stackSize);
+                };
 
                 evaluator->pushScope(variables);
                 ON_SCOPE_EXIT { evaluator->popScope(); };
@@ -827,7 +832,17 @@ namespace hex::pl {
             return patterns;
         }
 
-            private:
+        FunctionResult execute(Evaluator *evaluator) override {
+            for (auto &variable : this->m_variables) {
+                auto variableDecl = dynamic_cast<ASTNodeVariableDecl*>(variable);
+
+                evaluator->createVariable(variableDecl->getName(), variableDecl->getType()->evaluate(evaluator));
+            }
+
+            return { false, { } };
+        }
+
+    private:
         std::vector<ASTNode*> m_variables;
     };
 
@@ -1279,10 +1294,15 @@ namespace hex::pl {
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
             std::vector<PatternData*> variables = evaluator->getScope(0);
-            u32 startSize = variables.size();
+            u32 startVariableCount = variables.size();
             ON_SCOPE_EXIT {
-                for (u32 i = startSize; i < variables.size(); i++)
-                    delete variables[i];
+                s64 stackSize = evaluator->getStack().size();
+                for (u32 i = startVariableCount; i < variables.size(); i++) {
+                  stackSize -= variables[i]->getSize();
+                  delete variables[i];
+                }
+                if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                evaluator->getStack().resize(stackSize);
             };
 
             evaluator->pushScope(variables);
