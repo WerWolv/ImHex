@@ -376,6 +376,74 @@ namespace hex::pl {
         std::optional<std::endian> m_endian;
     };
 
+    class ASTNodeWhileStatement : public ASTNode {
+    public:
+        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode*> body)
+                : ASTNode(), m_condition(condition), m_body(std::move(body)) { }
+
+        ~ASTNodeWhileStatement() override {
+            delete this->m_condition;
+
+            for (auto &statement : this->m_body)
+                delete statement;
+        }
+
+        ASTNodeWhileStatement(const ASTNodeWhileStatement &other) : ASTNode(other) {
+            this->m_condition = other.m_condition->clone();
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeWhileStatement(*this);
+        }
+
+        [[nodiscard]] ASTNode* getCondition() {
+            return this->m_condition;
+        }
+
+        [[nodiscard]] const std::vector<ASTNode*>& getBody() {
+            return this->m_body;
+        }
+
+        FunctionResult execute(Evaluator *evaluator) override {
+
+            while (evaluateCondition(evaluator)) {
+                std::vector<PatternData*> variables = evaluator->getScope(0);
+                u32 startSize = variables.size();
+                ON_SCOPE_EXIT {
+                                  for (u32 i = startSize; i < variables.size(); i++)
+                                      delete variables[i];
+                              };
+
+                evaluator->pushScope(variables);
+                ON_SCOPE_EXIT { evaluator->popScope(); };
+
+                for (auto &statement : this->m_body) {
+                    auto [executionStopped, result] = statement->execute(evaluator);
+                    if (executionStopped) {
+                        return { true, result };
+                    }
+                }
+            }
+
+            return { false, { } };
+        }
+
+        [[nodiscard]]
+        bool evaluateCondition(Evaluator *evaluator) const {
+            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator));
+            ON_SCOPE_EXIT { delete literal; };
+
+            return std::visit(overloaded {
+                    [](std::string) { return false; },
+                    [](auto &&value) { return value != 0; }
+            }, literal->getValue());
+        }
+
+    private:
+        ASTNode *m_condition;
+        std::vector<ASTNode*> m_body;
+    };
+
     class ASTNodeVariableDecl : public ASTNode, public Attributable {
     public:
         ASTNodeVariableDecl(std::string name, ASTNode *type, ASTNode *placementOffset = nullptr)
@@ -511,9 +579,10 @@ namespace hex::pl {
             PatternData *templatePattern = this->m_type->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete templatePattern; };
 
+            evaluator->dataOffset() = startOffset;
+
             u128 entryCount = 0;
 
-            // TODO: Implement while and unsized arrays
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete sizeNode; };
@@ -523,6 +592,32 @@ namespace hex::pl {
                             [this](std::string) { LogConsole::abortEvaluation("cannot use string to index array", this); return u128(0); },
                             [](auto &&size) { return u128(size); }
                     }, literal->getValue());
+                } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
+                    while (whileStatement->evaluateCondition(evaluator)) {
+                        entryCount++;
+                        evaluator->dataOffset() += templatePattern->getSize();
+                    }
+                }
+            } else {
+                std::vector<u8> buffer(templatePattern->getSize());
+                while (true) {
+                    if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size())
+                        LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
+
+                    evaluator->getProvider()->read(evaluator->dataOffset(), buffer.data(), buffer.size());
+                    evaluator->dataOffset() += buffer.size();
+
+                    entryCount++;
+
+                    bool reachedEnd = true;
+                    for (u8 &byte : buffer) {
+                        if (byte != 0x00) {
+                            reachedEnd = false;
+                            break;
+                        }
+                    }
+
+                    if (reachedEnd) break;
                 }
             }
 
@@ -554,27 +649,31 @@ namespace hex::pl {
             auto arrayPattern = new PatternDataDynamicArray(evaluator->dataOffset(), 0);
             arrayPattern->setVariableName(this->m_name);
 
-            // TODO: Implement while and unsized arrays
+            std::vector<PatternData *> entries;
+            size_t size = 0;
+            u64 entryCount = 0;
+
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete sizeNode; };
 
+                {
+                    auto templatePattern = this->m_type->createPatterns(evaluator).front();
+                    ON_SCOPE_EXIT { delete templatePattern; };
+
+                    arrayPattern->setTypeName(templatePattern->getTypeName());
+                    evaluator->dataOffset() -= templatePattern->getSize();
+                }
+
                 if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
-                    auto entryCount = std::visit(overloaded {
-                            [this](std::string) { LogConsole::abortEvaluation("cannot use string to index array", this); return u128(0); },
+                    entryCount = std::visit(overloaded{
+                            [this](std::string) {
+                                LogConsole::abortEvaluation("cannot use string to index array", this);
+                                return u128(0);
+                            },
                             [](auto &&size) { return u128(size); }
                     }, literal->getValue());
 
-                    {
-                        auto templatePattern = this->m_type->createPatterns(evaluator).front();
-                        ON_SCOPE_EXIT { delete templatePattern; };
-
-                        arrayPattern->setTypeName(templatePattern->getTypeName());
-                        evaluator->dataOffset() -= templatePattern->getSize();
-                    }
-
-                    std::vector<PatternData*> entries;
-                    size_t size = 0;
                     for (u64 i = 0; i < entryCount; i++) {
                         auto pattern = this->m_type->createPatterns(evaluator).front();
 
@@ -585,10 +684,52 @@ namespace hex::pl {
 
                         size += pattern->getSize();
                     }
-                    arrayPattern->setEntries(entries);
-                    arrayPattern->setSize(size);
+                } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
+                    while (whileStatement->evaluateCondition(evaluator)) {
+                        auto pattern = this->m_type->createPatterns(evaluator).front();
+
+                        pattern->setVariableName(hex::format("[{}]", entryCount));
+                        pattern->setEndian(arrayPattern->getEndian());
+                        pattern->setColor(arrayPattern->getColor());
+                        entries.push_back(pattern);
+
+                        entryCount++;
+                        size += pattern->getSize();
+                    }
+                }
+            } else {
+                while (true) {
+                    auto pattern = this->m_type->createPatterns(evaluator).front();
+                    std::vector<u8> buffer(pattern->getSize());
+
+                    if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size()) {
+                        delete pattern;
+                        LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
+                    }
+
+                    pattern->setVariableName(hex::format("[{}]", entryCount));
+                    pattern->setEndian(arrayPattern->getEndian());
+                    pattern->setColor(arrayPattern->getColor());
+                    entries.push_back(pattern);
+
+                    size += pattern->getSize();
+                    entryCount++;
+
+                    evaluator->getProvider()->read(evaluator->dataOffset() - pattern->getSize(), buffer.data(), buffer.size());
+                    bool reachedEnd = true;
+                    for (u8 &byte : buffer) {
+                        if (byte != 0x00) {
+                            reachedEnd = false;
+                            break;
+                        }
+                    }
+
+                    if (reachedEnd) break;
                 }
             }
+
+            arrayPattern->setEntries(entries);
+            arrayPattern->setSize(size);
 
             return arrayPattern;
         }
@@ -1170,74 +1311,6 @@ namespace hex::pl {
 
         ASTNode *m_condition;
         std::vector<ASTNode*> m_trueBody, m_falseBody;
-    };
-
-    class ASTNodeWhileStatement : public ASTNode {
-    public:
-        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode*> body)
-            : ASTNode(), m_condition(condition), m_body(std::move(body)) { }
-
-        ~ASTNodeWhileStatement() override {
-            delete this->m_condition;
-
-            for (auto &statement : this->m_body)
-                delete statement;
-        }
-
-        ASTNodeWhileStatement(const ASTNodeWhileStatement &other) : ASTNode(other) {
-            this->m_condition = other.m_condition->clone();
-        }
-
-        [[nodiscard]] ASTNode* clone() const override {
-            return new ASTNodeWhileStatement(*this);
-        }
-
-        [[nodiscard]] ASTNode* getCondition() {
-            return this->m_condition;
-        }
-
-        [[nodiscard]] const std::vector<ASTNode*>& getBody() {
-            return this->m_body;
-        }
-
-        FunctionResult execute(Evaluator *evaluator) override {
-
-            while (evaluateCondition(evaluator)) {
-                std::vector<PatternData*> variables = evaluator->getScope(0);
-                u32 startSize = variables.size();
-                ON_SCOPE_EXIT {
-                    for (u32 i = startSize; i < variables.size(); i++)
-                        delete variables[i];
-                };
-
-                evaluator->pushScope(variables);
-                ON_SCOPE_EXIT { evaluator->popScope(); };
-
-                for (auto &statement : this->m_body) {
-                    auto [executionStopped, result] = statement->execute(evaluator);
-                    if (executionStopped) {
-                        return { true, result };
-                    }
-                }
-            }
-
-            return { false, { } };
-        }
-
-    private:
-        ASTNode *m_condition;
-        std::vector<ASTNode*> m_body;
-
-        [[nodiscard]]
-        bool evaluateCondition(Evaluator *evaluator) const {
-            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator));
-            ON_SCOPE_EXIT { delete literal; };
-
-            return std::visit(overloaded {
-                    [](std::string) { return false; },
-                    [](auto &&value) { return value != 0; }
-            }, literal->getValue());
-        }
     };
 
     class ASTNodeFunctionCall : public ASTNode {
