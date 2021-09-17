@@ -28,7 +28,7 @@ namespace hex::pl {
 
         void pushScope(std::vector<PatternData*> &scope) { this->m_currScope.push_back(&scope); }
         void popScope() { this->m_currScope.pop_back(); }
-        const std::vector<PatternData*>& getScope(s32 index) {
+        std::vector<PatternData*>& getScope(s32 index) {
             static std::vector<PatternData*> empty;
 
             if (index > 0 || -index >= this->m_currScope.size()) return empty;
@@ -75,6 +75,10 @@ namespace hex::pl {
             return this->m_stack;
         }
 
+        void createVariable(const std::string &name, ASTNode *type);
+
+        void setVariable(const std::string &name, const Token::Literal& value);
+
     private:
         u64 m_currOffset;
         prv::Provider *m_provider = nullptr;
@@ -84,6 +88,7 @@ namespace hex::pl {
 
         std::vector<std::vector<PatternData*>*> m_currScope;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
+        std::vector<ASTNode*> m_customFunctionDefinitions;
         std::vector<u8> m_stack;
     };
 

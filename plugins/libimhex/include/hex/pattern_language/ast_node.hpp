@@ -421,6 +421,11 @@ namespace hex::pl {
             return { pattern };
         }
 
+        FunctionResult execute(Evaluator *evaluator) override {
+            evaluator->createVariable(this->getName(), this->getType());
+
+            return { false, { } };
+        }
 
     private:
         std::string m_name;
@@ -1107,16 +1112,11 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             std::vector<PatternData *> patterns;
 
-            if (evaluateCondition(evaluator)) {
-                for (auto &node: this->m_trueBody) {
-                    auto newPatterns = node->createPatterns(evaluator);
-                    patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
-                }
-            } else {
-                for (auto &node: this->m_falseBody) {
-                    auto newPatterns = node->createPatterns(evaluator);
-                    patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
-                }
+            auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
+
+            for (auto &node : body) {
+                auto newPatterns = node->createPatterns(evaluator);
+                patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
             }
 
             return patterns;
@@ -1132,6 +1132,28 @@ namespace hex::pl {
 
         [[nodiscard]] const std::vector<ASTNode*>& getFalseBody() const {
             return this->m_falseBody;
+        }
+
+        FunctionResult execute(Evaluator *evaluator) override {
+            auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
+
+            std::vector<PatternData*> variables = evaluator->getScope(0);
+            u32 startSize = variables.size();
+            ON_SCOPE_EXIT {
+                for (u32 i = startSize; i < variables.size(); i++)
+                    delete variables[i];
+            };
+
+            evaluator->pushScope(variables);
+            ON_SCOPE_EXIT { evaluator->popScope(); };
+            for (auto &statement : body) {
+                auto [executionStopped, result] = statement->execute(evaluator);
+                if (executionStopped) {
+                    return { true, result };
+                }
+            }
+
+            return { false, { } };
         }
 
     private:
@@ -1178,9 +1200,44 @@ namespace hex::pl {
             return this->m_body;
         }
 
+        FunctionResult execute(Evaluator *evaluator) override {
+
+            while (evaluateCondition(evaluator)) {
+                std::vector<PatternData*> variables = evaluator->getScope(0);
+                u32 startSize = variables.size();
+                ON_SCOPE_EXIT {
+                    for (u32 i = startSize; i < variables.size(); i++)
+                        delete variables[i];
+                };
+
+                evaluator->pushScope(variables);
+                ON_SCOPE_EXIT { evaluator->popScope(); };
+
+                for (auto &statement : this->m_body) {
+                    auto [executionStopped, result] = statement->execute(evaluator);
+                    if (executionStopped) {
+                        return { true, result };
+                    }
+                }
+            }
+
+            return { false, { } };
+        }
+
     private:
         ASTNode *m_condition;
         std::vector<ASTNode*> m_body;
+
+        [[nodiscard]]
+        bool evaluateCondition(Evaluator *evaluator) const {
+            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator));
+            ON_SCOPE_EXIT { delete literal; };
+
+            return std::visit(overloaded {
+                    [](std::string) { return false; },
+                    [](auto &&value) { return value != 0; }
+            }, literal->getValue());
+        }
     };
 
     class ASTNodeFunctionCall : public ASTNode {
@@ -1261,7 +1318,13 @@ namespace hex::pl {
             return nullptr;
         }
 
-            private:
+        FunctionResult execute(Evaluator *evaluator) override {
+            delete this->evaluate(evaluator);
+
+            return { false, { } };
+        }
+
+    private:
         std::string m_functionName;
         std::vector<ASTNode*> m_params;
     };
@@ -1345,6 +1408,15 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
+        FunctionResult execute(Evaluator *evaluator) override {
+            auto literal = dynamic_cast<ASTNodeLiteral*>(this->getRValue()->evaluate(evaluator));
+            ON_SCOPE_EXIT { delete literal; };
+
+            evaluator->setVariable(this->getLValueName(), literal->getValue());
+
+            return { false, { } };
+        }
+
     private:
         std::string m_lvalueName;
         ASTNode *m_rvalue;
@@ -1373,6 +1445,19 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
+        FunctionResult execute(Evaluator *evaluator) override {
+            auto returnValue = this->getReturnValue();
+
+            if (returnValue == nullptr)
+                return { true, std::nullopt };
+            else {
+                auto literal = dynamic_cast<ASTNodeLiteral*>(returnValue->evaluate(evaluator));
+                ON_SCOPE_EXIT { delete literal; };
+
+                return { true, literal->getValue() };
+            }
+        }
+
     private:
         ASTNode *m_rvalue;
     };
@@ -1389,6 +1474,10 @@ namespace hex::pl {
             this->m_name = other.m_name;
             this->m_params = other.m_params;
 
+            for (const auto &[name, type] : other.m_params) {
+                this->m_params.emplace(name, type->clone());
+            }
+
             for (auto statement : other.m_body) {
                 this->m_body.push_back(statement->clone());
             }
@@ -1399,6 +1488,8 @@ namespace hex::pl {
         }
 
         ~ASTNodeFunctionDefinition() override {
+            for (auto &[name, type] : this->m_params)
+                delete type;
             for (auto statement : this->m_body)
                 delete statement;
         }
@@ -1420,87 +1511,24 @@ namespace hex::pl {
             evaluator->addCustomFunction(this->m_name, this->m_params.size(), [this](Evaluator *ctx, const std::vector<Token::Literal>& params) -> std::optional<Token::Literal> {
                 std::vector<PatternData*> variables;
 
-                auto createVariable = [&](const std::string &name, ASTNode *type) {
-                    for (auto &variable : variables) {
-                        if (variable->getVariableName() == name) {
-                            LogConsole::abortEvaluation(hex::format("variable with name '{}' already exists", name));
-                        }
-                    }
-
-                    auto pattern = type->createPatterns(ctx).front();
-
-                    pattern->setVariableName(name);
-                    pattern->setOffset(ctx->getStack().size());
-                    pattern->setLocal(true);
-
-                    variables.push_back(pattern);
-                };
-
-                auto setVariable = [&](const std::string &name, const Token::Literal& value) {
-                    PatternData *pattern = nullptr;
-                    for (auto &variable : variables) {
-                        if (variable->getVariableName() == name) {
-                            pattern = variable;
-                            break;
-                        }
-                    }
-
-                    if (pattern == nullptr)
-                        LogConsole::abortEvaluation(hex::format("no variable with name '{}' found", name), this);
-
-                    std::visit(overloaded {
-                            [&](std::string value) {
-                                auto size = value.length();
-
-                                pattern->setSize(size);
-                                ctx->getStack().resize(ctx->getStack().size() + size);
-                                std::memcpy(&ctx->getStack()[pattern->getOffset()], &value, size);
-                            },
-                            [&](auto &&value) {
-                                auto size = std::min(sizeof(value), pattern->getSize());
-
-                                ctx->getStack().resize(ctx->getStack().size() + size);
-                                std::memcpy(&ctx->getStack()[pattern->getOffset()], &value, size);
-                            }
-                    }, value);
-                };
-
                 ctx->pushScope(variables);
+                ON_SCOPE_EXIT { ctx->popScope(); };
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {
-                    createVariable(name, type);
-                    setVariable(name, params[paramIndex]);
+                    ctx->createVariable(name, type);
+                    ctx->setVariable(name, params[paramIndex]);
 
                     paramIndex++;
                 }
 
                 for (auto statement : this->m_body) {
-                    if (auto returnNode = dynamic_cast<ASTNodeReturnStatement*>(statement)) {
-                        auto returnValue = returnNode->getReturnValue();
+                    auto [executionStopped, result] = statement->execute(ctx);
 
-                        if (returnValue == nullptr)
-                            return { };
-                        else {
-                            auto literal = dynamic_cast<ASTNodeLiteral*>(returnValue->evaluate(ctx));
-                            ON_SCOPE_EXIT { delete literal; };
-
-                            return literal->getValue();
-                        }
-                    } else if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl*>(statement)) {
-                        createVariable(variableDeclNode->getName(), variableDeclNode->getType());
-                    } else if (auto assignmentNode = dynamic_cast<ASTNodeAssignment*>(statement)) {
-                        auto literal = dynamic_cast<ASTNodeLiteral*>(assignmentNode->getRValue()->evaluate(ctx));
-                        ON_SCOPE_EXIT { delete literal; };
-
-                        setVariable(assignmentNode->getLValueName(), literal->getValue());
-                    } else {
-                        LogConsole::abortEvaluation("invalid expression in function body", statement);
+                    if (executionStopped) {
+                        return result;
                     }
-
                 }
-
-                ctx->popScope();
 
                 return { };
             });

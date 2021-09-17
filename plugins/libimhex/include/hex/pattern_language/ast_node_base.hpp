@@ -1,9 +1,13 @@
 #pragma once
 
+#include <optional>
 #include <vector>
+
+#include <hex/pattern_language/token.hpp>
 
 namespace hex::pl {
 
+    class ASTNode;
     class ASTNodeAttribute;
 
     class PatternData;
@@ -29,7 +33,13 @@ namespace hex::pl {
         std::vector<ASTNodeAttribute *> m_attributes;
     };
 
-    class ASTNode {
+    class Clonable {
+    public:
+        [[nodiscard]]
+        virtual ASTNode* clone() const = 0;
+    };
+
+    class ASTNode : public Clonable {
     public:
         constexpr ASTNode() = default;
 
@@ -41,11 +51,12 @@ namespace hex::pl {
 
         [[maybe_unused]] constexpr void setLineNumber(u32 lineNumber) { this->m_lineNumber = lineNumber; }
 
-        [[nodiscard]] virtual ASTNode *clone() const = 0;
-
         [[nodiscard]] virtual ASTNode *evaluate(Evaluator *evaluator) const { return this->clone(); }
 
         [[nodiscard]] virtual std::vector<PatternData *> createPatterns(Evaluator *evaluator) const { return {}; }
+
+        using FunctionResult = std::pair<bool, std::optional<Token::Literal>>;
+        virtual FunctionResult execute(Evaluator *evaluator) { throw std::pair<u32, std::string>(this->getLineNumber(), "cannot execute non-function statement"); }
 
     private:
         u32 m_lineNumber = 1;
