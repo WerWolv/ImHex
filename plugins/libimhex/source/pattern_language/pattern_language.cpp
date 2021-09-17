@@ -70,6 +70,9 @@ namespace hex::pl {
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
 
+        for (auto &node : this->m_currAST)
+            delete node;
+
         auto preprocessedCode = this->m_preprocessor->preprocess(string);
         if (!preprocessedCode.has_value()) {
             this->m_currError = this->m_preprocessor->getError();
@@ -91,10 +94,7 @@ namespace hex::pl {
             return { };
         }
 
-        ON_SCOPE_EXIT {
-            for(auto &node : ast.value())
-                delete node;
-        };
+        this->m_currAST = ast.value();
 
         auto patterns = this->m_evaluator->evaluate(ast.value());
         if (!patterns.has_value()) {

@@ -88,6 +88,13 @@ namespace hex::pl {
         [[nodiscard]] PatternData* getParent() const { return this->m_parent; }
         void setParent(PatternData *parent) { this->m_parent = parent; }
 
+        [[nodiscard]] std::string getDisplayName() const {  return this->m_displayName.value_or(this->m_variableName); }
+        void setDisplayName(const std::string &name) { this->m_displayName = name; }
+
+        void setFormatterFunction(const ContentRegistry::PatternLanguageFunctions::Function &function, Evaluator *evaluator) {
+            this->m_formatterFunction = { function, evaluator };
+        }
+
         virtual void createEntry(prv::Provider* &provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
@@ -118,9 +125,9 @@ namespace hex::pl {
         static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, pl::PatternData* left, pl::PatternData* right) {
             if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                    return left->getVariableName() > right->getVariableName();
+                    return left->getDisplayName() > right->getDisplayName();
                 else
-                    return left->getVariableName() < right->getVariableName();
+                    return left->getDisplayName() < right->getDisplayName();
             }
             else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
@@ -209,16 +216,16 @@ namespace hex::pl {
         }
 
     protected:
-        void createDefaultEntry(const std::string &value) const {
+        void createDefaultEntry(const std::string &value, const Token::Literal &literal) const {
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             this->drawCommentTooltip();
             ImGui::SameLine();
-            ImGui::Text("%s", this->getVariableName().c_str());
+            ImGui::Text("%s", this->getDisplayName().c_str());
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
@@ -228,7 +235,20 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", value.c_str());
+
+            if (!this->m_formatterFunction.has_value())
+                ImGui::Text("%s", value.c_str());
+            else {
+                auto &[func, evaluator] = this->m_formatterFunction.value();
+                auto result = func.func(evaluator, { literal });
+
+                if (result.has_value()) {
+                    if (auto displayValue = std::get_if<std::string>(&result.value()); displayValue != nullptr)
+                        ImGui::Text("%s", displayValue->c_str());
+                } else {
+                    ImGui::Text("???");
+                }
+            }
         }
 
         void drawCommentTooltip() const {
@@ -249,9 +269,12 @@ namespace hex::pl {
         size_t m_size;
 
         u32 m_color;
+        std::optional<std::string> m_displayName;
         std::string m_variableName;
         std::optional<std::string> m_comment;
         std::string m_typeName;
+
+        std::optional<std::pair<ContentRegistry::PatternLanguageFunctions::Function, Evaluator*>> m_formatterFunction;
 
         PatternData *m_parent;
         bool m_local = false;
@@ -300,7 +323,7 @@ namespace hex::pl {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -355,7 +378,7 @@ namespace hex::pl {
 
         void setPointedAtPattern(PatternData *pattern) {
             this->m_pointedAt = pattern;
-            this->m_pointedAt->setVariableName("*" + this->getVariableName());
+            this->m_pointedAt->setVariableName("*" + this->getDisplayName());
         }
 
         [[nodiscard]] PatternData* getPointedAtPattern() {
@@ -381,11 +404,11 @@ namespace hex::pl {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            u64 data = 0;
+            u128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, this->getSize() * 2));
+            this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, this->getSize() * 2), data);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -412,42 +435,12 @@ namespace hex::pl {
         }
 
        void createEntry(prv::Provider* &provider) override {
-            u128 data = 0;
+            s128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            switch (this->getSize()) {
-                case 1: {
-                    s8 signedData;
-                    std::memcpy(&signedData, &data, 1);
-                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 1 * 2));
-                }
-                break;
-                case 2: {
-                    s16 signedData;
-                    std::memcpy(&signedData, &data, 2);
-                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 2 * 2));
-                }
-                break;
-                case 4: {
-                    s32 signedData;
-                    std::memcpy(&signedData, &data, 4);
-                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 4 * 2));
-                }
-                break;
-                case 8: {
-                    s64 signedData;
-                    std::memcpy(&signedData, &data, 8);
-                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 8 * 2));
-                }
-                break;
-                case 16: {
-                    s128 signedData;
-                    std::memcpy(&signedData, &data, 16);
-                    this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", signedData, data, 16 * 2));
-                }
-                break;
-            }
+            data = hex::signExtend(this->getSize() * 8, data);
+            this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -479,13 +472,13 @@ namespace hex::pl {
                 provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
 
-                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<float*>(&data), data, this->getSize() * 2));
+                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<float*>(&data), data, this->getSize() * 2), *reinterpret_cast<float*>(&data));
             } else if (this->getSize() == 8) {
                 u64 data = 0;
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
-                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<double*>(&data), data, this->getSize() * 2));
+                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<double*>(&data), data, this->getSize() * 2), *reinterpret_cast<double*>(&data));
             }
         }
 
@@ -514,11 +507,11 @@ namespace hex::pl {
             provider->read(this->getOffset(), &boolean, 1);
 
             if (boolean == 0)
-                this->createDefaultEntry("false");
+                this->createDefaultEntry("false", false);
             else if (boolean == 1)
-                this->createDefaultEntry("true");
+                this->createDefaultEntry("true", true);
             else
-                this->createDefaultEntry("true*");
+                this->createDefaultEntry("true*", true);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -541,7 +534,7 @@ namespace hex::pl {
             char character;
             provider->read(this->getOffset(), &character, 1);
 
-            this->createDefaultEntry(hex::format("'{0}'", character));
+            this->createDefaultEntry(hex::format("'{0}'", character), character);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -565,7 +558,8 @@ namespace hex::pl {
             provider->read(this->getOffset(), &character, 2);
             character = hex::changeEndianess(character, this->getEndian());
 
-            this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character)));
+            u128 literal = character;
+            this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character)), literal);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -588,7 +582,7 @@ namespace hex::pl {
             std::string buffer(this->getSize(), 0x00);
             provider->read(this->getOffset(), buffer.data(), this->getSize());
 
-            this->createDefaultEntry(hex::format("\"{0}\"", makeDisplayable(buffer.data(), this->getSize()).c_str()));
+            this->createDefaultEntry(hex::format("\"{0}\"", makeDisplayable(buffer.data(), this->getSize()).c_str()), buffer);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -616,7 +610,7 @@ namespace hex::pl {
 
             auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
 
-            this->createDefaultEntry(hex::format("\"{0}\"", utf8String)) ;
+            this->createDefaultEntry(hex::format("\"{0}\"", utf8String), utf8String);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -663,7 +657,7 @@ namespace hex::pl {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -778,7 +772,7 @@ namespace hex::pl {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -916,7 +910,7 @@ namespace hex::pl {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
@@ -1047,7 +1041,7 @@ namespace hex::pl {
         void createEntry(prv::Provider* &provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();
@@ -1186,14 +1180,14 @@ namespace hex::pl {
                 valueString += "???";
 
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                 EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             ImGui::SameLine();
-            ImGui::Text("%s", this->getVariableName().c_str());
+            ImGui::Text("%s", this->getDisplayName().c_str());
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
@@ -1258,9 +1252,9 @@ namespace hex::pl {
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getVariableName().c_str());
+            ImGui::Text("%s", this->getDisplayName().c_str());
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
@@ -1338,7 +1332,7 @@ namespace hex::pl {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getVariableName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
             ImGui::TableNextColumn();

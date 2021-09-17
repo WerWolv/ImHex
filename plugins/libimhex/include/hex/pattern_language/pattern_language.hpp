@@ -21,6 +21,8 @@ namespace hex::pl {
     class Evaluator;
     class PatternData;
 
+    class ASTNode;
+
     class PatternLanguage {
     public:
         PatternLanguage();
@@ -38,6 +40,8 @@ namespace hex::pl {
         Parser *m_parser;
         Validator *m_validator;
         Evaluator *m_evaluator;
+
+        std::vector<ASTNode*> m_currAST;
 
         prv::Provider *m_provider = nullptr;
         std::endian m_defaultEndian = std::endian::native;

@@ -457,6 +457,48 @@ namespace hex::pl {
         std::vector<ASTNode*> m_body;
     };
 
+    inline void applyVariableAttributes(Evaluator *evaluator, const Attributable *attributable, PatternData *pattern) {
+        for (ASTNodeAttribute *attribute : attributable->getAttributes()) {
+            auto &name = attribute->getAttribute();
+            auto value = attribute->getValue();
+
+            auto node = reinterpret_cast<const ASTNode*>(attributable);
+
+            auto requiresValue = [&]() {
+                if (!value.has_value())
+                    LogConsole::abortEvaluation(hex::format("used attribute '{}' without providing a value", name), node);
+                return true;
+            };
+
+            auto noValue = [&]() {
+                if (value.has_value())
+                    LogConsole::abortEvaluation(hex::format("provided a value to attribute '{}' which doesn't take one", name), node);
+                return true;
+            };
+
+            if (name == "color" && requiresValue()) {
+                u32 color = strtoul(value->c_str(), nullptr, 16);
+                pattern->setColor(color);
+            } else if (name == "name" && requiresValue()) {
+                pattern->setVariableName(*value);
+            } else if (name == "comment" && requiresValue()) {
+                pattern->setComment(*value);
+            } else if (name == "hidden" && noValue()) {
+                pattern->setHidden(true);
+            } else if (name == "format" && requiresValue()) {
+                auto functions = evaluator->getCustomFunctions();
+                if (!functions.contains(*value))
+                    LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
+
+                const auto &function = functions[*value];
+                if (function.parameterCount != 1)
+                    LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
+
+                pattern->setFormatterFunction(function, evaluator);
+            }
+        }
+    }
+
     class ASTNodeVariableDecl : public ASTNode, public Attributable {
     public:
         ASTNodeVariableDecl(std::string name, ASTNode *type, ASTNode *placementOffset = nullptr)
@@ -499,6 +541,8 @@ namespace hex::pl {
 
             auto pattern = this->m_type->createPatterns(evaluator).front();
             pattern->setVariableName(this->m_name);
+
+            applyVariableAttributes(evaluator, this, pattern);
 
             return { pattern };
         }
@@ -559,8 +603,9 @@ namespace hex::pl {
             auto type = this->m_type->evaluate(evaluator);
             ON_SCOPE_EXIT { delete type; };
 
+            PatternData *pattern;
             if (dynamic_cast<ASTNodeBuiltinType*>(type))
-                return { createStaticArray(evaluator) };
+                pattern = createStaticArray(evaluator);
             else if (auto attributable = dynamic_cast<Attributable*>(type)) {
                 auto &attributes = attributable->getAttributes();
 
@@ -569,12 +614,15 @@ namespace hex::pl {
                 });
 
                 if (isStaticType)
-                    return { createStaticArray(evaluator) };
+                    pattern = createStaticArray(evaluator);
                 else
-                    return { createDynamicArray(evaluator) };
+                    pattern = createDynamicArray(evaluator);
+            } else {
+                LogConsole::abortEvaluation("invalid type used in array", this);
             }
 
-            LogConsole::abortEvaluation("invalid type used in array", this);
+            applyVariableAttributes(evaluator, this, pattern);
+            return { pattern };
         }
 
         [[nodiscard]] const std::string& getName() const { return this->m_name; }
@@ -798,6 +846,8 @@ namespace hex::pl {
             auto pattern = new PatternDataPointer(evaluator->dataOffset(), sizePattern->getSize());
             pattern->setPointedAtPattern(this->m_type->createPatterns(evaluator).front());
             pattern->setVariableName(this->m_name);
+
+            applyVariableAttributes(evaluator, this, pattern);
 
             return { pattern };
         }

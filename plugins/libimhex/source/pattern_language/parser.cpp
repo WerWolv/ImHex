@@ -381,8 +381,13 @@ namespace hex::pl {
             auto attribute = getValue<Token::Identifier>(-1).get();
 
             if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN, STRING, SEPARATOR_ROUNDBRACKETCLOSE))) {
-                auto value = getValue<Token::Identifier>(-2).get();
-                currNode->addAttribute(create(new ASTNodeAttribute(attribute, value)));
+                auto value = getValue<Token::Literal>(-2);
+                auto string = std::get_if<std::string>(&value);
+
+                if (string == nullptr)
+                    throwParseError("expected string attribute argument");
+
+                currNode->addAttribute(create(new ASTNodeAttribute(attribute, *string)));
             }
             else
                 currNode->addAttribute(create(new ASTNodeAttribute(attribute)));

@@ -202,12 +202,9 @@ namespace hex::plugin::builtin {
                 if (size > 16)
                     LogConsole::abortEvaluation("read size out of range");
 
-                s128 mask = 1U << (size * 8 - 1);
-                s128 result = 0;
-                ctx->getProvider()->read(address, &result, size);
-                result = (result ^ mask) - mask;
-
-                return result;
+                s128 value;
+                ctx->getProvider()->read(address, &value, size);
+                return hex::signExtend(size * 8, value);
             });
 
         }
