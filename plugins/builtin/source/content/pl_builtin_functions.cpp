@@ -6,11 +6,14 @@
 #include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/pattern_language/evaluator.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 
 #include <hex/helpers/utils.hpp>
 
 #include <cctype>
 #include <vector>
+
+#include <fmt/args.h>
 
 namespace hex::plugin::builtin {
 
@@ -18,69 +21,26 @@ namespace hex::plugin::builtin {
         auto format = pl::Token::literalToString(params[0], true);
         std::string message;
 
-        bool placeholder = false;
-        u32 index = 0;
-        std::optional<bool> manualIndexing;
-        bool currentlyManualIndexing = false;
+        fmt::dynamic_format_arg_store<fmt::format_context> formatArgs;
 
-        for (u32 i = 0; i < format.length(); i++) {
-            const char &c = format[i];
+        for (u32 i = 1; i < params.size(); i++) {
+            auto &param = params[i];
 
-            if (!placeholder) {
-                if (c == '{') {
-                    placeholder = true;
-                    continue;
-                } else if (c == '}') {
-                    if (i == format.length() - 1 || format[i + 1] != '}')
-                        pl::LogConsole::abortEvaluation("unmatched '}' in format string");
-                    else {
-                        message += '}';
-                        i++;
-                    }
-                } else {
-                    message += c;
+            std::visit(overloaded {
+                [&](pl::PatternData* value) {
+                    formatArgs.push_back(hex::format("{} {} @ 0x{:X}", value->getTypeName(), value->getVariableName(), value->getOffset()));
+                },
+                [&](auto &&value) {
+                    formatArgs.push_back(value);
                 }
-            } else {
-                if (c == '{') {
-                    message += '{';
-                } else if (c == '}') {
-                    if (!manualIndexing.has_value())
-                        manualIndexing = false;
-
-                    if(!currentlyManualIndexing && *manualIndexing)
-                        pl::LogConsole::abortEvaluation("cannot switch from manual to automatic argument indexing");
-
-                    if (index >= params.size() - 1)
-                        pl::LogConsole::abortEvaluation("format argument index out of range");
-
-                    message += pl::Token::literalToString(params[index + 1], true);
-
-                    if (!*manualIndexing)
-                        index++;
-                } else if (std::isdigit(c)) {
-                    char *end;
-                    index = std::strtoull(&c, &end, 10);
-
-                    i = (end - format.c_str()) - 1;
-
-                    currentlyManualIndexing = true;
-                    if (!manualIndexing.has_value())
-                        manualIndexing = true;
-
-                    if(!*manualIndexing)
-                        pl::LogConsole::abortEvaluation("cannot switch from automatic to manual argument indexing");
-
-                    continue;
-                } else {
-                    pl::LogConsole::abortEvaluation("unmatched '{' in format string");
-                }
-
-                placeholder = false;
-                currentlyManualIndexing = false;
-            }
+            }, param);
         }
 
-        return message;
+        try {
+            return fmt::vformat(format, formatArgs);
+        } catch (fmt::format_error &error) {
+            hex::pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
+        }
     }
 
     void registerPatternLanguageFunctions() {
@@ -91,7 +51,7 @@ namespace hex::plugin::builtin {
 
             /* assert(condition, message) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto condition =Token::literalToBoolean(params[0]);
+                auto condition = Token::literalToBoolean(params[0]);
                 auto message = std::get<std::string>(params[1]);
 
                 if (!condition)
@@ -102,7 +62,7 @@ namespace hex::plugin::builtin {
 
             /* assert_warn(condition, message) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto *ctx, auto params) -> std::optional<Token::Literal> {
-                auto condition =Token::literalToBoolean(params[0]);
+                auto condition = Token::literalToBoolean(params[0]);
                 auto message = std::get<std::string>(params[1]);
 
                 if (!condition)
@@ -130,8 +90,8 @@ namespace hex::plugin::builtin {
 
             /* align_to(alignment, value) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "align_to", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto alignment =Token::literalToUnsigned(params[0]);
-                auto value =Token::literalToUnsigned(params[1]);
+                auto alignment = Token::literalToUnsigned(params[0]);
+                auto value = Token::literalToUnsigned(params[1]);
 
                 u128 remainder = value % alignment;
 
@@ -150,11 +110,11 @@ namespace hex::plugin::builtin {
 
             /* find_sequence(occurrence_index, bytes...) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "find_sequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto occurrenceIndex =Token::literalToUnsigned(params[0]);
+                auto occurrenceIndex = Token::literalToUnsigned(params[0]);
 
                 std::vector<u8> sequence;
                 for (u32 i = 1; i < params.size(); i++) {
-                    auto byte =Token::literalToUnsigned(params[i]);
+                    auto byte = Token::literalToUnsigned(params[i]);
 
                     if (byte > 0xFF)
                         LogConsole::abortEvaluation(hex::format("byte #{} value out of range: {} > 0xFF", i, u64(byte)));
@@ -182,8 +142,8 @@ namespace hex::plugin::builtin {
 
             /* read_unsigned(address, size) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_unsigned", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto address =Token::literalToUnsigned(params[0]);
-                auto size =Token::literalToUnsigned(params[1]);
+                auto address = Token::literalToUnsigned(params[0]);
+                auto size = Token::literalToUnsigned(params[1]);
 
                 if (size > 16)
                     LogConsole::abortEvaluation("read size out of range");
@@ -196,8 +156,8 @@ namespace hex::plugin::builtin {
 
             /* read_signed(address, size) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_signed", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto address =Token::literalToUnsigned(params[0]);
-                auto size =Token::literalToUnsigned(params[1]);
+                auto address = Token::literalToUnsigned(params[0]);
+                auto size = Token::literalToUnsigned(params[1]);
 
                 if (size > 16)
                     LogConsole::abortEvaluation("read size out of range");
@@ -213,15 +173,15 @@ namespace hex::plugin::builtin {
         {
             /* length(string) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "length", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto string =Token::literalToString(params[0], false);
+                auto string = Token::literalToString(params[0], false);
 
                 return u128(string.length());
             });
 
             /* at(string, index) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "at", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto string =Token::literalToString(params[0], false);
-                auto index =Token::literalToSigned(params[1]);
+                auto string = Token::literalToString(params[0], false);
+                auto index = Token::literalToSigned(params[1]);
 
                 if (std::abs(index) >= string.length())
                     LogConsole::abortEvaluation("character index out of range");
@@ -234,9 +194,9 @@ namespace hex::plugin::builtin {
 
             /* substr(string, pos, count) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "substr", 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto string =Token::literalToString(params[0], false);
-                auto pos =Token::literalToUnsigned(params[1]);
-                auto size =Token::literalToUnsigned(params[2]);
+                auto string = Token::literalToString(params[0], false);
+                auto pos = Token::literalToUnsigned(params[1]);
+                auto size = Token::literalToUnsigned(params[2]);
 
                 if (pos > size)
                     LogConsole::abortEvaluation("character index out of range");
@@ -246,8 +206,8 @@ namespace hex::plugin::builtin {
 
             /* compare(left, right) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "compare", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto left =Token::literalToString(params[0], false);
-                auto right =Token::literalToString(params[1], false);
+                auto left = Token::literalToString(params[0], false);
+                auto right = Token::literalToString(params[1], false);
 
                 return bool(left == right);
             });

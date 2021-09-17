@@ -72,6 +72,7 @@ namespace hex::pl {
 
         for (auto &node : this->m_currAST)
             delete node;
+        this->m_currAST.clear();
 
         auto preprocessedCode = this->m_preprocessor->preprocess(string);
         if (!preprocessedCode.has_value()) {
