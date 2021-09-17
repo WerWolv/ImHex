@@ -14,6 +14,75 @@
 
 namespace hex::plugin::builtin {
 
+    std::string format(pl::Evaluator *, auto params) {
+        auto format = pl::Token::literalToString(params[0], true);
+        std::string message;
+
+        bool placeholder = false;
+        u32 index = 0;
+        std::optional<bool> manualIndexing;
+        bool currentlyManualIndexing = false;
+
+        for (u32 i = 0; i < format.length(); i++) {
+            const char &c = format[i];
+
+            if (!placeholder) {
+                if (c == '{') {
+                    placeholder = true;
+                    continue;
+                } else if (c == '}') {
+                    if (i == format.length() - 1 || format[i + 1] != '}')
+                        pl::LogConsole::abortEvaluation("unmatched '}' in format string");
+                    else {
+                        message += '}';
+                        i++;
+                    }
+                } else {
+                    message += c;
+                }
+            } else {
+                if (c == '{') {
+                    message += '{';
+                } else if (c == '}') {
+                    if (!manualIndexing.has_value())
+                        manualIndexing = false;
+
+                    if(!currentlyManualIndexing && *manualIndexing)
+                        pl::LogConsole::abortEvaluation("cannot switch from manual to automatic argument indexing");
+
+                    if (index >= params.size() - 1)
+                        pl::LogConsole::abortEvaluation("format argument index out of range");
+
+                    message += pl::Token::literalToString(params[index + 1], true);
+
+                    if (!*manualIndexing)
+                        index++;
+                } else if (std::isdigit(c)) {
+                    char *end;
+                    index = std::strtoull(&c, &end, 10);
+
+                    i = (end - format.c_str()) - 1;
+
+                    currentlyManualIndexing = true;
+                    if (!manualIndexing.has_value())
+                        manualIndexing = true;
+
+                    if(!*manualIndexing)
+                        pl::LogConsole::abortEvaluation("cannot switch from automatic to manual argument indexing");
+
+                    continue;
+                } else {
+                    pl::LogConsole::abortEvaluation("unmatched '{' in format string");
+                }
+
+                placeholder = false;
+                currentlyManualIndexing = false;
+            }
+        }
+
+        return message;
+    }
+
     void registerPatternLanguageFunctions() {
         using namespace hex::pl;
 
@@ -44,74 +113,14 @@ namespace hex::plugin::builtin {
 
             /* print(format, args...) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto format =Token::literalToString(params[0], true);
-                std::string message;
-
-                bool placeholder = false;
-                u32 index = 0;
-                std::optional<bool> manualIndexing;
-                bool currentlyManualIndexing = false;
-
-                for (u32 i = 0; i < format.length(); i++) {
-                    const char &c = format[i];
-
-                    if (!placeholder) {
-                        if (c == '{') {
-                            placeholder = true;
-                            continue;
-                        } else if (c == '}') {
-                            if (i == format.length() - 1 || format[i + 1] != '}')
-                                LogConsole::abortEvaluation("unmatched '}' in format string");
-                            else {
-                                message += '}';
-                                i++;
-                            }
-                        } else {
-                            message += c;
-                        }
-                    } else {
-                        if (c == '{') {
-                            message += '{';
-                        } else if (c == '}') {
-                            if (!manualIndexing.has_value())
-                                manualIndexing = false;
-
-                            if(!currentlyManualIndexing && *manualIndexing)
-                                LogConsole::abortEvaluation("cannot switch from manual to automatic argument indexing");
-
-                            if (index >= params.size() - 1)
-                                LogConsole::abortEvaluation("format argument index out of range");
-
-                            message +=Token::literalToString(params[index + 1], true);
-
-                            if (!*manualIndexing)
-                                index++;
-                        } else if (std::isdigit(c)) {
-                            char *end;
-                            index = std::strtoull(&c, &end, 10);
-
-                            i = (end - format.c_str()) - 1;
-
-                            currentlyManualIndexing = true;
-                            if (!manualIndexing.has_value())
-                                manualIndexing = true;
-
-                            if(!*manualIndexing)
-                                LogConsole::abortEvaluation("cannot switch from automatic to manual argument indexing");
-
-                            continue;
-                        } else {
-                            LogConsole::abortEvaluation("unmatched '{' in format string");
-                        }
-
-                        placeholder = false;
-                        currentlyManualIndexing = false;
-                    }
-                }
-
-                ctx->getConsole().log(LogConsole::Level::Info, message);
+                ctx->getConsole().log(LogConsole::Level::Info, format(ctx, params));
 
                 return std::nullopt;
+            });
+
+            /* format(format, args...) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "format", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return format(ctx, params);
             });
 
         }
