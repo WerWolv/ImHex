@@ -404,6 +404,8 @@ namespace hex::pl {
                         tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(true)));
                     else if (identifier == "parent")
                         tokens.emplace_back(TOKEN(Keyword, Parent));
+                    else if (identifier == "this")
+                        tokens.emplace_back(TOKEN(Keyword, This));
                     else if (identifier == "while")
                         tokens.emplace_back(TOKEN(Keyword, While));
                     else if (identifier == "fn")

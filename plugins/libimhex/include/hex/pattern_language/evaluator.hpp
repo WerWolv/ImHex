@@ -26,17 +26,18 @@ namespace hex::pl {
             return this->m_console;
         }
 
-        void pushScope(std::vector<PatternData*> &scope) { this->m_currScope.push_back(&scope); }
-        void popScope() { this->m_currScope.pop_back(); }
-        std::vector<PatternData*>& getScope(s32 index) {
-            static std::vector<PatternData*> empty;
+        struct Scope { PatternData *parent; std::vector<PatternData*>* scope; };
+        void pushScope(PatternData *parent, std::vector<PatternData*> &scope) { this->m_scopes.push_back({ parent, &scope }); }
+        void popScope() { this->m_scopes.pop_back(); }
+        const Scope& getScope(s32 index) {
+            static Scope empty;
 
-            if (index > 0 || -index >= this->m_currScope.size()) return empty;
-            return *this->m_currScope[this->m_currScope.size() - 1 + index];
+            if (index > 0 || -index >= this->m_scopes.size()) return empty;
+            return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
-        const std::vector<PatternData*>& getGlobalScope() {
-            return *this->m_currScope.front();
+        const Scope& getGlobalScope() {
+            return this->m_scopes.front();
         }
 
         void setProvider(prv::Provider *provider) {
@@ -86,7 +87,7 @@ namespace hex::pl {
 
         std::endian m_defaultEndian = std::endian::native;
 
-        std::vector<std::vector<PatternData*>*> m_currScope;
+        std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
         std::vector<ASTNode*> m_customFunctionDefinitions;
         std::vector<u8> m_stack;

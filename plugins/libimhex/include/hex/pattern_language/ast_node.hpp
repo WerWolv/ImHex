@@ -127,7 +127,23 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete left; delete right; };
 
             return std::visit(overloaded {
-                [this](std::string left, auto right) -> ASTNode* {
+                // TODO: :notlikethis:
+                [this](u128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](s128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](double left, PatternData * const &right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](char left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](bool left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](std::string left, PatternData * const &right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, u128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, s128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, double right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, char right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, bool right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, std::string right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](PatternData * const &left, PatternData *right) -> ASTNode*   { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+
+                [this](auto&& left, std::string right) -> ASTNode*          { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                [this](std::string left, auto&& right) -> ASTNode* {
                     switch (this->getOperator()) {
                         case Token::Operator::Star: {
                             std::string result;
@@ -139,7 +155,6 @@ namespace hex::pl {
                             LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                     }
                 },
-                [this](auto left, std::string right) -> ASTNode* { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                 [this](std::string left, std::string right) -> ASTNode* {
                     switch (this->getOperator()) {
                         case Token::Operator::Plus:
@@ -253,24 +268,16 @@ namespace hex::pl {
             auto *third = dynamic_cast<ASTNodeLiteral*>(this->getThirdOperand()->evaluate(evaluator));
             ON_SCOPE_EXIT { delete first; delete second; delete third; };
 
-            return std::visit(overloaded {
-                [this](std::string first, auto &&second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
-                [this](std::string first, std::string second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
-                [this](std::string first, auto &&second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
-                [this](std::string first, std::string second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
-                [this](auto &&first, std::string second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
-                [this](auto &&first, auto &&second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
-                [this](auto &&first, std::string second, std::string third) -> ASTNode * { LogConsole::abortEvaluation("invalid ternary operation", this); },
+            auto condition = std::visit(overloaded {
+                [this](std::string value) -> bool { return !value.empty(); },
+                [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                [](auto &&value) -> bool { return bool(value); }
+            }, first->getValue());
 
-                [this](auto &&first, auto &&second, auto &&third) -> ASTNode * {
-                    switch (this->getOperator()) {
-                    case Token::Operator::TernaryConditional:
-                        return new ASTNodeLiteral(first ? second : third);
-                    default:
-                        LogConsole::abortEvaluation("invalid ternary operator used in mathematical expression");
-                    }
-                }
-            }, first->getValue(), second->getValue(), third->getValue());
+            return std::visit(overloaded {
+                [condition]<typename T>(T second, T third) -> ASTNode* { return new ASTNodeLiteral(condition ? second : third); },
+                [this](auto &&second, auto &&third) -> ASTNode* { LogConsole::abortEvaluation("operands to ternary expression have different types", this); }
+            }, second->getValue(), third->getValue());
         }
 
         [[nodiscard]] ASTNode *getFirstOperand() const { return this->m_first; }
@@ -407,7 +414,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) override {
 
             while (evaluateCondition(evaluator)) {
-                std::vector<PatternData*> variables = evaluator->getScope(0);
+                auto variables = *evaluator->getScope(0).scope;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
                     s64 stackSize = evaluator->getStack().size();
@@ -419,7 +426,7 @@ namespace hex::pl {
                     evaluator->getStack().resize(stackSize);
                 };
 
-                evaluator->pushScope(variables);
+                evaluator->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT { evaluator->popScope(); };
 
                 for (auto &statement : this->m_body) {
@@ -439,8 +446,9 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete literal; };
 
             return std::visit(overloaded {
-                    [](std::string) { return false; },
-                    [](auto &&value) { return value != 0; }
+                    [](std::string value) -> bool { return !value.empty(); },
+                    [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                    [](auto &&value) -> bool { return value != 0; }
             }, literal->getValue());
         }
 
@@ -483,8 +491,9 @@ namespace hex::pl {
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                    [this](std::string){ LogConsole::abortEvaluation("placement offset cannot be a string", this); return u64(0); },
-                    [](auto &&offset) { return u64(offset); }
+                    [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                    [this](PatternData * const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                    [](auto &&offset) -> u64 { return offset; }
                 }, offset->getValue());
             }
 
@@ -541,8 +550,9 @@ namespace hex::pl {
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                        [this](std::string){ LogConsole::abortEvaluation("placement offset cannot be a string", this); return u64(0); },
-                        [](auto &&offset) { return u64(offset); }
+                        [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                        [this](PatternData * const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                        [](auto &&offset) -> u64 { return offset; }
                 }, offset->getValue());
             }
 
@@ -594,8 +604,9 @@ namespace hex::pl {
 
                 if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
                     entryCount = std::visit(overloaded {
-                            [this](std::string) { LogConsole::abortEvaluation("cannot use string to index array", this); return u128(0); },
-                            [](auto &&size) { return u128(size); }
+                            [this](std::string) -> u128  { LogConsole::abortEvaluation("cannot use string to index array", this); },
+                            [this](PatternData*) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                            [](auto &&size) -> u128 { return size; }
                     }, literal->getValue());
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
@@ -672,11 +683,9 @@ namespace hex::pl {
 
                 if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
                     entryCount = std::visit(overloaded{
-                            [this](std::string) {
-                                LogConsole::abortEvaluation("cannot use string to index array", this);
-                                return u128(0);
-                            },
-                            [](auto &&size) { return u128(size); }
+                            [this](std::string) -> u128  { LogConsole::abortEvaluation("cannot use string to index array", this); },
+                            [this](PatternData*) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                            [](auto &&size) -> u128 { return size; }
                     }, literal->getValue());
 
                     for (u64 i = 0; i < entryCount; i++) {
@@ -777,8 +786,9 @@ namespace hex::pl {
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                        [this](std::string){ LogConsole::abortEvaluation("placement offset cannot be a string", this); return u64(0); },
-                        [](auto &&offset) { return u64(offset); }
+                        [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                        [this](PatternData*) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                        [](auto &&offset) -> u64   { return u64(offset); }
                 }, offset->getValue());
             }
 
@@ -870,7 +880,7 @@ namespace hex::pl {
             u64 startOffset = evaluator->dataOffset();
             std::vector<PatternData*> memberPatterns;
 
-            evaluator->pushScope(memberPatterns);
+            evaluator->pushScope(pattern, memberPatterns);
             for (auto member : this->m_members) {
                 for (auto &memberPattern : member->createPatterns(evaluator)) {
                     memberPatterns.push_back(memberPattern);
@@ -916,7 +926,7 @@ namespace hex::pl {
             std::vector<PatternData*> memberPatterns;
             u64 startOffset = evaluator->dataOffset();
 
-            evaluator->pushScope(memberPatterns);
+            evaluator->pushScope(pattern, memberPatterns);
             for (auto member : this->m_members) {
                 for (auto &memberPattern : member->createPatterns(evaluator)) {
                     memberPattern->setOffset(startOffset);
@@ -1017,14 +1027,15 @@ namespace hex::pl {
 
             size_t bitOffset = 0;
             std::vector<PatternData*> fields;
-            evaluator->pushScope(fields);
+            evaluator->pushScope(pattern, fields);
             for (auto [name, bitSizeNode] : this->m_entries) {
                 auto literal = bitSizeNode->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete literal; };
 
                 u8 bitSize = std::visit(overloaded {
-                        [](std::string){ return static_cast<u8>(0); },
-                        [](auto &&offset) { return static_cast<u8>(offset); }
+                        [this](std::string) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a string", this); },
+                        [this](PatternData*) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a custom type", this); },
+                        [](auto &&offset) -> u8 { return static_cast<u8>(offset); }
                 }, dynamic_cast<ASTNodeLiteral*>(literal)->getValue());
 
                 auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize);
@@ -1127,7 +1138,9 @@ namespace hex::pl {
                 u64 value = 0;
                 readValue(value, pattern);
                 literal = u128(hex::extract(bitfieldFieldPattern->getBitOffset() + (bitfieldFieldPattern->getBitSize() - 1), bitfieldFieldPattern->getBitOffset(), value));
-            } else LogConsole::abortEvaluation("invalid type access", this);
+            } else {
+                literal = pattern->clone();
+            }
 
             return new ASTNodeLiteral(literal);
         }
@@ -1135,7 +1148,7 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             s32 scopeIndex = 0;
 
-            auto searchScope = evaluator->getScope(scopeIndex);
+            auto searchScope = *evaluator->getScope(scopeIndex).scope;
             PatternData *currPattern = nullptr;
 
             for (const auto &part : this->getPath()) {
@@ -1146,7 +1159,18 @@ namespace hex::pl {
 
                     if (name == "parent") {
                         scopeIndex--;
-                        searchScope = evaluator->getScope(scopeIndex);
+                        searchScope = *evaluator->getScope(scopeIndex).scope;
+                        currPattern = searchScope.front()->getParent();
+                    } else if (name == "this") {
+                        searchScope = *evaluator->getScope(scopeIndex).scope;
+
+                        auto currParent = evaluator->getScope(0).parent;
+
+                        if (currParent == nullptr)
+                            LogConsole::abortEvaluation("invalid use of 'this' outside of struct-like type", this);
+
+                        currPattern = currParent->clone();
+                        continue;
                     } else {
                         bool found = false;
                         for (const auto &variable : searchScope) {
@@ -1171,7 +1195,8 @@ namespace hex::pl {
                     ON_SCOPE_EXIT { delete index; };
 
                     std::visit(overloaded {
-                        [](std::string) { },
+                        [](std::string) { throw std::string("cannot use string to index array"); },
+                        [](PatternData * const &) { throw std::string("cannot use custom type to index array"); },
                         [&, this](auto &&index) {
                             if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern)) {
                                 if (index >= searchScope.size() || index < 0)
@@ -1185,7 +1210,7 @@ namespace hex::pl {
                                 if (index >= staticArrayPattern->getEntryCount() || index < 0)
                                     LogConsole::abortEvaluation("array index out of bounds", this);
 
-                                auto newPattern = searchScope[0]->clone();
+                                auto newPattern = searchScope.front()->clone();
                                 delete currPattern;
                                 currPattern = newPattern;
                                 currPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getSize());
@@ -1293,19 +1318,19 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) override {
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
-            std::vector<PatternData*> variables = evaluator->getScope(0);
+            auto variables = *evaluator->getScope(0).scope;
             u32 startVariableCount = variables.size();
             ON_SCOPE_EXIT {
                 s64 stackSize = evaluator->getStack().size();
                 for (u32 i = startVariableCount; i < variables.size(); i++) {
-                  stackSize -= variables[i]->getSize();
-                  delete variables[i];
+                    stackSize -= variables[i]->getSize();
+                    delete variables[i];
                 }
                 if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
-                evaluator->getStack().resize(stackSize);
+                    evaluator->getStack().resize(stackSize);
             };
 
-            evaluator->pushScope(variables);
+            evaluator->pushScope(nullptr, variables);
             ON_SCOPE_EXIT { evaluator->popScope(); };
             for (auto &statement : body) {
                 auto [executionStopped, result] = statement->execute(evaluator);
@@ -1324,8 +1349,9 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete literal; };
 
             return std::visit(overloaded {
-                [](std::string) { return false; },
-                [](auto &&value) { return value != 0; }
+                [](std::string value) -> bool { return !value.empty(); },
+                [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                [](auto &&value) -> bool { return value != 0; }
                 }, literal->getValue());
         }
 
@@ -1604,7 +1630,7 @@ namespace hex::pl {
             evaluator->addCustomFunction(this->m_name, this->m_params.size(), [this](Evaluator *ctx, const std::vector<Token::Literal>& params) -> std::optional<Token::Literal> {
                 std::vector<PatternData*> variables;
 
-                ctx->pushScope(variables);
+                ctx->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT { ctx->popScope(); };
 
                 u32 paramIndex = 0;

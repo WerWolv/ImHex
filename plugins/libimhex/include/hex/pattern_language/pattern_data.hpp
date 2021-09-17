@@ -1175,7 +1175,8 @@ namespace hex::pl {
 
                         return false;
                     },
-                    [](std::string) { return false; }
+                    [](std::string) { return false; },
+                    [](PatternData*) { return false; }
                 }, entryValueLiteral);
                 if (matches)
                     break;

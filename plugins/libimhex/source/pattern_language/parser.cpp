@@ -93,6 +93,8 @@ namespace hex::pl {
             path.push_back(getValue<Token::Identifier>(-1).get());
         else if (peek(KEYWORD_PARENT, -1))
             path.emplace_back("parent");
+        else if (peek(KEYWORD_THIS, -1))
+            path.emplace_back("this");
 
         if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN))) {
             path.push_back(parseMathematicalExpression());
@@ -135,7 +137,7 @@ namespace hex::pl {
                 ASTNodeRValue::Path path;
                 return this->parseRValue(path);
             }
-        } else if (MATCHES(oneOf(KEYWORD_PARENT))) {
+        } else if (MATCHES(oneOf(KEYWORD_PARENT, KEYWORD_THIS))) {
             ASTNodeRValue::Path path;
             return this->parseRValue(path);
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
@@ -143,7 +145,7 @@ namespace hex::pl {
         } else if (MATCHES(oneOf(OPERATOR_ADDRESSOF, OPERATOR_SIZEOF) && sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto op = getValue<Token::Operator>(-2);
 
-            if (!MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT))) {
+            if (!MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT, KEYWORD_THIS))) {
                 throwParseError("expected rvalue identifier");
             }
 
@@ -155,7 +157,7 @@ namespace hex::pl {
             }
             return node;
         } else
-            throwParseError("expected integer or parenthesis");
+            throwParseError("expected value or parenthesis");
     }
 
     // <+|-|!|~> (parseFactor)

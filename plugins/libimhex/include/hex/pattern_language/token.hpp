@@ -10,6 +10,8 @@
 
 namespace hex::pl {
 
+    class PatternData;
+
     class Token {
     public:
         enum class Type : u64 {
@@ -33,6 +35,7 @@ namespace hex::pl {
             If,
             Else,
             Parent,
+            This,
             While,
             Function,
             Return,
@@ -123,7 +126,7 @@ namespace hex::pl {
             std::string m_identifier;
         };
 
-        using Literal = std::variant<char, bool, u128, s128, double, std::string>;
+        using Literal = std::variant<char, bool, u128, s128, double, std::string, PatternData*>;
         using ValueTypes = std::variant<Keyword, Identifier, Operator, Literal, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -149,6 +152,7 @@ namespace hex::pl {
         static u128 literalToUnsigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                       [](std::string) -> u128 { throw std::string("expected integral type, got string"); },
+                                      [](PatternData*) -> u128 { throw std::string("expected integral type, got custom type"); },
                                       [](auto &&value) -> u128 { return value; }
                               },
                               literal);
@@ -157,6 +161,7 @@ namespace hex::pl {
         static s128 literalToSigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                       [](std::string) -> s128 { throw std::string("expected integral type, got string"); },
+                                      [](PatternData*) -> s128 { throw std::string("expected integral type, got custom type"); },
                                       [](auto &&value) -> s128 { return value; }
                               },
                               literal);
@@ -165,6 +170,7 @@ namespace hex::pl {
         static double literalToFloatingPoint(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                       [](std::string) -> double { throw std::string("expected integral type, got string"); },
+                                      [](PatternData*) -> double { throw std::string("expected integral type, got custom type"); },
                                       [](auto &&value) -> double { return value; }
                               },
                               literal);
@@ -173,6 +179,7 @@ namespace hex::pl {
         static bool literalToBoolean(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                       [](std::string) -> bool { throw std::string("expected integral type, got string"); },
+                                      [](PatternData*) -> bool { throw std::string("expected integral type, got custom type"); },
                                       [](auto &&value) -> bool { return value != 0; }
                               },
                               literal);
@@ -188,6 +195,7 @@ namespace hex::pl {
                                       [](s128 value)   -> std::string { return std::to_string(s64(value)); },
                                       [](bool value)   -> std::string { return value ? "true" : "false"; },
                                       [](char value)   -> std::string { return std::string() + value; },
+                                      [](PatternData*) -> std::string { throw std::string("expected integral type, got custom type"); },
                                       [](auto &&value) -> std::string { return std::to_string(value); }
                               },
                               literal);
@@ -267,6 +275,7 @@ namespace hex::pl {
 #define KEYWORD_IF                          COMPONENT(Keyword, If)
 #define KEYWORD_ELSE                        COMPONENT(Keyword, Else)
 #define KEYWORD_PARENT                      COMPONENT(Keyword, Parent)
+#define KEYWORD_THIS                        COMPONENT(Keyword, This)
 #define KEYWORD_WHILE                       COMPONENT(Keyword, While)
 #define KEYWORD_FUNCTION                    COMPONENT(Keyword, Function)
 #define KEYWORD_RETURN                      COMPONENT(Keyword, Return)

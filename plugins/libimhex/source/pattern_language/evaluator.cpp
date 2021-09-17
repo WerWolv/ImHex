@@ -4,7 +4,7 @@
 namespace hex::pl {
 
     void Evaluator::createVariable(const std::string &name, ASTNode *type) {
-        auto &variables = this->getScope(0);
+        auto &variables = *this->getScope(0).scope;
         for (auto &variable : variables) {
             if (variable->getVariableName() == name) {
                 LogConsole::abortEvaluation(hex::format("variable with name '{}' already exists", name));
@@ -25,7 +25,7 @@ namespace hex::pl {
     void Evaluator::setVariable(const std::string &name, const Token::Literal& value) {
         PatternData *pattern = nullptr;
 
-        auto &variables = this->getScope(0);
+        auto &variables = *this->getScope(0).scope;
         for (auto &variable : variables) {
             if (variable->getVariableName() == name) {
                 pattern = variable;
@@ -37,7 +37,17 @@ namespace hex::pl {
             LogConsole::abortEvaluation(hex::format("no variable with name '{}' found", name));
 
         std::visit(overloaded {
+                [&](PatternData * const &value) {
+                    if (value->getTypeName() != pattern->getTypeName())
+                        LogConsole::abortEvaluation(hex::format("cannot assign value of type '{}' to variable of type '{}'", value->getTypeName(), pattern->getTypeName()));
+
+                    pattern->setOffset(value->getOffset());
+                    pattern->setSize(value->getSize());
+                },
                 [&](std::string value) {
+                    if (!dynamic_cast<PatternDataString*>(pattern))
+                        LogConsole::abortEvaluation(hex::format("cannot assign value of type string to variable of type '{}'", pattern->getTypeName()));
+
                     auto size = value.length();
 
                     pattern->setSize(size);
@@ -45,6 +55,9 @@ namespace hex::pl {
                     std::memcpy(&this->getStack()[pattern->getOffset()], value.data(), size);
                 },
                 [&](auto &&value) {
+                    if (!dynamic_cast<PatternDataUnsigned*>(pattern) && !dynamic_cast<PatternDataSigned*>(pattern) && !dynamic_cast<PatternDataCharacter*>(pattern) && !dynamic_cast<PatternDataCharacter16*>(pattern) && !dynamic_cast<PatternDataBoolean*>(pattern))
+                        LogConsole::abortEvaluation(hex::format("cannot assign value of type integral to variable of type '{}'", pattern->getTypeName()));
+
                     auto size = std::min(sizeof(value), pattern->getSize());
 
                     this->getStack().resize(this->getStack().size() + size);
@@ -56,7 +69,7 @@ namespace hex::pl {
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode*> &ast) {
         this->m_stack.clear();
         this->m_customFunctions.clear();
-        this->m_currScope.clear();
+        this->m_scopes.clear();
 
         for (auto &func : this->m_customFunctionDefinitions)
             delete func;
@@ -65,7 +78,7 @@ namespace hex::pl {
         std::vector<PatternData*> patterns;
 
         try {
-            pushScope(patterns);
+            pushScope(nullptr, patterns);
             for (auto node : ast) {
                 if (dynamic_cast<ASTNodeTypeDecl*>(node)) {
                     ;// Don't create patterns from type declarations
