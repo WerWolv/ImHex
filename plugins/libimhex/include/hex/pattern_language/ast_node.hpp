@@ -275,7 +275,7 @@ namespace hex::pl {
             }, first->getValue());
 
             return std::visit(overloaded {
-                [condition]<typename T>(T second, T third) -> ASTNode* { return new ASTNodeLiteral(condition ? second : third); },
+                [condition]<typename T>(const T &second, const T &third) -> ASTNode* { return new ASTNodeLiteral(condition ? second : third); },
                 [this](auto &&second, auto &&third) -> ASTNode* { LogConsole::abortEvaluation("operands to ternary expression have different types", this); }
             }, second->getValue(), third->getValue());
         }

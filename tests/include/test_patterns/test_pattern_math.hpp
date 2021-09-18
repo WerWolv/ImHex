@@ -46,7 +46,7 @@ namespace hex::test {
 
                 // Special operators
                 std::assert($ == 0, "$ operator error");
-                std::assert((10 == 20) ? 30 : 40 == 40, "?: operator error");
+                std::assert(((10 == 20) ? 30 : 40) == 40, "?: operator error");
 
                 // Type operators
                 struct TypeTest { u32 x, y, z; };
