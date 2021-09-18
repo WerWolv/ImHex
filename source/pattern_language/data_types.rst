@@ -138,11 +138,7 @@ Literals are fixed values representing a specific constant. The following litera
     =========================== ===========================
     Decimal Integer             ``42``, ``-1337``
     Unsigned 32 bit integer     ``69U``
-    Unsigned 64 bit integer     ``666UL``
-    Unsigned 128 bit integer    ``9000ULL``
-    Signed 32 bit integer       ``69``
-    Signed 64 bit integer       ``-666L``
-    Signed 128 bit integer      ``-12345LL``
+    Signed 32 bit integer       ``69``, ``-123``
     Hexadecimal Integer         ``0xDEAD``
     Binary Integer              ``0b00100101``
     Octal Integer               ``0o644``

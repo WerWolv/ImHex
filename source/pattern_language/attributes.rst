@@ -36,6 +36,12 @@ Changes the display name of the variable in the pattern data view without affect
 
 Adds a comment to the current variable that is displayed when hovering over it in the pattern data view.
 
+``[[format("formatter_function_name")]]``
+-----------------------
+
+Overrides the default display value formatter with a custom function. 
+The function requires a single argument representing the value to be formatted (e.g ``u32`` if this attribute was applied to a variable of type ``u32``) and return a string which will be displayed in place of the default value.
+
 ``[[hidden]]``
 --------------
 

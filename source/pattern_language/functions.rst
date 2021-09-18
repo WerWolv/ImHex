@@ -3,15 +3,11 @@ Functions
 
 Functions are reusable pieces of code that can do calculations. Pretty much like functions in any other programming language.
 
-.. note:: 
-
-    Arguments and return values in custom function can only be numbers right now, this is likely to change though in the future.
-
-    Argument types will automatically be deduced from the value passed into the function. This will most likely change as well
+Parameter types need to be specified explicitly, return type is automatically deduced.
 
 .. code-block:: hexpat
 
-    fn min(a, b) {
+    fn min(s32 a, s32 b) {
         if (a > b)
             return b;
         else
@@ -24,10 +20,6 @@ Variables
 ^^^^^^^^^
 
 Variables can be declared in a similar fashion as outside of functions but they will be put onto the function's stack instead of being highlighted.
-
-.. note:: 
-
-   Currently only built-in types can be used within functions
 
 
 .. code-block:: hexpat

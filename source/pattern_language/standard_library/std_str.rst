@@ -46,10 +46,10 @@
 
 ------------------------
 
-``std::str::compare(left, right)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::str::substr(string, pos, size)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Checks if two strings are identical**
+**Gets a substring of ``string`` starting at ``pos```` of size ``size``**
 
 
 .. table::
@@ -58,7 +58,8 @@
     =============== =========================================================================
     Parameter       Description
     =============== =========================================================================
-    ``left``        First string 
-    ``right``       Second string
-    ``return``      True if first string and second string are identical, false otherwise
+    ``string``      String to index
+    ``pos``         Starting position of substring
+    ``size``        Size of substring
+    ``return``      Substring
     =============== =========================================================================
