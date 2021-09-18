@@ -161,7 +161,7 @@ namespace hex::pl {
     }
 
     ASTNode* Parser::parseCastExpression() {
-        if (peek(VALUETYPE_ANY)) {
+        if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
             auto type = parseType();
             auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(type->getType());
 
@@ -176,7 +176,7 @@ namespace hex::pl {
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                 throwParseError("expected ')' after cast expression", -1);
 
-            return new ASTNodeCast(node, builtinType->getType());
+            return new ASTNodeCast(node, type);
         } else return parseFactor();
     }
 
