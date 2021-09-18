@@ -88,6 +88,7 @@ namespace hex::pl {
                     std::memcpy(&this->getStack()[pattern->getOffset()], value.data(), size);
                 },
                 [&](double &value) {
+                    value = hex::changeEndianess(value, pattern->getEndian());
                     auto size = std::min(sizeof(value), pattern->getSize());
 
                     if (pattern->getSize() == sizeof(float)) {
@@ -102,6 +103,7 @@ namespace hex::pl {
                 },
                 [&](auto &&value) {
                     auto size = std::min(sizeof(value), pattern->getSize());
+                    value = hex::changeEndianess(value, size, pattern->getEndian());
 
                     this->getStack().resize(this->getStack().size() + size);
                     std::memcpy(&this->getStack()[pattern->getOffset()], &value, size);
