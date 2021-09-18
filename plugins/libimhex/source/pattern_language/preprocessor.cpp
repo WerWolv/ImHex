@@ -168,9 +168,7 @@ namespace hex::pl {
                 if (code[offset] == '\n') {
                     lineNumber++;
                     startOfLine = true;
-                }
-
-                if (!std::isblank(code[offset]))
+                } else if (!std::isspace(code[offset]))
                     startOfLine = false;
 
                 output += code[offset];
