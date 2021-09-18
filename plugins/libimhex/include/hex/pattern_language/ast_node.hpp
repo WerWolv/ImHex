@@ -237,6 +237,72 @@ namespace hex::pl {
         Token::Operator m_operator;
     };
 
+    class ASTNodeCast : public ASTNode {
+    public:
+        ASTNodeCast(ASTNode *value, Token::ValueType type) : m_value(value), m_type(type) { }
+        ASTNodeCast(const ASTNodeCast &other) {
+            this->m_value = other.m_value->clone();
+            this->m_type = other.m_type;
+        }
+
+        ~ASTNodeCast() override {
+            delete this->m_value;
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeCast(*this);
+        }
+
+        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_value->evaluate(evaluator));
+
+            return std::visit(overloaded {
+                [this](PatternData * value) -> ASTNode* { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(this->m_type)), this); },
+                [this](const std::string&) -> ASTNode* { LogConsole::abortEvaluation(hex::format("cannot cast string to '{}'", Token::getTypeName(this->m_type)), this); },
+                [this](auto &&value) -> ASTNode* {
+                    switch (this->m_type) {
+                        case Token::ValueType::Unsigned8Bit:
+                            return new ASTNodeLiteral(u128(u8(value)));
+                        case Token::ValueType::Unsigned16Bit:
+                            return new ASTNodeLiteral(u128(u16(value)));
+                        case Token::ValueType::Unsigned32Bit:
+                            return new ASTNodeLiteral(u128(u32(value)));
+                        case Token::ValueType::Unsigned64Bit:
+                            return new ASTNodeLiteral(u128(u64(value)));
+                        case Token::ValueType::Unsigned128Bit:
+                            return new ASTNodeLiteral(u128(value));
+                        case Token::ValueType::Signed8Bit:
+                            return new ASTNodeLiteral(s128(s8(value)));
+                        case Token::ValueType::Signed16Bit:
+                            return new ASTNodeLiteral(s128(s16(value)));
+                        case Token::ValueType::Signed32Bit:
+                            return new ASTNodeLiteral(s128(s32(value)));
+                        case Token::ValueType::Signed64Bit:
+                            return new ASTNodeLiteral(s128(s64(value)));
+                        case Token::ValueType::Signed128Bit:
+                            return new ASTNodeLiteral(s128(value));
+                        case Token::ValueType::Float:
+                            return new ASTNodeLiteral(double(float(value)));
+                        case Token::ValueType::Double:
+                            return new ASTNodeLiteral(double(value));
+                        case Token::ValueType::Character:
+                            return new ASTNodeLiteral(char(value));
+                        case Token::ValueType::Character16:
+                            return new ASTNodeLiteral(u128(char16_t(value)));
+                        case Token::ValueType::Boolean:
+                            return new ASTNodeLiteral(bool(value));
+                        default:
+                            LogConsole::abortEvaluation(hex::format("cannot cast value to '{}'", Token::getTypeName(this->m_type)), this);
+                    }
+                },
+            }, literal->getValue());
+        }
+
+    private:
+        ASTNode *m_value;
+        Token::ValueType m_type;
+    };
+
     class ASTNodeTernaryExpression : public ASTNode {
     public:
         ASTNodeTernaryExpression(ASTNode *first, ASTNode *second, ASTNode *third, Token::Operator op)

@@ -73,6 +73,7 @@ namespace hex::pl {
         ASTNode* parseScopeResolution();
         ASTNode* parseRValue(ASTNodeRValue::Path &path);
         ASTNode* parseFactor();
+        ASTNode* parseCastExpression();
         ASTNode* parseUnaryExpression();
         ASTNode* parseMultiplicativeExpression();
         ASTNode* parseAdditiveExpression();

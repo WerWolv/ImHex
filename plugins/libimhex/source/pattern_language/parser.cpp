@@ -160,17 +160,37 @@ namespace hex::pl {
             throwParseError("expected value or parenthesis");
     }
 
+    ASTNode* Parser::parseCastExpression() {
+        if (peek(VALUETYPE_ANY)) {
+            auto type = parseType();
+            auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(type->getType());
+
+            if (builtinType == nullptr)
+                throwParseError("invalid type used for pointer size", -1);
+
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN)))
+                throwParseError("expected '(' before cast expression", -1);
+
+            auto node = parseFactor();
+
+            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+                throwParseError("expected ')' after cast expression", -1);
+
+            return new ASTNodeCast(node, builtinType->getType());
+        } else return parseFactor();
+    }
+
     // <+|-|!|~> (parseFactor)
     ASTNode* Parser::parseUnaryExpression() {
         if (MATCHES(oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_BOOLNOT, OPERATOR_BITNOT))) {
             auto op = getValue<Token::Operator>(-1);
 
-            return create(new ASTNodeMathematicalExpression(new ASTNodeLiteral(0), this->parseFactor(), op));
+            return create(new ASTNodeMathematicalExpression(new ASTNodeLiteral(0), this->parseCastExpression(), op));
         } else if (MATCHES(sequence(STRING))) {
             return this->parseStringLiteral();
         }
 
-        return this->parseFactor();
+        return this->parseCastExpression();
     }
 
     // (parseUnaryExpression) <*|/|%> (parseUnaryExpression)
