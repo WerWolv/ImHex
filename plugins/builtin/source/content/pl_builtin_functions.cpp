@@ -8,9 +8,6 @@
 #include <hex/pattern_language/evaluator.hpp>
 #include <hex/pattern_language/pattern_data.hpp>
 
-#include <hex/helpers/utils.hpp>
-
-#include <cctype>
 #include <vector>
 
 #include <fmt/args.h>
@@ -204,13 +201,6 @@ namespace hex::plugin::builtin {
                 return string.substr(pos, size);
             });
 
-            /* compare(left, right) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "compare", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                auto left = Token::literalToString(params[0], false);
-                auto right = Token::literalToString(params[1], false);
-
-                return bool(left == right);
-            });
         }
     }
 
