@@ -19,6 +19,15 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
+        
+    - name: 📜 Restore cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.ccache
+          .flatpak-builder
+        key: ${{ runner.os }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-build-
 
     - name: ⬇️ Install dependencies
       run: |
@@ -27,11 +36,12 @@ jobs:
 
     - name: 🛠️ Build
       run: |
-        mkdir build
+        mkdir -p build
         cd build
         CC=gcc-10 CXX=g++-10 cmake \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           ..
         make -j 4 install
 
@@ -41,7 +51,7 @@ jobs:
         flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         flatpak --user install -y flathub org.freedesktop.Platform//20.08
         flatpak --user install -y flathub org.freedesktop.Sdk//20.08
-        flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml
+        flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
         flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
 
     - name: ⬆️ Upload ELF
@@ -64,21 +74,42 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+    env:
+      CCACHE_DIR:      "${{ github.workspace }}/.ccache"
+      CCACHE_MAXSIZE:  "1000M"
+      CCACHE_COMPRESS: "true"
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
         submodules: recursive
+        
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
+
     - name: ⬇️ Install dependencies
       run: |
-          bash dist/get_deps_msys2.sh
+        bash dist/get_deps_msys2.sh
+
+    - name: 📜 Prepare Cache
+      id:    prep-ccache
+      shell: bash
+      run: |
+        mkdir -p "${CCACHE_DIR}"
+        echo "::set-output name=dir::$CCACHE_DIR"
+
+    - name: 📜 Restore Cache
+      uses:  actions/cache@v1
+      id:    cache-ccache
+      with:
+        path: ${{ steps.prep-ccache.outputs.dir }}
+        key: ${{ runner.os }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-build-
 
     - name: 🛠️ Build
       run: |
-        mkdir build
+        mkdir -p build
         cd build
         # Get path to mingw python library
         PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//' | sed 's/ //')
@@ -89,11 +120,11 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCREATE_PACKAGE=ON \
           -DPython_LIBRARY="$PYTHON_LIB_PATH" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           ..
-        mingw32-make -j4
-        mingw32-make install
+        mingw32-make -j4 install
         cpack
-
+      
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v2
       with:
@@ -124,9 +155,17 @@ jobs:
       run: |
         brew bundle --no-lock --file dist/Brewfile
 
+    - name: 📜 Restore cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.ccache
+        key: ${{ runner.os }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-build-
+
     - name: 🛠️ Build
       run: |
-        mkdir build
+        mkdir -p build
         cd build
         CC=$(brew --prefix llvm)/bin/clang \
         CXX=$(brew --prefix llvm)/bin/clang++ \
@@ -136,8 +175,9 @@ jobs:
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DCREATE_BUNDLE=ON \
           -DCREATE_PACKAGE=ON \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           ..
-        make -j 4 package
+        make -j4 package
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v2

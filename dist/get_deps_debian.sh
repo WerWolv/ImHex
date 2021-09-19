@@ -17,6 +17,7 @@ apt install -y \
   ${PKGCONF:-}          \
   cmake                 \
   make                  \
+  ccache                \
   libglfw3-dev          \
   libglm-dev            \
   libmagic-dev          \

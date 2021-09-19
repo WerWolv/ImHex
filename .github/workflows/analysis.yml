@@ -29,6 +29,14 @@ jobs:
       with:
         languages: 'cpp'
 
+    - name: 📜 Restore cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.ccache
+          .flatpak-builder
+        key: ${{ runner.os }}-build
+
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update
@@ -41,6 +49,7 @@ jobs:
         CC=gcc-10 CXX=g++-10 cmake \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
+          -D CMAKE_C_COMPILER_LAUNCHER=ccache -D CMAKE_CXX_COMPILER_LAUNCHER=ccache \
           ..
         make -j 4 install
 
