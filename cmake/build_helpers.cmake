@@ -185,7 +185,7 @@ macro(createPackage)
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
             CONFLICTING_DEPENDENCIES_PREFIX _c_deps
             DIRECTORIES ${DEP_FOLDERS}
-            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll" ".*SysWow64/.*\\.dll"
+            POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
         )
 
         if(_u_deps)
