@@ -57,7 +57,7 @@ namespace hex {
         void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
 
         static inline std::string toWindowName(const std::string &unlocalizedName) {
-            return LangEntry(unlocalizedName) + "##" + unlocalizedName;
+            return LangEntry(unlocalizedName) + "###" + unlocalizedName;
         }
 
     private:
