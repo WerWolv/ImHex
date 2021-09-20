@@ -82,7 +82,9 @@ namespace hex::plugin::builtin {
             }();
 
             static auto languageNames = [&]() {
-                std::vector<const char*> result(languages.size());
+                std::vector<const char*> result;
+                result.reserve(languages.size());
+
                 for (auto &[languageCode, languageName] : languages)
                     result.push_back(languageName.c_str());
 
