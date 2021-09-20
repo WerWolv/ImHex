@@ -92,6 +92,7 @@ struct MemoryEditor
     bool            OptShowAdvancedDecoding;                    // = true   // display advanced decoding data on the right side.
     bool            OptGreyOutZeroes;                           // = true   // display null/zero bytes using the TextDisabled color.
     bool            OptUpperCaseHex;                            // = true   // display hexadecimal values as "FF" instead of "ff".
+    bool            OptShowExtraInfo;                           // = true   // display extra information about size of data and current selection
     int             OptMidColsCount;                            // = 8      // set to 0 to disable extra spacing between every mid-cols.
     int             OptAddrDigitsCount;                         // = 0      // number of addr digits to display (default calculated based on maximum displayed addr).
     ImU32           HighlightColor;                             //          // background color of highlighted bytes.
@@ -311,9 +312,8 @@ struct MemoryEditor
         size_t data_preview_addr_next = (size_t)-1;
 
         if (ImGui::IsWindowFocused()) {
-            if (DataEditingAddr != (size_t)-1)
-            {
-                // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
+            // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
+            if (DataEditingAddr != (size_t)-1) {
                 if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataEditingAddr >= (size_t)Cols)          { data_editing_addr_next = DataEditingAddr - Cols; DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataEditingAddr < mem_size - Cols) { data_editing_addr_next = DataEditingAddr + Cols; DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataEditingAddr > 0)               { data_editing_addr_next = DataEditingAddr - 1; DataEditingTakeFocus = true; }
@@ -323,7 +323,6 @@ struct MemoryEditor
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)) && DataEditingAddr > 0)                    { data_editing_addr_next = 0; DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)) && DataEditingAddr < mem_size - 1)          { data_editing_addr_next = mem_size - 1; DataEditingTakeFocus = true; }
             } else if (DataPreviewAddr != -1) {
-                // Move cursor but only apply on next frame so scrolling with be synchronized (because currently we can't change the scrolling while the window is being rendered)
                 if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataPreviewAddr >= (size_t)Cols)          { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr - Cols; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataPreviewAddr < mem_size - Cols) { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr + Cols; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataPreviewAddr > 0)               { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr - 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
@@ -333,6 +332,11 @@ struct MemoryEditor
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)) && DataPreviewAddr > 0)                    { DataPreviewAddr = data_preview_addr_next = 0; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)) && DataPreviewAddr < mem_size - 1)          { DataPreviewAddr = data_preview_addr_next = mem_size - 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
             }
+        } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            DataPreviewAddr = data_preview_addr_next = DataPreviewAddrEnd = (size_t)-1;
+            HighlightMin = HighlightMax = (size_t)-1;
+
+            hex::EventManager::post<hex::EventRegionSelected>(hex::Region{ (size_t)-1, 0 });
         }
 
         if (data_preview_addr_next != (size_t)-1 && (data_preview_addr_next / Cols) != (data_preview_addr_backup / Cols))
@@ -688,35 +692,19 @@ struct MemoryEditor
         const char* format_range = OptUpperCaseHex ? "Range %0*" _PRISizeT "X..%0*" _PRISizeT "X" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x";
         const char* format_selection = OptUpperCaseHex ? "Selection %0*" _PRISizeT "X..%0*" _PRISizeT "X (%ld %s)" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x (%ld %s)";
 
-        // Options menu
-        if (ImGui::Button("Options"))
-            ImGui::OpenPopup("options");
+        if (this->OptShowExtraInfo) {
+            ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
+            if (DataPreviewAddr != (size_t)-1 && DataPreviewAddrEnd != (size_t)-1) {
+                ImGui::SameLine();
+                ImGui::Spacing();
+                ImGui::SameLine();
 
-        if (ImGui::BeginPopup("options")) {
-            ImGui::PushItemWidth(ImGui::CalcTextSize("00 cols").x * 1.1f);
-            if (ImGui::DragInt("##cols", &Cols, 0.2f, 4, 32, "%d cols")) { ContentsWidthChanged = true; if (Cols < 1) Cols = 1; }
-            ImGui::PopItemWidth();
-            ImGui::Checkbox("Show HexII", &OptShowHexII);
-            if (ImGui::Checkbox("Show Ascii", &OptShowAscii)) { ContentsWidthChanged = true; }
-            if (ImGui::Checkbox("Show Advanced Decoding", &OptShowAdvancedDecoding)) { ContentsWidthChanged = true; }
-            ImGui::Checkbox("Grey out zeroes", &OptGreyOutZeroes);
-            ImGui::Checkbox("Uppercase Hex", &OptUpperCaseHex);
+                auto selectionStart = std::min(DataPreviewAddr, DataPreviewAddrEnd);
+                auto selectionEnd = std::max(DataPreviewAddr, DataPreviewAddrEnd);
 
-            ImGui::EndPopup();
-        }
-
-        ImGui::SameLine();
-        ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
-        if (DataPreviewAddr != (size_t)-1 && DataPreviewAddrEnd != (size_t)-1) {
-            ImGui::SameLine();
-            ImGui::Spacing();
-            ImGui::SameLine();
-
-            auto selectionStart = std::min(DataPreviewAddr, DataPreviewAddrEnd);
-            auto selectionEnd = std::max(DataPreviewAddr, DataPreviewAddrEnd);
-
-            size_t regionSize = (selectionEnd - selectionStart) + 1;
-            ImGui::Text(format_selection, s.AddrDigitsCount, base_display_addr + selectionStart, s.AddrDigitsCount, base_display_addr + selectionEnd, regionSize, regionSize == 1 ? "byte" : "bytes");
+                size_t regionSize = (selectionEnd - selectionStart) + 1;
+                ImGui::Text(format_selection, s.AddrDigitsCount, base_display_addr + selectionStart, s.AddrDigitsCount, base_display_addr + selectionEnd, regionSize, regionSize == 1 ? "byte" : "bytes");
+            }
         }
 
         if (GotoAddr != (size_t)-1)

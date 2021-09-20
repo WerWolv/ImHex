@@ -95,6 +95,8 @@ namespace hex::plugin::builtin {
                 { "hex.view.data_inspector.name", "Ispezione Dati" },
                     { "hex.view.data_inspector.table.name", "Nome" },
                     { "hex.view.data_inspector.table.value", "Valore" },
+                    //{ "hex.view.data_inspector.no_data", "No bytes selected"},
+
 
                 { "hex.view.data_processor.name", "Processa Dati"  },
                     { "hex.view.data_processor.menu.remove_selection", "Rimuovi i selezionati" },
@@ -593,8 +595,16 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x1_0", "x1.0" },
                         { "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
-                { "hex.builtin.setting.interface.fps", "Limite FPS" },
-                { "hex.builtin.setting.interface.highlight_alpha", "Evidenziazione dell'opacità" },
+                    { "hex.builtin.setting.interface.fps", "Limite FPS" },
+                    { "hex.builtin.setting.interface.highlight_alpha", "Evidenziazione dell'opacità" },
+                //{ "hex.builtin.setting.hex_editor", "Hex Editor" },
+                    //{ "hex.builtin.setting.hex_editor.column_count", "Byte column count" },
+                    //{ "hex.builtin.setting.hex_editor.hexii", "Display HexII instead of Bytes" },
+                    //{ "hex.builtin.setting.hex_editor.ascii", "Display ASCII column" },
+                    //{ "hex.builtin.setting.hex_editor.advanced_decoding", "Display advanced decoding column" },
+                    //{ "hex.builtin.setting.hex_editor.grey_zeros", "Grey out zeros" },
+                    //{ "hex.builtin.setting.hex_editor.uppercase_hex", "Upper case Hex characters" },
+                    //{ "hex.builtin.setting.hex_editor.extra_info", "Display extra information" },
 
                 { "hex.builtin.provider.file.path", "Percorso del File" },
                 { "hex.builtin.provider.file.size", "Dimensione" },

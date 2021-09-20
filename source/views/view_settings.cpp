@@ -24,14 +24,22 @@ namespace hex {
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX));
 
         if (ImGui::BeginPopupModal(View::toWindowName("hex.view.settings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
-            for (auto &[category, entries] : ContentRegistry::Settings::getEntries()) {
-                ImGui::TextUnformatted(LangEntry(category));
-                ImGui::Separator();
-                for (auto &[name, callback] : entries) {
-                    if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category][name]))
-                        EventManager::post<EventSettingsChanged>();
+            if (ImGui::BeginTabBar("settings")) {
+                for (auto &[category, entries] : ContentRegistry::Settings::getEntries()) {
+                    if (ImGui::BeginTabItem(LangEntry(category))) {
+                        ImGui::TextUnformatted(LangEntry(category));
+                        ImGui::Separator();
+
+                        for (auto &[name, callback] : entries) {
+                            if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category][name]))
+                                EventManager::post<EventSettingsChanged>();
+                        }
+
+                        ImGui::EndTabItem();
+                    }
                 }
-                ImGui::NewLine();
+
+                ImGui::EndTabBar();
             }
             ImGui::EndPopup();
         } else

@@ -131,6 +131,83 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count", 16, [](auto name, nlohmann::json &setting) {
+            static int columns = static_cast<int>(setting);
+
+            if (ImGui::SliderInt(name.data(), &columns, 1, 32)) {
+                setting = columns;
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii", 0, [](auto name, nlohmann::json &setting) {
+            static bool hexii = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &hexii)) {
+                setting = static_cast<int>(hexii);
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1, [](auto name, nlohmann::json &setting) {
+            static bool ascii = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &ascii)) {
+                setting = static_cast<int>(ascii);
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding", 0, [](auto name, nlohmann::json &setting) {
+            static bool advancedDecoding = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &advancedDecoding)) {
+                setting = static_cast<int>(advancedDecoding);
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros", 1, [](auto name, nlohmann::json &setting) {
+            static bool greyZeros = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &greyZeros)) {
+                setting = static_cast<int>(greyZeros);
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex", 1, [](auto name, nlohmann::json &setting) {
+            static bool upperCaseHex = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &upperCaseHex)) {
+                setting = static_cast<int>(upperCaseHex);
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.extra_info", 1, [](auto name, nlohmann::json &setting) {
+            static bool extraInfos = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &extraInfos)) {
+                setting = static_cast<int>(extraInfos);
+                return true;
+            }
+
+            return false;
+        });
+
     }
 
 }

@@ -45,7 +45,7 @@ namespace hex::prv {
 
     void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
 
-        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
+        if ((offset - this->getBaseAddress()) > (this->getSize() - size) || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset - this->getBaseAddress(), size);

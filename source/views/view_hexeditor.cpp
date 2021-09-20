@@ -204,10 +204,53 @@ namespace hex {
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
+            {
+                auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
 
-            if (alpha.is_number())
                 this->m_highlightAlpha = alpha;
+            }
+
+            {
+                auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
+
+                this->m_memoryEditor.Cols = static_cast<int>(columnCount);
+            }
+
+            {
+                auto hexii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii");
+
+                this->m_memoryEditor.OptShowHexII = static_cast<int>(hexii);
+            }
+
+            {
+                auto ascii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii");
+
+                this->m_memoryEditor.OptShowAscii = static_cast<int>(ascii);
+            }
+
+            {
+                auto advancedDecoding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding");
+
+                this->m_memoryEditor.OptShowAdvancedDecoding = static_cast<int>(advancedDecoding);
+            }
+
+            {
+                auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
+
+                this->m_memoryEditor.OptGreyOutZeroes = static_cast<int>(greyOutZeros);
+            }
+
+            {
+                auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
+
+                this->m_memoryEditor.OptUpperCaseHex = static_cast<int>(upperCaseHex);
+            }
+
+            {
+                auto showExtraInfo = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.extra_info");
+
+                this->m_memoryEditor.OptShowExtraInfo = static_cast<int>(showExtraInfo);
+            }
         });
 
         EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
@@ -246,25 +289,26 @@ namespace hex {
                     ImGui::EndPopup();
                 }
 
-                ImGui::SameLine();
-                ImGui::Spacing();
-                ImGui::SameLine();
-                ImGui::TextUnformatted(hex::format("hex.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount()).c_str());
-                ImGui::SameLine();
+                if (provider->getPageCount() > 1) {
+                    ImGui::TextUnformatted(hex::format("hex.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount()).c_str());
 
-                if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
-                    provider->setCurrentPage(provider->getCurrentPage() - 1);
+                    ImGui::SameLine();
 
-                    EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
+                    if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
+                        provider->setCurrentPage(provider->getCurrentPage() - 1);
+
+                        EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
+                    }
+
+                    ImGui::SameLine();
+
+                    if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
+                        provider->setCurrentPage(provider->getCurrentPage() + 1);
+
+                        EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
+                    }
                 }
 
-                ImGui::SameLine();
-
-                if (ImGui::ArrowButton("nextPage", ImGuiDir_Right)) {
-                    provider->setCurrentPage(provider->getCurrentPage() + 1);
-
-                    EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
-                }
             }
             ImGui::End();
 

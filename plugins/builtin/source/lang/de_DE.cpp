@@ -96,6 +96,7 @@ namespace hex::plugin::builtin {
                 { "hex.view.data_inspector.name", "Dateninspektor" },
                     { "hex.view.data_inspector.table.name", "Name" },
                     { "hex.view.data_inspector.table.value", "Wert" },
+                    { "hex.view.data_inspector.no_data", "Keine bytes angewählt"},
 
                 { "hex.view.data_processor.name", "Datenprozessor" },
                     { "hex.view.data_processor.menu.remove_selection", "Auswahl entfernen" },
@@ -596,6 +597,14 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.interface.language", "Sprache" },
                     { "hex.builtin.setting.interface.fps", "FPS Limite" },
                     { "hex.builtin.setting.interface.highlight_alpha", "Markierungssichtbarkeit" },
+                { "hex.builtin.setting.hex_editor", "Hex Editor" },
+                    { "hex.builtin.setting.hex_editor.column_count", "Anzahl Byte Spalten" },
+                    { "hex.builtin.setting.hex_editor.hexii", "HexII anstatt Bytes anzeigen" },
+                    { "hex.builtin.setting.hex_editor.ascii", "ASCII Spalte anzeigen" },
+                    { "hex.builtin.setting.hex_editor.advanced_decoding", "Erweiterte Dekodierungsspalte anzeigen" },
+                    { "hex.builtin.setting.hex_editor.grey_zeros", "Nullen ausgrauen" },
+                    { "hex.builtin.setting.hex_editor.uppercase_hex", "Hex Zeichen als Grossbuchstaben" },
+                    { "hex.builtin.setting.hex_editor.extra_info", "Extra informationen anzeigen" },
 
                 { "hex.builtin.provider.file.path", "Dateipfad" },
                 { "hex.builtin.provider.file.size", "Größe" },

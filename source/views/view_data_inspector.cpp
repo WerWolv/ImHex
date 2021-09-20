@@ -14,18 +14,12 @@ namespace hex {
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             auto provider = SharedData::currentProvider;
 
-            if (provider == nullptr) {
+            if (provider == nullptr || region.address == (size_t)-1) {
                 this->m_validBytes = 0;
-                return;
+            } else {
+                this->m_validBytes = u64(provider->getSize() - region.address);
+                this->m_startAddress = region.address;
             }
-
-            if (region.address == (size_t)-1) {
-                this->m_validBytes = 0;
-                return;
-            }
-
-            this->m_validBytes = u64(provider->getSize() - region.address);
-            this->m_startAddress = region.address;
 
             this->m_shouldInvalidate = true;
         });
@@ -56,7 +50,7 @@ namespace hex {
         if (ImGui::Begin(View::toWindowName("hex.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = SharedData::currentProvider;
 
-            if (provider != nullptr && provider->isReadable()) {
+            if (provider != nullptr && provider->isReadable() && this->m_validBytes > 0) {
                 if (ImGui::BeginTable("##datainspector", 2,
                     ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg,
                     ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {
@@ -112,6 +106,13 @@ namespace hex {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Octal;
                     this->m_shouldInvalidate = true;
                 }
+            } else {
+                std::string text = "hex.view.data_inspector.no_data"_lang;
+                auto textSize = ImGui::CalcTextSize(text.c_str());
+                auto availableSpace = ImGui::GetContentRegionAvail();
+
+                ImGui::SetCursorPos((availableSpace - textSize) / 2.0F);
+                ImGui::TextUnformatted(text.c_str());
             }
         }
         ImGui::End();

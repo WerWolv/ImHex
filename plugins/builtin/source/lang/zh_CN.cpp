@@ -96,6 +96,7 @@ namespace hex::plugin::builtin {
                 { "hex.view.data_inspector.name", "数据分析器" },
                     { "hex.view.data_inspector.table.name", "名称" },
                     { "hex.view.data_inspector.table.value", "值" },
+                    //{ "hex.view.data_inspector.no_data", "No bytes selected"},
 
                 { "hex.view.data_processor.name", "数据处理器" },
                     { "hex.view.data_processor.menu.remove_selection", "移除已选" },
@@ -598,6 +599,14 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.interface.language", "语言" },
                     { "hex.builtin.setting.interface.fps", "FPS限制" },
                     { "hex.builtin.setting.interface.highlight_alpha", "高亮不透明度" },
+                //{ "hex.builtin.setting.hex_editor", "Hex Editor" },
+                    //{ "hex.builtin.setting.hex_editor.column_count", "Byte column count" },
+                    //{ "hex.builtin.setting.hex_editor.hexii", "Display HexII instead of Bytes" },
+                    //{ "hex.builtin.setting.hex_editor.ascii", "Display ASCII column" },
+                    //{ "hex.builtin.setting.hex_editor.advanced_decoding", "Display advanced decoding column" },
+                    //{ "hex.builtin.setting.hex_editor.grey_zeros", "Grey out zeros" },
+                    //{ "hex.builtin.setting.hex_editor.uppercase_hex", "Upper case Hex characters" },
+                    //{ "hex.builtin.setting.hex_editor.extra_info", "Display extra information" },
 
                 { "hex.builtin.provider.file.path", "路径" },
                 { "hex.builtin.provider.file.size", "大小" },

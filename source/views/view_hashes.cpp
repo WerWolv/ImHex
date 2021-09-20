@@ -15,8 +15,12 @@ namespace hex {
 
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             if (this->m_shouldMatchSelection) {
-                this->m_hashRegion[0] = region.address;
-                this->m_hashRegion[1] = region.address + region.size;
+                if (region.address == size_t(-1)) {
+                    this->m_hashRegion[0] = this->m_hashRegion[1] = 0;
+                } else {
+                    this->m_hashRegion[0] = region.address;
+                    this->m_hashRegion[1] = region.address + region.size;
+                }
                 this->m_shouldInvalidate = true;
             }
         });

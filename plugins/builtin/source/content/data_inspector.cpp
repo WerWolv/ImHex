@@ -131,7 +131,7 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 0, [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1, [](auto buffer, auto endian, auto style) {
             Region currSelection = { 0 };
             EventManager::post<QuerySelection>(currSelection);
 
@@ -143,7 +143,7 @@ namespace hex::plugin::builtin {
                 stringBuffer += "...";
 
             for (auto &c : stringBuffer)
-                if (c < 0x20 || c == '\n' || c == '\r')
+                if (c < 0x20)
                     c = ' ';
 
 
