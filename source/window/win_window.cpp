@@ -222,8 +222,15 @@
 
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 6);
         #if defined(DEBUG)
-            if (ImGui::TitleBarButton(ICON_VS_DEBUG, buttonSize))
-                hex::openWebpage("https://imhex.werwolv.net/debug");
+            if (ImGui::TitleBarButton(ICON_VS_DEBUG, buttonSize)) {
+                if (ImGui::GetIO().KeyCtrl && ImGui::GetIO().KeyShift) {
+                    // Explicitly trigger a segfault by writing to an invalid memory location
+                    // Used for debugging crashes
+                    *reinterpret_cast<u8*>(0x10) = 0x10;
+                } else {
+                    hex::openWebpage("https://imhex.werwolv.net/debug");
+                }
+            }
             ImGui::InfoTooltip("hex.menu.debug_build"_lang);
         #endif
             if (ImGui::TitleBarButton(ICON_VS_SMILEY, buttonSize))
