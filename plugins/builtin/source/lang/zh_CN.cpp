@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.learn.pattern.desc", "如何基于我们完善的文档编写ImHex模式" },
                     { "hex.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs/pattern_language/pattern_language.html" },
                     { "hex.welcome.learn.plugins.title", "插件API" },
-                    { "hex.welcome.learn.plugins.desc", "通过插件扩展ImHex得到更多功能" },
+                    { "hex.welcome.learn.plugins.desc", "通过插件扩展ImHex获得更多功能" },
                     { "hex.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.welcome.header.various", "杂项" },
                 { "hex.welcome.tip_of_the_day", "小提示" },
