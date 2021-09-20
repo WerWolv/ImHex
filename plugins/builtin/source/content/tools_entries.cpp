@@ -97,24 +97,22 @@ namespace hex::plugin::builtin {
         }
 
         void drawRegexReplacer() {
-            static std::vector<char> regexInput(0xF'FFFF, 0x00);;
-            static std::vector<char> regexPattern(0xF'FFFF, 0x00);;
-            static std::vector<char> replacePattern(0xF'FFFF, 0x00);;
-            static std::string regexOutput(0xF'FFFF, 0x00);;
+            static auto regexInput = []{ std::string s; s.reserve(0xFFF); return s; }();
+            static auto regexPattern = []{ std::string s; s.reserve(0xFFF); return s; }();
+            static auto replacePattern = []{ std::string s; s.reserve(0xFFF); return s; }();
+            static auto regexOutput = []{ std::string s; s.reserve(0xFFF); return s; }();
 
-            bool shouldInvalidate;
+            bool changed1 = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern.data(), regexPattern.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &regexPattern);
+            bool changed2 = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern.data(), replacePattern.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &replacePattern);
+            bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput.data(), regexInput.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &regexInput);
 
-            shouldInvalidate = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern.data(), regexPattern.size());
-            shouldInvalidate = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern.data(), replacePattern.size()) || shouldInvalidate;
-            shouldInvalidate = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput.data(), regexInput.size())  || shouldInvalidate;
-
-            if (shouldInvalidate) {
+            if (changed1 || changed2 || changed3) {
                 try {
                     regexOutput = std::regex_replace(regexInput.data(), std::regex(regexPattern.data()), replacePattern.data());
                 } catch (std::regex_error&) {}
             }
 
-            ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
             ImGui::NewLine();
         }
 
