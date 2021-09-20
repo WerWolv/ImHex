@@ -203,7 +203,7 @@ macro(createPackage)
                 FILES "${_file}"
                 )
         endforeach()
-    ]])
+        ]])
     endif()
 
     if (CREATE_BUNDLE)
