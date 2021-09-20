@@ -162,9 +162,7 @@
 
         void Window::initNative() {
             auto hConsoleWindow = ::GetConsoleWindow();
-            #if !defined(DEBUG)
             ::ShowWindow(hConsoleWindow, FALSE);
-            #endif
 
             auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
             if (hConsole != INVALID_HANDLE_VALUE) {
