@@ -317,6 +317,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.store.tab.magics", "Magic Files" },
                     { "hex.view.store.tab.constants", "Konstanten" },
                     { "hex.view.store.loading", "Store inhalt wird geladen..." },
+                { "hex.view.diff.name", "Diffing" },
 
             /* Builtin plugin features */
 
