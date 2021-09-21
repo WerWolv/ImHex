@@ -17,6 +17,7 @@ namespace hex::plugin::windows {
                     { "hex.windows.view.tty_console.connect", "Connect" },
                     { "hex.windows.view.tty_console.disconnect", "Disconnect" },
                     { "hex.windows.view.tty_console.connect_error", "Failed to connect to COM Port!" },
+                    { "hex.windows.view.tty_console.no_available_port", "No valid COM port is selected or no COM port is available!" },
                     { "hex.windows.view.tty_console.clear", "Clear" },
                     { "hex.windows.view.tty_console.auto_scroll", "Auto scroll" },
                 { "hex.windows.view.tty_console.console", "Console" },
