@@ -61,6 +61,7 @@ The simplest available types are the built-in standard types:
     ``char``   1 Bytes
     ``char16`` 2 Bytes
     ``bool``   1 Byte
+    ``str``    Varying
     ========== ==========
 
 * Unsigned integer types are displayed as a number ranging from ``0`` to ``((1 << bits) - 1)``.
@@ -69,6 +70,7 @@ The simplest available types are the built-in standard types:
 * ``char`` is displayed as a ``ASCII`` character.
 * ``char16`` is displayed as a ``UTF-16`` character.
 * ``bool`` is displayed as ``false`` for the value zero, ``true`` for the value one and ``true*`` for any other value
+* ``str`` can only be used for passing strings as function parameter. Use ``char[]`` instead in custom types.
 
 Endianess
 ^^^^^^^^^
