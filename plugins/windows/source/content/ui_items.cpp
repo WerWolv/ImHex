@@ -67,9 +67,11 @@ namespace hex::plugin::windows {
                     lastUserCPU = user;
                     lastSysCPU = sys;
                 }
+
+                cpuUsage *= 100;
             }
 
-            ImGui::TextUnformatted(hex::format(ICON_FA_TACHOMETER_ALT " {0:.2f}%", cpuUsage * 100).c_str());
+            ImGui::TextUnformatted(hex::format(ICON_FA_TACHOMETER_ALT " {0:2}.{1:02}", u32(cpuUsage), u32(cpuUsage * 100) % 100).c_str());
         });
 
         ContentRegistry::Interface::addFooterItem([] {
