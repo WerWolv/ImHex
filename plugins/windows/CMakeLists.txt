@@ -13,7 +13,7 @@ if (WIN32)
             source/lang/en_US.cpp
             source/lang/zh_CN.cpp
 
-            source/content/footer_items.cpp
+            source/content/ui_items.cpp
     )
 
     # Add additional include directories here #
