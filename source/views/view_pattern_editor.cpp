@@ -246,13 +246,21 @@ namespace hex {
                 if (this->m_evaluatorRunning)
                     ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
                 else
-                    ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically);
+                    if (ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically)) {
+                        if (this->m_runAutomatically)
+                            this->m_hasUnevaluatedChanges = true;
+                    }
 
                 if (this->m_textEditor.IsTextChanged()) {
                     if (this->m_runAutomatically)
-                        this->parsePattern(this->m_textEditor.GetText().data());
+                        this->m_hasUnevaluatedChanges = true;
+                }
 
+                if (this->m_hasUnevaluatedChanges && !this->m_evaluatorRunning) {
+                    this->m_hasUnevaluatedChanges = false;
                     ProjectFile::markDirty();
+
+                    this->parsePattern(this->m_textEditor.GetText().data());
                 }
             }
 

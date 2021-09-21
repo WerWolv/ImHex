@@ -30,6 +30,7 @@ namespace hex {
         int m_selectedPatternFile = 0;
         bool m_runAutomatically = false;
         bool m_evaluatorRunning = false;
+        bool m_hasUnevaluatedChanges = false;
 
         TextEditor m_textEditor;
         std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;
