@@ -51,7 +51,7 @@ namespace hex {
 
         bool& getWindowOpenState();
 
-        const std::string& getUnlocalizedName() const;
+        [[nodiscard]] const std::string& getUnlocalizedName() const;
 
     protected:
         void discardNavigationRequests();

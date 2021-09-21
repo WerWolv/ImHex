@@ -29,6 +29,7 @@
 #include "views/view_yara.hpp"
 #include "views/view_constants.hpp"
 #include "views/view_store.hpp"
+#include "views/view_diff.hpp"
 
 #include "helpers/plugin_manager.hpp"
 
@@ -191,6 +192,7 @@ namespace hex::init {
         ContentRegistry::Views::add<ViewYara>();
         ContentRegistry::Views::add<ViewConstants>();
         ContentRegistry::Views::add<ViewStore>();
+        ContentRegistry::Views::add<ViewDiff>();
 
         return true;
     }

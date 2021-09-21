@@ -7,19 +7,28 @@
 
 #include <array>
 #include <string>
+#include <vector>
 
 namespace hex {
 
     namespace prv { class Provider; }
 
-    class ViewTools : public View {
+    class ViewDiff : public View {
     public:
-        ViewTools();
-        ~ViewTools() override;
+        ViewDiff();
+        ~ViewDiff() override;
 
         void drawContent() override;
         void drawMenu() override;
 
+    private:
+        void drawDiffLine(const std::array<int, 2> &providerIds, u64 row) const;
+
+        int m_providerA = -1, m_providerB = -1;
+
+        bool m_greyedOutZeros = true;
+        bool m_upperCaseHex = true;
+        int m_columnCount = 16;
     };
 
 }

@@ -94,6 +94,7 @@ add_executable(imhex ${application_type}
         source/views/view_yara.cpp
         source/views/view_constants.cpp
         source/views/view_store.cpp
+        source/views/view_diff.cpp
 
         ${imhex_icon}
         )
