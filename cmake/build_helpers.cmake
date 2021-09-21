@@ -37,9 +37,9 @@ macro(findLibraries)
     # Find packages
     find_package(PkgConfig REQUIRED)
 
-    find_package(mbedTLS REQUIRED)
+    find_package(mbedTLS 2.26.0 REQUIRED)
 
-    pkg_search_module(CAPSTONE REQUIRED capstone)
+    pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
 
     find_package(OpenGL REQUIRED)
 
@@ -60,9 +60,9 @@ macro(findLibraries)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
 
-    pkg_search_module(MAGIC libmagic)
+    pkg_search_module(MAGIC libmagic>=5.39)
     if(NOT MAGIC_FOUND)
-        find_library(MAGIC magic REQUIRED)
+        find_library(MAGIC 5.39 magic REQUIRED)
     else()
         set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
     endif()
