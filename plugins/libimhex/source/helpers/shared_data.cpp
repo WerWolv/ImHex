@@ -5,7 +5,10 @@
 namespace hex {
 
     std::vector<std::function<void()>> SharedData::deferredCalls;
-    prv::Provider *SharedData::currentProvider;
+
+    std::vector<prv::Provider*> SharedData::providers;
+    u32 SharedData::currentProvider;
+
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> SharedData::settingsEntries;
     nlohmann::json SharedData::settingsJson;
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;

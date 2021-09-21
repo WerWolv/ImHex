@@ -59,7 +59,7 @@ namespace hex {
 
                 cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
-                auto provider = SharedData::currentProvider;
+                auto provider = ImHexApi::Provider::get();
                 std::vector<u8> buffer(2048, 0x00);
                 for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
                     size_t bufferSize = std::min(u64(2048), (this->m_codeRegion[1] - this->m_codeRegion[0] + 1) - address);
@@ -106,8 +106,8 @@ namespace hex {
 
         if (ImGui::Begin(View::toWindowName("hex.view.disassembler.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            auto provider = SharedData::currentProvider;
-            if (provider != nullptr && provider->isReadable()) {
+            auto provider = ImHexApi::Provider::get();
+            if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                 ImGui::TextUnformatted("hex.view.disassembler.position"_lang);
                 ImGui::Separator();
 

@@ -27,7 +27,7 @@ namespace hex {
 
     std::string readString(const FoundString &foundString) {
         std::string string(foundString.size + 1, '\0');
-        SharedData::currentProvider->read(foundString.offset, string.data(), foundString.size);
+        ImHexApi::Provider::get()->read(foundString.offset, string.data(), foundString.size);
 
         return string;
     }
@@ -57,7 +57,7 @@ namespace hex {
         this->m_searching = true;
 
         std::thread([this] {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
@@ -91,10 +91,10 @@ namespace hex {
     }
 
     void ViewStrings::drawContent() {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         if (ImGui::Begin(View::toWindowName("hex.view.strings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (provider != nullptr && provider->isReadable()) {
+            if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                 ImGui::Disabled([this]{
                     if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                         this->m_foundStrings.clear();

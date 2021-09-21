@@ -21,11 +21,11 @@ namespace hex::prv {
         explicit FileProvider(std::string path);
         ~FileProvider() override;
 
-        bool isAvailable() override;
-        bool isReadable() override;
-        bool isWritable() override;
-        bool isResizable() override;
-        bool isSavable() override;
+        bool isAvailable() const override;
+        bool isReadable() const override;
+        bool isWritable() const override;
+        bool isResizable() const override;
+        bool isSavable() const override;
 
         void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
@@ -33,12 +33,13 @@ namespace hex::prv {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        size_t getActualSize() override;
+        size_t getActualSize() const override;
 
         void save() override;
         void saveAs(const std::string &path) override;
 
-        std::vector<std::pair<std::string, std::string>> getDataInformation() override;
+        [[nodiscard]] std::string getName() const override;
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
 
     private:
         #if defined(OS_WINDOWS)

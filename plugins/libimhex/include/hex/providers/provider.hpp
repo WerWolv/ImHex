@@ -19,11 +19,11 @@ namespace hex::prv {
         Provider();
         virtual ~Provider();
 
-        virtual bool isAvailable() = 0;
-        virtual bool isReadable() = 0;
-        virtual bool isWritable() = 0;
-        virtual bool isResizable() = 0;
-        virtual bool isSavable() = 0;
+        virtual bool isAvailable() const = 0;
+        virtual bool isReadable() const = 0;
+        virtual bool isWritable() const = 0;
+        virtual bool isResizable() const = 0;
+        virtual bool isSavable() const = 0;
 
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void readRelative(u64 offset, void *buffer, size_t size, bool overlays = true);
@@ -37,35 +37,37 @@ namespace hex::prv {
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
-        virtual size_t getActualSize() = 0;
+        virtual size_t getActualSize() const  = 0;
 
         void applyOverlays(u64 offset, void *buffer, size_t size);
 
         std::map<u64, u8>& getPatches();
+        const std::map<u64, u8>& getPatches() const;
         void applyPatches();
 
         [[nodiscard]] Overlay* newOverlay();
         void deleteOverlay(Overlay *overlay);
         [[nodiscard]] const std::list<Overlay*>& getOverlays();
 
-        u32 getPageCount();
+        u32 getPageCount() const;
         u32 getCurrentPage() const;
         void setCurrentPage(u32 page);
 
         virtual void setBaseAddress(u64 address);
-        virtual u64 getBaseAddress();
-        virtual size_t getSize();
-        virtual std::optional<u32> getPageOfAddress(u64 address);
+        virtual u64 getBaseAddress() const;
+        virtual size_t getSize() const;
+        virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
-        virtual std::vector<std::pair<std::string, std::string>> getDataInformation() = 0;
+        [[nodiscard]] virtual std::string getName() const = 0;
+        [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataInformation() const = 0;
 
         void addPatch(u64 offset, const void *buffer, size_t size);
 
         void undo();
         void redo();
 
-        bool canUndo();
-        bool canRedo();
+        bool canUndo() const;
+        bool canRedo() const;
 
     protected:
         u32 m_currPage = 0;

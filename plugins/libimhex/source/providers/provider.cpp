@@ -57,6 +57,10 @@ namespace hex::prv {
         return *(this->m_patches.end() - 1 - this->m_patchTreeOffset);
     }
 
+    const std::map<u64, u8>& Provider::getPatches() const {
+        return *(this->m_patches.end() - 1 - this->m_patchTreeOffset);
+    }
+
     void Provider::applyPatches() {
         for (auto &[patchAddress, patch] : getPatches())
             this->writeRaw(patchAddress, &patch, 1);
@@ -77,7 +81,7 @@ namespace hex::prv {
     }
 
 
-    u32 Provider::getPageCount() {
+    u32 Provider::getPageCount() const {
         return std::ceil(this->getActualSize() / double(PageSize));
     }
 
@@ -95,15 +99,15 @@ namespace hex::prv {
         this->m_baseAddress = address;
     }
 
-    u64 Provider::getBaseAddress() {
+    u64 Provider::getBaseAddress() const {
         return this->m_baseAddress + PageSize * this->m_currPage;
     }
 
-    size_t Provider::getSize() {
+    size_t Provider::getSize() const {
         return std::min(this->getActualSize() - PageSize * this->m_currPage, PageSize);
     }
 
-    std::optional<u32> Provider::getPageOfAddress(u64 address) {
+    std::optional<u32> Provider::getPageOfAddress(u64 address) const {
         u32 page = std::floor((address - this->getBaseAddress()) / double(PageSize));
 
         if (page >= this->getPageCount())
@@ -134,11 +138,11 @@ namespace hex::prv {
             this->m_patchTreeOffset--;
     }
 
-    bool Provider::canUndo() {
+    bool Provider::canUndo() const {
         return this->m_patchTreeOffset < this->m_patches.size() - 1;
     }
 
-    bool Provider::canRedo() {
+    bool Provider::canRedo() const {
         return this->m_patchTreeOffset > 0;
     }
 

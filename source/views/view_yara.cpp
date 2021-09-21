@@ -151,7 +151,7 @@ namespace hex {
             YR_RULES *rules;
             yr_compiler_get_rules(compiler, &rules);
 
-            auto &provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
             std::vector<YaraMatch> newMatches;
 
@@ -167,7 +167,7 @@ namespace hex {
             context.currBlock.fetch_data = [](auto *block) -> const u8* {
                 auto &context = *static_cast<ScanContext*>(block->context);
 
-                auto &provider = SharedData::currentProvider;
+                auto provider = ImHexApi::Provider::get();
 
                 context.buffer.resize(std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base));
 
@@ -178,7 +178,7 @@ namespace hex {
                 return context.buffer.data();
             };
             iterator.file_size = [](auto *iterator) -> u64 {
-                return SharedData::currentProvider->getSize();
+                return ImHexApi::Provider::get()->getSize();
             };
 
             iterator.context = &context;
@@ -199,7 +199,7 @@ namespace hex {
 
                 iterator->last_error = ERROR_SUCCESS;
                 context.currBlock.base = address;
-                context.currBlock.size = std::min<u64>(0xF'FFFF, SharedData::currentProvider->getSize() - address);
+                context.currBlock.size = std::min<u64>(0xF'FFFF, ImHexApi::Provider::get()->getSize() - address);
                 context.currBlock.context = &context;
 
                 if (context.currBlock.size == 0) return nullptr;

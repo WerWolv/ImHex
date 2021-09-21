@@ -138,7 +138,7 @@ namespace hex::plugin::builtin {
             constexpr static auto MaxStringLength = 32;
 
             std::string stringBuffer(std::min<ssize_t>(MaxStringLength, currSelection.size), 0x00);
-            SharedData::currentProvider->read(currSelection.address, stringBuffer.data(), stringBuffer.size());
+            ImHexApi::Provider::get()->read(currSelection.address, stringBuffer.data(), stringBuffer.size());
             if (currSelection.size > MaxStringLength)
                 stringBuffer += "...";
 

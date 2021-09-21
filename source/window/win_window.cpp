@@ -139,7 +139,7 @@
                             return HTBOTTOMRIGHT;
                         case RegionClient:
                         default:
-                            if ((cursor.y < (window.top + titleBarHeight * 2)) && !ImGui::IsAnyItemHovered())
+                            if ((cursor.y < (window.top + titleBarHeight)) && !(ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused()))
                                 return HTCAPTION;
                             else break;
                     }

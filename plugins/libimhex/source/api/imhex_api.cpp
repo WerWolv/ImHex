@@ -43,4 +43,38 @@ namespace hex {
         return SharedData::bookmarkEntries;
     }
 
+
+    prv::Provider* ImHexApi::Provider::get() {
+        if (!ImHexApi::Provider::isValid())
+            return nullptr;
+
+        return SharedData::providers[SharedData::currentProvider];
+    }
+
+    const std::vector<prv::Provider*>& ImHexApi::Provider::getProviders() {
+        return SharedData::providers;
+    }
+
+    bool ImHexApi::Provider::isValid() {
+        return !SharedData::providers.empty();
+    }
+
+    void ImHexApi::Provider::add(prv::Provider *provider) {
+        SharedData::providers.push_back(provider);
+        SharedData::currentProvider = SharedData::providers.size() - 1;
+    }
+
+    void ImHexApi::Provider::remove(prv::Provider *provider) {
+        auto &providers = SharedData::providers;
+
+        auto it = std::find(providers.begin(), providers.end(), provider);
+
+        providers.erase(it);
+
+        if (it - providers.begin() == SharedData::currentProvider)
+            SharedData::currentProvider = 0;
+
+        delete provider;
+    }
+
 }

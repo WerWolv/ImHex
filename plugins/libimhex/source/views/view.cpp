@@ -16,7 +16,7 @@ namespace hex {
     bool View::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) { return false; }
 
     bool View::isAvailable() {
-        return SharedData::currentProvider != nullptr && SharedData::currentProvider->isAvailable();
+        return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
     std::vector<std::function<void()>>& View::getDeferedCalls() {

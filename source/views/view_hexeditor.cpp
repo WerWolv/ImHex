@@ -35,7 +35,7 @@ namespace hex {
         this->m_searchHexBuffer.resize(0xFFF, 0x00);
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
             if (!provider->isAvailable() || !provider->isReadable())
                 return 0x00;
 
@@ -46,7 +46,7 @@ namespace hex {
         };
 
         this->m_memoryEditor.WriteFn = [](ImU8 *data, size_t off, ImU8 d) -> void {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
             if (!provider->isAvailable() || !provider->isWritable())
                 return;
 
@@ -60,7 +60,7 @@ namespace hex {
 
             std::optional<u32> currColor, prevColor;
 
-            off += SharedData::currentProvider->getBaseAddress();
+            off += ImHexApi::Provider::get()->getBaseAddress();
 
             u32 alpha = static_cast<u32>(_this->m_highlightAlpha) << 24;
 
@@ -96,7 +96,7 @@ namespace hex {
         this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t off) {
             bool tooltipShown = false;
 
-            off += SharedData::currentProvider->getBaseAddress();
+            off += ImHexApi::Provider::get()->getBaseAddress();
 
             for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
                 if (off >= region.address && off < (region.address + region.size)) {
@@ -120,7 +120,7 @@ namespace hex {
             if (_this->m_currEncodingFile.getLongestSequence() == 0)
                 return { ".", 1, 0xFFFF8000 };
 
-            auto &provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
             size_t size = std::min<size_t>(_this->m_currEncodingFile.getLongestSequence(), provider->getActualSize() - addr);
 
             std::vector<u8> buffer(size);
@@ -144,7 +144,7 @@ namespace hex {
         });
 
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
             auto page = provider->getPageOfAddress(region.address);
 
             if (!page.has_value())
@@ -272,9 +272,9 @@ namespace hex {
     }
 
     void ViewHexEditor::drawContent() {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
-        size_t dataSize = (provider == nullptr || !provider->isReadable()) ? 0x00 : provider->getSize();
+        size_t dataSize = (!ImHexApi::Provider::isValid() || !provider->isReadable()) ? 0x00 : provider->getSize();
 
         this->m_memoryEditor.DrawWindow(View::toWindowName("hex.view.hexeditor.name").c_str(), &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
 
@@ -318,19 +318,17 @@ namespace hex {
     }
 
     static void save() {
-        auto provider = SharedData::currentProvider;
-        provider->save();
+        ImHexApi::Provider::get()->save();
     }
 
     static void saveAs() {
         hex::openFileBrowser("hex.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [](auto path) {
-            auto provider = SharedData::currentProvider;
-            provider->saveAs(path);
+            ImHexApi::Provider::get()->saveAs(path);
         });
     }
 
     void ViewHexEditor::drawAlwaysVisible() {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         if (ImGui::BeginPopupModal("hex.view.hexeditor.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
@@ -431,7 +429,8 @@ namespace hex {
     }
 
     void ViewHexEditor::drawMenu() {
-        auto &provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
+        bool providerValid = ImHexApi::Provider::isValid();
 
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
@@ -451,18 +450,17 @@ namespace hex {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save"_lang, "CTRL + S", false, provider != nullptr && provider->isWritable())) {
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save"_lang, "CTRL + S", false, providerValid && provider->isWritable())) {
                 save();
             }
 
-            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_as"_lang, "CTRL + SHIFT + S", false, provider != nullptr && provider->isWritable())) {
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_as"_lang, "CTRL + SHIFT + S", false, providerValid && provider->isWritable())) {
                 saveAs();
             }
 
-            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close"_lang, "", false, provider != nullptr && provider->isAvailable())) {
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close"_lang, "", false, providerValid && provider->isAvailable())) {
                 EventManager::post<EventFileUnloaded>();
-                delete SharedData::currentProvider;
-                SharedData::currentProvider = nullptr;
+                ImHexApi::Provider::remove(ImHexApi::Provider::get());
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.quit"_lang, "", false)) {
@@ -478,7 +476,7 @@ namespace hex {
                 });
             }
 
-            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_project"_lang, "", false, provider != nullptr && provider->isWritable())) {
+            if (ImGui::MenuItem("hex.view.hexeditor.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
                 if (ProjectFile::getProjectFilePath() == "") {
                     hex::openFileBrowser("hex.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](auto path) {
                         if (path.ends_with(".hexproj")) {
@@ -528,8 +526,9 @@ namespace hex {
                         auto patchData = File(path, File::Mode::Read).readBytes();
                         auto patch = hex::loadIPSPatch(patchData);
 
+                        auto provider = ImHexApi::Provider::get();
                         for (auto &[address, value] : patch) {
-                            SharedData::currentProvider->write(address, &value, 1);
+                            provider->write(address, &value, 1);
                         }
                        this->getWindowOpenState() = true;
                    });
@@ -542,8 +541,9 @@ namespace hex {
                         auto patchData = File(path, File::Mode::Read).readBytes();
                         auto patch = hex::loadIPS32Patch(patchData);
 
+                        auto provider = ImHexApi::Provider::get();
                         for (auto &[address, value] : patch) {
-                            SharedData::currentProvider->write(address, &value, 1);
+                            provider->write(address, &value, 1);
                         }
                         this->getWindowOpenState() = true;
                     });
@@ -558,7 +558,7 @@ namespace hex {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.export"_lang, provider != nullptr && provider->isWritable())) {
+            if (ImGui::BeginMenu("hex.view.hexeditor.menu.file.export"_lang, providerValid && provider->isWritable())) {
                 if (ImGui::MenuItem("hex.view.hexeditor.menu.file.export.ips"_lang)) {
                     Patches patches = provider->getPatches();
                     if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
@@ -626,12 +626,12 @@ namespace hex {
 
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
                 if (ctrl && keys['Z']) {
-                    if (SharedData::currentProvider != nullptr)
-                        SharedData::currentProvider->undo();
+                    if (ImHexApi::Provider::isValid())
+                        ImHexApi::Provider::get()->undo();
                     return true;
                 } else if (ctrl && keys['Y']) {
-                    if (SharedData::currentProvider != nullptr)
-                        SharedData::currentProvider->redo();
+                    if (ImHexApi::Provider::isValid())
+                        ImHexApi::Provider::get()->redo();
                 } else if (ctrl && keys['F']) {
                     View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
                     return true;
@@ -651,7 +651,8 @@ namespace hex {
                     this->pasteBytes();
                     return true;
                 } else if (ctrl && keys['A']) {
-                    EventManager::post<RequestSelectionChange>(Region { SharedData::currentProvider->getBaseAddress(), SharedData::currentProvider->getActualSize() });
+                    auto provider = ImHexApi::Provider::get();
+                    EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
                     return true;
                 }
             }
@@ -695,11 +696,9 @@ namespace hex {
     }
 
     void ViewHexEditor::openFile(const std::string &path) {
-        auto& provider = SharedData::currentProvider;
+        ImHexApi::Provider::add<prv::FileProvider>(path);
+        auto provider = ImHexApi::Provider::get();
 
-        delete provider;
-
-        provider = new prv::FileProvider(path);
         if (!provider->isWritable()) {
             this->m_memoryEditor.ReadOnly = true;
             View::showErrorPopup("hex.view.hexeditor.error.read_only"_lang);
@@ -709,8 +708,7 @@ namespace hex {
 
         if (!provider->isAvailable()) {
             View::showErrorPopup("hex.view.hexeditor.error.open"_lang);
-            delete provider;
-            provider = nullptr;
+            ImHexApi::Provider::remove(provider);
 
             return;
         }
@@ -737,7 +735,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyBytes() const {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -756,7 +754,7 @@ namespace hex {
     }
 
     void ViewHexEditor::pasteBytes() const {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -798,7 +796,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyString() const {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -813,7 +811,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyLanguageArray(Language language) const {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -915,7 +913,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyHexView() const {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -962,7 +960,7 @@ namespace hex {
     }
 
     void ViewHexEditor::copyHexViewHTML() const {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
 
         size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
         size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -1095,7 +1093,7 @@ R"(
     void ViewHexEditor::drawSearchPopup() {
         static auto InputCallback = [](ImGuiInputTextCallbackData* data) -> int {
             auto _this = static_cast<ViewHexEditor*>(data->UserData);
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
             *_this->m_lastSearchBuffer = _this->m_searchFunction(provider, data->Buf);
             _this->m_lastSearchIndex = 0;
@@ -1107,7 +1105,7 @@ R"(
         };
 
         static auto Find = [this](char *buffer) {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
             *this->m_lastSearchBuffer = this->m_searchFunction(provider, buffer);
             this->m_lastSearchIndex = 0;
@@ -1187,7 +1185,7 @@ R"(
     }
 
     void ViewHexEditor::drawGotoPopup() {
-        auto provider = SharedData::currentProvider;
+        auto provider = ImHexApi::Provider::get();
         auto baseAddress = provider->getBaseAddress();
         auto dataSize = provider->getActualSize();
 
@@ -1253,10 +1251,12 @@ R"(
     }
 
     void ViewHexEditor::drawEditPopup() {
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.undo"_lang, "CTRL + Z", false, SharedData::currentProvider != nullptr))
-            SharedData::currentProvider->undo();
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo"_lang, "CTRL + Y", false, SharedData::currentProvider != nullptr))
-            SharedData::currentProvider->redo();
+        auto provider = ImHexApi::Provider::get();
+        bool providerValid = ImHexApi::Provider::isValid();
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.undo"_lang, "CTRL + Z", false, providerValid))
+            provider->undo();
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.redo"_lang, "CTRL + Y", false, providerValid))
+            provider->redo();
 
         ImGui::Separator();
 
@@ -1299,13 +1299,13 @@ R"(
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.paste"_lang, "CTRL + V", false, bytesSelected))
             this->pasteBytes();
 
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.select_all"_lang, "CTRL + A", false, SharedData::currentProvider != nullptr))
-            EventManager::post<RequestSelectionChange>(Region { SharedData::currentProvider->getBaseAddress(), SharedData::currentProvider->getActualSize() });
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.select_all"_lang, "CTRL + A", false, providerValid))
+            EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
 
         ImGui::Separator();
 
         if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.bookmark"_lang, nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-            auto base = SharedData::currentProvider->getBaseAddress();
+            auto base = ImHexApi::Provider::get()->getBaseAddress();
 
             size_t start = base + std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
             size_t end = base + std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -1313,15 +1313,14 @@ R"(
             ImHexApi::Bookmarks::add(start, end - start + 1, { }, { });
         }
 
-        auto provider = SharedData::currentProvider;
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.set_base"_lang, nullptr, false, provider != nullptr && provider->isReadable())) {
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.set_base"_lang, nullptr, false, providerValid && provider->isReadable())) {
             std::memset(this->m_baseAddressBuffer, 0x00, sizeof(this->m_baseAddressBuffer));
             View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.edit.set_base"_lang); });
         }
 
-        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.resize"_lang, nullptr, false, provider != nullptr && provider->isResizable())) {
+        if (ImGui::MenuItem("hex.view.hexeditor.menu.edit.resize"_lang, nullptr, false, providerValid && provider->isResizable())) {
             View::doLater([this]{
-                this->m_resizeSize = SharedData::currentProvider->getActualSize();
+                this->m_resizeSize = ImHexApi::Provider::get()->getActualSize();
                 ImGui::OpenPopup("hex.view.hexeditor.menu.edit.resize"_lang);
             });
         }

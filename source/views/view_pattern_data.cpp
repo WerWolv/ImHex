@@ -49,8 +49,8 @@ namespace hex {
 
     void ViewPatternData::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = SharedData::currentProvider;
-            if (provider != nullptr && provider->isReadable()) {
+            auto provider = ImHexApi::Provider::get();
+            if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
                 if (beginPatternDataTable(provider, SharedData::patternData, this->m_sortedPatternData)) {
                     ImGui::TableHeadersRow();

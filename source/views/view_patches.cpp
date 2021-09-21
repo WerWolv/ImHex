@@ -12,14 +12,14 @@ namespace hex {
 
     ViewPatches::ViewPatches() : View("hex.view.patches.name") {
         EventManager::subscribe<EventProjectFileStore>(this, []{
-            auto provider = SharedData::currentProvider;
-            if (provider != nullptr)
+            auto provider = ImHexApi::Provider::get();
+            if (ImHexApi::Provider::isValid())
                 ProjectFile::setPatches(provider->getPatches());
         });
 
         EventManager::subscribe<EventProjectFileLoad>(this, []{
-            auto provider = SharedData::currentProvider;
-            if (provider != nullptr)
+            auto provider = ImHexApi::Provider::get();
+            if (ImHexApi::Provider::isValid())
                 provider->getPatches() = ProjectFile::getPatches();
         });
     }
@@ -31,9 +31,9 @@ namespace hex {
 
     void ViewPatches::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.view.patches.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
-            if (provider != nullptr && provider->isReadable()) {
+            if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
                 if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
                                                         ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {

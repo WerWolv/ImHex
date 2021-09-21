@@ -49,7 +49,7 @@ namespace hex::pl {
         this->m_preprocessor->addPragmaHandler("base_address", [](std::string value) {
             auto baseAddress = strtoull(value.c_str(), nullptr, 0);
 
-            SharedData::currentProvider->setBaseAddress(baseAddress);
+            ImHexApi::Provider::get()->setBaseAddress(baseAddress);
             return true;
         });
 

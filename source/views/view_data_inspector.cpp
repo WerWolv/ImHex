@@ -12,9 +12,9 @@ namespace hex {
 
     ViewDataInspector::ViewDataInspector() : View("hex.view.data_inspector.name") {
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
-            if (provider == nullptr || region.address == (size_t)-1) {
+            if (!ImHexApi::Provider::isValid() || region.address == (size_t)-1) {
                 this->m_validBytes = 0;
             } else {
                 this->m_validBytes = u64(provider->getSize() - region.address);
@@ -34,7 +34,7 @@ namespace hex {
             this->m_shouldInvalidate = false;
 
             this->m_cachedData.clear();
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
             for (auto &entry : ContentRegistry::DataInspector::getEntries()) {
                 if (this->m_validBytes < entry.requiredSize)
                     continue;
@@ -48,9 +48,9 @@ namespace hex {
 
 
         if (ImGui::Begin(View::toWindowName("hex.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
-            if (provider != nullptr && provider->isReadable() && this->m_validBytes > 0) {
+            if (ImHexApi::Provider::isValid() && provider->isReadable() && this->m_validBytes > 0) {
                 if (ImGui::BeginTable("##datainspector", 2,
                     ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg,
                     ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {

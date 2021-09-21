@@ -198,8 +198,8 @@ namespace hex::init {
     bool deleteSharedData() {
         SharedData::deferredCalls.clear();
 
-        delete SharedData::currentProvider;
-        SharedData::currentProvider = nullptr;
+        while (ImHexApi::Provider::isValid())
+            ImHexApi::Provider::remove(ImHexApi::Provider::get());
 
         SharedData::settingsEntries.clear();
         SharedData::settingsJson.clear();

@@ -53,7 +53,10 @@ namespace hex {
 
     public:
         static std::vector<std::function<void()>> deferredCalls;
-        static prv::Provider *currentProvider;
+
+        static std::vector<prv::Provider*> providers;
+        static u32 currentProvider;
+
         static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> settingsEntries;
         static nlohmann::json settingsJson;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;

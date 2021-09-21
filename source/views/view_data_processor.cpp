@@ -100,11 +100,11 @@ namespace hex {
     void ViewDataProcessor::processNodes() {
         if (this->m_dataOverlays.size() != this->m_endNodes.size()) {
             for (auto overlay : this->m_dataOverlays)
-                SharedData::currentProvider->deleteOverlay(overlay);
+                ImHexApi::Provider::get()->deleteOverlay(overlay);
             this->m_dataOverlays.clear();
 
             for (u32 i = 0; i < this->m_endNodes.size(); i++)
-                this->m_dataOverlays.push_back(SharedData::currentProvider->newOverlay());
+                this->m_dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
 
             u32 overlayIndex = 0;
             for (auto endNode : this->m_endNodes) {
@@ -128,7 +128,7 @@ namespace hex {
             this->m_currNodeError = e;
 
             for (auto overlay : this->m_dataOverlays)
-                SharedData::currentProvider->deleteOverlay(overlay);
+                ImHexApi::Provider::get()->deleteOverlay(overlay);
             this->m_dataOverlays.clear();
 
         } catch (std::runtime_error &e) {

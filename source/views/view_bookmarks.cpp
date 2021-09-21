@@ -91,7 +91,7 @@ namespace hex {
                             {
                                 std::array<u8, 0x10> bytes = { 0 };
                                 size_t byteCount = std::min<size_t>(0x10 - offset, region.size);
-                                SharedData::currentProvider->read(region.address, bytes.data() + offset, byteCount);
+                                ImHexApi::Provider::get()->read(region.address, bytes.data() + offset, byteCount);
 
                                 for (size_t byte = 0; byte < 0x10; byte++) {
                                     if (byte < offset)
@@ -108,7 +108,7 @@ namespace hex {
                                 std::array<u8, 0x10> bytes = { 0 };
                                 for (u32 i = 0x10 - offset; i < region.size; i += 0x10) {
                                     size_t byteCount = std::min<size_t>(region.size - i, 0x10);
-                                    SharedData::currentProvider->read(region.address + i, bytes.data(), byteCount);
+                                    ImHexApi::Provider::get()->read(region.address + i, bytes.data(), byteCount);
 
                                     for (size_t byte = 0; byte < byteCount; byte++) {
                                         ImGui::Text("%02X", bytes[byte]);

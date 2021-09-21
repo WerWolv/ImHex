@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/shared_data.hpp>
@@ -156,8 +157,8 @@ namespace hex::plugin::builtin {
                 evaluator.setFunction("read", [](auto args) -> std::optional<long double> {
                     u8 value = 0;
 
-                    auto provider = SharedData::currentProvider;
-                    if (provider == nullptr || !provider->isReadable() || args[0] >= provider->getActualSize())
+                    auto provider = ImHexApi::Provider::get();
+                    if (!ImHexApi::Provider::isValid() || !provider->isReadable() || args[0] >= provider->getActualSize())
                         return { };
 
                     provider->read(args[0], &value, sizeof(u8));
@@ -166,8 +167,8 @@ namespace hex::plugin::builtin {
                 }, 1, 1);
 
                 evaluator.setFunction("write", [](auto args) -> std::optional<long double> {
-                    auto provider = SharedData::currentProvider;
-                    if (provider == nullptr || !provider->isWritable() || args[0] >= provider->getActualSize())
+                    auto provider = ImHexApi::Provider::get();
+                    if (!ImHexApi::Provider::isValid() || !provider->isWritable() || args[0] >= provider->getActualSize())
                         return { };
 
                     if (args[1] > 0xFF)

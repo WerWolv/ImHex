@@ -18,7 +18,7 @@ namespace hex::prv {
     }
 
 
-    bool FileProvider::isAvailable() {
+    bool FileProvider::isAvailable() const {
         #if defined(OS_WINDOWS)
         return this->m_file != nullptr && this->m_mapping != nullptr && this->m_mappedFile != nullptr;
         #else
@@ -26,19 +26,19 @@ namespace hex::prv {
         #endif
     }
 
-    bool FileProvider::isReadable() {
+    bool FileProvider::isReadable() const {
         return isAvailable() && this->m_readable;
     }
 
-    bool FileProvider::isWritable() {
+    bool FileProvider::isWritable() const {
         return isAvailable() && this->m_writable;
     }
 
-    bool FileProvider::isResizable() {
+    bool FileProvider::isResizable() const {
         return true;
     }
 
-    bool FileProvider::isSavable() {
+    bool FileProvider::isSavable() const {
         return !this->getPatches().empty();
     }
 
@@ -94,7 +94,7 @@ namespace hex::prv {
             std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, file.getSize()), 0x00);
             size_t bufferSize = buffer.size();
 
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
             for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
                 if (bufferSize > provider->getActualSize() - offset)
                     bufferSize = provider->getActualSize() - offset;
@@ -137,11 +137,15 @@ namespace hex::prv {
         this->open();
     }
 
-    size_t FileProvider::getActualSize() {
+    size_t FileProvider::getActualSize() const {
         return this->m_fileSize;
     }
 
-    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() {
+    std::string FileProvider::getName() const {
+        return std::filesystem::path(this->m_path).filename().string();
+    }
+
+    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {
         std::vector<std::pair<std::string, std::string>> result;
 
         result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path);

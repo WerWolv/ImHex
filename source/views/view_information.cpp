@@ -69,7 +69,7 @@ namespace hex {
         this->m_analyzing = true;
 
         std::thread([this]{
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
             this->m_analyzedRegion = { provider->getBaseAddress(), provider->getBaseAddress() + provider->getSize() };
 
@@ -110,8 +110,8 @@ namespace hex {
             if (ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav)) {
 
 
-                auto provider = SharedData::currentProvider;
-                if (provider != nullptr && provider->isReadable()) {
+                auto provider = ImHexApi::Provider::get();
+                if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                     ImGui::TextUnformatted("hex.view.information.control"_lang);
                     ImGui::Separator();
 
@@ -131,7 +131,7 @@ namespace hex {
                         ImGui::TextUnformatted("hex.view.information.region"_lang);
                         ImGui::Separator();
 
-                        for (auto &[name, value] : (SharedData::currentProvider)->getDataInformation()) {
+                        for (auto &[name, value] : provider->getDataInformation()) {
                             ImGui::LabelText(name.c_str(), "%s", value.c_str());
                         }
 

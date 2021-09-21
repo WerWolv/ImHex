@@ -89,12 +89,12 @@ namespace hex::plugin::builtin {
 
             /* base_address() */
             ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "base_address", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
-                return new ASTNodeIntegerLiteral(u64(SharedData::currentProvider->getBaseAddress()));
+                return new ASTNodeIntegerLiteral(u64(ImHexApi::Provider::get()->getBaseAddress()));
             });
 
             /* size() */
             ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "size", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
-                return new ASTNodeIntegerLiteral(u64(SharedData::currentProvider->getActualSize()));
+                return new ASTNodeIntegerLiteral(u64(ImHexApi::Provider::get()->getActualSize()));
             });
 
             /* find_sequence(occurrence_index, bytes...) */
@@ -112,8 +112,8 @@ namespace hex::plugin::builtin {
 
                 std::vector<u8> bytes(sequence.size(), 0x00);
                 u32 occurrences = 0;
-                for (u64 offset = 0; offset < SharedData::currentProvider->getSize() - sequence.size(); offset++) {
-                    SharedData::currentProvider->read(offset, bytes.data(), bytes.size());
+                for (u64 offset = 0; offset < ImHexApi::Provider::get()->getSize() - sequence.size(); offset++) {
+                    ImHexApi::Provider::get()->read(offset, bytes.data(), bytes.size());
 
                     if (bytes == sequence) {
                         if (LITERAL_COMPARE(occurrenceIndex, occurrences < occurrenceIndex)) {
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
                 auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
                 auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
 
-                if (LITERAL_COMPARE(address, address >= SharedData::currentProvider->getActualSize()))
+                if (LITERAL_COMPARE(address, address >= ImHexApi::Provider::get()->getActualSize()))
                     ctx.getConsole().abortEvaluation("address out of range");
 
                 return std::visit([&](auto &&address, auto &&size) {
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
                         ctx.getConsole().abortEvaluation("invalid read size");
 
                     u8 value[(u8)size];
-                    SharedData::currentProvider->read(address, value, size);
+                    ImHexApi::Provider::get()->read(address, value, size);
 
                     switch ((u8)size) {
                         case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u8*>(value));
@@ -159,7 +159,7 @@ namespace hex::plugin::builtin {
                 auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
                 auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
 
-                if (LITERAL_COMPARE(address, address >= SharedData::currentProvider->getActualSize()))
+                if (LITERAL_COMPARE(address, address >= ImHexApi::Provider::get()->getActualSize()))
                     ctx.getConsole().abortEvaluation("address out of range");
 
                 return std::visit([&](auto &&address, auto &&size) {
@@ -167,7 +167,7 @@ namespace hex::plugin::builtin {
                         ctx.getConsole().abortEvaluation("invalid read size");
 
                     u8 value[(u8)size];
-                    SharedData::currentProvider->read(address, value, size);
+                    ImHexApi::Provider::get()->read(address, value, size);
 
                     switch ((u8)size) {
                         case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s8*>(value));

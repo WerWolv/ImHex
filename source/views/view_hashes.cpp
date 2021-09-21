@@ -43,8 +43,8 @@ namespace hex {
             if (ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav)) {
 
 
-                auto provider = SharedData::currentProvider;
-                if (provider != nullptr && provider->isAvailable()) {
+                auto provider = ImHexApi::Provider::get();
+                if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
 
                     ImGui::TextUnformatted("hex.common.region"_lang);
                     ImGui::Separator();

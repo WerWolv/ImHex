@@ -28,19 +28,19 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addToolbarItem([] {
             const static auto buttonSize = ImVec2(ImGui::GetCurrentWindow()->MenuBarHeight(), ImGui::GetCurrentWindow()->MenuBarHeight());
 
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
             // Undo
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
                     provider->undo();
-            }, provider == nullptr || !provider->canUndo());
+            }, !ImHexApi::Provider::isValid() || !provider->canUndo());
 
             // Redo
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
                     provider->redo();
-            }, provider == nullptr || !provider->canRedo());
+            }, !ImHexApi::Provider::isValid() || !provider->canRedo());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
                     provider->save();
-            }, provider == nullptr || !provider->isWritable() || !provider->isSavable());
+            }, !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
 
             // Save file as
             ImGui::Disabled([&provider] {
@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
                     hex::openFileBrowser("hex.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [&provider](auto path) {
                         provider->saveAs(path);
                     });
-            }, provider == nullptr || !provider->isSavable());
+            }, !ImHexApi::Provider::isValid() || !provider->isSavable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -82,8 +82,33 @@ namespace hex::plugin::builtin {
 
                     ImHexApi::Bookmarks::add(region.address, region.size, { }, { });
                 }
-            }, provider == nullptr || !provider->isReadable());
+            }, !ImHexApi::Provider::isValid() || !provider->isReadable());
 
+
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ImGui::Spacing();
+
+            // Provider switcher
+            ImGui::Disabled([] {
+                auto &providers = ImHexApi::Provider::getProviders();
+
+                std::string preview;
+                if (ImHexApi::Provider::isValid())
+                    preview = providers[SharedData::currentProvider]->getName();
+
+                ImGui::SetNextItemWidth(200 * SharedData::globalScale);
+                if (ImGui::BeginCombo("", preview.c_str())) {
+
+                    for (int i = 0; i < providers.size(); i++) {
+                        if (ImGui::Selectable(providers[i]->getName().c_str())) {
+                            SharedData::currentProvider = i;
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+            }, !ImHexApi::Provider::isValid());
         });
 
     }

@@ -65,8 +65,6 @@ namespace hex {
     }
 
     Window::Window() {
-        SharedData::currentProvider = nullptr;
-
         {
             for (const auto &[argument, value] : init::getInitArguments()) {
                 if (argument == "update-available") {
@@ -200,7 +198,7 @@ namespace hex {
         EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
             std::string title = "ImHex";
 
-            if (SharedData::currentProvider != nullptr) {
+            if (ImHexApi::Provider::isValid()) {
                 if (!windowTitle.empty())
                     title += " - " + windowTitle;
 
@@ -373,7 +371,7 @@ namespace hex {
                 ImGui::EndMenuBar();
             }
 
-            if (SharedData::currentProvider == nullptr) {
+            if (!ImHexApi::Provider::isValid()) {
                 static char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {

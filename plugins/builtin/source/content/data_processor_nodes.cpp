@@ -380,7 +380,7 @@ namespace hex::plugin::builtin {
             std::vector<u8> data;
             data.resize(size);
 
-            SharedData::currentProvider->readRaw(address, data.data(), size);
+            ImHexApi::Provider::get()->readRaw(address, data.data(), size);
 
             this->setBufferOnOutput(2, data);
         }
@@ -407,7 +407,7 @@ namespace hex::plugin::builtin {
         }) { }
 
         void process() override {
-            auto size = SharedData::currentProvider->getActualSize();
+            auto size = ImHexApi::Provider::get()->getActualSize();
 
             this->setIntegerOnOutput(0, size);
         }

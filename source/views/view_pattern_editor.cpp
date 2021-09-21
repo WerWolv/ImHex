@@ -106,12 +106,11 @@ namespace hex {
                 return;
 
             pl::Preprocessor preprocessor;
-            auto provider = SharedData::currentProvider;
 
-            if (provider == nullptr)
+            if (ImHexApi::Provider::isValid())
                 return;
 
-            std::string mimeType = magic::getMIMEType(provider);
+            std::string mimeType = magic::getMIMEType(ImHexApi::Provider::get());
 
             bool foundCorrectType = false;
             preprocessor.addPragmaHandler("MIME", [&mimeType, &foundCorrectType](std::string value) {
@@ -193,9 +192,9 @@ namespace hex {
 
     void ViewPatternEditor::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.view.pattern.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            auto provider = SharedData::currentProvider;
+            auto provider = ImHexApi::Provider::get();
 
-            if (provider != nullptr && provider->isAvailable()) {
+            if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
                 textEditorSize.y *= 4.0/5.0;
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
@@ -340,7 +339,7 @@ namespace hex {
         EventManager::post<EventPatternChanged>();
 
         std::thread([this, buffer = std::string(buffer)] {
-            auto result = this->m_patternLanguageRuntime->executeString(SharedData::currentProvider, buffer);
+            auto result = this->m_patternLanguageRuntime->executeString(ImHexApi::Provider::get(), buffer);
 
             auto error = this->m_patternLanguageRuntime->getError();
             if (error.has_value()) {
