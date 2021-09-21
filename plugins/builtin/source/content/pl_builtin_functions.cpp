@@ -164,6 +164,17 @@ namespace hex::plugin::builtin {
                 return hex::signExtend(size * 8, value);
             });
 
+            /* read_string(address, size) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_string", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto address = Token::literalToUnsigned(params[0]);
+                auto size = Token::literalToUnsigned(params[1]);
+
+                std::string result(size, '\x00');
+                ctx->getProvider()->read(address, result.data(), size);
+
+                return result;
+            });
+
         }
 
         ContentRegistry::PatternLanguageFunctions::Namespace nsStdStr = { "std", "str" };
