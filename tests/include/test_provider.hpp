@@ -17,13 +17,17 @@ namespace hex::test {
         }
         ~TestProvider() override = default;
 
-        bool isAvailable() override { return true; }
-        bool isReadable() override { return true; }
-        bool isWritable() override { return false; }
-        bool isResizable() override { return false; }
-        bool isSavable() override { return false; }
+        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool isReadable() const override { return true; }
+        [[nodiscard]] bool isWritable() const override { return false; }
+        [[nodiscard]] bool isResizable() const override { return false; }
+        [[nodiscard]] bool isSavable() const override { return false; }
 
-        std::vector<std::pair<std::string, std::string>> getDataInformation() override {
+        [[nodiscard]] std::string getName() const override {
+            return "";
+        }
+
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override {
             return { };
         }
 
@@ -37,8 +41,8 @@ namespace hex::test {
             this->m_testFile.write(static_cast<const u8*>(buffer), size);
         }
 
-        size_t getActualSize() override {
-            return m_testFile.getSize();
+        size_t getActualSize() const override {
+            return this->m_testFile.getSize();
         }
 
     private:

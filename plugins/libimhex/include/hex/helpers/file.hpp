@@ -30,7 +30,7 @@ namespace hex {
 
         ~File();
 
-        bool isValid() { return this->m_file != nullptr; }
+        bool isValid() const { return this->m_file != nullptr; }
 
         void seek(u64 offset);
 
@@ -42,7 +42,7 @@ namespace hex {
         void write(const std::vector<u8> &bytes);
         void write(const std::string &string);
 
-        size_t getSize();
+        size_t getSize() const;
         void setSize(u64 size);
 
         auto getHandle() { return this->m_file; }

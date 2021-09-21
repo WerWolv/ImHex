@@ -72,7 +72,7 @@ namespace hex {
         fwrite(string.data(), string.size(), 1, this->m_file);
     }
 
-    size_t File::getSize() {
+    size_t File::getSize() const {
         if (!isValid()) return 0;
 
         auto startPos = ftello64(this->m_file);
