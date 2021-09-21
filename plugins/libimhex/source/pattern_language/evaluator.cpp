@@ -17,8 +17,7 @@ namespace hex::pl {
         pattern->setOffset(this->getStack().size());
         pattern->setLocal(true);
 
-        this->getStack().resize(this->getStack().size() + pattern->getSize());
-
+        this->getStack().emplace_back();
         variables.push_back(pattern);
     }
 
@@ -75,40 +74,7 @@ namespace hex::pl {
                     }
             }, value);
 
-        std::visit(overloaded {
-                [&](PatternData *value) {
-                    pattern->setOffset(value->getOffset());
-                    pattern->setSize(value->getSize());
-                },
-                [&](std::string value) {
-                    auto size = value.length();
-
-                    pattern->setSize(size);
-                    this->getStack().resize(this->getStack().size() + size);
-                    std::memcpy(&this->getStack()[pattern->getOffset()], value.data(), size);
-                },
-                [&](double &value) {
-                    value = hex::changeEndianess(value, pattern->getEndian());
-                    auto size = std::min(sizeof(value), pattern->getSize());
-
-                    if (pattern->getSize() == sizeof(float)) {
-                        auto floatValue = static_cast<float>(value);
-
-                        this->getStack().resize(this->getStack().size() + size);
-                        std::memcpy(&this->getStack()[pattern->getOffset()], &floatValue, size);
-                    } else if (pattern->getSize() == sizeof(double)) {
-                        this->getStack().resize(this->getStack().size() + size);
-                        std::memcpy(&this->getStack()[pattern->getOffset()], &value, size);
-                    }
-                },
-                [&](auto &&value) {
-                    auto size = std::min(sizeof(value), pattern->getSize());
-                    value = hex::changeEndianess(value, size, pattern->getEndian());
-
-                    this->getStack().resize(this->getStack().size() + size);
-                    std::memcpy(&this->getStack()[pattern->getOffset()], &value, size);
-                }
-        }, castedLiteral);
+        this->getStack().back() = castedLiteral;
     }
 
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode*> &ast) {

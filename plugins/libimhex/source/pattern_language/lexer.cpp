@@ -446,6 +446,8 @@ namespace hex::pl {
                         tokens.emplace_back(TOKEN(ValueType, Character16));
                     else if (identifier == "bool")
                         tokens.emplace_back(TOKEN(ValueType, Boolean));
+                    else if (identifier == "str")
+                        tokens.emplace_back(TOKEN(ValueType, String));
                     else if (identifier == "padding")
                         tokens.emplace_back(TOKEN(ValueType, Padding));
 

@@ -72,7 +72,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]]
-        std::vector<u8>& getStack() {
+        std::vector<Token::Literal>& getStack() {
             return this->m_stack;
         }
 
@@ -90,7 +90,7 @@ namespace hex::pl {
         std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
         std::vector<ASTNode*> m_customFunctionDefinitions;
-        std::vector<u8> m_stack;
+        std::vector<Token::Literal> m_stack;
     };
 
 }

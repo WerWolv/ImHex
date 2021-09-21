@@ -322,6 +322,8 @@ namespace hex::pl {
                 pattern = new PatternDataCharacter16(offset);
             else if (this->m_type == Token::ValueType::Padding)
                 pattern = new PatternDataPadding(offset, 1);
+            else if (this->m_type == Token::ValueType::String)
+                pattern = new PatternDataString(offset, 1);
             else
                 LogConsole::abortEvaluation("invalid built-in type", this);
 
@@ -491,7 +493,7 @@ namespace hex::pl {
                 ON_SCOPE_EXIT {
                     s64 stackSize = evaluator->getStack().size();
                     for (u32 i = startVariableCount; i < variables.size(); i++) {
-                        stackSize -= variables[i]->getSize();
+                        stackSize--;
                         delete variables[i];
                     }
                     if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
@@ -1215,8 +1217,14 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete pattern; };
 
             auto readValue = [&evaluator](auto &value, PatternData *pattern) {
-                if (pattern->isLocal())
-                    std::memcpy(&value, &evaluator->getStack()[pattern->getOffset()], pattern->getSize());
+                if (pattern->isLocal()) {
+                    auto &literal = evaluator->getStack()[pattern->getOffset()];
+
+                    std::visit(overloaded {
+                        [&](std::string &assignmentValue) { },
+                        [&](auto &&assignmentValue) { std::memcpy(&value, &assignmentValue, pattern->getSize()); }
+                    }, literal);
+                }
                 else
                     evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
             };
@@ -1249,12 +1257,23 @@ namespace hex::pl {
                 readValue(value, pattern);
                 literal = value;
             } else if (dynamic_cast<PatternDataBoolean*>(pattern)) {
-                bool value = 0;
+                bool value = false;
                 readValue(value, pattern);
                 literal = value;
             } else if (dynamic_cast<PatternDataString*>(pattern)) {
-                std::string value(pattern->getSize(), '\x00');
-                readValue(value, pattern);
+                std::string value;
+
+                if (pattern->isLocal()) {
+                    auto &literal = evaluator->getStack()[pattern->getOffset()];
+
+                    std::visit(overloaded {
+                            [&](std::string &assignmentValue) { value = assignmentValue; },
+                            [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); }
+                    }, literal);
+                }
+                else
+                    evaluator->getProvider()->read(pattern->getOffset(), value.data(), pattern->getSize());
+
                 literal = value;
             } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(pattern)) {
                 u64 value = 0;
@@ -1445,7 +1464,7 @@ namespace hex::pl {
             ON_SCOPE_EXIT {
                 s64 stackSize = evaluator->getStack().size();
                 for (u32 i = startVariableCount; i < variables.size(); i++) {
-                    stackSize -= variables[i]->getSize();
+                    stackSize--;
                     delete variables[i];
                 }
                 if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);

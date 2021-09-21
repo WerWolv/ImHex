@@ -428,7 +428,7 @@ namespace hex::pl {
         bool hasParams = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
         u32 unnamedParamCount = 0;
         while (hasParams) {
-            auto type = parseType();
+            auto type = parseType(true);
 
             if (MATCHES(sequence(IDENTIFIER)))
                 params.emplace(getValue<Token::Identifier>(-1).get(), type);
@@ -644,8 +644,8 @@ namespace hex::pl {
 
     /* Type declarations */
 
-    // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double>
-    ASTNodeTypeDecl* Parser::parseType() {
+    // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double|str>
+    ASTNodeTypeDecl* Parser::parseType(bool allowString) {
         std::optional<std::endian> endian;
 
         if (MATCHES(sequence(KEYWORD_LE)))
@@ -664,7 +664,11 @@ namespace hex::pl {
                 throwParseError(hex::format("unknown type '{}'", typeName));
         }
         else if (MATCHES(sequence(VALUETYPE_ANY))) { // Builtin type
-            return create(new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(getValue<Token::ValueType>(-1)), endian));
+            auto type = getValue<Token::ValueType>(-1);
+            if (!allowString && type == Token::ValueType::String)
+                throwParseError("cannot use 'str' in this context. Use a character array instead");
+
+            return create(new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(type), endian));
         } else throwParseError("failed to parse type. Expected identifier or builtin type");
     }
 

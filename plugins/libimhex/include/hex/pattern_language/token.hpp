@@ -90,6 +90,7 @@ namespace hex::pl {
             Boolean             = 0x14,
             Float               = 0x42,
             Double              = 0x82,
+            String              = 0x15,
             CustomType          = 0x00,
             Padding             = 0x1F,
 
