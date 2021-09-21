@@ -445,6 +445,17 @@ namespace hex::pl {
                                 return new ASTNodeLiteral(u128(char16_t(endianAdjustedValue)));
                             case Token::ValueType::Boolean:
                                 return new ASTNodeLiteral(bool(endianAdjustedValue));
+                            case Token::ValueType::String:
+                            {
+                                std::string string(sizeof(value), '\x00');
+                                std::memcpy(string.data(), &value, string.size());
+                                hex::trim(string);
+
+                                if (typePattern->getEndian() != std::endian::native)
+                                    std::reverse(string.begin(), string.end());
+
+                                return new ASTNodeLiteral(string);
+                            }
                             default:
                                 LogConsole::abortEvaluation(hex::format("cannot cast value to '{}'", Token::getTypeName(type)), this);
                         }

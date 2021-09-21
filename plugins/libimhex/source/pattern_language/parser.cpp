@@ -162,7 +162,7 @@ namespace hex::pl {
 
     ASTNode* Parser::parseCastExpression() {
         if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
-            auto type = parseType();
+            auto type = parseType(true);
             auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(type->getType());
 
             if (builtinType == nullptr)
