@@ -337,7 +337,7 @@ namespace hex {
                     if (ImGui::BeginMenu("hex.menu.view"_lang)) {
                         for (auto &view : ContentRegistry::Views::getEntries()) {
                             if (view->hasViewMenuItemEntry())
-                                ImGui::MenuItem((LangEntry(view->getUnlocalizedName()) + " " + "hex.menu.view"_lang).c_str(), "", &view->getWindowOpenState());
+                                ImGui::MenuItem(LangEntry(view->getUnlocalizedName()), "", &view->getWindowOpenState());
                         }
                         ImGui::EndMenu();
                     }
