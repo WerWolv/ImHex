@@ -167,7 +167,7 @@ namespace hex {
     /* Pattern Language Functions */
 
 
-    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const std::function<hex::pl::ASTNode*(hex::pl::Evaluator&, std::vector<hex::pl::ASTNode*>&)> &func) {
+    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguageFunctions::Callback &func) {
         std::string functionName;
         for (auto &scope : ns)
             functionName += scope + "::";

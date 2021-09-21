@@ -17,14 +17,14 @@ using namespace hex::test;
 
 void addFunctions() {
     hex::ContentRegistry::PatternLanguageFunctions::Namespace nsStd = { "std" };
-    hex::ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](auto &ctx, auto params) {
-        auto condition = AS_TYPE(hex::pl::ASTNodeIntegerLiteral, params[0])->getValue();
-        auto message = AS_TYPE(hex::pl::ASTNodeStringLiteral, params[1])->getString();
+    hex::ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+        auto condition = Token::literalToBoolean(params[0]);
+        auto message = Token::literalToString(params[1], false);
 
-        if (LITERAL_COMPARE(condition, condition == 0))
-            ctx.getConsole().abortEvaluation(hex::format("assertion failed \"{0}\"", message.data()));
+        if (!condition)
+            LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
 
-        return nullptr;
+        return { };
     });
 }
 
@@ -67,7 +67,7 @@ int test(int argc, char **argv) {
         hex::log::fatal("Error during compilation!");
 
         if (auto error = language.getError(); error.has_value())
-            hex::log::info("Compile error: {}:{}", error->first, error->second);
+            hex::log::info("Compile error: {} : {}", error->first, error->second);
         else
             for (auto &[level, message] : language.getConsoleLog())
                 hex::log::info("Evaluate error: {}", message);
@@ -93,10 +93,10 @@ int test(int argc, char **argv) {
 
     // Check if the produced patterns are the ones expected
     for (u32 i = 0; i < currTest->getPatterns().size(); i++) {
-        auto &left = *patterns->at(i);
-        auto &right = *currTest->getPatterns().at(i);
+        auto &evaluatedPattern = *patterns->at(i);
+        auto &controlPattern = *currTest->getPatterns().at(i);
 
-        if (left != right) {
+        if (evaluatedPattern != controlPattern) {
             hex::log::fatal("Pattern with name {}:{} didn't match template", patterns->at(i)->getTypeName(), patterns->at(i)->getVariableName());
             return EXIT_FAILURE;
         }

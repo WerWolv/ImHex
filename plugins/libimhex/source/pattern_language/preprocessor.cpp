@@ -25,8 +25,9 @@ namespace hex::pl {
         output.reserve(code.length());
 
         try {
+            bool startOfLine = true;
             while (offset < code.length()) {
-                if (code[offset] == '#') {
+                if (code[offset] == '#' && startOfLine) {
                     offset += 1;
 
                     if (code.substr(offset, 7) == "include") {
@@ -164,8 +165,11 @@ namespace hex::pl {
                         throwPreprocessorError("unterminated comment", lineNumber - 1);
                 }
 
-                if (code[offset] == '\n')
+                if (code[offset] == '\n') {
                     lineNumber++;
+                    startOfLine = true;
+                } else if (!std::isspace(code[offset]))
+                    startOfLine = false;
 
                 output += code[offset];
                 offset += 1;

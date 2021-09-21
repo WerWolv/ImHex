@@ -28,9 +28,9 @@ namespace hex::pl {
         return string.find_first_not_of("0123456789ABCDEFabcdef.xUL");
     }
 
-    std::optional<Token::IntegerLiteral> parseIntegerLiteral(const std::string &string) {
+    std::optional<Token::Literal> parseIntegerLiteral(const std::string &string) {
         Token::ValueType type = Token::ValueType::Any;
-        Token::IntegerLiteral result;
+        Token::Literal result;
 
         u8 base;
 
@@ -38,20 +38,8 @@ namespace hex::pl {
         auto numberData = std::string_view(string).substr(0, endPos);
 
         if (numberData.ends_with('U')) {
-            type = Token::ValueType::Unsigned32Bit;
-            numberData.remove_suffix(1);
-        } else if (numberData.ends_with("UL")) {
-            type = Token::ValueType::Unsigned64Bit;
-            numberData.remove_suffix(2);
-        } else if (numberData.ends_with("ULL")) {
             type = Token::ValueType::Unsigned128Bit;
-            numberData.remove_suffix(3);
-        } else if (numberData.ends_with("L")) {
-            type = Token::ValueType::Signed64Bit;
             numberData.remove_suffix(1);
-        } else if (numberData.ends_with("LL")) {
-            type = Token::ValueType::Signed128Bit;
-            numberData.remove_suffix(2);
         } else if (!numberData.starts_with("0x") && !numberData.starts_with("0b")) {
             if (numberData.ends_with('F')) {
                 type = Token::ValueType::Float;
@@ -98,7 +86,7 @@ namespace hex::pl {
         } else return { };
 
         if (type == Token::ValueType::Any)
-            type = Token::ValueType::Signed32Bit;
+            type = Token::ValueType::Signed128Bit;
 
 
         if (numberData.length() == 0)
@@ -119,10 +107,6 @@ namespace hex::pl {
             }
 
             switch (type) {
-                case Token::ValueType::Unsigned32Bit:  return { u32(integer) };
-                case Token::ValueType::Signed32Bit:    return { s32(integer) };
-                case Token::ValueType::Unsigned64Bit:  return { u64(integer) };
-                case Token::ValueType::Signed64Bit:    return { s64(integer) };
                 case Token::ValueType::Unsigned128Bit: return { u128(integer) };
                 case Token::ValueType::Signed128Bit:   return { s128(integer) };
                 default: return { };
@@ -379,7 +363,7 @@ namespace hex::pl {
 
                     auto [c, charSize] = character.value();
 
-                    tokens.emplace_back(VALUE_TOKEN(Integer, c));
+                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(c)));
                     offset += charSize;
                 } else if (c == '\"') {
                     auto string = getStringLiteral(code.substr(offset));
@@ -389,7 +373,7 @@ namespace hex::pl {
 
                     auto [s, stringSize] = string.value();
 
-                    tokens.emplace_back(VALUE_TOKEN(String, s));
+                    tokens.emplace_back(VALUE_TOKEN(String, Token::Literal(s)));
                     offset += stringSize;
                 } else if (std::isalpha(c)) {
                     std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
@@ -415,11 +399,13 @@ namespace hex::pl {
                     else if (identifier == "else")
                         tokens.emplace_back(TOKEN(Keyword, Else));
                     else if (identifier == "false")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, bool(0)));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(false)));
                     else if (identifier == "true")
-                        tokens.emplace_back(VALUE_TOKEN(Integer, bool(1)));
+                        tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(true)));
                     else if (identifier == "parent")
                         tokens.emplace_back(TOKEN(Keyword, Parent));
+                    else if (identifier == "this")
+                        tokens.emplace_back(TOKEN(Keyword, This));
                     else if (identifier == "while")
                         tokens.emplace_back(TOKEN(Keyword, While));
                     else if (identifier == "fn")
@@ -460,13 +446,15 @@ namespace hex::pl {
                         tokens.emplace_back(TOKEN(ValueType, Character16));
                     else if (identifier == "bool")
                         tokens.emplace_back(TOKEN(ValueType, Boolean));
+                    else if (identifier == "str")
+                        tokens.emplace_back(TOKEN(ValueType, String));
                     else if (identifier == "padding")
                         tokens.emplace_back(TOKEN(ValueType, Padding));
 
                     // If it's not a keyword and a builtin type, it has to be an identifier
 
                     else
-                        tokens.emplace_back(VALUE_TOKEN(Identifier, identifier));
+                        tokens.emplace_back(VALUE_TOKEN(Identifier, Token::Identifier(identifier)));
 
                     offset += identifier.length();
                 } else if (std::isdigit(c)) {
@@ -476,7 +464,7 @@ namespace hex::pl {
                         throwLexerError("invalid integer literal", lineNumber);
 
 
-                    tokens.emplace_back(VALUE_TOKEN(Integer, integer.value()));
+                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(integer.value())));
                     offset += getIntegerLiteralLength(&code[offset]);
                 } else
                     throwLexerError("unknown token", lineNumber);

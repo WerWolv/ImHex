@@ -57,6 +57,11 @@ namespace hex {
         return (value & mask) >> to;
     }
 
+    constexpr inline s128 signExtend(size_t numBits, s128 value) {
+        s128 mask = 1U << (numBits - 1);
+        return (value ^ mask) - mask;
+    }
+
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 

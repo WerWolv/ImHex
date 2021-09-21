@@ -10,7 +10,7 @@ namespace hex::test {
             auto testStruct = create<PatternDataStruct>("TestStruct", "testStruct", 0x100, sizeof(s32) + 20 + sizeof(u8[0x10]));
 
             auto variable = create<PatternDataSigned>("s32", "variable", 0x100, sizeof(s32));
-            auto padding = create<PatternDataPadding>("", "", 0x100 + sizeof(s32), 20);
+            auto padding = create<PatternDataPadding>("padding", "", 0x100 + sizeof(s32), 20);
             auto array = create<PatternDataStaticArray>("u8", "array", 0x100 + sizeof(s32) + 20, sizeof(u8[0x10]));
             array->setEntries(create<PatternDataUnsigned>("u8", "", 0x100 + sizeof(s32) + 20, sizeof(u8)), 0x10);
 

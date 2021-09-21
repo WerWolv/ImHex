@@ -23,21 +23,21 @@ namespace hex {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             static const char* const keywords[] = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "parent", "addressof", "sizeof", "$", "while", "fn", "return", "namespace"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "fn", "return", "namespace"
             };
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);
 
-            static std::pair<const char* const, size_t> builtInTypes[] = {
-                    { "u8", 1 }, { "u16", 2 }, { "u32", 4 }, { "u64", 8 }, { "u128", 16 },
-                    { "s8", 1 }, { "s16", 2 }, { "s32", 4 }, { "s64", 8 }, { "s128", 16 },
-                    { "float", 4 }, { "double", 8 }, { "char", 1 }, { "char16", 2 }, { "bool", 1 }, { "padding", 1 }
+            static const char* const builtInTypes[] = {
+                    "u8", "u16", "u32", "u64", "u128",
+                    "s8", "s16", "s32", "s64", "s128",
+                    "float", "double", "char", "char16",
+                    "bool", "padding", "str"
             };
 
-            for (const auto &[name, size] : builtInTypes) {
+            for (const auto name : builtInTypes) {
                 TextEditor::Identifier id;
-                id.mDeclaration = std::to_string(size);
-                id.mDeclaration += size == 1 ? " byte" : " bytes";
+                id.mDeclaration = "Built-in type";
                 langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
             }
 

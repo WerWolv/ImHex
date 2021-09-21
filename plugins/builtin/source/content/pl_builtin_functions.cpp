@@ -3,13 +3,42 @@
 #include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <hex/pattern_language/ast_node.hpp>
+#include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/pattern_language/evaluator.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 
 #include <vector>
 
+#include <fmt/args.h>
+
 namespace hex::plugin::builtin {
+
+    std::string format(pl::Evaluator *, auto params) {
+        auto format = pl::Token::literalToString(params[0], true);
+        std::string message;
+
+        fmt::dynamic_format_arg_store<fmt::format_context> formatArgs;
+
+        for (u32 i = 1; i < params.size(); i++) {
+            auto &param = params[i];
+
+            std::visit(overloaded {
+                [&](pl::PatternData* value) {
+                    formatArgs.push_back(hex::format("{} {} @ 0x{:X}", value->getTypeName(), value->getVariableName(), value->getOffset()));
+                },
+                [&](auto &&value) {
+                    formatArgs.push_back(value);
+                }
+            }, param);
+        }
+
+        try {
+            return fmt::vformat(format, formatArgs);
+        } catch (fmt::format_error &error) {
+            hex::pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
+        }
+    }
 
     void registerPatternLanguageFunctions() {
         using namespace hex::pl;
@@ -18,55 +47,37 @@ namespace hex::plugin::builtin {
         {
 
             /* assert(condition, message) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](auto &ctx, auto params) {
-                auto condition = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto message = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto condition = Token::literalToBoolean(params[0]);
+                auto message = std::get<std::string>(params[1]);
 
-                if (LITERAL_COMPARE(condition, condition == 0))
-                    ctx.getConsole().abortEvaluation(hex::format("assertion failed \"{0}\"", message.data()));
+                if (!condition)
+                    LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
 
-                return nullptr;
+                return std::nullopt;
             });
 
             /* assert_warn(condition, message) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto ctx, auto params) {
-                auto condition = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto message = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto *ctx, auto params) -> std::optional<Token::Literal> {
+                auto condition = Token::literalToBoolean(params[0]);
+                auto message = std::get<std::string>(params[1]);
 
-                if (LITERAL_COMPARE(condition, condition == 0))
-                    ctx.getConsole().log(LogConsole::Level::Warning, hex::format("assertion failed \"{0}\"", message));
+                if (!condition)
+                    ctx->getConsole().log(LogConsole::Level::Warning, hex::format("assertion failed \"{0}\"", message));
 
-                return nullptr;
+                return std::nullopt;
             });
 
-            /* print(values...) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStd, "print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](auto &ctx, auto params) {
-                std::string message;
-                for (auto& param : params) {
-                    if (auto integerLiteral = dynamic_cast<ASTNodeIntegerLiteral*>(param); integerLiteral != nullptr) {
-                        std::visit([&](auto &&value) {
-                            using Type = std::remove_cvref_t<decltype(value)>;
-                            if constexpr (std::is_same_v<Type, char>)
-                                message += (char)value;
-                            else if constexpr (std::is_same_v<Type, bool>)
-                                message += value == 0 ? "false" : "true";
-                            else if constexpr (std::is_unsigned_v<Type>)
-                                message += std::to_string(static_cast<u64>(value));
-                            else if constexpr (std::is_signed_v<Type>)
-                                message += std::to_string(static_cast<s64>(value));
-                            else if constexpr (std::is_floating_point_v<Type>)
-                                message += std::to_string(value);
-                            else
-                                message += "< Custom Type >";
-                        }, integerLiteral->getValue());
-                    }
-                    else if (auto stringLiteral = dynamic_cast<ASTNodeStringLiteral*>(param); stringLiteral != nullptr)
-                        message += stringLiteral->getString();
-                }
+            /* print(format, args...) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "print", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                ctx->getConsole().log(LogConsole::Level::Info, format(ctx, params));
 
-                ctx.getConsole().log(LogConsole::Level::Info, message);
+                return std::nullopt;
+            });
 
-                return nullptr;
+            /* format(format, args...) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "format", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return format(ctx, params);
             });
 
         }
@@ -75,109 +86,82 @@ namespace hex::plugin::builtin {
         {
 
             /* align_to(alignment, value) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "align_to", 2, [](auto &ctx, auto params) -> ASTNode* {
-                auto alignment = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto value = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "align_to", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto alignment = Token::literalToUnsigned(params[0]);
+                auto value = Token::literalToUnsigned(params[1]);
 
-                auto result = std::visit([](auto &&alignment, auto &&value) {
-                    u64 remainder = u64(value) % u64(alignment);
-                    return remainder != 0 ? u64(value) + (u64(alignment) - remainder) : u64(value);
-                    }, alignment, value);
+                u128 remainder = value % alignment;
 
-                return new ASTNodeIntegerLiteral(u64(result));
+                return remainder != 0 ? value + (alignment - remainder) : value;
             });
 
             /* base_address() */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "base_address", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
-                return new ASTNodeIntegerLiteral(u64(ImHexApi::Provider::get()->getBaseAddress()));
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "base_address", ContentRegistry::PatternLanguageFunctions::NoParameters, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return u128(ctx->getProvider()->getBaseAddress());
             });
 
             /* size() */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "size", ContentRegistry::PatternLanguageFunctions::NoParameters, [](auto &ctx, auto params) -> ASTNode* {
-                return new ASTNodeIntegerLiteral(u64(ImHexApi::Provider::get()->getActualSize()));
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "size", ContentRegistry::PatternLanguageFunctions::NoParameters, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return u128(ctx->getProvider()->getActualSize());
             });
 
             /* find_sequence(occurrence_index, bytes...) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "find_sequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](auto &ctx, auto params) {
-                auto& occurrenceIndex = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "find_sequence", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto occurrenceIndex = Token::literalToUnsigned(params[0]);
+
                 std::vector<u8> sequence;
                 for (u32 i = 1; i < params.size(); i++) {
-                    sequence.push_back(std::visit([&](auto &&value) -> u8 {
-                        if (value <= 0xFF)
-                            return value;
-                        else
-                            ctx.getConsole().abortEvaluation("sequence bytes need to fit into 1 byte");
-                        }, AS_TYPE(ASTNodeIntegerLiteral, params[i])->getValue()));
+                    auto byte = Token::literalToUnsigned(params[i]);
+
+                    if (byte > 0xFF)
+                        LogConsole::abortEvaluation(hex::format("byte #{} value out of range: {} > 0xFF", i, u64(byte)));
+
+                    sequence.push_back(u8(byte & 0xFF));
                 }
 
                 std::vector<u8> bytes(sequence.size(), 0x00);
                 u32 occurrences = 0;
-                for (u64 offset = 0; offset < ImHexApi::Provider::get()->getSize() - sequence.size(); offset++) {
-                    ImHexApi::Provider::get()->read(offset, bytes.data(), bytes.size());
+                for (u64 offset = 0; offset < ctx->getProvider()->getSize() - sequence.size(); offset++) {
+                    ctx->getProvider()->read(offset, bytes.data(), bytes.size());
 
                     if (bytes == sequence) {
-                        if (LITERAL_COMPARE(occurrenceIndex, occurrences < occurrenceIndex)) {
+                        if (occurrences < occurrenceIndex) {
                             occurrences++;
                             continue;
                         }
 
-                        return new ASTNodeIntegerLiteral(offset);
+                        return u128(offset);
                     }
                 }
 
-                ctx.getConsole().abortEvaluation("failed to find sequence");
+                LogConsole::abortEvaluation("failed to find sequence");
             });
 
             /* read_unsigned(address, size) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_unsigned", 2, [](auto &ctx, auto params) {
-                auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_unsigned", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto address = Token::literalToUnsigned(params[0]);
+                auto size = Token::literalToUnsigned(params[1]);
 
-                if (LITERAL_COMPARE(address, address >= ImHexApi::Provider::get()->getActualSize()))
-                    ctx.getConsole().abortEvaluation("address out of range");
+                if (size > 16)
+                    LogConsole::abortEvaluation("read size out of range");
 
-                return std::visit([&](auto &&address, auto &&size) {
-                    if (size <= 0 || size > 16)
-                        ctx.getConsole().abortEvaluation("invalid read size");
+                u128 result = 0;
+                ctx->getProvider()->read(address, &result, size);
 
-                    u8 value[(u8)size];
-                    ImHexApi::Provider::get()->read(address, value, size);
-
-                    switch ((u8)size) {
-                        case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u8*>(value));
-                        case 2:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u16*>(value));
-                        case 4:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u32*>(value));
-                        case 8:  return new ASTNodeIntegerLiteral(*reinterpret_cast<u64*>(value));
-                        case 16: return new ASTNodeIntegerLiteral(*reinterpret_cast<u128*>(value));
-                        default: ctx.getConsole().abortEvaluation("invalid read size");
-                    }
-                    }, address, size);
+                return result;
             });
 
             /* read_signed(address, size) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_signed", 2, [](auto &ctx, auto params) {
-                auto address = AS_TYPE(ASTNodeIntegerLiteral, params[0])->getValue();
-                auto size = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
+            ContentRegistry::PatternLanguageFunctions::add(nsStdMem, "read_signed", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto address = Token::literalToUnsigned(params[0]);
+                auto size = Token::literalToUnsigned(params[1]);
 
-                if (LITERAL_COMPARE(address, address >= ImHexApi::Provider::get()->getActualSize()))
-                    ctx.getConsole().abortEvaluation("address out of range");
+                if (size > 16)
+                    LogConsole::abortEvaluation("read size out of range");
 
-                return std::visit([&](auto &&address, auto &&size) {
-                    if (size <= 0 || size > 16)
-                        ctx.getConsole().abortEvaluation("invalid read size");
-
-                    u8 value[(u8)size];
-                    ImHexApi::Provider::get()->read(address, value, size);
-
-                    switch ((u8)size) {
-                        case 1:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s8*>(value));
-                        case 2:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s16*>(value));
-                        case 4:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s32*>(value));
-                        case 8:  return new ASTNodeIntegerLiteral(*reinterpret_cast<s64*>(value));
-                        case 16: return new ASTNodeIntegerLiteral(*reinterpret_cast<s128*>(value));
-                        default: ctx.getConsole().abortEvaluation("invalid read size");
-                    }
-                    }, address, size);
+                s128 value;
+                ctx->getProvider()->read(address, &value, size);
+                return hex::signExtend(size * 8, value);
             });
 
         }
@@ -185,30 +169,38 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguageFunctions::Namespace nsStdStr = { "std", "str" };
         {
             /* length(string) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "length", 1, [](auto &ctx, auto params) {
-                auto string = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "length", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto string = Token::literalToString(params[0], false);
 
-                return new ASTNodeIntegerLiteral(u32(string.length()));
+                return u128(string.length());
             });
 
             /* at(string, index) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "at", 2, [](auto &ctx, auto params) {
-                auto string = AS_TYPE(ASTNodeStringLiteral, params[0])->getString();
-                auto index = AS_TYPE(ASTNodeIntegerLiteral, params[1])->getValue();
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "at", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto string = Token::literalToString(params[0], false);
+                auto index = Token::literalToSigned(params[1]);
 
-                if (LITERAL_COMPARE(index, index >= string.length() || index < 0))
-                    ctx.getConsole().abortEvaluation("character index out of bounds");
+                if (std::abs(index) >= string.length())
+                    LogConsole::abortEvaluation("character index out of range");
 
-                return std::visit([&](auto &&value) { return new ASTNodeIntegerLiteral(char(string[u32(value)])); }, index);
+                if (index >= 0)
+                    return char(string[index]);
+                else
+                    return char(string[string.length() - -index]);
             });
 
-            /* compare(left, right) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "compare", 2, [](auto &ctx, auto params) {
-                auto left = AS_TYPE(ASTNodeStringLiteral, params[0])->getString();
-                auto right = AS_TYPE(ASTNodeStringLiteral, params[1])->getString();
+            /* substr(string, pos, count) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "substr", 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto string = Token::literalToString(params[0], false);
+                auto pos = Token::literalToUnsigned(params[1]);
+                auto size = Token::literalToUnsigned(params[2]);
 
-                return new ASTNodeIntegerLiteral(bool(left == right));
+                if (pos > size)
+                    LogConsole::abortEvaluation("character index out of range");
+
+                return string.substr(pos, size);
             });
+
         }
     }
 

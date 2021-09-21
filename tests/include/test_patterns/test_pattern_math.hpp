@@ -33,7 +33,7 @@ namespace hex::test {
                 std::assert(0xFF00FF | 0x00AA00 == 0xFFAAFF, "| operator error");
                 std::assert(0xFFFFFF & 0x00FF00 == 0x00FF00, "& operator error");
                 std::assert(0xFFFFFF ^ 0x00AA00 == 0xFF55FF, "^ operator error");
-                std::assert(~0xFFFFFFFF == 0x00, "~ operator error");
+                std::assert(~0x00 == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, "~ operator error");
                 std::assert(0xAA >> 4 == 0x0A, ">> operator error");
                 std::assert(0xAA << 4 == 0xAA0, "<< operator error");
 
@@ -46,7 +46,7 @@ namespace hex::test {
 
                 // Special operators
                 std::assert($ == 0, "$ operator error");
-                std::assert((10 == 20) ? 30 : 40 == 40, "?: operator error");
+                std::assert(((10 == 20) ? 30 : 40) == 40, "?: operator error");
 
                 // Type operators
                 struct TypeTest { u32 x, y, z; };
