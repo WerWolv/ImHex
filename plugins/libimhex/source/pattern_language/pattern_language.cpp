@@ -43,7 +43,17 @@ namespace hex::pl {
             if (limit <= 0)
                 return false;
 
-            this->m_recursionLimit = limit;
+            this->m_evalDepth = limit;
+            return true;
+        });
+
+        this->m_preprocessor->addPragmaHandler("array_limit", [this](std::string value) {
+            auto limit = strtol(value.c_str(), nullptr, 0);
+
+            if (limit <= 0)
+                return false;
+
+            this->m_arrayLimit = limit;
             return true;
         });
 
@@ -69,6 +79,8 @@ namespace hex::pl {
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
+        this->m_evalDepth = 32;
+        this->m_arrayLimit = 0x1000;
 
         for (auto &node : this->m_currAST)
             delete node;
@@ -81,7 +93,8 @@ namespace hex::pl {
         }
 
         this->m_evaluator->setDefaultEndian(this->m_defaultEndian);
-        // this->m_evaluator->setRecursionLimit(this->m_recursionLimit);
+        this->m_evaluator->setEvaluationDepth(this->m_evalDepth);
+        this->m_evaluator->setArrayLimit(this->m_arrayLimit);
 
         auto tokens = this->m_lexer->lex(preprocessedCode.value());
         if (!tokens.has_value()) {

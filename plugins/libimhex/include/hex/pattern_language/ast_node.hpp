@@ -821,6 +821,10 @@ namespace hex::pl {
                             [](auto &&size) -> u128 { return size; }
                     }, literal->getValue());
 
+                    auto limit = evaluator->getArrayLimit();
+                    if (entryCount > limit)
+                        LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
+
                     for (u64 i = 0; i < entryCount; i++) {
                         auto pattern = this->m_type->createPatterns(evaluator).front();
 
@@ -833,6 +837,10 @@ namespace hex::pl {
                     }
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
+                        auto limit = evaluator->getArrayLimit();
+                        if (entryCount > limit)
+                            LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
+
                         auto pattern = this->m_type->createPatterns(evaluator).front();
 
                         pattern->setVariableName(hex::format("[{}]", entryCount));
@@ -846,6 +854,10 @@ namespace hex::pl {
                 }
             } else {
                 while (true) {
+                    auto limit = evaluator->getArrayLimit();
+                    if (entryCount > limit)
+                        LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
+
                     auto pattern = this->m_type->createPatterns(evaluator).front();
                     std::vector<u8> buffer(pattern->getSize());
 

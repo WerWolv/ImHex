@@ -45,7 +45,8 @@ namespace hex::pl {
 
         prv::Provider *m_provider = nullptr;
         std::endian m_defaultEndian = std::endian::native;
-        u32 m_recursionLimit = 32;
+        u32 m_evalDepth;
+        u32 m_arrayLimit;
 
         std::optional<std::pair<u32, std::string>> m_currError;
     };

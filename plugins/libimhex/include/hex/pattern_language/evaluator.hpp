@@ -8,6 +8,8 @@
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/api/content_registry.hpp>
 
+#include <hex/helpers/fmt.hpp>
+
 namespace hex::prv { class Provider; }
 
 namespace hex::pl {
@@ -27,8 +29,17 @@ namespace hex::pl {
         }
 
         struct Scope { PatternData *parent; std::vector<PatternData*>* scope; };
-        void pushScope(PatternData *parent, std::vector<PatternData*> &scope) { this->m_scopes.push_back({ parent, &scope }); }
-        void popScope() { this->m_scopes.pop_back(); }
+        void pushScope(PatternData *parent, std::vector<PatternData*> &scope) {
+            if (this->m_scopes.size() > this->m_evalDepth)
+                LogConsole::abortEvaluation(hex::format("recursion limit of {} reached", this->m_evalDepth));
+
+            this->m_scopes.push_back({ parent, &scope });
+        }
+
+        void popScope() {
+            this->m_scopes.pop_back();
+        }
+
         const Scope& getScope(s32 index) {
             static Scope empty;
 
@@ -56,6 +67,24 @@ namespace hex::pl {
         [[nodiscard]]
         std::endian getDefaultEndian() const {
             return this->m_defaultEndian;
+        }
+
+        void setEvaluationDepth(u32 evalDepth) {
+            this->m_evalDepth = evalDepth;
+        }
+
+        [[nodiscard]]
+        u32 getEvaluationDepth() const {
+            return this->m_evalDepth;
+        }
+
+        void setArrayLimit(u32 arrayLimit) {
+            this->m_arrayLimit = arrayLimit;
+        }
+
+        [[nodiscard]]
+        u32 getArrayLimit() const {
+            return this->m_arrayLimit;
         }
 
         u64& dataOffset() { return this->m_currOffset; }
@@ -86,6 +115,8 @@ namespace hex::pl {
         LogConsole m_console;
 
         std::endian m_defaultEndian = std::endian::native;
+        u32 m_evalDepth;
+        u32 m_arrayLimit;
 
         std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
