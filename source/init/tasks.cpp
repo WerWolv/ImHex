@@ -51,7 +51,8 @@ namespace hex::init {
         if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
             return false;
 
-        auto currVersion = "v" + std::string(IMHEX_VERSION).substr(0, 5);
+        auto versionString = std::string(IMHEX_VERSION);
+        auto currVersion = "v" + versionString.substr(0, versionString.find_first_of('-'));
         auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
         if (latestVersion != currVersion)
