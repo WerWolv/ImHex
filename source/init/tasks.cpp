@@ -113,9 +113,11 @@ namespace hex::init {
 
         std::string fontFile;
         for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
-            fontFile = dir + "/font.ttf";
-            if (std::filesystem::exists(fontFile))
+            auto path = dir + "/font.ttf";
+            if (std::filesystem::exists(path)) {
+                fontFile = path;
                 break;
+            }
         }
 
         ImVector<ImWchar> ranges;
@@ -146,8 +148,10 @@ namespace hex::init {
                 0
         };
 
-        if (!std::filesystem::exists(fontFile)) {
+
+        if (fontFile.empty()) {
             // Load default font
+
             fonts->Clear();
 
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
@@ -156,10 +160,12 @@ namespace hex::init {
         } else {
             // Load custom font
 
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = 13.0f * SharedData::fontScale;
+            auto fontSize = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.font_size", 14);
 
-            fonts->AddFontFromFileTTF(fontFile.c_str(), std::floor(14.0f * SharedData::fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = fontSize * SharedData::fontScale;
+
+            fonts->AddFontFromFileTTF(fontFile.c_str(), std::floor(fontSize * SharedData::fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
         }
 
         cfg.MergeMode = true;
