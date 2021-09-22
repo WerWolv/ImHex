@@ -24,8 +24,9 @@ namespace hex {
     }
 
     void View::drawCommonInterfaces() {
-        if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
+        ImGui::SetNextWindowSize(ImVec2(200, 100) * SharedData::globalScale);
+        if (ImGui::BeginPopupModal("hex.common.info"_lang)) {
+            ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
@@ -34,8 +35,20 @@ namespace hex {
             ImGui::EndPopup();
         }
 
-        if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Text("%s", SharedData::errorPopupMessage.c_str());
+        ImGui::SetNextWindowSize(ImVec2(200, 100) * SharedData::globalScale);
+        if (ImGui::BeginPopupModal("hex.common.error"_lang)) {
+            ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        ImGui::SetNextWindowSize(ImVec2(200, 100) * SharedData::globalScale);
+        if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr)) {
+            ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
@@ -47,14 +60,20 @@ namespace hex {
         }
     }
 
+    void View::showMessagePopup(const std::string &message) {
+        SharedData::popupMessage = message;
+
+        View::doLater([] { ImGui::OpenPopup("hex.common.info"_lang); });
+    }
+
     void View::showErrorPopup(const std::string &errorMessage) {
-        SharedData::errorPopupMessage = errorMessage;
+        SharedData::popupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
     }
 
     void View::showFatalPopup(const std::string &errorMessage) {
-        SharedData::errorPopupMessage = errorMessage;
+        SharedData::popupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
     }
@@ -64,11 +83,11 @@ namespace hex {
     }
 
     ImVec2 View::getMinSize() {
-        return ImVec2(480, 720);
+        return ImVec2(480, 720) * SharedData::globalScale;
     }
 
     ImVec2 View::getMaxSize() {
-        return ImVec2(FLT_MAX, FLT_MAX);
+        return { FLT_MAX, FLT_MAX };
     }
 
 

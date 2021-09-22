@@ -30,9 +30,10 @@ namespace hex {
 
         ~File();
 
-        bool isValid() const { return this->m_file != nullptr; }
+        [[nodiscard]] bool isValid() const { return this->m_file != nullptr; }
 
         void seek(u64 offset);
+        void close();
 
         size_t readBuffer(u8 *buffer, size_t size);
         std::vector<u8> readBytes(size_t numBytes = 0);
@@ -42,13 +43,18 @@ namespace hex {
         void write(const std::vector<u8> &bytes);
         void write(const std::string &string);
 
-        size_t getSize() const;
+        [[nodiscard]] size_t getSize() const;
         void setSize(u64 size);
 
+        void flush();
+        void remove();
+
         auto getHandle() { return this->m_file; }
+        const std::string& getPath() { return this->m_path; }
 
     private:
         FILE *m_file;
+        std::string m_path;
     };
 
 }

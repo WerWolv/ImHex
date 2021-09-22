@@ -3,7 +3,7 @@
 
 namespace hex {
 
-    File::File(const std::string &path, Mode mode) {
+    File::File(const std::string &path, Mode mode) : m_path(path) {
         if (mode == File::Mode::Read)
             this->m_file = fopen64(path.c_str(), "rb");
         else if (mode == File::Mode::Write)
@@ -23,12 +23,18 @@ namespace hex {
     }
 
     File::~File() {
-        if (isValid())
-            fclose(this->m_file);
+        this->close();
     }
 
     void File::seek(u64 offset) {
         fseeko64(this->m_file, offset, SEEK_SET);
+    }
+
+    void File::close() {
+        if (isValid()) {
+            fclose(this->m_file);
+            this->m_file = nullptr;
+        }
     }
 
     size_t File::readBuffer(u8 *buffer, size_t size) {
@@ -41,7 +47,7 @@ namespace hex {
         if (!isValid()) return { };
 
         std::vector<u8> bytes(numBytes ?: getSize());
-        auto bytesRead = fread(bytes.data(), bytes.size(), 1, this->m_file);
+        auto bytesRead = fread(bytes.data(), 1,  bytes.size(), this->m_file);
 
         bytes.resize(bytesRead);
 
@@ -63,7 +69,7 @@ namespace hex {
     void File::write(const std::vector<u8> &bytes) {
         if (!isValid()) return;
 
-        fwrite(bytes.data(), bytes.size(), 1, this->m_file);
+        fwrite(bytes.data(), 1, bytes.size(), this->m_file);
     }
 
     void File::write(const std::string &string) {
@@ -87,6 +93,15 @@ namespace hex {
         if (!isValid()) return;
 
         ftruncate64(fileno(this->m_file), size);
+    }
+
+    void File::flush() {
+        fflush(this->m_file);
+    }
+
+    void File::remove() {
+        this->close();
+        std::remove(this->m_path.c_str());
     }
 
 }

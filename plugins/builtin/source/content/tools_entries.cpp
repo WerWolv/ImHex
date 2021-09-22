@@ -5,9 +5,13 @@
 #include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/file.hpp>
+#include <hex/helpers/literals.hpp>
 
-#include <regex>
+#include <algorithm>
 #include <chrono>
+#include <random>
+#include <regex>
 
 #include <llvm/Demangle/Demangle.h>
 #include "math_evaluator.hpp"
@@ -24,6 +28,7 @@ namespace hex::plugin::builtin {
 
         using namespace std::literals::string_literals;
         using namespace std::literals::chrono_literals;
+        using namespace hex::literals;
 
         int updateStringSizeCallback(ImGuiInputTextCallbackData *data) {
             auto &mathInput = *static_cast<std::string*>(data->UserData);
@@ -666,6 +671,371 @@ namespace hex::plugin::builtin {
         }
     }
 
+
+    void drawFileToolShredder() {
+        static bool shredding = false;
+        static auto selectedFile = []{ std::string s; s.reserve(0x1000); return s; }();
+        static bool fastMode = false;
+
+        ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.warning"_lang);
+        ImGui::NewLine();
+
+        if (ImGui::BeginChild("settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 4 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            ImGui::BeginDisabled(shredding);
+            {
+                ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.input"_lang);
+                ImGui::SameLine();
+                ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &selectedFile);
+                ImGui::SameLine();
+                if (ImGui::Button("...")) {
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, DialogMode::Open, {}, [](const std::string &path) {
+                        selectedFile = path;
+                    });
+                }
+
+                ImGui::Checkbox("hex.builtin.tools.file_tools.shredder.fast"_lang, &fastMode);
+            }
+            ImGui::EndDisabled();
+        }
+        ImGui::EndChild();
+
+        if (shredding)
+            ImGui::TextSpinner("hex.builtin.tools.file_tools.shredder.shredding"_lang);
+        else {
+            ImGui::BeginDisabled(selectedFile.empty());
+            {
+                if (ImGui::Button("hex.builtin.tools.file_tools.shredder.shred"_lang)) {
+                    shredding = true;
+
+                    std::thread([]{
+                        ON_SCOPE_EXIT { shredding = false; selectedFile.clear(); };
+                        File file(selectedFile, File::Mode::Write);
+
+                        if (!file.isValid()) {
+                            View::showErrorPopup("hex.builtin.tools.file_tools.shredder.error.open"_lang);
+                            return;
+                        }
+
+                        std::vector<std::array<u8, 3>> overwritePattern;
+                        if (fastMode) {
+                            /* Should be sufficient for modern disks */
+                            overwritePattern.push_back({ 0x00, 0x00, 0x00 });
+                            overwritePattern.push_back({ 0xFF, 0xFF, 0xFF });
+                        }
+                        else {
+                            /* Gutmann's method. Secure for magnetic storage */
+                            std::random_device rd;
+                            std::uniform_int_distribution<u8> dist(0x00, 0xFF);
+
+                            /* Fill fixed patterns */
+                            overwritePattern = {
+                                    {}, {}, {}, {},
+                                    { 0x55, 0x55, 0x55 }, { 0xAA, 0xAA, 0xAA }, { 0x92, 0x49, 0x24 }, { 0x49, 0x24, 0x92 },
+                                    { 0x24, 0x92, 0x49 }, { 0x00, 0x00, 0x00 }, { 0x11, 0x11, 0x11 }, { 0x22, 0x22, 0x22 },
+                                    { 0x33, 0x33, 0x44 }, { 0x55, 0x55, 0x55 }, { 0x66, 0x66, 0x66 }, { 0x77, 0x77, 0x77 },
+                                    { 0x88, 0x88, 0x88 }, { 0x99, 0x99, 0x99 }, { 0xAA, 0xAA, 0xAA }, { 0xBB, 0xBB, 0xBB },
+                                    { 0xCC, 0xCC, 0xCC }, { 0xDD, 0xDD, 0xDD }, { 0xEE, 0xEE, 0xEE }, { 0xFF, 0xFF, 0xFF },
+                                    { 0x92, 0x49, 0x24 }, { 0x49, 0x24, 0x92 }, { 0x24, 0x92, 0x49 }, { 0x6D, 0xB6, 0xDB },
+                                    { 0xB6, 0xDB, 0x6D }, { 0xBD, 0x6D, 0xB6 },
+                                    {}, {}, {}, {}
+                            };
+
+                            /* Fill random patterns */
+                            for (u8 i = 0; i < 4; i++)
+                                overwritePattern[i] = { dist(rd), dist(rd), dist(rd) };
+                            for (u8 i = 0; i < 4; i++)
+                                overwritePattern[overwritePattern.size() - 1 - i] = { dist(rd), dist(rd), dist(rd) };
+                        }
+
+                        size_t fileSize = file.getSize();
+                        for (const auto &pattern : overwritePattern) {
+                            for (u64 offset = 0; offset < fileSize; offset += 3) {
+                                file.write(pattern.data(), std::min(pattern.size(), fileSize - offset));
+                            }
+                            file.flush();
+                        }
+
+                        file.remove();
+
+                        View::showMessagePopup("hex.builtin.tools.file_tools.shredder.success"_lang);
+
+                    }).detach();
+                }
+            }
+            ImGui::EndDisabled();
+        }
+    }
+
+    void drawFileToolSplitter() {
+        std::array sizeText = {
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.5_75_floppy"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.3_5_floppy"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.zip100"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.zip200"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.cdrom650"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.cdrom700"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.fat32"_lang,
+                (const char*)"hex.builtin.tools.file_tools.splitter.sizes.custom"_lang
+        };
+        std::array<u64, sizeText.size()> sizes = {
+                1200_KiB,
+                1400_KiB,
+                100_MiB,
+                200_MiB,
+                650_MiB,
+                700_MiB,
+                4_GiB,
+                1
+        };
+
+        static bool splitting =  false;
+        static auto selectedFile = []{ std::string s; s.reserve(0x1000); return s; }();
+        static auto baseOutputPath = []{ std::string s; s.reserve(0x1000); return s; }();
+        static u64 splitSize = sizes[0];
+        static int selectedItem = 0;
+
+        if (ImGui::BeginChild("split_settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 7 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            ImGui::BeginDisabled(splitting);
+            {
+                ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.input"_lang);
+                ImGui::SameLine();
+                ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &selectedFile);
+                ImGui::SameLine();
+                if (ImGui::Button("...##input")) {
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, DialogMode::Open, {}, [](const std::string &path) {
+                        selectedFile = path;
+                    });
+                }
+
+                ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.output"_lang);
+                ImGui::SameLine();
+                ImGui::InputText("##base_path", baseOutputPath.data(), baseOutputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &baseOutputPath);
+                ImGui::SameLine();
+                if (ImGui::Button("...##output")) {
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, DialogMode::Save, {}, [](const std::string &path) {
+                        baseOutputPath = path;
+                    });
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::Combo("###part_size", &selectedItem, sizeText.data(), sizeText.size())) {
+                    splitSize = sizes[selectedItem];
+                }
+
+            }
+            ImGui::EndDisabled();
+            ImGui::BeginDisabled(splitting || selectedItem != sizes.size() - 1);
+            {
+                ImGui::InputScalar("###custom_size", ImGuiDataType_U64, &splitSize);
+                ImGui::SameLine();
+                ImGui::TextUnformatted("Bytes");
+            }
+            ImGui::EndDisabled();
+        }
+        ImGui::EndChild();
+
+        ImGui::BeginDisabled(selectedFile.empty() || baseOutputPath.empty() || splitSize == 0);
+        {
+            if (splitting)
+                ImGui::TextSpinner("hex.builtin.tools.file_tools.splitter.splitting"_lang);
+            else {
+                if (ImGui::Button("hex.builtin.tools.file_tools.splitter.split"_lang)) {
+                    splitting = true;
+
+                    std::thread([]{
+                        ON_SCOPE_EXIT { splitting = false; selectedFile.clear(); baseOutputPath.clear(); };
+                        File file(selectedFile, File::Mode::Read);
+
+                        if (!file.isValid()) {
+                            View::showErrorPopup("hex.builtin.tools.file_tools.splitter.error.open"_lang);
+                            return;
+                        }
+
+                        if (file.getSize() < splitSize) {
+                            View::showErrorPopup("hex.builtin.tools.file_tools.splitter.error.size"_lang);
+                            return;
+                        }
+
+                        u32 index = 1;
+                        for (u64 offset = 0; offset < file.getSize(); offset += splitSize) {
+                            File partFile(baseOutputPath + hex::format(".{:05}", index), File::Mode::Create);
+
+                            if (!partFile.isValid()) {
+                                View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.error.create"_lang, index));
+                                return;
+                            }
+
+                            constexpr auto BufferSize = 0xFF'FFFF;
+                            for (u64 partOffset = 0; partOffset < splitSize; partOffset += BufferSize) {
+                                partFile.write(file.readBytes(std::min<u64>(BufferSize, splitSize - partOffset)));
+                                partFile.flush();
+                            }
+
+                            index++;
+                        }
+
+                        View::showMessagePopup("hex.builtin.tools.file_tools.splitter.success"_lang);
+                    }).detach();
+                }
+            }
+        }
+        ImGui::EndDisabled();
+    }
+
+    void drawFileToolCombiner() {
+        static bool combining = false;
+        static std::vector<std::string> files;
+        static auto outputPath = []{ std::string s; s.reserve(0x1000); return s; }();
+        static s32 selectedIndex;
+
+        if (ImGui::BeginTable("files_table", 2, ImGuiTableFlags_SizingStretchProp)) {
+            ImGui::TableSetupColumn("file list", ImGuiTableColumnFlags_NoHeaderLabel, 10);
+            ImGui::TableSetupColumn("buttons", ImGuiTableColumnFlags_NoHeaderLabel, 1);
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
+
+                s32 index = 0;
+                for (auto &file : files) {
+                    if (ImGui::Selectable(std::filesystem::path(file).filename().string().c_str(), index == selectedIndex))
+                        selectedIndex = index;
+                    index++;
+                }
+
+                ImGui::EndListBox();
+            }
+
+            ImGui::TableNextColumn();
+
+            ImGui::BeginDisabled(selectedIndex <= 0) ;
+            {
+                if (ImGui::ArrowButton("move_up", ImGuiDir_Up)) {
+                    std::iter_swap(files.begin() + selectedIndex, files.begin() + selectedIndex - 1);
+                    selectedIndex--;
+                }
+            }
+            ImGui::EndDisabled();
+
+            ImGui::BeginDisabled(files.empty() || selectedIndex >= files.size() - 1) ;
+            {
+                if (ImGui::ArrowButton("move_down", ImGuiDir_Down)) {
+                    std::iter_swap(files.begin() + selectedIndex, files.begin() + selectedIndex + 1);
+                    selectedIndex++;
+                }
+            }
+            ImGui::EndDisabled();
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            ImGui::BeginDisabled(combining);
+            {
+                if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.add.picker"_lang, DialogMode::Open, {}, [](const std::string &path) {
+                        files.push_back(path);
+                    });
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("hex.builtin.tools.file_tools.combiner.delete"_lang)) {
+                    files.erase(files.begin() + selectedIndex);
+                    selectedIndex--;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("hex.builtin.tools.file_tools.combiner.clear"_lang)) {
+                    files.clear();
+                }
+            }
+            ImGui::EndDisabled();
+
+            ImGui::EndTable();
+        }
+
+        ImGui::BeginDisabled(combining);
+        {
+            ImGui::TextUnformatted("hex.builtin.tools.file_tools.combiner.output"_lang);
+            ImGui::SameLine();
+            ImGui::InputText("##output_path", outputPath.data(), outputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &outputPath);
+            ImGui::SameLine();
+            if (ImGui::Button("...")) {
+                hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, DialogMode::Save, {}, [](const std::string &path) {
+                    outputPath = path;
+                });
+            }
+        }
+        ImGui::EndDisabled();
+
+        ImGui::BeginDisabled(files.empty() || outputPath.empty());
+        {
+            if (combining)
+                ImGui::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
+            else {
+                if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
+                    combining = true;
+
+                    std::thread([]{
+                        ON_SCOPE_EXIT { combining = false; };
+
+                        File output(outputPath, File::Mode::Create);
+
+                        if (!output.isValid()) {
+                            View::showErrorPopup("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
+                            return;
+                        }
+
+                        for (const auto &file : files) {
+                            File input(file, File::Mode::Read);
+
+                            if (!input.isValid()) {
+                                View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, std::filesystem::path(file).filename().string()));
+                                return;
+                            }
+
+                            constexpr auto BufferSize = 0xFF'FFFF;
+                            auto inputSize = input.getSize();
+                            for (u64 inputOffset = 0; inputOffset < inputSize; inputOffset += BufferSize) {
+                                output.write(input.readBytes(std::min<u64>(BufferSize, inputSize - inputOffset)));
+                                output.flush();
+                            }
+                        }
+
+                        files.clear();
+                        selectedIndex = 0;
+                        outputPath.clear();
+
+                        View::showMessagePopup("hex.builtin.tools.file_tools.combiner.success"_lang);
+                    }).detach();
+                }
+            }
+        }
+        ImGui::EndDisabled();
+
+    }
+
+    void drawFileTools() {
+
+        if (ImGui::BeginTabBar("file_tools_tabs")) {
+
+            if (ImGui::BeginTabItem("hex.builtin.tools.file_tools.shredder"_lang)) {
+                drawFileToolShredder();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("hex.builtin.tools.file_tools.splitter"_lang)) {
+                drawFileToolSplitter();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("hex.builtin.tools.file_tools.combiner"_lang)) {
+                drawFileToolCombiner();
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
+        }
+    }
+
     void registerToolEntries() {
         ContentRegistry::Tools::add("hex.builtin.tools.demangler",         drawDemangler);
         ContentRegistry::Tools::add("hex.builtin.tools.ascii_table",       drawASCIITable);
@@ -676,6 +1046,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.permissions",       drawPermissionsCalculator);
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader",     drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain",      drawWikiExplainer);
+        ContentRegistry::Tools::add("hex.builtin.tools.file_tools",        drawFileTools);
     }
 
 }

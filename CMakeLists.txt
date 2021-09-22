@@ -17,11 +17,6 @@ set(PLUGINS
         # example
         )
 
-# List extra magic databases to compile here
-set(MAGICDBS
-        magic_dbs/nintendo_magic
-        )
-
 findLibraries()
 
 detectOS()
@@ -45,10 +40,10 @@ add_subdirectory(plugins/libimhex)
 # Add include directories
 include_directories(include ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
 if (USE_SYSTEM_LLVM)
-    include_directories(include ${LLVM_INCLUDE_DIRS})
+    include_directories(${LLVM_INCLUDE_DIRS})
 endif()
 if (USE_SYSTEM_YARA)
-    include_directories(include ${YARA_INCLUDE_DIRS})
+    include_directories(${YARA_INCLUDE_DIRS})
 endif()
 
 enable_testing()

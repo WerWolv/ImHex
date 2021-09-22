@@ -42,6 +42,7 @@ namespace hex {
 
         static void drawCommonInterfaces();
 
+        static void showMessagePopup(const std::string &message);
         static void showErrorPopup(const std::string &errorMessage);
         static void showFatalPopup(const std::string &errorMessage);
 
@@ -53,10 +54,8 @@ namespace hex {
 
         [[nodiscard]] const std::string& getUnlocalizedName() const;
 
-    protected:
-        void discardNavigationRequests();
-
-        void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
+        static void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
+        static void discardNavigationRequests();
 
         static inline std::string toWindowName(const std::string &unlocalizedName) {
             return LangEntry(unlocalizedName) + "###" + unlocalizedName;

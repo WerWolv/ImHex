@@ -65,7 +65,7 @@ namespace hex {
         static std::vector<ContentRegistry::Tools::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;
-        static std::string errorPopupMessage;
+        static std::string popupMessage;
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
         static std::vector<pl::PatternData*> patternData;
 

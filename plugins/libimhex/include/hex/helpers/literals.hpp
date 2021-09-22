@@ -8,12 +8,12 @@ namespace hex::literals {
         return bytes;
     }
 
-    constexpr static inline unsigned long long operator ""_kiB(unsigned long long kiB) noexcept {
+    constexpr static inline unsigned long long operator ""_KiB(unsigned long long kiB) noexcept {
         return operator ""_Bytes(kiB * 1024);
     }
 
     constexpr static inline unsigned long long operator ""_MiB(unsigned long long MiB) noexcept {
-        return operator ""_kiB(MiB * 1024);
+        return operator ""_KiB(MiB * 1024);
     }
 
     constexpr static inline unsigned long long operator ""_GiB(unsigned long long GiB) noexcept {
