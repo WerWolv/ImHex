@@ -2,7 +2,7 @@ Mathematical Expressions
 ========================
 
 Numeric Operators
-^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 .. table::
     :align: left

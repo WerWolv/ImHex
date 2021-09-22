@@ -47,7 +47,7 @@
 ------------------------
 
 ``std::str::substr(string, pos, size)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Gets a substring of ``string`` starting at ``pos```` of size ``size``**
 

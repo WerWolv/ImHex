@@ -112,3 +112,20 @@
     ``size``            Size of value to read. This can be 1, 2, 4, 8 or 16
     ``return``          Value as the smalest signed type that can fit this many bytes
     =================== ===========================================================================
+
+``std::mem::read_string(address, size)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Reads string from memory without declaring a variable**
+
+
+.. table::
+    :align: left
+
+    =================== ===========================================================================
+    Parameter           Description
+    =================== ===========================================================================
+    ``address``         Address of value to read
+    ``size``            Size of string to read
+    ``return``          String containing a trimmed version of the read string
+    =================== ===========================================================================
