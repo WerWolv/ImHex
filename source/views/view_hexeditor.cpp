@@ -461,6 +461,7 @@ namespace hex {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.close"_lang, "", false, providerValid && provider->isAvailable())) {
                 EventManager::post<EventFileUnloaded>();
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
+                providerValid = false;
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.quit"_lang, "", false)) {
