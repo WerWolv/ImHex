@@ -8,15 +8,19 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURREN
 
 if(NOT USE_SYSTEM_NLOHMANN_JSON)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json)
+  set(NLOHMANN_JSON_LIBRARIES nlohmann_json)
 else()
   find_package(nlohmann_json 3.10.2 REQUIRED)
+  set(NLOHMANN_JSON_LIBRARIES nlohmann_json::nlohmann_json)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
 if(NOT USE_SYSTEM_FMT)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/fmt ${CMAKE_CURRENT_BINARY_DIR}/external/fmt)
+  set(FMT_LIBRARIES fmt-header-only)
 else()
   find_package(fmt 8.0.0 REQUIRED)
+  set(FMT_LIBRARIES fmt::fmt)
 endif()
 
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
@@ -27,6 +31,7 @@ set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 if(NOT USE_SYSTEM_CURL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/curl ${CMAKE_CURRENT_BINARY_DIR}/external/curl EXCLUDE_FROM_ALL)
   set_target_properties(libcurl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set(LIBCURL_LIBRARIES libcurl)
 else()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.78.0)
@@ -96,20 +101,9 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
 
 if (APPLE)
     find_library(FOUNDATION NAMES Foundation)
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto ${FOUNDATION} nfd fmt-header-only libcurl magic)
+    target_link_libraries(libimhex PUBLIC imgui ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FOUNDATION} nfd
+      ${FMT_LIBRARIES} ${LIBCURL_LIBRARIES} magic)
 else ()
-    target_link_libraries(libimhex PUBLIC imgui nlohmann_json mbedcrypto nfd magic)
-
-    if (NOT USE_SYSTEM_FMT)
-        target_link_libraries(libimhex PUBLIC fmt-header-only)
-    else()
-        target_link_libraries(libimhex PUBLIC fmt)
-    endif()
-
-    if (NOT USE_SYSTEM_CURL)
-        target_link_libraries(libimhex PUBLIC libcurl)
-    else()
-        target_link_libraries(libimhex PUBLIC curl)
-    endif()
-
+    target_link_libraries(libimhex PUBLIC imgui ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} nfd magic
+      ${FMT_LIBRARIES} ${LIBCURL_LIBRARIES})
 endif ()
