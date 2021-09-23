@@ -23,7 +23,7 @@ namespace hex {
             bool wholeDataMatch;
         };
 
-        std::vector<std::string> m_rules;
+        std::vector<std::pair<std::string, std::string>> m_rules;
         std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
         bool m_matching = false;

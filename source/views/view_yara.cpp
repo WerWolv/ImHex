@@ -3,14 +3,18 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <yara.h>
 #include <filesystem>
 #include <thread>
 
 #include <imgui_imhex_extensions.h>
+#include <hex/helpers/paths.hpp>
 
 namespace hex {
+
+    namespace fs = std::filesystem;
 
     ViewYara::ViewYara() : View("hex.view.yara.name") {
         yr_initialize();
@@ -39,10 +43,10 @@ namespace hex {
                 if (ImGui::Button("hex.view.yara.reload"_lang)) this->reloadRules();
             } else {
                 ImGui::Disabled([this]{
-                    if (ImGui::BeginCombo("hex.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].c_str())) {
+                    if (ImGui::BeginCombo("hex.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
                             const bool selected = (this->m_selectedRule == i);
-                            if (ImGui::Selectable(this->m_rules[i].c_str(), selected))
+                            if (ImGui::Selectable(this->m_rules[i].first.c_str(), selected))
                                 this->m_selectedRule = i;
 
                             if (selected)
@@ -119,12 +123,15 @@ namespace hex {
     void ViewYara::reloadRules() {
         this->m_rules.clear();
 
-        if (!std::filesystem::exists("./yara"))
-            return;
+        for (auto path : hex::getPath(ImHexPath::Yara)) {
+            if (!fs::exists(path))
+                continue;
 
-        for (const auto &entry : std::filesystem::directory_iterator("yara")) {
-            if (entry.is_regular_file())
-                this->m_rules.push_back(entry.path().string());
+            for (const auto &entry : fs::recursive_directory_iterator(path)) {
+                if (entry.is_regular_file() && entry.path().extension() == ".yar") {
+                    this->m_rules.push_back({ fs::relative(entry.path(), fs::path(path)).string(), entry.path().string() });
+                }
+            }
         }
     }
 
@@ -137,21 +144,45 @@ namespace hex {
 
             YR_COMPILER *compiler = nullptr;
             yr_compiler_create(&compiler);
+            ON_SCOPE_EXIT {
+                yr_compiler_destroy(compiler);
+                this->m_matching = false;
+            };
 
-            File file(this->m_rules[this->m_selectedRule], File::Mode::Read);
+            yr_compiler_set_include_callback(
+                    compiler,
+                    [](const char *includeName, const char *callingRuleFileName, const char *callingRuleNamespace, void *userData) -> const char * {
+                        auto currFilePath = static_cast<const char*>(userData);
+
+                        File file((fs::path(currFilePath).parent_path() / includeName).string(), File::Mode::Read);
+                        if (!file.isValid())
+                            return nullptr;
+
+                        auto size = file.getSize();
+                        char *buffer = new char[size + 1];
+                        file.readBuffer(reinterpret_cast<u8*>(buffer), size);
+                        buffer[size] = 0x00;
+
+                        return buffer;
+                    },
+                    [](const char *ptr, void *userData) {
+                        delete[] ptr;
+                    },
+                    this->m_rules[this->m_selectedRule].second.data());
+
+
+            File file(this->m_rules[this->m_selectedRule].second, File::Mode::Read);
             if (!file.isValid()) return;
 
             if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
                 this->m_errorMessage.resize(0xFFFF);
                 yr_compiler_get_error_message(compiler, this->m_errorMessage.data(), this->m_errorMessage.size());
-                this->m_matching = false;
                 return;
             }
 
             YR_RULES *rules;
             yr_compiler_get_rules(compiler, &rules);
-
-            auto provider = ImHexApi::Provider::get();
+            ON_SCOPE_EXIT { yr_rules_destroy(rules); };
 
             std::vector<YaraMatch> newMatches;
 
@@ -232,10 +263,6 @@ namespace hex {
             }, &newMatches, 0);
 
             std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
-
-            yr_compiler_destroy(compiler);
-
-            this->m_matching = false;
         }).detach();
 
     }
