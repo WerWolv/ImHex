@@ -115,6 +115,8 @@ namespace hex::pl {
     ASTNode* Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
             return new ASTNodeLiteral(getValue<Token::Literal>(-1));
+        else if (peek(OPERATOR_PLUS) || peek(OPERATOR_MINUS) || peek(OPERATOR_BITNOT) || peek(OPERATOR_BOOLNOT))
+            return this->parseMathematicalExpression();
         else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto node = this->parseMathematicalExpression();
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
