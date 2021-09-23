@@ -252,14 +252,14 @@ namespace hex {
                     }
 
                 if (this->m_textEditor.IsTextChanged()) {
+                    ProjectFile::markDirty();
+
                     if (this->m_runAutomatically)
                         this->m_hasUnevaluatedChanges = true;
                 }
 
                 if (this->m_hasUnevaluatedChanges && !this->m_evaluatorRunning) {
                     this->m_hasUnevaluatedChanges = false;
-                    ProjectFile::markDirty();
-
                     this->parsePattern(this->m_textEditor.GetText().data());
                 }
             }
