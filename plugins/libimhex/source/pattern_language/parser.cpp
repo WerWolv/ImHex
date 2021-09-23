@@ -797,8 +797,26 @@ namespace hex::pl {
     // struct Identifier { <(parseMember)...> }
     ASTNode* Parser::parseStruct() {
         const auto structNode = create(new ASTNodeStruct());
-        const auto &typeName = getValue<Token::Identifier>(-2).get();
+        const auto &typeName = getValue<Token::Identifier>(-1).get();
         auto structGuard = SCOPE_GUARD { delete structNode; };
+
+        if (MATCHES(sequence(OPERATOR_INHERIT, IDENTIFIER))) {
+            // Inheritance
+
+            do {
+                auto inheritedTypeName = getValue<Token::Identifier>(-1).get();
+                if (!this->m_types.contains(inheritedTypeName))
+                    throwParseError(hex::format("cannot inherit from unknown type '{}'", inheritedTypeName), -1);
+
+                structNode->addInheritance(this->m_types[inheritedTypeName]->clone());
+            } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
+
+        } else if (MATCHES(sequence(OPERATOR_INHERIT, VALUETYPE_ANY))) {
+            throwParseError("cannot inherit from builtin type");
+        }
+
+        if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
+            throwParseError("expected '{' after struct definition", -1);
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             structNode->addMember(parseMember());
@@ -1032,7 +1050,7 @@ namespace hex::pl {
         }
         else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY))
             statement = parsePlacement();
-        else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
+        else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER)))
             statement = parseStruct();
         else if (MATCHES(sequence(KEYWORD_UNION, IDENTIFIER, SEPARATOR_CURLYBRACKETOPEN)))
             statement = parseUnion();

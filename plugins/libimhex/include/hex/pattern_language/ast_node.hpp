@@ -9,6 +9,7 @@
 #include <map>
 #include <variant>
 #include <vector>
+#include <ranges>
 
 #include <hex/pattern_language/ast_node_base.hpp>
 
@@ -315,7 +316,7 @@ namespace hex::pl {
             else if (Token::isFloatingPoint(this->m_type))
                 pattern = new PatternDataFloat(offset, size);
             else if (this->m_type == Token::ValueType::Boolean)
-                pattern = new PatternDataBoolean(offset, size);
+                pattern = new PatternDataBoolean(offset);
             else if (this->m_type == Token::ValueType::Character)
                 pattern = new PatternDataCharacter(offset);
             else if (this->m_type == Token::ValueType::Character16)
@@ -1015,11 +1016,15 @@ namespace hex::pl {
         ASTNodeStruct(const ASTNodeStruct &other) : ASTNode(other), Attributable(other) {
             for (const auto &otherMember : other.getMembers())
                 this->m_members.push_back(otherMember->clone());
+            for (const auto &otherInheritance : other.getInheritance())
+                this->m_inheritance.push_back(otherInheritance->clone());
         }
 
         ~ASTNodeStruct() override {
             for (auto &member : this->m_members)
                 delete member;
+            for (auto &inheritance : this->m_inheritance)
+                delete inheritance;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -1033,11 +1038,26 @@ namespace hex::pl {
             std::vector<PatternData*> memberPatterns;
 
             evaluator->pushScope(pattern, memberPatterns);
+
+            for (auto inheritance : this->m_inheritance) {
+                auto inheritancePatterns = inheritance->createPatterns(evaluator).front();
+                ON_SCOPE_EXIT {
+                    delete inheritancePatterns;
+                };
+
+                if (auto structPattern = dynamic_cast<PatternDataStruct*>(inheritancePatterns)) {
+                    for (auto member : structPattern->getMembers()) {
+                        memberPatterns.push_back(member->clone());
+                    }
+                }
+            }
+
             for (auto member : this->m_members) {
                 for (auto &memberPattern : member->createPatterns(evaluator)) {
                     memberPatterns.push_back(memberPattern);
                 }
             }
+
             evaluator->popScope();
 
             pattern->setMembers(memberPatterns);
@@ -1049,8 +1069,12 @@ namespace hex::pl {
         [[nodiscard]] const std::vector<ASTNode*>& getMembers() const { return this->m_members; }
         void addMember(ASTNode *node) { this->m_members.push_back(node); }
 
+        [[nodiscard]] const std::vector<ASTNode*>& getInheritance() const { return this->m_inheritance; }
+        void addInheritance(ASTNode *node) { this->m_inheritance.push_back(node); }
+
     private:
         std::vector<ASTNode*> m_members;
+        std::vector<ASTNode*> m_inheritance;
     };
 
     class ASTNodeUnion : public ASTNode, public Attributable {
@@ -1342,7 +1366,7 @@ namespace hex::pl {
                         continue;
                     } else {
                         bool found = false;
-                        for (const auto &variable : searchScope) {
+                        for (const auto &variable : searchScope | std::views::reverse) {
                             if (variable->getVariableName() == name) {
                                 auto newPattern = variable->clone();
                                 delete currPattern;
