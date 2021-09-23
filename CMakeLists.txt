@@ -27,8 +27,10 @@ if (NOT USE_SYSTEM_LLVM)
 else()
     find_package(LLVM REQUIRED Demangle)
 endif()
+
 if (NOT USE_SYSTEM_YARA)
     add_subdirectory(external/yara)
+    set(YARA_LIBRARIES libyara)
 else()
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
@@ -98,9 +100,11 @@ set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 target_link_directories(imhex PRIVATE ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imhex ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32 libyara Dwmapi.lib dl)
+    target_link_libraries(imhex ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} wsock32 ws2_32
+      ${YARA_LIBRARIES} Dwmapi.lib dl)
 else ()
-    target_link_libraries(imhex ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread libyara)
+    target_link_libraries(imhex ${CMAKE_DL_LIBS} capstone LLVMDemangle libimhex ${Python_LIBRARIES} dl pthread
+      ${YARA_LIBRARIES})
 endif ()
 
 createPackage()
