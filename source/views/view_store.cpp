@@ -13,6 +13,8 @@
 #include <filesystem>
 #include <functional>
 #include <nlohmann/json.hpp>
+#include <microtar.h>
+#include <hex/helpers/file.hpp>
 
 namespace hex {
 
@@ -34,7 +36,7 @@ namespace hex {
             this->refresh();
         }
 
-        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, std::function<void()> downloadDoneCallback) {
+        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, std::function<void(const StoreEntry&)> downloadDoneCallback) {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -66,7 +68,34 @@ namespace hex {
                                     if (response.code == 200) {
                                        entry.installed = true;
                                        entry.hasUpdate = false;
-                                       downloadDoneCallback();
+
+                                       if (entry.isFolder) {
+                                           mtar_t ctx;
+                                           mtar_open(&ctx, this->m_downloadPath.string().c_str(), "r");
+
+                                           mtar_header_t header;
+                                           auto extractBasePath = this->m_downloadPath.parent_path() / this->m_downloadPath.stem();
+                                           while (mtar_read_header(&ctx, &header) != MTAR_ENULLRECORD) {
+                                               auto filePath = extractBasePath / fs::path(header.name);
+                                               fs::create_directories(filePath.parent_path());
+                                               File outputFile(filePath.string(), File::Mode::Create);
+
+                                               std::vector<u8> buffer(0x10000);
+                                               for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
+                                                   auto readSize = std::min(buffer.size(), header.size - offset);
+                                                   mtar_read_data(&ctx, buffer.data(), readSize);
+
+                                                   buffer.resize(readSize);
+                                                   outputFile.write(buffer);
+                                               }
+                                               mtar_next(&ctx);
+                                           }
+
+                                           mtar_finalize(&ctx);
+                                           mtar_close(&ctx);
+                                       }
+
+                                       downloadDoneCallback(entry);
                                     } else
                                         log::error("Download failed!");
 
@@ -103,12 +132,17 @@ namespace hex {
         };
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            drawTab("hex.view.store.tab.patterns"_lang, ImHexPath::Patterns, this->m_patterns, []{});
-            drawTab("hex.view.store.tab.libraries"_lang, ImHexPath::PatternsInclude, this->m_includes, []{});
-            drawTab("hex.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, []{
+            auto extractTar = []{
+
+            };
+
+            drawTab("hex.view.store.tab.patterns"_lang, ImHexPath::Patterns, this->m_patterns, [](auto){});
+            drawTab("hex.view.store.tab.libraries"_lang, ImHexPath::PatternsInclude, this->m_includes, [](auto){});
+            drawTab("hex.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, [](auto){
                 magic::compile();
             });
-            drawTab("hex.view.store.tab.constants"_lang, ImHexPath::Constants, this->m_constants, []{});
+            drawTab("hex.view.store.tab.constants"_lang, ImHexPath::Constants, this->m_constants, [](auto){});
+            drawTab("hex.view.store.tab.yara"_lang, ImHexPath::Yara, this->m_yara, [](auto){});
 
             ImGui::EndTabBar();
         }
@@ -119,6 +153,7 @@ namespace hex {
         this->m_includes.clear();
         this->m_magics.clear();
         this->m_constants.clear();
+        this->m_yara.clear();
 
         this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s);
     }
@@ -135,10 +170,10 @@ namespace hex {
                     for (auto &entry : storeJson[name]) {
 
                         // Check if entry is valid
-                        if (entry.contains("name") && entry.contains("desc") && entry.contains("file") && entry.contains("url") && entry.contains("hash")) {
+                        if (entry.contains("name") && entry.contains("desc") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
 
                             // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], false, false, false };
+                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], entry["folder"],false, false, false };
 
                             // Check if file is installed already or has an update available
                             for (const auto &folder : hex::getPath(pathType)) {
@@ -170,6 +205,7 @@ namespace hex {
             parseStoreEntries(json, "includes", ImHexPath::PatternsInclude, this->m_includes);
             parseStoreEntries(json, "magic", ImHexPath::Magic, this->m_magics);
             parseStoreEntries(json, "constants", ImHexPath::Constants, this->m_constants);
+            parseStoreEntries(json, "yara", ImHexPath::Yara, this->m_yara);
 
         }
         this->m_apiRequest = { };
@@ -208,11 +244,13 @@ namespace hex {
 
     void ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
         if (!update) {
-            this->m_download = this->m_net.downloadFile(url, hex::getPath(pathType).front() / fs::path(fileName));
+            this->m_downloadPath = hex::getPath(pathType).front() / fs::path(fileName);
+            this->m_download = this->m_net.downloadFile(url, this->m_downloadPath);
         } else {
             for (const auto &path : hex::getPath(pathType)) {
                 auto fullPath = path / fs::path(fileName);
                 if (fs::exists(fullPath)) {
+                    this->m_downloadPath = fullPath;
                     this->m_download = this->m_net.downloadFile(url, fullPath);
                 }
             }

@@ -25,7 +25,7 @@ using namespace std::literals::chrono_literals;
 
 namespace hex::init {
 
-    WindowSplash::WindowSplash(int &argc, char **&argv) {
+    WindowSplash::WindowSplash(int &argc, char **&argv) : m_window(nullptr) {
         SharedData::mainArgc = argc;
         SharedData::mainArgv = argv;
 
@@ -57,7 +57,7 @@ namespace hex::init {
 
                 {
                     std::lock_guard guard(this->m_progressMutex);
-                    this->m_progress += 1.0F / m_tasks.size();
+                    this->m_progress += 1.0F / this->m_tasks.size();
                 }
             }
 
@@ -69,9 +69,7 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
-        ImGui::Texture splashTexture;
-
-        splashTexture = ImGui::LoadImageFromMemory(splash, splash_size);
+        ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(splash, splash_size);
 
         if (splashTexture == nullptr) {
             log::fatal("Could not load splash screen image!");
@@ -168,10 +166,14 @@ namespace hex::init {
         glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 
         if (GLFWmonitor *monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
-            float xscale, yscale;
-            glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+            float xScale = 0, yScale = 0;
+            glfwGetMonitorContentScale(monitor, &xScale, &yScale);
 
-            SharedData::globalScale = SharedData::fontScale = std::midpoint(xscale, yscale);
+            SharedData::globalScale = SharedData::fontScale = std::midpoint(xScale, yScale);
+
+            if (SharedData::globalScale <= 0) {
+                SharedData::globalScale = 1.0;
+            }
         }
 
         this->m_window = glfwCreateWindow(640 * SharedData::globalScale, 400 * SharedData::globalScale, "ImHex", nullptr, nullptr);

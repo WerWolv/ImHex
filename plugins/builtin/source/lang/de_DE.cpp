@@ -316,6 +316,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.store.tab.libraries", "Libraries" },
                     { "hex.view.store.tab.magics", "Magic Files" },
                     { "hex.view.store.tab.constants", "Konstanten" },
+                    { "hex.view.store.tab.yara", "Yara Rules" },
                     { "hex.view.store.loading", "Store inhalt wird geladen..." },
                 { "hex.view.diff.name", "Diffing" },
 

@@ -316,7 +316,8 @@ namespace hex::plugin::builtin {
                     { "hex.view.store.tab.libraries", "库" },
                     { "hex.view.store.tab.magics", "魔术数据库" },
                     { "hex.view.store.tab.constants", "常量" },
-                    { "hex.view.store.loading", "正在加载仓库内容..." },
+                    { "hex.view.store.tab.yara", "Yara规则" },
+                { "hex.view.store.loading", "正在加载仓库内容..." },
                 //{ "hex.view.diff.name", "Diffing" },
 
             /* Builtin plugin features */

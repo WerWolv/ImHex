@@ -5,6 +5,13 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/ImGui ${CMAKE_CURRENT_BINARY_DIR}/external/ImGui)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/microtar ${CMAKE_CURRENT_BINARY_DIR}/external/microtar EXCLUDE_FROM_ALL)
+
+set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
+set(CMAKE_USE_MBEDTLS ON)
+set(BUILD_CURL_EXE OFF)
+set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
 if(NOT USE_SYSTEM_NLOHMANN_JSON)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json)
@@ -14,7 +21,6 @@ else()
   set(NLOHMANN_JSON_LIBRARIES nlohmann_json::nlohmann_json)
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
 if(NOT USE_SYSTEM_FMT)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/fmt ${CMAKE_CURRENT_BINARY_DIR}/external/fmt)
   set(FMT_LIBRARIES fmt-header-only)
@@ -23,11 +29,6 @@ else()
   set(FMT_LIBRARIES fmt::fmt)
 endif()
 
-set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
-set(CMAKE_USE_MBEDTLS ON)
-set(BUILD_CURL_EXE OFF)
-set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
-
 if(NOT USE_SYSTEM_CURL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/curl ${CMAKE_CURRENT_BINARY_DIR}/external/curl EXCLUDE_FROM_ALL)
   set_target_properties(libcurl PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -35,6 +36,20 @@ if(NOT USE_SYSTEM_CURL)
 else()
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.78.0)
+endif()
+
+if (NOT USE_SYSTEM_LLVM)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/llvm ${CMAKE_CURRENT_BINARY_DIR}/external/llvm EXCLUDE_FROM_ALL)
+else()
+    find_package(LLVM REQUIRED Demangle)
+endif()
+
+if (NOT USE_SYSTEM_YARA)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/yara ${CMAKE_CURRENT_BINARY_DIR}/external/yara EXCLUDE_FROM_ALL)
+    set(YARA_LIBRARIES libyara)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -83,27 +98,17 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm include/hex/helpers/file.hpp)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm)
 endif ()
 
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 
-target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR} ${XDGPP_INCLUDE_DIRS})
-
-if (USE_SYSTEM_FMT)
-    target_include_directories(libimhex PUBLIC include ${FMT_INCLUDE_DIRS})
-endif()
-if (USE_SYSTEM_CURL)
-    target_include_directories(libimhex PUBLIC include ${CURL_INCLUDE_DIRS})
-endif()
-
-target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR})
+target_include_directories(libimhex PUBLIC include ${MBEDTLS_INCLUDE_DIR} ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS})
+target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (APPLE)
     find_library(FOUNDATION NAMES Foundation)
-    target_link_libraries(libimhex PUBLIC imgui ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FOUNDATION} nfd
-      ${FMT_LIBRARIES} ${LIBCURL_LIBRARIES} magic)
-else ()
-    target_link_libraries(libimhex PUBLIC imgui ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} nfd magic
-      ${FMT_LIBRARIES} ${LIBCURL_LIBRARIES})
+    target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
+
+target_link_libraries(libimhex PUBLIC imgui nfd magic capstone LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES})
