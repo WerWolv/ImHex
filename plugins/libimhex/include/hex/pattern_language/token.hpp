@@ -91,6 +91,7 @@ namespace hex::pl {
             Float               = 0x42,
             Double              = 0x82,
             String              = 0x15,
+            Auto                = 0x16,
             CustomType          = 0x00,
             Padding             = 0x1F,
 

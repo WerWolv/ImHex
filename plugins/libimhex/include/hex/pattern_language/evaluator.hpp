@@ -105,7 +105,7 @@ namespace hex::pl {
             return this->m_stack;
         }
 
-        void createVariable(const std::string &name, ASTNode *type);
+        void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt);
 
         void setVariable(const std::string &name, const Token::Literal& value);
 

@@ -99,7 +99,7 @@ namespace hex::pl {
         void parseAttribute(Attributable *currNode);
         ASTNode* parseConditional();
         ASTNode* parseWhileStatement();
-        ASTNodeTypeDecl* parseType(bool allowString = false);
+        ASTNodeTypeDecl* parseType(bool allowFunctionTypes = false);
         ASTNode* parseUsingDeclaration();
         ASTNode* parsePadding();
         ASTNode* parseMemberVariable(ASTNodeTypeDecl *type);

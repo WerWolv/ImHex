@@ -3,7 +3,7 @@
 
 namespace hex::pl {
 
-    void Evaluator::createVariable(const std::string &name, ASTNode *type) {
+    void Evaluator::createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value) {
         auto &variables = *this->getScope(0).scope;
         for (auto &variable : variables) {
             if (variable->getVariableName() == name) {
@@ -12,6 +12,27 @@ namespace hex::pl {
         }
 
         auto pattern = type->createPatterns(this).front();
+
+        if (pattern == nullptr) {
+            // Handle auto variables
+            if (!value.has_value())
+                LogConsole::abortEvaluation("cannot determine type of auto variable", type);
+
+            if (std::get_if<u128>(&*value) != nullptr)
+                pattern = new PatternDataUnsigned(0, sizeof(u128));
+            else if (std::get_if<s128>(&*value) != nullptr)
+                pattern = new PatternDataSigned(0, sizeof(s128));
+            else if (std::get_if<double>(&*value) != nullptr)
+                pattern = new PatternDataFloat(0, sizeof(double));
+            else if (std::get_if<bool>(&*value) != nullptr)
+                pattern = new PatternDataBoolean(0, sizeof(bool));
+            else if (std::get_if<char>(&*value) != nullptr)
+                pattern = new PatternDataCharacter(0, sizeof(char));
+            else if (std::get_if<PatternData*>(&*value) != nullptr)
+                pattern = std::get<PatternData*>(*value)->clone();
+            else if (std::get_if<std::string>(&*value) != nullptr)
+                pattern = new PatternDataString(0, 1);
+        }
 
         pattern->setVariableName(name);
         pattern->setOffset(this->getStack().size());

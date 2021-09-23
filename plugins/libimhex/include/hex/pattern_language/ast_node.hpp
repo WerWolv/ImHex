@@ -324,6 +324,8 @@ namespace hex::pl {
                 pattern = new PatternDataPadding(offset, 1);
             else if (this->m_type == Token::ValueType::String)
                 pattern = new PatternDataString(offset, 1);
+            else if (this->m_type == Token::ValueType::Auto)
+                return { nullptr };
             else
                 LogConsole::abortEvaluation("invalid built-in type", this);
 
@@ -371,6 +373,9 @@ namespace hex::pl {
             auto patterns = this->m_type->createPatterns(evaluator);
 
             for (auto &pattern : patterns) {
+                if (pattern == nullptr)
+                    continue;
+
                 if (!this->m_name.empty())
                     pattern->setTypeName(this->m_name);
                 pattern->setEndian(this->m_endian.value_or(evaluator->getDefaultEndian()));
@@ -1799,7 +1804,7 @@ namespace hex::pl {
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {
-                    ctx->createVariable(name, type);
+                    ctx->createVariable(name, type, params[paramIndex]);
                     ctx->setVariable(name, params[paramIndex]);
 
                     paramIndex++;

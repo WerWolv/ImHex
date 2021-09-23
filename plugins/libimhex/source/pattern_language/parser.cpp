@@ -645,7 +645,7 @@ namespace hex::pl {
     /* Type declarations */
 
     // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double|str>
-    ASTNodeTypeDecl* Parser::parseType(bool allowString) {
+    ASTNodeTypeDecl* Parser::parseType(bool allowFunctionTypes) {
         std::optional<std::endian> endian;
 
         if (MATCHES(sequence(KEYWORD_LE)))
@@ -665,8 +665,12 @@ namespace hex::pl {
         }
         else if (MATCHES(sequence(VALUETYPE_ANY))) { // Builtin type
             auto type = getValue<Token::ValueType>(-1);
-            if (!allowString && type == Token::ValueType::String)
-                throwParseError("cannot use 'str' in this context. Use a character array instead");
+            if (!allowFunctionTypes) {
+                if (type == Token::ValueType::String)
+                    throwParseError("cannot use 'str' in this context. Use a character array instead");
+                else if (type == Token::ValueType::Auto)
+                    throwParseError("cannot use 'auto' in this context");
+            }
 
             return create(new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(type), endian));
         } else throwParseError("failed to parse type. Expected identifier or builtin type");

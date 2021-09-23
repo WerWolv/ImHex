@@ -450,6 +450,8 @@ namespace hex::pl {
                         tokens.emplace_back(TOKEN(ValueType, String));
                     else if (identifier == "padding")
                         tokens.emplace_back(TOKEN(ValueType, Padding));
+                    else if (identifier == "auto")
+                        tokens.emplace_back(TOKEN(ValueType, Auto));
 
                     // If it's not a keyword and a builtin type, it has to be an identifier
 

@@ -32,7 +32,7 @@ namespace hex {
                     "u8", "u16", "u32", "u64", "u128",
                     "s8", "s16", "s32", "s64", "s128",
                     "float", "double", "char", "char16",
-                    "bool", "padding", "str"
+                    "bool", "padding", "str", "auto"
             };
 
             for (const auto name : builtInTypes) {
