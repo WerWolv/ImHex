@@ -177,17 +177,17 @@ namespace hex::plugin::builtin {
 
         }
 
-        ContentRegistry::PatternLanguageFunctions::Namespace nsStdStr = { "std", "str" };
+        ContentRegistry::PatternLanguageFunctions::Namespace nsStdString = { "std", "string" };
         {
             /* length(string) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "length", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdString, "length", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
 
                 return u128(string.length());
             });
 
             /* at(string, index) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "at", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdString, "at", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
                 auto index = Token::literalToSigned(params[1]);
 
@@ -201,7 +201,7 @@ namespace hex::plugin::builtin {
             });
 
             /* substr(string, pos, count) */
-            ContentRegistry::PatternLanguageFunctions::add(nsStdStr, "substr", 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguageFunctions::add(nsStdString, "substr", 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
                 auto pos = Token::literalToUnsigned(params[1]);
                 auto size = Token::literalToUnsigned(params[2]);
