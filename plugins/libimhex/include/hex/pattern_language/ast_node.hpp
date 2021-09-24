@@ -1777,7 +1777,7 @@ namespace hex::pl {
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
         // TODO: Implement this
-        ASTNodeFunctionDefinition(std::string name, std::map<std::string, ASTNode*> params, std::vector<ASTNode*> body)
+        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode*>> params, std::vector<ASTNode*> body)
             : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
 
         }
@@ -1787,7 +1787,7 @@ namespace hex::pl {
             this->m_params = other.m_params;
 
             for (const auto &[name, type] : other.m_params) {
-                this->m_params.emplace(name, type->clone());
+                this->m_params.emplace_back(name, type->clone());
             }
 
             for (auto statement : other.m_body) {
@@ -1828,6 +1828,7 @@ namespace hex::pl {
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {
+                    hex::log::info("{}", name);
                     ctx->createVariable(name, type, params[paramIndex]);
                     ctx->setVariable(name, params[paramIndex]);
 
@@ -1851,7 +1852,7 @@ namespace hex::pl {
 
     private:
         std::string m_name;
-        std::map<std::string, ASTNode*> m_params;
+        std::vector<std::pair<std::string, ASTNode*>> m_params;
         std::vector<ASTNode*> m_body;
     };
 
