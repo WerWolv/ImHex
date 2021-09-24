@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
                 auto pos = Token::literalToUnsigned(params[1]);
                 auto size = Token::literalToUnsigned(params[2]);
 
-                if (pos > size)
+                if (pos > string.length())
                     LogConsole::abortEvaluation("character index out of range");
 
                 return string.substr(pos, size);
