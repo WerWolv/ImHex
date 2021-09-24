@@ -170,13 +170,10 @@ namespace hex::pl {
             if (builtinType == nullptr)
                 throwParseError("invalid type used for pointer size", -1);
 
-            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN)))
+            if (!peek(SEPARATOR_ROUNDBRACKETOPEN))
                 throwParseError("expected '(' before cast expression", -1);
 
             auto node = parseFactor();
-
-            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-                throwParseError("expected ')' after cast expression", -1);
 
             return new ASTNodeCast(node, type);
         } else return parseFactor();
@@ -327,7 +324,7 @@ namespace hex::pl {
         auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLAND))) {
-            node = create(new ASTNodeMathematicalExpression(node, this->parseBinaryOrExpression(), Token::Operator::BitOr));
+            node = create(new ASTNodeMathematicalExpression(node, this->parseBinaryOrExpression(), Token::Operator::BoolAnd));
         }
 
         nodeCleanup.release();
@@ -342,7 +339,7 @@ namespace hex::pl {
         auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLXOR))) {
-            node = create(new ASTNodeMathematicalExpression(node, this->parseBooleanAnd(), Token::Operator::BitOr));
+            node = create(new ASTNodeMathematicalExpression(node, this->parseBooleanAnd(), Token::Operator::BoolXor));
         }
 
         nodeCleanup.release();
@@ -357,7 +354,7 @@ namespace hex::pl {
         auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLOR))) {
-            node = create(new ASTNodeMathematicalExpression(node, this->parseBooleanXor(), Token::Operator::BitOr));
+            node = create(new ASTNodeMathematicalExpression(node, this->parseBooleanXor(), Token::Operator::BoolOr));
         }
 
         nodeCleanup.release();

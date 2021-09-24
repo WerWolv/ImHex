@@ -203,25 +203,25 @@ namespace hex::pl {
                         case Token::Operator::BitNot:
                             return new ASTNodeLiteral(bitNot(left, right));
                         case Token::Operator::BoolEquals:
-                            return new ASTNodeLiteral(left == right);
+                            return new ASTNodeLiteral(bool(left == right));
                         case Token::Operator::BoolNotEquals:
-                            return new ASTNodeLiteral(left != right);
+                            return new ASTNodeLiteral(bool(left != right));
                         case Token::Operator::BoolGreaterThan:
-                            return new ASTNodeLiteral(left > right);
+                            return new ASTNodeLiteral(bool(left > right));
                         case Token::Operator::BoolLessThan:
-                            return new ASTNodeLiteral(left < right);
+                            return new ASTNodeLiteral(bool(left < right));
                         case Token::Operator::BoolGreaterThanOrEquals:
-                            return new ASTNodeLiteral(left >= right);
+                            return new ASTNodeLiteral(bool(left >= right));
                         case Token::Operator::BoolLessThanOrEquals:
-                            return new ASTNodeLiteral(left <= right);
+                            return new ASTNodeLiteral(bool(left <= right));
                         case Token::Operator::BoolAnd:
-                            return new ASTNodeLiteral(left && right);
+                            return new ASTNodeLiteral(bool(left && right));
                         case Token::Operator::BoolXor:
-                            return new ASTNodeLiteral(left && !right || !left && right);
+                            return new ASTNodeLiteral(bool(left && !right || !left && right));
                         case Token::Operator::BoolOr:
-                            return new ASTNodeLiteral(left || right);
+                            return new ASTNodeLiteral(bool(left || right));
                         case Token::Operator::BoolNot:
-                            return new ASTNodeLiteral(!right);
+                            return new ASTNodeLiteral(bool(!right));
                         default:
                             LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                     }
