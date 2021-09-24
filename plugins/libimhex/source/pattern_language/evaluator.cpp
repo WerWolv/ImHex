@@ -95,7 +95,7 @@ namespace hex::pl {
                     }
             }, value);
 
-        this->getStack().back() = castedLiteral;
+        this->getStack()[pattern->getOffset()] = castedLiteral;
     }
 
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode*> &ast) {
