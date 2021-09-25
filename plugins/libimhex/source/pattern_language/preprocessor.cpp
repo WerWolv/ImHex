@@ -15,6 +15,7 @@ namespace hex::pl {
     std::optional<std::string> Preprocessor::preprocess(const std::string& code, bool initialRun) {
         u32 offset = 0;
         u32 lineNumber = 1;
+        bool isInString = false;
 
         if (initialRun) {
             this->m_defines.clear();
@@ -27,6 +28,14 @@ namespace hex::pl {
         try {
             bool startOfLine = true;
             while (offset < code.length()) {
+                if (offset > 0 && code[offset - 1] != '\\' && code[offset] == '\"')
+                    isInString = !isInString;
+                else if (isInString) {
+                    output += code[offset];
+                    offset += 1;
+                    continue;
+                }
+
                 if (code[offset] == '#' && startOfLine) {
                     offset += 1;
 
