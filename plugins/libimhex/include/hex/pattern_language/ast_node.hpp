@@ -943,14 +943,28 @@ namespace hex::pl {
                 }, offset->getValue());
             }
 
+            auto offset = evaluator->dataOffset();
+
             auto sizePattern = this->m_sizeType->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete sizePattern; };
 
-            auto pattern = new PatternDataPointer(evaluator->dataOffset(), sizePattern->getSize());
-            pattern->setPointedAtPattern(this->m_type->createPatterns(evaluator).front());
+            auto pattern = new PatternDataPointer(offset, sizePattern->getSize());
+            offset = evaluator->dataOffset();
+
+            {
+                auto pointedAtPattern = this->m_type->createPatterns(evaluator).front();
+                u128 pointerAddress = 0;
+                evaluator->getProvider()->read(pattern->getOffset(), &pointerAddress, pattern->getSize());
+                pointedAtPattern->setOffset(pointerAddress);
+
+                pattern->setPointedAtPattern(pointedAtPattern);
+            }
+
             pattern->setVariableName(this->m_name);
 
             applyVariableAttributes(evaluator, this, pattern);
+
+            evaluator->dataOffset() = offset;
 
             return { pattern };
         }
