@@ -2,6 +2,7 @@
 
 #include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/net.hpp>
 
 #include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/log_console.hpp>
@@ -212,6 +213,17 @@ namespace hex::plugin::builtin {
                 return string.substr(pos, size);
             });
 
+        }
+
+        ContentRegistry::PatternLanguageFunctions::Namespace nsStdHttp = { "std", "http" };
+        {
+            /* get(url) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdHttp, "get", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto url = Token::literalToString(params[0], false);
+
+                hex::Net net;
+                return net.getString(url).get().body;
+            });
         }
     }
 
