@@ -684,7 +684,7 @@ namespace hex::pl {
         auto *type = dynamic_cast<ASTNodeTypeDecl *>(parseType());
         if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
-        return create(new ASTNodeTypeDecl(name, type, type->getEndian()));
+        return addType(name, type, type->getEndian());
     }
 
     // padding[(parseMathematicalExpression)]
@@ -707,14 +707,14 @@ namespace hex::pl {
             auto variableCleanup = SCOPE_GUARD { for (auto var : variables) delete var; };
 
             do {
-                variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type->clone())));
+                variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type)));
             } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
 
             variableCleanup.release();
 
             return create(new ASTNodeMultiVariableDecl(variables));
         } else
-            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type->clone()));
+            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type));
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]
@@ -736,7 +736,7 @@ namespace hex::pl {
 
         sizeCleanup.release();
 
-        return create(new ASTNodeArrayVariableDecl(name, type->clone(), size));
+        return create(new ASTNodeArrayVariableDecl(name, type, size));
     }
 
     // (parseType) *Identifier : (parseType)
@@ -752,7 +752,7 @@ namespace hex::pl {
                 throwParseError("invalid type used for pointer size", -1);
         }
 
-        return create(new ASTNodePointerVariableDecl(name, type->clone(), sizeType));
+        return create(new ASTNodePointerVariableDecl(name, type, sizeType));
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
@@ -764,7 +764,6 @@ namespace hex::pl {
             // Some kind of variable definition
 
             auto type = parseType();
-            ON_SCOPE_EXIT { delete type; };
 
             if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN))
                 member = parseMemberArrayVariable(type);
@@ -798,9 +797,11 @@ namespace hex::pl {
 
     // struct Identifier { <(parseMember)...> }
     ASTNode* Parser::parseStruct() {
-        const auto structNode = create(new ASTNodeStruct());
         const auto &typeName = getValue<Token::Identifier>(-1).get();
-        auto structGuard = SCOPE_GUARD { delete structNode; };
+
+        const auto structNode = create(new ASTNodeStruct());
+        const auto typeDecl = addType(typeName, structNode);
+        auto structGuard = SCOPE_GUARD { delete structNode; delete typeDecl; };
 
         if (MATCHES(sequence(OPERATOR_INHERIT, IDENTIFIER))) {
             // Inheritance
@@ -826,14 +827,16 @@ namespace hex::pl {
 
         structGuard.release();
 
-        return create(new ASTNodeTypeDecl(typeName, structNode));
+        return typeDecl;
     }
 
     // union Identifier { <(parseMember)...> }
     ASTNode* Parser::parseUnion() {
-        const auto unionNode = create(new ASTNodeUnion());
         const auto &typeName = getValue<Token::Identifier>(-2).get();
-        auto unionGuard = SCOPE_GUARD { delete unionNode; };
+
+        const auto unionNode = create(new ASTNodeUnion());
+        const auto typeDecl = addType(typeName, unionNode);
+        auto unionGuard = SCOPE_GUARD { delete unionNode; delete typeDecl; };
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             unionNode->addMember(parseMember());
@@ -841,7 +844,7 @@ namespace hex::pl {
 
         unionGuard.release();
 
-        return create(new ASTNodeTypeDecl(typeName, unionNode));
+        return typeDecl;
     }
 
     // enum Identifier : (parseType) { <<Identifier|Identifier = (parseMathematicalExpression)[,]>...> }
@@ -852,7 +855,8 @@ namespace hex::pl {
         if (underlyingType->getEndian().has_value()) throwParseError("underlying type may not have an endian specification", -2);
 
         const auto enumNode = create(new ASTNodeEnum(underlyingType));
-        auto enumGuard = SCOPE_GUARD { delete enumNode; };
+        const auto typeDecl = addType(typeName, enumNode);
+        auto enumGuard = SCOPE_GUARD { delete enumNode; delete typeDecl; };
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
             throwParseError("expected '{' after enum definition", -1);
@@ -891,7 +895,7 @@ namespace hex::pl {
 
         enumGuard.release();
 
-        return create(new ASTNodeTypeDecl(typeName, enumNode));
+        return typeDecl;
     }
 
     // bitfield Identifier { <Identifier : (parseMathematicalExpression)[;]...> }
@@ -899,7 +903,9 @@ namespace hex::pl {
         std::string typeName = getValue<Token::Identifier>(-2).get();
 
         const auto bitfieldNode = create(new ASTNodeBitfield());
-        auto enumGuard = SCOPE_GUARD { delete bitfieldNode; };
+        const auto typeDecl = addType(typeName, bitfieldNode);
+
+        auto enumGuard = SCOPE_GUARD { delete bitfieldNode; delete typeDecl; };
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
@@ -920,7 +926,7 @@ namespace hex::pl {
 
         enumGuard.release();
 
-        return create(new ASTNodeTypeDecl(typeName, bitfieldNode));
+        return typeDecl;
     }
 
     // (parseType) Identifier @ Integer
@@ -1075,17 +1081,19 @@ namespace hex::pl {
         // Consume superfluous semicolons
         while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
 
-        if (auto typeDecl = dynamic_cast<ASTNodeTypeDecl*>(statement); typeDecl != nullptr) {
-            auto typeName = getNamespacePrefixedName(typeDecl->getName());
-
-            if (this->m_types.contains(typeName))
-                throwParseError(hex::format("redefinition of type '{}'", typeName));
-
-            typeDecl->setName(typeName);
-            this->m_types.insert({ typeName, typeDecl });
-        }
-
         return { statement };
+    }
+
+    ASTNodeTypeDecl* Parser::addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian) {
+        auto typeName = getNamespacePrefixedName(name);
+
+        if (this->m_types.contains(typeName))
+            throwParseError(hex::format("redefinition of type '{}'", typeName));
+
+        auto typeDecl = create(new ASTNodeTypeDecl(typeName, node, endian));
+        this->m_types.insert({ typeName,  typeDecl });
+
+        return typeDecl;
     }
 
     // <(parseNamespace)...> EndOfProgram

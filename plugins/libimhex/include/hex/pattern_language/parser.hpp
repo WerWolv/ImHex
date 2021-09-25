@@ -117,6 +117,8 @@ namespace hex::pl {
         std::vector<ASTNode*> parseNamespace();
         std::vector<ASTNode*> parseStatements();
 
+        ASTNodeTypeDecl* addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian = std::nullopt);
+
         std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {
             std::vector<ASTNode*> program;
             auto guard = SCOPE_GUARD {

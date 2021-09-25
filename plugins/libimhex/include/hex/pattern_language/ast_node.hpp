@@ -346,15 +346,8 @@ namespace hex::pl {
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
-            if (other.m_type != nullptr)
-                this->m_type = other.m_type->clone();
-            else
-                this->m_type = nullptr;
+            this->m_type = other.m_type;
             this->m_endian = other.m_endian;
-        }
-
-        ~ASTNodeTypeDecl() override {
-            delete this->m_type;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
