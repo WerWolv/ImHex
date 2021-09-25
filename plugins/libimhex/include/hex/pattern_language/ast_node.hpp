@@ -1323,8 +1323,10 @@ namespace hex::pl {
                             [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); }
                     }, literal);
                 }
-                else
-                    evaluator->getProvider()->read(pattern->getOffset(), value.data(), pattern->getSize());
+                else {
+                    value.resize(pattern->getSize());
+                    evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
+                }
 
                 literal = value;
             } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(pattern)) {
