@@ -1286,6 +1286,8 @@ namespace hex::pl {
                 }
                 else
                     evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
+
+                value = hex::changeEndianess(value, pattern->getSize(), pattern->getEndian());
             };
 
             Token::Literal literal;
