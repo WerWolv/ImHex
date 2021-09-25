@@ -77,7 +77,10 @@ namespace hex::pl {
                     typeName += "::";
                    continue;
                 } else {
-                    return create(new ASTNodeScopeResolution({ typeName, getValue<Token::Identifier>(-1).get() }));
+                    if (!this->m_types.contains(typeName))
+                        throwParseError(hex::format("cannot access scope of invalid type '{}'", typeName), -1);
+
+                    return create(new ASTNodeScopeResolution(this->m_types[typeName]->clone(), getValue<Token::Identifier>(-1).get()));
                 }
             }
             else

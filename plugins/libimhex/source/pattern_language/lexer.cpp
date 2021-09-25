@@ -375,7 +375,7 @@ namespace hex::pl {
 
                     tokens.emplace_back(VALUE_TOKEN(String, Token::Literal(s)));
                     offset += stringSize;
-                } else if (std::isalpha(c)) {
+                } else if (std::isalpha(c) || c == '_') {
                     std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
 
                     // Check for reserved keywords

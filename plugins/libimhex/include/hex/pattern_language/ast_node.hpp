@@ -1282,7 +1282,7 @@ namespace hex::pl {
             };
 
             Token::Literal literal;
-            if (dynamic_cast<PatternDataUnsigned*>(pattern)) {
+            if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern)) {
                 u128 value = 0;
                 readValue(value, pattern);
                 literal = value;
@@ -1440,20 +1440,40 @@ namespace hex::pl {
 
     class ASTNodeScopeResolution : public ASTNode {
     public:
-        explicit ASTNodeScopeResolution(std::vector<std::string> path) : ASTNode(), m_path(std::move(path)) { }
+        explicit ASTNodeScopeResolution(ASTNode *type, std::string name) : ASTNode(), m_type(type), m_name(std::move(name)) { }
 
-        ASTNodeScopeResolution(const ASTNodeScopeResolution&) = default;
+        ASTNodeScopeResolution(const ASTNodeScopeResolution &other) {
+            this->m_type = other.m_type->clone();
+            this->m_name = other.m_name;
+        }
+
+        ~ASTNodeScopeResolution() override {
+            delete this->m_type;
+        }
 
         [[nodiscard]] ASTNode* clone() const override {
             return new ASTNodeScopeResolution(*this);
         }
 
-        const std::vector<std::string>& getPath() {
-            return this->m_path;
+        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+            auto type = this->m_type->evaluate(evaluator);
+            ON_SCOPE_EXIT { delete type; };
+
+            if (auto enumType = dynamic_cast<ASTNodeEnum*>(type)) {
+                for (auto &[name, value] : enumType->getEntries()) {
+                    if (name == this->m_name)
+                        return value->evaluate(evaluator);
+                }
+            } else {
+                LogConsole::abortEvaluation("invalid scope resolution. Cannot access this type");
+            }
+
+            LogConsole::abortEvaluation(hex::format("could not find constant '{}'", this->m_name), this);
         }
 
     private:
-        std::vector<std::string> m_path;
+        ASTNode *m_type;
+        std::string m_name;
     };
 
     class ASTNodeConditionalStatement : public ASTNode {
@@ -1828,7 +1848,6 @@ namespace hex::pl {
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {
-                    hex::log::info("{}", name);
                     ctx->createVariable(name, type, params[paramIndex]);
                     ctx->setVariable(name, params[paramIndex]);
 

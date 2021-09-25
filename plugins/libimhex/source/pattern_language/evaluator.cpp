@@ -25,9 +25,9 @@ namespace hex::pl {
             else if (std::get_if<double>(&*value) != nullptr)
                 pattern = new PatternDataFloat(0, sizeof(double));
             else if (std::get_if<bool>(&*value) != nullptr)
-                pattern = new PatternDataBoolean(0, sizeof(bool));
+                pattern = new PatternDataBoolean(0);
             else if (std::get_if<char>(&*value) != nullptr)
-                pattern = new PatternDataCharacter(0, sizeof(char));
+                pattern = new PatternDataCharacter(0);
             else if (std::get_if<PatternData*>(&*value) != nullptr)
                 pattern = std::get<PatternData*>(*value)->clone();
             else if (std::get_if<std::string>(&*value) != nullptr)
