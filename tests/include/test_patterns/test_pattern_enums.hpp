@@ -7,13 +7,14 @@ namespace hex::test {
     class TestPatternEnums : public TestPattern {
     public:
         TestPatternEnums() : TestPattern("Enums"){
-            auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x120, sizeof(u32));
+            auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x08, sizeof(u32));
             testEnum->setEnumValues({
                 { u128(0x0000), "A" },
-                { s128(0x1234), "B" },
-                { u128(0x1235), "C" },
-                { u128(0x1236), "D" },
+                { s128(0x0C), "B" },
+                { u128(0x0D), "C" },
+                { u128(0x0E), "D" },
             });
+            testEnum->setEndian(std::endian::big);
 
             addPattern(testEnum);
         }
@@ -24,12 +25,14 @@ namespace hex::test {
             return R"(
                 enum TestEnum : u32 {
                     A,
-                    B = 0x1234,
+                    B = 0x0C,
                     C,
                     D
                 };
 
-                TestEnum testEnum @ 0x120;
+                be TestEnum testEnum @ 0x08;
+
+                std::assert(testEnum == TestEnum::C, "Invalid enum value");
             )";
         }
 

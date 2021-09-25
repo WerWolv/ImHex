@@ -97,7 +97,7 @@ int test(int argc, char **argv) {
         auto &controlPattern = *currTest->getPatterns().at(i);
 
         if (evaluatedPattern != controlPattern) {
-            hex::log::fatal("Pattern with name {}:{} didn't match template", patterns->at(i)->getTypeName(), patterns->at(i)->getVariableName());
+            hex::log::fatal("Pattern with name {}:{} didn't match template", evaluatedPattern.getTypeName(), evaluatedPattern.getVariableName());
             return EXIT_FAILURE;
         }
     }

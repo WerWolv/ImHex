@@ -13,6 +13,7 @@
 #include "test_patterns/test_pattern_rvalues.hpp"
 #include "test_patterns/test_pattern_namespaces.hpp"
 #include "test_patterns/test_pattern_extra_semicolon.hpp"
+#include "test_patterns/test_pattern_pointers.hpp"
 
 std::array Tests = {
         TEST(Placement),
@@ -27,5 +28,6 @@ std::array Tests = {
         TEST(Math),
         TEST(RValues),
         TEST(Namespaces),
-        TEST(ExtraSemicolon)
+        TEST(ExtraSemicolon),
+        TEST(Pointers)
 };

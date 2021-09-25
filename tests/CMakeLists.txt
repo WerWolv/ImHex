@@ -18,6 +18,7 @@ set(AVAILABLE_TESTS
         RValues
         Namespaces
         ExtraSemicolon
+        Pointers
 )
 
 
