@@ -761,7 +761,26 @@ namespace hex {
             if (count != 1)
                 return;
 
-            EventManager::post<RequestOpenFile>(paths[0]);
+            for (u32 i = 0; i < count; i++) {
+                auto path = std::filesystem::path(paths[i]);
+
+                if (path.extension() == ".hexpat" || path.extension() == ".pat") {
+                    File file(path.string(), File::Mode::Read);
+
+                    if (file.isValid())
+                        EventManager::post<RequestSetPatternLanguageCode>(file.readString());
+                } else if (path.extension() == ".yar") {
+                    for (auto &destPath : hex::getPath(ImHexPath::Yara)) {
+                        std::error_code error;
+                        std::filesystem::copy(path, destPath, error);
+
+                        if (!error)
+                            break;
+                    }
+                } else {
+                    EventManager::post<RequestOpenFile>(path.string());
+                }
+            }
         });
 
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
