@@ -213,6 +213,21 @@ namespace hex::plugin::builtin {
                 return string.substr(pos, size);
             });
 
+            /* parse_int(string, base) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdString, "parse_int", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto string = Token::literalToString(params[0], false);
+                auto base = Token::literalToUnsigned(params[1]);
+
+                return s128(std::strtoll(string.c_str(), nullptr, base));
+            });
+
+            /* parse_float(string) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdString, "parse_float", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto string = Token::literalToString(params[0], false);
+
+                return double(std::strtod(string.c_str(), nullptr));
+            });
+
         }
 
         ContentRegistry::PatternLanguageFunctions::Namespace nsStdHttp = { "std", "http" };
