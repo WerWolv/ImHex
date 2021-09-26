@@ -1515,16 +1515,16 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            std::vector<PatternData *> patterns;
-
+            auto &scope = *evaluator->getScope(0).scope;
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
             for (auto &node : body) {
                 auto newPatterns = node->createPatterns(evaluator);
-                patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
+                for (auto &pattern : newPatterns)
+                    scope.push_back(pattern->clone());
             }
 
-            return patterns;
+            return { };
         }
 
         [[nodiscard]] ASTNode* getCondition() {
