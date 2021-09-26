@@ -533,6 +533,27 @@ namespace hex::pl {
             return create(new ASTNodeReturnStatement(this->parseMathematicalExpression()));
     }
 
+    std::vector<ASTNode*> Parser::parseStatementBody() {
+        std::vector<ASTNode*> body;
+
+        auto bodyCleanup = SCOPE_GUARD {
+            for (auto &node : body)
+                delete node;
+        };
+
+        if (MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN))) {
+            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
+                body.push_back(parseFunctionStatement());
+            }
+        } else {
+            body.push_back(parseFunctionStatement());
+        }
+
+        bodyCleanup.release();
+
+        return body;
+    }
+
     ASTNode* Parser::parseFunctionConditional() {
         auto condition = parseMathematicalExpression();
         std::vector<ASTNode*> trueBody, falseBody;
@@ -545,22 +566,13 @@ namespace hex::pl {
                 delete statement;
         };
 
-        if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE, SEPARATOR_CURLYBRACKETOPEN))) {
-            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
-                trueBody.push_back(parseFunctionStatement());
-            }
-        } else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
-            trueBody.push_back(parseFunctionStatement());
-        } else
-            throwParseError("expected body of conditional statement");
+        if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            throwParseError("expected closing ')' after statement head");
 
-        if (MATCHES(sequence(KEYWORD_ELSE, SEPARATOR_CURLYBRACKETOPEN))) {
-            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
-                falseBody.push_back(parseFunctionStatement());
-            }
-        } else if (MATCHES(sequence(KEYWORD_ELSE))) {
-            falseBody.push_back(parseFunctionStatement());
-        }
+        trueBody = parseStatementBody();
+
+        if (MATCHES(sequence(KEYWORD_ELSE)))
+            falseBody = parseStatementBody();
 
         cleanup.release();
 
@@ -577,14 +589,10 @@ namespace hex::pl {
                 delete statement;
         };
 
-        if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE, SEPARATOR_CURLYBRACKETOPEN))) {
-            while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
-                body.push_back(parseFunctionStatement());
-            }
-        } else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
-            body.push_back(parseFunctionStatement());
-        } else
-            throwParseError("expected body of conditional statement");
+        if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            throwParseError("expected closing ')' after statement head");
+
+        body = parseStatementBody();
 
         cleanup.release();
 

@@ -481,6 +481,9 @@ namespace hex::pl {
 
         ASTNodeWhileStatement(const ASTNodeWhileStatement &other) : ASTNode(other) {
             this->m_condition = other.m_condition->clone();
+
+            for (auto &statement : other.m_body)
+                this->m_body.push_back(statement->clone());
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -1377,7 +1380,7 @@ namespace hex::pl {
                         continue;
                     } else {
                         bool found = false;
-                        for (const auto &variable : searchScope | std::views::reverse) {
+                        for (const auto &variable : (searchScope | std::views::reverse)) {
                             if (variable->getVariableName() == name) {
                                 auto newPattern = variable->clone();
                                 delete currPattern;
