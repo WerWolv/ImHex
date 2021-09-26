@@ -807,16 +807,17 @@ namespace hex::pl {
 
         std::optional<u32> highlightBytes(size_t offset) override{
             auto entry = this->m_template->clone();
+            ON_SCOPE_EXIT { delete entry; };
 
-            for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += this->m_template->getSize()) {
-                entry->setOffset(address);
-                if (auto color = entry->highlightBytes(offset); color.has_value())
-                    return color.value();
-            }
+            if (offset < this->getOffset() || offset >= this->getOffset() + this->getSize())
+                return { };
 
-            delete entry;
-
-            return { };
+            auto index = (offset - this->getOffset()) / this->m_template->getSize();
+            entry->setOffset(this->getOffset() + this->m_template->getSize() * index);
+            if (auto color = entry->highlightBytes(offset); color.has_value())
+                return color.value();
+            else
+                return { };
         }
 
         std::map<u64, u32> getHighlightedAddresses() override {

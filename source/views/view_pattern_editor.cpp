@@ -341,9 +341,9 @@ namespace hex {
     void ViewPatternEditor::parsePattern(char *buffer) {
         this->m_evaluatorRunning = true;
 
-        this->clearPatternData();
         this->m_textEditor.SetErrorMarkers({ });
         this->m_console.clear();
+        this->clearPatternData();
         EventManager::post<EventPatternChanged>();
 
         std::thread([this, buffer = std::string(buffer)] {
@@ -358,9 +358,9 @@ namespace hex {
 
             if (result.has_value()) {
                 SharedData::patternData = std::move(result.value());
-                View::doLater([]{
+                //View::doLater([]{
                     EventManager::post<EventPatternChanged>();
-                });
+                //});
             }
 
             this->m_evaluatorRunning = false;
