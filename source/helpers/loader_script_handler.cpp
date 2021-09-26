@@ -165,7 +165,7 @@ namespace hex {
 
         code += "};\n";
 
-        EventManager::post<RequestAppendPatternLanguageCode>(code);
+        EventManager::post<RequestSetPatternLanguageCode>(code);
 
         Py_RETURN_NONE;
     }

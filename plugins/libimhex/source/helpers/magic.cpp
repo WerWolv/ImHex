@@ -74,7 +74,7 @@ namespace hex::magic {
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_MIME);
+            magic_t ctx = magic_open(MAGIC_MIME_TYPE);
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0)

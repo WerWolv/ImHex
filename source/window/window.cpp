@@ -6,6 +6,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -222,6 +223,10 @@ namespace hex {
             }
         });
 
+        EventManager::subscribe<RequestOpenPopup>(this, [this](auto name){
+            this->m_popupsToOpen.push_back(name);
+        });
+
         for (const auto &path : hex::getPath(ImHexPath::Config)) {
             if (auto filePath = std::filesystem::path(path) / CrashBackupFileName; std::filesystem::exists(filePath)) {
                 this->m_safetyBackupPath = filePath;
@@ -263,6 +268,7 @@ namespace hex {
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
         EventManager::unsubscribe<EventAbnormalTermination>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
+        EventManager::unsubscribe<RequestOpenPopup>(this);
 
         ImGui::UnloadImage(this->m_bannerTexture);
         ImGui::UnloadImage(this->m_logoTexture);
@@ -451,6 +457,13 @@ namespace hex {
             }
 
             ImGui::EndPopup();
+        }
+
+        for (auto it = this->m_popupsToOpen.begin(); it != this->m_popupsToOpen.end(); it++) {
+            if (ImGui::IsPopupOpen(it->c_str()))
+                this->m_popupsToOpen.erase(it);
+            else
+                ImGui::OpenPopup(it->c_str());
         }
     }
 

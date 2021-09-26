@@ -111,11 +111,12 @@ namespace hex {
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
     EVENT_DEF(RequestAddBookmark, ImHexApi::Bookmarks::Entry);
-    EVENT_DEF(RequestAppendPatternLanguageCode, std::string);
+    EVENT_DEF(RequestSetPatternLanguageCode, std::string);
     EVENT_DEF(RequestChangeWindowTitle, std::string);
     EVENT_DEF(RequestCloseImHex, bool);
     EVENT_DEF(RequestOpenFile, std::string);
     EVENT_DEF(RequestChangeTheme, u32);
+    EVENT_DEF(RequestOpenPopup, std::string);
 
     EVENT_DEF(QuerySelection, Region&);
 

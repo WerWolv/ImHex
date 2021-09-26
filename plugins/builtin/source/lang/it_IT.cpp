@@ -78,6 +78,8 @@ namespace hex::plugin::builtin {
                 { "hex.common.dont_show_again", "Non mostrare di nuovo" },
                 { "hex.common.link", "Link" },
                 { "hex.common.file", "File" },
+                //{ "hex.common.open", "Open" },
+                //{ "hex.common.browse", "Browse..." },
 
                 { "hex.view.bookmarks.name", "Segnalibri" },
                     { "hex.view.bookmarks.default_title", "Segnalibro [0x{0:X} - 0x{1:X}]" },

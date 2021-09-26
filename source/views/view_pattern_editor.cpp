@@ -17,6 +17,7 @@
 namespace hex {
 
     using namespace hex::literals;
+    namespace fs = std::filesystem;
 
     static const TextEditor::LanguageDefinition& PatternLanguage() {
         static bool initialized = false;
@@ -96,18 +97,16 @@ namespace hex {
             this->parsePattern(this->m_textEditor.GetText().data());
         });
 
-        EventManager::subscribe<RequestAppendPatternLanguageCode>(this, [this](std::string code) {
-             this->m_textEditor.InsertText("\n");
+        EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](std::string code) {
+             this->m_textEditor.SelectAll();
+             this->m_textEditor.Delete();
              this->m_textEditor.InsertText(code);
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path) {
-            if (this->m_textEditor.GetText().find_first_not_of(" \f\n\r\t\v") != std::string::npos)
-                return;
-
             pl::Preprocessor preprocessor;
 
-            if (ImHexApi::Provider::isValid())
+            if (!ImHexApi::Provider::isValid())
                 return;
 
             std::string mimeType = magic::getMIMEType(ImHexApi::Provider::get());
@@ -127,6 +126,7 @@ namespace hex {
             std::error_code errorCode;
             for (const auto &dir : hex::getPath(ImHexPath::Patterns)) {
                 for (auto &entry : std::filesystem::directory_iterator(dir, errorCode)) {
+                    foundCorrectType = false;
                     if (!entry.is_regular_file())
                         continue;
 
@@ -137,14 +137,15 @@ namespace hex {
                     preprocessor.preprocess(file.readString());
 
                     if (foundCorrectType)
-                        this->m_possiblePatternFiles.push_back(entry.path().string());
+                        this->m_possiblePatternFiles.push_back(entry.path());
                 }
             }
 
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;
-                View::doLater([] { ImGui::OpenPopup("hex.view.pattern.accept_pattern"_lang); });
+                EventManager::post<RequestOpenPopup>("hex.view.pattern.accept_pattern"_lang);
+                this->m_acceptPatternWindowOpen = true;
             }
         });
 
@@ -174,7 +175,7 @@ namespace hex {
 
         EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
-        EventManager::unsubscribe<RequestAppendPatternLanguageCode>(this);
+        EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
     }
@@ -182,9 +183,19 @@ namespace hex {
     void ViewPatternEditor::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.view.pattern.menu.file.load_pattern"_lang)) {
-                hex::openFileBrowser("hex.view.pattern.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
-                    this->loadPatternFile(path);
-                });
+
+                this->m_selectedPatternFile = 0;
+                this->m_possiblePatternFiles.clear();
+
+                for (auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
+                    for (auto &entry: fs::recursive_directory_iterator(imhexPath)) {
+                        if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
+                            this->m_possiblePatternFiles.push_back(entry.path());
+                        }
+                    }
+                }
+
+                View::doLater([]{ ImGui::OpenPopup("hex.view.pattern.menu.file.load_pattern"_lang); });
             }
             ImGui::EndMenu();
         }
@@ -270,7 +281,7 @@ namespace hex {
     }
 
     void ViewPatternEditor::drawAlwaysVisible() {
-        if (ImGui::BeginPopupModal("hex.view.pattern.accept_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.view.pattern.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("%s", static_cast<const char *>("hex.view.pattern.accept_pattern.desc"_lang));
 
             std::vector<std::string> entries;
@@ -280,19 +291,23 @@ namespace hex {
                 entries[i] = std::filesystem::path(this->m_possiblePatternFiles[i]).filename().string();
             }
 
-            ImGui::ListBox("hex.view.pattern.accept_pattern.pattern_language"_lang, &this->m_selectedPatternFile, [](void *data, int id, const char** outText) -> bool {
-                auto &entries = *static_cast<std::vector<std::string>*>(data);
+            if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
 
-                *outText = entries[id].c_str();
+                u32 index = 0;
+                for (auto &path : this->m_possiblePatternFiles) {
+                    if (ImGui::Selectable(path.filename().string().c_str(), index == this->m_selectedPatternFile))
+                        this->m_selectedPatternFile = index;
+                    index++;
+                }
 
-                return true;
-            }, &entries, entries.size(), 4);
+                ImGui::EndListBox();
+            }
 
             ImGui::NewLine();
             ImGui::Text("%s", static_cast<const char *>("hex.view.pattern.accept_pattern.question"_lang));
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
-                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile]);
+                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
                 ImGui::CloseCurrentPopup();
             }, []{
                 ImGui::CloseCurrentPopup();
@@ -300,6 +315,37 @@ namespace hex {
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopupModal("hex.view.pattern.menu.file.load_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+            if (ImGui::BeginListBox("##patterns", ImVec2(-FLT_MIN, 0))) {
+
+                u32 index = 0;
+                for (auto &path : this->m_possiblePatternFiles) {
+                    if (ImGui::Selectable(path.filename().string().c_str(), index == this->m_selectedPatternFile))
+                        this->m_selectedPatternFile = index;
+                    index++;
+                }
+
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("hex.common.open"_lang)) {
+                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("hex.common.browse"_lang)) {
+                hex::openFileBrowser("hex.view.pattern.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
+                    this->loadPatternFile(path);
+                    ImGui::CloseCurrentPopup();
+                });
+            }
 
             ImGui::EndPopup();
         }

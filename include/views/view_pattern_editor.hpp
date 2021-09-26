@@ -26,11 +26,13 @@ namespace hex {
 
     private:
         pl::PatternLanguage *m_patternLanguageRuntime;
-        std::vector<std::string> m_possiblePatternFiles;
-        int m_selectedPatternFile = 0;
+        std::vector<std::filesystem::path> m_possiblePatternFiles;
+        u32 m_selectedPatternFile = 0;
         bool m_runAutomatically = false;
         bool m_evaluatorRunning = false;
         bool m_hasUnevaluatedChanges = false;
+
+        bool m_acceptPatternWindowOpen = false;
 
         TextEditor m_textEditor;
         std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;

@@ -79,6 +79,8 @@ namespace hex::plugin::builtin {
                 { "hex.common.dont_show_again", "Don't show again" },
                 { "hex.common.link", "Link" },
                 { "hex.common.file", "File" },
+                { "hex.common.open", "Open" },
+                { "hex.common.browse", "Browse..." },
 
                 { "hex.view.bookmarks.name", "Bookmarks" },
                     { "hex.view.bookmarks.default_title", "Bookmark [0x{0:X} - 0x{1:X}]" },

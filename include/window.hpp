@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <list>
 #include <vector>
 
 #include <hex/views/view.hpp>
@@ -64,6 +65,8 @@ namespace hex {
         ImGui::Texture m_logoTexture;
 
         std::filesystem::path m_safetyBackupPath;
+
+        std::list<std::string> m_popupsToOpen;
     };
 
 }
