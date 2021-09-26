@@ -99,8 +99,8 @@
                     POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                     const POINT border{
-                        static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 2.0F),
-                        static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 2.0F)
+                        static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 1.5F),
+                        static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 1.5F)
                     };
 
                     RECT window;
@@ -119,6 +119,9 @@
                             RegionRight  * (cursor.x >= (window.right  - border.x)) |
                             RegionTop    * (cursor.y <  (window.top    + border.y)) |
                             RegionBottom * (cursor.y >= (window.bottom - border.y));
+
+                    if (result != 0 && (ImGui::IsItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
+                        break;
 
                     switch (result) {
                         case RegionLeft:
@@ -139,7 +142,7 @@
                             return HTBOTTOMRIGHT;
                         case RegionClient:
                         default:
-                            if ((cursor.y < (window.top + titleBarHeight)) && !(ImGui::IsAnyItemHovered() || ImGui::IsAnyItemFocused()))
+                            if ((cursor.y < (window.top + titleBarHeight * 2)) && !(ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
                                 return HTCAPTION;
                             else break;
                     }
