@@ -572,6 +572,14 @@ namespace hex::pl {
                 pattern->setComment(*value);
             } else if (name == "hidden" && noValue()) {
                 pattern->setHidden(true);
+            } else if (name == "inline" && noValue()) {
+                auto inlinable = dynamic_cast<Inlinable*>(pattern);
+
+                if (inlinable == nullptr)
+                    LogConsole::abortEvaluation("inline attribute can only be applied to nested types", node);
+                else
+                    inlinable->setInlined(true);
+
             } else if (name == "format" && requiresValue()) {
                 auto functions = evaluator->getCustomFunctions();
                 if (!functions.contains(*value))

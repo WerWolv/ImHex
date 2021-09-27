@@ -43,6 +43,14 @@ namespace hex::pl {
 
     }
 
+    class Inlinable {
+    public:
+        [[nodiscard]] bool isInlined() const { return this->m_inlined; }
+        void setInlined(bool inlined) { this->m_inlined = inlined; }
+    private:
+        bool m_inlined = false;
+    };
+
     class PatternData {
     public:
         PatternData(u64 offset, size_t size, u32 color = 0)
@@ -619,7 +627,7 @@ namespace hex::pl {
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
-    class PatternDataDynamicArray : public PatternData {
+    class PatternDataDynamicArray : public PatternData, public Inlinable {
     public:
         PatternDataDynamicArray(u64 offset, size_t size, u32 color = 0)
             : PatternData(offset, size, color) {
@@ -654,34 +662,38 @@ namespace hex::pl {
             if (this->m_entries.empty())
                 return;
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_entries[0]->getTypeName().c_str());
-            ImGui::SameLine(0, 0);
+            bool open = true;
+            if (this->isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                this->drawCommentTooltip();
+                ImGui::TableNextColumn();
+                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_entries[0]->getTypeName().c_str());
+                ImGui::SameLine(0, 0);
 
-            ImGui::TextUnformatted("[");
-            ImGui::SameLine(0, 0);
-            ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entries.size());
-            ImGui::SameLine(0, 0);
-            ImGui::TextUnformatted("]");
+                ImGui::TextUnformatted("[");
+                ImGui::SameLine(0, 0);
+                ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entries.size());
+                ImGui::SameLine(0, 0);
+                ImGui::TextUnformatted("]");
 
-            ImGui::TableNextColumn();
-            ImGui::Text("%s", "{ ... }");
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", "{ ... }");
+            }
 
             if (open) {
                 for (auto &member : this->m_entries)
                     member->draw(provider);
 
-                ImGui::TreePop();
+                if (!this->isInlined())
+                    ImGui::TreePop();
             }
         }
 
@@ -747,7 +759,7 @@ namespace hex::pl {
         std::vector<PatternData*> m_entries;
     };
 
-    class PatternDataStaticArray : public PatternData {
+    class PatternDataStaticArray : public PatternData, public Inlinable {
     public:
         PatternDataStaticArray(u64 offset, size_t size, u32 color = 0)
                 : PatternData(offset, size, color) {
@@ -769,28 +781,32 @@ namespace hex::pl {
             if (this->getEntryCount() == 0)
                 return;
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_template->getTypeName().c_str());
-            ImGui::SameLine(0, 0);
+            bool open = true;
 
-            ImGui::TextUnformatted("[");
-            ImGui::SameLine(0, 0);
-            ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entryCount);
-            ImGui::SameLine(0, 0);
-            ImGui::TextUnformatted("]");
+            if (this->isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                this->drawCommentTooltip();
+                ImGui::TableNextColumn();
+                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_template->getTypeName().c_str());
+                ImGui::SameLine(0, 0);
 
-            ImGui::TableNextColumn();
-            ImGui::Text("%s", "{ ... }");
+                ImGui::TextUnformatted("[");
+                ImGui::SameLine(0, 0);
+                ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entryCount);
+                ImGui::SameLine(0, 0);
+                ImGui::TextUnformatted("]");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", "{ ... }");
+            }
 
             if (open) {
                 auto entry = this->m_template->clone();
@@ -801,7 +817,8 @@ namespace hex::pl {
                 }
                 delete entry;
 
-                ImGui::TreePop();
+                if (!this->isInlined())
+                    ImGui::TreePop();
             }
         }
 
@@ -879,7 +896,7 @@ namespace hex::pl {
         size_t m_entryCount;
     };
 
-    class PatternDataStruct : public PatternData {
+    class PatternDataStruct : public PatternData, public Inlinable {
     public:
         PatternDataStruct(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color){
         }
@@ -908,25 +925,30 @@ namespace hex::pl {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->getTypeName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::Text("%s", "{ ... }");
+            bool open = true;
+
+            if (!this->isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                this->drawCommentTooltip();
+                ImGui::TableNextColumn();
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->getTypeName().c_str());
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", "{ ... }");
+            }
 
             if (open) {
                 for (auto &member : this->m_sortedMembers)
                     member->draw(provider);
 
-                ImGui::TreePop();
+                if (!this->isInlined())
+                    ImGui::TreePop();
             }
 
         }
@@ -1009,7 +1031,7 @@ namespace hex::pl {
         std::vector<PatternData*> m_sortedMembers;
     };
 
-    class PatternDataUnion : public PatternData {
+    class PatternDataUnion : public PatternData, public Inlinable {
     public:
         PatternDataUnion(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
 
@@ -1039,25 +1061,30 @@ namespace hex::pl {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
+            bool open = true;
 
-            ImGui::TableNextColumn();
-            ImGui::Text("%s", "{ ... }");
+            if (this->isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                this->drawCommentTooltip();
+                ImGui::TableNextColumn();
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
+
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", "{ ... }");
+            }
 
             if (open) {
                 for (auto &member : this->m_sortedMembers)
                     member->draw(provider);
 
+                if (!this->isInlined())
                 ImGui::TreePop();
             }
 
@@ -1252,7 +1279,6 @@ namespace hex::pl {
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
             ImGui::Text("%s", this->getDisplayName().c_str());
             ImGui::TableNextColumn();
@@ -1303,7 +1329,7 @@ namespace hex::pl {
         u8 m_bitOffset, m_bitSize;
     };
 
-    class PatternDataBitfield : public PatternData {
+    class PatternDataBitfield : public PatternData, public Inlinable {
     public:
         PatternDataBitfield(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
 
@@ -1330,32 +1356,36 @@ namespace hex::pl {
             if (this->m_endian == std::endian::little)
                 std::reverse(value.begin(), value.end());
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
-            ImGui::TableNextColumn();
+            bool open = true;
+            if (this->isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                this->drawCommentTooltip();
+                ImGui::TableNextColumn();
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TableNextColumn();
+                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TableNextColumn();
+                ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
+                ImGui::TableNextColumn();
 
-            std::string valueString = "{ ";
-            for (auto i : value)
-                valueString += hex::format("{0:02X} ", i);
-            valueString += "}";
+                std::string valueString = "{ ";
+                for (auto i : value)
+                    valueString += hex::format("{0:02X} ", i);
+                valueString += "}";
 
-            ImGui::TextUnformatted(valueString.c_str());
+                ImGui::TextUnformatted(valueString.c_str());
+            }
 
             if (open) {
 
                 for (auto &field : this->m_fields)
                     field->draw(provider);
 
-                ImGui::TreePop();
+                if (!this->isInlined())
+                    ImGui::TreePop();
             }
 
         }
