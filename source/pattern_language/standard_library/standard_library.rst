@@ -11,4 +11,5 @@ Libraries
 
    std
    std_mem
-   std_str
+   std_string
+   std_http

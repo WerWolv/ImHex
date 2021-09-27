@@ -1,5 +1,5 @@
-``std::string``
-===============
+``std::string`` :version:`Nightly`
+==================================
 
 | This namespace contains functions to deal with strings
 |
@@ -65,8 +65,8 @@
     =============== =========================================================================
 
 
-``std::string::parse_int(string, base)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::parse_int(string, base)`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Parses ``string`` passed into the function as an integer in base ``base`` and returns it**
 
@@ -83,8 +83,8 @@
     =============== =========================================================================
 
 
-``std::string::parse_float(string)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::parse_float(string)`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Parses ``string`` passed into the function as a float and returns it**
 

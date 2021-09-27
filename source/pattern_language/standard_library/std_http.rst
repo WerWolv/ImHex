@@ -6,8 +6,9 @@
 
 ------------------------
 
-``std::http::get(url)``
-^^^^^^^^^^^^^^^^^^^^^^^
+``std::http::get(url)`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 **Issues a ``GET`` request to the passed URL and returns the received data as a string**
 

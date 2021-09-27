@@ -42,8 +42,8 @@ This code will insert a 4 byte padding between the members ``x`` and ``y`` as we
   :width: 100%
   :alt: Decoding
 
-Inheritance
-^^^^^^^^^^^
+Inheritance :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Inheritance allows copying all members of the parent struct into the child struct and make them available there.
 

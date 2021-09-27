@@ -70,6 +70,8 @@ source_suffix = {
     '.md': 'markdown',
 }
 
+rst_epilog = "\n.. include:: /.roles.rst\n"
+
 master_doc = 'index'
 
 # List of patterns, relative to source directory, that match files and

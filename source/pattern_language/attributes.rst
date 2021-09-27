@@ -49,8 +49,8 @@ The function requires a single argument representing the value to be formatted (
 
 Prevents a variable from being shown in the pattern data view but still be usable from the rest of the program.
 
-``[[inline]]``
---------------
+``[[inline]]`` :version:`Nightly`
+---------------------------------
 
 Can only be applied to Arrays and Struct-like types. Visually inlines all members of this variable into the parent scope. 
 Useful to flatten the displayed tree structure and avoid unnecessary indentation while keeping the pattern structured. 

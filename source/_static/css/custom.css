@@ -11,3 +11,16 @@ img.align-center {
 .sidebar-drawer {
 	width: calc(50% - 35em);
 }
+
+.version {
+    background-color: rgb(228, 186, 50);
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgb(255, 236, 127);
+    border-radius: 5px;
+    color: black;
+    padding: 2px 10px 2px 10px;
+    font-size: xx-small;
+    font-weight: bold;
+}
+
