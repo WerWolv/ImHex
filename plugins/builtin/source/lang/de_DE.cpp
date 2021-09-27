@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.bookmarks.name", "Lesezeichen" },
                     { "hex.view.bookmarks.default_title", "Lesezeichen [0x{0:X} - 0x{1:X}]" },
-                    { "hex.view.bookmarks.no_bookmarks", "Noch kein Lesezeichen erstellt. Füge eines hinzu mit Bearbeiten -> Lesezeichen hinzufügen" },
+                    { "hex.view.bookmarks.no_bookmarks", "Noch kein Lesezeichen erstellt. Füge eines hinzu mit Bearbeiten -> Lesezeichen erstellen" },
                     { "hex.view.bookmarks.title.info", "Informationen" },
                     { "hex.view.bookmarks.address", "0x{0:X} : 0x{1:X} ({2} bytes)" },
                     { "hex.view.bookmarks.button.jump", "Springen" },

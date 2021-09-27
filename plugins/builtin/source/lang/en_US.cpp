@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.bookmarks.name", "Bookmarks" },
                     { "hex.view.bookmarks.default_title", "Bookmark [0x{0:X} - 0x{1:X}]" },
-                    { "hex.view.bookmarks.no_bookmarks", "No bookmarks created yet. Add one with Edit -> Add Bookmark" },
+                    { "hex.view.bookmarks.no_bookmarks", "No bookmarks created yet. Add one with Edit -> Create Bookmark" },
                     { "hex.view.bookmarks.title.info", "Information" },
                     { "hex.view.bookmarks.address", "0x{0:X} : 0x{1:X} ({2} bytes)" },
                     { "hex.view.bookmarks.button.jump", "Jump to" },

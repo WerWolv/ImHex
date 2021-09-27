@@ -52,9 +52,12 @@ namespace hex {
                 auto &bookmarks = ImHexApi::Bookmarks::getEntries();
 
                 if (bookmarks.empty()) {
-                    ImGui::NewLine();
-                    ImGui::Indent(30);
-                    ImGui::TextWrapped("%s", static_cast<const char*>("hex.view.bookmarks.no_bookmarks"_lang));
+                    std::string text = "hex.view.bookmarks.no_bookmarks"_lang;
+                    auto textSize = ImGui::CalcTextSize(text.c_str());
+                    auto availableSpace = ImGui::GetContentRegionAvail();
+
+                    ImGui::SetCursorPos((availableSpace - textSize) / 2.0F);
+                    ImGui::TextUnformatted(text.c_str());
                 }
 
                 u32 id = 1;

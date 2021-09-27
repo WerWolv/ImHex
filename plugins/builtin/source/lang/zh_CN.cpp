@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.bookmarks.name", "书签" },
                     { "hex.view.bookmarks.default_title", "书签 [0x{0:X} - 0x{1:X}]" },
-                    { "hex.view.bookmarks.no_bookmarks", "空空如也。通过 编辑->添加书签 添加一个" },
+                    { "hex.view.bookmarks.no_bookmarks", "空空如也。通过 编辑->添加书签" },
                     { "hex.view.bookmarks.title.info", "信息" },
                     { "hex.view.bookmarks.address", "0x{0:X} : 0x{1:X} ({2} 字节)" },
                     { "hex.view.bookmarks.button.jump", "转到" },

@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.view.bookmarks.name", "Segnalibri" },
                     { "hex.view.bookmarks.default_title", "Segnalibro [0x{0:X} - 0x{1:X}]" },
-                    { "hex.view.bookmarks.no_bookmarks", "Non è stato creato alcun segnalibro. Aggiungine uno andando su Modifica -> Aggiungi Segnalibro" },
+                    { "hex.view.bookmarks.no_bookmarks", "Non è stato creato alcun segnalibro. Aggiungine uno andando su Modifica -> Crea Segnalibro" },
                     { "hex.view.bookmarks.title.info", "Informazioni" },
                     { "hex.view.bookmarks.address", "0x{0:X} : 0x{1:X} ({2} bytes)" },
                     { "hex.view.bookmarks.button.jump", "Vai a" },
