@@ -99,9 +99,13 @@ namespace hex::pl {
         [[nodiscard]] std::string getDisplayName() const {  return this->m_displayName.value_or(this->m_variableName); }
         void setDisplayName(const std::string &name) { this->m_displayName = name; }
 
-        void setFormatterFunction(const ContentRegistry::PatternLanguageFunctions::Function &function, Evaluator *evaluator) {
-            this->m_formatterFunction = { function, evaluator };
-        }
+        [[nodiscard]] Evaluator* getEvaluator() const { return this->m_evaluator; }
+        void setEvaluator(Evaluator *evaluator) { this->m_evaluator = evaluator; }
+
+        [[nodiscard]] const auto& getTransformFunction() const { return this->m_transformFunction; }
+        void setTransformFunction(const ContentRegistry::PatternLanguageFunctions::Function &function) { this->m_transformFunction = function; }
+        [[nodiscard]] const auto& getFormatterFunction() const { return this->m_formatterFunction; }
+        void setFormatterFunction(const ContentRegistry::PatternLanguageFunctions::Function &function) { this->m_formatterFunction = function; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
@@ -247,8 +251,7 @@ namespace hex::pl {
             if (!this->m_formatterFunction.has_value())
                 ImGui::Text("%s", value.c_str());
             else {
-                auto &[func, evaluator] = this->m_formatterFunction.value();
-                auto result = func.func(evaluator, { literal });
+                auto result = this->m_formatterFunction->func(this->getEvaluator(), { literal });
 
                 if (result.has_value()) {
                     if (auto displayValue = std::get_if<std::string>(&result.value()); displayValue != nullptr)
@@ -282,7 +285,9 @@ namespace hex::pl {
         std::optional<std::string> m_comment;
         std::string m_typeName;
 
-        std::optional<std::pair<ContentRegistry::PatternLanguageFunctions::Function, Evaluator*>> m_formatterFunction;
+        Evaluator *m_evaluator = nullptr;
+        std::optional<ContentRegistry::PatternLanguageFunctions::Function> m_formatterFunction;
+        std::optional<ContentRegistry::PatternLanguageFunctions::Function> m_transformFunction;
 
         PatternData *m_parent;
         bool m_local = false;
@@ -397,8 +402,14 @@ namespace hex::pl {
             *static_cast<const PatternDataPointer*>(&other)->m_pointedAt == *this->m_pointedAt;
         }
 
+        void rebase(u64 base) {
+            this->m_pointedAt->setOffset((this->m_pointedAt->getOffset() - this->m_pointerBase) + base);
+            this->m_pointerBase = base;
+        }
+
     private:
         PatternData *m_pointedAt;
+        u64 m_pointerBase = 0;
     };
 
     class PatternDataUnsigned : public PatternData {

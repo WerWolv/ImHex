@@ -589,7 +589,41 @@ namespace hex::pl {
                 if (function.parameterCount != 1)
                     LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
 
-                pattern->setFormatterFunction(function, evaluator);
+                pattern->setEvaluator(evaluator);
+                pattern->setFormatterFunction(function);
+            } else if (name == "transform" && requiresValue()) {
+                auto functions = evaluator->getCustomFunctions();
+                if (!functions.contains(*value))
+                    LogConsole::abortEvaluation(hex::format("cannot find transform function '{}'", *value), node);
+
+                const auto &function = functions[*value];
+                if (function.parameterCount != 1)
+                    LogConsole::abortEvaluation("transform function needs exactly one parameter", node);
+
+                pattern->setEvaluator(evaluator);
+                pattern->setTransformFunction(function);
+            } else if (name == "pointer_base" && requiresValue()) {
+                auto functions = evaluator->getCustomFunctions();
+                if (!functions.contains(*value))
+                    LogConsole::abortEvaluation(hex::format("cannot find pointer base function '{}'", *value), node);
+
+                const auto &function = functions[*value];
+                if (function.parameterCount != 1)
+                    LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
+
+                if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(pattern)) {
+                    u128 value = 0;
+                    evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
+
+                    auto result = function.func(evaluator, { value });
+
+                    if (!result.has_value())
+                        LogConsole::abortEvaluation("pointer base function did not return a value", node);
+
+                    pointerPattern->rebase(Token::literalToUnsigned(result.value()));
+                } else {
+                    LogConsole::abortEvaluation("pointer_base attribute may only be applied to a pointer");
+                }
             }
         }
     }
@@ -957,6 +991,7 @@ namespace hex::pl {
 
             {
                 auto pointedAtPattern = this->m_type->createPatterns(evaluator).front();
+
                 u128 pointerAddress = 0;
                 evaluator->getProvider()->read(pattern->getOffset(), &pointerAddress, pattern->getSize());
                 pointedAtPattern->setOffset(pointerAddress);
@@ -964,11 +999,11 @@ namespace hex::pl {
                 pattern->setPointedAtPattern(pointedAtPattern);
             }
 
+            evaluator->dataOffset() = offset;
+
             pattern->setVariableName(this->m_name);
 
             applyVariableAttributes(evaluator, this, pattern);
-
-            evaluator->dataOffset() = offset;
 
             return { pattern };
         }
@@ -1357,6 +1392,14 @@ namespace hex::pl {
                 literal = pattern->clone();
             }
 
+            if (auto transformFunc = pattern->getTransformFunction(); transformFunc.has_value()) {
+                auto result = transformFunc->func(evaluator, { literal });
+
+                if (!result.has_value())
+                    LogConsole::abortEvaluation("transform function did not return a value", this);
+                literal = result.value();
+            }
+
             return new ASTNodeLiteral(literal);
         }
 
@@ -1375,7 +1418,13 @@ namespace hex::pl {
                     if (name == "parent") {
                         scopeIndex--;
                         searchScope = *evaluator->getScope(scopeIndex).scope;
-                        currPattern = searchScope.front()->getParent();
+                        auto currParent = evaluator->getScope(scopeIndex).parent;
+
+                        if (currParent == nullptr)
+                            LogConsole::abortEvaluation("no parent available", this);
+
+                        currPattern = currParent->clone();
+                        continue;
                     } else if (name == "this") {
                         searchScope = *evaluator->getScope(scopeIndex).scope;
 

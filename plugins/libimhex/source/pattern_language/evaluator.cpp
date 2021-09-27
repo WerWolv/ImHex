@@ -11,7 +11,9 @@ namespace hex::pl {
             }
         }
 
+        auto startOffset = this->dataOffset();
         auto pattern = type->createPatterns(this).front();
+        this->dataOffset() = startOffset;
 
         if (pattern == nullptr) {
             // Handle auto variables
