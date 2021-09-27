@@ -459,12 +459,14 @@ namespace hex {
             ImGui::EndPopup();
         }
 
-        for (auto it = this->m_popupsToOpen.begin(); it != this->m_popupsToOpen.end(); it++) {
-            if (ImGui::IsPopupOpen(it->c_str()))
-                this->m_popupsToOpen.erase(it);
+        this->m_popupsToOpen.remove_if([](const auto &name) {
+            if (ImGui::IsPopupOpen(name.c_str()))
+                return true;
             else
-                ImGui::OpenPopup(it->c_str());
-        }
+                ImGui::OpenPopup(name.c_str());
+
+            return false;
+        });
     }
 
     void Window::frame() {
