@@ -6,8 +6,11 @@
 
 ------------------------
 
-``std::mem::align_to(alignment, value)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Functions
+---------
+
+``std::mem::align_to(u128 alignment, u128 value) -> u128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Aligns a given value upwards to the next valid value**
 
@@ -24,8 +27,8 @@
 
 ------------------------
 
-``std::mem::base_address()``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::mem::base_address() -> u128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Gets the current base address of the loaded data**
 
@@ -41,8 +44,8 @@
 
 ------------------------
 
-``std::mem::size()``
-^^^^^^^^^^^^^^^^^^^^
+``std::mem::size() -> u128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Gets the size of the loaded data**
 
@@ -58,10 +61,10 @@
 
 ------------------------
 
-``std::mem::find_sequence(occurence_index, bytes...)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::mem::find_sequence(u128 occurence_index, u8 bytes...) -> u128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Gets the size of the loaded data**
+**Searches the data for the ``occurence_index``th occurence of a sequence of ``bytes``**
 
 
 .. table::
@@ -77,8 +80,8 @@
 
 ------------------------
 
-``std::mem::read_unsigned(address, size)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::mem::read_unsigned(u128 address, u128 size) -> u128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Reads an unsigned value from memory without declaring a variable**
 
@@ -96,8 +99,8 @@
 
 ------------------------
 
-``std::mem::read_signed(address, size)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::mem::read_signed(u128 address, u128 size) -> s128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Reads an signed value from memory without declaring a variable**
 
@@ -113,8 +116,8 @@
     ``return``          Value as the smalest signed type that can fit this many bytes
     =================== ===========================================================================
 
-``std::mem::read_string(address, size)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::mem::read_string(u128 address, u128 size) -> str``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Reads string from memory without declaring a variable**
 

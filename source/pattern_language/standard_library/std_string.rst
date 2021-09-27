@@ -6,8 +6,11 @@
 
 ------------------------
 
-``std::string::length(string)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Functions
+---------
+
+``std::string::length(str string) -> u128``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Calculates the length of a given string**
 
@@ -27,11 +30,10 @@
 
 ------------------------
 
-``std::string::at(string, index)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::at(str string, u128 index) -> char``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Get a character at a given index withing a string**
-
 
 .. table::
     :align: left
@@ -46,11 +48,10 @@
 
 ------------------------
 
-``std::string::substr(string, pos, size)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::substr(str string, u128 pos, u128 size) -> str``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Gets a substring of ``string`` starting at ``pos```` of size ``size``**
-
 
 .. table::
     :align: left
@@ -64,12 +65,12 @@
     ``return``      Substring
     =============== =========================================================================
 
+------------------------
 
-``std::string::parse_int(string, base)`` :version:`Nightly`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::parse_int(str string, u128 base) -> s128`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Parses ``string`` passed into the function as an integer in base ``base`` and returns it**
-
 
 .. table::
     :align: left
@@ -82,12 +83,12 @@
     ``return``      Parsed integer
     =============== =========================================================================
 
+------------------------
 
-``std::string::parse_float(string)`` :version:`Nightly`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::parse_float(str string) -> double`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Parses ``string`` passed into the function as a float and returns it**
-
 
 .. table::
     :align: left
@@ -97,4 +98,75 @@
     =============== =========================================================================
     ``string``      String to parse
     ``return``      Parsed float
+    =============== =========================================================================
+
+------------------------
+
+``std::string::to_string(auto x) -> str`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Turns a integer, floating point, character or bool into a string**
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``x``           Integral, floating point, character of bool value
+    ``return``      Representation of ``x`` as a string
+    =============== =========================================================================
+
+------------------------
+
+``std::string::starts_with(str string, str part) -> bool`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Checks if the string ``string`` starts with the string ``part``**
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``string``      String to inspect
+    ``part``        String to match at the beginning of ``string``
+    ``return``      True if the string ``string`` starts with the string ``part``
+    =============== =========================================================================
+
+------------------------
+
+``std::string::ends_with(str string, str part) -> bool`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Checks if the string ``string`` ends with the string ``part``**
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``string``      String to inspect
+    ``part``        String to match at the end of ``string``
+    ``return``      True if the string ``string`` ends with the string ``part``
+    =============== =========================================================================
+
+------------------------
+
+``std::string::contains(str a, str b) -> bool`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Checks if the string ``string`` ends with the string ``part``**
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``a``           String to inspect
+    ``b``           String to find in ``a``
+    ``return``      True if the string ``b`` can be found inside of ``a``
     =============== =========================================================================

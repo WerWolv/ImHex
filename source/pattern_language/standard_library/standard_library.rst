@@ -10,6 +10,14 @@ Libraries
    :maxdepth: 3
 
    std
-   std_mem
-   std_string
+   std_bit
+   std_cint
+   std_ctype
+   std_fxpt
    std_http
+   std_limits
+   std_math
+   std_mem
+   std_ptr
+   std_rustint
+   std_string

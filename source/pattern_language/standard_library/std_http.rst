@@ -1,14 +1,16 @@
-``std::http``
-=============
+``std::http`` :version:`Nightly`
+================================
 
 | This namespace contains networking functions
 |
 
 ------------------------
 
-``std::http::get(url)`` :version:`Nightly`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Functions
+---------
 
+``std::http::get(str url) -> str`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Issues a ``GET`` request to the passed URL and returns the received data as a string**
 

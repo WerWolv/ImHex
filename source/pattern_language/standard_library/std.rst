@@ -6,8 +6,11 @@
 
 ------------------------
 
-``std::print(format, args...)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Functions
+---------
+
+``std::print(str format, auto args...)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Formats and outputs a set of values to the built-in console**
 
@@ -31,8 +34,8 @@ Please check its documentation for further informatiom
 
 ------------------------
 
-``std::format(format, args...)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::format(str format, auto args...) -> str``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Formats a set of values and returns the result as a string**
 
@@ -56,8 +59,8 @@ Please check its documentation for further informatiom
 
 ------------------------
 
-``std::assert(condition, message)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::assert(bool condition, str message)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Aborts evaluation and prints an error to the console if ``condition`` evaluates to false**
 
@@ -74,8 +77,8 @@ Please check its documentation for further informatiom
 
 ------------------------
 
-``std::assert_warn(condition, message)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::assert_warn(bool condition, str message)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Prints a warning to the console if ``condition`` evaluates to false**
 

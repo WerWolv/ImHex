@@ -55,6 +55,20 @@ Prevents a variable from being shown in the pattern data view but still be usabl
 Can only be applied to Arrays and Struct-like types. Visually inlines all members of this variable into the parent scope. 
 Useful to flatten the displayed tree structure and avoid unnecessary indentation while keeping the pattern structured. 
 
+``[[transform("transformer_function_name")]]`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specifies a function that will be executed to preprocess the value read from that variable before it's being accessed through the dot syntax (``some_struct.some_value``).
+The function requires a single argument representing the original value that was read (e.g ``u32`` if this attribute was applied to a variable of type ``u32``) and return a value that will be returned instead.
+
+``[[pointer_base("pointer_base_function_name")]]`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Specifies a function that will be executed to preprocess the address of the pointer this attribute was applied to points to.
+The function requires a single argument representing the original pointer address that was read (e.g ``u32`` if this attribute was applied to a pointer with size type ``u32``) and return the offset the pointer should point to instead.
+
+There's a number of :ref:`predefined pointer helper functions <Pointer Helpers>` available in the standard library to rebase pointers off of different places.
+
 
 Type Attributes
 ^^^^^^^^^^^^^^^

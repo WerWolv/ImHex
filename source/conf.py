@@ -56,7 +56,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'sphinx_tabs.tabs'
+    'sphinx_tabs.tabs',
+    'hoverxref.extension'
 ]
 
 todo_include_todos = True
