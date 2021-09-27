@@ -391,6 +391,7 @@ namespace hex::pl {
 
         void setPointedAtPattern(PatternData *pattern) {
             this->m_pointedAt = pattern;
+            this->m_pointedAt->setVariableName(hex::format("*({})", this->getVariableName()));
         }
 
         [[nodiscard]] PatternData* getPointedAtPattern() {

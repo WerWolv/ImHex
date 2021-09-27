@@ -987,6 +987,8 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete sizePattern; };
 
             auto pattern = new PatternDataPointer(offset, sizePattern->getSize());
+            pattern->setVariableName(this->m_name);
+
             offset = evaluator->dataOffset();
 
             {
@@ -1000,8 +1002,6 @@ namespace hex::pl {
             }
 
             evaluator->dataOffset() = offset;
-
-            pattern->setVariableName(this->m_name);
 
             applyVariableAttributes(evaluator, this, pattern);
 
