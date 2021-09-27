@@ -1,13 +1,13 @@
-``std::str``
-============
+``std::string``
+===============
 
 | This namespace contains functions to deal with strings
 |
 
 ------------------------
 
-``std::str::length(string)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::length(string)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Calculates the length of a given string**
 
@@ -27,8 +27,8 @@
 
 ------------------------
 
-``std::str::at(string, index)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::at(string, index)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Get a character at a given index withing a string**
 
@@ -46,8 +46,8 @@
 
 ------------------------
 
-``std::str::substr(string, pos, size)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::string::substr(string, pos, size)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Gets a substring of ``string`` starting at ``pos```` of size ``size``**
 
@@ -62,4 +62,39 @@
     ``pos``         Starting position of substring
     ``size``        Size of substring
     ``return``      Substring
+    =============== =========================================================================
+
+
+``std::string::parse_int(string, base)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Parses ``string`` passed into the function as an integer in base ``base`` and returns it**
+
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``string``      String to parse
+    ``base``        Base of integer. Use 0 to use number prefix to determine base 
+    ``return``      Parsed integer
+    =============== =========================================================================
+
+
+``std::string::parse_float(string)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Parses ``string`` passed into the function as a float and returns it**
+
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``string``      String to parse
+    ``return``      Parsed float
     =============== =========================================================================

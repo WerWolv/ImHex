@@ -41,3 +41,21 @@ This code will insert a 4 byte padding between the members ``x`` and ``y`` as we
 .. image:: assets/structs/padding.png
   :width: 100%
   :alt: Decoding
+
+Inheritance
+^^^^^^^^^^^
+
+Inheritance allows copying all members of the parent struct into the child struct and make them available there.
+
+.. code-block:: hexpat
+
+  struct Parent {
+    u32 type;
+    float value;
+  };
+
+  struct Child : Parent {
+    char string[];
+  };
+
+The struct ``Child`` now contains ``type``, ``value`` and ``string``.

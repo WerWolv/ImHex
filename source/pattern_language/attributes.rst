@@ -11,8 +11,10 @@ Attributes are special directives that can add extra configuration individual va
     u8 blue  [[color("0000FF")]];
   } [[static]];
 
-| Attributes can either have no arguments: ``[[attribute_name]]``
-| Or a single string argument: ``[[attribute_name("attribute_value")]]``
+.. note::
+
+  | Attributes can either have no arguments: ``[[attribute_name]]``
+  | Or a single string argument: ``[[attribute_name("attribute_value")]]``
 
 It's also possible to apply multiple attributes to the same variable or type: ``[[attribute1, attribute2]]``
 
@@ -46,6 +48,13 @@ The function requires a single argument representing the value to be formatted (
 --------------
 
 Prevents a variable from being shown in the pattern data view but still be usable from the rest of the program.
+
+``[[inline]]``
+--------------
+
+Can only be applied to Arrays and Struct-like types. Visually inlines all members of this variable into the parent scope. 
+Useful to flatten the displayed tree structure and avoid unnecessary indentation while keeping the pattern structured. 
+
 
 Type Attributes
 ^^^^^^^^^^^^^^^
