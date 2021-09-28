@@ -35,8 +35,8 @@ jobs:
         sudo bash dist/get_deps_debian.sh
         
         curl https://sh.rustup.rs -sSf | sh
-        rm rustup-init.sh -y --default-host=x86_64-pc-windows-gnu --default-toolchain=none
-        rustup target add x86_64-pc-windows-gnu
+        rm rustup-init.sh -y --default-toolchain none
+        rustup target add x86_64-unknown-linux-gnu
         rustup default nightly
 
     - name: 🛠️ Build
