@@ -33,6 +33,11 @@ jobs:
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
+        
+        curl https://sh.rustup.rs -sSf | sh
+        rm rustup-init.sh
+        rustup target add x86_64-pc-windows-gnu
+        rustup default nightly
 
     - name: 🛠️ Build
       run: |
@@ -91,6 +96,12 @@ jobs:
     - name: ⬇️ Install dependencies
       run: |
         bash dist/get_deps_msys2.sh
+        
+        wget https://win.rustup.rs/ -O rustup-init.exe
+        ./rustup-init.exe -y --default-host=x86_64-pc-windows-gnu --default-toolchain=none
+        rm rustup-init.exe
+        rustup target add x86_64-pc-windows-gnu
+        rustup default nightly
 
     - name: 📜 Prepare Cache
       id:    prep-ccache
