@@ -1,0 +1,11 @@
+[package]
+name = "example_rust"
+version = "0.1.0"
+authors = ["Marc-André Moreau <marcandre.moreau@gmail.com>"]
+
+[lib]
+crate-type = ["dylib"]
+path = "source/plugin_example.rs"
+
+[dependencies]
+libimhex-rust = { path = "../libimhex-rust" }
