@@ -9,3 +9,6 @@ path = "source/plugin_example.rs"
 
 [dependencies]
 hex = { path = "../libimhex-rust" }
+
+[profile.release]
+opt-level = 0 # TODO: Fix this when Rust has support for force-exporting symbols

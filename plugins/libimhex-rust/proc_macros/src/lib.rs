@@ -50,23 +50,22 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
     );
 
     quote!(
-        // function itself + export_name
         #[export_name = #plugin_name_export]
-        extern "C" fn plugin_name() -> *const u8 {
+        pub extern "C" fn plugin_name() -> *const u8 {
             concat!(#plugin_name, "\0").as_ptr()
         }
 
         #[export_name = #plugin_author_export]
-        extern "C" fn plugin_author() -> *const u8 {
+        pub extern "C" fn plugin_author() -> *const u8 {
             concat!(#author_name, "\0").as_ptr()
         }
 
         #[export_name = #plugin_desc_export]
-        extern "C" fn plugin_description() -> *const u8 {
+        pub extern "C" fn plugin_description() -> *const u8 {
             concat!(#description, "\0").as_ptr()
         }
 
         #[export_name = #plugin_init_export]
-        extern "C" #function
+        pub extern "C" #function
     ).into()
 }
