@@ -8,4 +8,4 @@ crate-type = ["dylib"]
 path = "source/plugin_example.rs"
 
 [dependencies]
-libimhex-rust = { path = "../libimhex-rust" }
+hex = { path = "../libimhex-rust" }

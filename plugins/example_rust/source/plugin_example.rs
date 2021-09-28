@@ -1,7 +1,6 @@
-extern crate libimhex;
-use libimhex::macros::plugin_setup;
+extern crate hex;
 
-#[plugin_setup("Hello Rust", "WerWolv", "Test Description")]
+#[hex::plugin_setup("Hello Rust", "WerWolv", "Test Description")]
 fn init() {
     println!("Hello from Rust!");
 }

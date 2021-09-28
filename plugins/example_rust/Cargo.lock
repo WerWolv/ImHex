@@ -6,11 +6,11 @@ version = 3
 name = "example_rust"
 version = "0.1.0"
 dependencies = [
- "libimhex-rust",
+ "hex",
 ]
 
 [[package]]
-name = "libimhex-rust"
+name = "hex"
 version = "0.1.0"
 dependencies = [
  "macros",

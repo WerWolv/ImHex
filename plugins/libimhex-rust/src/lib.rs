@@ -1,1 +1,1 @@
-pub use macros;
+pub use macros::plugin_setup;

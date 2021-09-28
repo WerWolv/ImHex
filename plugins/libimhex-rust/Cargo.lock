@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "libimhex-rust"
+name = "hex"
 version = "0.1.0"
 dependencies = [
  "macros",
