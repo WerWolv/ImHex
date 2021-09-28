@@ -357,6 +357,13 @@ namespace ImGui {
         texture = { nullptr, 0, 0 };
     }
 
+    void OpenPopupInWindow(const char *window_name, const char *popup_name) {
+        if (ImGui::Begin(window_name)) {
+            ImGui::OpenPopup(popup_name);
+        }
+        ImGui::End();
+    }
+
 
     bool TitleBarButton(const char* label, ImVec2 size_arg) {
         ImGuiWindow* window = GetCurrentWindow();

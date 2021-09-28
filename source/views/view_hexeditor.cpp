@@ -309,11 +309,11 @@ namespace hex {
                     }
                 }
 
+                this->drawSearchPopup();
+                this->drawGotoPopup();
+
             }
             ImGui::End();
-
-            this->drawSearchPopup();
-            this->drawGotoPopup();
         }
     }
 
@@ -596,12 +596,12 @@ namespace hex {
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.search"_lang, "CTRL + F")) {
                 this->getWindowOpenState() = true;
-                View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
+                ImGui::OpenPopupInWindow(View::toWindowName("hex.view.hexeditor.name").c_str(), "hex.view.hexeditor.menu.file.search"_lang);
             }
 
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.goto"_lang, "CTRL + G")) {
                 this->getWindowOpenState() = true;
-                View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
+                ImGui::OpenPopupInWindow(View::toWindowName("hex.view.hexeditor.name").c_str(), "hex.view.hexeditor.menu.file.goto"_lang);
             }
 
             ImGui::EndMenu();
@@ -634,13 +634,15 @@ namespace hex {
                     if (ImHexApi::Provider::isValid())
                         ImHexApi::Provider::get()->redo();
                 } else if (ctrl && keys['F']) {
-                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.search"_lang); });
+                    ImGui::OpenPopupInWindow(View::toWindowName("hex.view.hexeditor.name").c_str(), "hex.view.hexeditor.menu.file.search"_lang);
                     return true;
                 } else if (ctrl && keys['G']) {
-                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.menu.file.goto"_lang); });
+                    ImGui::OpenPopupInWindow(View::toWindowName("hex.view.hexeditor.name").c_str(), "hex.view.hexeditor.menu.file.goto"_lang);
                     return true;
                 } else if (ctrl && keys['O']) {
-                    View::doLater([]{ ImGui::OpenPopup("hex.view.hexeditor.open_file"_lang); });
+                    hex::openFileBrowser("hex.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [](auto path) {
+                        EventManager::post<RequestOpenFile>(path);
+                    });
                     return true;
                 } else if (ctrl && keys['C']) {
                     this->copyBytes();
@@ -1043,7 +1045,7 @@ R"(
                     foundCharacters = 0;
 
                 if (foundCharacters == string.size()) {
-                    results.emplace_back(offset + i - foundCharacters + 1, offset + i + 1);
+                    results.emplace_back(offset + i - foundCharacters + 1, offset + i);
                     foundCharacters = 0;
                 }
             }
@@ -1081,7 +1083,7 @@ R"(
                     foundCharacters = 0;
 
                 if (foundCharacters == hex.size()) {
-                    results.emplace_back(offset + i - foundCharacters + 1, offset + i + 1);
+                    results.emplace_back(offset + i - foundCharacters + 1, offset + i);
                     foundCharacters = 0;
                 }
             }
@@ -1137,8 +1139,9 @@ R"(
             }
         };
 
-        if (ImGui::BeginPopupContextVoid("hex.view.hexeditor.menu.file.search"_lang)) {
-            ImGui::TextUnformatted("hex.view.hexeditor.menu.file.search"_lang);
+
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding);
+        if (ImGui::BeginPopup("hex.view.hexeditor.menu.file.search"_lang)) {
             if (ImGui::BeginTabBar("searchTabs")) {
                 std::vector<char> *currBuffer = nullptr;
                 if (ImGui::BeginTabItem("hex.view.hexeditor.search.string"_lang)) {
@@ -1180,7 +1183,6 @@ R"(
                 ImGui::EndTabBar();
             }
 
-
             ImGui::EndPopup();
         }
     }
@@ -1190,8 +1192,8 @@ R"(
         auto baseAddress = provider->getBaseAddress();
         auto dataSize = provider->getActualSize();
 
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding);
         if (ImGui::BeginPopup("hex.view.hexeditor.menu.file.goto"_lang)) {
-            ImGui::TextUnformatted("hex.view.hexeditor.menu.file.goto"_lang);
             if (ImGui::BeginTabBar("gotoTabs")) {
                 u64 newOffset = 0;
                 if (ImGui::BeginTabItem("hex.view.hexeditor.goto.offset.absolute"_lang)) {

@@ -71,6 +71,7 @@ namespace ImGui {
     Texture LoadImageFromMemory(ImU8 *buffer, int size);
     void UnloadImage(Texture &texture);
 
+    void OpenPopupInWindow(const char *window_name, const char *popup_name);
 
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
