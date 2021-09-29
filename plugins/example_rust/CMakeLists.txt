@@ -27,10 +27,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LOCATION ${CMAKE_CURRENT_BINARY
 set_target_properties(${PROJECT_NAME} PROPERTIES RUST_PROJECT 1)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE Rust)
 
-if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--allow-multiple-definition -fvisibility=hidden")
-endif()
-
 add_compile_definitions(IMHEX_PLUGIN_NAME=${PROJECT_NAME})
 
 if (NOT TARGET libimhex)
