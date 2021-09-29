@@ -137,7 +137,11 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
-      
+
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
+
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v2
       with:
