@@ -49,6 +49,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DRUST_PATH="$HOME/.cargo/bin/" \
           ..
         make -j 4 install
 
@@ -102,9 +103,8 @@ jobs:
         curl --proto '=https' --tlsv1.2 -sSf https://win.rustup.rs > rustup-init.exe
         ./rustup-init.exe -y --default-host=x86_64-pc-windows-gnu --default-toolchain=none
         rm rustup-init.exe
-        echo "$USERPROFILE/.cargo/bin" >> $GITHUB_PATH
-        rustup target add x86_64-pc-windows-gnu
-        rustup default nightly
+        $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
+        $USERPROFILE/.cargo/bin/rustup.exe default nightly
 
     - name: 📜 Prepare Cache
       id:    prep-ccache
@@ -135,6 +135,7 @@ jobs:
           -DCREATE_PACKAGE=ON \
           -DPython_LIBRARY="$PYTHON_LIB_PATH" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DRUST_PATH="$USERPROFILE/.cargo/bin/" \
           ..
         mingw32-make -j4 install
         cpack

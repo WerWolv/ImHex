@@ -6,10 +6,10 @@ project(example_rust)
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CARGO_CMD cargo build)
+    set(CARGO_CMD ${RUST_PATH}cargo build)
     set(TARGET_DIR "debug")
 else ()
-    set(CARGO_CMD cargo build --release)
+    set(CARGO_CMD ${RUST_PATH}cargo build --release)
     set(TARGET_DIR "release")
 endif ()
 
