@@ -675,7 +675,7 @@ namespace hex::pl {
                 return;
 
             bool open = true;
-            if (this->isInlined()) {
+            if (!this->isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
@@ -795,7 +795,7 @@ namespace hex::pl {
 
             bool open = true;
 
-            if (this->isInlined()) {
+            if (!this->isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
@@ -1075,7 +1075,7 @@ namespace hex::pl {
         void createEntry(prv::Provider* &provider) override {
             bool open = true;
 
-            if (this->isInlined()) {
+            if (!this->isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
@@ -1369,7 +1369,7 @@ namespace hex::pl {
                 std::reverse(value.begin(), value.end());
 
             bool open = true;
-            if (this->isInlined()) {
+            if (!this->isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
