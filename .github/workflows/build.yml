@@ -37,8 +37,9 @@ jobs:
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
         sh rustup-init.sh -y --default-toolchain none
         rm rustup-init.sh
-        rustup target add x86_64-unknown-linux-gnu
-        rustup default nightly
+        $HOME/.cargo/bin/rustup install nightly
+        $HOME/.cargo/bin/rustup target add x86_64-unknown-linux-gnu
+        $HOME/.cargo/bin/rustup default nightly
 
     - name: 🛠️ Build
       run: |
