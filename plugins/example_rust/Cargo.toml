@@ -13,4 +13,3 @@ hex = { path = "../libimhex-rust" }
 
 [profile.release]
 lto = true
-incremental = false
