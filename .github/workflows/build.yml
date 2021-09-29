@@ -120,6 +120,9 @@ jobs:
         key: ${{ runner.os }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-build-
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: 🛠️ Build
       run: |
         mkdir -p build
