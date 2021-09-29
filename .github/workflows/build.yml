@@ -102,8 +102,9 @@ jobs:
         curl --proto '=https' --tlsv1.2 -sSf https://win.rustup.rs > rustup-init.exe
         ./rustup-init.exe -y --default-host=x86_64-pc-windows-gnu --default-toolchain=none
         rm rustup-init.exe
-        $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
-        $USERPROFILE/.cargo/bin/rustup.exe default nightly
+        echo "$USERPROFILE/.cargo/bin" >> $GITHUB_PATH
+        rustup target add x86_64-pc-windows-gnu
+        rustup default nightly
 
     - name: 📜 Prepare Cache
       id:    prep-ccache
@@ -137,10 +138,6 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
-
-    - name: Setup tmate session
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
 
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v2
