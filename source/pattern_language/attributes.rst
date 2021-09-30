@@ -49,19 +49,19 @@ The function requires a single argument representing the value to be formatted (
 
 Prevents a variable from being shown in the pattern data view but still be usable from the rest of the program.
 
-``[[inline]]`` :version:`Nightly`
+``[[inline]]`` :version:`1.10.1`
 ---------------------------------
 
 Can only be applied to Arrays and Struct-like types. Visually inlines all members of this variable into the parent scope. 
 Useful to flatten the displayed tree structure and avoid unnecessary indentation while keeping the pattern structured. 
 
-``[[transform("transformer_function_name")]]`` :version:`Nightly`
+``[[transform("transformer_function_name")]]`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifies a function that will be executed to preprocess the value read from that variable before it's being accessed through the dot syntax (``some_struct.some_value``).
 The function requires a single argument representing the original value that was read (e.g ``u32`` if this attribute was applied to a variable of type ``u32``) and return a value that will be returned instead.
 
-``[[pointer_base("pointer_base_function_name")]]`` :version:`Nightly`
+``[[pointer_base("pointer_base_function_name")]]`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifies a function that will be executed to preprocess the address of the pointer this attribute was applied to points to.

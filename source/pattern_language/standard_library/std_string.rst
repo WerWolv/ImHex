@@ -1,4 +1,4 @@
-``std::string`` :version:`Nightly`
+``std::string`` :version:`1.10.1`
 ==================================
 
 | This namespace contains functions to deal with strings
@@ -67,7 +67,7 @@ Functions
 
 ------------------------
 
-``std::string::parse_int(str string, u128 base) -> s128`` :version:`Nightly`
+``std::string::parse_int(str string, u128 base) -> s128`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Parses ``string`` passed into the function as an integer in base ``base`` and returns it**
@@ -85,7 +85,7 @@ Functions
 
 ------------------------
 
-``std::string::parse_float(str string) -> double`` :version:`Nightly`
+``std::string::parse_float(str string) -> double`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Parses ``string`` passed into the function as a float and returns it**
@@ -102,7 +102,7 @@ Functions
 
 ------------------------
 
-``std::string::to_string(auto x) -> str`` :version:`Nightly`
+``std::string::to_string(auto x) -> str`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Turns a integer, floating point, character or bool into a string**
@@ -119,7 +119,7 @@ Functions
 
 ------------------------
 
-``std::string::starts_with(str string, str part) -> bool`` :version:`Nightly`
+``std::string::starts_with(str string, str part) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the string ``string`` starts with the string ``part``**
@@ -137,7 +137,7 @@ Functions
 
 ------------------------
 
-``std::string::ends_with(str string, str part) -> bool`` :version:`Nightly`
+``std::string::ends_with(str string, str part) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the string ``string`` ends with the string ``part``**
@@ -155,7 +155,7 @@ Functions
 
 ------------------------
 
-``std::string::contains(str a, str b) -> bool`` :version:`Nightly`
+``std::string::contains(str a, str b) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the string ``string`` ends with the string ``part``**

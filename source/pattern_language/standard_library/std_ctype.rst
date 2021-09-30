@@ -1,4 +1,4 @@
-``std::ctype`` :version:`Nightly`
+``std::ctype`` :version:`1.10.1`
 =================================
 
 | This namespace contains trait functions to inspect ASCII characters
@@ -9,7 +9,7 @@
 Functions
 ---------
 
-``std::ctype::isdigit(char c) -> bool`` :version:`Nightly`
+``std::ctype::isdigit(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII digit**
@@ -26,7 +26,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isxdigit(char c) -> bool`` :version:`Nightly`
+``std::ctype::isxdigit(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a hexadecimal ASCII digit**
@@ -43,7 +43,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isupper(char c) -> bool`` :version:`Nightly`
+``std::ctype::isupper(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a uppercase ASCII letter**
@@ -60,7 +60,7 @@ Functions
 
 ------------------------
 
-``std::ctype::islower(char c) -> bool`` :version:`Nightly`
+``std::ctype::islower(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a lowercase ASCII letter**
@@ -77,7 +77,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isalpha(char c) -> bool`` :version:`Nightly`
+``std::ctype::isalpha(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII letter**
@@ -94,7 +94,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isalnum(char c) -> bool`` :version:`Nightly`
+``std::ctype::isalnum(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII letter or digit**
@@ -111,7 +111,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isspace(char c) -> bool`` :version:`Nightly`
+``std::ctype::isspace(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII whitespace character**
@@ -128,7 +128,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isblank(char c) -> bool`` :version:`Nightly`
+``std::ctype::isblank(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a blank ASCII character**
@@ -145,7 +145,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isprint(char c) -> bool`` :version:`Nightly`
+``std::ctype::isprint(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a printable ASCII character**
@@ -162,7 +162,7 @@ Functions
 
 ------------------------
 
-``std::ctype::iscntrl(char c) -> bool`` :version:`Nightly`
+``std::ctype::iscntrl(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII control character**
@@ -179,7 +179,7 @@ Functions
 
 ------------------------
 
-``std::ctype::isgraph(char c) -> bool`` :version:`Nightly`
+``std::ctype::isgraph(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII character with a graphical representation**
@@ -196,7 +196,7 @@ Functions
 
 ------------------------
 
-``std::ctype::ispunct(char c) -> bool`` :version:`Nightly`
+``std::ctype::ispunct(char c) -> bool`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the character ``c`` is a ASCII punctuation character**

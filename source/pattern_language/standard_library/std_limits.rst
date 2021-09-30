@@ -1,4 +1,4 @@
-``std::limits`` :version:`Nightly`
+``std::limits`` :version:`1.10.1`
 ==================================
 
 | This namespace contains the biggest and smallest representable number of various types
@@ -9,7 +9,7 @@
 Functions
 ---------
 
-``std::limits::u8_min() -> u8`` :version:`Nightly`
+``std::limits::u8_min() -> u8`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``u8``**
@@ -25,7 +25,7 @@ Functions
 
 ------------------------
 
-``std::limits::u8_max() -> u8`` :version:`Nightly`
+``std::limits::u8_max() -> u8`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``u8``**
@@ -41,7 +41,7 @@ Functions
 
 ------------------------
 
-``std::limits::u16_min() -> u16`` :version:`Nightly`
+``std::limits::u16_min() -> u16`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``u16``**
@@ -57,7 +57,7 @@ Functions
 
 ------------------------
 
-``std::limits::u16_max() -> u16`` :version:`Nightly`
+``std::limits::u16_max() -> u16`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``u16``**
@@ -73,7 +73,7 @@ Functions
 
 ------------------------
 
-``std::limits::u32_min() -> u32`` :version:`Nightly`
+``std::limits::u32_min() -> u32`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``u32``**
@@ -89,7 +89,7 @@ Functions
 
 ------------------------
 
-``std::limits::u32_max() -> u32`` :version:`Nightly`
+``std::limits::u32_max() -> u32`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``u32``**
@@ -105,7 +105,7 @@ Functions
 
 ------------------------
 
-``std::limits::u64_min() -> u64`` :version:`Nightly`
+``std::limits::u64_min() -> u64`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``u64``**
@@ -121,7 +121,7 @@ Functions
 
 ------------------------
 
-``std::limits::u64_max() -> u64`` :version:`Nightly`
+``std::limits::u64_max() -> u64`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``u64``**
@@ -138,7 +138,7 @@ Functions
 ------------------------
 
 
-``std::limits::u128_min() -> u128`` :version:`Nightly`
+``std::limits::u128_min() -> u128`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``u128``**
@@ -154,7 +154,7 @@ Functions
 
 ------------------------
 
-``std::limits::u128_max() -> u128`` :version:`Nightly`
+``std::limits::u128_max() -> u128`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``u128``**
@@ -170,7 +170,7 @@ Functions
 
 ------------------------
 
-``std::limits::s8_min() -> s8`` :version:`Nightly`
+``std::limits::s8_min() -> s8`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``s8``**
@@ -186,7 +186,7 @@ Functions
 
 ------------------------
 
-``std::limits::s8_max() -> s8`` :version:`Nightly`
+``std::limits::s8_max() -> s8`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``s8``**
@@ -202,7 +202,7 @@ Functions
 
 ------------------------
 
-``std::limits::s16_min() -> s16`` :version:`Nightly`
+``std::limits::s16_min() -> s16`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``s16``**
@@ -218,7 +218,7 @@ Functions
 
 ------------------------
 
-``std::limits::s16_max() -> s16`` :version:`Nightly`
+``std::limits::s16_max() -> s16`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``s16``**
@@ -234,7 +234,7 @@ Functions
 
 ------------------------
 
-``std::limits::s32_min() -> s32`` :version:`Nightly`
+``std::limits::s32_min() -> s32`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``s32``**
@@ -250,7 +250,7 @@ Functions
 
 ------------------------
 
-``std::limits::s32_max() -> s32`` :version:`Nightly`
+``std::limits::s32_max() -> s32`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``s32``**
@@ -266,7 +266,7 @@ Functions
 
 ------------------------
 
-``std::limits::s64_min() -> s64`` :version:`Nightly`
+``std::limits::s64_min() -> s64`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``s64``**
@@ -282,7 +282,7 @@ Functions
 
 ------------------------
 
-``std::limits::s64_max() -> s64`` :version:`Nightly`
+``std::limits::s64_max() -> s64`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``s64``**
@@ -299,7 +299,7 @@ Functions
 ------------------------
 
 
-``std::limits::s128_min() -> s128`` :version:`Nightly`
+``std::limits::s128_min() -> s128`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smallest value representable by a ``s128``**
@@ -315,7 +315,7 @@ Functions
 
 ------------------------
 
-``std::limits::s128_max() -> s128`` :version:`Nightly`
+``std::limits::s128_max() -> s128`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the biggest value representable by a ``s128``**

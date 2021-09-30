@@ -1,4 +1,4 @@
-``std::fxpt`` :version:`Nightly`
+``std::fxpt`` :version:`1.10.1`
 ================================
 
 | This namespace contains various fixed-point calculation functions
@@ -17,7 +17,7 @@ Types
 Functions
 ---------
 
-``std::fxpt::to_float(fixed fxt, u32 precision) -> double`` :version:`Nightly`
+``std::fxpt::to_float(fixed fxt, u32 precision) -> double`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Converts a fixed point number ``fxt`` with a precision of ``precision`` bits into a floating point number**
@@ -35,7 +35,7 @@ Functions
 
 ------------------------
 
-``std::fxpt::to_fixed(double flt, u32 precision) -> fixed`` :version:`Nightly`
+``std::fxpt::to_fixed(double flt, u32 precision) -> fixed`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Converts a floating point number ``flt`` into a fixed point number with a precision of ``precision`` bits**
@@ -53,7 +53,7 @@ Functions
 
 ------------------------
 
-``std::fxpt::change_precision(fixed value, u32 start_precision, u32 end_precision) -> fixed`` :version:`Nightly`
+``std::fxpt::change_precision(fixed value, u32 start_precision, u32 end_precision) -> fixed`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Converts a fixed point number ``value`` with a precision of ``start_precision`` bits into a fixed point number with a precision of ``end_precision`` bits**
@@ -72,7 +72,7 @@ Functions
 
 ------------------------
 
-``std::fxpt::add(fixed a, fixed b, u32 precision) -> fixed`` :version:`Nightly`
+``std::fxpt::add(fixed a, fixed b, u32 precision) -> fixed`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Performs a fixed point addition of values ``a`` and ``b`` with a precision of ``precision`` bits**
@@ -95,7 +95,7 @@ Functions
 
 ------------------------
 
-``std::fxpt::subtract(fixed a, fixed b, u32 precision) -> fixed`` :version:`Nightly`
+``std::fxpt::subtract(fixed a, fixed b, u32 precision) -> fixed`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Performs a fixed point subtraction of values ``a`` and ``b`` with a precision of ``precision`` bits**
@@ -118,7 +118,7 @@ Functions
 
 ------------------------
 
-``std::fxpt::multiply(fixed a, fixed b, u32 precision) -> fixed`` :version:`Nightly`
+``std::fxpt::multiply(fixed a, fixed b, u32 precision) -> fixed`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Performs a fixed point multiplication of values ``a`` and ``b`` with a precision of ``precision`` bits**
@@ -141,7 +141,7 @@ Functions
 
 ------------------------
 
-``std::fxpt::divide(fixed a, fixed b, u32 precision) -> fixed`` :version:`Nightly`
+``std::fxpt::divide(fixed a, fixed b, u32 precision) -> fixed`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Performs a fixed point division of values ``a`` and ``b`` with a precision of ``precision`` bits**

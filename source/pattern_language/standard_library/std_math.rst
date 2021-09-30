@@ -1,4 +1,4 @@
-``std::math`` :version:`Nightly`
+``std::math`` :version:`1.10.1`
 ================================
 
 | This namespace contains various math functions
@@ -9,7 +9,7 @@
 Functions
 ---------
 
-``std::math::min(auto a, auto b) -> auto`` :version:`Nightly`
+``std::math::min(auto a, auto b) -> auto`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the smaller number between ``a`` and ``b``**
@@ -27,7 +27,7 @@ Functions
 
 ------------------------
 
-``std::math::max(auto a, auto b) -> auto`` :version:`Nightly`
+``std::math::max(auto a, auto b) -> auto`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Returns the larger number between ``a`` and ``b``**
@@ -45,7 +45,7 @@ Functions
 
 ------------------------
 
-``std::math::clamp(auto x, auto min, auto max) -> auto`` :version:`Nightly`
+``std::math::clamp(auto x, auto min, auto max) -> auto`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Clamps the value ``x`` between ``min`` and ``max``**
@@ -64,7 +64,7 @@ Functions
 
 ------------------------
 
-``std::math::abs(auto x) -> auto`` :version:`Nightly`
+``std::math::abs(auto x) -> auto`` :version:`1.10.1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Calculates the absolute value of ``x``**

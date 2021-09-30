@@ -72,7 +72,7 @@ The simplest available types are the built-in standard types:
 * ``char16`` is displayed as a ``UTF-16`` character.
 * ``bool`` is displayed as ``false`` for the value zero, ``true`` for the value one and ``true*`` for any other value
 * ``str`` can only be used for passing strings as function parameter. Use ``char[]`` instead in custom types.
-* ``auto`` can only be used for function parameters and automatically resolve to whatever type is passed into the function. :version:`Nightly`
+* ``auto`` can only be used for function parameters and automatically resolve to whatever type is passed into the function. :version:`1.10.1`
 
 Endianess
 ^^^^^^^^^
