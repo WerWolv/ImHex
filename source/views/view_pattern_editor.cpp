@@ -104,6 +104,9 @@ namespace hex {
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path) {
+            if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
+                return;
+
             pl::Preprocessor preprocessor;
 
             if (!ImHexApi::Provider::isValid())

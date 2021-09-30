@@ -628,6 +628,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.imhex.recent_files", "最近文件" },
                 { "hex.builtin.setting.general", "通用" },
                     { "hex.builtin.setting.general.show_tips", "在启动时显示每日提示" },
+                    //{ "hex.builtin.setting.general.auto_load_patterns", "Auto-load supported pattern" },
                 { "hex.builtin.setting.interface", "界面" },
                     { "hex.builtin.setting.interface.color", "颜色主题" },
                         { "hex.builtin.setting.interface.color.system", "跟随系统" },

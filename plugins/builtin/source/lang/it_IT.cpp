@@ -626,6 +626,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.imhex.recent_files", "File recenti" },
                 { "hex.builtin.setting.general", "Generali" },
                     { "hex.builtin.setting.general.show_tips", "Mostra consigli all'avvio" },
+                    //{ "hex.builtin.setting.general.auto_load_patterns", "Auto-load supported pattern" },
                 { "hex.builtin.setting.interface", "Interfaccia" },
                     { "hex.builtin.setting.interface.color", "Colore del Tema" },
                         { "hex.builtin.setting.interface.color.system", "Sistema" },

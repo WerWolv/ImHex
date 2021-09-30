@@ -628,6 +628,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.imhex.recent_files", "Recent Files" },
                 { "hex.builtin.setting.general", "General" },
                     { "hex.builtin.setting.general.show_tips", "Show tips on startup" },
+                    { "hex.builtin.setting.general.auto_load_patterns", "Auto-load supported pattern" },
                 { "hex.builtin.setting.interface", "Interface" },
                     { "hex.builtin.setting.interface.color", "Color theme" },
                         { "hex.builtin.setting.interface.color.system", "System" },
