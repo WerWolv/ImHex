@@ -63,6 +63,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.decimal", "Decimal" },
                 { "hex.common.hexadecimal", "Hexadecimal" },
                 { "hex.common.octal", "Octal" },
+                { "hex.common.info", "Information" },
                 { "hex.common.error", "Error" },
                 { "hex.common.fatal", "Fatal Error" },
                 { "hex.common.address", "Address" },
@@ -81,6 +82,9 @@ namespace hex::plugin::builtin {
                 { "hex.common.file", "File" },
                 { "hex.common.open", "Open" },
                 { "hex.common.browse", "Browse..." },
+
+                { "hex.message.yara_rule_added", "Yara rule added!" },
+                { "hex.message.magic_db_added", "Magic database added!" },
 
                 { "hex.view.bookmarks.name", "Bookmarks" },
                     { "hex.view.bookmarks.default_title", "Bookmark [0x{0:X} - 0x{1:X}]" },

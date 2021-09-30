@@ -63,6 +63,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.decimal", "十进制" },
                 { "hex.common.hexadecimal", "十六进制" },
                 { "hex.common.octal", "八进制" },
+                //{ "hex.common.info", "Information" },
                 { "hex.common.error", "错误" },
                 { "hex.common.fatal", "致命错误" },
                 { "hex.common.address", "地址" },
@@ -81,6 +82,9 @@ namespace hex::plugin::builtin {
                 { "hex.common.file", "文件" },
                 //{ "hex.common.open", "Open" },
                 //{ "hex.common.browse", "Browse..." },
+
+                //{ "hex.message.yara_rule_added", "Yara rule added!" },
+                //{ "hex.message.magic_db_added", "Magic database added!" },
 
                 { "hex.view.bookmarks.name", "书签" },
                     { "hex.view.bookmarks.default_title", "书签 [0x{0:X} - 0x{1:X}]" },

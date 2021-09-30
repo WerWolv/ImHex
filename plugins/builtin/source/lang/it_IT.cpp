@@ -62,6 +62,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.decimal", "Decimale" },
                 { "hex.common.hexadecimal", "Esadecimale" },
                 { "hex.common.octal", "Ottale" },
+                //{ "hex.common.info", "Information" },
                 { "hex.common.error", "Errore" },
                 { "hex.common.fatal", "Errore Fatale" },
                 { "hex.common.address", "Indirizzo" },
@@ -80,6 +81,9 @@ namespace hex::plugin::builtin {
                 { "hex.common.file", "File" },
                 //{ "hex.common.open", "Open" },
                 //{ "hex.common.browse", "Browse..." },
+
+                //{ "hex.message.yara_rule_added", "Yara rule added!" },
+                //{ "hex.message.magic_db_added", "Magic database added!" },
 
                 { "hex.view.bookmarks.name", "Segnalibri" },
                     { "hex.view.bookmarks.default_title", "Segnalibro [0x{0:X} - 0x{1:X}]" },

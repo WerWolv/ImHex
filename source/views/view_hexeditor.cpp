@@ -197,7 +197,6 @@ namespace hex {
             } else if (name == "Open Project") {
                 hex::openFileBrowser("hex.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
-                    EventManager::post<EventProjectFileLoad>();
                     this->getWindowOpenState() = true;
                 });
             }
@@ -473,7 +472,6 @@ namespace hex {
             if (ImGui::MenuItem("hex.view.hexeditor.menu.file.open_project"_lang, "")) {
                 hex::openFileBrowser("hex.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
                     ProjectFile::load(path);
-                    EventManager::post<EventProjectFileLoad>();
                 });
             }
 

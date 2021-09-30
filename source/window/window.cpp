@@ -440,7 +440,6 @@ namespace hex {
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
                 ProjectFile::load(this->m_safetyBackupPath.string());
-                EventManager::post<EventProjectFileLoad>();
                 ProjectFile::markDirty();
 
                 ProjectFile::clearProjectFilePath();
@@ -784,13 +783,23 @@ namespace hex {
 
                     if (file.isValid())
                         EventManager::post<RequestSetPatternLanguageCode>(file.readString());
+                } else if (path.extension() == ".hexproj") {
+                    ProjectFile::load(path.string());
                 } else if (path.extension() == ".yar") {
                     for (auto &destPath : hex::getPath(ImHexPath::Yara)) {
                         std::error_code error;
-                        std::filesystem::copy(path, destPath, error);
-
-                        if (!error)
+                        if (std::filesystem::copy_file(path, destPath / path.filename(), std::filesystem::copy_options::overwrite_existing, error)) {
+                            View::showMessagePopup("hex.message.yara_rule_added"_lang);
                             break;
+                        }
+                    }
+                } else if (path.extension() == ".mgc") {
+                    for (auto &destPath : hex::getPath(ImHexPath::Magic)) {
+                        std::error_code error;
+                        if (std::filesystem::copy_file(path, destPath / path.filename(), std::filesystem::copy_options::overwrite_existing, error)) {
+                            View::showMessagePopup("hex.message.magic_db_added"_lang);
+                            break;
+                        }
                     }
                 } else {
                     EventManager::post<RequestOpenFile>(path.string());
