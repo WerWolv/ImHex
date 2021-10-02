@@ -105,6 +105,8 @@ namespace hex::pl {
         this->m_customFunctions.clear();
         this->m_scopes.clear();
 
+        this->dataOffset() = 0x00;
+
         for (auto &func : this->m_customFunctionDefinitions)
             delete func;
         this->m_customFunctionDefinitions.clear();
