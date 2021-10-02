@@ -41,13 +41,15 @@ The following pragmas are available:
 ^^^^^^^^^^
 
 **Possible values:** ``big``, ``little``, ``native``
+**Default:** ``native``
 
-This pragma overwrites the default endianess of all variables declared in the file. By default ``native`` endianess is used.
+This pragma overwrites the default endianess of all variables declared in the file.
 
 ``MIME``
 ^^^^^^^^
 
 **Possible values:** Any MIME Type string
+**Default:** ``Unspecified``
 
 This pragma specifies the MIME type of files that can be interpreted by this pattern.
 This is useful for automatically loading relevant patterns when a file is opened. The MIME type of the loaded file will be matched against the MIME type specified here and if it matches, a popup will appear asking if this pattern should get loaded.
@@ -56,6 +58,7 @@ This is useful for automatically loading relevant patterns when a file is opened
 ^^^^^^^^^^^^^^^^
 
 **Possible values:** Any integer value
+**Default:** ``0x00``
 
 This pragma automatically adjusts the base address of the currently loaded file.
 This is useful for patterns that depend on a file being loaded at a certain address in memory.
@@ -64,6 +67,7 @@ This is useful for patterns that depend on a file being loaded at a certain addr
 ^^^^^^^^^^^^^^
 
 **Possible values:** Any integer value
+**Default:** ``32``
 
 This pragma sets the evaluation depth of recursive functions and types.
 To prevent ImHex from crashing when evaluating infinitely deep recursive types, ImHex will abort evaluation prematurely if it detects recursion that is too deep. This pragma can adjust the maximum depth allowed
@@ -72,6 +76,17 @@ To prevent ImHex from crashing when evaluating infinitely deep recursive types, 
 ^^^^^^^^^^^^^^^
 
 **Possible values:** Any integer value
+**Default:** ``0x1000``
 
 This pragma sets the maximum number of entries allowed in an array.
 To prevent ImHex using up a lot of memory when creating huge arrays, ImHex will abort evaluation prematurely if an array with too many entries is evaluated. This pragma can adjust the maximum number of entries allowed
+
+``pattern_limit`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Possible values:** Any integer value
+**Default:** ``0x2000``
+
+This pragma sets the maximum number of patterns allowed to be created.
+To prevent ImHex using up a lot of memory when creating a lot of patterns, ImHex will abort evaluation prematurely if too many patterns are existing simultaneously.
+This is similar to the ``array_limit`` pragma but catches smaller, nested arrays as well.
