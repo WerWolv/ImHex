@@ -310,21 +310,21 @@ namespace hex::pl {
 
             PatternData *pattern;
             if (Token::isUnsigned(this->m_type))
-                pattern = new PatternDataUnsigned(offset, size);
+                pattern = new PatternDataUnsigned(offset, size, evaluator);
             else if (Token::isSigned(this->m_type))
-                pattern = new PatternDataSigned(offset, size);
+                pattern = new PatternDataSigned(offset, size, evaluator);
             else if (Token::isFloatingPoint(this->m_type))
-                pattern = new PatternDataFloat(offset, size);
+                pattern = new PatternDataFloat(offset, size, evaluator);
             else if (this->m_type == Token::ValueType::Boolean)
-                pattern = new PatternDataBoolean(offset);
+                pattern = new PatternDataBoolean(offset, evaluator);
             else if (this->m_type == Token::ValueType::Character)
-                pattern = new PatternDataCharacter(offset);
+                pattern = new PatternDataCharacter(offset, evaluator);
             else if (this->m_type == Token::ValueType::Character16)
-                pattern = new PatternDataCharacter16(offset);
+                pattern = new PatternDataCharacter16(offset, evaluator);
             else if (this->m_type == Token::ValueType::Padding)
-                pattern = new PatternDataPadding(offset, 1);
+                pattern = new PatternDataPadding(offset, 1, evaluator);
             else if (this->m_type == Token::ValueType::String)
-                pattern = new PatternDataString(offset, 1);
+                pattern = new PatternDataString(offset, 1, evaluator);
             else if (this->m_type == Token::ValueType::Auto)
                 return { nullptr };
             else
@@ -589,7 +589,6 @@ namespace hex::pl {
                 if (function.parameterCount != 1)
                     LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
 
-                pattern->setEvaluator(evaluator);
                 pattern->setFormatterFunction(function);
             } else if (name == "transform" && requiresValue()) {
                 auto functions = evaluator->getCustomFunctions();
@@ -600,7 +599,6 @@ namespace hex::pl {
                 if (function.parameterCount != 1)
                     LogConsole::abortEvaluation("transform function needs exactly one parameter", node);
 
-                pattern->setEvaluator(evaluator);
                 pattern->setTransformFunction(function);
             } else if (name == "pointer_base" && requiresValue()) {
                 auto functions = evaluator->getCustomFunctions();
@@ -816,13 +814,13 @@ namespace hex::pl {
 
             PatternData *outputPattern;
             if (dynamic_cast<PatternDataPadding*>(templatePattern)) {
-                outputPattern = new PatternDataPadding(startOffset, 0);
+                outputPattern = new PatternDataPadding(startOffset, 0, evaluator);
             } else if (dynamic_cast<PatternDataCharacter*>(templatePattern)) {
-                outputPattern = new PatternDataString(startOffset, 0);
+                outputPattern = new PatternDataString(startOffset, 0, evaluator);
             } else if (dynamic_cast<PatternDataCharacter16*>(templatePattern)) {
-                outputPattern = new PatternDataString16(startOffset, 0);
+                outputPattern = new PatternDataString16(startOffset, 0, evaluator);
             } else {
-                auto arrayPattern = new PatternDataStaticArray(startOffset, 0);
+                auto arrayPattern = new PatternDataStaticArray(startOffset, 0, evaluator);
                 arrayPattern->setEntries(templatePattern->clone(), entryCount);
                 outputPattern = arrayPattern;
             }
@@ -839,10 +837,15 @@ namespace hex::pl {
         }
 
         PatternData* createDynamicArray(Evaluator *evaluator) const {
-            auto arrayPattern = new PatternDataDynamicArray(evaluator->dataOffset(), 0);
+            auto arrayPattern = new PatternDataDynamicArray(evaluator->dataOffset(), 0, evaluator);
             arrayPattern->setVariableName(this->m_name);
 
             std::vector<PatternData *> entries;
+            auto arrayCleanup = SCOPE_GUARD {
+                for (auto entry : entries)
+                    delete entry;
+            };
+
             size_t size = 0;
             u64 entryCount = 0;
 
@@ -934,6 +937,8 @@ namespace hex::pl {
             arrayPattern->setEntries(entries);
             arrayPattern->setSize(size);
 
+            arrayCleanup.release();
+
             return arrayPattern;
         }
     };
@@ -986,7 +991,7 @@ namespace hex::pl {
             auto sizePattern = this->m_sizeType->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete sizePattern; };
 
-            auto pattern = new PatternDataPointer(offset, sizePattern->getSize());
+            auto pattern = new PatternDataPointer(offset, sizePattern->getSize(), evaluator);
             pattern->setVariableName(this->m_name);
 
             offset = evaluator->dataOffset();
@@ -1085,10 +1090,15 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataStruct(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataStruct(evaluator->dataOffset(), 0, evaluator);
 
             u64 startOffset = evaluator->dataOffset();
             std::vector<PatternData*> memberPatterns;
+            auto structCleanup = SCOPE_GUARD {
+                delete pattern;
+                for (auto member : memberPatterns)
+                    delete member;
+            };
 
             evaluator->pushScope(pattern, memberPatterns);
 
@@ -1115,6 +1125,8 @@ namespace hex::pl {
 
             pattern->setMembers(memberPatterns);
             pattern->setSize(evaluator->dataOffset() - startOffset);
+
+            structCleanup.release();
 
             return { pattern };
         }
@@ -1149,11 +1161,17 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataUnion(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataUnion(evaluator->dataOffset(), 0, evaluator);
 
             size_t size = 0;
             std::vector<PatternData*> memberPatterns;
             u64 startOffset = evaluator->dataOffset();
+
+            auto unionCleanup = SCOPE_GUARD {
+                delete pattern;
+                for (auto member : memberPatterns)
+                    delete member;
+            };
 
             evaluator->pushScope(pattern, memberPatterns);
             for (auto member : this->m_members) {
@@ -1168,6 +1186,8 @@ namespace hex::pl {
             evaluator->dataOffset() = startOffset + size;
             pattern->setMembers(memberPatterns);
             pattern->setSize(size);
+
+            unionCleanup.release();
 
             return { pattern };
         }
@@ -1200,7 +1220,9 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataEnum(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataEnum(evaluator->dataOffset(), 0, evaluator);
+            auto enumCleanup = SCOPE_GUARD { delete pattern; };
+
 
             std::vector<std::pair<Token::Literal, std::string>> enumEntries;
             for (const auto &[name, value] : this->m_entries) {
@@ -1216,6 +1238,8 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete underlying; };
             pattern->setSize(underlying->getSize());
             pattern->setEndian(underlying->getEndian());
+
+            enumCleanup.release();
 
             return { pattern };
         }
@@ -1252,10 +1276,17 @@ namespace hex::pl {
         void addEntry(const std::string &name, ASTNode* size) { this->m_entries.emplace_back(name, size); }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataBitfield(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataBitfield(evaluator->dataOffset(), 0, evaluator);
 
             size_t bitOffset = 0;
             std::vector<PatternData*> fields;
+
+            auto bitfieldCleanup = SCOPE_GUARD {
+                delete pattern;
+                for (auto field : fields)
+                    delete field;
+            };
+
             evaluator->pushScope(pattern, fields);
             for (auto [name, bitSizeNode] : this->m_entries) {
                 auto literal = bitSizeNode->evaluate(evaluator);
@@ -1267,7 +1298,7 @@ namespace hex::pl {
                         [](auto &&offset) -> u8 { return static_cast<u8>(offset); }
                 }, dynamic_cast<ASTNodeLiteral*>(literal)->getValue());
 
-                auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize);
+                auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize, evaluator);
                 field->setVariableName(name);
 
                 bitOffset += bitSize;
@@ -1279,6 +1310,8 @@ namespace hex::pl {
             pattern->setFields(fields);
 
             evaluator->dataOffset() += pattern->getSize();
+
+            bitfieldCleanup.release();
 
             return { pattern };
         }
@@ -1915,7 +1948,12 @@ namespace hex::pl {
                 std::vector<PatternData*> variables;
 
                 ctx->pushScope(nullptr, variables);
-                ON_SCOPE_EXIT { ctx->popScope(); };
+                ON_SCOPE_EXIT {
+                    for (auto variable : variables)
+                        delete variable;
+
+                    ctx->popScope();
+                };
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {

@@ -34,6 +34,9 @@ namespace hex::pl {
         const std::vector<std::pair<LogConsole::Level, std::string>>& getConsoleLog();
         const std::optional<std::pair<u32, std::string>>& getError();
 
+        u32 getCreatedPatternCount();
+        u32 getMaximumPatternCount();
+
     private:
         Preprocessor *m_preprocessor;
         Lexer *m_lexer;
@@ -45,8 +48,6 @@ namespace hex::pl {
 
         prv::Provider *m_provider = nullptr;
         std::endian m_defaultEndian = std::endian::native;
-        u32 m_evalDepth;
-        u32 m_arrayLimit;
 
         std::optional<std::pair<u32, std::string>> m_currError;
     };

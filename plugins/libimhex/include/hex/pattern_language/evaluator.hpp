@@ -15,6 +15,7 @@ namespace hex::prv { class Provider; }
 namespace hex::pl {
 
     class PatternData;
+    class PatternCreationLimiter;
     class ASTNode;
 
     class Evaluator {
@@ -87,6 +88,20 @@ namespace hex::pl {
             return this->m_arrayLimit;
         }
 
+        void setPatternLimit(u32 limit) {
+            this->m_patternLimit = limit;
+        }
+
+        [[nodiscard]]
+        u32 getPatternLimit() {
+            return this->m_patternLimit;
+        }
+
+        [[nodiscard]]
+        u32 getPatternCount() {
+            return this->m_currPatternCount;
+        }
+
         u64& dataOffset() { return this->m_currOffset; }
 
         bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguageFunctions::Callback &function) {
@@ -106,8 +121,12 @@ namespace hex::pl {
         }
 
         void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt);
-
         void setVariable(const std::string &name, const Token::Literal& value);
+
+    private:
+
+        void patternCreated();
+        void patternDestroyed();
 
     private:
         u64 m_currOffset;
@@ -117,11 +136,16 @@ namespace hex::pl {
         std::endian m_defaultEndian = std::endian::native;
         u32 m_evalDepth;
         u32 m_arrayLimit;
+        u32 m_patternLimit;
+
+        u32 m_currPatternCount;
 
         std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
         std::vector<ASTNode*> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
+
+        friend class PatternCreationLimiter;
     };
 
 }

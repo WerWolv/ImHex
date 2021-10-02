@@ -21,19 +21,21 @@ namespace hex::pl {
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
 
             if (std::get_if<u128>(&*value) != nullptr)
-                pattern = new PatternDataUnsigned(0, sizeof(u128));
+                pattern = new PatternDataUnsigned(0, sizeof(u128), this);
             else if (std::get_if<s128>(&*value) != nullptr)
-                pattern = new PatternDataSigned(0, sizeof(s128));
+                pattern = new PatternDataSigned(0, sizeof(s128), this);
             else if (std::get_if<double>(&*value) != nullptr)
-                pattern = new PatternDataFloat(0, sizeof(double));
+                pattern = new PatternDataFloat(0, sizeof(double), this);
             else if (std::get_if<bool>(&*value) != nullptr)
-                pattern = new PatternDataBoolean(0);
+                pattern = new PatternDataBoolean(0, this);
             else if (std::get_if<char>(&*value) != nullptr)
-                pattern = new PatternDataCharacter(0);
+                pattern = new PatternDataCharacter(0, this);
             else if (std::get_if<PatternData*>(&*value) != nullptr)
                 pattern = std::get<PatternData*>(*value)->clone();
             else if (std::get_if<std::string>(&*value) != nullptr)
-                pattern = new PatternDataString(0, 1);
+                pattern = new PatternDataString(0, 1, this);
+            else
+                __builtin_unreachable();
         }
 
         pattern->setVariableName(name);
@@ -106,6 +108,7 @@ namespace hex::pl {
         this->m_scopes.clear();
 
         this->dataOffset() = 0x00;
+        this->m_currPatternCount = 0;
 
         for (auto &func : this->m_customFunctionDefinitions)
             delete func;
@@ -139,10 +142,22 @@ namespace hex::pl {
                 delete pattern;
             patterns.clear();
 
+            this->m_currPatternCount = 0;
+
             return std::nullopt;
         }
 
         return patterns;
+    }
+
+    void Evaluator::patternCreated() {
+        if (this->m_currPatternCount > this->m_patternLimit)
+            LogConsole::abortEvaluation(hex::format("exceeded maximum number of patterns: {}", this->m_patternLimit));
+        this->m_currPatternCount++;
+    }
+
+    void Evaluator::patternDestroyed() {
+        this->m_currPatternCount--;
     }
 
 }

@@ -259,11 +259,22 @@ namespace hex {
                 ImGui::SameLine();
                 if (this->m_evaluatorRunning)
                     ImGui::TextSpinner("hex.view.pattern.evaluating"_lang);
-                else
+                else {
                     if (ImGui::Checkbox("hex.view.pattern.auto"_lang, &this->m_runAutomatically)) {
                         if (this->m_runAutomatically)
                             this->m_hasUnevaluatedChanges = true;
                     }
+
+                    ImGui::SameLine();
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
+
+                    ImGui::TextUnformatted(hex::format("{} / {}",
+                                                       this->m_patternLanguageRuntime->getCreatedPatternCount(),
+                                                       this->m_patternLanguageRuntime->getMaximumPatternCount()
+                                                       ).c_str()
+                                           );
+                }
 
                 if (this->m_textEditor.IsTextChanged()) {
                     ProjectFile::markDirty();

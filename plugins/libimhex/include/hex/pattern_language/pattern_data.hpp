@@ -6,6 +6,8 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/pattern_language/token.hpp>
+#include <hex/pattern_language/evaluator.hpp>
+
 #include <hex/views/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -51,10 +53,29 @@ namespace hex::pl {
         bool m_inlined = false;
     };
 
-    class PatternData {
+    class PatternCreationLimiter {
     public:
-        PatternData(u64 offset, size_t size, u32 color = 0)
-        : m_offset(offset), m_size(size), m_color(color), m_parent(nullptr) {
+        explicit PatternCreationLimiter(Evaluator *evaluator) : m_evaluator(evaluator) {
+            this->m_evaluator->patternCreated();
+        }
+
+        PatternCreationLimiter(const PatternCreationLimiter &other) {
+            this->m_evaluator = other.m_evaluator;
+            this->m_evaluator->patternCreated();
+        }
+
+        ~PatternCreationLimiter() {
+            this->m_evaluator->patternDestroyed();
+        }
+
+    private:
+        Evaluator *m_evaluator;
+    };
+
+    class PatternData : public PatternCreationLimiter {
+    public:
+        PatternData(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+        : PatternCreationLimiter(evaluator), m_offset(offset), m_size(size), m_color(color), m_parent(nullptr), m_evaluator(evaluator) {
             constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
@@ -100,7 +121,6 @@ namespace hex::pl {
         void setDisplayName(const std::string &name) { this->m_displayName = name; }
 
         [[nodiscard]] Evaluator* getEvaluator() const { return this->m_evaluator; }
-        void setEvaluator(Evaluator *evaluator) { this->m_evaluator = evaluator; }
 
         [[nodiscard]] const auto& getTransformFunction() const { return this->m_transformFunction; }
         void setTransformFunction(const ContentRegistry::PatternLanguageFunctions::Function &function) { this->m_transformFunction = function; }
@@ -295,7 +315,7 @@ namespace hex::pl {
 
     class PatternDataPadding : public PatternData {
     public:
-        PatternDataPadding(u64 offset, size_t size) : PatternData(offset, size, 0xFF000000) { }
+        PatternDataPadding(u64 offset, size_t size, Evaluator *evaluator) : PatternData(offset, size, evaluator, 0xFF000000) { }
 
         PatternData* clone() override {
             return new PatternDataPadding(*this);
@@ -313,8 +333,8 @@ namespace hex::pl {
 
     class PatternDataPointer : public PatternData {
     public:
-        PatternDataPointer(u64 offset, size_t size, u32 color = 0)
-        : PatternData(offset, size, color), m_pointedAt(nullptr) {
+        PatternDataPointer(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+        : PatternData(offset, size, evaluator, color), m_pointedAt(nullptr) {
         }
 
         PatternDataPointer(const PatternDataPointer &other) : PatternData(other) {
@@ -415,8 +435,8 @@ namespace hex::pl {
 
     class PatternDataUnsigned : public PatternData {
     public:
-        PatternDataUnsigned(u64 offset, size_t size, u32 color = 0)
-            : PatternData(offset, size, color) { }
+        PatternDataUnsigned(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataUnsigned(*this);
@@ -446,8 +466,8 @@ namespace hex::pl {
 
     class PatternDataSigned : public PatternData {
     public:
-        PatternDataSigned(u64 offset, size_t size, u32 color = 0)
-            : PatternData(offset, size, color) { }
+        PatternDataSigned(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataSigned(*this);
@@ -478,8 +498,8 @@ namespace hex::pl {
 
     class PatternDataFloat : public PatternData {
     public:
-        PatternDataFloat(u64 offset, size_t size, u32 color = 0)
-            : PatternData(offset, size, color) { }
+        PatternDataFloat(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataFloat(*this);
@@ -514,8 +534,8 @@ namespace hex::pl {
 
     class PatternDataBoolean : public PatternData {
     public:
-        explicit PatternDataBoolean(u64 offset, u32 color = 0)
-                : PatternData(offset, 1, color) { }
+        explicit PatternDataBoolean(u64 offset, Evaluator *evaluator, u32 color = 0)
+                : PatternData(offset, 1, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataBoolean(*this);
@@ -542,8 +562,8 @@ namespace hex::pl {
 
     class PatternDataCharacter : public PatternData {
     public:
-        explicit PatternDataCharacter(u64 offset, u32 color = 0)
-            : PatternData(offset, 1, color) { }
+        explicit PatternDataCharacter(u64 offset, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, 1, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataCharacter(*this);
@@ -565,8 +585,8 @@ namespace hex::pl {
 
     class PatternDataCharacter16 : public PatternData {
     public:
-        explicit PatternDataCharacter16(u64 offset, u32 color = 0)
-                : PatternData(offset, 2, color) { }
+        explicit PatternDataCharacter16(u64 offset, Evaluator *evaluator, u32 color = 0)
+                : PatternData(offset, 2, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataCharacter16(*this);
@@ -590,8 +610,8 @@ namespace hex::pl {
 
     class PatternDataString : public PatternData {
     public:
-        PatternDataString(u64 offset, size_t size, u32 color = 0)
-            : PatternData(offset, size, color) { }
+        PatternDataString(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataString(*this);
@@ -613,8 +633,8 @@ namespace hex::pl {
 
     class PatternDataString16 : public PatternData {
     public:
-        PatternDataString16(u64 offset, size_t size, u32 color = 0)
-                : PatternData(offset, size, color) { }
+        PatternDataString16(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+                : PatternData(offset, size, evaluator, color) { }
 
         PatternData* clone() override {
             return new PatternDataString16(*this);
@@ -641,8 +661,8 @@ namespace hex::pl {
 
     class PatternDataDynamicArray : public PatternData, public Inlinable {
     public:
-        PatternDataDynamicArray(u64 offset, size_t size, u32 color = 0)
-            : PatternData(offset, size, color) {
+        PatternDataDynamicArray(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) {
         }
 
         PatternDataDynamicArray(const PatternDataDynamicArray &other) : PatternData(other) {
@@ -773,8 +793,8 @@ namespace hex::pl {
 
     class PatternDataStaticArray : public PatternData, public Inlinable {
     public:
-        PatternDataStaticArray(u64 offset, size_t size, u32 color = 0)
-                : PatternData(offset, size, color) {
+        PatternDataStaticArray(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+                : PatternData(offset, size, evaluator, color) {
         }
 
         PatternDataStaticArray(const PatternDataStaticArray &other) : PatternData(other) {
@@ -910,7 +930,8 @@ namespace hex::pl {
 
     class PatternDataStruct : public PatternData, public Inlinable {
     public:
-        PatternDataStruct(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color){
+        PatternDataStruct(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color){
         }
 
         PatternDataStruct(const PatternDataStruct &other) : PatternData(other) {
@@ -1045,7 +1066,8 @@ namespace hex::pl {
 
     class PatternDataUnion : public PatternData, public Inlinable {
     public:
-        PatternDataUnion(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
+        PatternDataUnion(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) {
 
         }
 
@@ -1181,7 +1203,8 @@ namespace hex::pl {
 
     class PatternDataEnum : public PatternData {
     public:
-        PatternDataEnum(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
+        PatternDataEnum(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) {
 
         }
 
@@ -1274,8 +1297,8 @@ namespace hex::pl {
 
     class PatternDataBitfieldField : public PatternData {
     public:
-        PatternDataBitfieldField(u64 offset, u8 bitOffset, u8 bitSize, u32 color = 0)
-        : m_bitOffset(bitOffset), m_bitSize(bitSize), PatternData(offset, 0, color) {
+        PatternDataBitfieldField(u64 offset, u8 bitOffset, u8 bitSize, Evaluator *evaluator, u32 color = 0)
+        : m_bitOffset(bitOffset), m_bitSize(bitSize), PatternData(offset, 0, evaluator, color) {
 
         }
 
@@ -1343,7 +1366,8 @@ namespace hex::pl {
 
     class PatternDataBitfield : public PatternData, public Inlinable {
     public:
-        PatternDataBitfield(u64 offset, size_t size, u32 color = 0) : PatternData(offset, size, color) {
+        PatternDataBitfield(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
+            : PatternData(offset, size, evaluator, color) {
 
         }
 

@@ -43,21 +43,31 @@ namespace hex::pl {
             if (limit <= 0)
                 return false;
 
-            this->m_evalDepth = limit;
+            this->m_evaluator->setEvaluationDepth(limit);
             return true;
         });
 
-        this->m_preprocessor->addPragmaHandler("array_limit", [this](std::string value) {
+        this->m_preprocessor->addPragmaHandler("array_limit", [this](const std::string &value) {
             auto limit = strtol(value.c_str(), nullptr, 0);
 
             if (limit <= 0)
                 return false;
 
-            this->m_arrayLimit = limit;
+            this->m_evaluator->setArrayLimit(limit);
             return true;
         });
 
-        this->m_preprocessor->addPragmaHandler("base_address", [](std::string value) {
+        this->m_preprocessor->addPragmaHandler("pattern_limit", [this](const std::string &value) {
+            auto limit = strtol(value.c_str(), nullptr, 0);
+
+            if (limit <= 0)
+                return false;
+
+            this->m_evaluator->setPatternLimit(limit);
+            return true;
+        });
+
+        this->m_preprocessor->addPragmaHandler("base_address", [](const std::string &value) {
             auto baseAddress = strtoull(value.c_str(), nullptr, 0);
 
             ImHexApi::Provider::get()->setBaseAddress(baseAddress);
@@ -79,8 +89,10 @@ namespace hex::pl {
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
-        this->m_evalDepth = 32;
-        this->m_arrayLimit = 0x1000;
+        this->m_evaluator->setDefaultEndian(std::endian::native);
+        this->m_evaluator->setEvaluationDepth(32);
+        this->m_evaluator->setArrayLimit(0x1000);
+        this->m_evaluator->setPatternLimit(0x2000);
 
         for (auto &node : this->m_currAST)
             delete node;
@@ -91,10 +103,6 @@ namespace hex::pl {
             this->m_currError = this->m_preprocessor->getError();
             return { };
         }
-
-        this->m_evaluator->setDefaultEndian(this->m_defaultEndian);
-        this->m_evaluator->setEvaluationDepth(this->m_evalDepth);
-        this->m_evaluator->setArrayLimit(this->m_arrayLimit);
 
         auto tokens = this->m_lexer->lex(preprocessedCode.value());
         if (!tokens.has_value()) {
@@ -132,6 +140,14 @@ namespace hex::pl {
 
     const std::optional<std::pair<u32, std::string>>& PatternLanguage::getError() {
         return this->m_currError;
+    }
+
+    u32 PatternLanguage::getCreatedPatternCount() {
+        return this->m_evaluator->getPatternCount();
+    }
+
+    u32 PatternLanguage::getMaximumPatternCount() {
+        return this->m_evaluator->getPatternLimit();
     }
 
 }
