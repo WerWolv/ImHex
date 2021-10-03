@@ -7,6 +7,7 @@ fn main() {
 
     cxx_build::bridge("src/imhex_api.rs")
         .include(format!("{}/include", env!("LIBIMHEX_SOURCE_DIRECTORY")))
-        .flag("-std=gnu++20")
+        .flag_if_supported("-std=gnu++2a")
+        .flag_if_supported("-std=gnu++20")
         .compile("libimhex-bridge");
 }
