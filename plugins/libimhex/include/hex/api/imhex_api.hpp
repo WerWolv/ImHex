@@ -12,19 +12,16 @@ namespace hex {
 
     namespace prv { class Provider; }
 
-    struct ImHexApi {
-        ImHexApi() = delete;
+    namespace ImHexApi {
+        namespace Common {
 
-        struct Common {
-
-            static void closeImHex(bool noQuestions = false);
-            static void restartImHex();
+            void sayHello();
+            void closeImHex(bool noQuestions = false);
+            void restartImHex();
 
         };
 
-        struct Bookmarks {
-            Bookmarks() = delete;
-
+        namespace Bookmarks {
             struct Entry {
                 Region region;
 
@@ -34,28 +31,28 @@ namespace hex {
                 bool locked;
             };
 
-            static void add(Region region, const std::string &name, const std::string &comment, u32 color = 0x00000000);
-            static void add(u64 addr, size_t size, const std::string &name, const std::string &comment, u32 color = 0x00000000);
+            void add(Region region, const std::string &name, const std::string &comment, u32 color = 0x00000000);
+            void add(u64 addr, size_t size, const std::string &name, const std::string &comment, u32 color = 0x00000000);
 
-            static std::list<Entry>& getEntries();
+            std::list<Entry>& getEntries();
         };
 
-        struct Provider {
+        namespace Provider {
 
-            static prv::Provider* get();
-            static const std::vector<prv::Provider*>& getProviders();
+            prv::Provider* get();
+            const std::vector<prv::Provider*>& getProviders();
 
-            static bool isValid();
+            bool isValid();
+
+            void add(prv::Provider *provider);
 
             template<hex::derived_from<prv::Provider> T>
-            static void add(auto&& ... args) {
+            void add(auto&& ... args) {
                 add(new T(std::forward<decltype(args)>(args)...));
             }
 
-            static void remove(prv::Provider *provider);
+            void remove(prv::Provider *provider);
 
-        private:
-            static void add(prv::Provider *provider);
         };
 
     };

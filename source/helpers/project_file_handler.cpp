@@ -1,5 +1,7 @@
 #include "helpers/project_file_handler.hpp"
 
+#include <hex/api/imhex_api.hpp>
+
 #include <fstream>
 #include <nlohmann/json.hpp>
 
@@ -42,7 +44,9 @@ namespace hex {
             ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
 
             for (auto &element : projectFileData["bookmarks"].items()) {
-                ProjectFile::s_bookmarks.push_back(element.value().get<ImHexApi::Bookmarks::Entry>());
+                ImHexApi::Bookmarks::Entry entry;
+                from_json(element.value(), entry);
+                ProjectFile::s_bookmarks.push_back(entry);
             }
 
         } catch (json::exception &e) {
@@ -73,7 +77,7 @@ namespace hex {
             projectFileData["dataProcessor"]    = ProjectFile::s_dataProcessorContent;
 
             for (auto &bookmark : ProjectFile::s_bookmarks) {
-                projectFileData["bookmarks"].push_back(bookmark);
+                to_json(projectFileData["bookmarks"].emplace_back(), bookmark);
             }
 
             std::ofstream projectFile(filePath.c_str(), std::fstream::trunc);

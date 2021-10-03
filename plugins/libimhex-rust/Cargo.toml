@@ -2,8 +2,14 @@
 name = "hex"
 version = "0.1.0"
 edition = "2018"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 macros = { path = "proc_macros" }
+
+cxx = "1.0.55"
+
+[build-dependencies]
+cxx-build = "1.0.55"

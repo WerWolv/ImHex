@@ -24,13 +24,10 @@ namespace hex {
         It allows you to add/register new content that will be picked up and used by the ImHex core or by other
         plugins when needed.
     */
-    struct ContentRegistry {
-        ContentRegistry() = delete;
+    namespace ContentRegistry {
 
         /* Settings Registry. Allows adding of new entries into the ImHex preferences window. */
-        struct Settings {
-            Settings() = delete;
-
+        namespace Settings {
             using Callback = std::function<bool(const std::string&, nlohmann::json&)>;
 
             struct Entry {
@@ -38,28 +35,27 @@ namespace hex {
                 Callback callback;
             };
 
-            static void load();
-            static void store();
+            void load();
+            void store();
 
-            static void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const Callback &callback);
-            static void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const Callback &callback);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
 
-            static void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 value);
-            static void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
-            static void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value);
+            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 value);
+            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
+            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value);
 
-            static s64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue);
-            static std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
-            static std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue = { });
+            s64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue);
+            std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
+            std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue = { });
 
-            static std::map<std::string, std::vector<Entry>>& getEntries();
-            static nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
-            static nlohmann::json& getSettingsData();
+            std::map<std::string, std::vector<Entry>>& getEntries();
+            nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
+            nlohmann::json& getSettingsData();
         };
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
-        struct CommandPaletteCommands {
-            CommandPaletteCommands() = delete;
+        namespace CommandPaletteCommands {
 
             enum class Type : u32 {
                 SymbolCommand,
@@ -77,13 +73,12 @@ namespace hex {
                 ExecuteCallback executeCallback;
             };
 
-            static void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto){});
-            static std::vector<Entry>& getEntries();
+            void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto){});
+            std::vector<Entry>& getEntries();
         };
 
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
-        struct PatternLanguageFunctions {
-            PatternLanguageFunctions() = delete;
+        namespace PatternLanguageFunctions {
 
             constexpr static u32 UnlimitedParameters   = 0xFFFF'FFFF;
             constexpr static u32 MoreParametersThan    = 0x8000'0000;
@@ -98,31 +93,25 @@ namespace hex {
                 Callback func;
             };
 
-            static void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
-            static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
+            void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
+            std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
         };
 
         /* View Registry. Allows adding of new windows */
-        struct Views {
-            Views() = delete;
+        namespace Views {
+            void add(View *view);
 
             template<hex::derived_from<View> T, typename ... Args>
-            static void add(Args&& ... args) {
+            void add(Args&& ... args) {
                 return add(new T(std::forward<Args>(args)...));
             }
 
-            static std::vector<View*>& getEntries();
-
-        private:
-            static void add(View *view);
-
+            std::vector<View*>& getEntries();
 
         };
 
         /* Tools Registry. Allows adding new entries to the tools window */
-        struct Tools {
-            Tools() = delete;
-
+        namespace Tools {
             using Callback = std::function<void()>;
 
             struct Entry {
@@ -130,14 +119,13 @@ namespace hex {
                 Callback function;
             };
 
-            static void add(const std::string &unlocalizedName, const Callback &function);
+            void add(const std::string &unlocalizedName, const Callback &function);
 
-            static std::vector<Entry>& getEntries();
+            std::vector<Entry>& getEntries();
         };
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
-        struct DataInspector {
-            DataInspector() = delete;
+        namespace DataInspector {
 
             enum class NumberDisplayStyle {
                 Decimal,
@@ -154,13 +142,14 @@ namespace hex {
                 GeneratorFunction generatorFunction;
             };
 
-            static void add(const std::string &unlocalizedName, size_t requiredSize, GeneratorFunction function);
+            void add(const std::string &unlocalizedName, size_t requiredSize, GeneratorFunction function);
 
-            static std::vector<Entry>& getEntries();
+            std::vector<Entry>& getEntries();
         };
 
         /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
-        struct DataProcessorNode {
+        namespace DataProcessorNode {
+
             using CreatorFunction = std::function<dp::Node*()>;
             struct Entry {
                 std::string category;
@@ -168,8 +157,10 @@ namespace hex {
                 CreatorFunction creatorFunction;
             };
 
+            void add(const Entry &entry);
+
             template<hex::derived_from<dp::Node> T, typename ... Args>
-            static void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args&& ... args) {
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args&& ... args) {
                 add(Entry{ unlocalizedCategory.c_str(), unlocalizedName.c_str(),
                    [=]{
                         auto node = new T(std::forward<Args>(args)...);
@@ -179,33 +170,32 @@ namespace hex {
                 });
             }
 
-            static void addSeparator();
+            void addSeparator();
 
-            static std::vector<Entry>& getEntries();
-        private:
-            static void add(const Entry &entry);
+            std::vector<Entry>& getEntries();
+
         };
 
         /* Language Registry. Allows together with the LangEntry class and the _lang user defined literal to add new languages */
-        struct Language {
-            static void registerLanguage(const std::string &name, const std::string &languageCode);
-            static void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition);
+        namespace Language {
+            void registerLanguage(const std::string &name, const std::string &languageCode);
+            void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition);
 
-            static std::map<std::string, std::string>& getLanguages();
-            static std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
+            std::map<std::string, std::string>& getLanguages();
+            std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
         };
 
         /* Interface Registry. Allows adding new items to various interfaces */
-        struct Interface {
+        namespace Interface {
             using DrawCallback = std::function<void()>;
 
-            static void addWelcomeScreenEntry(const DrawCallback &function);
-            static void addFooterItem(const DrawCallback &function);
-            static void addToolbarItem(const DrawCallback &function);
+            void addWelcomeScreenEntry(const DrawCallback &function);
+            void addFooterItem(const DrawCallback &function);
+            void addToolbarItem(const DrawCallback &function);
 
-            static std::vector<DrawCallback>& getWelcomeScreenEntries();
-            static std::vector<DrawCallback>& getFooterItems();
-            static std::vector<DrawCallback>& getToolbarItems();
+            std::vector<DrawCallback>& getWelcomeScreenEntries();
+            std::vector<DrawCallback>& getFooterItems();
+            std::vector<DrawCallback>& getToolbarItems();
         };
     };
 
