@@ -30,10 +30,6 @@ void addFunctions() {
 
 int test(int argc, char **argv) {
     auto &testPatterns = TestPattern::getTests();
-    ON_SCOPE_EXIT {
-        for (auto &[key, value] : TestPattern::getTests())
-            delete value;
-    };
 
     // Check if a test to run has been provided
     if (argc != 2) {
@@ -106,7 +102,18 @@ int test(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    auto result = test(argc, argv);
+    int result = EXIT_SUCCESS;
+
+    for (u32 i = 0; i < 16; i++) {
+        result = test(argc, argv);
+        if (result != EXIT_SUCCESS)
+            break;
+    }
+
+    ON_SCOPE_EXIT {
+        for (auto &[key, value] : TestPattern::getTests())
+            delete value;
+    };
 
     if (result == EXIT_SUCCESS)
         hex::log::info("Success!");
