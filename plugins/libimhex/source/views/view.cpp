@@ -32,6 +32,7 @@ namespace hex {
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
+            ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
 
@@ -43,6 +44,7 @@ namespace hex {
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
+            ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
 
@@ -56,6 +58,7 @@ namespace hex {
                 ImGui::CloseCurrentPopup();
             }
 
+            ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
     }

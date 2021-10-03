@@ -1425,7 +1425,7 @@ namespace hex::pl {
                 literal = pattern->clone();
             }
 
-            if (auto transformFunc = pattern->getTransformFunction(); transformFunc.has_value()) {
+            if (auto transformFunc = pattern->getTransformFunction(); transformFunc.has_value() && pattern->getEvaluator() != nullptr) {
                 auto result = transformFunc->func(evaluator, { literal });
 
                 if (!result.has_value())

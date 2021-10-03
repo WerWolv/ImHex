@@ -56,15 +56,21 @@ namespace hex::pl {
     class PatternCreationLimiter {
     public:
         explicit PatternCreationLimiter(Evaluator *evaluator) : m_evaluator(evaluator) {
+            if (this->m_evaluator == nullptr) return;
+
             this->m_evaluator->patternCreated();
         }
 
         PatternCreationLimiter(const PatternCreationLimiter &other) {
+            if (this->m_evaluator == nullptr) return;
+
             this->m_evaluator = other.m_evaluator;
             this->m_evaluator->patternCreated();
         }
 
         ~PatternCreationLimiter() {
+            if (this->m_evaluator == nullptr) return;
+
             this->m_evaluator->patternDestroyed();
         }
 
