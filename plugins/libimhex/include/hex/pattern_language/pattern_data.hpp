@@ -62,9 +62,9 @@ namespace hex::pl {
         }
 
         PatternCreationLimiter(const PatternCreationLimiter &other) {
-            if (this->m_evaluator == nullptr) return;
-
             this->m_evaluator = other.m_evaluator;
+
+            if (this->m_evaluator == nullptr) return;
             this->m_evaluator->patternCreated();
         }
 
@@ -75,7 +75,7 @@ namespace hex::pl {
         }
 
     private:
-        Evaluator *m_evaluator;
+        Evaluator *m_evaluator = nullptr;
     };
 
     class PatternData : public PatternCreationLimiter {
