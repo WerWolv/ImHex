@@ -10,5 +10,6 @@ fn main() {
         .flag_if_supported("-std=gnu++20")
         .flag_if_supported("-std=gnu++2a")
         .flag_if_supported("-fconcepts")
+        .compiler(env!("CXX_COMPILER"))
         .compile("libimhex-bridge");
 }

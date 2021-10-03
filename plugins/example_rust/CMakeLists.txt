@@ -6,10 +6,10 @@ project(example_rust)
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CARGO_CMD ${RUST_PATH}cargo build --quiet)
+    set(CARGO_CMD ${RUST_PATH}cargo build)
     set(TARGET_DIR "debug")
 else ()
-    set(CARGO_CMD ${RUST_PATH}cargo build --release --quiet)
+    set(CARGO_CMD ${RUST_PATH}cargo build --release)
     set(TARGET_DIR "release")
 endif ()
 
@@ -22,7 +22,12 @@ endif ()
 get_target_property(LIBIMHEX_SOURCE_DIRECTORY libimhex SOURCE_DIR)
 
 add_custom_target(${PROJECT_NAME} ALL
-        COMMAND ${CMAKE_COMMAND} -E env CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR} LIBIMHEX_SOURCE_DIRECTORY=${LIBIMHEX_SOURCE_DIRECTORY} LIBIMHEX_OUTPUT_DIRECTORY=$<TARGET_FILE_DIR:libimhex> ${CARGO_CMD}
+        COMMAND ${CMAKE_COMMAND} -E env
+            CARGO_TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            LIBIMHEX_SOURCE_DIRECTORY=${LIBIMHEX_SOURCE_DIRECTORY}
+            LIBIMHEX_OUTPUT_DIRECTORY=$<TARGET_FILE_DIR:libimhex>
+            CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            ${CARGO_CMD}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PLUGIN_OUTPUT_PATH} "${CMAKE_CURRENT_BINARY_DIR}/../${PROJECT_NAME}.hexplug"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         VERBATIM
