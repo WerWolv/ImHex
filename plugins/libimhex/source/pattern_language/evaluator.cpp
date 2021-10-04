@@ -20,19 +20,19 @@ namespace hex::pl {
             if (!value.has_value())
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
 
-            if (std::get_if<u128>(&*value) != nullptr)
+            if (std::get_if<u128>(&value.value()) != nullptr)
                 pattern = new PatternDataUnsigned(0, sizeof(u128), this);
-            else if (std::get_if<s128>(&*value) != nullptr)
+            else if (std::get_if<s128>(&value.value()) != nullptr)
                 pattern = new PatternDataSigned(0, sizeof(s128), this);
-            else if (std::get_if<double>(&*value) != nullptr)
+            else if (std::get_if<double>(&value.value()) != nullptr)
                 pattern = new PatternDataFloat(0, sizeof(double), this);
-            else if (std::get_if<bool>(&*value) != nullptr)
+            else if (std::get_if<bool>(&value.value()) != nullptr)
                 pattern = new PatternDataBoolean(0, this);
-            else if (std::get_if<char>(&*value) != nullptr)
+            else if (std::get_if<char>(&value.value()) != nullptr)
                 pattern = new PatternDataCharacter(0, this);
-            else if (std::get_if<PatternData*>(&*value) != nullptr)
-                pattern = std::get<PatternData*>(*value)->clone();
-            else if (std::get_if<std::string>(&*value) != nullptr)
+            else if (std::get_if<PatternData*>(&value.value()) != nullptr)
+                pattern = std::get<PatternData*>(value.value())->clone();
+            else if (std::get_if<std::string>(&value.value()) != nullptr)
                 pattern = new PatternDataString(0, 1, this);
             else
                 __builtin_unreachable();

@@ -220,6 +220,7 @@ namespace hex::pl {
                 case ValueType::Character:      return "char";
                 case ValueType::Character16:    return "char16";
                 case ValueType::Padding:        return "padding";
+                case ValueType::String:         return "str";
                 default:                        return "< ??? >";
             }
         }

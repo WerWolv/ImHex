@@ -176,6 +176,22 @@ namespace hex::pl {
                             LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                     }
                 },
+                [this](std::string left, char right) -> ASTNode* {
+                    switch (this->getOperator()) {
+                        case Token::Operator::Plus:
+                            return new ASTNodeLiteral(left + right);
+                        default:
+                            LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                    }
+                },
+                [this](char left, std::string right) -> ASTNode* {
+                        switch (this->getOperator()) {
+                            case Token::Operator::Plus:
+                                return new ASTNodeLiteral(left + right);
+                            default:
+                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                        }
+                    },
                 [this](auto &&left, auto &&right) -> ASTNode* {
                     switch (this->getOperator()) {
                         case Token::Operator::Plus:
@@ -1359,14 +1375,29 @@ namespace hex::pl {
                     auto &literal = evaluator->getStack()[pattern->getOffset()];
 
                     std::visit(overloaded {
-                        [&](std::string &assignmentValue) { },
-                        [&](auto &&assignmentValue) { std::memcpy(&value, &assignmentValue, pattern->getSize()); }
+                            [&](std::string &assignmentValue) { },
+                            [&](auto &&assignmentValue) { std::memcpy(&value, &assignmentValue, pattern->getSize()); }
                     }, literal);
                 }
                 else
                     evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
 
                 value = hex::changeEndianess(value, pattern->getSize(), pattern->getEndian());
+            };
+
+            auto readString = [&evaluator](std::string &value, PatternData *pattern) {
+                if (pattern->isLocal()) {
+                    auto &literal = evaluator->getStack()[pattern->getOffset()];
+
+                    std::visit(overloaded {
+                            [&](std::string &assignmentValue) { value = assignmentValue; },
+                            [&](auto &&assignmentValue) { }
+                    }, literal);
+                }
+                else {
+                    value.resize(pattern->getSize());
+                    evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
+                }
             };
 
             Token::Literal literal;
@@ -1407,7 +1438,14 @@ namespace hex::pl {
                     auto &literal = evaluator->getStack()[pattern->getOffset()];
 
                     std::visit(overloaded {
-                            [&](std::string &assignmentValue) { value = assignmentValue; },
+                            [&](char assignmentValue) { if (assignmentValue != 0x00) value = std::string({ assignmentValue }); },
+                            [&](std::string assignmentValue) { value = assignmentValue; },
+                            [&, this](PatternData * const &assignmentValue) {
+                                if (!dynamic_cast<PatternDataString*>(assignmentValue) && !dynamic_cast<PatternDataCharacter*>(assignmentValue))
+                                    LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this);
+
+                                readString(value, assignmentValue);
+                            },
                             [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); }
                     }, literal);
                 }

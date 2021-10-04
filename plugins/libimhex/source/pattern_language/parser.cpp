@@ -494,10 +494,10 @@ namespace hex::pl {
                 statement = parseFunctionCall();
             }
             else
-                statement = parseMemberVariable(parseType());
+                statement = parseMemberVariable(parseType(true));
         }
         else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
-            auto type = parseType();
+            auto type = parseType(true);
 
             if (MATCHES(sequence(IDENTIFIER)))
                 statement = parseMemberVariable(type);
