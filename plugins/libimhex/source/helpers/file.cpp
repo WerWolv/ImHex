@@ -9,7 +9,7 @@ namespace hex {
         else if (mode == File::Mode::Write)
             this->m_file = fopen64(path.c_str(), "r+b");
 
-        if (mode == File::Mode::Create || this->m_file == nullptr)
+        if (mode == File::Mode::Create || (mode == File::Mode::Write && this->m_file == nullptr))
             this->m_file = fopen64(path.c_str(), "w+b");
     }
 
