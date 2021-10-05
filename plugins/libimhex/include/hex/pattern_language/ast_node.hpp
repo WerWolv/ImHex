@@ -561,6 +561,10 @@ namespace hex::pl {
     };
 
     inline void applyVariableAttributes(Evaluator *evaluator, const Attributable *attributable, PatternData *pattern) {
+        auto endOffset = evaluator->dataOffset();
+        evaluator->dataOffset() = pattern->getOffset();
+        ON_SCOPE_EXIT { evaluator->dataOffset() = endOffset; };
+
         for (ASTNodeAttribute *attribute : attributable->getAttributes()) {
             auto &name = attribute->getAttribute();
             auto value = attribute->getValue();
