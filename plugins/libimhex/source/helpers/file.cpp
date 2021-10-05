@@ -57,6 +57,8 @@ namespace hex {
     std::string File::readString(size_t numBytes) {
         if (!isValid()) return { };
 
+        if (getSize() == 0) return { };
+
         return reinterpret_cast<char*>(readBytes(numBytes).data());
     }
 
