@@ -715,8 +715,9 @@ namespace hex::pl {
             auto variableCleanup = SCOPE_GUARD { for (auto var : variables) delete var; };
 
             do {
-                variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type)));
+                variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type->clone())));
             } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
+            delete type;
 
             variableCleanup.release();
 
