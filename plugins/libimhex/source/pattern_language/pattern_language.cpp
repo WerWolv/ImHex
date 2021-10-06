@@ -25,13 +25,13 @@ namespace hex::pl {
 
         this->m_preprocessor->addPragmaHandler("endian", [this](std::string value) {
             if (value == "big") {
-                this->m_defaultEndian = std::endian::big;
+                this->m_evaluator->setDefaultEndian(std::endian::big);
                 return true;
             } else if (value == "little") {
-                this->m_defaultEndian = std::endian::little;
+                this->m_evaluator->setDefaultEndian(std::endian::little);
                 return true;
             } else if (value == "native") {
-                this->m_defaultEndian = std::endian::native;
+                this->m_evaluator->setDefaultEndian(std::endian::native);
                 return true;
             } else
                 return false;

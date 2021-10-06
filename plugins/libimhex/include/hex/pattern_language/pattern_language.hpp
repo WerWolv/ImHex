@@ -46,9 +46,6 @@ namespace hex::pl {
 
         std::vector<ASTNode*> m_currAST;
 
-        prv::Provider *m_provider = nullptr;
-        std::endian m_defaultEndian = std::endian::native;
-
         std::optional<std::pair<u32, std::string>> m_currError;
     };
 
