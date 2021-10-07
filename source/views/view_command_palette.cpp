@@ -45,6 +45,11 @@ namespace hex {
             }
 
             if (this->m_focusInputTextBox) {
+                auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
+                if (textState != nullptr) {
+                    textState->Stb.cursor = strlen(this->m_commandBuffer.data());
+                }
+
                 ImGui::SetKeyboardFocusHere(0);
                 this->m_focusInputTextBox = false;
             }
