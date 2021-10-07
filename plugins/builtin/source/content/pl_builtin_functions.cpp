@@ -3,6 +3,7 @@
 #include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/net.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/log_console.hpp>
@@ -238,6 +239,135 @@ namespace hex::plugin::builtin {
 
                 hex::Net net;
                 return net.getString(url).get().body;
+            });
+        }
+
+
+        ContentRegistry::PatternLanguageFunctions::Namespace nsStdFile = { "std", "file" };
+        {
+
+            static u32 fileCounter = 0;
+            static std::map<u32, File> openFiles;
+
+            /* open(path, mode) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "open", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto path = Token::literalToString(params[0], false);
+                const auto modeEnum = Token::literalToUnsigned(params[1]);
+
+                File::Mode mode;
+                switch (modeEnum) {
+                    case 1: mode = File::Mode::Read; break;
+                    case 2: mode = File::Mode::Write; break;
+                    case 3: mode = File::Mode::Create; break;
+                    default:
+                        LogConsole::abortEvaluation("invalid file open mode");
+                }
+
+                auto file = File(path, mode);
+
+                if (!file.isValid())
+                    LogConsole::abortEvaluation(hex::format("failed to open file {}", path));
+
+                fileCounter++;
+                openFiles.emplace(std::pair{ fileCounter, std::move(file) });
+
+                return u128(fileCounter);
+            });
+
+            /* close(file) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "close", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                openFiles.erase(file);
+
+                return { };
+            });
+
+            /* read(file, size) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "read", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+                const auto size = Token::literalToUnsigned(params[1]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                return openFiles[file].readString(size);
+            });
+
+            /* write(file, data) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "write", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+                const auto data = Token::literalToString(params[1], true);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                openFiles[file].write(data);
+
+                return { };
+            });
+
+            /* seek(file, offset) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "seek", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+                const auto offset = Token::literalToUnsigned(params[1]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                openFiles[file].seek(offset);
+
+                return { };
+            });
+
+            /* size(file) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "size", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                return u128(openFiles[file].getSize());
+            });
+
+            /* resize(file, size) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "resize", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+                const auto size = Token::literalToUnsigned(params[1]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                openFiles[file].setSize(size);
+
+                return { };
+            });
+
+            /* flush(file) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "flush", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                openFiles[file].flush();
+
+                return { };
+            });
+
+            /* remove(file) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "remove", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                const auto file = Token::literalToUnsigned(params[0]);
+
+                if (!openFiles.contains(file))
+                    LogConsole::abortEvaluation("failed to access invalid file");
+
+                openFiles[file].remove();
+
+                return { };
             });
         }
     }

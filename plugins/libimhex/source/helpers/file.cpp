@@ -59,7 +59,9 @@ namespace hex {
 
         if (getSize() == 0) return { };
 
-        return reinterpret_cast<char*>(readBytes(numBytes).data());
+        auto bytes = readBytes(numBytes);
+
+        return { reinterpret_cast<char*>(bytes.data()), bytes.size() };
     }
 
     void File::write(const u8 *buffer, size_t size) {
