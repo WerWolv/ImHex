@@ -91,10 +91,11 @@ namespace hex::prv {
         File file(path, File::Mode::Create);
 
         if (file.isValid()) {
-            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, file.getSize()), 0x00);
+            auto provider = ImHexApi::Provider::get();
+
+            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, provider->getActualSize()), 0x00);
             size_t bufferSize = buffer.size();
 
-            auto provider = ImHexApi::Provider::get();
             for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
                 if (bufferSize > provider->getActualSize() - offset)
                     bufferSize = provider->getActualSize() - offset;

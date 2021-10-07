@@ -53,6 +53,8 @@ namespace hex {
 
         ProjectFile::s_currProjectFilePath = filePath;
 
+        EventManager::post<EventProjectFileLoad>();
+
         return true;
     }
 
@@ -84,8 +86,6 @@ namespace hex {
 
         ProjectFile::s_hasUnsavedChanged = false;
         ProjectFile::s_currProjectFilePath = filePath;
-
-        EventManager::post<EventProjectFileLoad>();
 
         return true;
     }
