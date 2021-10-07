@@ -19,7 +19,7 @@ namespace hex {
     static bool beginPatternDataTable(prv::Provider* &provider, const std::vector<pl::PatternData*> &patterns, std::vector<pl::PatternData*> &sortedPatterns) {
         if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.view.pattern_data.name"_lang, 0, -1, ImGui::GetID("name"));
+            ImGui::TableSetupColumn("hex.view.pattern_data.var_name"_lang, 0, -1, ImGui::GetID("name"));
             ImGui::TableSetupColumn("hex.view.pattern_data.color"_lang, 0, -1, ImGui::GetID("color"));
             ImGui::TableSetupColumn("hex.view.pattern_data.offset"_lang, 0, -1, ImGui::GetID("offset"));
             ImGui::TableSetupColumn("hex.view.pattern_data.size"_lang, 0, -1, ImGui::GetID("size"));

@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
                 { "hex.view.pattern.auto", "Auto evaluieren" },
 
                 { "hex.view.pattern_data.name", "Pattern Daten" },
-                    { "hex.view.pattern_data.name", "Name" },
+                    { "hex.view.pattern_data.var_name", "Name" },
                     { "hex.view.pattern_data.color", "Farbe" },
                     { "hex.view.pattern_data.offset", "Offset" },
                     { "hex.view.pattern_data.size", "Grösse" },

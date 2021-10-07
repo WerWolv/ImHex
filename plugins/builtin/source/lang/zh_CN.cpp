@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
                 { "hex.view.pattern.auto", "自动计算" },
 
                 { "hex.view.pattern_data.name", "模式数据" },
-                    { "hex.view.pattern_data.name", "名称" },
+                    { "hex.view.pattern_data.var_name", "名称" },
                     { "hex.view.pattern_data.color", "颜色" },
                     { "hex.view.pattern_data.offset", "偏移" },
                     { "hex.view.pattern_data.size", "大小" },
