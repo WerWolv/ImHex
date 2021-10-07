@@ -106,6 +106,7 @@ namespace hex::pl {
         this->m_stack.clear();
         this->m_customFunctions.clear();
         this->m_scopes.clear();
+        this->m_aborted = false;
 
         this->dataOffset() = 0x00;
         this->m_currPatternCount = 0;

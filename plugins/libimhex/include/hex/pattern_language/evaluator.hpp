@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <bit>
 #include <map>
 #include <optional>
@@ -31,8 +32,10 @@ namespace hex::pl {
 
         struct Scope { PatternData *parent; std::vector<PatternData*>* scope; };
         void pushScope(PatternData *parent, std::vector<PatternData*> &scope) {
-            if (this->m_scopes.size() > this->m_evalDepth)
-                LogConsole::abortEvaluation(hex::format("recursion limit of {} reached", this->m_evalDepth));
+            if (this->m_scopes.size() > this->getEvaluationDepth())
+                LogConsole::abortEvaluation(hex::format("evaluation depth exceeded set limit of {}", this->getEvaluationDepth()));
+
+            this->handleAbort();
 
             this->m_scopes.push_back({ parent, &scope });
         }
@@ -70,36 +73,45 @@ namespace hex::pl {
             return this->m_defaultEndian;
         }
 
-        void setEvaluationDepth(u32 evalDepth) {
+        void setEvaluationDepth(u64 evalDepth) {
             this->m_evalDepth = evalDepth;
         }
 
         [[nodiscard]]
-        u32 getEvaluationDepth() const {
+        u64 getEvaluationDepth() const {
             return this->m_evalDepth;
         }
 
-        void setArrayLimit(u32 arrayLimit) {
+        void setArrayLimit(u64 arrayLimit) {
             this->m_arrayLimit = arrayLimit;
         }
 
         [[nodiscard]]
-        u32 getArrayLimit() const {
+        u64 getArrayLimit() const {
             return this->m_arrayLimit;
         }
 
-        void setPatternLimit(u32 limit) {
+        void setPatternLimit(u64 limit) {
             this->m_patternLimit = limit;
         }
 
         [[nodiscard]]
-        u32 getPatternLimit() {
+        u64 getPatternLimit() {
             return this->m_patternLimit;
         }
 
         [[nodiscard]]
-        u32 getPatternCount() {
+        u64 getPatternCount() {
             return this->m_currPatternCount;
+        }
+
+        void setLoopLimit(u64 limit) {
+            this->m_loopLimit = limit;
+        }
+
+        [[nodiscard]]
+        u64 getLoopLimit() {
+            return this->m_loopLimit;
         }
 
         u64& dataOffset() { return this->m_currOffset; }
@@ -123,6 +135,15 @@ namespace hex::pl {
         void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt);
         void setVariable(const std::string &name, const Token::Literal& value);
 
+        void abort() {
+            this->m_aborted = true;
+        }
+
+        void handleAbort() {
+            if (this->m_aborted)
+                LogConsole::abortEvaluation("evaluation aborted by user");
+        }
+
     private:
 
         void patternCreated();
@@ -134,11 +155,14 @@ namespace hex::pl {
         LogConsole m_console;
 
         std::endian m_defaultEndian = std::endian::native;
-        u32 m_evalDepth;
-        u32 m_arrayLimit;
-        u32 m_patternLimit;
+        u64 m_evalDepth;
+        u64 m_arrayLimit;
+        u64 m_patternLimit;
+        u64 m_loopLimit;
 
-        u32 m_currPatternCount;
+        u64 m_currPatternCount;
+
+        std::atomic<bool> m_aborted;
 
         std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;

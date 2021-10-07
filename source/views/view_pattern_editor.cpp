@@ -245,16 +245,18 @@ namespace hex {
                 ImGui::EndChild();
                 ImGui::PopStyleColor(1);
 
-                ImGui::Disabled([this] {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(0x20, 0x85, 0x20)));
-                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-                    if (ImGui::ArrowButton("evaluate", ImGuiDir_Right))
+                if (this->m_evaluatorRunning) {
+                    if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
+                        this->m_patternLanguageRuntime->abort();
+                } else {
+                    if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)))
                         this->parsePattern(this->m_textEditor.GetText().data());
+                }
 
-                    ImGui::PopStyleVar();
-                    ImGui::PopStyleColor();
-                }, this->m_evaluatorRunning);
+
+                ImGui::PopStyleVar();
 
                 ImGui::SameLine();
                 if (this->m_evaluatorRunning)

@@ -26,19 +26,17 @@ namespace hex::plugin::builtin {
 
     void addToolbarItems() {
         ContentRegistry::Interface::addToolbarItem([] {
-            const static auto buttonSize = ImVec2(ImGui::GetCurrentWindow()->MenuBarHeight(), ImGui::GetCurrentWindow()->MenuBarHeight());
-
             auto provider = ImHexApi::Provider::get();
 
             // Undo
             ImGui::Disabled([&provider] {
-                if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
+                if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->undo();
             }, !ImHexApi::Provider::isValid() || !provider->canUndo());
 
             // Redo
             ImGui::Disabled([&provider] {
-                if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
+                if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->redo();
             }, !ImHexApi::Provider::isValid() || !provider->canRedo());
 
@@ -46,11 +44,11 @@ namespace hex::plugin::builtin {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
             // Create new file
-            if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray), buttonSize))
+            if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray)))
                 EventManager::post<RequestOpenWindow>("Create File");
 
             // Open file
-            if (ImGui::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown), buttonSize))
+            if (ImGui::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
                 EventManager::post<RequestOpenWindow>("Open File");
 
 
@@ -58,13 +56,13 @@ namespace hex::plugin::builtin {
 
             // Save file
             ImGui::Disabled([&provider] {
-                if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
+                if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->save();
             }, !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
 
             // Save file as
             ImGui::Disabled([&provider] {
-                if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue), buttonSize))
+                if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     hex::openFileBrowser("hex.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [&provider](auto path) {
                         provider->saveAs(path);
                     });
@@ -76,7 +74,7 @@ namespace hex::plugin::builtin {
 
             // Create bookmark
             ImGui::Disabled([] {
-                if (ImGui::ToolBarButton(ICON_VS_BOOKMARK, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen), buttonSize)) {
+                if (ImGui::ToolBarButton(ICON_VS_BOOKMARK, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                     Region region = { 0 };
                     EventManager::post<QuerySelection>(region);
 

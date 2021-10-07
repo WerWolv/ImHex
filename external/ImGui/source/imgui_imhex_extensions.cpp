@@ -401,7 +401,49 @@ namespace ImGui {
         return pressed;
     }
 
-    bool ToolBarButton(const char* symbol, ImVec4 color, ImVec2 size_arg) {
+    bool ToolBarButton(const char* symbol, ImVec4 color) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        color.w = 1.0F;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(symbol);
+        const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
+
+        ImVec2 pos = window->DC.CursorPos;
+
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * ImGui::GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+        const ImRect bb(pos, pos + size);
+        ItemSize(size, style.FramePadding.y);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        bool hovered, held;
+        bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+        PushStyleColor(ImGuiCol_Text, color);
+
+        // Render
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_MenuBarBg);
+        RenderNavHighlight(bb, id);
+        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);
+
+        PopStyleColor();
+
+        // Automatically close popups
+        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        //    CloseCurrentPopup();
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        return pressed;
+    }
+
+    bool IconButton(const char* symbol, ImVec4 color, ImVec2 size_arg) {
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -428,7 +470,7 @@ namespace ImGui {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_MenuBarBg);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);

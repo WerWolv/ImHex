@@ -516,7 +516,10 @@ namespace hex::pl {
 
         FunctionResult execute(Evaluator *evaluator) override {
 
+            u64 loopIterations = 0;
             while (evaluateCondition(evaluator)) {
+                evaluator->handleAbort();
+
                 auto variables = *evaluator->getScope(0).scope;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
@@ -538,6 +541,12 @@ namespace hex::pl {
                         return { true, result };
                     }
                 }
+
+                loopIterations++;
+                if (loopIterations >= evaluator->getLoopLimit())
+                    LogConsole::abortEvaluation(hex::format("loop iterations exceeded limit of {}", evaluator->getLoopLimit()), this);
+
+                evaluator->handleAbort();
             }
 
             return { false, { } };
@@ -807,6 +816,7 @@ namespace hex::pl {
                     while (whileStatement->evaluateCondition(evaluator)) {
                         entryCount++;
                         evaluator->dataOffset() += templatePattern->getSize();
+                        evaluator->handleAbort();
                     }
                 }
             } else {
@@ -829,6 +839,7 @@ namespace hex::pl {
                     }
 
                     if (reachedEnd) break;
+                    evaluator->handleAbort();
                 }
             }
 
@@ -901,6 +912,8 @@ namespace hex::pl {
                         entries.push_back(pattern);
 
                         size += pattern->getSize();
+
+                        evaluator->handleAbort();
                     }
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
@@ -917,6 +930,8 @@ namespace hex::pl {
 
                         entryCount++;
                         size += pattern->getSize();
+
+                        evaluator->handleAbort();
                     }
                 }
             } else {
@@ -951,6 +966,7 @@ namespace hex::pl {
                     }
 
                     if (reachedEnd) break;
+                    evaluator->handleAbort();
                 }
             }
 
@@ -1380,6 +1396,10 @@ namespace hex::pl {
 
                     std::visit(overloaded {
                             [&](std::string &assignmentValue) { },
+                            [&](s128 assignmentValue) {
+                                std::memcpy(&value, &assignmentValue, pattern->getSize());
+                                value = hex::signExtend(pattern->getSize() * 8, value);
+                            },
                             [&](auto &&assignmentValue) { std::memcpy(&value, &assignmentValue, pattern->getSize()); }
                     }, literal);
                 }

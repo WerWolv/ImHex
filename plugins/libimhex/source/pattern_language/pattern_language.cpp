@@ -67,6 +67,16 @@ namespace hex::pl {
             return true;
         });
 
+        this->m_preprocessor->addPragmaHandler("loop_limit", [this](const std::string &value) {
+            auto limit = strtol(value.c_str(), nullptr, 0);
+
+            if (limit <= 0)
+                return false;
+
+            this->m_evaluator->setLoopLimit(limit);
+            return true;
+        });
+
         this->m_preprocessor->addPragmaHandler("base_address", [](const std::string &value) {
             auto baseAddress = strtoull(value.c_str(), nullptr, 0);
 
@@ -93,6 +103,7 @@ namespace hex::pl {
         this->m_evaluator->setEvaluationDepth(32);
         this->m_evaluator->setArrayLimit(0x1000);
         this->m_evaluator->setPatternLimit(0x2000);
+        this->m_evaluator->setLoopLimit(0x1000);
 
         for (auto &node : this->m_currAST)
             delete node;
@@ -131,6 +142,10 @@ namespace hex::pl {
         File file(path, File::Mode::Read);
 
         return this->executeString(provider, file.readString());
+    }
+
+    void PatternLanguage::abort() {
+        this->m_evaluator->abort();
     }
 
 
