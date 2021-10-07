@@ -1421,6 +1421,7 @@ namespace hex::pl {
                 else {
                     value.resize(pattern->getSize());
                     evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
+                    value.erase(std::find(value.begin(), value.end(), '\0'), value.end());
                 }
             };
 
@@ -1476,6 +1477,7 @@ namespace hex::pl {
                 else {
                     value.resize(pattern->getSize());
                     evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
+                    value.erase(std::find(value.begin(), value.end(), '\0'), value.end());
                 }
 
                 literal = value;
