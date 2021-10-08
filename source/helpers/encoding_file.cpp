@@ -17,7 +17,9 @@ namespace hex {
     }
 
     std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(const std::vector<u8> &buffer) const {
-        for (const auto &[size, mapping] : this->m_mapping | std::views::reverse) {
+        for (auto riter = this->m_mapping.crbegin(); riter != this->m_mapping.crend(); ++riter) {
+            const auto &[size, mapping] = *riter;
+
             if (size > buffer.size()) continue;
 
             auto key = std::vector<u8>(buffer.begin(), buffer.begin() + size);

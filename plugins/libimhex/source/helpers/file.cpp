@@ -96,7 +96,11 @@ namespace hex {
     void File::setSize(u64 size) {
         if (!isValid()) return;
 
+#if defined(OS_MACOS)
+        ftruncate(fileno(this->m_file), size);
+#else
         ftruncate64(fileno(this->m_file), size);
+#endif
     }
 
     void File::flush() {

@@ -27,26 +27,28 @@
 
 #elif defined(OS_MACOS)
 
-    #define RESOURCE_NULL_TERMINATED(name, path)    \
+    #define RESOURCE(name, path)                    \
     __asm__ (                                       \
-        ".global " #name ";\n"                      \
-        ".global " #name "_size;\n"                 \
-        #name ":\n"                                 \
+        ".global _" #name ";\n"                     \
+        ".global _" #name "_size;\n"                \
+        "_" #name ":\n"                             \
             ".incbin \"" path "\";\n"               \
-        #name "_size:\n"                            \
-            ".int " #name "_size - " #name ";\n"    \
+            ".align 8;\n"                           \
+        "_" #name "_size:\n"                        \
+            ".int _" #name "_size - _" #name ";\n"  \
             ".align 8;\n"                           \
     )
 
     #define RESOURCE_NULL_TERMINATED(name, path)    \
     __asm__ (                                       \
-        ".global " #name ";\n"                      \
-        ".global " #name "_size;\n"                 \
-        #name ":\n"                                 \
+        ".global _" #name ";\n"                     \
+        ".global _" #name "_size;\n"                \
+        "_" #name ":\n"                             \
             ".incbin \"" path "\";\n"               \
             ".byte 0\n"                             \
-        #name "_size:\n"                            \
-            ".int " #name "_size - " #name ";\n"    \
+            ".align 8;\n"                           \
+        "_" #name "_size:\n"                        \
+            ".int _" #name "_size - _" #name ";\n"  \
             ".align 8;\n"                           \
     )
 
