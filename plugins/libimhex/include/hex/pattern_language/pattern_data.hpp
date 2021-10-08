@@ -689,9 +689,12 @@ namespace hex::pl {
         }
 
         void setOffset(u64 offset) override {
-            for (auto &entry : this->m_entries) {
-                entry->setOffset(offset + (entry->getOffset() - this->getOffset()));
+            if (!this->isLocal()) {
+                for (auto &entry : this->m_entries) {
+                    entry->setOffset(offset + (entry->getOffset() - this->getOffset()));
+                }
             }
+
 
             PatternData::setOffset(offset);
         }
@@ -956,8 +959,10 @@ namespace hex::pl {
         }
 
         void setOffset(u64 offset) override {
-            for (auto &member : this->m_members) {
-                member->setOffset(offset + (member->getOffset() - this->getOffset()));
+            if (!this->isLocal()) {
+                for (auto &member: this->m_members) {
+                    member->setOffset(offset + (member->getOffset() - this->getOffset()));
+                }
             }
 
             PatternData::setOffset(offset);
@@ -1093,8 +1098,10 @@ namespace hex::pl {
         }
 
         void setOffset(u64 offset) override {
-            for (auto &member : this->m_members) {
-                member->setOffset(offset + (member->getOffset() - this->getOffset()));
+            if (!this->isLocal()) {
+                for (auto &member: this->m_members) {
+                    member->setOffset(offset + (member->getOffset() - this->getOffset()));
+                }
             }
 
             PatternData::setOffset(offset);

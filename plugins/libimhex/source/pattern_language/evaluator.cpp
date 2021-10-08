@@ -39,8 +39,8 @@ namespace hex::pl {
         }
 
         pattern->setVariableName(name);
-        pattern->setOffset(this->getStack().size());
         pattern->setLocal(true);
+        pattern->setOffset(this->getStack().size());
 
         this->getStack().emplace_back();
         variables.push_back(pattern);
