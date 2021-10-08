@@ -119,6 +119,7 @@ namespace hex::pl {
 
         try {
             pushScope(nullptr, patterns);
+
             for (auto node : ast) {
                 if (dynamic_cast<ASTNodeTypeDecl*>(node)) {
                     ;// Don't create patterns from type declarations
@@ -130,8 +131,23 @@ namespace hex::pl {
                     auto newPatterns = node->createPatterns(this);
                     patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
                 }
-
             }
+
+            if (this->m_customFunctions.contains("main")) {
+                auto mainFunction = this->m_customFunctions["main"];
+
+                if (mainFunction.parameterCount > 0)
+                    LogConsole::abortEvaluation("main function may not accept any arguments");
+
+                auto result = mainFunction.func(this, { });
+                if (result) {
+                    auto returnCode = Token::literalToSigned(*result);
+
+                    if (returnCode != 0)
+                        LogConsole::abortEvaluation(hex::format("non-success value returned from main: {}", returnCode));
+                }
+            }
+
             popScope();
         } catch (const LogConsole::EvaluateError &error) {
             this->m_console.log(LogConsole::Level::Error, error.second);
