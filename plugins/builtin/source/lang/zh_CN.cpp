@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.browse", "浏览..." },
 
                 { "hex.message.yara_rule_added", "Yara规则已添加！" },
-                { "hex.message.magic_db_added", "魔术数据库已添加!" },
+                { "hex.message.magic_db_added", "魔术数据库已添加！" },
 
                 { "hex.view.bookmarks.name", "书签" },
                     { "hex.view.bookmarks.default_title", "书签 [0x{0:X} - 0x{1:X}]" },
@@ -334,7 +334,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.command.web.desc", "网站解析" },
                 { "hex.builtin.command.web.result", "导航到 '{0}'" },
 
-                // Use half angle for inspector names because displayable space
+                // Use half width symbols for inspector names because displayable space
                 { "hex.builtin.inspector.binary", "二进制(8位)" },
                 { "hex.builtin.inspector.u8", "uint8_t" },
                 { "hex.builtin.inspector.s8", "int8_t" },
