@@ -599,7 +599,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.tools.file_tools.splitter", "分割" },
                         { "hex.builtin.tools.file_tools.splitter.sizes.5_75_floppy", "5寸软盘（1200KiB）" },
                         { "hex.builtin.tools.file_tools.splitter.sizes.3_5_floppy", "3寸软盘（1400KiB）" },
-                        { "hex.builtin.tools.file_tools.splitter.sizes.zip100", "Zip极碟100(100MiB)" },
+                        { "hex.builtin.tools.file_tools.splitter.sizes.zip100", "Zip极碟100（100MiB）" },
                         { "hex.builtin.tools.file_tools.splitter.sizes.zip200", "Zip极碟200（200MiB）" },
                         { "hex.builtin.tools.file_tools.splitter.sizes.cdrom650", "CD-ROM（650MiB）" },
                         { "hex.builtin.tools.file_tools.splitter.sizes.cdrom700", "CD-ROM（700MiB）" },
