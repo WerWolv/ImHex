@@ -81,10 +81,8 @@ namespace hex {
                                                File outputFile(filePath.string(), File::Mode::Create);
 
                                                std::vector<u8> buffer(0x10000);
-                                               const unsigned long long bufferSize = buffer.size();
-
-                                               for (u64 offset = 0; offset < header.size; offset += bufferSize) {
-                                                   auto readSize = std::min(bufferSize, header.size - offset);
+                                               for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
+                                                   auto readSize = std::min<u64>(buffer.size(), header.size - offset);
                                                    mtar_read_data(&ctx, buffer.data(), readSize);
 
                                                    buffer.resize(readSize);
