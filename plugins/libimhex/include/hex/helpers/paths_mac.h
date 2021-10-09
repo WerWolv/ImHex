@@ -4,6 +4,7 @@
     #include <hex/helpers/paths.hpp>
 
     namespace hex {
-        std::string getPathForMac(ImHexPath path);
+        std::string getMacExecutableDirectoryPath();
+        std::string getMacApplicationSupportDirectoryPath();
     }
 #endif

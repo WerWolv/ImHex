@@ -83,7 +83,39 @@ namespace hex {
 
             return results;
         #elif defined(OS_MACOS)
-            return { getPathForMac(path) };
+            // Get path to special directories
+            const std::filesystem::path exeDir(getMacExecutableDirectoryPath());
+            const std::filesystem::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
+
+            std::vector<std::filesystem::path> paths = { exeDir, applicationSupportDir / "imhex" };
+            std::vector<std::string> results;
+
+            switch (path) {
+            case ImHexPath::Patterns:
+                return { (applicationSupportDir / "patterns").string() };
+            case ImHexPath::PatternsInclude:
+                return { (applicationSupportDir / "includes").string() };
+            case ImHexPath::Magic:
+                return { (applicationSupportDir / "magic").string() };
+            case ImHexPath::Python:
+                return { (applicationSupportDir / "python").string() };
+            case ImHexPath::Plugins:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    return (path / "plugins").string();
+                });
+                break;
+            case ImHexPath::Yara:
+                return { (applicationSupportDir / "yara").string() };
+            case ImHexPath::Config:
+                return { (applicationSupportDir / "imhex" / "config").string() };
+            case ImHexPath::Resources:
+                return { (applicationSupportDir / "resources").string() };
+            case ImHexPath::Constants:
+                return { (applicationSupportDir / "constants").string() };
+            default: __builtin_unreachable();
+            }
+
+            return results;
         #else
             std::vector<std::filesystem::path> configDirs = xdg::ConfigDirs();
             std::vector<std::filesystem::path> dataDirs = xdg::DataDirs();
