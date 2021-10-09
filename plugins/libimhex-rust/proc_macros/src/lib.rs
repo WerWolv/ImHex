@@ -24,33 +24,27 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let function = syn::parse_macro_input!(item as syn::ItemFn);
 
-    let symbol_prefix = if cfg!(target_os = "macos") { "_" } else { "" };
-
     let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
     let plugin_name_export = format!(
-        "\u{1}{}_ZN3hex6plugin{}{}8internal13getPluginNameEv",
-        symbol_prefix,
+        "_ZN3hex6plugin{}{}8internal13getPluginNameEv",
         pkg_name.len(),
         pkg_name
     );
 
     let plugin_author_export = format!(
-        "\u{1}{}_ZN3hex6plugin{}{}8internal15getPluginAuthorEv",
-        symbol_prefix,
+        "_ZN3hex6plugin{}{}8internal15getPluginAuthorEv",
         pkg_name.len(),
         pkg_name
     );
 
     let plugin_desc_export = format!(
-        "\u{1}{}_ZN3hex6plugin{}{}8internal20getPluginDescriptionEv",
-        symbol_prefix,
+        "_ZN3hex6plugin{}{}8internal20getPluginDescriptionEv",
         pkg_name.len(),
         pkg_name
     );
 
     let plugin_init_export = format!(
-        "\u{1}{}_ZN3hex6plugin{}{}8internal16initializePluginEv",
-        symbol_prefix,
+        "_ZN3hex6plugin{}{}8internal16initializePluginEv",
         pkg_name.len(),
         pkg_name
     );
