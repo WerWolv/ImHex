@@ -191,6 +191,8 @@ namespace hex {
                 this->m_possiblePatternFiles.clear();
 
                 for (auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
+                    if (!fs::exists(imhexPath)) continue;
+
                     for (auto &entry: fs::recursive_directory_iterator(imhexPath)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
                             this->m_possiblePatternFiles.push_back(entry.path());
