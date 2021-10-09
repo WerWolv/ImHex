@@ -194,7 +194,7 @@ namespace hex::plugin::builtin {
                 auto index = Token::literalToSigned(params[1]);
 
 #if defined(OS_MACOS)
-                const auto signIndex = index >> (sizeof(index) - 1);
+                const auto signIndex = index >> (sizeof(index) * 8 - 1);
                 const auto absIndex = (index ^ signIndex) - signIndex;
 #else
                 const auto absIndex = std::abs(index);
