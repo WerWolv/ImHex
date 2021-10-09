@@ -7,8 +7,8 @@ on:
     branches: [ master ]
 
 jobs:
-  analyze:
-    name: 🐛 Analyze
+  tests:
+    name: 🧪 Unit Tests
     runs-on: ubuntu-latest
     permissions:
       actions: read

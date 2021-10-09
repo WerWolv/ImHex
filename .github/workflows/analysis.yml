@@ -5,8 +5,8 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  analyze:
-    name: 🐛 Analyze
+  codeql:
+    name: 🐛 CodeQL
     runs-on: ubuntu-latest
     permissions:
       actions: read
