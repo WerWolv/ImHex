@@ -87,7 +87,7 @@ namespace hex {
             const std::filesystem::path exeDir(getMacExecutableDirectoryPath());
             const std::filesystem::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
-            std::vector<std::filesystem::path> paths = { exeDir, applicationSupportDir / "imhex" };
+            std::vector<std::filesystem::path> paths = { exeDir, applicationSupportDir };
             std::vector<std::string> results;
 
             switch (path) {
@@ -107,7 +107,7 @@ namespace hex {
             case ImHexPath::Yara:
                 return { (applicationSupportDir / "yara").string() };
             case ImHexPath::Config:
-                return { (applicationSupportDir / "imhex" / "config").string() };
+                return { (applicationSupportDir / "config").string() };
             case ImHexPath::Resources:
                 return { (applicationSupportDir / "resources").string() };
             case ImHexPath::Constants:

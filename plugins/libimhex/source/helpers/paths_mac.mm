@@ -23,7 +23,7 @@
                     __builtin_unreachable();
                 }
 
-                return {[[dirUrl path] UTF8String]};
+                return {[[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String]};
             }
         }
     }
