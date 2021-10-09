@@ -82,7 +82,7 @@ namespace hex {
 
                                                std::vector<u8> buffer(0x10000);
                                                for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
-                                                   auto readSize = std::min(buffer.size(), header.size - offset);
+                                                   auto readSize = std::min<u64>(buffer.size(), header.size - offset);
                                                    mtar_read_data(&ctx, buffer.data(), readSize);
 
                                                    buffer.resize(readSize);

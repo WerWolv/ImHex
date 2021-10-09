@@ -194,7 +194,7 @@ namespace hex::init {
         ImGui::StyleColorsDark();
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
-        ImGui_ImplOpenGL3_Init("#version 130");
+        ImGui_ImplOpenGL3_Init("#version 150");
 
         auto &io = ImGui::GetIO();
 

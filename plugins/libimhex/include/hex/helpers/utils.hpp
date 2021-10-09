@@ -5,6 +5,7 @@
 #include <hex/helpers/concepts.hpp>
 
 #include <array>
+#include <bit>
 #include <cstring>
 #include <cctype>
 #include <functional>

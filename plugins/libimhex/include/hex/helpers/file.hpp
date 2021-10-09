@@ -11,6 +11,7 @@
     #define fopen64 fopen
     #define fseeko64 fseek
     #define ftello64 ftell
+    #define ftruncate64 ftruncate
 #endif
 
 namespace hex {

@@ -7,6 +7,10 @@ find_package(PkgConfig REQUIRED)
 find_package(Freetype REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
+if (UNIX)
+    find_package(OpenGL REQUIRED)
+endif ()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 add_library(imgui STATIC
@@ -43,5 +47,5 @@ target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
 if (WIN32)
     target_link_libraries(imgui Freetype::Freetype glfw3 opengl32.lib)
 elseif (UNIX)
-    target_link_libraries(imgui Freetype::Freetype glfw GL)
+    target_link_libraries(imgui Freetype::Freetype glfw OpenGL::GL)
 endif()

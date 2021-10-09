@@ -157,8 +157,15 @@ macro(createPackage)
         add_subdirectory("plugins/${plugin}")
         if (TARGET ${plugin})
             set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+
             if (WIN32)
                 install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
+            elseif (APPLE)
+                if (CREATE_BUNDLE)
+                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:imhex>/${PLUGINS_INSTALL_LOCATION})
+                else ()
+                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+                endif ()
             else ()
                 install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
             endif ()
@@ -168,7 +175,6 @@ macro(createPackage)
     endforeach()
 
     set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    install(TARGETS libimhex RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     if (WIN32)
         # Install binaries directly in the prefix, usually C:\Program Files\ImHex.

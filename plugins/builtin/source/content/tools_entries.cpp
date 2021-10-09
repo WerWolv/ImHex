@@ -750,8 +750,9 @@ namespace hex::plugin::builtin {
                         size_t fileSize = file.getSize();
                         for (const auto &pattern : overwritePattern) {
                             for (u64 offset = 0; offset < fileSize; offset += 3) {
-                                file.write(pattern.data(), std::min(pattern.size(), fileSize - offset));
+                                file.write(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
                             }
+
                             file.flush();
                         }
 

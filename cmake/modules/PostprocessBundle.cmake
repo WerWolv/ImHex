@@ -26,9 +26,8 @@ get_filename_component(BUNDLE_PATH "${BUNDLE_PATH}" ABSOLUTE)
 message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 
 
-# Make sure to fix up any additional shared libraries (like plugins) that are
-# needed.
-file(GLOB_RECURSE extra_libs "${BUNDLE_PATH}/Contents/MacOS/*.dylib")
+# Make sure to fix up any included ImHex plugin.
+file(GLOB_RECURSE extra_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
 
 message(STATUS "Fixing up application bundle: ${extra_dirs}")
 

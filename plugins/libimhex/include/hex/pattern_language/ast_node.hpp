@@ -4,12 +4,12 @@
 #include <hex/pattern_language/evaluator.hpp>
 #include <hex/pattern_language/pattern_data.hpp>
 
+#include <algorithm>
 #include <bit>
 #include <optional>
 #include <map>
 #include <variant>
 #include <vector>
-#include <ranges>
 
 #include <hex/pattern_language/ast_node_base.hpp>
 
@@ -1534,9 +1534,9 @@ namespace hex::pl {
                         continue;
                     } else {
                         bool found = false;
-                        for (const auto &variable : (searchScope | std::views::reverse)) {
-                            if (variable->getVariableName() == name) {
-                                auto newPattern = variable->clone();
+                        for (auto iter = searchScope.crbegin(); iter != searchScope.crend(); ++iter) {
+                            if ((*iter)->getVariableName() == name) {
+                                auto newPattern = (*iter)->clone();
                                 delete currPattern;
                                 currPattern = newPattern;
                                 found = true;
