@@ -1,6 +1,5 @@
 #include "helpers/encoding_file.hpp"
 
-#include <ranges>
 #include <hex/helpers/utils.hpp>
 
 #include <fstream>

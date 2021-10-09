@@ -10,7 +10,6 @@
 #include <map>
 #include <variant>
 #include <vector>
-#include <ranges>
 
 #include <hex/pattern_language/ast_node_base.hpp>
 
