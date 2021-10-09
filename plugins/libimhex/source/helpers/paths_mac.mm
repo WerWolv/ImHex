@@ -7,11 +7,18 @@
         std::string getPathForMac(ImHexPath path) {
             @autoreleasepool {
                 NSError * error = nil;
-                NSURL * appSupportDir = [[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
-                                                                            inDomain:NSUserDomainMask
-                                                                    appropriateForURL:nil
-                                                                                create:YES
-                                                                                error:&error];
+                NSURL * baseUrl;
+
+                if (path == ImHexPath::Plugins) {
+                    baseUrl = [[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent];
+                } else {
+                    baseUrl = [[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
+                                                                     inDomain:NSUserDomainMask
+                                                            appropriateForURL:nil
+                                                                       create:YES
+                                                                        error:&error];
+                }
+
                 if (error != nil) {
                     __builtin_unreachable();
                 }
@@ -19,32 +26,32 @@
                 NSURL * result = nil;
                 switch (path) {
                     case ImHexPath::Patterns:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/patterns"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/patterns"];
                         break;
 
                     case ImHexPath::PatternsInclude:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/patterns"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/patterns"];
                         break;
                     case ImHexPath::Magic:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/magic"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/magic"];
                         break;
                     case ImHexPath::Python:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex"];
                         break;
                     case ImHexPath::Plugins:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/plugins"];
+                        result = [baseUrl URLByAppendingPathComponent:@"plugins"];
                         break;
                     case ImHexPath::Yara:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/yara"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/yara"];
                         break;
                     case ImHexPath::Config:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/config"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/config"];
                         break;
                     case ImHexPath::Resources:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/resources"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/resources"];
                         break;
                     case ImHexPath::Constants:
-                        result = [appSupportDir URLByAppendingPathComponent:@"imhex/constants"];
+                        result = [baseUrl URLByAppendingPathComponent:@"imhex/constants"];
                         break;
                 }
 
