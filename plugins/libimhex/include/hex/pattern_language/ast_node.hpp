@@ -594,7 +594,7 @@ namespace hex::pl {
 
             if (name == "color" && requiresValue()) {
                 u32 color = strtoul(value->c_str(), nullptr, 16);
-                pattern->setColor(color);
+                pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
             } else if (name == "name" && requiresValue()) {
                 pattern->setVariableName(*value);
             } else if (name == "comment" && requiresValue()) {
