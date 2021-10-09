@@ -23,6 +23,8 @@ add_library(imgui STATIC
         source/imgui_tables.cpp
         source/imgui_widgets.cpp
 
+        source/cimgui.cpp
+
         source/TextEditor.cpp
 
         source/imgui_imhex_extensions.cpp
@@ -40,7 +42,7 @@ add_library(imgui STATIC
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+target_include_directories(imgui PUBLIC include fonts ${CMAKE_CURRENT_SOURCE_DIR} ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
 
