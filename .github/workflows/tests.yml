@@ -1,8 +1,10 @@
-name: "CodeQL"
+name: "Unit Tests"
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   analyze:
@@ -19,11 +21,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: recursive
-
-    - name: ✋ Initialize CodeQL
-      uses: github/codeql-action/init@v1
-      with:
-        languages: 'cpp'
 
     - name: 📜 Restore cache
       uses: actions/cache@v2
@@ -49,5 +46,7 @@ jobs:
           ..
         make -j 4 install
 
-    - name: 🗯️ Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
+    - name: 🧪 Perform Unit Tests
+      run: |
+        cd build
+        ctest
