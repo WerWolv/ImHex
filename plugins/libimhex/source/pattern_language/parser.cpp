@@ -511,12 +511,13 @@ namespace hex::pl {
             auto originalPos = this->m_curr;
             parseNamespaceResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
-            this->m_curr = originalPos;
 
             if (isFunction) {
+                this->m_curr = originalPos;
                 statement = parseFunctionCall();
             }
             else {
+                this->m_curr = originalPos - 1;
                 statement = parseFunctionVariableDecl();
             }
         }
@@ -749,7 +750,11 @@ namespace hex::pl {
 
     // using Identifier = (parseType)
     ASTNode* Parser::parseUsingDeclaration() {
-        auto name = getValue<Token::Identifier>(-2).get();
+        auto name = parseNamespaceResolution();
+
+        if (!MATCHES(sequence(OPERATOR_ASSIGNMENT)))
+            throwParseError("expected '=' after type name of using declaration");
+
         auto *type = dynamic_cast<ASTNodeTypeDecl *>(parseType());
         if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
 
@@ -1110,7 +1115,7 @@ namespace hex::pl {
     std::vector<ASTNode*> Parser::parseStatements() {
         ASTNode *statement;
 
-        if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT)))
+        if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER)))
             statement = parseUsingDeclaration();
         else if (peek(IDENTIFIER)) {
             auto originalPos = this->m_curr;
