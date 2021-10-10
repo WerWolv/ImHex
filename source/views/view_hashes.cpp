@@ -63,8 +63,19 @@ namespace hex {
                     ImGui::TextUnformatted("hex.view.hashes.settings"_lang);
                     ImGui::Separator();
 
-                    if (ImGui::Combo("hex.view.hashes.function"_lang, &this->m_currHashFunction, HashFunctionNames,sizeof(HashFunctionNames) / sizeof(const char *)))
+                    if (ImGui::BeginCombo("hex.view.hashes.function"_lang, hashFunctionNames[this->m_currHashFunction].second, 0))
+                    {
+                        for (int i = 0; i < hashFunctionNames.size(); i++)
+                        {
+                            bool is_selected = (this->m_currHashFunction == i);
+                            if (ImGui::Selectable(hashFunctionNames[i].second, is_selected))
+                                this->m_currHashFunction = i;
+                            if (is_selected)
+                                ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+                        }
+                        ImGui::EndCombo();
                         this->m_shouldInvalidate = true;
+                    }
 
                     size_t dataSize = provider->getSize();
                     if (this->m_hashRegion[1] >= provider->getBaseAddress() + dataSize)
@@ -73,8 +84,44 @@ namespace hex {
 
                     if (this->m_hashRegion[1] >= this->m_hashRegion[0]) {
 
-                        switch (this->m_currHashFunction) {
-                            case 0: // CRC16
+                        switch (hashFunctionNames[this->m_currHashFunction].first) {
+                            case HashFunctions::Crc8:
+                            {
+                                static int polynomial = 0x07, init = 0x0000, xorout = 0x0000;
+                                static bool reflectIn = false, reflectOut = false;
+
+                                ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::InputInt("hex.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::InputInt("hex.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::NewLine();
+
+                                static u16 result = 0;
+
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::crc8(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1,
+                                                          polynomial, init, xorout, reflectIn, reflectOut);
+
+                                char buffer[sizeof(result) * 2 + 1];
+                                snprintf(buffer, sizeof(buffer), "%02X", result);
+
+                                ImGui::TextUnformatted("hex.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                                break;
+                            case HashFunctions::Crc16:
                             {
                                 static int polynomial = 0x8005, init = 0x0000, xorout = 0x0000;
                                 static bool reflectIn = false, reflectOut = false;
@@ -110,7 +157,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 1: // CRC32
+                            case HashFunctions::Crc32:
                             {
                                 static int polynomial = 0x04C11DB7, init = 0xFFFFFFFF, xorout = 0xFFFFFFFF;
                                 static bool reflectIn = true, reflectOut = true;
@@ -148,7 +195,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 2: // MD5
+                            case HashFunctions::Md5:
                             {
                                 static std::array<u8, 16> result = { 0 };
 
@@ -164,7 +211,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 3: // SHA-1
+                            case HashFunctions::Sha1:
                             {
                                 static std::array<u8, 20> result = { 0 };
 
@@ -180,7 +227,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 4: // SHA-224
+                            case HashFunctions::Sha224:
                             {
                                 static std::array<u8, 28> result = { 0 };
 
@@ -196,7 +243,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 5: // SHA-256
+                            case HashFunctions::Sha256:
                             {
                                 static std::array<u8, 32> result;
 
@@ -212,7 +259,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 6: // SHA-384
+                            case HashFunctions::Sha384:
                             {
                                 static std::array<u8, 48> result;
 
@@ -228,7 +275,7 @@ namespace hex {
                                 ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
                             }
                                 break;
-                            case 7: // SHA-512
+                            case HashFunctions::Sha512:
                             {
                                 static std::array<u8, 64> result;
 
