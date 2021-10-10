@@ -26,8 +26,9 @@ Variables can be declared in a similar fashion as outside of functions but they 
 
     fn get_value() {
         u32 value;
+        u8 x = 1234;
 
-        value = 1234;
+        value = x * 2;
 
         return value;
     };
