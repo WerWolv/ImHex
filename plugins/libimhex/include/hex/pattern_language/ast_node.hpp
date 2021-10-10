@@ -2048,4 +2048,65 @@ namespace hex::pl {
         std::vector<ASTNode*> m_body;
     };
 
-}
+    class ASTNodeCompoundStatement : public ASTNode {
+    public:
+
+        ASTNodeCompoundStatement(std::vector<ASTNode*> statements) : m_statements(std::move(statements)) {
+
+        }
+
+        ASTNodeCompoundStatement(const ASTNodeCompoundStatement &other) : ASTNode(other) {
+            for (const auto &statement : other.m_statements) {
+                this->m_statements.push_back(statement->clone());
+            }
+        }
+
+        [[nodiscard]] ASTNode* clone() const override {
+            return new ASTNodeCompoundStatement(*this);
+        }
+
+        ~ASTNodeCompoundStatement() override {
+            for (const auto &statement : this->m_statements) {
+                delete statement;
+            }
+        }
+
+        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+            ASTNode *result = nullptr;
+
+            for (const auto &statement : this->m_statements) {
+                delete result;
+                result = statement->evaluate(evaluator);
+            }
+
+            return result;
+        }
+
+        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+            std::vector<PatternData*> result;
+
+            for (const auto &statement : this->m_statements) {
+                auto patterns = statement->createPatterns(evaluator);
+                std::copy(patterns.begin(), patterns.end(), std::back_inserter(result));
+            }
+
+            return result;
+        }
+
+        FunctionResult execute(Evaluator *evaluator) override {
+            FunctionResult result;
+
+            for (const auto &statement : this->m_statements) {
+                result = statement->execute(evaluator);
+                if (result.first)
+                    return result;
+            }
+
+            return result;
+        }
+
+    public:
+        std::vector<ASTNode*> m_statements;
+    };
+
+};

@@ -493,14 +493,23 @@ namespace hex::pl {
             if (isFunction) {
                 statement = parseFunctionCall();
             }
-            else
+            else {
                 statement = parseMemberVariable(parseType(true));
+            }
         }
         else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
             auto type = parseType(true);
 
-            if (MATCHES(sequence(IDENTIFIER)))
+            if (MATCHES(sequence(IDENTIFIER))) {
+                auto identifier = getValue<Token::Identifier>(-1).get();
                 statement = parseMemberVariable(type);
+
+                if (MATCHES(sequence(OPERATOR_ASSIGNMENT))) {
+                    auto expression = parseMathematicalExpression();
+
+                    statement = new ASTNodeCompoundStatement({ statement, new ASTNodeAssignment(identifier, expression) });
+                }
+            }
             else
                 throwParseError("invalid variable declaration");
         }
