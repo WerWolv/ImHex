@@ -37,26 +37,54 @@ Variables can be declared in a similar fashion as outside of functions but they 
 Control statements
 ^^^^^^^^^^^^^^^^^^
 
-If-else blocks can be used the same as outside of functions to cause code to only execute when the condition is met.
+If-Else-Statements
+------------------
+
+If, Else-If and Else statements work the same as in most other C-like languages.
+When the condition inside a ``if`` head evaluates to true, the code in its body is executed.
+If it evaluates to false, the optional ``else`` block is executed.
+
+Curly braces are optional and only required if more than one statement is present in the body.
 
 .. code-block:: hexpat
 
     if (x > 5) {
         // Execute when x is greater than 5
+    } else if (x == 2) {
+        // Execute only when x is equals to 2
     } else {
         // Execute otherwise
     }
 
-While loops can be used as well.
+
+While-Loops
+----------------
+
+While loops work similarly to if statements. As long as the condition in the head evaluates to true, the body will continuously be executed.
 
 .. code-block:: hexpat
 
-    u32 i;
-    while (i < 100) {
-        // Do calculation
-        i = i + 1;
+    while (check()) {
+        // Keeps on executing as long as the check() function returns true
     }
 
+
+For-Statement :version:`Nightly`
+--------------------------------
+
+For loops are another kind of loop similar to the while loop. Its head consists of three blocks separated by commas.
+The first block is a variable declaration which will only be available inside the current for loop.
+The second block is a condition that will continuously be checked. The body is executed as long as this condition evaluates to true.
+The third block is a variable assignment which will be executed after all statements in the body have run.
+
+.. code-block:: hexpat
+
+    // Declare a variable called i available only inside the for
+    for (u8 i = 0, i < 10, i = i + 1) {
+        // Keeps on executing as long as i is less than 10
+
+        // At the end, increment i by 1
+    }
 
 Return statements
 ^^^^^^^^^^^^^^^^^
@@ -71,4 +99,4 @@ The return type of the function will automatically be determined by the value re
         return 1234;
     };
 
-    std::print(get_value()); // 1234
+    std::print("{}", get_value()); // 1234

@@ -1,5 +1,5 @@
 ``std::string`` :version:`1.10.1`
-==================================
+=================================
 
 | This namespace contains functions to deal with strings
 |
@@ -174,7 +174,7 @@ Functions
 ------------------------
 
 ``std::string::reverse(str string) -> str`` :version:`Nightly`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Reverses the string `string`**
 
