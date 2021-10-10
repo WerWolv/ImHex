@@ -47,7 +47,7 @@ target_include_directories(imgui PUBLIC include fonts ${CMAKE_CURRENT_SOURCE_DIR
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imgui Freetype::Freetype glfw3 opengl32.lib)
+    target_link_libraries(imgui PUBLIC Freetype::Freetype glfw3 opengl32.lib)
 elseif (UNIX)
-    target_link_libraries(imgui Freetype::Freetype glfw OpenGL::GL)
+    target_link_libraries(imgui PUBLIC Freetype::Freetype glfw OpenGL::GL)
 endif()

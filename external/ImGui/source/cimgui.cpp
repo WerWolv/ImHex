@@ -267,11 +267,11 @@ CIMGUI_API float igGetScrollY()
 {
     return ImGui::GetScrollY();
 }
-CIMGUI_API void igSetScrollX_Float(float scroll_x)
+CIMGUI_API void igSetScrollX(float scroll_x)
 {
     return ImGui::SetScrollX(scroll_x);
 }
-CIMGUI_API void igSetScrollY_Float(float scroll_y)
+CIMGUI_API void igSetScrollY(float scroll_y)
 {
     return ImGui::SetScrollY(scroll_y);
 }
@@ -291,11 +291,11 @@ CIMGUI_API void igSetScrollHereY(float center_y_ratio)
 {
     return ImGui::SetScrollHereY(center_y_ratio);
 }
-CIMGUI_API void igSetScrollFromPosX_Float(float local_x,float center_x_ratio)
+CIMGUI_API void igSetScrollFromPosX(float local_x,float center_x_ratio)
 {
     return ImGui::SetScrollFromPosX(local_x,center_x_ratio);
 }
-CIMGUI_API void igSetScrollFromPosY_Float(float local_y,float center_y_ratio)
+CIMGUI_API void igSetScrollFromPosY(float local_y,float center_y_ratio)
 {
     return ImGui::SetScrollFromPosY(local_y,center_y_ratio);
 }
@@ -1372,11 +1372,11 @@ CIMGUI_API int igGetFrameCount()
 {
     return ImGui::GetFrameCount();
 }
-CIMGUI_API ImDrawList* igGetBackgroundDrawList_Nil()
+CIMGUI_API ImDrawList* igGetBackgroundDrawList()
 {
     return ImGui::GetBackgroundDrawList();
 }
-CIMGUI_API ImDrawList* igGetForegroundDrawList_Nil()
+CIMGUI_API ImDrawList* igGetForegroundDrawList()
 {
     return ImGui::GetForegroundDrawList();
 }
