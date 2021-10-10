@@ -470,6 +470,26 @@ namespace hex::pl {
         return create(new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), params, body));
     }
 
+    ASTNode* Parser::parseFunctionVariableDecl() {
+        ASTNode *statement;
+        auto type = parseType(true);
+
+        if (MATCHES(sequence(IDENTIFIER))) {
+            auto identifier = getValue<Token::Identifier>(-1).get();
+            statement = parseMemberVariable(type);
+
+            if (MATCHES(sequence(OPERATOR_ASSIGNMENT))) {
+                auto expression = parseMathematicalExpression();
+
+                statement = create(new ASTNodeCompoundStatement({ statement, create(new ASTNodeAssignment(identifier, expression)) }));
+            }
+        }
+        else
+            throwParseError("invalid variable declaration");
+
+        return statement;
+    }
+
     ASTNode* Parser::parseFunctionStatement() {
         bool needsSemicolon = true;
         ASTNode *statement;
@@ -484,6 +504,9 @@ namespace hex::pl {
         } else if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN))) {
             statement = parseFunctionWhileLoop();
             needsSemicolon = false;
+        } else if (MATCHES(sequence(KEYWORD_FOR, SEPARATOR_ROUNDBRACKETOPEN))) {
+            statement = parseFunctionForLoop();
+            needsSemicolon = false;
         } else if (MATCHES(sequence(IDENTIFIER))) {
             auto originalPos = this->m_curr;
             parseNamespaceResolution();
@@ -494,24 +517,11 @@ namespace hex::pl {
                 statement = parseFunctionCall();
             }
             else {
-                statement = parseMemberVariable(parseType(true));
+                statement = parseFunctionVariableDecl();
             }
         }
         else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
-            auto type = parseType(true);
-
-            if (MATCHES(sequence(IDENTIFIER))) {
-                auto identifier = getValue<Token::Identifier>(-1).get();
-                statement = parseMemberVariable(type);
-
-                if (MATCHES(sequence(OPERATOR_ASSIGNMENT))) {
-                    auto expression = parseMathematicalExpression();
-
-                    statement = new ASTNodeCompoundStatement({ statement, new ASTNodeAssignment(identifier, expression) });
-                }
-            }
-            else
-                throwParseError("invalid variable declaration");
+            statement = parseFunctionVariableDecl();
         }
         else
             throwParseError("invalid sequence", 0);
@@ -606,6 +616,48 @@ namespace hex::pl {
         cleanup.release();
 
         return create(new ASTNodeWhileStatement(condition, body));
+    }
+
+    ASTNode* Parser::parseFunctionForLoop() {
+        auto variable = parseFunctionVariableDecl();
+        auto variableCleanup = SCOPE_GUARD { delete variable; };
+
+        if (!MATCHES(sequence(SEPARATOR_COMMA)))
+            throwParseError("expected ',' after for loop variable declaration");
+
+        auto condition = parseMathematicalExpression();
+        auto conditionCleanup = SCOPE_GUARD { delete condition; };
+
+        if (!MATCHES(sequence(SEPARATOR_COMMA)))
+            throwParseError("expected ',' after for loop condition");
+
+        if (!MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
+            throwParseError("expected for loop variable assignment");
+
+        auto postExpression = parseFunctionVariableAssignment();
+        auto postExpressionCleanup = SCOPE_GUARD { delete postExpression; };
+
+        std::vector<ASTNode*> body;
+
+        auto bodyCleanup = SCOPE_GUARD {
+            delete condition;
+            for (auto &statement : body)
+                delete statement;
+        };
+
+        if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            throwParseError("expected closing ')' after statement head");
+
+        body = parseStatementBody();
+
+        body.push_back(postExpression);
+
+        variableCleanup.release();
+        conditionCleanup.release();
+        postExpressionCleanup.release();
+        bodyCleanup.release();
+
+        return create(new ASTNodeCompoundStatement({ variable, create(new ASTNodeWhileStatement(condition, body)) }, true));
     }
 
     /* Control flow */

@@ -90,12 +90,14 @@ namespace hex::pl {
         ASTNode* parseMathematicalExpression();
 
         ASTNode* parseFunctionDefinition();
+        ASTNode* parseFunctionVariableDecl();
         ASTNode* parseFunctionStatement();
         ASTNode* parseFunctionVariableAssignment();
         ASTNode* parseFunctionReturnStatement();
         std::vector<ASTNode*> parseStatementBody();
         ASTNode* parseFunctionConditional();
         ASTNode* parseFunctionWhileLoop();
+        ASTNode* parseFunctionForLoop();
 
         void parseAttribute(Attributable *currNode);
         ASTNode* parseConditional();

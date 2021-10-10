@@ -37,6 +37,7 @@ namespace hex::pl {
             Parent,
             This,
             While,
+            For,
             Function,
             Return,
             Namespace
@@ -280,6 +281,7 @@ namespace hex::pl {
 #define KEYWORD_PARENT                      COMPONENT(Keyword, Parent)
 #define KEYWORD_THIS                        COMPONENT(Keyword, This)
 #define KEYWORD_WHILE                       COMPONENT(Keyword, While)
+#define KEYWORD_FOR                         COMPONENT(Keyword, For)
 #define KEYWORD_FUNCTION                    COMPONENT(Keyword, Function)
 #define KEYWORD_RETURN                      COMPONENT(Keyword, Return)
 #define KEYWORD_NAMESPACE                   COMPONENT(Keyword, Namespace)

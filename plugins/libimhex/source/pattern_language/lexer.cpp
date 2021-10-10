@@ -408,6 +408,8 @@ namespace hex::pl {
                         tokens.emplace_back(TOKEN(Keyword, This));
                     else if (identifier == "while")
                         tokens.emplace_back(TOKEN(Keyword, While));
+                    else if (identifier == "for")
+                        tokens.emplace_back(TOKEN(Keyword, For));
                     else if (identifier == "fn")
                         tokens.emplace_back(TOKEN(Keyword, Function));
                     else if (identifier == "return")

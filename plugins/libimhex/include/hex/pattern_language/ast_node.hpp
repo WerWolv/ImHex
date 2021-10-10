@@ -2051,7 +2051,7 @@ namespace hex::pl {
     class ASTNodeCompoundStatement : public ASTNode {
     public:
 
-        ASTNodeCompoundStatement(std::vector<ASTNode*> statements) : m_statements(std::move(statements)) {
+        ASTNodeCompoundStatement(std::vector<ASTNode*> statements, bool newScope = false) : m_statements(std::move(statements)), m_newScope(newScope) {
 
         }
 
@@ -2096,10 +2096,29 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) override {
             FunctionResult result;
 
+            auto variables = *evaluator->getScope(0).scope;
+            u32 startVariableCount = variables.size();
+
+            if (this->m_newScope) {
+                evaluator->pushScope(nullptr, variables);
+            }
+
             for (const auto &statement : this->m_statements) {
                 result = statement->execute(evaluator);
                 if (result.first)
                     return result;
+            }
+
+            if (this->m_newScope) {
+                s64 stackSize = evaluator->getStack().size();
+                for (u32 i = startVariableCount; i < variables.size(); i++) {
+                    stackSize--;
+                    delete variables[i];
+                }
+                if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                evaluator->getStack().resize(stackSize);
+
+                evaluator->popScope();
             }
 
             return result;
@@ -2107,6 +2126,7 @@ namespace hex::pl {
 
     public:
         std::vector<ASTNode*> m_statements;
+        bool m_newScope;
     };
 
 };
