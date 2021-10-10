@@ -1,53 +1,45 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::punctuated::Punctuated;
 use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
 use syn::LitStr;
 use syn::Token;
 
 struct AttrList(Punctuated<LitStr, Token![,]>);
 
 impl Parse for AttrList {
-
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Punctuated::parse_terminated(input).map(Self)
     }
+}
 
+fn symbol(name: &str) -> String {
+    let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+    format!(
+        "_ZN3hex6plugin{}{}8internal{}{}Ev",
+        pkg_name.len(),
+        pkg_name,
+        name.len(),
+        name,
+    )
 }
 
 #[proc_macro_attribute]
 pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args = syn::parse_macro_input!(attr as AttrList).0.into_iter().collect::<Vec<_>>();
+    let args = syn::parse_macro_input!(attr as AttrList)
+        .0
+        .into_iter()
+        .collect::<Vec<_>>();
     let plugin_name = &args[0];
     let author_name = &args[1];
     let description = &args[2];
 
     let function = syn::parse_macro_input!(item as syn::ItemFn);
 
-    let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
-    let plugin_name_export = format!(
-        "_ZN3hex6plugin{}{}8internal13getPluginNameEv",
-        pkg_name.len(),
-        pkg_name
-    );
-
-    let plugin_author_export = format!(
-        "_ZN3hex6plugin{}{}8internal15getPluginAuthorEv",
-        pkg_name.len(),
-        pkg_name
-    );
-
-    let plugin_desc_export = format!(
-        "_ZN3hex6plugin{}{}8internal20getPluginDescriptionEv",
-        pkg_name.len(),
-        pkg_name
-    );
-
-    let plugin_init_export = format!(
-        "_ZN3hex6plugin{}{}8internal16initializePluginEv",
-        pkg_name.len(),
-        pkg_name
-    );
+    let plugin_name_export = symbol("getPluginName");
+    let plugin_author_export = symbol("getPluginAuthor");
+    let plugin_desc_export = symbol("getPluginDescription");
+    let plugin_init_export = symbol("initializePlugin");
 
     quote!(
         #[export_name = #plugin_name_export]
@@ -67,5 +59,7 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[export_name = #plugin_init_export]
         pub extern "C" #function
-    ).into()
+    )
+    .into()
 }
+
