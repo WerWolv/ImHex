@@ -8,12 +8,9 @@ build = "build.rs"
 
 [dependencies]
 macros = { path = "proc_macros" }
-imgui = "0.8.0"
+imgui = { path = "imgui-rs" }
 
 cxx = "1.0.55"
 
 [build-dependencies]
 cxx-build = "1.0.55"
-
-[patch.crates-io]
-imgui-sys = { path = "imgui-sys" }

@@ -1,0 +1,31 @@
+[package]
+name = "imgui"
+version = "0.8.0"
+edition = "2018"
+authors = ["The imgui-rs Developers"]
+description = "High-level Rust bindings to dear imgui"
+homepage = "https://github.com/imgui-rs/imgui-rs"
+repository = "https://github.com/imgui-rs/imgui-rs"
+license = "MIT/Apache-2.0"
+categories = ["gui", "api-bindings"]
+readme = "../README.markdown"
+
+exclude = ["/resources"]
+
+[dependencies]
+bitflags = "1"
+imgui-sys = { path = "../imgui-sys" }
+parking_lot = "0.11"
+
+[features]
+default = ["min-const-generics"]
+
+wasm = ["imgui-sys/wasm"]
+freetype = ["imgui-sys/freetype"]
+min-const-generics = []
+# this api is in beta in the upstream imgui crate. See issue #524 for more info.
+# it should be stable and fine to use though.
+tables-api = []
+
+[dev-dependencies]
+memoffset = "0.6"

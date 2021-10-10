@@ -93,8 +93,6 @@ dependencies = [
 [[package]]
 name = "imgui"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4edc4023dc7b1161e25ec9bcee478173f97d6f618a1d04eced2d559ce03119b4"
 dependencies = [
  "bitflags",
  "imgui-sys",
