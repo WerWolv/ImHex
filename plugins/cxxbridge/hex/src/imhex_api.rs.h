@@ -1,0 +1,1 @@
+/home/jam/dev/imhex/plugins/example_rust/../debug/build/hex-2ef67216ae657e21/out/cxxbridge/include/hex/src/imhex_api.rs.h

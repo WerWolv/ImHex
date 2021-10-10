@@ -40,6 +40,7 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
     let plugin_author_export = symbol("getPluginAuthor");
     let plugin_desc_export = symbol("getPluginDescription");
     let plugin_init_export = symbol("initializePlugin");
+    let plugin_set_imgui_ctxt_export = symbol("setImGuiContext");
 
     quote!(
         #[export_name = #plugin_name_export]
@@ -57,9 +58,13 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
             concat!(#description, "\0").as_ptr()
         }
 
+        #[export_name = #plugin_set_imgui_ctxt_export]
+        pub unsafe extern "C" fn set_imgui_context(context: *mut ::hex::imgui::sys::ImGuiContext) {
+            ::hex::imgui::sys::igSetCurrentContext(context);
+        }
+
         #[export_name = #plugin_init_export]
         pub extern "C" #function
     )
     .into()
 }
-

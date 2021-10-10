@@ -272,6 +272,7 @@ impl Context {
 }
 
 /// A reference to a [`Context`] object
+#[derive(Debug)]
 pub struct ContextRef(ManuallyDrop<Context>);
 
 impl core::ops::Deref for ContextRef {
