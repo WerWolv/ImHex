@@ -1,6 +1,7 @@
 use parking_lot::ReentrantMutex;
 use std::cell::{RefCell, UnsafeCell};
 use std::ffi::{CStr, CString};
+use std::mem::ManuallyDrop;
 use std::ops::Drop;
 use std::path::PathBuf;
 use std::ptr;
@@ -246,6 +247,44 @@ impl Context {
     fn is_current_context(&self) -> bool {
         let ctx = unsafe { sys::igGetCurrentContext() };
         self.raw == ctx
+    }
+
+    /// Get a reference to the current context
+    pub fn current() -> Option<ContextRef> {
+        let _guard = CTX_MUTEX.lock();
+
+        let raw = unsafe { sys::igGetCurrentContext() };
+
+        if raw.is_null() {
+            None
+        } else {
+            Some(ContextRef(ManuallyDrop::new(Context {
+                raw,
+                shared_font_atlas: None, // XXX: this might be needed tbh
+                ini_filename: None,
+                log_filename: None,
+                platform_name: None,
+                renderer_name: None,
+                clipboard_ctx: Box::new(ClipboardContext::dummy().into()),
+            })))
+        }
+    }
+}
+
+/// A reference to a [`Context`] object
+pub struct ContextRef(ManuallyDrop<Context>);
+
+impl core::ops::Deref for ContextRef {
+    type Target = Context;
+
+    fn deref(&self) -> &Context {
+        &*self.0
+    }
+}
+
+impl core::ops::DerefMut for ContextRef {
+    fn deref_mut(&mut self) -> &mut Context {
+        &mut *self.0
     }
 }
 
