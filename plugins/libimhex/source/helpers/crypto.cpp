@@ -13,6 +13,8 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/cipher.h>
 
+#include <boost/crc.hpp>
+
 #include <array>
 #include <span>
 
@@ -38,30 +40,8 @@
 
 namespace hex::crypt {
 
-    u16 crc16(prv::Provider* &data, u64 offset, size_t size, u16 polynomial, u16 init) {
-        const auto table = [polynomial] {
-            std::array<u16, 256> table;
-
-            for (u16 i = 0; i < 256; i++) {
-                u16 crc = 0;
-                u16 c = i;
-
-                for (u16 j = 0; j < 8; j++) {
-                    if (((crc ^ c) & 0x0001U) != 0)
-                        crc = (crc >> 1U) ^ polynomial;
-                    else
-                        crc >>= 1U;
-
-                    c >>= 1U;
-                }
-
-                table[i] = crc;
-            }
-
-            return table;
-        }();
-
-        u16 crc = init;
+    u16 crc8(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        boost::crc_basic<8> crc(polynomial, init, xorout, reflectIn, reflectOut);
 
         std::array<u8, 512> buffer = { 0 };
 
@@ -69,45 +49,40 @@ namespace hex::crypt {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
 
-            for (size_t i = 0; i < readSize; i++) {
-                crc = (crc >> 8) ^ table[(crc ^ u16(buffer[i])) & 0x00FF];
-            }
+            crc.process_bytes(buffer.data(), readSize);
         }
 
-        return crc;
+        return crc.checksum();
     }
 
-    u32 crc32(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init) {
-        const auto table = [polynomial] {
-            std::array<uint32_t, 256> table = {0};
+    u16 crc16(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        boost::crc_basic<16> crc(polynomial, init, xorout, reflectIn, reflectOut);
 
-            for (uint32_t i = 0; i < 256; i++) {
-                uint32_t c = i;
-                for (size_t j = 0; j < 8; j++) {
-                    if (c & 1)
-                        c = polynomial ^ (c >> 1);
-                    else
-                        c >>= 1;
-                }
-                table[i] = c;
-            }
-
-            return table;
-        }();
-
-        uint32_t c = init;
         std::array<u8, 512> buffer = { 0 };
 
         for (u64 bufferOffset = 0; offset < size; offset += buffer.size()) {
             const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
 
-            for (size_t i = 0; i < readSize; i++) {
-                c = table[(c ^ buffer[i]) & 0xFF] ^ (c >> 8);
-            }
+            crc.process_bytes(buffer.data(), readSize);
         }
 
-        return ~c;
+        return crc.checksum();
+    }
+
+    u32 crc32(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        boost::crc_basic<32> crc(polynomial, init, xorout, reflectIn, reflectOut);
+
+        std::array<u8, 512> buffer = { 0 };
+
+        for (u64 bufferOffset = 0; offset < size; offset += buffer.size()) {
+            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
+            data->read(offset + bufferOffset, buffer.data(), readSize);
+
+            crc.process_bytes(buffer.data(), readSize);
+        }
+
+        return crc.checksum();
     }
 
 

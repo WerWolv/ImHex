@@ -76,9 +76,19 @@ namespace hex {
                         switch (this->m_currHashFunction) {
                             case 0: // CRC16
                             {
-                                static int polynomial = 0x8005, init = 0x0000;
+                                static int polynomial = 0x8005, init = 0x0000, xorout = 0x0000;
+                                static bool reflectIn = false, reflectOut = false;
 
                                 ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::InputInt("hex.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                                 ImGui::InputInt("hex.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
@@ -89,7 +99,8 @@ namespace hex {
                                 static u16 result = 0;
 
                                 if (this->m_shouldInvalidate)
-                                    result = crypt::crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
+                                    result = crypt::crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1,
+                                                          polynomial, init, xorout, reflectIn, reflectOut);
 
                                 char buffer[sizeof(result) * 2 + 1];
                                 snprintf(buffer, sizeof(buffer), "%04X", result);
@@ -101,9 +112,21 @@ namespace hex {
                                 break;
                             case 1: // CRC32
                             {
-                                static int polynomial = 0x04C11DB7, init = 0xFFFFFFFF;
+                                static int polynomial = 0x04C11DB7, init = 0xFFFFFFFF, xorout = 0xFFFFFFFF;
+                                static bool reflectIn = true, reflectOut = true;
+
+
 
                                 ImGui::InputInt("hex.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::InputInt("hex.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+
+                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                                 ImGui::InputInt("hex.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
@@ -114,7 +137,8 @@ namespace hex {
                                 static u32 result = 0;
 
                                 if (this->m_shouldInvalidate)
-                                    result = crypt::crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1, polynomial, init);
+                                    result = crypt::crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1] - this->m_hashRegion[0] + 1,
+                                                          polynomial, init, xorout, reflectIn, reflectOut);
 
                                 char buffer[sizeof(result) * 2 + 1];
                                 snprintf(buffer, sizeof(buffer), "%08X", result);
