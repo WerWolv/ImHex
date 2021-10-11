@@ -1501,10 +1501,19 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+            std::vector<PatternData*> searchScope;
+            PatternData *currPattern = nullptr;
             s32 scopeIndex = 0;
 
-            auto searchScope = *evaluator->getScope(scopeIndex).scope;
-            PatternData *currPattern = nullptr;
+            if (!evaluator->isGlobalScope()){
+                auto globalScope = evaluator->getGlobalScope().scope;
+                std::copy(globalScope->begin(), globalScope->end(), std::back_inserter(searchScope));
+            }
+
+            {
+                auto currScope = evaluator->getScope(scopeIndex).scope;
+                std::copy(currScope->begin(), currScope->end(), std::back_inserter(searchScope));
+            }
 
             for (const auto &part : this->getPath()) {
 

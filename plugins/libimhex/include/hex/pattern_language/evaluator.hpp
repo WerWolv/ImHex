@@ -55,6 +55,10 @@ namespace hex::pl {
             return this->m_scopes.front();
         }
 
+        bool isGlobalScope() {
+            return this->m_scopes.size() == 1;
+        }
+
         void setProvider(prv::Provider *provider) {
             this->m_provider = provider;
         }
