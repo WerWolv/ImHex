@@ -624,10 +624,12 @@ namespace hex::pl {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            std::string buffer(this->getSize(), 0x00);
-            provider->read(this->getOffset(), buffer.data(), this->getSize());
+            auto size = std::min<size_t>(this->getSize(), 0x7F);
+            std::string buffer(size, 0x00);
 
-            this->createDefaultEntry(hex::format("\"{0}\"", makeDisplayable(buffer.data(), this->getSize()).c_str()), buffer);
+            provider->read(this->getOffset(), buffer.data(), size);
+
+            this->createDefaultEntry(hex::format("\"{0}\" {1}", makeDisplayable(buffer.data(), this->getSize()), size > this->getSize() ? "(truncated)" : ""), buffer);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -647,15 +649,17 @@ namespace hex::pl {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            std::u16string buffer(this->getSize(), 0x00);
-            provider->read(this->getOffset(), buffer.data(), this->getSize());
+            auto size = std::min<size_t>(this->getSize(), 0x100);
+
+            std::u16string buffer(size, 0x00);
+            provider->read(this->getOffset(), buffer.data(), size);
 
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
 
             auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
 
-            this->createDefaultEntry(hex::format("\"{0}\"", utf8String), utf8String);
+            this->createDefaultEntry(hex::format("\"{0}\" {1}", utf8String, size > this->getSize() ? "(truncated)" : ""), utf8String);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
