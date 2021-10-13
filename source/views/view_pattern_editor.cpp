@@ -337,7 +337,8 @@ namespace hex {
             ImGui::EndPopup();
         }
 
-        if (ImGui::BeginPopupModal("hex.view.pattern.menu.file.load_pattern"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        bool opened = true;
+        if (ImGui::BeginPopupModal("hex.view.pattern.menu.file.load_pattern"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
 
             if (ImGui::BeginListBox("##patterns", ImVec2(-FLT_MIN, 0))) {
 
