@@ -19,8 +19,8 @@ A single field cannot occupy more than 64 bits.
   :width: 100%
   :alt: Bitfields Decoding
 
-Padding
-^^^^^^^
+Padding :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It's also possible to insert padding inbetween fields using the padding syntax.
 
