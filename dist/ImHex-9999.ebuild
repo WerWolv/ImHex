@@ -29,6 +29,5 @@ RDEPEND="${DEPEND}
 		dev-libs/capstone
 		dev-cpp/nlohmann_json
 		x11-libs/gtk+
-		dev-cpp/catch
 		"
 BDEPEND="${DEPEND}"

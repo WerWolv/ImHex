@@ -26,7 +26,6 @@ apt install -y \
   python3-dev           \
   libfreetype-dev       \
   libgtk-3-dev          \
-  catch
 
 echo "Please consider this before running cmake (useful on e.g. Ubuntu 20.04):"
 echo "export CXX=g++-10"

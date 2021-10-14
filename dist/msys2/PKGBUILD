@@ -18,8 +18,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
              "${MINGW_PACKAGE_PREFIX}-mbedtls"
              "${MINGW_PACKAGE_PREFIX}-polly"
              "${MINGW_PACKAGE_PREFIX}-python"
-             "${MINGW_PACKAGE_PREFIX}-freetype"
-             "${MINGW_PACKAGE_PREFIX}-catch")
+             "${MINGW_PACKAGE_PREFIX}-freetype")
 
 source=()
 sha256sums=()

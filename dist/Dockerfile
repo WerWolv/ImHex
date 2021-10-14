@@ -16,8 +16,7 @@ RUN pacman -S --needed --noconfirm      \
     capstone                            \
     python3                             \
     freetype2                           \
-    gtk3                                \
-    catch2
+    gtk3
 
 # Clone ImHex
 RUN git clone https://github.com/WerWolv/ImHex --recurse-submodules /root/ImHex

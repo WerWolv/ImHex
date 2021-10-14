@@ -22,7 +22,6 @@ set(AVAILABLE_TESTS
 )
 
 
-
 add_executable(pattern_language_tests source/main.cpp source/tests.cpp)
 target_include_directories(pattern_language_tests PRIVATE include)
 target_link_libraries(pattern_language_tests libimhex)

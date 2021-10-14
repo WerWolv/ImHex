@@ -11,5 +11,4 @@ pacman -S --needed --noconfirm \
   mingw-w64-x86_64-mbedtls \
   mingw-w64-x86_64-python \
   mingw-w64-x86_64-freetype \
-  mingw-w64-x86_64-dlfcn \
-  mingw-w64-x86_64-catch
+  mingw-w64-x86_64-dlfcn
