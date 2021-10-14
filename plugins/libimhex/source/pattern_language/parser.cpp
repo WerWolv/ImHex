@@ -986,8 +986,9 @@ namespace hex::pl {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
                 auto name = getValue<Token::Identifier>(-2).get();
                 bitfieldNode->addEntry(name, parseMathematicalExpression());
-            }
-            else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
+            } else if (MATCHES(sequence(VALUETYPE_PADDING, OPERATOR_INHERIT))) {
+              bitfieldNode->addEntry("padding", parseMathematicalExpression());
+            } else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
                 throwParseError("unexpected end of program", -2);
             else
                 throwParseError("invalid bitfield member", 0);

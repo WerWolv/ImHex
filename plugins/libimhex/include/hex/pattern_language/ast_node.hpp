@@ -1334,11 +1334,14 @@ namespace hex::pl {
                         [](auto &&offset) -> u8 { return static_cast<u8>(offset); }
                 }, dynamic_cast<ASTNodeLiteral*>(literal)->getValue());
 
-                auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize, evaluator);
-                field->setVariableName(name);
+                // If a field is named padding, it was created through a padding expression and only advances the bit position
+                if (name != "padding") {
+                    auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize, evaluator);
+                    field->setVariableName(name);
+                    fields.push_back(field);
+                }
 
                 bitOffset += bitSize;
-                fields.push_back(field);
             }
             evaluator->popScope();
 
