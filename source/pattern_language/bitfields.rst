@@ -18,3 +18,19 @@ A single field cannot occupy more than 64 bits.
 .. image:: assets/bitfields/data.png
   :width: 100%
   :alt: Bitfields Decoding
+
+Padding
+^^^^^^^
+
+It's also possible to insert padding inbetween fields using the padding syntax.
+
+.. code-block:: hexpat
+
+  bitfield Flags {
+    a : 1;
+    b : 2;
+    padding : 4;
+    c : 1;
+  };
+
+This inserts a 4 bit padding between field ``b`` and ``c``.
