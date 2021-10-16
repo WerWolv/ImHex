@@ -13,8 +13,6 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/cipher.h>
 
-#include <boost/crc.hpp>
-
 #include <array>
 #include <span>
 #include <concepts>
@@ -54,11 +52,112 @@ namespace hex::crypt {
         }
     }
 
-    template<int bits>
-	auto calcCrc(prv::Provider* data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
-        boost::crc_basic<bits> crc(polynomial, init, xorout, reflectIn, reflectOut);
+    template<typename T>
+    T reflect(T in, std::size_t bits)
+    {
+        T out{};
 
-        processDataByChunks(data, offset, size, std::bind(&boost::crc_basic<bits>::process_bytes, &crc, _1, _2));
+        for(std::size_t i = 0; i < bits; i++)
+        {
+            out <<= 1;
+            if (in & 0b1)
+                out |= 1;
+            in >>= 1;
+        }
+        return out;
+    }
+
+    template<typename T>
+    T reflect(T in)
+    {
+        if constexpr (sizeof(T) == 1)
+        {
+            T out{in};
+
+            out = ((out & 0xf0u) >> 4) | ((out & 0x0fu) << 4);
+            out = ((out & 0xccu) >> 2) | ((out & 0x33u) << 2);
+            out = ((out & 0xaau) >> 1) | ((out & 0x55u) << 1);
+
+            return out;
+        }
+        else
+        {
+            return reflect(in, sizeof(T) *8 );
+        }
+    }
+
+    class Crc {
+        // use reflected algorithm, so we reflect only if refin / refout is FALSE
+        // mask values, 0b1 << 64 is UB, so use 0b10 << 63
+
+    public:
+        using calc_type = uint64_t;
+
+        Crc(int bits, calc_type polynomial, calc_type init, calc_type xorout, bool refin, bool refout) :
+            m_bits(bits),
+            m_init(init & ((0b10ull << (bits-1)) - 1)),
+            m_xorout(xorout & ((0b10ull << (bits-1)) - 1)),
+            m_refin(refin),
+            m_refout(refout),
+            table([polynomial, bits](){
+                auto reflectedpoly= reflect(polynomial & ((0b10ull << (bits-1)) - 1), bits);
+                std::array<uint64_t, 256> table = {0};
+
+                for (uint32_t i = 0; i < 256; i++) {
+                    uint64_t c = i;
+                    for (std::size_t j = 0; j < 8; j++) {
+                        if (c & 0b1)
+                            c = reflectedpoly ^ (c >> 1);
+                        else
+                            c >>= 1;
+                    }
+                    table[i] = c;
+                }
+
+                return table;
+            }()) {
+            reset();
+        };
+
+        void reset() {
+            c = reflect(m_init, m_bits);
+        }
+
+        void processBytes(const unsigned char *data, std::size_t size) {
+            for (std::size_t i = 0; i < size; i++) {
+                unsigned char d;
+                if (m_refin)
+                    d = data[i];
+                else
+                    d = reflect(data[i]);
+
+                c = table[(c ^ d) & 0xFFL] ^ (c >> 8);
+            }
+        }
+
+        calc_type checksum() const {
+            if (m_refout)
+                return c ^ m_xorout;
+            else
+                return reflect(c, m_bits) ^ m_xorout;
+        }
+
+    private:
+        const int m_bits;
+        const calc_type m_init;
+        const calc_type m_xorout;
+        const bool m_refin;
+        const bool m_refout;
+        const std::array<uint64_t, 256> table;
+
+        calc_type c;
+    };
+
+    template<int bits>
+    auto calcCrc(prv::Provider* data, u64 offset, std::size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        Crc crc(bits, polynomial, init, xorout, reflectIn, reflectOut);
+
+        processDataByChunks(data, offset, size, std::bind(&Crc::processBytes, &crc, _1, _2));
 
         return crc.checksum();
     }
