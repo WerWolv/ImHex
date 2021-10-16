@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Change this to the name of your plugin #
-project(example)
+project(example_cpp)
 
 # Add your source files here #
 add_library(${PROJECT_NAME} SHARED

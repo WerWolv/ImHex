@@ -1,0 +1,11 @@
+[package]
+name = "macros"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1", features = ["full"] }
+quote = "1"

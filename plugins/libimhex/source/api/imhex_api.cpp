@@ -5,7 +5,13 @@
 
 #include <unistd.h>
 
+#include <hex/helpers/logger.hpp>
+
 namespace hex {
+
+    void ImHexApi::Common::sayHello() {
+        log::warn("Hello!");
+    }
 
     void ImHexApi::Common::closeImHex(bool noQuestions) {
         EventManager::post<RequestCloseImHex>(noQuestions);

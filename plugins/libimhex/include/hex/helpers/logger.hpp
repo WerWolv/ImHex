@@ -20,7 +20,7 @@ namespace hex::log {
     }
 
     void warn(const std::string &fmt, auto ... args) {
-        fmt::print(fg(fmt::color::light_golden_rod_yellow) | fmt::emphasis::bold, "[WARN]  ");
+        fmt::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN]  ");
         fmt::print(fmt::runtime(fmt), args...);
         fmt::print("\n");
     }

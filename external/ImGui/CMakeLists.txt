@@ -13,7 +13,7 @@ endif ()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
-add_library(imgui STATIC
+add_library(imgui OBJECT
         source/imgui.cpp
         source/imgui_demo.cpp
         source/imgui_draw.cpp
@@ -22,6 +22,8 @@ add_library(imgui STATIC
         source/imgui_impl_opengl3.cpp
         source/imgui_tables.cpp
         source/imgui_widgets.cpp
+
+        source/cimgui.cpp
 
         source/TextEditor.cpp
 
@@ -40,12 +42,12 @@ add_library(imgui STATIC
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-target_include_directories(imgui PUBLIC include fonts ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+target_include_directories(imgui PUBLIC include fonts ${CMAKE_CURRENT_SOURCE_DIR} ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
 
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
 
 if (WIN32)
-    target_link_libraries(imgui Freetype::Freetype glfw3 opengl32.lib)
+    target_link_libraries(imgui PUBLIC Freetype::Freetype glfw3 opengl32.lib)
 elseif (UNIX)
-    target_link_libraries(imgui Freetype::Freetype glfw OpenGL::GL)
+    target_link_libraries(imgui PUBLIC Freetype::Freetype glfw OpenGL::GL)
 endif()

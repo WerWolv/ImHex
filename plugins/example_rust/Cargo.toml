@@ -1,0 +1,15 @@
+[package]
+name = "example_rust"
+version = "0.1.0"
+authors = ["Marc-André Moreau <marcandre.moreau@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+path = "source/plugin_example.rs"
+
+[dependencies]
+hex = { path = "../libimhex-rust" }
+
+[profile.release]
+lto = true

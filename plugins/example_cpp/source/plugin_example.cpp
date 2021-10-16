@@ -15,7 +15,7 @@ public:
     }
 };
 
-IMHEX_PLUGIN_SETUP("Example", "WerWolv", "Example plugin used as template for plugin devs") {
+IMHEX_PLUGIN_SETUP("Example C++", "WerWolv", "Example C++ plugin used as template for plugin devs") {
 
     ContentRegistry::Views::add<ViewExample>();
 

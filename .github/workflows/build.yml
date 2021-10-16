@@ -33,6 +33,13 @@ jobs:
       run: |
         sudo apt update
         sudo bash dist/get_deps_debian.sh
+        
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+        sh rustup-init.sh -y --default-toolchain none
+        rm rustup-init.sh
+        $HOME/.cargo/bin/rustup install nightly
+        $HOME/.cargo/bin/rustup target add x86_64-unknown-linux-gnu
+        $HOME/.cargo/bin/rustup default nightly
 
     - name: 🛠️ Build
       run: |
@@ -42,6 +49,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DRUST_PATH="$HOME/.cargo/bin/" \
           ..
         make -j 4 install
 
@@ -91,6 +99,12 @@ jobs:
     - name: ⬇️ Install dependencies
       run: |
         bash dist/get_deps_msys2.sh
+        
+        curl --proto '=https' --tlsv1.2 -sSf https://win.rustup.rs > rustup-init.exe
+        ./rustup-init.exe -y --default-host=x86_64-pc-windows-gnu --default-toolchain=none
+        rm rustup-init.exe
+        $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
+        $USERPROFILE/.cargo/bin/rustup.exe default nightly
 
     - name: 📜 Prepare Cache
       id:    prep-ccache
@@ -121,10 +135,11 @@ jobs:
           -DCREATE_PACKAGE=ON \
           -DPython_LIBRARY="$PYTHON_LIB_PATH" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DRUST_PATH="$USERPROFILE/.cargo/bin/" \
           ..
         mingw32-make -j4 install
         cpack
-      
+
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v2
       with:

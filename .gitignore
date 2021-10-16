@@ -12,3 +12,6 @@ build*/
 *.mgc
 imgui.ini
 .DS_Store
+plugins/.rustc_info.json
+
+**/target
