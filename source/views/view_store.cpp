@@ -263,8 +263,10 @@ namespace hex {
     }
     
     void ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
-        for (const auto &path : hex::getPath(pathType))
+        for (const auto &path : hex::getPath(pathType)) {
             fs::remove(path / fs::path(fileName));
+            fs::remove(path / fs::path(fileName).stem());
+        }
     }
 
 }
