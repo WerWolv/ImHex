@@ -45,14 +45,15 @@ namespace hex::pl {
         }
 
         const Scope& getScope(s32 index) {
-            static Scope empty;
-
-            if (index > 0 || -index >= this->m_scopes.size()) return empty;
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
         const Scope& getGlobalScope() {
             return this->m_scopes.front();
+        }
+
+        size_t getScopeCount() {
+            return this->m_scopes.size();
         }
 
         bool isGlobalScope() {

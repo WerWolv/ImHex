@@ -1526,13 +1526,19 @@ namespace hex::pl {
 
                     if (name == "parent") {
                         scopeIndex--;
+
+                        if (-scopeIndex >= evaluator->getScopeCount())
+                            LogConsole::abortEvaluation("cannot access parent of global scope", this);
+
                         searchScope = *evaluator->getScope(scopeIndex).scope;
                         auto currParent = evaluator->getScope(scopeIndex).parent;
 
-                        if (currParent == nullptr)
-                            LogConsole::abortEvaluation("no parent available", this);
+                        if (currParent == nullptr) {
+                            currPattern = nullptr;
+                        } else {
+                            currPattern = currParent->clone();
+                        }
 
-                        currPattern = currParent->clone();
                         continue;
                     } else if (name == "this") {
                         searchScope = *evaluator->getScope(scopeIndex).scope;
@@ -1592,6 +1598,9 @@ namespace hex::pl {
                     }, index->getValue());
                 }
 
+                if (currPattern == nullptr)
+                    break;
+
                 if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern)) {
                     auto newPattern = pointerPattern->getPointedAtPattern()->clone();
                     delete currPattern;
@@ -1610,6 +1619,9 @@ namespace hex::pl {
                     searchScope = { staticArrayPattern->getTemplate() };
 
             }
+
+            if (currPattern == nullptr)
+                LogConsole::abortEvaluation("cannot reference global scope", this);
 
             return { currPattern };
         }
