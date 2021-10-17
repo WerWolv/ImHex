@@ -77,6 +77,11 @@ namespace hex {
                                            auto extractBasePath = this->m_downloadPath.parent_path() / this->m_downloadPath.stem();
                                            while (mtar_read_header(&ctx, &header) != MTAR_ENULLRECORD) {
                                                auto filePath = extractBasePath / fs::path(header.name);
+                                               if (filePath.filename() == "@PaxHeader") {
+                                                   mtar_next(&ctx);
+                                                   continue;
+                                               }
+
                                                fs::create_directories(filePath.parent_path());
                                                File outputFile(filePath.string(), File::Mode::Create);
 
