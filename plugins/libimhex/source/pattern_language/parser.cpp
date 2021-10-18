@@ -1009,10 +1009,12 @@ namespace hex::pl {
     ASTNode* Parser::parseVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-1).get();
 
-        if (!MATCHES(sequence(OPERATOR_AT)))
-            throwParseError("expected placement instruction", -1);
-
-        auto placementOffset = parseMathematicalExpression();
+        ASTNode *placementOffset;
+        if (MATCHES(sequence(OPERATOR_AT))) {
+            placementOffset = parseMathematicalExpression();
+        } else {
+            placementOffset = nullptr;
+        }
 
         return create(new ASTNodeVariableDecl(name, type, placementOffset));
     }

@@ -49,11 +49,26 @@ namespace hex::pl {
     void Evaluator::setVariable(const std::string &name, const Token::Literal& value) {
         PatternData *pattern = nullptr;
 
-        auto &variables = *this->getScope(0).scope;
-        for (auto &variable : variables) {
-            if (variable->getVariableName() == name) {
-                pattern = variable;
-                break;
+        {
+            auto &variables = *this->getScope(0).scope;
+            for (auto &variable : variables) {
+                if (variable->getVariableName() == name) {
+                    pattern = variable;
+                    break;
+                }
+            }
+        }
+
+        if (pattern == nullptr) {
+            auto &variables = *this->getGlobalScope().scope;
+            for (auto &variable : variables) {
+                if (variable->getVariableName() == name) {
+                    if (!variable->isLocal())
+                        LogConsole::abortEvaluation(hex::format("cannot modify global variable '{}' which has been placed in memory", name));
+
+                    pattern = variable;
+                    break;
+                }
             }
         }
 
@@ -127,6 +142,18 @@ namespace hex::pl {
                     delete node->evaluate(this);
                 } else if (dynamic_cast<ASTNodeFunctionDefinition*>(node)) {
                     this->m_customFunctionDefinitions.push_back(node->evaluate(this));
+                } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node)) {
+                    auto pattern = node->createPatterns(this).front();
+
+                    if (varDeclNode->getPlacementOffset() == nullptr) {
+                        auto type = varDeclNode->getType()->evaluate(this);
+                        ON_SCOPE_EXIT { delete type; };
+
+                        this->createVariable(pattern->getVariableName(), type);
+                        delete pattern;
+                  } else {
+                    patterns.push_back(pattern);
+                  }
                 } else {
                     auto newPatterns = node->createPatterns(this);
                     patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
@@ -163,6 +190,11 @@ namespace hex::pl {
 
             return std::nullopt;
         }
+
+        // Remove global local variables
+        std::erase_if(patterns, [](PatternData *pattern) {
+            return pattern->isLocal();
+        });
 
         return patterns;
     }
