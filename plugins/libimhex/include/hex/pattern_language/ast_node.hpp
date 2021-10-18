@@ -596,7 +596,7 @@ namespace hex::pl {
                 u32 color = strtoul(value->c_str(), nullptr, 16);
                 pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
             } else if (name == "name" && requiresValue()) {
-                pattern->setVariableName(*value);
+                pattern->setDisplayName(*value);
             } else if (name == "comment" && requiresValue()) {
                 pattern->setComment(*value);
             } else if (name == "hidden" && noValue()) {
