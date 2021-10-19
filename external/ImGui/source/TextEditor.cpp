@@ -767,8 +767,26 @@ void TextEditor::HandleKeyboardInputs()
 			for (int i = 0; i < io.InputQueueCharacters.Size; i++)
 			{
 				auto c = io.InputQueueCharacters[i];
-				if (c != 0 && (c == '\n' || c >= 32))
-					EnterCharacter(c, shift);
+				if (c != 0 && (c == '\n' || c >= 32)) {
+                    constexpr std::array<std::pair<char, char>, 5> doubleChars = {{ { '(', ')' }, { '[', ']' }, { '{', '}' }, { '"', '"' }, {'\'', '\'' } }};
+
+                    bool handled = false;
+                    for (auto [doubleCharOpen, doubleCharClose] : doubleChars) {
+                        if (c == doubleCharOpen) {
+                            EnterCharacter(doubleCharOpen, shift);
+                            auto cursorPos = GetCursorPosition();
+                            EnterCharacter(doubleCharClose, shift);
+                            SetCursorPosition(cursorPos);
+
+                            handled = true;
+
+                            break;
+                        }
+                    }
+
+                    if (!handled)
+					    EnterCharacter(c, shift);
+                }
 			}
 			io.InputQueueCharacters.resize(0);
 		}
