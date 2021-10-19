@@ -63,17 +63,19 @@ namespace hex::pl {
                         }
                         offset += 1;
 
+                        std::string includePath = includeFile;
+
                         if (includeFile[0] != '/') {
-                            std::string tempPath = includeFile;
                             for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                               tempPath = hex::format("{0}/{1}", dir.c_str(), includeFile.c_str());
-                                if (std::filesystem::exists(includeFile))
+                               std::string tempPath = hex::format("{0}/{1}", dir.c_str(), includeFile.c_str());
+                                if (std::filesystem::exists(tempPath)) {
+                                    includePath = tempPath;
                                     break;
+                                }
                             }
-                            includeFile = tempPath;
                         }
 
-                        File file(includeFile, File::Mode::Read);
+                        File file(includePath, File::Mode::Read);
                         if (!file.isValid())
                             throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
 
