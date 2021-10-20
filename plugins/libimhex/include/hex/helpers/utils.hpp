@@ -66,23 +66,46 @@ namespace hex {
     template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
+    template<size_t Size>
+    struct SizeTypeImpl { };
+
+    template<> struct SizeTypeImpl<1>  { using Type = u8;   };
+    template<> struct SizeTypeImpl<2>  { using Type = u16;  };
+    template<> struct SizeTypeImpl<4>  { using Type = u32;  };
+    template<> struct SizeTypeImpl<8>  { using Type = u64;  };
+    template<> struct SizeTypeImpl<16> { using Type = u128; };
+
+    template<size_t Size>
+    using SizeType = typename SizeTypeImpl<Size>::Type;
+
     template<typename T>
-    constexpr T changeEndianess(T value, std::endian endian) {
+    constexpr T changeEndianess(const T &value, std::endian endian) {
         if (endian == std::endian::native)
             return value;
 
-        if constexpr (sizeof(T) == 1)
-            return value;
-        else if constexpr (sizeof(T) == 2)
-            return __builtin_bswap16(value);
-        else if constexpr (sizeof(T) == 4)
-            return __builtin_bswap32(value);
-        else if constexpr (sizeof(T) == 8)
-            return __builtin_bswap64(value);
-        else if constexpr (sizeof(T) == 16)
-            return T(__builtin_bswap64(value & 0xFFFF'FFFF'FFFF'FFFF)) << 64 | __builtin_bswap64(value >> 64);
-        else
-            static_assert(always_false<T>::value, "Invalid type provided!");
+        constexpr auto Size = sizeof(T);
+
+        SizeType<Size> unswapped;
+        std::memcpy(&unswapped, &value, Size);
+
+        SizeType<Size> swapped;
+
+        if constexpr (!std::has_single_bit(Size) || Size > 16)
+                static_assert(always_false<T>::value, "Invalid type provided!");
+
+        switch (Size) {
+            case 1:  swapped = unswapped; break;
+            case 2:  swapped = __builtin_bswap16(unswapped); break;
+            case 4:  swapped = __builtin_bswap32(unswapped); break;
+            case 8:  swapped = __builtin_bswap64(unswapped); break;
+            case 16: swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64); break;
+            default: __builtin_unreachable();
+        }
+
+        T result;
+        std::memcpy(&result, &swapped, Size);
+
+        return result;
     }
 
     template<typename T>
@@ -90,18 +113,24 @@ namespace hex {
         if (endian == std::endian::native)
             return value;
 
-        if (size == 1)
-            return value;
-        else if (size == 2)
-            return __builtin_bswap16(value);
-        else if (size == 4)
-            return __builtin_bswap32(value);
-        else if (size == 8)
-            return __builtin_bswap64(value);
-        else if (size == 16)
-            return u128(__builtin_bswap64(u128(value) & 0xFFFF'FFFF'FFFF'FFFF)) << 64 | __builtin_bswap64(u128(value) >> 64);
-        else
-            throw std::invalid_argument("Invalid value size!");
+        u128 unswapped = 0;
+        std::memcpy(&unswapped, &value, size);
+
+        u128 swapped;
+
+        switch (size) {
+            case 1:  swapped = unswapped; break;
+            case 2:  swapped = __builtin_bswap16(unswapped); break;
+            case 4:  swapped = __builtin_bswap32(unswapped); break;
+            case 8:  swapped = __builtin_bswap64(unswapped); break;
+            case 16: swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64); break;
+            default: __builtin_unreachable();
+        }
+
+        T result;
+        std::memcpy(&result, &swapped, size);
+
+        return result;
     }
 
     template< class T >
