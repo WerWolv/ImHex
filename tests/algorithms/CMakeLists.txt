@@ -5,12 +5,22 @@ project(algorithms_test)
 
 # Add new tests here #
 set(AVAILABLE_TESTS
-    TestSucceeding
-    TestFailing
+    # Common
+        TestSucceeding
+        TestFailing
+
+    # Endian
+        32BitIntegerEndianSwap
+        64BitFloatEndianSwap
 )
 
 
-add_executable(algorithms_test source/hash.cpp source/main.cpp include/tests.hpp)
+add_executable(algorithms_test
+        source/main.cpp
+
+        source/common.cpp
+        source/endian.cpp
+)
 target_include_directories(algorithms_test PRIVATE include)
 target_link_libraries(algorithms_test libimhex)
 

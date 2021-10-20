@@ -9,9 +9,10 @@
 #include <functional>
 
 #define TEST_SEQUENCE(...) static auto ANONYMOUS_VARIABLE(TEST_SEQUENCE) = ::hex::test::TestSequenceExecutor(__VA_ARGS__) + []() -> int
-#define TEST_FAIL() return EXIT_FAILURE;
-#define TEST_SUCCESS() return EXIT_SUCCESS;
+#define TEST_FAIL() return EXIT_FAILURE
+#define TEST_SUCCESS() return EXIT_SUCCESS
 #define FAILING true
+#define TEST_ASSERT(x) return (x) ? EXIT_SUCCESS : EXIT_FAILURE
 
 namespace hex::test {
 
