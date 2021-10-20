@@ -22,10 +22,10 @@ namespace hex::pl {
         ~Parser() = default;
 
         std::optional<std::vector<ASTNode*>> parse(const std::vector<Token> &tokens);
-        const ParseError& getError() { return this->m_error; }
+        const std::optional<ParseError>& getError() { return this->m_error; }
 
     private:
-        ParseError m_error;
+        std::optional<ParseError> m_error;
         TokenIter m_curr;
         TokenIter m_originalPosition;
 

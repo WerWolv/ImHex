@@ -55,11 +55,11 @@ namespace hex::pl {
         void setHardError(const EvaluateError &error) { this->m_lastHardError = error; }
 
         [[nodiscard]]
-        const LogConsole::EvaluateError& getLastHardError() { return this->m_lastHardError; };
+        const std::optional<EvaluateError>& getLastHardError() { return this->m_lastHardError; };
 
     private:
         std::vector<std::pair<Level, std::string>> m_consoleLog;
-        EvaluateError m_lastHardError;
+        std::optional<EvaluateError> m_lastHardError;
     };
 
 }

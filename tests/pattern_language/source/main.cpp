@@ -64,9 +64,8 @@ int test(int argc, char **argv) {
 
         if (auto error = language.getError(); error.has_value())
             hex::log::info("Compile error: {} : {}", error->first, error->second);
-        else
-            for (auto &[level, message] : language.getConsoleLog())
-                hex::log::info("Evaluate error: {}", message);
+        for (auto &[level, message] : language.getConsoleLog())
+            hex::log::info("Evaluate error: {}", message);
 
         return failing ? EXIT_SUCCESS : EXIT_FAILURE;
     }
