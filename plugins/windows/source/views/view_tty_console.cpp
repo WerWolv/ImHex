@@ -117,8 +117,8 @@ namespace hex::plugin::windows {
                 }
                 ImGui::PopStyleVar();
 
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
 
             ImGui::PushItemWidth(-1);
             if (ImGui::InputText("##transmit", this->m_transmitDataBuffer.data(), this->m_transmitDataBuffer.size() - 2, ImGuiInputTextFlags_EnterReturnsTrue)) {
