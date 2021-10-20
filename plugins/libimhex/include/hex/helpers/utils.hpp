@@ -127,7 +127,7 @@ namespace hex {
             default: __builtin_unreachable();
         }
 
-        T result;
+        T result = 0;
         std::memcpy(&result, &swapped, size);
 
         return result;
