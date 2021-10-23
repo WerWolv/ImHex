@@ -521,7 +521,9 @@ namespace hex {
 
         glfwSwapBuffers(this->m_window);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / this->m_targetFps - glfwGetTime()) * 1000)));
+        if (this->m_targetFps <= 200)
+            std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / this->m_targetFps - glfwGetTime()) * 1000)));
+
         this->m_lastFrameTime = glfwGetTime();
     }
 

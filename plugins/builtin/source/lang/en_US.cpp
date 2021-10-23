@@ -647,6 +647,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
                     { "hex.builtin.setting.interface.language", "Language" },
                     { "hex.builtin.setting.interface.fps", "FPS Limit" },
+                    { "hex.builtin.setting.interface.fps.unlocked", "Unlocked" },
                     { "hex.builtin.setting.interface.highlight_alpha", "Highlighting opacity" },
                 { "hex.builtin.setting.hex_editor", "Hex Editor" },
                     { "hex.builtin.setting.hex_editor.column_count", "Byte column count" },

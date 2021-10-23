@@ -646,6 +646,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
                     { "hex.builtin.setting.interface.language", "Sprache" },
                     { "hex.builtin.setting.interface.fps", "FPS Limite" },
+                    { "hex.builtin.setting.interface.fps.unlocked", "Unbegrenzt" },
                     { "hex.builtin.setting.interface.highlight_alpha", "Markierungssichtbarkeit" },
                 { "hex.builtin.setting.hex_editor", "Hex Editor" },
                     { "hex.builtin.setting.hex_editor.column_count", "Anzahl Byte Spalten" },
