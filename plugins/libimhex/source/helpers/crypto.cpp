@@ -17,6 +17,9 @@
 #include <span>
 #include <concepts>
 #include <functional>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 
 #if MBEDTLS_VERSION_MAJOR <= 2
 
@@ -45,8 +48,8 @@ namespace hex::crypt {
     void processDataByChunks(prv::Provider* data, u64 offset, size_t size, Func func)
     {
         std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(buffer.size(), size - bufferOffset);
+        for (size_t bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
+            const auto readSize = std::min(buffer.size(), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
             func(buffer.data(), readSize);
         }
