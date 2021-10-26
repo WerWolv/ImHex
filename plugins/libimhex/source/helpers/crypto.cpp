@@ -15,6 +15,11 @@
 
 #include <array>
 #include <span>
+#include <concepts>
+#include <functional>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 
 #if MBEDTLS_VERSION_MAJOR <= 2
 
@@ -37,77 +42,139 @@
 #endif
 
 namespace hex::crypt {
+    using namespace std::placeholders;
 
-    u16 crc16(prv::Provider* &data, u64 offset, size_t size, u16 polynomial, u16 init) {
-        const auto table = [polynomial] {
-            std::array<u16, 256> table;
-
-            for (u16 i = 0; i < 256; i++) {
-                u16 crc = 0;
-                u16 c = i;
-
-                for (u16 j = 0; j < 8; j++) {
-                    if (((crc ^ c) & 0x0001U) != 0)
-                        crc = (crc >> 1U) ^ polynomial;
-                    else
-                        crc >>= 1U;
-
-                    c >>= 1U;
-                }
-
-                table[i] = crc;
-            }
-
-            return table;
-        }();
-
-        u16 crc = init;
-
+    template<std::invocable<unsigned char*, size_t> Func>
+    void processDataByChunks(prv::Provider* data, u64 offset, size_t size, Func func)
+    {
         std::array<u8, 512> buffer = { 0 };
-
-        for (u64 bufferOffset = 0; offset < size; offset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
+        for (size_t bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
+            const auto readSize = std::min(buffer.size(), size - bufferOffset);
             data->read(offset + bufferOffset, buffer.data(), readSize);
-
-            for (size_t i = 0; i < readSize; i++) {
-                crc = (crc >> 8) ^ table[(crc ^ u16(buffer[i])) & 0x00FF];
-            }
+            func(buffer.data(), readSize);
         }
-
-        return crc;
     }
 
-    u32 crc32(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init) {
-        const auto table = [polynomial] {
-            std::array<uint32_t, 256> table = {0};
+    template<typename T>
+    T reflect(T in, std::size_t bits)
+    {
+        T out{};
 
-            for (uint32_t i = 0; i < 256; i++) {
-                uint32_t c = i;
-                for (size_t j = 0; j < 8; j++) {
-                    if (c & 1)
-                        c = polynomial ^ (c >> 1);
-                    else
-                        c >>= 1;
+        for(std::size_t i = 0; i < bits; i++)
+        {
+            out <<= 1;
+            if (in & 0b1)
+                out |= 1;
+            in >>= 1;
+        }
+        return out;
+    }
+
+    template<typename T>
+    T reflect(T in)
+    {
+        if constexpr (sizeof(T) == 1)
+        {
+            T out{in};
+
+            out = ((out & 0xf0u) >> 4) | ((out & 0x0fu) << 4);
+            out = ((out & 0xccu) >> 2) | ((out & 0x33u) << 2);
+            out = ((out & 0xaau) >> 1) | ((out & 0x55u) << 1);
+
+            return out;
+        }
+        else
+        {
+            return reflect(in, sizeof(T) *8 );
+        }
+    }
+
+    class Crc {
+        // use reflected algorithm, so we reflect only if refin / refout is FALSE
+        // mask values, 0b1 << 64 is UB, so use 0b10 << 63
+
+    public:
+        using calc_type = uint64_t;
+
+        Crc(int bits, calc_type polynomial, calc_type init, calc_type xorout, bool refin, bool refout) :
+            m_bits(bits),
+            m_init(init & ((0b10ull << (bits-1)) - 1)),
+            m_xorout(xorout & ((0b10ull << (bits-1)) - 1)),
+            m_refin(refin),
+            m_refout(refout),
+            table([polynomial, bits](){
+                auto reflectedpoly= reflect(polynomial & ((0b10ull << (bits-1)) - 1), bits);
+                std::array<uint64_t, 256> table = {0};
+
+                for (uint32_t i = 0; i < 256; i++) {
+                    uint64_t c = i;
+                    for (std::size_t j = 0; j < 8; j++) {
+                        if (c & 0b1)
+                            c = reflectedpoly ^ (c >> 1);
+                        else
+                            c >>= 1;
+                    }
+                    table[i] = c;
                 }
-                table[i] = c;
-            }
 
-            return table;
-        }();
+                return table;
+            }()) {
+            reset();
+        };
 
-        uint32_t c = init;
-        std::array<u8, 512> buffer = { 0 };
+        void reset() {
+            c = reflect(m_init, m_bits);
+        }
 
-        for (u64 bufferOffset = 0; offset < size; offset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
+        void processBytes(const unsigned char *data, std::size_t size) {
+            for (std::size_t i = 0; i < size; i++) {
+                unsigned char d;
+                if (m_refin)
+                    d = data[i];
+                else
+                    d = reflect(data[i]);
 
-            for (size_t i = 0; i < readSize; i++) {
-                c = table[(c ^ buffer[i]) & 0xFF] ^ (c >> 8);
+                c = table[(c ^ d) & 0xFFL] ^ (c >> 8);
             }
         }
 
-        return ~c;
+        calc_type checksum() const {
+            if (m_refout)
+                return c ^ m_xorout;
+            else
+                return reflect(c, m_bits) ^ m_xorout;
+        }
+
+    private:
+        const int m_bits;
+        const calc_type m_init;
+        const calc_type m_xorout;
+        const bool m_refin;
+        const bool m_refout;
+        const std::array<uint64_t, 256> table;
+
+        calc_type c;
+    };
+
+    template<int bits>
+    auto calcCrc(prv::Provider* data, u64 offset, std::size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        Crc crc(bits, polynomial, init, xorout, reflectIn, reflectOut);
+
+        processDataByChunks(data, offset, size, std::bind(&Crc::processBytes, &crc, _1, _2));
+
+        return crc.checksum();
+    }
+
+    u16 crc8(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        return calcCrc<8>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
+    }
+
+    u16 crc16(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        return calcCrc<16>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
+    }
+
+    u32 crc32(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+        return calcCrc<32>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
     }
 
 
@@ -119,12 +186,7 @@ namespace hex::crypt {
 
         mbedtls_md5_starts(&ctx);
 
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_md5_update(&ctx, buffer.data(), readSize);
-        }
+        processDataByChunks(data, offset, size, std::bind(mbedtls_md5_update, &ctx, _1, _2));
 
         mbedtls_md5_finish(&ctx, result.data());
 
@@ -156,12 +218,7 @@ namespace hex::crypt {
 
         mbedtls_sha1_starts(&ctx);
 
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha1_update(&ctx, buffer.data(), readSize);
-        }
+        processDataByChunks(data, offset, size, std::bind(mbedtls_sha1_update, &ctx, _1, _2));
 
         mbedtls_sha1_finish(&ctx, result.data());
 
@@ -193,12 +250,7 @@ namespace hex::crypt {
 
         mbedtls_sha256_starts(&ctx, true);
 
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha256_update(&ctx, buffer.data(), readSize);
-        }
+        processDataByChunks(data, offset, size, std::bind(mbedtls_sha256_update, &ctx, _1, _2));
 
         mbedtls_sha256_finish(&ctx, result.data());
 
@@ -230,12 +282,7 @@ namespace hex::crypt {
 
         mbedtls_sha256_starts(&ctx, false);
 
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha256_update(&ctx, buffer.data(), readSize);
-        }
+        processDataByChunks(data, offset, size, std::bind(mbedtls_sha256_update, &ctx, _1, _2));
 
         mbedtls_sha256_finish(&ctx, result.data());
 
@@ -267,12 +314,7 @@ namespace hex::crypt {
 
         mbedtls_sha512_starts(&ctx, true);
 
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha512_update(&ctx, buffer.data(), readSize);
-        }
+        processDataByChunks(data, offset, size, std::bind(mbedtls_sha512_update, &ctx, _1, _2));
 
         mbedtls_sha512_finish(&ctx, result.data());
 
@@ -304,12 +346,7 @@ namespace hex::crypt {
 
         mbedtls_sha512_starts(&ctx, false);
 
-        std::array<u8, 512> buffer = { 0 };
-        for (u64 bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
-            const u64 readSize = std::min(u64(buffer.size()), size - bufferOffset);
-            data->read(offset + bufferOffset, buffer.data(), readSize);
-            mbedtls_sha512_update(&ctx, buffer.data(), readSize);
-        }
+        processDataByChunks(data, offset, size, std::bind(mbedtls_sha512_update, &ctx, _1, _2));
 
         mbedtls_sha512_finish(&ctx, result.data());
 

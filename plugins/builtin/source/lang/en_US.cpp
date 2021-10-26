@@ -146,6 +146,9 @@ namespace hex::plugin::builtin {
                     { "hex.view.hashes.settings", "Settings" },
                     { "hex.view.hashes.function", "Hash function" },
                     { "hex.view.hashes.iv", "Initial value" },
+                    { "hex.view.hashes.xorout", "Final XOR value" },
+                    { "hex.common.reflectIn", "Reflect input" },
+                    { "hex.common.reflectOut", "Reflect output" },
                     { "hex.view.hashes.poly", "Polynomial" },
                     { "hex.view.hashes.result", "Result" },
 
