@@ -10,4 +10,4 @@ dnf install \
   mbedtls-devel \
   python-devel \
   freetype-devel \
-  gtk3
+  gtk3-devel
