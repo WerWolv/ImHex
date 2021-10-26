@@ -73,7 +73,7 @@ namespace hex {
                     ImGui::PushStyleColor(ImGuiCol_Header, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
-                    if (ImGui::CollapsingHeader(std::string(name.data()).c_str())) {
+                    if (ImGui::CollapsingHeader((std::string(name.data()) + "###bookmark").c_str())) {
                         ImGui::TextUnformatted("hex.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
                         ImGui::TextUnformatted(hex::format("hex.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size).c_str());
