@@ -2,6 +2,9 @@
 #include "test_provider.hpp"
 #include "tests.hpp"
 
+#include <vector>
+#include <algorithm>
+
 TEST_SEQUENCE("TestSucceeding") {
     TEST_SUCCESS();
 };

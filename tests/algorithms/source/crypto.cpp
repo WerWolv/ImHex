@@ -4,6 +4,10 @@
 #include "tests.hpp"
 
 #include <random>
+#include <vector>
+#include <array>
+#include <ranges>
+#include <algorithm>
 #include <fmt/ranges.h>
 
 struct EncodeChek {
