@@ -1,0 +1,3 @@
+external/** linguist-vendored
+plugins/libimhex-rust/imgui-rs/** linguist-vendored
+plugins/libimhex-rust/imgui-sys/** linguist-vendored
