@@ -9,7 +9,7 @@ namespace hex::test {
 
     class TestProvider : public prv::Provider {
     public:
-        TestProvider(std::vector<u8> data) : Provider(){
+        TestProvider(std::vector<u8>* data) : Provider(){
             this->setData(data);
         }
         ~TestProvider() override = default;
@@ -20,8 +20,8 @@ namespace hex::test {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
 
-        void setData(const std::vector<u8> &data) {
-            if (data.empty()) {
+        void setData(std::vector<u8>* data) {
+            if (data->empty()) {
                 hex::log::fatal("No data provided");
                 throw std::runtime_error("");
             }
@@ -38,23 +38,23 @@ namespace hex::test {
         }
 
         void readRaw(u64 offset, void *buffer, size_t size) override {
-            if (offset + size >= this->m_data.size()) return;
+            if (offset + size > this->m_data->size()) return;
 
-            std::memcpy(buffer, &this->m_data[offset], size);
+            std::memcpy(buffer, m_data->data() + offset, size);
         }
 
         void writeRaw(u64 offset, const void *buffer, size_t size) override {
-            if (offset + size >= this->m_data.size()) return;
+            if (offset + size > this->m_data->size()) return;
 
-            std::memcpy(&this->m_data[offset], buffer, size);
+            std::memcpy(m_data->data() + offset, buffer, size);
         }
 
         size_t getActualSize() const override {
-            return this->m_data.size();
+            return this->m_data->size();
         }
 
     private:
-        std::vector<u8> m_data;
+        std::vector<u8>* m_data;
     };
 
 }

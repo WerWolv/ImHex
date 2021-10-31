@@ -8,6 +8,8 @@ set(AVAILABLE_TESTS
     # Common
         TestSucceeding
         TestFailing
+        TestProvider_read
+        TestProvider_write
 
     # Endian
         32BitIntegerEndianSwap
