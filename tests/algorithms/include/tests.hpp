@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <utility>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <string>
 #include <map>
@@ -12,7 +13,15 @@
 #define TEST_FAIL() return EXIT_FAILURE
 #define TEST_SUCCESS() return EXIT_SUCCESS
 #define FAILING true
-#define TEST_ASSERT(x) return (x) ? EXIT_SUCCESS : EXIT_FAILURE
+#define TEST_ASSERT(x, ...) \
+    do { \
+        auto ret = (x); \
+        if (!ret) { \
+            hex::log::error("Test assert '" #x "' failed {} at {}:{}", \
+                            hex::format("" __VA_ARGS__),  __FILE__, __LINE__); \
+            return EXIT_FAILURE; \
+        } \
+    } while (0)
 
 namespace hex::test {
 
