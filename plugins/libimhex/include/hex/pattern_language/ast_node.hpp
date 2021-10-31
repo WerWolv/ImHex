@@ -692,6 +692,7 @@ namespace hex::pl {
                 if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(pattern)) {
                     u128 value = 0;
                     evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
+                    value = hex::changeEndianess(value, pattern->getSize(), pattern->getEndian());
 
                     auto result = function.func(evaluator, { value });
 
@@ -1088,9 +1089,12 @@ namespace hex::pl {
 
                 u128 pointerAddress = 0;
                 evaluator->getProvider()->read(pattern->getOffset(), &pointerAddress, pattern->getSize());
+                pointerAddress = hex::changeEndianess(pointerAddress, sizePattern->getSize(), sizePattern->getEndian());
+
                 pointedAtPattern->setOffset(pointerAddress);
 
                 pattern->setPointedAtPattern(pointedAtPattern);
+                pattern->setEndian(sizePattern->getEndian());
             }
 
             evaluator->dataOffset() = offset;
