@@ -372,23 +372,28 @@ namespace hex::crypt {
 
 
     std::vector<u8> decode64(const std::vector<u8> &input) {
-        size_t outputSize = (3 * input.size()) / 4;
-        std::vector<u8> output(outputSize + 1, 0x00);
 
         size_t written = 0;
+        mbedtls_base64_decode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
+        std::vector<u8> output(written, 0x00);
         if (mbedtls_base64_decode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
+
+        output.resize(written);
 
         return output;
     }
 
     std::vector<u8> encode64(const std::vector<u8> &input) {
-        size_t outputSize = 4 * ((input.size() + 2) / 3);
-        std::vector<u8> output(outputSize + 1, 0x00);
 
         size_t written = 0;
+        mbedtls_base64_encode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
+
+        std::vector<u8> output(written, 0x00);
         if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
+
+        output.resize(written);
 
         return output;
     }

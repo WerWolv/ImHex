@@ -17,6 +17,7 @@ set(AVAILABLE_TESTS
 
     # Crypto
         EncodeDecode16
+        EncodeDecode64
 )
 
 
