@@ -269,3 +269,137 @@ TEST_SEQUENCE("CRC8Random") {
 
     TEST_SUCCESS();
 };
+
+struct HashCheck {
+    std::string data;
+    std::string result;
+};
+
+template<typename Ret, typename Range>
+requires std::ranges::input_range<Range> && std::same_as<std::ranges::range_value_t<Range>, HashCheck>
+int checkHashProviderAgainstGondenSamples(Ret (*func)(hex::prv::Provider* &, u64, size_t), Range golden_samples)
+{
+    for(auto& i: golden_samples) {
+        std::vector<u8> data(i.data.data(), i.data.data() + i.data.size());
+        hex::test::TestProvider provider(&data);
+        hex::prv::Provider* provider2 = &provider;
+        auto res = func(provider2, 0, i.data.size());
+        TEST_ASSERT(std::ranges::equal(res, hex::crypt::decode16(i.result)),
+                    "data: '{}' got: {} expected: {}", i.data, hex::crypt::encode16(std::vector(res.begin(), res.end())), i.result);
+    }
+    TEST_SUCCESS();
+}
+
+template<typename Ret, typename Range>
+requires std::ranges::input_range<Range> && std::same_as<std::ranges::range_value_t<Range>, HashCheck>
+int checkHashVectorAgainstGondenSamples(Ret (*func)(const std::vector<u8> &), Range golden_samples)
+{
+    for(auto& i: golden_samples) {
+        std::vector<u8> data(i.data.data(), i.data.data() + i.data.size());
+        auto res = func(data);
+        TEST_ASSERT(std::ranges::equal(res, hex::crypt::decode16(i.result)),
+                    "data: '{}' got: {} expected: {}", i.data, hex::crypt::encode16(std::vector(res.begin(), res.end())), i.result);
+    }
+    TEST_SUCCESS();
+}
+
+TEST_SEQUENCE("md5") {
+    std::array golden_samples = {
+        // source: RFC 1321: The MD5 Message-Digest Algorithm [https://datatracker.ietf.org/doc/html/rfc1321#appendix-A.5]
+        HashCheck{"",
+                  "d41d8cd98f00b204e9800998ecf8427e"},
+        HashCheck{"a",
+                  "0cc175b9c0f1b6a831c399e269772661"},
+        HashCheck{"abc",
+                  "900150983cd24fb0d6963f7d28e17f72"},
+        HashCheck{"message digest",
+                  "f96b697d7cb7938d525a2f31aaf161d0"},
+        HashCheck{"abcdefghijklmnopqrstuvwxyz",
+                  "c3fcd3d76192e4007dfb496cca67e13b"},
+        HashCheck{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+                  "d174ab98d277d9f5a5611c2c9f419d9f"},
+        HashCheck{"12345678901234567890123456789012345678901234567890123456789012345678901234567890",
+                  "57edf4a22be3c955ac49da2e2107b67a"},
+    };
+
+    TEST_ASSERT(!checkHashProviderAgainstGondenSamples(hex::crypt::md5, golden_samples));
+    TEST_ASSERT(!checkHashVectorAgainstGondenSamples(hex::crypt::md5, golden_samples));
+
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("sha1") {
+    std::array golden_samples = {
+        // source: RFC 3174: US Secure Hash Algorithm 1 (SHA1) [https://datatracker.ietf.org/doc/html/rfc3174#section-7.3]
+        HashCheck{"abc",
+                  "A9993E364706816ABA3E25717850C26C9CD0D89D"},
+        HashCheck{"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+                  "84983E441C3BD26EBAAE4AA1F95129E5E54670F1"},
+    };
+
+    TEST_ASSERT(!checkHashProviderAgainstGondenSamples(hex::crypt::sha1, golden_samples));
+    TEST_ASSERT(!checkHashVectorAgainstGondenSamples(hex::crypt::sha1, golden_samples));
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("sha224") {
+    std::array golden_samples = {
+        // source: RFC 3874: A 224-bit One-way Hash Function: SHA-224 [https://datatracker.ietf.org/doc/html/rfc3874#section-3]
+        HashCheck{"abc",
+                  "23097D223405D8228642A477BDA255B32AADBCE4BDA0B3F7E36C9DA7"},
+        HashCheck{"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+                  "75388B16512776CC5DBA5DA1FD890150B0C6455CB4F58B1952522525"},
+    };
+
+    TEST_ASSERT(!checkHashProviderAgainstGondenSamples(hex::crypt::sha224, golden_samples));
+    TEST_ASSERT(!checkHashVectorAgainstGondenSamples(hex::crypt::sha224, golden_samples));
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("sha256") {
+    std::array golden_samples = {
+        // source: RFC 4634: US Secure Hash Algorithms (SHA and HMAC-SHA) [https://datatracker.ietf.org/doc/html/rfc4634#section-8.4]
+        HashCheck{"abc",
+                  "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD"},
+        HashCheck{"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+                  "248D6A61D20638B8E5C026930C3E6039A33CE45964FF2167F6ECEDD419DB06C1"},
+    };
+
+    TEST_ASSERT(!checkHashProviderAgainstGondenSamples(hex::crypt::sha256, golden_samples));
+    TEST_ASSERT(!checkHashVectorAgainstGondenSamples(hex::crypt::sha256, golden_samples));
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("sha384") {
+    std::array golden_samples = {
+        // source: RFC 4634: US Secure Hash Algorithms (SHA and HMAC-SHA) [https://datatracker.ietf.org/doc/html/rfc4634#section-8.4]
+        HashCheck{"abc",
+                  "CB00753F45A35E8BB5A03D699AC65007272C32AB0EDED1631A8B605A43FF5BED8086072BA1E7CC2358BAECA134C825A7"},
+        HashCheck{"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+                  "09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039"},
+    };
+
+    TEST_ASSERT(!checkHashProviderAgainstGondenSamples(hex::crypt::sha384, golden_samples));
+    TEST_ASSERT(!checkHashVectorAgainstGondenSamples(hex::crypt::sha384, golden_samples));
+
+    TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("sha512") {
+    std::array golden_samples = {
+        // source: RFC 4634: US Secure Hash Algorithms (SHA and HMAC-SHA) [https://datatracker.ietf.org/doc/html/rfc4634#section-8.4]
+        HashCheck{"abc",
+                  "DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F"},
+        HashCheck{"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+                  "8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909"},
+    };
+
+    TEST_ASSERT(!checkHashProviderAgainstGondenSamples(hex::crypt::sha512, golden_samples));
+    TEST_ASSERT(!checkHashVectorAgainstGondenSamples(hex::crypt::sha512, golden_samples));
+
+    TEST_SUCCESS();
+};

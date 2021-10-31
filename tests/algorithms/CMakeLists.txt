@@ -24,6 +24,12 @@ set(AVAILABLE_TESTS
         CRC16Random
         CRC8
         CRC8Random
+        md5
+        sha1
+        sha224
+        sha256
+        sha384
+        sha512
 )
 
 
