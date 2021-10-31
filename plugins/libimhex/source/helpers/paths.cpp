@@ -24,7 +24,7 @@ namespace hex {
             return exePath;
         #elif defined(OS_LINUX)
             std::string exePath(PATH_MAX, '\0');
-            readlink("/proc/self/exe", executablePath.data(), PATH_MAX);
+            readlink("/proc/self/exe", exePath.data(), PATH_MAX);
 
             return exePath;
         #elif defined(OS_MACOS)
@@ -146,7 +146,7 @@ namespace hex {
             const auto exePath = getExecutablePath();
 
             if (!exePath.empty())
-                dataDirs.emplace(dataDirs.begin(), std::filesystem::path(executablePath.data()).parent_path());
+                dataDirs.emplace(dataDirs.begin(), std::filesystem::path(exePath.data()).parent_path());
 
             std::vector<std::string> result;
 
