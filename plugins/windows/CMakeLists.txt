@@ -14,6 +14,7 @@ if (WIN32)
             source/lang/zh_CN.cpp
 
             source/content/ui_items.cpp
+            source/content/settings_entries.cpp
     )
 
     # Add additional include directories here #

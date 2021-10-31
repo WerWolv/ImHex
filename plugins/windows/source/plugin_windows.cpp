@@ -8,6 +8,7 @@ namespace hex::plugin::windows {
     void registerLanguageZhCN();
 
     void addFooterItems();
+    void registerSettings();
 }
 
 
@@ -20,6 +21,7 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     registerLanguageZhCN();
 
     addFooterItems();
+    registerSettings();
 }
 
 

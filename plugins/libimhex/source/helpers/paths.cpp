@@ -16,11 +16,28 @@
 
 namespace hex {
 
-    std::vector<std::string> getPath(ImHexPath path) {
+    std::string getExecutablePath() {
         #if defined(OS_WINDOWS)
             std::string exePath(MAX_PATH, '\0');
             GetModuleFileName(nullptr, exePath.data(), exePath.length());
-            auto parentDir = std::filesystem::path(exePath).parent_path();
+
+            return exePath;
+        #elif defined(OS_LINUX)
+            std::string exePath(PATH_MAX, '\0');
+            readlink("/proc/self/exe", executablePath.data(), PATH_MAX);
+
+            return exePath;
+        #elif defined(OS_MACOS)
+            return getMacExecutableDirectoryPath();
+        #else
+            return "";
+        #endif
+    }
+
+    std::vector<std::string> getPath(ImHexPath path) {
+        #if defined(OS_WINDOWS)
+            const auto exePath = getExecutablePath();
+            const auto parentDir = std::filesystem::path(exePath).parent_path();
 
             std::filesystem::path appDataDir;
             {
@@ -84,10 +101,10 @@ namespace hex {
             return results;
         #elif defined(OS_MACOS)
             // Get path to special directories
-            const std::filesystem::path exeDir(getMacExecutableDirectoryPath());
+            const auto exePath = getExecutablePath();
             const std::filesystem::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
-            std::vector<std::filesystem::path> paths = { exeDir, applicationSupportDir };
+            std::vector<std::filesystem::path> paths = { exePath, applicationSupportDir };
             std::vector<std::string> results;
 
             switch (path) {
@@ -126,8 +143,9 @@ namespace hex {
             for (auto &dir : dataDirs)
                 dir = dir / "imhex";
 
-            std::array<char, PATH_MAX> executablePath = { 0 };
-            if (readlink("/proc/self/exe", executablePath.data(), PATH_MAX) != -1)
+            const auto exePath = getExecutablePath();
+
+            if (!exePath.empty())
                 dataDirs.emplace(dataDirs.begin(), std::filesystem::path(executablePath.data()).parent_path());
 
             std::vector<std::string> result;

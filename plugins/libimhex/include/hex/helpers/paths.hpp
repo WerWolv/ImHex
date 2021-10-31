@@ -17,6 +17,8 @@ namespace hex {
         Constants
     };
 
+    std::string getExecutablePath();
+
     std::vector<std::string> getPath(ImHexPath path);
 
 }
