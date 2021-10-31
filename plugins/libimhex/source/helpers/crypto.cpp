@@ -411,7 +411,9 @@ namespace hex::crypt {
     }
 
     std::string encode16(const std::vector<u8> &input) {
-        std::string output(input.size() * 2 + 1, 0x00);
+
+        if (input.empty())
+            return { };
 
         mbedtls_mpi ctx;
         mbedtls_mpi_init(&ctx);
@@ -422,8 +424,11 @@ namespace hex::crypt {
             return { };
 
         size_t written = 0;
+        mbedtls_mpi_write_string(&ctx, 16, nullptr, 0, &written);
+        std::string output(written, 0x00);
         if (mbedtls_mpi_write_string(&ctx, 16, output.data(), output.size(), &written))
             return { };
+        output.resize(written-1);
 
         return output;
     }
