@@ -84,6 +84,7 @@ set(LIBIMHEX_SOURCES
     source/pattern_language/parser.cpp
     source/pattern_language/validator.cpp
     source/pattern_language/evaluator.cpp
+    source/pattern_language/log_console.cpp
 
     source/providers/provider.cpp
 

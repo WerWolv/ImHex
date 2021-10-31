@@ -2,12 +2,11 @@
 
 #include <hex.hpp>
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
-
-#include <hex/pattern_language/ast_node_base.hpp>
 
 namespace hex::pl {
 
@@ -27,30 +26,15 @@ namespace hex::pl {
 
         using EvaluateError = std::pair<u32, std::string>;
 
-        void log(Level level, const std::string &message) {
-            switch (level) {
-                default:
-                case Level::Debug:   this->m_consoleLog.emplace_back(level, "[-] " + message); break;
-                case Level::Info:    this->m_consoleLog.emplace_back(level, "[i] " + message); break;
-                case Level::Warning: this->m_consoleLog.emplace_back(level, "[*] " + message); break;
-                case Level::Error:   this->m_consoleLog.emplace_back(level, "[!] " + message); break;
-            }
-        }
+        void log(Level level, const std::string &message);
 
         [[noreturn]]
-        static void abortEvaluation(const std::string &message) {
-            throw EvaluateError(0, message);
-        }
+        static void abortEvaluation(const std::string &message);
 
         [[noreturn]]
-        static void abortEvaluation(const std::string &message, const auto *node) {
-            throw EvaluateError(static_cast<const ASTNode*>(node)->getLineNumber(), message);
-        }
+        static void abortEvaluation(const std::string &message, const ASTNode *node);
 
-        void clear() {
-            this->m_consoleLog.clear();
-            this->m_lastHardError = { };
-        }
+        void clear();
 
         void setHardError(const EvaluateError &error) { this->m_lastHardError = error; }
 
