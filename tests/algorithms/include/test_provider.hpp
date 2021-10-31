@@ -21,11 +21,6 @@ namespace hex::test {
         [[nodiscard]] bool isSavable() const override { return false; }
 
         void setData(std::vector<u8>* data) {
-            if (data->empty()) {
-                hex::log::fatal("No data provided");
-                throw std::runtime_error("");
-            }
-
             this->m_data = data;
         }
 
