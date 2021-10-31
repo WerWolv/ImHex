@@ -34,6 +34,10 @@ body:
     placeholder: X.X.X
   validations:
     required: true
+- type: checkboxes
+  attributes:
+    options:
+      - label: Nightly or built from sources
 - type: textarea
   attributes:
     label: Additional context?

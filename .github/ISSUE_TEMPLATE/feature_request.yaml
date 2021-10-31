@@ -18,4 +18,4 @@ body:
 - type: checkboxes
   attributes:
     options:
-      - label: I can provide PoC for that feature or am willing to work on it myself and submit a PR
+      - label: I can provide a PoC for this feature or am willing to work on it myself and submit a PR
