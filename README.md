@@ -20,8 +20,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 ## Screenshots
 
-![](https://user-images.githubusercontent.com/10835354/139592192-46ba0aef-3096-4ba6-96ca-8d65c7b6bf57.png)
-![](https://user-images.githubusercontent.com/10835354/139592467-27031984-4381-4341-aa18-e827eadca701.png)
+![Hex editor, patterns and data information](https://user-images.githubusercontent.com/10835354/139717326-8044769d-527b-4d88-8adf-2d4ecafdca1f.png)
+![Bookmarks, disassembler and data processor](https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png)
 
 ## Features
 
