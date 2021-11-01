@@ -6,7 +6,6 @@
 #include <random>
 #include <vector>
 #include <array>
-#include <ranges>
 #include <algorithm>
 #include <fmt/ranges.h>
 
@@ -41,7 +40,7 @@ TEST_SEQUENCE("EncodeDecode16") {
 
     for(int i = 0; i < 1000; i++) {
         std::vector<u8> original(dataLen(gen));
-        std::ranges::generate(original, [&](){ return data(gen); });
+        std::generate(std::begin(original), std::end(original), [&](){ return data(gen); });
 
         if ((original.size() > 0) && (original[0] == 0))
             continue; // BUG: mbedtls_mpi_read_binary ignores initial null bytes
@@ -94,7 +93,7 @@ TEST_SEQUENCE("EncodeDecode64") {
 
     for(int i = 0; i < 1000; i++) {
         std::vector<u8> original(dataLen(gen));
-        std::ranges::generate(original, [&](){ return data(gen); });
+        std::generate(std::begin(original), std::end(original), [&](){ return data(gen); });
 
         auto encoded = vectorToString(hex::crypt::encode64(original));
         auto decoded = hex::crypt::decode64(stringToVector(encoded));
@@ -118,8 +117,7 @@ struct CrcCheck {
     std::vector<u8> data;
 };
 
-template<std::invocable<hex::prv::Provider* &, u64, size_t, u32, u32, u32, bool, bool> Func, std::ranges::input_range Range>
-requires std::same_as<std::ranges::range_value_t<Range>, CrcCheck>
+template<std::invocable<hex::prv::Provider* &, u64, size_t, u32, u32, u32, bool, bool> Func, typename Range>
 int checkCrcAgainstGondenSamples(Func func, Range golden_samples) {
     for(auto& i: golden_samples) {
         hex::test::TestProvider provider(&i.data);
@@ -143,7 +141,7 @@ int checkCrcAgainstRandomData(Func func, int width) {
     for(int i = 0; i < 500; i++) {
         CrcCheck c{"", width, distribPoly(gen), distribPoly(gen), 0, false, false, 0, {}};
         c.data.resize(distribLen(gen));
-        std::ranges::generate(c.data, [&](){ return distribData(gen); });
+        std::generate(std::begin(c.data), std::end(c.data), [&](){ return distribData(gen); });
 
         hex::test::TestProvider testprovider(&c.data);
         hex::prv::Provider* provider = &testprovider;
@@ -280,7 +278,6 @@ struct HashCheck {
 };
 
 template<typename Ret, typename Range>
-requires std::ranges::input_range<Range> && std::same_as<std::ranges::range_value_t<Range>, HashCheck>
 int checkHashProviderAgainstGondenSamples(Ret (*func)(hex::prv::Provider* &, u64, size_t), Range golden_samples)
 {
     for(auto& i: golden_samples) {
@@ -288,20 +285,19 @@ int checkHashProviderAgainstGondenSamples(Ret (*func)(hex::prv::Provider* &, u64
         hex::test::TestProvider provider(&data);
         hex::prv::Provider* provider2 = &provider;
         auto res = func(provider2, 0, i.data.size());
-        TEST_ASSERT(std::ranges::equal(res, hex::crypt::decode16(i.result)),
+        TEST_ASSERT(std::equal(std::begin(res), std::end(res), hex::crypt::decode16(i.result).begin()),
                     "data: '{}' got: {} expected: {}", i.data, hex::crypt::encode16(std::vector(res.begin(), res.end())), i.result);
     }
     TEST_SUCCESS();
 }
 
 template<typename Ret, typename Range>
-requires std::ranges::input_range<Range> && std::same_as<std::ranges::range_value_t<Range>, HashCheck>
 int checkHashVectorAgainstGondenSamples(Ret (*func)(const std::vector<u8> &), Range golden_samples)
 {
     for(auto& i: golden_samples) {
         std::vector<u8> data(i.data.data(), i.data.data() + i.data.size());
         auto res = func(data);
-        TEST_ASSERT(std::ranges::equal(res, hex::crypt::decode16(i.result)),
+        TEST_ASSERT(std::equal(std::begin(res), std::end(res), hex::crypt::decode16(i.result).begin()),
                     "data: '{}' got: {} expected: {}", i.data, hex::crypt::encode16(std::vector(res.begin(), res.end())), i.result);
     }
     TEST_SUCCESS();
