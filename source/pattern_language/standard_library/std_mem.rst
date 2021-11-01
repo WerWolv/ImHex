@@ -116,6 +116,8 @@ Functions
     ``return``          Value as the smalest signed type that can fit this many bytes
     =================== ===========================================================================
 
+------------------------
+
 ``std::mem::read_string(u128 address, u128 size) -> str``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -132,3 +134,19 @@ Functions
     ``size``            Size of string to read
     ``return``          String containing a trimmed version of the read string
     =================== ===========================================================================
+    
+``std::mem::eof() -> bool`` :version:`Nightly`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Checks if the current offset is at or past the end of the data. Useful for letting an array grow until it encapsulates the entire data**
+
+.. table::
+    :align: left
+
+    ============= ===========================================================================
+    Parameter     Description
+    ============= ===========================================================================
+    ``return``    True if the current offset is at or past the end of the data
+    ============= ===========================================================================
+
+------------------------
