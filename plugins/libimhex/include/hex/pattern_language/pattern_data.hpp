@@ -160,6 +160,11 @@ namespace hex::pl {
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
 
+        [[nodiscard]]
+        virtual std::string toString(prv::Provider *provider) const {
+            return hex::format("{} {} @ 0x{:X}", this->getTypeName(), this->getVariableName(), this->getOffset());
+        }
+
         static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, pl::PatternData* left, pl::PatternData* right) {
             if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
@@ -611,6 +616,14 @@ namespace hex::pl {
             return "char16";
         }
 
+        [[nodiscard]] std::string toString(prv::Provider *provider) const override {
+            char16_t character;
+            provider->read(this->getOffset(), &character, 2);
+            character = hex::changeEndianess(character, this->getEndian());
+
+            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character);
+        }
+
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
@@ -634,6 +647,13 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
            return "String";
+        }
+
+        [[nodiscard]] std::string toString(prv::Provider *provider) const override {
+            std::string buffer(this->getSize(), 0x00);
+            provider->read(this->getOffset(), buffer.data(), buffer.size());
+
+            return buffer;
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
@@ -664,6 +684,16 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
             return "String16";
+        }
+
+        [[nodiscard]] std::string toString(prv::Provider *provider) const override {
+            std::u16string buffer(this->getSize(), 0x00);
+            provider->read(this->getOffset(), buffer.data(), buffer.size());
+
+            for (auto &c : buffer)
+                c = hex::changeEndianess(c, 2, this->getEndian());
+
+            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }

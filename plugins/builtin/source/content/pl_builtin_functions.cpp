@@ -16,7 +16,7 @@
 
 namespace hex::plugin::builtin {
 
-    std::string format(pl::Evaluator *, auto params) {
+    std::string format(pl::Evaluator *ctx, auto params) {
         auto format = pl::Token::literalToString(params[0], true);
         std::string message;
 
@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
             std::visit(overloaded {
                 [&](pl::PatternData* value) {
-                    formatArgs.push_back(hex::format("{} {} @ 0x{:X}", value->getTypeName(), value->getVariableName(), value->getOffset()));
+                    formatArgs.push_back(value->toString(ctx->getProvider()));
                 },
                 [&](auto &&value) {
                     formatArgs.push_back(value);
