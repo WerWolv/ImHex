@@ -301,6 +301,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.error", "Yara编译器错误: " },
                     { "hex.view.yara.header.matches", "匹配" },
                         { "hex.view.yara.matches.identifier", "标识符" },
+                        //{ "hex.view.yara.matches.variable", "Variable" },
                         { "hex.view.yara.whole_data", "全文件匹配！" },
                         { "hex.view.yara.no_rules", "没有找到YARA规则。请将规则放到ImHex的'yara'目录下。" },
 

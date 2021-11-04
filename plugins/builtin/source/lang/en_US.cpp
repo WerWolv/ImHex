@@ -304,6 +304,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.error", "Yara Compiler error: " },
                     { "hex.view.yara.header.matches", "Matches" },
                         { "hex.view.yara.matches.identifier", "Identifier" },
+                        { "hex.view.yara.matches.variable", "Variable" },
                         { "hex.view.yara.whole_data", "Whole file matches!" },
                         { "hex.view.yara.no_rules", "No YARA rules found. Put them in ImHex's 'yara' folder" },
 

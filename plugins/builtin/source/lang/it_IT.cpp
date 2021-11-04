@@ -301,6 +301,7 @@ namespace hex::plugin::builtin {
                         { "hex.view.yara.error", "Errore compilazione Yara: " },
                     { "hex.view.yara.header.matches", "Abbinamenti" },
                         { "hex.view.yara.matches.identifier", "Identificatore" },
+                        //{ "hex.view.yara.matches.variable", "Variable" },
                         { "hex.view.yara.whole_data", "Tutti i file combaciano!" },
                         { "hex.view.yara.no_rules", "Nessuna regola di YARA. Aggiungile in nella cartella 'yara' di 'ImHex'" },
 

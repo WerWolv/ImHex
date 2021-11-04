@@ -69,9 +69,10 @@ namespace hex {
             ImGui::TextUnformatted("hex.view.yara.header.matches"_lang);
             ImGui::Separator();
 
-            if (ImGui::BeginTable("matches", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.view.yara.matches.identifier"_lang);
+                ImGui::TableSetupColumn("hex.view.yara.matches.variable"_lang);
                 ImGui::TableSetupColumn("hex.common.address"_lang);
                 ImGui::TableSetupColumn("hex.common.size"_lang);
 
@@ -82,7 +83,7 @@ namespace hex {
 
                 while (clipper.Step()) {
                     for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &[identifier, address, size, wholeDataMatch] = this->m_matches[i];
+                        auto &[identifier, variableName, address, size, wholeDataMatch] = this->m_matches[i];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::PushID(i);
@@ -92,6 +93,8 @@ namespace hex {
                         ImGui::PopID();
                         ImGui::SameLine();
                         ImGui::TextUnformatted(identifier.c_str());
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(variableName.c_str());
 
                         if (!wholeDataMatch) {
                             ImGui::TableNextColumn();
@@ -250,11 +253,11 @@ namespace hex {
                     if (rule->strings != nullptr) {
                         yr_rule_strings_foreach(rule, string) {
                             yr_string_matches_foreach(context, string, match) {
-                                newMatches.push_back({ rule->identifier, match->offset, match->match_length, false });
+                                newMatches.push_back({ rule->identifier, string->identifier, match->offset, match->match_length, false });
                             }
                         }
                     } else {
-                        newMatches.push_back({ rule->identifier, 0, 0, true });
+                        newMatches.push_back({ rule->identifier, "", 0, 0, true });
                     }
 
                 }

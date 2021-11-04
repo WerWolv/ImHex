@@ -18,6 +18,7 @@ namespace hex {
     private:
         struct YaraMatch {
             std::string identifier;
+            std::string variable;
             s64 address;
             s32 size;
             bool wholeDataMatch;
