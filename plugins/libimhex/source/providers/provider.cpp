@@ -100,7 +100,7 @@ namespace hex::prv {
     }
 
     u64 Provider::getBaseAddress() const {
-        return this->m_baseAddress + PageSize * this->m_currPage;
+        return this->m_baseAddress;
     }
 
     size_t Provider::getSize() const {
