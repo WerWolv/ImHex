@@ -242,8 +242,8 @@ namespace hex {
             EventManager::post<EventAbnormalTermination>(signalNumber);
 
             // Let's not loop on this...
-            std::signal(SIGABRT, nullptr);
-            std::raise(SIGABRT);
+            std::signal(signalNumber, nullptr);
+            std::raise(signalNumber);
         };
 
         std::signal(SIGTERM, signalHandler);
