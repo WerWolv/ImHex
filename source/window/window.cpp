@@ -241,6 +241,8 @@ namespace hex {
         auto signalHandler = [](int signalNumber) {
             EventManager::post<EventAbnormalTermination>(signalNumber);
 
+            // Let's not loop on this...
+            std::signal(SIGABRT, nullptr);
             std::raise(SIGABRT);
         };
 
