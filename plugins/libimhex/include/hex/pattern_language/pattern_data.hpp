@@ -642,6 +642,10 @@ namespace hex::pl {
 
             provider->read(this->getOffset(), buffer.data(), size);
 
+            std::erase_if(buffer, [](auto c){
+                return c == 0x00;
+            });
+
             this->createDefaultEntry(hex::format("\"{0}\" {1}", makeDisplayable(buffer.data(), this->getSize()), size > this->getSize() ? "(truncated)" : ""), buffer);
         }
 
@@ -652,6 +656,10 @@ namespace hex::pl {
         [[nodiscard]] std::string toString(prv::Provider *provider) const override {
             std::string buffer(this->getSize(), 0x00);
             provider->read(this->getOffset(), buffer.data(), buffer.size());
+
+            std::erase_if(buffer, [](auto c){
+                return c == 0x00;
+            });
 
             return buffer;
         }
@@ -677,6 +685,10 @@ namespace hex::pl {
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
 
+            std::erase_if(buffer, [](auto c){
+                return c == 0x00;
+            });
+
             auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
 
             this->createDefaultEntry(hex::format("\"{0}\" {1}", utf8String, size > this->getSize() ? "(truncated)" : ""), utf8String);
@@ -692,6 +704,10 @@ namespace hex::pl {
 
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
+
+            std::erase_if(buffer, [](auto c){
+                return c == 0x00;
+            });
 
             return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
         }
