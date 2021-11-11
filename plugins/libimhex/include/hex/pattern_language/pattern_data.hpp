@@ -679,7 +679,7 @@ namespace hex::pl {
         void createEntry(prv::Provider* &provider) override {
             auto size = std::min<size_t>(this->getSize(), 0x100);
 
-            std::u16string buffer(size, 0x00);
+            std::u16string buffer(this->getSize()/sizeof(char16_t), 0x00);
             provider->read(this->getOffset(), buffer.data(), size);
 
             for (auto &c : buffer)
@@ -699,8 +699,8 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::string toString(prv::Provider *provider) const override {
-            std::u16string buffer(this->getSize(), 0x00);
-            provider->read(this->getOffset(), buffer.data(), buffer.size());
+            std::u16string buffer(this->getSize()/sizeof(char16_t), 0x00);
+            provider->read(this->getOffset(), buffer.data(), this->getSize());
 
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
