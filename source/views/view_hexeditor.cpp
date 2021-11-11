@@ -206,49 +206,57 @@ namespace hex {
             {
                 auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
 
-                this->m_highlightAlpha = alpha;
+                if (alpha.is_number())
+                    this->m_highlightAlpha = alpha;
             }
 
             {
                 auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
 
-                this->m_memoryEditor.Cols = static_cast<int>(columnCount);
+                if (columnCount.is_number())
+                    this->m_memoryEditor.Cols = static_cast<int>(columnCount);
             }
 
             {
                 auto hexii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii");
 
-                this->m_memoryEditor.OptShowHexII = static_cast<int>(hexii);
+                if (hexii.is_number())
+                    this->m_memoryEditor.OptShowHexII = static_cast<int>(hexii);
             }
 
             {
                 auto ascii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii");
 
-                this->m_memoryEditor.OptShowAscii = static_cast<int>(ascii);
+                if (ascii.is_number())
+                    this->m_memoryEditor.OptShowAscii = static_cast<int>(ascii);
             }
 
             {
                 auto advancedDecoding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding");
 
-                this->m_memoryEditor.OptShowAdvancedDecoding = static_cast<int>(advancedDecoding);
+                if (advancedDecoding.is_number())
+                    this->m_memoryEditor.OptShowAdvancedDecoding = static_cast<int>(advancedDecoding);
             }
 
             {
                 auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
 
-                this->m_memoryEditor.OptGreyOutZeroes = static_cast<int>(greyOutZeros);
+                if (greyOutZeros.is_number())
+                    this->m_memoryEditor.OptGreyOutZeroes = static_cast<int>(greyOutZeros);
             }
 
             {
                 auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
 
-                this->m_memoryEditor.OptUpperCaseHex = static_cast<int>(upperCaseHex);
+                if (upperCaseHex.is_number())
+                    this->m_memoryEditor.OptUpperCaseHex = static_cast<int>(upperCaseHex);
             }
 
             {
                 auto showExtraInfo = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.extra_info");
 
-                this->m_memoryEditor.OptShowExtraInfo = static_cast<int>(showExtraInfo);
+                if (showExtraInfo.is_number())
+                    this->m_memoryEditor.OptShowExtraInfo = static_cast<int>(showExtraInfo);
             }
         });
 

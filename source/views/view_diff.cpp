@@ -16,19 +16,22 @@ namespace hex {
             {
                 auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
 
-                this->m_columnCount = static_cast<int>(columnCount);
+                if (columnCount.is_number())
+                    this->m_columnCount = static_cast<int>(columnCount);
             }
 
             {
                 auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
 
-                this->m_greyedOutZeros = static_cast<int>(greyOutZeros);
+                if (greyOutZeros.is_number())
+                    this->m_greyedOutZeros = static_cast<int>(greyOutZeros);
             }
 
             {
                 auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
 
-                this->m_upperCaseHex = static_cast<int>(upperCaseHex);
+                if (upperCaseHex.is_number())
+                    this->m_upperCaseHex = static_cast<int>(upperCaseHex);
             }
         });
         

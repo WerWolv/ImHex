@@ -89,7 +89,9 @@ namespace hex {
         EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
-                EventManager::post<RequestChangeTheme>(theme.get<int>());
+
+                if (theme.is_number())
+                    EventManager::post<RequestChangeTheme>(theme.get<int>());
             }
 
             {
