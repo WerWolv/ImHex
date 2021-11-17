@@ -20,7 +20,7 @@ TEST_SEQUENCE("EncodeDecode16") {
         // source: created by hand
         EncodeChek{ { }, "" },
         EncodeChek{ { 0x2a }, "2A" },
-        //EncodeChek{ { 0x00, 0x2a }, "002A" }, // BUG: mbedtls_mpi_read_binary ignores initial null bytes
+        EncodeChek{ { 0x00, 0x2a }, "002A" },
         EncodeChek{ { 0x2a, 0x00 }, "2A00" },
         EncodeChek{ { 0xde, 0xad, 0xbe, 0xef, 0x42, 0x2a, 0x00, 0xff}, "DEADBEEF422A00FF" },
     };
@@ -41,9 +41,6 @@ TEST_SEQUENCE("EncodeDecode16") {
     for(int i = 0; i < 1000; i++) {
         std::vector<u8> original(dataLen(gen));
         std::generate(std::begin(original), std::end(original), [&](){ return data(gen); });
-
-        if ((original.size() > 0) && (original[0] == 0))
-            continue; // BUG: mbedtls_mpi_read_binary ignores initial null bytes
 
         auto encoded = hex::crypt::encode16(original);
         auto decoded = hex::crypt::decode16(encoded);

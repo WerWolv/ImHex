@@ -420,20 +420,12 @@ namespace hex::crypt {
         if (input.empty())
             return { };
 
-        mbedtls_mpi ctx;
-        mbedtls_mpi_init(&ctx);
+        std::string output(input.size() * 2, '\0');
 
-        ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
-
-        if (mbedtls_mpi_read_binary(&ctx, input.data(), input.size()))
-            return { };
-
-        size_t written = 0;
-        mbedtls_mpi_write_string(&ctx, 16, nullptr, 0, &written);
-        std::string output(written, 0x00);
-        if (mbedtls_mpi_write_string(&ctx, 16, output.data(), output.size(), &written))
-            return { };
-        output.resize(written-1);
+        for(int i = 0; i < input.size(); i++) {
+            output[2*i+0] = "0123456789ABCDEF"[input[i] / 16];
+            output[2*i+1] = "0123456789ABCDEF"[input[i] % 16];
+        }
 
         return output;
     }
