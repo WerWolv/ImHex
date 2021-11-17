@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <thread>
+#include <regex>
 
 #include <llvm/Demangle/Demangle.h>
 #include <imgui_imhex_extensions.h>
@@ -105,12 +106,25 @@ namespace hex {
 
                         view.m_filterIndices.clear();
                         for (u64 i = 0; i < view.m_foundStrings.size(); i++) {
-                            if (readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos)
+                            auto str = readString(view.m_foundStrings[i]);
+                            bool regex = false;
+                            if (view.m_regex) {
+                                try {
+                                    std::regex re(view.m_filter.data());
+                                    regex = std::regex_search(str, re);
+                                } catch (std::regex_error &e) {
+                                    regex = false;
+                                }
+                            } 
+                            if(regex || str.find(data->Buf) != std::string::npos){
                                 view.m_filterIndices.push_back(i);
+                            }
                         }
 
                         return 0;
                     }, this);
+                    ImGui::SameLine();
+                    ImGui::Checkbox("Regex", &this->m_regex);
 
                     if (ImGui::Button("hex.view.strings.extract"_lang))
                         this->searchStrings();
