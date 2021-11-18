@@ -25,6 +25,7 @@ namespace hex {
     private:
         bool m_searching = false;
         bool m_regex = false;
+        bool m_pattern_parsed = false;
 
         std::vector<FoundString> m_foundStrings;
         std::vector<size_t> m_filterIndices;
