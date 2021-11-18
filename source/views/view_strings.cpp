@@ -127,7 +127,7 @@ namespace hex {
                         return 0;
                     }, this);
                     if(this->m_regex && !this->m_pattern_parsed){
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Invalid regex");
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "hex.view.strings.regex_error"_lang);
                     }
 
                     if (ImGui::Button("hex.view.strings.extract"_lang))
