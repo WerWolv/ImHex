@@ -109,7 +109,7 @@ namespace hex {
                         std::regex pattern;
                         if (view.m_regex) {
                             try {
-                                pattern = std::regex(view.m_filter.data());
+                                pattern = std::regex(data->Buf);
                                 view.m_pattern_parsed = true;
                             } catch (std::regex_error &e) {
                                 view.m_pattern_parsed = false;
@@ -120,7 +120,7 @@ namespace hex {
                                 if(view.m_pattern_parsed && std::regex_search(readString(view.m_foundStrings[i]), pattern))
                                     view.m_filterIndices.push_back(i);
                             }
-                            else if(readString(view.m_foundStrings[i]).find(view.m_filter.data()) != std::string::npos) {
+                            else if(readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos) {
                                 view.m_filterIndices.push_back(i);
                             }
                         }
