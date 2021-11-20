@@ -641,7 +641,6 @@ namespace hex::pl {
         std::vector<ASTNode*> body;
 
         auto bodyCleanup = SCOPE_GUARD {
-            delete condition;
             for (auto &statement : body)
                 delete statement;
         };
