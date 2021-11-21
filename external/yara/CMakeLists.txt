@@ -107,6 +107,7 @@ add_compile_definitions("DEX_MODULE")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-count-overflow")
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
+set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(
         libyara
