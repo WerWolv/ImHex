@@ -881,7 +881,7 @@ namespace hex {
                 str += " };";
                 break;
             case Language::Rust:
-                str += "let data: [u8, " + std::to_string(buffer.size()) + "] = [ ";
+                str += "let data: [u8; " + std::to_string(buffer.size()) + "] = [ ";
 
                 for (const auto &byte : buffer)
                     str += hex::format("0x{0:02X}, ", byte);
