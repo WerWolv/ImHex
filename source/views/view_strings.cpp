@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <thread>
+#include <regex>
 
 #include <llvm/Demangle/Demangle.h>
 #include <imgui_imhex_extensions.h>
@@ -99,18 +100,35 @@ namespace hex {
                     if (ImGui::InputInt("hex.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                         this->m_foundStrings.clear();
 
+                    ImGui::Checkbox("Regex", &this->m_regex);
+
                     ImGui::InputText("hex.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
                         auto &view = *static_cast<ViewStrings*>(data->UserData);
                         view.m_filter.resize(data->BufTextLen);
-
                         view.m_filterIndices.clear();
+                        std::regex pattern;
+                        if (view.m_regex) {
+                            try {
+                                pattern = std::regex(data->Buf);
+                                view.m_pattern_parsed = true;
+                            } catch (std::regex_error &e) {
+                                view.m_pattern_parsed = false;
+                            }
+                        } 
                         for (u64 i = 0; i < view.m_foundStrings.size(); i++) {
-                            if (readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos)
+                            if(view.m_regex){
+                                if(view.m_pattern_parsed && std::regex_search(readString(view.m_foundStrings[i]), pattern))
+                                    view.m_filterIndices.push_back(i);
+                            }
+                            else if(readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos) {
                                 view.m_filterIndices.push_back(i);
+                            }
                         }
-
                         return 0;
                     }, this);
+                    if(this->m_regex && !this->m_pattern_parsed){
+                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "hex.view.strings.regex_error"_lang);
+                    }
 
                     if (ImGui::Button("hex.view.strings.extract"_lang))
                         this->searchStrings();
