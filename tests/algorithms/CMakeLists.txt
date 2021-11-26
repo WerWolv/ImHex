@@ -8,10 +8,28 @@ set(AVAILABLE_TESTS
     # Common
         TestSucceeding
         TestFailing
+        TestProvider_read
+        TestProvider_write
 
     # Endian
         32BitIntegerEndianSwap
         64BitFloatEndianSwap
+
+    # Crypto
+        EncodeDecode16
+        EncodeDecode64
+        CRC32
+        CRC32Random
+        CRC16
+        CRC16Random
+        CRC8
+        CRC8Random
+        md5
+        sha1
+        sha224
+        sha256
+        sha384
+        sha512
 )
 
 
@@ -20,6 +38,7 @@ add_executable(algorithms_test
 
         source/common.cpp
         source/endian.cpp
+        source/crypto.cpp
 )
 target_include_directories(algorithms_test PRIVATE include)
 target_link_libraries(algorithms_test libimhex)

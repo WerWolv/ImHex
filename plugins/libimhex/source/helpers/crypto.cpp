@@ -372,23 +372,28 @@ namespace hex::crypt {
 
 
     std::vector<u8> decode64(const std::vector<u8> &input) {
-        size_t outputSize = (3 * input.size()) / 4;
-        std::vector<u8> output(outputSize + 1, 0x00);
 
         size_t written = 0;
+        mbedtls_base64_decode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
+        std::vector<u8> output(written, 0x00);
         if (mbedtls_base64_decode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
+
+        output.resize(written);
 
         return output;
     }
 
     std::vector<u8> encode64(const std::vector<u8> &input) {
-        size_t outputSize = 4 * ((input.size() + 2) / 3);
-        std::vector<u8> output(outputSize + 1, 0x00);
 
         size_t written = 0;
+        mbedtls_base64_encode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
+
+        std::vector<u8> output(written, 0x00);
         if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
             return { };
+
+        output.resize(written);
 
         return output;
     }
@@ -411,19 +416,16 @@ namespace hex::crypt {
     }
 
     std::string encode16(const std::vector<u8> &input) {
-        std::string output(input.size() * 2 + 1, 0x00);
 
-        mbedtls_mpi ctx;
-        mbedtls_mpi_init(&ctx);
-
-        ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
-
-        if (mbedtls_mpi_read_binary(&ctx, input.data(), input.size()))
+        if (input.empty())
             return { };
 
-        size_t written = 0;
-        if (mbedtls_mpi_write_string(&ctx, 16, output.data(), output.size(), &written))
-            return { };
+        std::string output(input.size() * 2, '\0');
+
+        for(int i = 0; i < input.size(); i++) {
+            output[2*i+0] = "0123456789ABCDEF"[input[i] / 16];
+            output[2*i+1] = "0123456789ABCDEF"[input[i] % 16];
+        }
 
         return output;
     }
