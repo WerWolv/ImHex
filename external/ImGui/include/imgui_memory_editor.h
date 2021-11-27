@@ -393,8 +393,8 @@ struct MemoryEditor
                 bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
                 if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
                 {
-                    ImVec2 pos = ImGui::GetCursorScreenPos();
-                    float highlight_width = s.GlyphWidth * 2;
+                    ImVec2 pos = ImGui::GetCursorScreenPos() - ImVec2(ImGui::GetStyle().CellPadding.x / 2, 0);
+                    float highlight_width = s.GlyphWidth * 2 + ImGui::GetStyle().CellPadding.x / 2;
                     bool is_next_byte_highlighted = (addr + 1 < mem_size) &&
                                                     ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) ||
                                                     (HighlightFn && HighlightFn(mem_data, addr + 1, true)) ||
@@ -411,6 +411,23 @@ struct MemoryEditor
                         color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
 
                     draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), color);
+
+                    if (is_highlight_from_preview) {
+                        size_t min = std::min(DataPreviewAddr, DataPreviewAddrEnd);
+                        size_t max = std::max(DataPreviewAddr, DataPreviewAddrEnd);
+
+                        if (n == 0 || addr == min)
+                            draw_list->AddLine(pos, pos + ImVec2(0, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                        if (n == Cols - 1 || addr == max) {
+                            draw_list->AddRectFilled(pos + ImVec2(highlight_width, 0), pos + ImVec2(highlight_width + 1, s.LineHeight), color);
+                            draw_list->AddLine(pos + ImVec2(highlight_width + 1, -1), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                        }
+
+                        if (addr - Cols < min)
+                            draw_list->AddLine(pos, pos + ImVec2(highlight_width + 1, 0), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                        if (addr + Cols > max)
+                            draw_list->AddLine(pos + ImVec2(0, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                    }
                 }
 
                 if (DataEditingAddr == addr)
