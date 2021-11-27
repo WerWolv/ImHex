@@ -62,7 +62,7 @@ namespace hex::pl {
         [[nodiscard]] virtual std::vector<PatternData *> createPatterns(Evaluator *evaluator) const { return {}; }
 
         using FunctionResult = std::pair<bool, std::optional<Token::Literal>>;
-        virtual FunctionResult execute(Evaluator *evaluator) { throw std::pair<u32, std::string>(this->getLineNumber(), "cannot execute non-function statement"); }
+        virtual FunctionResult execute(Evaluator *evaluator) const { throw std::pair<u32, std::string>(this->getLineNumber(), "cannot execute non-function statement"); }
 
     private:
         u32 m_lineNumber = 1;
@@ -565,7 +565,7 @@ namespace hex::pl {
             return this->m_body;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
 
             u64 loopIterations = 0;
             while (evaluateCondition(evaluator)) {
@@ -755,7 +755,7 @@ namespace hex::pl {
             return { pattern };
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             evaluator->createVariable(this->getName(), this->getType());
 
             return { false, { } };
@@ -1144,7 +1144,7 @@ namespace hex::pl {
             return patterns;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             for (auto &variable : this->m_variables) {
                 auto variableDecl = dynamic_cast<ASTNodeVariableDecl*>(variable);
 
@@ -1775,7 +1775,7 @@ namespace hex::pl {
             return this->m_falseBody;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
             auto variables = *evaluator->getScope(0).scope;
@@ -1848,6 +1848,13 @@ namespace hex::pl {
             return this->m_params;
         }
 
+        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+
+            this->execute(evaluator);
+
+            return { };
+        }
+
         [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
             std::vector<Token::Literal> evaluatedParams;
             for (auto param : this->m_params) {
@@ -1897,7 +1904,7 @@ namespace hex::pl {
             return nullptr;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             delete this->evaluate(evaluator);
 
             return { false, { } };
@@ -1987,7 +1994,7 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             auto literal = dynamic_cast<ASTNodeLiteral*>(this->getRValue()->evaluate(evaluator));
             ON_SCOPE_EXIT { delete literal; };
 
@@ -2024,7 +2031,7 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             auto returnValue = this->getReturnValue();
 
             if (returnValue == nullptr)
@@ -2172,7 +2179,7 @@ namespace hex::pl {
             return result;
         }
 
-        FunctionResult execute(Evaluator *evaluator) override {
+        FunctionResult execute(Evaluator *evaluator) const override {
             FunctionResult result;
 
             auto variables = *evaluator->getScope(0).scope;

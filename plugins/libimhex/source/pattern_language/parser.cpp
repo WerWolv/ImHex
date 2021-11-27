@@ -837,16 +837,34 @@ namespace hex::pl {
         if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY) || peek(IDENTIFIER)) {
             // Some kind of variable definition
 
-            auto type = parseType();
+            bool isFunction = false;
 
-            if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN))
-                member = parseMemberArrayVariable(type);
-            else if (MATCHES(sequence(IDENTIFIER)))
-                member = parseMemberVariable(type);
-            else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
-                member = parseMemberPointerVariable(type);
-            else
-                throwParseError("invalid variable declaration");
+            if (peek(IDENTIFIER)) {
+                auto originalPos = this->m_curr;
+                this->m_curr++;
+                parseNamespaceResolution();
+                isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
+                this->m_curr = originalPos;
+
+                if (isFunction) {
+                    this->m_curr++;
+                    member = parseFunctionCall();
+                }
+            }
+
+
+            if (!isFunction) {
+                auto type = parseType();
+
+                if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN))
+                    member = parseMemberArrayVariable(type);
+                else if (MATCHES(sequence(IDENTIFIER)))
+                    member = parseMemberVariable(type);
+                else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
+                    member = parseMemberPointerVariable(type);
+                else
+                    throwParseError("invalid variable declaration");
+            }
         }
         else if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
             member = parsePadding();
