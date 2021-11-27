@@ -1454,10 +1454,6 @@ namespace hex::pl {
 
                     std::visit(overloaded {
                             [&](std::string &assignmentValue) { },
-                            [&](s128 assignmentValue) {
-                                std::memcpy(&value, &assignmentValue, pattern->getSize());
-                                value = hex::signExtend(pattern->getSize() * 8, value);
-                            },
                             [&](auto &&assignmentValue) { std::memcpy(&value, &assignmentValue, pattern->getSize()); }
                     }, literal);
                 }
@@ -1491,6 +1487,7 @@ namespace hex::pl {
             } else if (dynamic_cast<PatternDataSigned*>(pattern)) {
                 s128 value = 0;
                 readValue(value, pattern);
+                value = hex::signExtend(pattern->getSize() * 8, value);
                 literal = value;
             } else if (dynamic_cast<PatternDataFloat*>(pattern)) {
                 if (pattern->getSize() == sizeof(u16)) {
