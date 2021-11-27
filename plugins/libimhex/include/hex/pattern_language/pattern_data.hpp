@@ -37,7 +37,7 @@ namespace hex::pl {
                     result += static_cast<char>(*c);
             }
 
-            if (*(data + size - 1) == '\x00')
+            if (size != 0 && *(data + size - 1) == '\x00')
                 result.pop_back();
 
             return result;
@@ -638,6 +638,10 @@ namespace hex::pl {
 
         void createEntry(prv::Provider* &provider) override {
             auto size = std::min<size_t>(this->getSize(), 0x7F);
+
+            if (size == 0)
+                return;
+
             std::string buffer(size, 0x00);
 
             provider->read(this->getOffset(), buffer.data(), size);
@@ -678,6 +682,9 @@ namespace hex::pl {
 
         void createEntry(prv::Provider* &provider) override {
             auto size = std::min<size_t>(this->getSize(), 0x100);
+
+            if (size == 0)
+                return;
 
             std::u16string buffer(this->getSize()/sizeof(char16_t), 0x00);
             provider->read(this->getOffset(), buffer.data(), size);
