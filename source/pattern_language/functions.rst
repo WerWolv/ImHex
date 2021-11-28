@@ -70,7 +70,7 @@ While loops work similarly to if statements. As long as the condition in the hea
     }
 
 
-For-Statement :version:`Nightly`
+For-Statement :version:`1.11.0`
 --------------------------------
 
 For loops are another kind of loop similar to the while loop. Its head consists of three blocks separated by commas.

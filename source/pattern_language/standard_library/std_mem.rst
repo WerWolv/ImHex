@@ -135,7 +135,7 @@ Functions
     ``return``          String containing a trimmed version of the read string
     =================== ===========================================================================
     
-``std::mem::eof() -> bool`` :version:`Nightly`
+``std::mem::eof() -> bool`` :version:`1.11.0`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Checks if the current offset is at or past the end of the data. Useful for letting an array grow until it encapsulates the entire data**
