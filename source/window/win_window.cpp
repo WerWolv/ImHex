@@ -170,15 +170,28 @@
 
 
         void Window::initNative() {
-            auto hConsoleWindow = ::GetConsoleWindow();
-            ::ShowWindow(hConsoleWindow, FALSE);
+            // Attach to parent console if one exists
+            AttachConsole(ATTACH_PARENT_PROCESS);
 
-            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
-            if (hConsole != INVALID_HANDLE_VALUE) {
-                DWORD mode = 0;
-                if (::GetConsoleMode(hConsole, &mode)) {
-                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-                    ::SetConsoleMode(hConsole, mode);
+            // Redirect cin, cout and cerr to that console
+            freopen("CONIN$", "w", stdin);
+            freopen("CONOUT$", "w", stdout);
+            freopen("CONERR$", "w", stderr);
+            setvbuf(stdin,  nullptr, _IONBF, 0);
+            setvbuf(stdout, nullptr, _IONBF, 0);
+            setvbuf(stderr, nullptr, _IONBF, 0);
+
+            fmt::print("\n");
+
+            // Enable color format specifiers in console
+            {
+                auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
+                if (hConsole != INVALID_HANDLE_VALUE) {
+                    DWORD mode = 0;
+                    if (::GetConsoleMode(hConsole, &mode)) {
+                        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+                        ::SetConsoleMode(hConsole, mode);
+                    }
                 }
             }
         }
