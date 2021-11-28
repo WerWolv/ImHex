@@ -700,15 +700,16 @@ namespace hex {
         if (!glfwInit())
             throw std::runtime_error("Failed to initialize GLFW!");
 
-        #ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        #if defined(OS_WINDOWS)
+            glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+        #elif defined(OS_MACOS)
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         #endif
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
         this->m_windowTitle = "ImHex";
