@@ -193,7 +193,7 @@
                 if (!themeFollowSystem) return;
 
                 HKEY hkey;
-                if (RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", &hkey) == ERROR_SUCCESS) {
+                if (RegOpenKey(HKEY_CURRENT_USER, R"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", &hkey) == ERROR_SUCCESS) {
                     DWORD value = 0;
                     DWORD size = sizeof(DWORD);
 

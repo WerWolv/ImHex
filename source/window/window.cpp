@@ -84,7 +84,6 @@ namespace hex {
 
         this->initGLFW();
         this->initImGui();
-        this->setupNativeWindow();
 
         EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             {
@@ -719,6 +718,8 @@ namespace hex {
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
+
+        this->setupNativeWindow();
 
         {
             int x = 0, y = 0;
