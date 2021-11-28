@@ -249,7 +249,7 @@ namespace hex {
 
     void ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
         if (!update) {
-            this->m_downloadPath = hex::getPath(pathType).front() / fs::path(fileName);
+            this->m_downloadPath = hex::getPath(pathType).back() / fs::path(fileName);
             this->m_download = this->m_net.downloadFile(url, this->m_downloadPath);
         } else {
             for (const auto &path : hex::getPath(pathType)) {
