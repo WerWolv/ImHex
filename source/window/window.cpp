@@ -84,6 +84,7 @@ namespace hex {
 
         this->initGLFW();
         this->initImGui();
+        this->setupNativeWindow();
 
         EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             {
@@ -707,6 +708,8 @@ namespace hex {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
         this->m_windowTitle = "ImHex";
         this->m_window = glfwCreateWindow(1280 * SharedData::globalScale, 720 * SharedData::globalScale, this->m_windowTitle.c_str(), nullptr, nullptr);
@@ -719,7 +722,19 @@ namespace hex {
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
 
-        this->setupNativeWindow();
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        if (monitor != nullptr) {
+            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+            if (mode != nullptr) {
+                int monitorX, monitorY;
+                glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+                int windowWidth, windowHeight;
+                glfwGetWindowSize(this->m_window, &windowWidth, &windowHeight);
+
+                glfwSetWindowPos(this->m_window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+            }
+        }
 
         {
             int x = 0, y = 0;
@@ -819,6 +834,8 @@ namespace hex {
         });
 
         glfwSetWindowSizeLimits(this->m_window, 720 * SharedData::globalScale, 480 * SharedData::globalScale, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
+        glfwShowWindow(this->m_window);
     }
 
     void Window::initImGui() {

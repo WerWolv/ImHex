@@ -26,6 +26,7 @@
         static LONG_PTR oldWndProc;
         static float titleBarHeight;
         static ImGuiMouseCursor mouseCursorIcon;
+        static BOOL compositionEnabled = false;
 
         static bool isTaskbarAutoHideEnabled(UINT edge, RECT monitor) {
             APPBARDATA data = { .cbSize = sizeof(APPBARDATA), .uEdge = edge, .rc = monitor };
@@ -156,6 +157,11 @@
 
                     break;
                 }
+                case WM_NCACTIVATE:
+                case WM_NCPAINT:
+                {
+                    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+                }
                 default: break;
             }
 
@@ -182,11 +188,14 @@
 
             oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
 
-            MARGINS borderless = {1,1,1,1};
+            MARGINS borderless = { 1, 1, 1, 1 };
             ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
 
+            DWORD attribute = DWMNCRP_ENABLED;
+            ::DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &attribute, sizeof(attribute));
+
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);
-            ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU);
+            ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
 
             bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
             EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem]{
