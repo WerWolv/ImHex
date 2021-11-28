@@ -171,17 +171,19 @@
 
         void Window::initNative() {
             // Attach to parent console if one exists
-            AttachConsole(ATTACH_PARENT_PROCESS);
+            if (AttachConsole(ATTACH_PARENT_PROCESS)) {
 
-            // Redirect cin, cout and cerr to that console
-            freopen("CONIN$", "w", stdin);
-            freopen("CONOUT$", "w", stdout);
-            freopen("CONERR$", "w", stderr);
-            setvbuf(stdin,  nullptr, _IONBF, 0);
-            setvbuf(stdout, nullptr, _IONBF, 0);
-            setvbuf(stderr, nullptr, _IONBF, 0);
+                // Redirect cin, cout and cerr to that console
+                freopen("CONIN$", "w", stdin);
+                freopen("CONOUT$", "w", stdout);
+                freopen("CONERR$", "w", stderr);
+                setvbuf(stdin,  nullptr, _IONBF, 0);
+                setvbuf(stdout, nullptr, _IONBF, 0);
+                setvbuf(stderr, nullptr, _IONBF, 0);
 
-            fmt::print("\n");
+                fmt::print("\n");
+            }
+
 
             // Enable color format specifiers in console
             {
