@@ -525,7 +525,7 @@ bool ImGui_ImplOpenGL3_CreateFontsTexture()
     glGenTextures(1, &bd->FontTexture);
     glBindTexture(GL_TEXTURE_2D, bd->FontTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 #ifdef GL_UNPACK_ROW_LENGTH // Not on WebGL/ES
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 #endif
