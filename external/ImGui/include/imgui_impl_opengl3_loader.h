@@ -149,6 +149,7 @@ typedef khronos_uint8_t GLubyte;
 #define GL_FILL                           0x1B02
 #define GL_VERSION                        0x1F02
 #define GL_EXTENSIONS                     0x1F03
+#define GL_NEAREST                        0x2600
 #define GL_LINEAR                         0x2601
 #define GL_TEXTURE_MAG_FILTER             0x2800
 #define GL_TEXTURE_MIN_FILTER             0x2801
