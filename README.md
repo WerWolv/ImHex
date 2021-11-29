@@ -209,6 +209,15 @@ with the environment variables `XDG_CONFIG_HOME`, `XDG_CONFIG_DIRS`,
 
 ## Credits
 
+### Contributors
+
+- [Mary](https://github.com/Thog) for her immense help porting ImHex to MacOS and help during development
+- [Roblabla](https://github.com/Roblabla) for adding MSI Installer support to ImHex
+- [jam1garner](https://github.com/jam1garner) and [raytwo](https://github.com/raytwo) for their help with adding Rust support to plugins
+- All other people that have been reporting issues on Discord or GitHub that I had great conversations with :)
+
+### Libraries
+
 - Thanks a lot to ocornut for their amazing [Dear ImGui](https://github.com/ocornut/imgui) which is used for building the entire interface
   - Thanks to ocornut as well for their hex editor view used as base for this project.
   - Thanks to BalazsJako for their incredible [ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit) used for the pattern language syntax highlighting
