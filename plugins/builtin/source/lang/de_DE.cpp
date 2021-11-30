@@ -285,6 +285,7 @@ namespace hex::plugin::builtin {
                     { "hex.view.strings.filter", "Filter" },
                     { "hex.view.strings.extract", "Extrahieren" },
                     { "hex.view.strings.regex_error", "Ungültiges Regex" },
+                    { "hex.view.strings.results", "{0} Ergebnisse" },
                     { "hex.view.strings.searching", "Suchen..." },
                     { "hex.view.strings.offset", "Offset" },
                     { "hex.view.strings.size", "Grösse" },

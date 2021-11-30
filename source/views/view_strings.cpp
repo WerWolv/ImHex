@@ -1,6 +1,7 @@
 #include "views/view_strings.hpp"
 
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <cstring>
 #include <thread>
@@ -116,17 +117,17 @@ namespace hex {
                             }
                         } 
                         for (u64 i = 0; i < view.m_foundStrings.size(); i++) {
-                            if(view.m_regex){
+                            if (view.m_regex) {
                                 if(view.m_pattern_parsed && std::regex_search(readString(view.m_foundStrings[i]), pattern))
                                     view.m_filterIndices.push_back(i);
                             }
-                            else if(readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos) {
+                            else if (readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos) {
                                 view.m_filterIndices.push_back(i);
                             }
                         }
                         return 0;
                     }, this);
-                    if(this->m_regex && !this->m_pattern_parsed){
+                    if (this->m_regex && !this->m_pattern_parsed) {
                         ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "hex.view.strings.regex_error"_lang);
                     }
 
@@ -137,6 +138,10 @@ namespace hex {
                 if (this->m_searching) {
                     ImGui::SameLine();
                     ImGui::TextSpinner("hex.view.strings.searching"_lang);
+                }
+                else if (this->m_foundStrings.size() > 0) {
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted(hex::format("hex.view.strings.results"_lang, this->m_filterIndices.size()).c_str());
                 }
 
 
