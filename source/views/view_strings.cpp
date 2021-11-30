@@ -141,7 +141,7 @@ namespace hex {
 
                 if(this->m_foundStrings.size() > 0){
                     ImGui::SameLine();
-                    ImGui::Text("Found %i occurrences", this->m_filterIndices.size());
+                    ImGui::Text("hex.view.strings.results"_lang, this->m_filterIndices.size());
                 }
 
 
