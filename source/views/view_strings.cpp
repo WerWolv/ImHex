@@ -139,6 +139,11 @@ namespace hex {
                     ImGui::TextSpinner("hex.view.strings.searching"_lang);
                 }
 
+                if(this->m_foundStrings.size() > 0){
+                    ImGui::SameLine();
+                    ImGui::Text("Found %i occurrences", this->m_filterIndices.size());
+                }
+
 
                 ImGui::Separator();
                 ImGui::NewLine();
