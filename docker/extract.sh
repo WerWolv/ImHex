@@ -20,7 +20,7 @@ docker cp imhex:/ImHex-x86_64.AppImage .
 
 # Move to tagged name if $TAG set
 if [ -n "$TAG" ]; then
-    mv ImHex-x86_64.AppImage Imhex-${TAG}-x86_64.AppImage
+    mv ImHex-x86_64.AppImage ImHex-${TAG}-x86_64.AppImage
 fi
 
 popd
