@@ -11,9 +11,9 @@ docker rm imhex 2>&1 > /dev/null
 # AppImage uses FUSE, which makes --device /dev/fuse --cap-add SYS_ADMIN necessary here
 # on Debian --security-opt apparmor:unconfined is also needed
 if [ -z "$TAG" ]; then
-    docker run -d --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined --name imhex imhex-appimage-build sh -c '/source/appimagetool-x86_64.AppImage /source/ImHex.AppDir; sleep 60'
+    docker run -d --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined --name imhex imhex-appimage-build
 else
-    docker run -d --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined --name imhex imhex-appimage-build-$TAG sh -c '/source/appimagetool-x86_64.AppImage /source/ImHex.AppDir; sleep 60'
+    docker run -d --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined --name imhex imhex-appimage-build-$TAG
 fi
 sleep 10
 docker cp imhex:/ImHex-x86_64.AppImage .

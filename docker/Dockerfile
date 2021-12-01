@@ -57,3 +57,5 @@ RUN cd /source \
 # this cannot be done in a build container.
 #
 # /source/appimagetool-x86_64.AppImage ImHex.AppDir
+
+ENTRYPOINT sh -c '/source/appimagetool-x86_64.AppImage /source/ImHex.AppDir; sleep 60'
