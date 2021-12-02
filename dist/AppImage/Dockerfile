@@ -37,4 +37,4 @@ RUN mkdir -p /source/ImHex/build \
 # Prepare for AppImage
 RUN cd /source/ImHex/dist/AppImage \
     && ./package.sh /source/ImHex/build \
-    && mv /source/ImHex/build/ImHex-x86_64.AppImage /AppImage/
+    && mv /source/ImHex/build/ImHex-x86_64.AppImage /

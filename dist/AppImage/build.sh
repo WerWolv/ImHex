@@ -11,7 +11,6 @@ SUFFIX=""
 [ -n "${TAG}" ] && BUILDARG="${BUILDARG} --build-arg=TAG=${TAG}" && SUFFIX=":${TAG}"
 [ -n "${REPO}" ] && BUILDARG="${BUILDARG} --build-arg=REPO=${REPO}"
 
-mkdir -p ../../build/AppImage
-docker build ${BUILDARG} -v "../../build/AppImage:/AppImage" -t imhex-appimage-build${SUFFIX} .
+docker build ${BUILDARG} -t imhex-appimage-build${SUFFIX} .
 
 popd

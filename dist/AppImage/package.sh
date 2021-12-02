@@ -51,4 +51,6 @@ cat ${MYDIR}/runtime-x86_64 > ${APPIMAGE}
 cat ${BUILDDIR}/ImHex.squashfs >> ${APPIMAGE}
 chmod a+x ${APPIMAGE}
 
-echo "The created AppImage can be found in the build dir under AppImage/"
+if [ ! -f /.dockerenv ]; then
+    echo -e "\nThe created AppImage can be found here:\n  ${APPIMAGE}\n\n"
+fi
