@@ -12,7 +12,7 @@ SUFFIX=""
 docker rm imhex 2>&1 > /dev/null
 
 docker run -d --name imhex imhex-appimage-build${SUFFIX} sleep 30 &
-sleep 5
+sleep 15
 docker cp imhex:/ImHex-x86_64.AppImage .
 
 # Move to tagged name if $TAG set
