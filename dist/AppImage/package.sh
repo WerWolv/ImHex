@@ -28,7 +28,8 @@ mkdir -p ${BUILDDIR}/ImHex.AppDir/usr/{bin,lib} ${BUILDDIR}/ImHex.AppDir/usr/sha
 ## Add ImHex files to structure
 cp ${BUILDDIR}/imhex ${BUILDDIR}/ImHex.AppDir/usr/bin
 cp ${BUILDDIR}/plugins/builtin/builtin.hexplug ${BUILDDIR}/ImHex.AppDir/usr/share/imhex/plugins
-cp ${MYDIR}/{AppRun,ImHex.desktop,imhex.png} ${BUILDDIR}/ImHex.AppDir/
+cp ${MYDIR}/{AppRun-x86_64,ImHex.desktop,imhex.png} ${BUILDDIR}/ImHex.AppDir/
+mv ${BUILDDIR}/ImHex.AppDir/AppRun-x86_64 ${BUILDDIR}/ImHex.AppDir/AppRun
 chmod a+x ${BUILDDIR}/ImHex.AppDir/AppRun
 
 ## Add all dependencies
@@ -37,7 +38,7 @@ ldd ${BUILDDIR}/imhex | awk '/ => /{print $3}' | xargs -I '{}' cp '{}' ${BUILDDI
 # Package it up as described here:
 # https://github.com/AppImage/AppImageKit#appimagetool-usage
 # under 'If you want to generate an AppImage manually'
-# `runtime` is taken from https://github.com/AppImage/AppImageKit/releases
+# `runtime` and `AppRun-x86_64` are from https://github.com/AppImage/AppImageKit/releases
 # This builds a v2 AppImage according to
 # https://github.com/AppImage/AppImageSpec/blob/master/draft.md#type-2-image-format
 mksquashfs ${BUILDDIR}/ImHex.AppDir ${BUILDDIR}/ImHex.squashfs -root-owned -noappend
