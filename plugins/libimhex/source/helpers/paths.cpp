@@ -1,6 +1,8 @@
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/paths_mac.h>
 
+#include <xdg.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shlobj.h>
