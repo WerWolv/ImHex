@@ -20,28 +20,35 @@ MYDIR=$(dirname "$(realpath "$0")")
 set -u # Throw errors when unset variables are used
 
 BUILDDIR=$1
+APPDIR=${BUILDDIR}/ImHex.AppDir
+APPIMAGE=${BUILDDIR}/ImHex-x86_64.AppImage
 
 # Prepare for AppImage
+## Fetch the needed AppImage binaries
+curl -L https://github.com/AppImage/AppImageKit/releases/download/13/AppRun-x86_64 -o ${MYDIR}/AppRun-x86_64
+curl -L https://github.com/AppImage/AppImageKit/releases/download/13/runtime-x86_64 -o ${MYDIR}/runtime-x86_64
+
 ## Setup directory structure
 mkdir -p ${BUILDDIR}/ImHex.AppDir/usr/{bin,lib} ${BUILDDIR}/ImHex.AppDir/usr/share/imhex/plugins
 
 ## Add ImHex files to structure
-cp ${BUILDDIR}/imhex ${BUILDDIR}/ImHex.AppDir/usr/bin
-cp ${BUILDDIR}/plugins/builtin/builtin.hexplug ${BUILDDIR}/ImHex.AppDir/usr/share/imhex/plugins
-cp ${MYDIR}/{AppRun-x86_64,ImHex.desktop,imhex.png} ${BUILDDIR}/ImHex.AppDir/
-mv ${BUILDDIR}/ImHex.AppDir/AppRun-x86_64 ${BUILDDIR}/ImHex.AppDir/AppRun
+cp ${BUILDDIR}/imhex ${APPDIR}/usr/bin
+cp ${BUILDDIR}/plugins/builtin/builtin.hexplug ${APPDIR}/usr/share/imhex/plugins
+cp ${MYDIR}/{AppRun-x86_64,ImHex.desktop,imhex.png} ${APPDIR}/
+mv ${BUILDDIR}/ImHex.AppDir/AppRun-x86_64 ${APPDIR}/AppRun
 chmod a+x ${BUILDDIR}/ImHex.AppDir/AppRun
 
 ## Add all dependencies
-ldd ${BUILDDIR}/imhex | awk '/ => /{print $3}' | xargs -I '{}' cp '{}' ${BUILDDIR}/ImHex.AppDir/usr/lib
+ldd ${BUILDDIR}/imhex | awk '/ => /{print $3}' | xargs -I '{}' cp '{}' ${APPDIR}/usr/lib
 
 # Package it up as described here:
 # https://github.com/AppImage/AppImageKit#appimagetool-usage
 # under 'If you want to generate an AppImage manually'
-# `runtime` and `AppRun-x86_64` are from https://github.com/AppImage/AppImageKit/releases
 # This builds a v2 AppImage according to
 # https://github.com/AppImage/AppImageSpec/blob/master/draft.md#type-2-image-format
-mksquashfs ${BUILDDIR}/ImHex.AppDir ${BUILDDIR}/ImHex.squashfs -root-owned -noappend
-cat ${MYDIR}/runtime-x86_64 > ${BUILDDIR}/ImHex-x86_64.AppImage
-cat ${BUILDDIR}/ImHex.squashfs >> ${BUILDDIR}/ImHex-x86_64.AppImage
-chmod a+x ${BUILDDIR}/ImHex-x86_64.AppImage
+mksquashfs ${APPDIR} ${BUILDDIR}/ImHex.squashfs -root-owned -noappend
+cat ${MYDIR}/runtime-x86_64 > ${APPIMAGE}
+cat ${BUILDDIR}/ImHex.squashfs >> ${APPIMAGE}
+chmod a+x ${APPIMAGE}
+
+echo "The created AppImage can be found in the build dir under AppImage/"
