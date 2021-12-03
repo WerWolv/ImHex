@@ -186,6 +186,7 @@ macro(createPackage)
         endif ()
     endforeach()
 
+    install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
     if (WIN32)
