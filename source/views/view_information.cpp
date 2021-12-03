@@ -96,6 +96,8 @@ namespace hex {
             }
 
             {
+                magic::compile();
+
                 this->m_fileDescription = magic::getDescription(provider);
                 this->m_mimeType = magic::getMIMEType(provider);
                 this->m_dataValid = true;
