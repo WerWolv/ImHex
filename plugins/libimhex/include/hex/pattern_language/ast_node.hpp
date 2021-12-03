@@ -472,8 +472,13 @@ namespace hex::pl {
             auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_value->evaluate(evaluator));
             auto type = dynamic_cast<ASTNodeBuiltinType*>(this->m_type->evaluate(evaluator))->getType();
 
+            auto startOffset= evaluator->dataOffset();
+
             auto typePattern = this->m_type->createPatterns(evaluator).front();
-            ON_SCOPE_EXIT { delete typePattern; };
+            ON_SCOPE_EXIT {
+                evaluator->dataOffset() = startOffset;
+                delete typePattern;
+            };
 
             return std::visit(overloaded {
                     [&, this](PatternData * value) -> ASTNode* { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(type)), this); },
