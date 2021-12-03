@@ -65,7 +65,7 @@ jobs:
     - name: 📦 Bundle .deb
       run: |
         dpkg-deb --build build/install
-        mv install.deb imhex.deb
+        mv build/install.deb imhex.deb
         
     - name: ⬆️ Upload ELF
       uses: actions/upload-artifact@v2
@@ -84,7 +84,7 @@ jobs:
     - name: ⬆️ Upload .deb
       uses: actions/upload-artifact@v2
       with:
-        name: Linux .deb
+        name: Linux DEB
         path: |
          imhex.deb
   win:
