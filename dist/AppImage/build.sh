@@ -1,14 +1,16 @@
 #!/bin/bash
 
 # Set the TAG environment variable to build a specific tag
+# Set the REPO environment variable to point at a different git repository
 
-# Make sure we're in the same direcotry as this script
+# Make sure we're in the same directory as this script
 pushd $(dirname "$(realpath "$0")")
 
-if [ -z "$TAG" ]; then
-    docker build -t imhex-appimage-build .
-else
-    docker build --build-arg=TAG=$TAG -t imhex-appimage-build-$TAG .
-fi
+BUILDARG=""
+SUFFIX=""
+[ -n "${TAG}" ] && BUILDARG="${BUILDARG} --build-arg=TAG=${TAG}" && SUFFIX=":${TAG}"
+[ -n "${REPO}" ] && BUILDARG="${BUILDARG} --build-arg=REPO=${REPO}"
+
+docker build ${BUILDARG} -t imhex-appimage-build${SUFFIX} .
 
 popd

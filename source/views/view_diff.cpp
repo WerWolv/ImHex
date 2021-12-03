@@ -161,7 +161,7 @@ namespace hex {
                     lastHighlightEnd.reset();
                 }
 
-                ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 2.5F : glyphWidth * 0.25F);
+                ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 2.5F : glyphWidth * 0.5F);
             }
             ImGui::TableNextColumn();
         }
@@ -201,7 +201,7 @@ namespace hex {
                     for (u8 i = 0; i < 2; i++) {
                         for (u8 col = 0; col < this->m_columnCount; col++) {
                             ImGui::TextUnformatted(hex::format(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col).c_str());
-                            ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 2.5F : glyphWidth * 0.25F);
+                            ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 2.5F : glyphWidth * 0.5F);
                         }
                         ImGui::TableNextColumn();
                     }
@@ -211,7 +211,7 @@ namespace hex {
                 if (this->m_providerA >= 0 && this->m_providerB >= 0) {
                     auto &providers = ImHexApi::Provider::getProviders();
                     ImGuiListClipper clipper;
-                    clipper.Begin(std::max(providers[this->m_providerA]->getSize() / this->m_columnCount, providers[this->m_providerB]->getSize() / this->m_columnCount));
+                    clipper.Begin(std::max(providers[this->m_providerA]->getSize() / this->m_columnCount, providers[this->m_providerB]->getSize() / this->m_columnCount) + 1, ImGui::GetTextLineHeightWithSpacing());
 
                     // Draw diff lines
                     while (clipper.Step()) {

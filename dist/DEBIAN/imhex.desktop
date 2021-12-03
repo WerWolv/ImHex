@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=ImHex
+Comment=ImHex Hex Editor
+GenericName=Hex Editor
+Exec=/usr/bin/imhex %U
+Icon=/usr/share/pixmaps/imhex.png
+Type=Application
+StartupNotify=true
+Categories=GNOME;GTK;Development;
+StartupWMClass=imhex
+

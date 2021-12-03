@@ -61,6 +61,16 @@ jobs:
         flatpak --user install -y flathub org.freedesktop.Sdk//20.08
         flatpak-builder --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
         flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
+        
+    - name: 📦 Bundle DEB
+      run: |
+        dpkg-deb --build build/install
+        mv build/install.deb imhex.deb
+
+    - name: 📦 Bundle AppImage
+      run: |
+        dist/AppImage/package.sh build
+        mv build/ImHex-x86_64.AppImage imhex.AppImage
 
     - name: ⬆️ Upload ELF
       uses: actions/upload-artifact@v2
@@ -74,7 +84,21 @@ jobs:
       with:
         name: Linux Flatpak
         path: |
-         imhex.flatpak
+          imhex.flatpak
+         
+    - name: ⬆️ Upload .deb
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux DEB
+        path: |
+          imhex.deb
+
+    - name: ⬆️ Upload AppImage
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux AppImage
+        path: |
+          imhex.AppImage
 
   win:
     runs-on: windows-latest
