@@ -279,13 +279,15 @@ namespace hex {
     }
 
     void Window::loop() {
+        double timeout;
         this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
                 glfwWaitEvents();
             else
-                glfwWaitEventsTimeout(0.2);
-
+                timeout = (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime);
+                timeout = timeout > 0 ? timeout : 0;
+                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ? 0 : timeout);
 
             this->frameBegin();
             this->frame();
