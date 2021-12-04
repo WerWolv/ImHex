@@ -280,14 +280,11 @@ namespace hex {
 
     void Window::loop() {
         this->m_lastFrameTime = glfwGetTime();
-        float timeout;
         while (!glfwWindowShouldClose(this->m_window)) {
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED))
                 glfwWaitEvents();
             else
-                timeout = (this->m_lastFrameTime - glfwGetTime() + 1 / 5.0);
-                timeout = timeout > 0 ? timeout : 0;
-                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ? 0 : timeout);
+                glfwWaitEventsTimeout(0.2);
 
 
             this->frameBegin();
