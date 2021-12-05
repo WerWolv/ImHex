@@ -27,11 +27,16 @@ namespace hex {
                 }
             }
         });
+
+        EventManager::subscribe<EventFileUnloaded>(this, [this]{
+            this->m_disassembly.clear();
+        });
     }
 
     ViewDisassembler::~ViewDisassembler() {
         EventManager::unsubscribe<EventDataChanged>(this);
         EventManager::unsubscribe<EventRegionSelected>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
     void ViewDisassembler::disassemble() {

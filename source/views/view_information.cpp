@@ -39,11 +39,16 @@ namespace hex {
             if (this->m_blockSize != 0)
                 this->m_entropyHandlePosition = region.address / this->m_blockSize;
         });
+
+        EventManager::subscribe<EventFileUnloaded>(this, [this]{
+            this->m_dataValid = false;
+        });
     }
 
     ViewInformation::~ViewInformation() {
         EventManager::unsubscribe<EventDataChanged>(this);
         EventManager::unsubscribe<EventRegionSelected>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
     static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t numBytes) {

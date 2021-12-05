@@ -37,12 +37,17 @@ namespace hex {
         EventManager::subscribe<EventProjectFileStore>(this, []{
             ProjectFile::setBookmarks(SharedData::bookmarkEntries);
         });
+
+        EventManager::subscribe<EventFileUnloaded>(this, []{
+            ImHexApi::Bookmarks::getEntries().clear();
+        });
     }
 
     ViewBookmarks::~ViewBookmarks() {
         EventManager::unsubscribe<RequestAddBookmark>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<EventProjectFileStore>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
     void ViewBookmarks::drawContent() {

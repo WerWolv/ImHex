@@ -21,10 +21,15 @@ namespace hex {
 
         this->m_filter.reserve(0xFFFF);
         std::memset(this->m_filter.data(), 0x00, this->m_filter.capacity());
+
+        EventManager::subscribe<EventFileUnloaded>(this, [this]{
+            this->m_foundStrings.clear();
+        });
     }
 
     ViewStrings::~ViewStrings() {
         EventManager::unsubscribe<EventDataChanged>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
     std::string readString(const FoundString &foundString) {

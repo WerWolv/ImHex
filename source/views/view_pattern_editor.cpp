@@ -152,6 +152,11 @@ namespace hex {
             }
         });
 
+        EventManager::subscribe<EventFileUnloaded>(this, [this]{
+            this->m_textEditor.SetText("");
+            this->m_patternLanguageRuntime->abort();
+        });
+
         /* Settings */
         {
 
@@ -181,6 +186,7 @@ namespace hex {
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
     void ViewPatternEditor::drawMenu() {
