@@ -1090,13 +1090,13 @@ namespace hex::pl {
             offset = evaluator->dataOffset();
 
             {
-                auto pointedAtPattern = this->m_type->createPatterns(evaluator).front();
-
                 u128 pointerAddress = 0;
                 evaluator->getProvider()->read(pattern->getOffset(), &pointerAddress, pattern->getSize());
                 pointerAddress = hex::changeEndianess(pointerAddress, sizePattern->getSize(), sizePattern->getEndian());
 
-                pointedAtPattern->setOffset(pointerAddress);
+                evaluator->dataOffset() = pointerAddress;
+
+                auto pointedAtPattern = this->m_type->createPatterns(evaluator).front();
 
                 pattern->setPointedAtPattern(pointedAtPattern);
                 pattern->setEndian(sizePattern->getEndian());
