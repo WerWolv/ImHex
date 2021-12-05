@@ -10,7 +10,7 @@ using json = nlohmann::json;
 namespace hex {
 
     void to_json(json& j, const ImHexApi::Bookmarks::Entry& b) {
-        j = json{ { "address", b.region.address }, { "size", b.region.size }, { "name", b.name.data() }, { "comment", b.comment.data() }, { "locked", b.locked } };
+        j = json{ { "address", b.region.address }, { "size", b.region.size }, { "name", b.name.data() }, { "comment", b.comment.data() }, { "locked", b.locked }, { "color", b.color } };
     }
 
     void from_json(const json& j, ImHexApi::Bookmarks::Entry& b) {
@@ -21,6 +21,7 @@ namespace hex {
         j.at("name").get_to(name);
         j.at("comment").get_to(comment);
         j.at("locked").get_to(b.locked);
+        j.at("color").get_to(b.color);
 
         std::copy(name.begin(), name.end(), std::back_inserter(b.name));
         b.name.push_back('\0');
@@ -43,6 +44,7 @@ namespace hex {
             ProjectFile::s_patches              = projectFileData["patches"].get<Patches>();
             ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
 
+            ProjectFile::s_bookmarks.clear();
             for (auto &element : projectFileData["bookmarks"].items()) {
                 ImHexApi::Bookmarks::Entry entry;
                 from_json(element.value(), entry);
