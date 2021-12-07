@@ -78,7 +78,7 @@ namespace hex {
         sockaddr_in client = { 0 };
 
         client.sin_family = AF_INET;
-        client.sin_port = ::htons(port);
+        client.sin_port = htons(port);
 
         #if defined(OS_WINDOWS)
             client.sin_addr.S_un.S_addr = ::inet_addr(address.c_str());
