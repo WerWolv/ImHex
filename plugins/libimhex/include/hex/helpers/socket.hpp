@@ -7,10 +7,17 @@
 
 #if defined(OS_WINDOWS)
     #include <winsock2.h>
+    #include <ws2tcpip.h>
     #include <windows.h>
+
+    #define SOCKET_NONE INVALID_SOCKET
 #else
     #include <unistd.h>
-    #include <sys/sock.h>
+    #include <sys/socket.h>
+    #include <netinet/ip.h>
+    #include <arpa/inet.h>
+
+    #define SOCKET_NONE -1
 #endif
 
 namespace hex {
@@ -39,9 +46,9 @@ namespace hex {
     private:
         bool m_connected = false;
         #if defined(OS_WINDOWS)
-            SOCKET m_socket = INVALID_SOCKET;
+            SOCKET m_socket = SOCKET_NONE;
         #else
-            int m_socket = -1;
+            int m_socket = SOCKET_NONE;
         #endif
     };
 

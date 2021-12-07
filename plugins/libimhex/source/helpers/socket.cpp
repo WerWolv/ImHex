@@ -3,8 +3,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 
-#include <ws2tcpip.h>
-
 namespace hex {
 
     Socket::Socket(const std::string &address, u16 port) {
@@ -26,7 +24,7 @@ namespace hex {
         this->m_socket = other.m_socket;
         this->m_connected = other.m_connected;
 
-        other.m_socket = INVALID_SOCKET;
+        other.m_socket = SOCKET_NONE;
     }
 
     Socket::~Socket() {
@@ -74,21 +72,31 @@ namespace hex {
 
     void Socket::connect(const std::string &address, u16 port) {
         this->m_socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (this->m_socket == INVALID_SOCKET)
+        if (this->m_socket == SOCKET_NONE)
             return;
 
         sockaddr_in client = { 0 };
 
         client.sin_family = AF_INET;
-        client.sin_addr.S_un.S_addr = ::inet_addr(address.c_str());
         client.sin_port = ::htons(port);
 
-        this->m_connected = ::connect(this->m_socket, reinterpret_cast<SOCKADDR*>(&client), sizeof(client)) != SOCKET_ERROR;
+        #if defined(OS_WINDOWS)
+            client.sin_addr.S_un.S_addr = ::inet_addr(address.c_str());
+        #else
+            client.sin_addr.s_addr = ::inet_addr(address.c_str());
+        #endif
+
+        this->m_connected = ::connect(this->m_socket, reinterpret_cast<sockaddr*>(&client), sizeof(client)) == 0;
     }
 
     void Socket::disconnect() {
-        if (this->m_socket != INVALID_SOCKET)
-            closesocket(this->m_socket);
+        if (this->m_socket != SOCKET_NONE) {
+            #if defined(OS_WINDOWS)
+                closesocket(this->m_socket);
+            #else
+                close(this->m_socket);
+            #endif
+        }
 
         this->m_connected = false;
     }
