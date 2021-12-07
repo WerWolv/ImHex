@@ -30,13 +30,6 @@ namespace hex::plugin::builtin {
         using namespace std::literals::chrono_literals;
         using namespace hex::literals;
 
-        int updateStringSizeCallback(ImGuiInputTextCallbackData *data) {
-            auto &mathInput = *static_cast<std::string*>(data->UserData);
-
-            mathInput.resize(data->BufTextLen);
-            return 0;
-        }
-
         void drawDemangler() {
             static std::vector<char> mangledBuffer(0xF'FFFF, 0x00);
             static std::string demangledName;
@@ -108,9 +101,9 @@ namespace hex::plugin::builtin {
             static auto replacePattern = []{ std::string s; s.reserve(0xFFF); return s; }();
             static auto regexOutput = []{ std::string s; s.reserve(0xFFF); return s; }();
 
-            bool changed1 = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern.data(), regexPattern.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &regexPattern);
-            bool changed2 = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern.data(), replacePattern.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &replacePattern);
-            bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput.data(), regexInput.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &regexInput);
+            bool changed1 = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern.data(), regexPattern.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &regexPattern);
+            bool changed2 = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern.data(), replacePattern.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &replacePattern);
+            bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput.data(), regexInput.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &regexInput);
 
             if (changed1 || changed2 || changed3) {
                 try {
@@ -363,7 +356,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-            if (ImGui::InputText("##input", mathInput.data(), mathInput.capacity(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &mathInput)) {
+            if (ImGui::InputText("##input", mathInput.data(), mathInput.capacity(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &mathInput)) {
                 ImGui::SetKeyboardFocusHere();
                 evaluate = true;
             }
@@ -619,7 +612,7 @@ namespace hex::plugin::builtin {
 
         bool startSearch;
 
-        startSearch = ImGui::InputText("##search", searchString.data(), searchString.capacity(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &searchString);
+        startSearch = ImGui::InputText("##search", searchString.data(), searchString.capacity(), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &searchString);
         ImGui::SameLine();
 
         ImGui::BeginDisabled(searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready || searchString.empty());
@@ -685,7 +678,7 @@ namespace hex::plugin::builtin {
             {
                 ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.input"_lang);
                 ImGui::SameLine();
-                ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &selectedFile);
+                ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...")) {
                     hex::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, DialogMode::Open, {}, [](const std::string &path) {
@@ -800,7 +793,7 @@ namespace hex::plugin::builtin {
             {
                 ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.input"_lang);
                 ImGui::SameLine();
-                ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &selectedFile);
+                ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...##input")) {
                     hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, DialogMode::Open, {}, [](const std::string &path) {
@@ -810,7 +803,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.output"_lang);
                 ImGui::SameLine();
-                ImGui::InputText("##base_path", baseOutputPath.data(), baseOutputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &baseOutputPath);
+                ImGui::InputText("##base_path", baseOutputPath.data(), baseOutputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &baseOutputPath);
                 ImGui::SameLine();
                 if (ImGui::Button("...##output")) {
                     hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, DialogMode::Save, {}, [](const std::string &path) {
@@ -957,7 +950,7 @@ namespace hex::plugin::builtin {
         {
             ImGui::TextUnformatted("hex.builtin.tools.file_tools.combiner.output"_lang);
             ImGui::SameLine();
-            ImGui::InputText("##output_path", outputPath.data(), outputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, updateStringSizeCallback, &outputPath);
+            ImGui::InputText("##output_path", outputPath.data(), outputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &outputPath);
             ImGui::SameLine();
             if (ImGui::Button("...")) {
                 hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, DialogMode::Save, {}, [](const std::string &path) {

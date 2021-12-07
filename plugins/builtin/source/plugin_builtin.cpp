@@ -2,12 +2,14 @@
 
 namespace hex::plugin::builtin {
 
+    void registerViews();
     void registerDataInspectorEntries();
     void registerToolEntries();
     void registerPatternLanguageFunctions();
     void registerCommandPaletteCommands();
     void registerSettings();
     void registerDataProcessorNodes();
+    void registerProviders();
 
     void addFooterItems();
     void addToolbarItems();
@@ -23,12 +25,14 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     using namespace hex::plugin::builtin;
 
+    registerViews();
     registerDataInspectorEntries();
     registerToolEntries();
     registerPatternLanguageFunctions();
     registerCommandPaletteCommands();
     registerSettings();
     registerDataProcessorNodes();
+    registerProviders();
 
     addFooterItems();
     addToolbarItems();

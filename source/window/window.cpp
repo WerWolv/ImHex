@@ -31,7 +31,7 @@
 #include <unifont_font.h>
 
 #include "helpers/plugin_manager.hpp"
-#include "helpers/project_file_handler.hpp"
+#include <hex/helpers/project_file_handler.hpp>
 #include "init/tasks.hpp"
 
 #include <GLFW/glfw3.h>
@@ -559,6 +559,19 @@ namespace hex {
                     EventManager::post<RequestOpenWindow>("Open File");
                 if (ImGui::IconHyperlink(ICON_VS_NOTEBOOK, "hex.welcome.start.open_project"_lang))
                     EventManager::post<RequestOpenWindow>("Open Project");
+                if (ImGui::IconHyperlink(ICON_VS_TELESCOPE, "hex.welcome.start.open_other"_lang))
+                    ImGui::OpenPopup("hex.welcome.start.popup.open_other"_lang);
+            }
+
+            if (ImGui::BeginPopup("hex.welcome.start.popup.open_other"_lang)) {
+                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
+                    if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
+                        EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                ImGui::EndPopup();
             }
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
@@ -687,9 +700,9 @@ namespace hex {
         for (auto &view : ContentRegistry::Views::getEntries())
             ImGui::DockBuilderDockWindow(view->getUnlocalizedName().data(), utilitiesId);
 
-        ImGui::DockBuilderDockWindow("hex.view.hexeditor.name", hexEditorId);
-        ImGui::DockBuilderDockWindow("hex.view.data_inspector.name", inspectorId);
-        ImGui::DockBuilderDockWindow("hex.view.pattern_data.name", patternDataId);
+        ImGui::DockBuilderDockWindow("hex.builtin.view.hexeditor.name", hexEditorId);
+        ImGui::DockBuilderDockWindow("hex.builtin.view.data_inspector.name", inspectorId);
+        ImGui::DockBuilderDockWindow("hex.builtin.view.pattern_data.name", patternDataId);
 
         ImGui::DockBuilderFinish(dockId);
     }

@@ -77,6 +77,11 @@ set(LIBIMHEX_SOURCES
     source/helpers/lang.cpp
     source/helpers/net.cpp
     source/helpers/file.cpp
+    source/helpers/socket.cpp
+    source/helpers/patches.cpp
+    source/helpers/project_file_handler.cpp
+    source/helpers/encoding_file.cpp
+    source/helpers/loader_script_handler.cpp
 
     source/pattern_language/pattern_language.cpp
     source/pattern_language/preprocessor.cpp

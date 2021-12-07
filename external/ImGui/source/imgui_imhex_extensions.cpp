@@ -15,6 +15,13 @@
 
 namespace ImGui {
 
+    int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
+        auto &mathInput = *static_cast<std::string*>(data->UserData);
+
+        mathInput.resize(data->BufTextLen);
+        return 0;
+    }
+
     bool IconHyperlink(const char *icon, const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)

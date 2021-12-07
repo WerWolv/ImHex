@@ -46,33 +46,7 @@ add_executable(imhex ${application_type}
         source/init/splash_window.cpp
         source/init/tasks.cpp
 
-        source/helpers/patches.cpp
-        source/helpers/project_file_handler.cpp
-        source/helpers/loader_script_handler.cpp
         source/helpers/plugin_manager.cpp
-        source/helpers/encoding_file.cpp
-
-        source/providers/file_provider.cpp
-
-        source/views/view_hexeditor.cpp
-        source/views/view_pattern_editor.cpp
-        source/views/view_pattern_data.cpp
-        source/views/view_hashes.cpp
-        source/views/view_information.cpp
-        source/views/view_help.cpp
-        source/views/view_tools.cpp
-        source/views/view_strings.cpp
-        source/views/view_data_inspector.cpp
-        source/views/view_disassembler.cpp
-        source/views/view_bookmarks.cpp
-        source/views/view_patches.cpp
-        source/views/view_command_palette.cpp
-        source/views/view_settings.cpp
-        source/views/view_data_processor.cpp
-        source/views/view_yara.cpp
-        source/views/view_constants.cpp
-        source/views/view_store.cpp
-        source/views/view_diff.cpp
 
         ${imhex_icon}
         )

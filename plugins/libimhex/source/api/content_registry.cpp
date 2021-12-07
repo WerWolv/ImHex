@@ -269,4 +269,15 @@ namespace hex {
     std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getToolbarItems() {
         return SharedData::toolbarItems;
     }
+
+
+    /* Providers */
+
+    void ContentRegistry::Provider::add(const std::string &unlocalizedName) {
+        SharedData::providerNames.push_back(unlocalizedName);
+    }
+
+    const std::vector<std::string> &ContentRegistry::Provider::getEntries() {
+        return SharedData::providerNames;
+    }
 }

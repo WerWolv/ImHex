@@ -18,6 +18,7 @@ namespace hex {
     class LanguageDefinition;
     namespace pl { class Evaluator; }
     namespace dp { class Node; }
+    namespace prv { class Provider; }
 
     /*
         The Content Registry is the heart of all features in ImHex that are in some way extendable by Plugins.
@@ -52,7 +53,7 @@ namespace hex {
             std::map<std::string, std::vector<Entry>>& getEntries();
             nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
             nlohmann::json& getSettingsData();
-        };
+        }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
         namespace CommandPaletteCommands {
@@ -75,7 +76,7 @@ namespace hex {
 
             void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto){});
             std::vector<Entry>& getEntries();
-        };
+        }
 
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         namespace PatternLanguageFunctions {
@@ -95,7 +96,7 @@ namespace hex {
 
             void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
             std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
-        };
+        }
 
         /* View Registry. Allows adding of new windows */
         namespace Views {
@@ -108,7 +109,7 @@ namespace hex {
 
             std::vector<View*>& getEntries();
 
-        };
+        }
 
         /* Tools Registry. Allows adding new entries to the tools window */
         namespace Tools {
@@ -122,7 +123,7 @@ namespace hex {
             void add(const std::string &unlocalizedName, const Callback &function);
 
             std::vector<Entry>& getEntries();
-        };
+        }
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
         namespace DataInspector {
@@ -145,7 +146,7 @@ namespace hex {
             void add(const std::string &unlocalizedName, size_t requiredSize, GeneratorFunction function);
 
             std::vector<Entry>& getEntries();
-        };
+        }
 
         /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
         namespace DataProcessorNode {
@@ -174,7 +175,7 @@ namespace hex {
 
             std::vector<Entry>& getEntries();
 
-        };
+        }
 
         /* Language Registry. Allows together with the LangEntry class and the _lang user defined literal to add new languages */
         namespace Language {
@@ -183,7 +184,7 @@ namespace hex {
 
             std::map<std::string, std::string>& getLanguages();
             std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
-        };
+        }
 
         /* Interface Registry. Allows adding new items to various interfaces */
         namespace Interface {
@@ -196,7 +197,16 @@ namespace hex {
             std::vector<DrawCallback>& getWelcomeScreenEntries();
             std::vector<DrawCallback>& getFooterItems();
             std::vector<DrawCallback>& getToolbarItems();
-        };
+        }
+
+        /* Provider Registry. Allows adding new data providers to be created from the UI */
+        namespace Provider {
+
+            void add(const std::string &unlocalizedName);
+
+            const std::vector<std::string>& getEntries();
+
+        }
     };
 
 }

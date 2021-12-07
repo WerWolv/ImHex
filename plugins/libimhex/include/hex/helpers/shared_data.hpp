@@ -77,6 +77,8 @@ namespace hex {
         static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
         static std::vector<ContentRegistry::Interface::DrawCallback> toolbarItems;
 
+        static std::vector<std::string> providerNames;
+
         static std::vector<ContentRegistry::DataProcessorNode::Entry> dataProcessorNodes;
         static u32 dataProcessorNodeIdCounter;
         static u32 dataProcessorLinkIdCounter;

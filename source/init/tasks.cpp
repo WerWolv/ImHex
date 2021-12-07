@@ -6,30 +6,11 @@
 #include <hex/helpers/net.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/pattern_language/pattern_data.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <fontawesome_font.h>
 #include <codicons_font.h>
 #include <unifont_font.h>
-
-#include "views/view_hexeditor.hpp"
-#include "views/view_pattern_editor.hpp"
-#include "views/view_pattern_data.hpp"
-#include "views/view_hashes.hpp"
-#include "views/view_information.hpp"
-#include "views/view_help.hpp"
-#include "views/view_tools.hpp"
-#include "views/view_strings.hpp"
-#include "views/view_data_inspector.hpp"
-#include "views/view_disassembler.hpp"
-#include "views/view_bookmarks.hpp"
-#include "views/view_patches.hpp"
-#include "views/view_command_palette.hpp"
-#include "views/view_settings.hpp"
-#include "views/view_data_processor.hpp"
-#include "views/view_yara.hpp"
-#include "views/view_constants.hpp"
-#include "views/view_store.hpp"
-#include "views/view_diff.hpp"
 
 #include "helpers/plugin_manager.hpp"
 
@@ -179,31 +160,6 @@ namespace hex::init {
         return true;
     }
 
-    bool loadDefaultViews() {
-
-        ContentRegistry::Views::add<ViewHexEditor>();
-        ContentRegistry::Views::add<ViewPatternEditor>();
-        ContentRegistry::Views::add<ViewPatternData>();
-        ContentRegistry::Views::add<ViewDataInspector>();
-        ContentRegistry::Views::add<ViewHashes>();
-        ContentRegistry::Views::add<ViewInformation>();
-        ContentRegistry::Views::add<ViewStrings>();
-        ContentRegistry::Views::add<ViewDisassembler>();
-        ContentRegistry::Views::add<ViewBookmarks>();
-        ContentRegistry::Views::add<ViewPatches>();
-        ContentRegistry::Views::add<ViewTools>();
-        ContentRegistry::Views::add<ViewCommandPalette>();
-        ContentRegistry::Views::add<ViewHelp>();
-        ContentRegistry::Views::add<ViewSettings>();
-        ContentRegistry::Views::add<ViewDataProcessor>();
-        ContentRegistry::Views::add<ViewYara>();
-        ContentRegistry::Views::add<ViewConstants>();
-        ContentRegistry::Views::add<ViewStore>();
-        ContentRegistry::Views::add<ViewDiff>();
-
-        return true;
-    }
-
     bool deleteSharedData() {
         SharedData::deferredCalls.clear();
 
@@ -312,7 +268,6 @@ namespace hex::init {
                 { "Checking for updates...",    checkForUpdates     },
                 { "Downloading information...", downloadInformation },
                 { "Creating directories...",    createDirectories   },
-                { "Loading default views...",   loadDefaultViews    },
                 { "Loading settings...",        loadSettings        },
                 { "Loading plugins...",         loadPlugins         },
                 { "Loading fonts...",           loadFonts           },
