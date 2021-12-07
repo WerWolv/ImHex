@@ -222,9 +222,9 @@ namespace hex::plugin::builtin::prv {
         this->m_port = port;
 
         if (this->m_socket.isConnected()) {
-            this->m_cacheUpdateThread = std::jthread([this](const std::stop_token& stopToken) {
+            this->m_cacheUpdateThread = std::thread([this]() {
                 auto cacheLine = this->m_cache.begin();
-                while (!stopToken.stop_requested()) {
+                while (this->isConnected()) {
                     {
                         std::scoped_lock lock(this->m_cacheLock);
 
@@ -253,7 +253,6 @@ namespace hex::plugin::builtin::prv {
         this->m_socket.disconnect();
 
         if (this->m_cacheUpdateThread.joinable()) {
-            this->m_cacheUpdateThread.request_stop();
             this->m_cacheUpdateThread.join();
         }
     }

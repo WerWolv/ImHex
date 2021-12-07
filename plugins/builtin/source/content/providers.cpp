@@ -1,8 +1,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/event.hpp>
 
-#include "content/providers/file_provider.hpp"
 #include "content/providers/gdb_provider.hpp"
+#include "content/providers/file_provider.hpp"
 
 namespace hex::plugin::builtin {
 

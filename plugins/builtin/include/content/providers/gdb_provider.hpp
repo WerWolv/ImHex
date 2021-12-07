@@ -52,7 +52,7 @@ class GDBProvider : public hex::prv::Provider {
 
         std::list<CacheLine> m_cache;
 
-        std::jthread m_cacheUpdateThread;
+        std::thread m_cacheUpdateThread;
         std::mutex m_cacheLock;
     };
 
