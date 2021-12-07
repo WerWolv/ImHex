@@ -706,8 +706,8 @@ struct MemoryEditor
     {
         IM_UNUSED(mem_data);
         ImGuiStyle& style = ImGui::GetStyle();
-        const char* format_range = OptUpperCaseHex ? "Range %0*" _PRISizeT "X..%0*" _PRISizeT "X" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x";
-        const char* format_selection = OptUpperCaseHex ? "Selection %0*" _PRISizeT "X..%0*" _PRISizeT "X (%ld %s)" : "Range %0*" _PRISizeT "x..%0*" _PRISizeT "x (%ld %s)";
+        const char* format_range = OptUpperCaseHex ? "Range 0x%0*" _PRISizeT "X..0x%0*" _PRISizeT "X" : "Range 0x%0*" _PRISizeT "x..0x%0*" _PRISizeT "x";
+        const char* format_selection = OptUpperCaseHex ? "Selection 0x%0*" _PRISizeT "X..0x%0*" _PRISizeT "X (%ld [0x%lX] %s)" : "Range 0x%0*" _PRISizeT "x..0x%0*" _PRISizeT "x (%ld [0x%lX] %s)";
 
         if (this->OptShowExtraInfo) {
             ImGui::Text(format_range, s.AddrDigitsCount, base_display_addr, s.AddrDigitsCount, base_display_addr + mem_size - 1);
@@ -720,7 +720,7 @@ struct MemoryEditor
                 auto selectionEnd = std::max(DataPreviewAddr, DataPreviewAddrEnd);
 
                 size_t regionSize = (selectionEnd - selectionStart) + 1;
-                ImGui::Text(format_selection, s.AddrDigitsCount, base_display_addr + selectionStart, s.AddrDigitsCount, base_display_addr + selectionEnd, regionSize, regionSize == 1 ? "byte" : "bytes");
+                ImGui::Text(format_selection, s.AddrDigitsCount, base_display_addr + selectionStart, s.AddrDigitsCount, base_display_addr + selectionEnd, regionSize, regionSize, regionSize == 1 ? "byte" : "bytes");
             }
         }
 
