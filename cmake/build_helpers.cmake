@@ -199,7 +199,7 @@ macro(createPackage)
         INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES $<TARGET_FILE:imhex>
+            EXECUTABLES $<TARGET_FILE:builtin> $<TARGET_FILE:libimhex> $<TARGET_FILE:imhex>
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
             CONFLICTING_DEPENDENCIES_PREFIX _c_deps
@@ -208,10 +208,10 @@ macro(createPackage)
         )
 
         if(_u_deps)
-            message(WARNING "There were unresolved dependencies for binary $<TARGET_FILE:imhex>: \"${_u_deps}\"!")
+            message(WARNING "There were unresolved dependencies for binary: \"${_u_deps}\"!")
         endif()
         if(_c_deps_FILENAMES)
-            message(WARNING "There were conflicting dependencies for library $<TARGET_FILE:imhex>: \"${_c_deps}\"!")
+            message(WARNING "There were conflicting dependencies for library: \"${_c_deps}\"!")
         endif()
 
         foreach(_file ${_r_deps})

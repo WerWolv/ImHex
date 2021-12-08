@@ -54,9 +54,9 @@ add_executable(imhex ${application_type}
 set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 if (WIN32)
-    target_link_libraries(imhex dl libimhex wsock32 ws2_32 Dwmapi.lib)
+    target_link_libraries(imhex PUBLIC dl libimhex wsock32 ws2_32 Dwmapi.lib)
 else ()
-    target_link_libraries(imhex dl libimhex pthread)
+    target_link_libraries(imhex PUBLIC dl libimhex pthread)
 endif ()
 
 createPackage()
