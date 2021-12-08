@@ -239,7 +239,9 @@ struct MemoryEditor
             DataPreviewAddrOld = DataPreviewAddr;
             DataPreviewAddrEndOld = DataPreviewAddrEnd;
 
-            DrawContents(mem_data, mem_size, base_display_addr);
+            if (mem_size > 0)
+                DrawContents(mem_data, mem_size, base_display_addr);
+
             if (ContentsWidthChanged)
             {
                 CalcSizes(s, mem_size, base_display_addr);

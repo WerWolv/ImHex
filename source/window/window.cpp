@@ -546,7 +546,7 @@ namespace hex {
 
             ImGui::TextWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
             ImGui::TableNextColumn();
 
 
@@ -563,7 +563,9 @@ namespace hex {
                     ImGui::OpenPopup("hex.welcome.start.popup.open_other"_lang);
             }
 
+            ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetCursorPos());
             if (ImGui::BeginPopup("hex.welcome.start.popup.open_other"_lang)) {
+
                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
                     if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
                         EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);

@@ -204,7 +204,17 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string GDBProvider::getName() const {
-        return hex::format("hex.builtin.provider.gdb.name"_lang, this->m_ipAddress, this->m_port);
+        std::string address, port;
+
+        if (this->m_ipAddress.empty()) {
+            address = "-";
+            port = "-";
+        } else {
+            address = this->m_ipAddress;
+            port = std::to_string(this->m_port);
+        }
+
+        return hex::format("hex.builtin.provider.gdb.name"_lang, address, port);
     }
 
     std::vector<std::pair<std::string, std::string>> GDBProvider::getDataInformation() const {
