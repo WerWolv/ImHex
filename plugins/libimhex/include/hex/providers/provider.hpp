@@ -26,9 +26,7 @@ namespace hex::prv {
         virtual bool isSavable() const = 0;
 
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
-        virtual void readRelative(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void write(u64 offset, const void *buffer, size_t size);
-        virtual void writeRelative(u64 offset, const void *buffer, size_t size);
 
         virtual void resize(ssize_t newSize);
 
@@ -55,6 +53,7 @@ namespace hex::prv {
 
         virtual void setBaseAddress(u64 address);
         virtual u64 getBaseAddress() const;
+        virtual u64 getCurrentPageAddress() const;
         virtual size_t getSize() const;
         virtual std::optional<u32> getPageOfAddress(u64 address) const;
 

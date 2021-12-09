@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
                 return 0x00;
 
             ImU8 byte;
-            provider->readRelative(off, &byte, sizeof(ImU8));
+            provider->read(off + provider->getBaseAddress() + provider->getCurrentPageAddress(), &byte, sizeof(ImU8));
 
             return byte;
         };
@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
             if (!provider->isAvailable() || !provider->isWritable())
                 return;
 
-            provider->writeRelative(off, &d, sizeof(ImU8));
+            provider->write(off + provider->getBaseAddress() + provider->getCurrentPageAddress(), &d, sizeof(ImU8));
             EventManager::post<EventDataChanged>();
             ProjectFile::markDirty();
         };
@@ -61,7 +61,9 @@ namespace hex::plugin::builtin {
 
             std::optional<u32> currColor, prevColor;
 
-            off += ImHexApi::Provider::get()->getBaseAddress();
+            auto provider = ImHexApi::Provider::get();
+
+            off += provider->getBaseAddress() + provider->getCurrentPageAddress();
 
             u32 alpha = static_cast<u32>(_this->m_highlightAlpha) << 24;
 
@@ -125,7 +127,7 @@ namespace hex::plugin::builtin {
             size_t size = std::min<size_t>(_this->m_currEncodingFile.getLongestSequence(), provider->getActualSize() - addr);
 
             std::vector<u8> buffer(size);
-            provider->readRelative(addr, buffer.data(), size);
+            provider->read(addr + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), size);
 
             auto [decoded, advance] = _this->m_currEncodingFile.getEncodingFor(buffer);
 
@@ -153,8 +155,8 @@ namespace hex::plugin::builtin {
 
             if (region.size != 0) {
                 provider->setCurrentPage(page.value());
-                u64 start = region.address;
-                this->m_memoryEditor.GotoAddrAndSelect(start - provider->getBaseAddress(), start + region.size - provider->getBaseAddress() - 1);
+                u64 start = region.address - provider->getBaseAddress() - provider->getCurrentPageAddress();
+                this->m_memoryEditor.GotoAddrAndSelect(start, start + region.size - 1);
             }
 
             EventManager::post<EventRegionSelected>(Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1});
@@ -284,7 +286,7 @@ namespace hex::plugin::builtin {
 
         size_t dataSize = (!ImHexApi::Provider::isValid() || !provider->isReadable()) ? 0x00 : provider->getSize();
 
-        this->m_memoryEditor.DrawWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress());
+        this->m_memoryEditor.DrawWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress() + provider->getCurrentPageAddress());
 
         if (dataSize != 0x00) {
             if (ImGui::Begin(View::toWindowName("hex.builtin.view.hexeditor.name").c_str())) {
@@ -758,7 +760,7 @@ namespace hex::plugin::builtin {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->readRelative(start, buffer.data(), buffer.size());
+        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
 
         std::string str;
         for (const auto &byte : buffer)
@@ -807,7 +809,7 @@ namespace hex::plugin::builtin {
         }
 
         // Write bytes
-        provider->writeRelative(start, buffer.data(), std::min(end - start + 1, buffer.size()));
+        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(end - start + 1, buffer.size()));
     }
 
     void ViewHexEditor::copyString() const {
@@ -820,7 +822,7 @@ namespace hex::plugin::builtin {
 
         std::string buffer(copySize, 0x00);
         buffer.reserve(copySize + 1);
-        provider->readRelative(start, buffer.data(), copySize);
+        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
     }
@@ -834,7 +836,7 @@ namespace hex::plugin::builtin {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->readRelative(start, buffer.data(), buffer.size());
+        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
 
         std::string str;
         switch (language) {
@@ -936,7 +938,7 @@ namespace hex::plugin::builtin {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->readRelative(start, buffer.data(), buffer.size());
+        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
 
         std::string str = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
 
@@ -983,7 +985,7 @@ namespace hex::plugin::builtin {
         size_t copySize = (end - start) + 1;
 
         std::vector<u8> buffer(copySize, 0x00);
-        provider->readRelative(start, buffer.data(), buffer.size());
+        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
 
         std::string str =
 R"(
@@ -1048,7 +1050,7 @@ R"(
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
             size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
-            provider->readRelative(offset, buffer.data(), usedBufferSize);
+            provider->read(offset + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
                 if (buffer[i] == string[foundCharacters])
@@ -1086,7 +1088,7 @@ R"(
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
             size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
-            provider->readRelative(offset, buffer.data(), usedBufferSize);
+            provider->read(offset + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
                 if (buffer[i] == hex[foundCharacters])

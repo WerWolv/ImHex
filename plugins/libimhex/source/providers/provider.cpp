@@ -20,19 +20,11 @@ namespace hex::prv {
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        this->readRaw(offset, buffer, size);
-    }
-
-    void Provider::readRelative(u64 offset, void *buffer, size_t size, bool overlays) {
-        this->read(offset + this->getBaseAddress(), buffer, size);
+        this->readRaw(offset - this->getBaseAddress(), buffer, size);
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
-        this->writeRaw(offset, buffer, size);
-    }
-
-    void Provider::writeRelative(u64 offset, const void *buffer, size_t size) {
-        this->write(offset + this->getBaseAddress(), buffer, size);
+        this->writeRaw(offset - this->getBaseAddress(), buffer, size);
     }
 
     void Provider::save() { }
@@ -63,7 +55,7 @@ namespace hex::prv {
 
     void Provider::applyPatches() {
         for (auto &[patchAddress, patch] : getPatches())
-            this->writeRaw(patchAddress, &patch, 1);
+            this->writeRaw( - this->getBaseAddress(), &patch, 1);
     }
 
 
@@ -100,7 +92,11 @@ namespace hex::prv {
     }
 
     u64 Provider::getBaseAddress() const {
-        return this->m_baseAddress + PageSize * this->m_currPage;
+        return this->m_baseAddress;
+    }
+
+    u64 Provider::getCurrentPageAddress() const {
+        return PageSize * this->getCurrentPage();
     }
 
     size_t Provider::getSize() const {

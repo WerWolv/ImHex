@@ -130,8 +130,10 @@ namespace hex::plugin::builtin::prv {
 
 
     void GDBProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        if ((offset - this->getBaseAddress()) > (this->getSize() - size) || buffer == nullptr || size == 0)
+        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
+
+        offset -= this->getBaseAddress();
 
         u64 alignedOffset = offset - (offset & 0xFFF);
 
@@ -164,16 +166,11 @@ namespace hex::plugin::builtin::prv {
     }
 
     void GDBProvider::write(u64 offset, const void *buffer, size_t size) {
-        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
-            return;
 
-        addPatch(offset, buffer, size);
     }
 
     void GDBProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        offset -= this->getBaseAddress();
-
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
         auto data = gdb::readMemory(this->m_socket, offset, size);
@@ -181,10 +178,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     void GDBProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        offset -= this->getBaseAddress();
 
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
-            return;
     }
 
     void GDBProvider::save() {

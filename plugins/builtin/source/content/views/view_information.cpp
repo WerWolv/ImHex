@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
 
                 for (u64 i = 0; i < provider->getSize(); i += this->m_blockSize) {
                     std::array<ImU64, 256> blockValueCounts = { 0 };
-                    provider->readRelative(i, buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
+                    provider->read(i + provider->getBaseAddress(), buffer.data(), std::min(u64(this->m_blockSize), provider->getSize() - i));
 
                     for (size_t j = 0; j < this->m_blockSize; j++) {
                         blockValueCounts[buffer[j]]++;

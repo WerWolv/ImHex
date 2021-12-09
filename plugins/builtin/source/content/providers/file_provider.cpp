@@ -44,11 +44,10 @@ namespace hex::plugin::builtin::prv {
 
 
     void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-
-        if ((offset - this->getBaseAddress()) > (this->getSize() - size) || buffer == nullptr || size == 0)
+        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset - this->getBaseAddress(), size);
+        this->readRaw(offset - this->getBaseAddress(), buffer, size);
 
         for (u64 i = 0; i < size; i++)
             if (getPatches().contains(offset + i))
@@ -59,25 +58,21 @@ namespace hex::plugin::builtin::prv {
     }
 
     void FileProvider::write(u64 offset, const void *buffer, size_t size) {
-        if (((offset - this->getBaseAddress()) + size) > this->getSize() || buffer == nullptr || size == 0)
+        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
         addPatch(offset, buffer, size);
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        offset -= this->getBaseAddress();
-
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-        offset -= this->getBaseAddress();
-
-        if ((offset + size) > this->getSize() || buffer == nullptr || size == 0)
+        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, buffer, size);
@@ -100,7 +95,7 @@ namespace hex::plugin::builtin::prv {
                 if (bufferSize > provider->getActualSize() - offset)
                     bufferSize = provider->getActualSize() - offset;
 
-                provider->readRelative(offset, buffer.data(), bufferSize);
+                provider->read(offset + this->getBaseAddress(), buffer.data(), bufferSize);
                 file.write(buffer);
             }
         }

@@ -13,7 +13,12 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.gdb.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             ImGui::Header("hex.builtin.view.gdb.settings"_lang);
             ImGui::InputText("hex.builtin.view.gdb.ip"_lang, this->m_address.data(), this->m_address.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &this->m_address);
-            ImGui::InputInt("hex.builtin.view.gdb.port"_lang, &this->m_port, 1, 0xFFFF);
+            ImGui::InputInt("hex.builtin.view.gdb.port"_lang, &this->m_port, 0, 0);
+
+            if (this->m_port < 0)
+                this->m_port = 0;
+            else if (this->m_port > 0xFFFF)
+                this->m_port = 0xFFFF;
 
             ImGui::NewLine();
 

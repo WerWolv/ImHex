@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
 
             for (u64 offset = 0; offset < provider->getSize(); offset += buffer.size()) {
                 size_t readSize = std::min(u64(buffer.size()), provider->getSize() - offset);
-                provider->readRelative(offset,  buffer.data(), readSize);
+                provider->read(offset + provider->getBaseAddress(),  buffer.data(), readSize);
 
                 for (u32 i = 0; i < readSize; i++) {
                     if (buffer[i] >= ' ' && buffer[i] <= '~' && offset < provider->getSize() - 1)

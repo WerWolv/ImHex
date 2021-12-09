@@ -65,7 +65,7 @@ namespace hex::magic {
 
     std::string getDescription(prv::Provider *provider, size_t size) {
         std::vector<u8> buffer(std::min(provider->getSize(), size), 0x00);
-        provider->readRelative(0x00, buffer.data(), buffer.size());
+        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
 
         return getDescription(buffer);
     }
@@ -86,7 +86,7 @@ namespace hex::magic {
 
     std::string getMIMEType(prv::Provider *provider, size_t size) {
         std::vector<u8> buffer(std::min(provider->getSize(), size), 0x00);
-        provider->readRelative(0x00, buffer.data(), buffer.size());
+        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
 
         return getMIMEType(buffer);
     }
