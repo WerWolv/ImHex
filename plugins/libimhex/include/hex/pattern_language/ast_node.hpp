@@ -1647,9 +1647,9 @@ namespace hex::pl {
                                     LogConsole::abortEvaluation("array index out of bounds", this);
 
                                 auto newPattern = searchScope.front()->clone();
+                                newPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getTemplate()->getSize());
                                 delete currPattern;
                                 currPattern = newPattern;
-                                currPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getSize());
                             }
                         }
                     }, index->getValue());
