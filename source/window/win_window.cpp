@@ -30,6 +30,7 @@
 
         static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             switch (uMsg) {
+                case WM_NCACTIVATE:
                 case WM_NCPAINT:
                     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
                 case WM_NCCALCSIZE: {
