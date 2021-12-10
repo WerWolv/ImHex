@@ -37,7 +37,11 @@
                 EventManager::post<EventOSThemeChanged>();
         }
 
-        void Window::updateNativeWindow() {
+        void Window::beginNativeWindowFrame() {
+
+        }
+
+        void Window::endNativeWindowFrame() {
 
         }
 

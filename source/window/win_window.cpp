@@ -30,11 +30,13 @@
 
         static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             switch (uMsg) {
+                case WM_NCPAINT:
+                    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
                 case WM_NCCALCSIZE: {
                     RECT &rect = *reinterpret_cast<RECT*>(lParam);
                     RECT client = rect;
 
-                    DefWindowProcW(hwnd, WM_NCCALCSIZE, wParam, lParam);
+                    CallWindowProc((WNDPROC)oldWndProc, hwnd, uMsg, wParam, lParam);
 
                     if (IsMaximized(hwnd)) {
                         WINDOWINFO windowInfo = { .cbSize = sizeof(WINDOWINFO) };
@@ -58,23 +60,26 @@
                         case HTRIGHT:
                         case HTLEFT:
                             mouseCursorIcon = ImGuiMouseCursor_ResizeEW;
-                            return TRUE;
+                            break;
                         case HTTOP:
                         case HTBOTTOM:
                             mouseCursorIcon = ImGuiMouseCursor_ResizeNS;
-                            return TRUE;
+                            break;
                         case HTTOPLEFT:
                         case HTBOTTOMRIGHT:
                             mouseCursorIcon = ImGuiMouseCursor_ResizeNWSE;
-                            return TRUE;
+                            break;
                         case HTTOPRIGHT:
                         case HTBOTTOMLEFT:
                             mouseCursorIcon = ImGuiMouseCursor_ResizeNESW;
-                            return TRUE;
-                        default:
+                            break;
+                        case HTCAPTION:
+                        case HTCLIENT:
                             mouseCursorIcon = ImGuiMouseCursor_None;
-                            return TRUE;
+                            break;
                     }
+
+                    return TRUE;
                 }
                 case WM_NCHITTEST: {
                     POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
@@ -131,6 +136,8 @@
                 }
                 case WM_SETTINGCHANGE:
                 {
+                    if (lParam == 0) break;
+
                     if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
                         EventManager::post<EventOSThemeChanged>();
                     }
@@ -149,7 +156,7 @@
             if (AttachConsole(ATTACH_PARENT_PROCESS)) {
 
                 // Redirect cin, cout and cerr to that console
-                freopen("CONIN$", "w", stdin);
+                freopen("CONIN$", "r", stdin);
                 freopen("CONOUT$", "w", stdout);
                 freopen("CONERR$", "w", stderr);
                 setvbuf(stdin,  nullptr, _IONBF, 0);
@@ -184,7 +191,7 @@
             DWORD attribute = DWMNCRP_ENABLED;
             ::DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &attribute, sizeof(attribute));
 
-            ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);
+            ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
 
             bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
@@ -207,11 +214,48 @@
                 EventManager::post<EventOSThemeChanged>();
         }
 
-        void Window::updateNativeWindow() {
+        void Window::beginNativeWindowFrame() {
             titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+        }
 
-            if (mouseCursorIcon != ImGuiMouseCursor_None)
+        void Window::endNativeWindowFrame() {
+            if (mouseCursorIcon != ImGuiMouseCursor_None) {
                 ImGui::SetMouseCursor(mouseCursorIcon);
+            }
+
+            switch (ImGui::GetMouseCursor()) {
+                case ImGuiMouseCursor_Arrow:
+                    SetCursor(LoadCursor(nullptr, IDC_ARROW));
+                    break;
+                case ImGuiMouseCursor_Hand:
+                    SetCursor(LoadCursor(nullptr, IDC_HAND));
+                    break;
+                case ImGuiMouseCursor_ResizeEW:
+                    SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+                    break;
+                case ImGuiMouseCursor_ResizeNS:
+                    SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+                    break;
+                case ImGuiMouseCursor_ResizeNWSE:
+                    SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
+                    break;
+                case ImGuiMouseCursor_ResizeNESW:
+                    SetCursor(LoadCursor(nullptr, IDC_SIZENESW));
+                    break;
+                case ImGuiMouseCursor_ResizeAll:
+                    SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+                    break;
+                case ImGuiMouseCursor_NotAllowed:
+                    SetCursor(LoadCursor(nullptr, IDC_NO));
+                    break;
+                case ImGuiMouseCursor_TextInput:
+                    SetCursor(LoadCursor(nullptr, IDC_IBEAM));
+                    break;
+                default:
+                case ImGuiMouseCursor_None:
+                    SetCursor(LoadCursor(nullptr, IDC_ARROW));
+                    break;
+            }
         }
 
         void Window::drawTitleBar() {

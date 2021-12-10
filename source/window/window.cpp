@@ -400,8 +400,7 @@ namespace hex {
                 this->resetLayout();
             }
 
-            this->updateNativeWindow();
-
+            this->beginNativeWindowFrame();
         }
         ImGui::End();
         ImGui::PopStyleVar(2);
@@ -511,6 +510,7 @@ namespace hex {
     }
 
     void Window::frameEnd() {
+        this->endNativeWindowFrame();
         ImGui::Render();
 
         int displayWidth, displayHeight;

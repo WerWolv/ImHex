@@ -25,7 +25,8 @@ namespace hex {
 
     private:
         void setupNativeWindow();
-        void updateNativeWindow();
+        void beginNativeWindowFrame();
+        void endNativeWindowFrame();
         void drawTitleBar();
 
         void frameBegin();
