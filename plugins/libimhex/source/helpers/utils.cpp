@@ -7,6 +7,13 @@
 
 #include <hex/helpers/fmt.hpp>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#elif defined(OS_MACOS)
+    #include <CoreFoundation/CFBundle.h>
+    #include <ApplicationServices/ApplicationServices.h>
+#endif
+
 namespace hex {
 
     std::string to_string(u128 value) {
@@ -173,9 +180,11 @@ namespace hex {
             url = "https://" + url;
 
         #if defined(OS_WINDOWS)
-            system(hex::format("start {0}", url).c_str());
+            ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
-            system(hex::format("open {0}", url).c_str());
+            CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<u8*>(url.data()), url.length(), kCFStringEncodingASCII, nullptr);
+            LSOpenCFURLRef(urlRef, nullptr);
+            CFRelease(urlRef);
         #elif defined(OS_LINUX)
             system(hex::format("xdg-open {0}", url).c_str());
         #else
