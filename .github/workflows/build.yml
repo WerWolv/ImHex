@@ -25,7 +25,6 @@ jobs:
       with:
         path: |
           ~/.ccache
-          .flatpak-builder
         key: ${{ runner.os }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-build-
 
