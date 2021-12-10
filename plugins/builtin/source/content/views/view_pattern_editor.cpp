@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern.name") {
+    ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern_editor.name") {
         this->m_patternLanguageRuntime = new pl::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;
-                EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern.accept_pattern"_lang);
+                EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern_editor.accept_pattern"_lang);
                 this->m_acceptPatternWindowOpen = true;
             }
         });
@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
-            if (ImGui::MenuItem("hex.builtin.view.pattern.menu.file.load_pattern"_lang)) {
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang)) {
 
                 this->m_selectedPatternFile = 0;
                 this->m_possiblePatternFiles.clear();
@@ -208,21 +208,21 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::doLater([]{ ImGui::OpenPopup("hex.builtin.view.pattern.menu.file.load_pattern"_lang); });
+                View::doLater([]{ ImGui::OpenPopup("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang); });
             }
             ImGui::EndMenu();
         }
     }
 
     void ViewPatternEditor::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_editor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             auto provider = ImHexApi::Provider::get();
 
             if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
                 textEditorSize.y *= 4.0/5.0;
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-                this->m_textEditor.Render("hex.builtin.view.pattern.name"_lang, textEditorSize, true);
+                this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
                 auto consoleSize = ImGui::GetContentRegionAvail();
                 consoleSize.y -= ImGui::GetTextLineHeightWithSpacing();
@@ -270,9 +270,9 @@ namespace hex::plugin::builtin {
 
                 ImGui::SameLine();
                 if (this->m_evaluatorRunning)
-                    ImGui::TextSpinner("hex.builtin.view.pattern.evaluating"_lang);
+                    ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
                 else {
-                    if (ImGui::Checkbox("hex.builtin.view.pattern.auto"_lang, &this->m_runAutomatically)) {
+                    if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
                         if (this->m_runAutomatically)
                             this->m_hasUnevaluatedChanges = true;
                     }
@@ -293,7 +293,7 @@ namespace hex::plugin::builtin {
                         ImGui::OpenPopup("env_vars");
 
                     if (ImGui::BeginPopup("env_vars")) {
-                        ImGui::TextUnformatted("Environment Variables");
+                        ImGui::TextUnformatted("hex.builtin.view.pattern_editor.env_vars"_lang);
                         ImGui::SameLine();
                         if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) this->m_envVarEntries.push_back({ "", s128(0), EnvVarType::Integer });
                         ImGui::Separator();
@@ -372,8 +372,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawAlwaysVisible() {
-        if (ImGui::BeginPopupModal("hex.builtin.view.pattern.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.pattern.accept_pattern.desc"_lang));
+        if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
             std::vector<std::string> entries;
             entries.resize(this->m_possiblePatternFiles.size());
@@ -395,7 +395,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::NewLine();
-            ImGui::Text("%s", static_cast<const char *>("hex.builtin.view.pattern.accept_pattern.question"_lang));
+            ImGui::Text("%s", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.question"_lang));
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
                 this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
@@ -411,7 +411,7 @@ namespace hex::plugin::builtin {
         }
 
         bool opened = true;
-        if (ImGui::BeginPopupModal("hex.builtin.view.pattern.menu.file.load_pattern"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
 
             if (ImGui::BeginListBox("##patterns", ImVec2(-FLT_MIN, 0))) {
 
@@ -433,7 +433,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             if (ImGui::Button("hex.common.browse"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.pattern.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
+                hex::openFileBrowser("hex.builtin.view.pattern_editor.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
                     this->loadPatternFile(path);
                     ImGui::CloseCurrentPopup();
                 });
