@@ -28,11 +28,6 @@
         static ImGuiMouseCursor mouseCursorIcon;
         static BOOL compositionEnabled = false;
 
-        static bool isTaskbarAutoHideEnabled(UINT edge, RECT monitor) {
-            APPBARDATA data = { .cbSize = sizeof(APPBARDATA), .uEdge = edge, .rc = monitor };
-            return ::SHAppBarMessage(ABM_GETAUTOHIDEBAR, &data);
-        }
-
         static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             switch (uMsg) {
                 case WM_NCCALCSIZE: {
@@ -48,23 +43,8 @@
                             .left = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
                             .top = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
                             .right = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
-                            .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders)
+                            .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders) + 1
                         };
-
-                        HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
-                        MONITORINFO monitorInfo = { .cbSize = sizeof(MONITORINFO) };
-                        GetMonitorInfoW(hMonitor, &monitorInfo);
-
-                        if (EqualRect(&rect, &monitorInfo.rcMonitor)) {
-                            if (isTaskbarAutoHideEnabled(ABE_BOTTOM, monitorInfo.rcMonitor))
-                                rect.bottom--;
-                            else if (isTaskbarAutoHideEnabled(ABE_LEFT, monitorInfo.rcMonitor))
-                                rect.left++;
-                            else if (isTaskbarAutoHideEnabled(ABE_TOP, monitorInfo.rcMonitor))
-                                rect.top++;
-                            else if (isTaskbarAutoHideEnabled(ABE_RIGHT, monitorInfo.rcMonitor))
-                                rect.right--;
-                        }
                     } else {
                         rect = client;
                     }
@@ -156,11 +136,6 @@
                     }
 
                     break;
-                }
-                case WM_NCACTIVATE:
-                case WM_NCPAINT:
-                {
-                    return DefWindowProc(hwnd, uMsg, wParam, lParam);
                 }
                 default: break;
             }
