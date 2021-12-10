@@ -95,7 +95,7 @@ namespace hex::pl {
     }
 
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, const std::string &string) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars) {
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
@@ -104,6 +104,9 @@ namespace hex::pl {
         this->m_evaluator->setArrayLimit(0x1000);
         this->m_evaluator->setPatternLimit(0x2000);
         this->m_evaluator->setLoopLimit(0x1000);
+
+        for (const auto &[name, value] : envVars)
+            this->m_evaluator->setEnvVariable(name, value);
 
         for (auto &node : this->m_currAST)
             delete node;
@@ -138,10 +141,10 @@ namespace hex::pl {
         return patterns;
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const std::string &path) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars) {
         File file(path, File::Mode::Read);
 
-        return this->executeString(provider, file.readString());
+        return this->executeString(provider, file.readString(), envVars);
     }
 
     void PatternLanguage::abort() {

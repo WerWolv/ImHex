@@ -3,12 +3,14 @@
 #include <hex.hpp>
 
 #include <bit>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include <hex/pattern_language/log_console.hpp>
+#include <hex/pattern_language/token.hpp>
 
 namespace hex::prv { class Provider; }
 
@@ -28,8 +30,8 @@ namespace hex::pl {
         PatternLanguage();
         ~PatternLanguage();
 
-        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, const std::string &string);
-        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const std::string &path);
+        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = { });
+        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars = { });
 
         void abort();
 

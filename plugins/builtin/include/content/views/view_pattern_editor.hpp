@@ -37,6 +37,21 @@ namespace hex::plugin::builtin {
         TextEditor m_textEditor;
         std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;
 
+        enum class EnvVarType {
+            Integer,
+            Float,
+            String,
+            Bool
+        };
+
+        struct EnvVar {
+            std::string name;
+            pl::Token::Literal value;
+            EnvVarType type;
+        };
+
+        std::vector<EnvVar> m_envVarEntries;
+
         void loadPatternFile(const std::string &path);
         void clearPatternData();
         void parsePattern(char *buffer);

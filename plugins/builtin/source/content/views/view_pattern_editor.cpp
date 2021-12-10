@@ -88,6 +88,8 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
+        this->m_envVarEntries = { { "", s128(0), EnvVarType::Integer } };
+
         EventManager::subscribe<EventProjectFileStore>(this, [this]() {
             ProjectFile::setPattern(this->m_textEditor.GetText());
         });
@@ -284,6 +286,71 @@ namespace hex::plugin::builtin {
                                                        this->m_patternLanguageRuntime->getMaximumPatternCount()
                                                        ).c_str()
                                            );
+
+                    ImGui::SameLine();
+
+                    if (ImGui::IconButton(ICON_VS_GLOBE, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                        ImGui::OpenPopup("env_vars");
+
+                    if (ImGui::BeginPopup("env_vars")) {
+                        ImGui::TextUnformatted("Environment Variables");
+                        ImGui::SameLine();
+                        if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) this->m_envVarEntries.push_back({ "", s128(0), EnvVarType::Integer });
+                        ImGui::Separator();
+
+                        int index = 0;
+                        for (auto &[name, value, type] : this->m_envVarEntries) {
+                            ImGui::PushID(index++);
+
+                            ImGui::PushItemWidth(ImGui::GetTextLineHeightWithSpacing() * 2);
+                            constexpr const char* Types[] = { "I", "F", "S", "B" };
+                            if (ImGui::BeginCombo("", Types[static_cast<int>(type)])) {
+                                for (auto i = 0; i < IM_ARRAYSIZE(Types); i++) {
+                                    if (ImGui::Selectable(Types[i]))
+                                        type = static_cast<EnvVarType>(i);
+                                }
+
+                                ImGui::EndCombo();
+                            }
+                            ImGui::PopItemWidth();
+
+                            ImGui::SameLine();
+
+                            ImGui::InputText("###name",  name.data(), name.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
+                            ImGui::SameLine();
+
+                            switch (type) {
+                                case EnvVarType::Integer: {
+                                    s64 displayValue = hex::get_or<s128>(value, 0);
+                                    ImGui::InputScalar("###value",  ImGuiDataType_S64, &displayValue);
+                                    value = s128(displayValue);
+                                    break;
+                                }
+                                case EnvVarType::Float: {
+                                    auto displayValue = hex::get_or<double>(value, 0.0);
+                                    ImGui::InputDouble("###value", &displayValue);
+                                    value = displayValue;
+                                    break;
+                                }
+                                case EnvVarType::Bool: {
+                                    auto displayValue = hex::get_or<bool>(value, false);
+                                    ImGui::Checkbox("###value", &displayValue);
+                                    value = displayValue;
+                                    break;
+                                }
+                                case EnvVarType::String: {
+                                    auto displayValue = hex::get_or<std::string>(value, "");
+                                    ImGui::InputText("###value",  displayValue.data(), displayValue.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
+                                    value = displayValue;
+                                    break;
+                                }
+                            }
+
+                            ImGui::PopID();
+                        }
+
+                        ImGui::EndPopup();
+                    }
                 }
 
                 if (this->m_textEditor.IsTextChanged()) {
@@ -418,7 +485,11 @@ namespace hex::plugin::builtin {
         EventManager::post<EventPatternChanged>();
 
         std::thread([this, buffer = std::string(buffer)] {
-            auto result = this->m_patternLanguageRuntime->executeString(ImHexApi::Provider::get(), buffer);
+            std::map<std::string, pl::Token::Literal> envVars;
+            for (const auto &[name, value, type] : this->m_envVarEntries)
+                envVars.insert({ name, value });
+
+            auto result = this->m_patternLanguageRuntime->executeString(ImHexApi::Provider::get(), buffer, envVars);
 
             auto error = this->m_patternLanguageRuntime->getError();
             if (error.has_value()) {

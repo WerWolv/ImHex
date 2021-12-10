@@ -14,6 +14,7 @@
 #include <optional>
 #include <string>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 #include <nfd.hpp>
@@ -225,6 +226,15 @@ namespace hex {
         });
 
         return iter != a.end();
+    }
+
+    template<typename T, typename ... VariantTypes>
+    T get_or(const std::variant<VariantTypes...> &variant, T alt) {
+        const T *value = std::get_if<T>(&variant);
+        if (value == nullptr)
+            return alt;
+        else
+            return *value;
     }
 
     namespace scope_guard {

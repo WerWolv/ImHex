@@ -149,6 +149,18 @@ namespace hex::pl {
                 LogConsole::abortEvaluation("evaluation aborted by user");
         }
 
+        [[nodiscard]]
+        std::optional<Token::Literal> getEnvVariable(const std::string &name) const {
+            if (this->m_envVariables.contains(name))
+                return this->m_envVariables.at(name);
+            else
+                return std::nullopt;
+        }
+
+        void setEnvVariable(const std::string &name, const Token::Literal &value) {
+            this->m_envVariables[name] = value;
+        }
+
     private:
 
         void patternCreated();
@@ -173,6 +185,7 @@ namespace hex::pl {
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
         std::vector<ASTNode*> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
+        std::map<std::string, Token::Literal> m_envVariables;
 
         friend class PatternCreationLimiter;
     };

@@ -123,6 +123,10 @@ namespace hex::pl {
         this->m_scopes.clear();
         this->m_aborted = false;
 
+        ON_SCOPE_EXIT {
+            this->m_envVariables.clear();
+        };
+
         this->dataOffset() = 0x00;
         this->m_currPatternCount = 0;
 

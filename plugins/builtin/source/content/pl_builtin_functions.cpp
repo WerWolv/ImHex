@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
             /* assert(condition, message) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto condition = Token::literalToBoolean(params[0]);
-                auto message = std::get<std::string>(params[1]);
+                auto message = Token::literalToString(params[1], false);
 
                 if (!condition)
                     LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
@@ -62,7 +62,7 @@ namespace hex::plugin::builtin {
             /* assert_warn(condition, message) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert_warn", 2, [](auto *ctx, auto params) -> std::optional<Token::Literal> {
                 auto condition = Token::literalToBoolean(params[0]);
-                auto message = std::get<std::string>(params[1]);
+                auto message = Token::literalToString(params[1], false);
 
                 if (!condition)
                     ctx->getConsole().log(LogConsole::Level::Warning, hex::format("assertion failed \"{0}\"", message));
@@ -80,6 +80,13 @@ namespace hex::plugin::builtin {
             /* format(format, args...) */
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "format", ContentRegistry::PatternLanguageFunctions::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 return format(ctx, params);
+            });
+
+            /* env(name) */
+            ContentRegistry::PatternLanguageFunctions::add(nsStd, "env", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                auto name = Token::literalToString(params[0], false);
+
+                return ctx->getEnvVariable(name);
             });
 
         }
