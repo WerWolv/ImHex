@@ -679,6 +679,11 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.provider.gdb", "GDB Server Provider" },
                     { "hex.builtin.provider.gdb.name", "GDB Server <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "Server" },
+                { "hex.builtin.provider.disk", "Datenträger Provider" },
+                    { "hex.builtin.provider.disk.selected_disk", "Datenträger" },
+                    { "hex.builtin.provider.disk.disk_size", "Datenträgergrösse" },
+                    { "hex.builtin.provider.disk.sector_size", "Sektorgrösse" },
+                    { "hex.builtin.provider.disk.reload", "Neu laden" },
         });
     }
 
