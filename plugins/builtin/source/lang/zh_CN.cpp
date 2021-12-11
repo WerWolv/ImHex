@@ -677,6 +677,7 @@ namespace hex::plugin::builtin {
                 //{ "hex.builtin.provider.file", "File Provider" },
                 //{ "hex.builtin.provider.gdb", "GDB Server Provider" },
                     //{ "hex.builtin.provider.gdb.name", "GDB Server <{0}:{1}>" },
+                    //{ "hex.builtin.provider.gdb.server", "Server" },
         });
     }
 

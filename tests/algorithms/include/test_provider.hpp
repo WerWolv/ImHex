@@ -48,6 +48,9 @@ namespace hex::test {
             return this->m_data->size();
         }
 
+        bool open() override { return true; }
+        void close() override { }
+
     private:
         std::vector<u8>* m_data;
     };

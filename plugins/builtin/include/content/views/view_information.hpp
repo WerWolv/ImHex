@@ -3,6 +3,7 @@
 #include <hex/views/view.hpp>
 
 #include <array>
+#include <atomic>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -30,6 +31,7 @@ namespace hex::plugin::builtin {
 
         std::array<ImU64, 256> m_valueCounts = { 0 };
         bool m_analyzing = false;
+        std::atomic<u64> m_bytesAnalyzed;
 
         std::pair<u64, u64> m_analyzedRegion = { 0, 0 };
 

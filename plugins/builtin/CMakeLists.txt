@@ -38,7 +38,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/views/view_constants.cpp
         source/content/views/view_store.cpp
         source/content/views/view_diff.cpp
-        source/content/views/view_gdb.cpp
+        source/content/views/view_provider_settings.cpp
 
 
         source/math_evaluator.cpp

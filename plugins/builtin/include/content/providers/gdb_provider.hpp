@@ -14,11 +14,11 @@ class GDBProvider : public hex::prv::Provider {
         explicit GDBProvider();
         ~GDBProvider() override;
 
-        bool isAvailable() const override;
-        bool isReadable() const override;
-        bool isWritable() const override;
-        bool isResizable() const override;
-        bool isSavable() const override;
+        [[nodiscard]] bool isAvailable() const override;
+        [[nodiscard]] bool isReadable() const override;
+        [[nodiscard]] bool isWritable() const override;
+        [[nodiscard]] bool isResizable() const override;
+        [[nodiscard]] bool isSavable() const override;
 
         void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
@@ -26,7 +26,7 @@ class GDBProvider : public hex::prv::Provider {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        size_t getActualSize() const override;
+        [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
         void saveAs(const std::string &path) override;
@@ -34,20 +34,26 @@ class GDBProvider : public hex::prv::Provider {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
 
-        void connect(const std::string &address, u16 port);
-        void disconnect();
-        bool isConnected();
+        [[nodiscard]] bool open() override;
+        void close() override;
 
-    private:
+        [[nodiscard]] bool isConnected() const;
+
+        [[nodiscard]] bool hasLoadInterface() const override { return true; }
+        void drawLoadInterface() override;
+
+    protected:
         hex::Socket m_socket;
 
         std::string m_ipAddress;
-        u16 m_port;
+        int m_port;
+
+        constexpr static size_t CacheLineSize = 0x1000;
 
         struct CacheLine {
             u64 address;
 
-            std::array<u8, 0x1000> data;
+            std::array<u8, CacheLineSize> data;
         };
 
         std::list<CacheLine> m_cache;

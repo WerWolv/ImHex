@@ -713,8 +713,13 @@ namespace hex::plugin::builtin {
         hex::prv::Provider *provider = nullptr;
         EventManager::post<RequestCreateProvider>("hex.builtin.provider.file", &provider);
 
-        if (auto fileProvider = dynamic_cast<prv::FileProvider*>(provider))
-            fileProvider->open(path);
+        if (auto fileProvider = dynamic_cast<prv::FileProvider*>(provider)) {
+            fileProvider->setPath(path);
+            if (!fileProvider->open()) {
+                View::showErrorPopup("hex.builtin.view.hexeditor.error.open"_lang);
+                return;
+            }
+        }
 
         if (!provider->isWritable()) {
             this->m_memoryEditor.ReadOnly = true;

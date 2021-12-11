@@ -21,11 +21,11 @@ namespace hex::plugin::builtin::prv {
         explicit FileProvider();
         ~FileProvider() override;
 
-        bool isAvailable() const override;
-        bool isReadable() const override;
-        bool isWritable() const override;
-        bool isResizable() const override;
-        bool isSavable() const override;
+        [[nodiscard]] bool isAvailable() const override;
+        [[nodiscard]] bool isReadable() const override;
+        [[nodiscard]] bool isWritable() const override;
+        [[nodiscard]] bool isResizable() const override;
+        [[nodiscard]] bool isSavable() const override;
 
         void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
@@ -33,7 +33,7 @@ namespace hex::plugin::builtin::prv {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        size_t getActualSize() const override;
+        [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
         void saveAs(const std::string &path) override;
@@ -41,10 +41,12 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
 
-        void open(const std::string &path);
-        void close();
+        void setPath(const std::string &path);
 
-    private:
+        [[nodiscard]] bool open() override;
+        void close() override;
+
+    protected:
         #if defined(OS_WINDOWS)
         HANDLE m_file = INVALID_HANDLE_VALUE;
         HANDLE m_mapping = INVALID_HANDLE_VALUE;

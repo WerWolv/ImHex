@@ -10,19 +10,17 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewGDB : public hex::View {
+    class ViewProviderSettings : public hex::View {
     public:
-        ViewGDB();
+        ViewProviderSettings();
+        ~ViewProviderSettings();
 
         void drawContent() override;
+        void drawAlwaysVisible() override;
 
         bool hasViewMenuItemEntry() override;
 
         bool isAvailable();
-
-    private:
-        std::string m_address;
-        int m_port = 0;
     };
 
 }

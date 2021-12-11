@@ -77,6 +77,19 @@ namespace hex::plugin::builtin::prv {
             return data;
         }
 
+        void writeMemory(Socket &socket, u64 address, const void *buffer, size_t size) {
+            std::vector<u8> bytes(size);
+            std::memcpy(bytes.data(), buffer, size);
+
+            std::string byteString = crypt::encode16(bytes);
+
+            std::string packet = createPacket(hex::format("M{:X},{:X}:{}", address, size, byteString));
+
+            socket.writeString(packet);
+
+            auto receivedPacket = socket.readString(3);
+        }
+
         bool enableNoAckMode(Socket &socket) {
             socket.writeString(createPacket("QStartNoAckMode"));
 
@@ -104,7 +117,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     GDBProvider::~GDBProvider() {
-        this->disconnect();
+        this->close();
     }
 
 
@@ -135,9 +148,9 @@ namespace hex::plugin::builtin::prv {
 
         offset -= this->getBaseAddress();
 
-        u64 alignedOffset = offset - (offset & 0xFFF);
+        u64 alignedOffset = offset - (offset % CacheLineSize);
 
-        {
+        if (size <= CacheLineSize) {
             std::scoped_lock lock(this->m_cacheLock);
 
             const auto &cacheLine = std::find_if(this->m_cache.begin(), this->m_cache.end(), [&](auto &line){
@@ -154,7 +167,15 @@ namespace hex::plugin::builtin::prv {
             }
 
             if (cacheLine != this->m_cache.end())
-                std::memcpy(buffer, &cacheLine->data[0] + (offset & 0xFFF), size);
+                std::memcpy(buffer, &cacheLine->data[0] + (offset % CacheLineSize), size);
+        } else {
+            while (size > 0) {
+                size_t readSize = std::min(size, CacheLineSize);
+                this->readRaw(offset, buffer, readSize);
+
+                size -= readSize;
+                offset += readSize;
+            }
         }
 
         for (u64 i = 0; i < size; i++)
@@ -166,7 +187,12 @@ namespace hex::plugin::builtin::prv {
     }
 
     void GDBProvider::write(u64 offset, const void *buffer, size_t size) {
+        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
+            return;
 
+        offset -= this->getBaseAddress();
+
+        gdb::writeMemory(this->m_socket, offset, buffer, size);
     }
 
     void GDBProvider::readRaw(u64 offset, void *buffer, size_t size) {
@@ -178,7 +204,10 @@ namespace hex::plugin::builtin::prv {
     }
 
     void GDBProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
+        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
+            return;
 
+        gdb::writeMemory(this->m_socket, offset, buffer, size);
     }
 
     void GDBProvider::save() {
@@ -200,7 +229,7 @@ namespace hex::plugin::builtin::prv {
     std::string GDBProvider::getName() const {
         std::string address, port;
 
-        if (this->m_ipAddress.empty()) {
+        if (!this->isConnected()) {
             address = "-";
             port = "-";
         } else {
@@ -212,18 +241,17 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::vector<std::pair<std::string, std::string>> GDBProvider::getDataInformation() const {
-        return { };
+        return {
+                { "hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", this->m_ipAddress, this->m_port) },
+        };
     }
 
-    void GDBProvider::connect(const std::string &address, u16 port) {
-        this->m_socket.connect(address, port);
+    bool GDBProvider::open() {
+        this->m_socket.connect(this->m_ipAddress, this->m_port);
         if (!gdb::enableNoAckMode(this->m_socket)) {
             this->m_socket.disconnect();
-            return;
+            return false;
         }
-
-        this->m_ipAddress = address;
-        this->m_port = port;
 
         if (this->m_socket.isConnected()) {
             this->m_cacheUpdateThread = std::thread([this]() {
@@ -250,10 +278,14 @@ namespace hex::plugin::builtin::prv {
                     std::this_thread::sleep_for(100ms);
                 }
             });
+
+            return true;
+        } else {
+            return false;
         }
     }
 
-    void GDBProvider::disconnect() {
+    void GDBProvider::close() {
         this->m_socket.disconnect();
 
         if (this->m_cacheUpdateThread.joinable()) {
@@ -261,8 +293,20 @@ namespace hex::plugin::builtin::prv {
         }
     }
 
-    bool GDBProvider::isConnected() {
+    bool GDBProvider::isConnected() const {
         return this->m_socket.isConnected();
+    }
+
+
+
+    void GDBProvider::drawLoadInterface() {
+        ImGui::InputText("hex.builtin.view.gdb.ip"_lang, this->m_ipAddress.data(), this->m_ipAddress.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &this->m_ipAddress);
+        ImGui::InputInt("hex.builtin.view.gdb.port"_lang, &this->m_port, 0, 0);
+
+        if (this->m_port < 0)
+            this->m_port = 0;
+        else if (this->m_port > 0xFFFF)
+            this->m_port = 0xFFFF;
     }
 
 }

@@ -1,6 +1,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex.hpp>
+#include <hex/api/event.hpp>
 
 #include <cmath>
 #include <cstring>
@@ -12,6 +13,9 @@ namespace hex::prv {
 
     Provider::Provider() {
         this->m_patches.emplace_back();
+
+        if (this->hasLoadInterface())
+            EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
     }
 
     Provider::~Provider() {
@@ -140,6 +144,23 @@ namespace hex::prv {
 
     bool Provider::canRedo() const {
         return this->m_patchTreeOffset > 0;
+    }
+
+
+    bool Provider::hasLoadInterface() const {
+        return false;
+    }
+
+    bool Provider::hasInterface() const {
+        return false;
+    }
+
+    void Provider::drawLoadInterface() {
+
+    }
+
+    void Provider::drawInterface() {
+
     }
 
 }

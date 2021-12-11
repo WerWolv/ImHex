@@ -45,6 +45,9 @@ namespace hex::test {
             return this->m_testFile.getSize();
         }
 
+        bool open() override { return true; }
+        void close() override { }
+
     private:
         File m_testFile;
     };

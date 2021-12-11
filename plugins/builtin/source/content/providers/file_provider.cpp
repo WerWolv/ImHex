@@ -130,7 +130,7 @@ namespace hex::plugin::builtin::prv {
         ::close(handle);
     #endif
 
-        this->open(this->m_path);
+        this->open();
     }
 
     size_t FileProvider::getActualSize() const {
@@ -156,8 +156,11 @@ namespace hex::plugin::builtin::prv {
         return result;
     }
 
-    void FileProvider::open(const std::string &path) {
+    void FileProvider::setPath(const std::string &path) {
         this->m_path = path;
+    }
+
+    bool FileProvider::open() {
         this->m_fileStatsValid = stat(this->m_path.data(), &this->m_fileStats) == 0;
 
         this->m_readable = true;
@@ -194,12 +197,12 @@ namespace hex::plugin::builtin::prv {
         };
 
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            return;
+            return false;
         }
 
         this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, nullptr);
         if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
-            return;
+            return false;
         }
 
         auto mappingCleanup = SCOPE_GUARD {
@@ -211,7 +214,7 @@ namespace hex::plugin::builtin::prv {
         this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
         if (this->m_mappedFile == nullptr) {
             this->m_readable = false;
-            return;
+            return false;
         }
 
         fileCleanup.release();
@@ -220,7 +223,7 @@ namespace hex::plugin::builtin::prv {
         ProjectFile::setFilePath(this->m_path);
 
         #else
-        this->m_file = ::open(this->m_path.data(), O_RDWR);
+            this->m_file = ::open(this->m_path.data(), O_RDWR);
             if (this->m_file == -1) {
                 this->m_file = ::open(this->m_path.data(), O_RDONLY);
                 this->m_writable = false;
@@ -228,14 +231,21 @@ namespace hex::plugin::builtin::prv {
 
             if (this->m_file == -1) {
                 this->m_readable = false;
-                return;
+                return false;
             }
 
             this->m_fileSize = this->m_fileStats.st_size;
 
-            this->m_mappedFile = mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, this->m_file, 0);
+            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, this->m_file, 0);
+            if (this->m_mappedFile == nullptr) {
+                ::close(this->m_file);
+                this->m_file = -1;
 
-    #endif
+                return false;
+            }
+        #endif
+
+        return true;
     }
 
     void FileProvider::close() {

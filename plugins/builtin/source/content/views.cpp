@@ -17,7 +17,7 @@
 #include "content/views/view_constants.hpp"
 #include "content/views/view_store.hpp"
 #include "content/views/view_diff.hpp"
-#include "content/views/view_gdb.hpp"
+#include "content/views/view_provider_settings.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewConstants>();
         ContentRegistry::Views::add<ViewStore>();
         ContentRegistry::Views::add<ViewDiff>();
-        ContentRegistry::Views::add<ViewGDB>();
+        ContentRegistry::Views::add<ViewProviderSettings>();
     }
 
 }

@@ -68,6 +68,8 @@ namespace hex {
     void ImHexApi::Provider::add(prv::Provider *provider) {
         SharedData::providers.push_back(provider);
         SharedData::currentProvider = SharedData::providers.size() - 1;
+
+        EventManager::post<EventProviderCreated>(provider);
     }
 
     void ImHexApi::Provider::remove(prv::Provider *provider) {

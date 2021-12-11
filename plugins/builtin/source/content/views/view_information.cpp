@@ -51,23 +51,18 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
-    static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t numBytes) {
+    static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
         float entropy = 0;
 
-        if (numBytes == 0)
-            return 0.0F;
+        for (auto count : valueCounts) {
+            if (count == 0) continue;
 
-        std::array<float, 256> floatValueCounts{ 0 };
-        std::copy(valueCounts.begin(), valueCounts.end(), floatValueCounts.begin());
+            float probability = static_cast<float>(count) / blockSize;
 
-        for (u16 i = 0; i < 256; i++) {
-            floatValueCounts[i] /= float(numBytes);
-
-            if (floatValueCounts[i] > 0)
-                entropy -= (floatValueCounts[i] * std::log2(floatValueCounts[i]));
+            entropy += probability * std::log2(probability);
         }
 
-        return entropy / 8;
+        return (-entropy) / 8; // log2(256) = 8
     }
 
     void ViewInformation::analyze() {
@@ -93,7 +88,10 @@ namespace hex::plugin::builtin {
                         blockValueCounts[buffer[j]]++;
                         this->m_valueCounts[buffer[j]]++;
                     }
+
                     this->m_blockEntropy.push_back(calculateEntropy(blockValueCounts, this->m_blockSize));
+
+                    this->m_bytesAnalyzed = i;
                 }
 
                 this->m_averageEntropy = calculateEntropy(this->m_valueCounts, provider->getSize());
@@ -128,19 +126,22 @@ namespace hex::plugin::builtin {
                     }, this->m_analyzing);
 
                     if (this->m_analyzing) {
-                        ImGui::SameLine();
                         ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
+                        ImGui::ProgressBar(this->m_bytesAnalyzed / static_cast<double>(provider->getSize()));
+                    } else {
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+                    }
+
+                    ImGui::NewLine();
+                    ImGui::TextUnformatted("hex.builtin.view.information.region"_lang);
+                    ImGui::Separator();
+
+                    for (auto &[name, value] : provider->getDataInformation()) {
+                        ImGui::LabelText(name.c_str(), "%s", value.c_str());
                     }
 
                     if (this->m_dataValid) {
-
-                        ImGui::NewLine();
-                        ImGui::TextUnformatted("hex.builtin.view.information.region"_lang);
-                        ImGui::Separator();
-
-                        for (auto &[name, value] : provider->getDataInformation()) {
-                            ImGui::LabelText(name.c_str(), "%s", value.c_str());
-                        }
 
                         ImGui::LabelText("hex.builtin.view.information.region"_lang, "0x%llx - 0x%llx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
 
@@ -169,8 +170,8 @@ namespace hex::plugin::builtin {
                         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
 
                         ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
-                        ImPlot::SetNextPlotLimits(0, 256, 0, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
-                        if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1,0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock))  {
+                        ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
+                        if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1,0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale))  {
                             static auto x = []{
                                 std::array<ImU64, 256> result{ 0 };
                                 std::iota(result.begin(), result.end(), 0);
@@ -188,7 +189,7 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
 
                         ImPlot::SetNextPlotLimits(0, this->m_blockEntropy.size(), -0.1, 1.1, ImGuiCond_Always);
-                        if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1,0), ImPlotFlags_CanvasOnly, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
+                        if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1,0), ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
                             ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
                             if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {

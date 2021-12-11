@@ -19,11 +19,11 @@ namespace hex::prv {
         Provider();
         virtual ~Provider();
 
-        virtual bool isAvailable() const = 0;
-        virtual bool isReadable() const = 0;
-        virtual bool isWritable() const = 0;
-        virtual bool isResizable() const = 0;
-        virtual bool isSavable() const = 0;
+        [[nodiscard]] virtual bool isAvailable() const = 0;
+        [[nodiscard]] virtual bool isReadable() const = 0;
+        [[nodiscard]] virtual bool isWritable() const = 0;
+        [[nodiscard]] virtual bool isResizable() const = 0;
+        [[nodiscard]] virtual bool isSavable() const = 0;
 
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void write(u64 offset, const void *buffer, size_t size);
@@ -35,38 +35,46 @@ namespace hex::prv {
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
-        virtual size_t getActualSize() const  = 0;
+        [[nodiscard]] virtual size_t getActualSize() const  = 0;
 
         void applyOverlays(u64 offset, void *buffer, size_t size);
 
-        std::map<u64, u8>& getPatches();
-        const std::map<u64, u8>& getPatches() const;
+        [[nodiscard]] std::map<u64, u8>& getPatches();
+        [[nodiscard]] const std::map<u64, u8>& getPatches() const;
         void applyPatches();
 
         [[nodiscard]] Overlay* newOverlay();
         void deleteOverlay(Overlay *overlay);
         [[nodiscard]] const std::list<Overlay*>& getOverlays();
 
-        u32 getPageCount() const;
-        u32 getCurrentPage() const;
+        [[nodiscard]] u32 getPageCount() const;
+        [[nodiscard]] u32 getCurrentPage() const;
         void setCurrentPage(u32 page);
 
         virtual void setBaseAddress(u64 address);
-        virtual u64 getBaseAddress() const;
-        virtual u64 getCurrentPageAddress() const;
-        virtual size_t getSize() const;
-        virtual std::optional<u32> getPageOfAddress(u64 address) const;
+        [[nodiscard]] virtual u64 getBaseAddress() const;
+        [[nodiscard]] virtual u64 getCurrentPageAddress() const;
+        [[nodiscard]] virtual size_t getSize() const;
+        [[nodiscard]] virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
         [[nodiscard]] virtual std::string getName() const = 0;
         [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataInformation() const = 0;
+
+        [[nodiscard]] virtual bool open() = 0;
+        virtual void close() = 0;
 
         void addPatch(u64 offset, const void *buffer, size_t size);
 
         void undo();
         void redo();
 
-        bool canUndo() const;
-        bool canRedo() const;
+        [[nodiscard]] bool canUndo() const;
+        [[nodiscard]] bool canRedo() const;
+
+        [[nodiscard]] virtual bool hasLoadInterface() const;
+        [[nodiscard]] virtual bool hasInterface() const;
+        virtual void drawLoadInterface();
+        virtual void drawInterface();
 
     protected:
         u32 m_currPage = 0;

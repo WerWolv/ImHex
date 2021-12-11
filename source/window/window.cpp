@@ -485,6 +485,7 @@ namespace hex {
         View::getDeferedCalls().clear();
 
         for (auto &view : ContentRegistry::Views::getEntries()) {
+            GImGui->NextWindowData.ClearFlags();
             view->drawAlwaysVisible();
 
             if (!view->shouldProcess())
@@ -496,6 +497,8 @@ namespace hex {
 
             ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
             view->drawContent();
+            GImGui->NextWindowData.ClearFlags();
+
             view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
         }
 
