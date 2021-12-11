@@ -193,6 +193,9 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawMenu() {
         if (ImGui::BeginMenu("hex.menu.file"_lang)) {
+
+            ImGui::Separator();
+
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang)) {
 
                 this->m_selectedPatternFile = 0;
@@ -210,6 +213,15 @@ namespace hex::plugin::builtin {
 
                 View::doLater([]{ ImGui::OpenPopup("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang); });
             }
+
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
+                hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, { { "Pattern", "hexpat" }}, [this](const std::string &path) {
+                    File file(path, File::Mode::Create);
+
+                    file.write(this->m_textEditor.GetText());
+                });
+            }
+
             ImGui::EndMenu();
         }
     }

@@ -267,6 +267,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_editor.accept_pattern.pattern_language", "Pattern" },
                     { "hex.builtin.view.pattern_editor.accept_pattern.question", "Vuoi applicare i patter selezionati" },
                 { "hex.builtin.view.pattern_editor.menu.file.load_pattern", "Caricamento dei pattern..." },
+                //{ "hex.builtin.view.pattern_editor.menu.file.save_pattern", "Save pattern..." },
                 { "hex.builtin.view.pattern_editor.open_pattern", "Apri pattern" },
                 { "hex.builtin.view.pattern_editor.evaluating", "Valutazione..." },
                 { "hex.builtin.view.pattern_editor.auto", "Auto valutazione" },

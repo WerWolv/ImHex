@@ -267,6 +267,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_editor.accept_pattern.pattern_language", "模式" },
                     { "hex.builtin.view.pattern_editor.accept_pattern.question", "是否应用找到的模式？" },
                 { "hex.builtin.view.pattern_editor.menu.file.load_pattern", "加载模式文件..." },
+                //{ "hex.builtin.view.pattern_editor.menu.file.save_pattern", "Save pattern..." },
                 { "hex.builtin.view.pattern_editor.open_pattern", "打开模式" },
                 { "hex.builtin.view.pattern_editor.evaluating", "计算中..." },
                 { "hex.builtin.view.pattern_editor.auto", "自动计算" },

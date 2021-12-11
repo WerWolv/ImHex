@@ -270,6 +270,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_editor.accept_pattern.pattern_language", "Patterns" },
                     { "hex.builtin.view.pattern_editor.accept_pattern.question", "Do you want to apply the selected pattern?" },
                 { "hex.builtin.view.pattern_editor.menu.file.load_pattern", "Load pattern..." },
+                { "hex.builtin.view.pattern_editor.menu.file.save_pattern", "Save pattern..." },
                 { "hex.builtin.view.pattern_editor.open_pattern", "Open pattern" },
                 { "hex.builtin.view.pattern_editor.evaluating", "Evaluating..." },
                 { "hex.builtin.view.pattern_editor.auto", "Auto evaluate" },
