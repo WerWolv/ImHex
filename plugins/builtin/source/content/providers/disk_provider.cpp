@@ -6,15 +6,17 @@
 #include <filesystem>
 
 #if defined (OS_LINUX)
-    #include <sys/types.h>
+    #include <fcntl.h>
     #include <unistd.h>
+    #include <sys/stat.h>
+    #include <sys/types.h>
 
     #define lseek lseek64
-#endif
-
-#if defined (OS_MACOS)
-    #include <sys/types.h>
+#elif defined (OS_MACOS)
+    #include <fcntl.h>
     #include <unistd.h>
+    #include <sys/stat.h>
+    #include <sys/types.h>
 #endif
 
 namespace hex::plugin::builtin::prv {
