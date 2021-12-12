@@ -37,7 +37,10 @@ namespace hex::plugin::builtin::prv {
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
         void drawLoadInterface() override;
+
     protected:
+        void reloadDrives();
+
         std::set<std::string> m_availableDrives;
         std::string m_path;
 

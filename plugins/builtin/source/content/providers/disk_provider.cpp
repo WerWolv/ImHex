@@ -20,7 +20,7 @@
 namespace hex::plugin::builtin::prv {
 
     DiskProvider::DiskProvider() : Provider() {
-
+        this->reloadDrives();
     }
 
     DiskProvider::~DiskProvider() {
@@ -255,6 +255,42 @@ namespace hex::plugin::builtin::prv {
     }
 
 
+    void DiskProvider::reloadDrives() {
+        #if defined (OS_WINDOWS)
+            this->m_availableDrives.clear();
+            std::bitset<32> drives = ::GetLogicalDrives();
+            for (char i = 0; i < 26; i++) {
+                if (drives[i])
+                    this->m_availableDrives.insert(hex::format(R"(\\.\{:c}:)", 'A' + i));
+            }
+
+            auto logicalDrives = this->m_availableDrives;
+            for (const auto &drive : logicalDrives) {
+                auto handle = reinterpret_cast<HANDLE>(::CreateFile(drive.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr));
+
+                if (handle == INVALID_HANDLE_VALUE) continue;
+
+                VOLUME_DISK_EXTENTS diskExtents = { 0 };
+                DWORD bytesRead = 0;
+                auto result = ::DeviceIoControl(
+                        handle,
+                        IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+                        nullptr,
+                        0,
+                        &diskExtents,
+                        sizeof(VOLUME_DISK_EXTENTS),
+                        &bytesRead,
+                        nullptr);
+
+                if (result) {
+                    auto diskPath = hex::format(R"(\\.\PhysicalDrive{})", diskExtents.Extents[0].DiskNumber);
+                    this->m_availableDrives.insert(diskPath);
+                }
+
+                ::CloseHandle(handle);
+            }
+        #endif
+    }
 
     void DiskProvider::drawLoadInterface() {
         #if defined (OS_WINDOWS)
@@ -271,38 +307,7 @@ namespace hex::plugin::builtin::prv {
             ImGui::SameLine();
 
             if (ImGui::Button("hex.builtin.provider.disk.reload"_lang)) {
-                this->m_availableDrives.clear();
-                std::bitset<32> drives = ::GetLogicalDrives();
-                for (char i = 0; i < 26; i++) {
-                    if (drives[i])
-                        this->m_availableDrives.insert(hex::format(R"(\\.\{:c}:)", 'A' + i));
-                }
-
-                auto logicalDrives = this->m_availableDrives;
-                for (const auto &drive : logicalDrives) {
-                    auto handle = reinterpret_cast<HANDLE>(::CreateFile(drive.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr));
-
-                    if (handle == INVALID_HANDLE_VALUE) continue;
-
-                    VOLUME_DISK_EXTENTS diskExtents = { 0 };
-                    DWORD bytesRead = 0;
-                    auto result = ::DeviceIoControl(
-                            handle,
-                            IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
-                            nullptr,
-                            0,
-                            &diskExtents,
-                            sizeof(VOLUME_DISK_EXTENTS),
-                            &bytesRead,
-                            nullptr);
-
-                    if (result) {
-                        auto diskPath = hex::format(R"(\\.\PhysicalDrive{})", diskExtents.Extents[0].DiskNumber);
-                        this->m_availableDrives.insert(diskPath);
-                    }
-
-                    ::CloseHandle(handle);
-                }
+                this->reloadDrives();
             }
 
         #else
