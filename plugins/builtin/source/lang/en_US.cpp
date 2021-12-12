@@ -161,6 +161,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.help.about.source", "Source code available on GitHub:" },
                         { "hex.builtin.view.help.about.donations", "Donations" },
                         { "hex.builtin.view.help.about.thanks", "If you like my work, please consider donating to keep the project going. Thanks a lot <3" },
+                        { "hex.builtin.view.help.about.contributor", "Contributors" },
                         { "hex.builtin.view.help.about.libs", "Libraries used" },
                         { "hex.builtin.view.help.about.paths", "ImHex Directories" },
                     { "hex.builtin.view.help.documentation", "ImHex Documentation" },

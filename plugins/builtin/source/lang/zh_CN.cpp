@@ -158,6 +158,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.help.about.source", "源代码位于GitHub:" },
                         { "hex.builtin.view.help.about.donations", "赞助" },
                         { "hex.builtin.view.help.about.thanks", "如果你喜欢我的工作，请赞助以帮助此项目继续前进。非常感谢 <3" },
+                        //{ "hex.builtin.view.help.about.contributor", "Contributors" },
                         { "hex.builtin.view.help.about.libs", "使用的库" },
                         { "hex.builtin.view.help.about.paths", "ImHex目录" },
                     { "hex.builtin.view.help.documentation", "ImHex文档" },

@@ -158,6 +158,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.help.about.source", "Codice Sorgente disponibile su GitHub:" },
                         { "hex.builtin.view.help.about.donations", "Donazioni" },
                         { "hex.builtin.view.help.about.thanks", "Se ti piace il mio lavoro, per favore considera di fare una donazione. Grazie mille <3" },
+                        //{ "hex.builtin.view.help.about.contributor", "Contributors" },
                         { "hex.builtin.view.help.about.libs", "Librerie usate" },
                         { "hex.builtin.view.help.about.paths", "ImHex cartelle" },
                     { "hex.builtin.view.help.documentation", "Documentazione di ImHex" },

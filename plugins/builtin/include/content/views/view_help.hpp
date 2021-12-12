@@ -30,12 +30,13 @@ namespace hex::plugin::builtin {
 
     private:
         bool m_aboutWindowOpen = false;
-        bool m_patternHelpWindowOpen = false;
-        bool m_mathHelpWindowOpen = false;
 
         void drawAboutPopup();
-        void drawPatternHelpPopup();
-        void drawMathEvaluatorHelp();
+
+        void drawAboutMainPage();
+        void drawContributorPage();
+        void drawLibraryCreditsPage();
+        void drawPathsPage();
     };
 
 }
