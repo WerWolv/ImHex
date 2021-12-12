@@ -184,7 +184,7 @@ namespace hex {
 
     /* Views */
 
-    void ContentRegistry::Views::add(View *view) {
+    void ContentRegistry::Views::impl::add(View *view) {
         getEntries().emplace_back(view);
     }
 
@@ -196,27 +196,27 @@ namespace hex {
     /* Tools */
 
     void ContentRegistry::Tools:: add(const std::string &unlocalizedName, const std::function<void()> &function) {
-        getEntries().emplace_back(Entry{ unlocalizedName, function });
+        getEntries().emplace_back(impl::Entry{ unlocalizedName, function });
     }
 
-    std::vector<ContentRegistry::Tools::Entry>& ContentRegistry::Tools::getEntries() {
+    std::vector<ContentRegistry::Tools::impl::Entry>& ContentRegistry::Tools::getEntries() {
         return SharedData::toolsEntries;
     }
 
 
     /* Data Inspector */
 
-    void ContentRegistry::DataInspector::add(const std::string &unlocalizedName, size_t requiredSize, ContentRegistry::DataInspector::GeneratorFunction function) {
+    void ContentRegistry::DataInspector::add(const std::string &unlocalizedName, size_t requiredSize, ContentRegistry::DataInspector::impl::GeneratorFunction function) {
         getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
     }
 
-    std::vector<ContentRegistry::DataInspector::Entry>& ContentRegistry::DataInspector::getEntries() {
+    std::vector<ContentRegistry::DataInspector::impl::Entry>& ContentRegistry::DataInspector::getEntries() {
         return SharedData::dataInspectorEntries;
     }
 
     /* Data Processor Nodes */
 
-    void ContentRegistry::DataProcessorNode::add(const Entry &entry) {
+    void ContentRegistry::DataProcessorNode::impl::add(const impl::Entry &entry) {
         getEntries().push_back(entry);
     }
 
@@ -224,7 +224,7 @@ namespace hex {
         getEntries().push_back({ "", "", []{ return nullptr; } });
     }
 
-    std::vector<ContentRegistry::DataProcessorNode::Entry>& ContentRegistry::DataProcessorNode::getEntries() {
+    std::vector<ContentRegistry::DataProcessorNode::impl::Entry>& ContentRegistry::DataProcessorNode::getEntries() {
         return SharedData::dataProcessorNodes;
     }
 
@@ -273,7 +273,7 @@ namespace hex {
 
     /* Providers */
 
-    void ContentRegistry::Provider::add(const std::string &unlocalizedName) {
+    void ContentRegistry::Provider::impl::addProviderName(const std::string &unlocalizedName) {
         SharedData::providerNames.push_back(unlocalizedName);
     }
 

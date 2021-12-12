@@ -3,6 +3,8 @@
 #include <hex.hpp>
 #include <hex/helpers/concepts.hpp>
 #include <hex/pattern_language/token.hpp>
+#include <hex/api/imhex_api.hpp>
+#include <hex/api/event.hpp>
 
 #include <functional>
 #include <map>
@@ -100,11 +102,17 @@ namespace hex {
 
         /* View Registry. Allows adding of new windows */
         namespace Views {
-            void add(View *view);
+
+            namespace impl {
+
+                void add(View *view);
+
+            }
+
 
             template<hex::derived_from<View> T, typename ... Args>
             void add(Args&& ... args) {
-                return add(new T(std::forward<Args>(args)...));
+                return impl::add(new T(std::forward<Args>(args)...));
             }
 
             std::vector<View*>& getEntries();
@@ -113,16 +121,21 @@ namespace hex {
 
         /* Tools Registry. Allows adding new entries to the tools window */
         namespace Tools {
-            using Callback = std::function<void()>;
 
-            struct Entry {
-                std::string name;
-                Callback function;
-            };
+            namespace impl {
 
-            void add(const std::string &unlocalizedName, const Callback &function);
+                using Callback = std::function<void()>;
 
-            std::vector<Entry>& getEntries();
+                struct Entry {
+                    std::string name;
+                    Callback function;
+                };
+
+            }
+
+            void add(const std::string &unlocalizedName, const impl::Callback &function);
+
+            std::vector<impl::Entry>& getEntries();
         }
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
@@ -134,35 +147,45 @@ namespace hex {
                 Octal
             };
 
-            using DisplayFunction = std::function<std::string()>;
-            using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8>&, std::endian, NumberDisplayStyle)>;
+            namespace impl {
 
-            struct Entry {
-                std::string unlocalizedName;
-                size_t requiredSize;
-                GeneratorFunction generatorFunction;
-            };
+                using DisplayFunction = std::function<std::string()>;
+                using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8>&, std::endian, NumberDisplayStyle)>;
 
-            void add(const std::string &unlocalizedName, size_t requiredSize, GeneratorFunction function);
+                struct Entry {
+                    std::string unlocalizedName;
+                    size_t requiredSize;
+                    impl::GeneratorFunction generatorFunction;
+                };
 
-            std::vector<Entry>& getEntries();
+            }
+
+            void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction function);
+
+            std::vector<impl::Entry>& getEntries();
         }
 
         /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
         namespace DataProcessorNode {
 
-            using CreatorFunction = std::function<dp::Node*()>;
-            struct Entry {
-                std::string category;
-                std::string name;
-                CreatorFunction creatorFunction;
-            };
+            namespace impl {
 
-            void add(const Entry &entry);
+                using CreatorFunction = std::function<dp::Node*()>;
+
+                struct Entry {
+                    std::string category;
+                    std::string name;
+                    CreatorFunction creatorFunction;
+                };
+
+                void add(const Entry &entry);
+
+            }
+
 
             template<hex::derived_from<dp::Node> T, typename ... Args>
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args&& ... args) {
-                add(Entry{ unlocalizedCategory.c_str(), unlocalizedName.c_str(),
+                add(impl::Entry{ unlocalizedCategory.c_str(), unlocalizedName.c_str(),
                    [=]{
                         auto node = new T(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
@@ -173,7 +196,7 @@ namespace hex {
 
             void addSeparator();
 
-            std::vector<Entry>& getEntries();
+            std::vector<impl::Entry>& getEntries();
 
         }
 
@@ -202,7 +225,28 @@ namespace hex {
         /* Provider Registry. Allows adding new data providers to be created from the UI */
         namespace Provider {
 
-            void add(const std::string &unlocalizedName);
+            namespace impl {
+
+                void addProviderName(const std::string &unlocalizedName);
+
+            }
+
+            template<hex::derived_from<hex::prv::Provider> T>
+            void add(const std::string &unlocalizedName, bool addToList = true) {
+                (void) EventManager::subscribe<RequestCreateProvider>([expectedName = unlocalizedName](const std::string &name, hex::prv::Provider **provider){
+                    if (name != expectedName) return;
+
+                    auto newProvider = new T();
+
+                    hex::ImHexApi::Provider::add(newProvider);
+
+                    if (provider != nullptr)
+                        *provider = newProvider;
+                });
+
+                if (addToList)
+                    impl::addProviderName(unlocalizedName);
+            }
 
             const std::vector<std::string>& getEntries();
 

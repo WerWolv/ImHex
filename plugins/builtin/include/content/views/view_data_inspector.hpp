@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
     private:
         struct InspectorCacheEntry {
             std::string unlocalizedName;
-            ContentRegistry::DataInspector::DisplayFunction displayFunction;
+            ContentRegistry::DataInspector::impl::DisplayFunction displayFunction;
         };
 
         bool m_shouldInvalidate = true;

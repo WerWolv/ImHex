@@ -62,8 +62,8 @@ namespace hex {
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
         static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctions;
         static std::vector<View*> views;
-        static std::vector<ContentRegistry::Tools::Entry> toolsEntries;
-        static std::vector<ContentRegistry::DataInspector::Entry> dataInspectorEntries;
+        static std::vector<ContentRegistry::Tools::impl::Entry> toolsEntries;
+        static std::vector<ContentRegistry::DataInspector::impl::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;
         static std::string popupMessage;
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
@@ -79,7 +79,7 @@ namespace hex {
 
         static std::vector<std::string> providerNames;
 
-        static std::vector<ContentRegistry::DataProcessorNode::Entry> dataProcessorNodes;
+        static std::vector<ContentRegistry::DataProcessorNode::impl::Entry> dataProcessorNodes;
         static u32 dataProcessorNodeIdCounter;
         static u32 dataProcessorLinkIdCounter;
         static u32 dataProcessorAttrIdCounter;

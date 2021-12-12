@@ -2,8 +2,6 @@
 
 #include <hex/providers/provider.hpp>
 
-#include "content/providers/file_provider.hpp"
-
 #include <set>
 #include <string>
 #include <vector>

@@ -14,8 +14,8 @@ namespace hex {
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> SharedData::patternLanguageFunctions;
     std::vector<View*> SharedData::views;
-    std::vector<ContentRegistry::Tools::Entry> SharedData::toolsEntries;
-    std::vector<ContentRegistry::DataInspector::Entry> SharedData::dataInspectorEntries;
+    std::vector<ContentRegistry::Tools::impl::Entry> SharedData::toolsEntries;
+    std::vector<ContentRegistry::DataInspector::impl::Entry> SharedData::dataInspectorEntries;
     u32 SharedData::patternPaletteOffset;
     std::string SharedData::popupMessage;
     std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
@@ -31,7 +31,7 @@ namespace hex {
 
     std::vector<std::string> SharedData::providerNames;
 
-    std::vector<ContentRegistry::DataProcessorNode::Entry> SharedData::dataProcessorNodes;
+    std::vector<ContentRegistry::DataProcessorNode::impl::Entry> SharedData::dataProcessorNodes;
     u32 SharedData::dataProcessorNodeIdCounter = 1;
     u32 SharedData::dataProcessorLinkIdCounter = 1;
     u32 SharedData::dataProcessorAttrIdCounter = 1;
