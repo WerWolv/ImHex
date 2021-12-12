@@ -184,7 +184,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hexeditor.script.file.title", "加载器脚本：打开文件" },
 
                     { "hex.builtin.view.hexeditor.menu.file.open_file", "打开文件..." },
-                    { "hex.builtin.view.hexeditor.menu.file.open_recent", "打开最近"},
+                    { "hex.builtin.view.hexeditor.menu.file.open_recent", "打开最近" },
+                    //{ "hex.builtin.view.hexeditor.menu.file.open_other", "Open Other..." },
                     { "hex.builtin.view.hexeditor.menu.file.save", "保存" },
                     { "hex.builtin.view.hexeditor.menu.file.save_as", "另存为..." },
                     { "hex.builtin.view.hexeditor.menu.file.close", "关闭" },

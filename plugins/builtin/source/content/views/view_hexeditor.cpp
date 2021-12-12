@@ -462,6 +462,17 @@ namespace hex::plugin::builtin {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_other"_lang)) {
+
+                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
+                    if (ImGui::MenuItem(LangEntry(unlocalizedProviderName))) {
+                        EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.save"_lang, "CTRL + S", false, providerValid && provider->isWritable())) {
                 save();
             }

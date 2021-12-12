@@ -168,6 +168,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hexeditor.create_file", "Nuovo" },
                     { "hex.builtin.view.hexeditor.open_file", "Apri" },
                     { "hex.builtin.view.hexeditor.menu.file.open_recent", "File recenti" },
+                    //{ "hex.builtin.view.hexeditor.menu.file.open_other", "Open Other..." },
                     { "hex.builtin.view.hexeditor.open_project", "Apri i Progetti" },
                     { "hex.builtin.view.hexeditor.save_project", "Salva i Progetti" },
                     { "hex.builtin.view.hexeditor.save_data", "Salva i Dati" },
