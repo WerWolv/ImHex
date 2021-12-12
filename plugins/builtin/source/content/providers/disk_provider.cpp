@@ -5,7 +5,14 @@
 #include <bitset>
 #include <filesystem>
 
-#if defined (OS_LINUX) || defined (OS_MACOS)
+#if defined (OS_LINUX)
+    #include <sys/types.h>
+    #include <unistd.h>
+
+    #define lseek lseek64
+#endif
+
+#if defined (OS_MACOS)
     #include <sys/types.h>
     #include <unistd.h>
 #endif
@@ -167,7 +174,7 @@ namespace hex::plugin::builtin::prv {
                 u64 seekPosition = offset - (offset % this->m_sectorSize);
 
                 if (this->m_sectorBufferAddress != seekPosition) {
-                    ::lseek64(this->m_diskHandle, seekPosition, SEEK_SET);
+                    ::lseek(this->m_diskHandle, seekPosition, SEEK_SET);
                     ::read(this->m_diskHandle, buffer, size);
                     this->m_sectorBufferAddress = seekPosition;
                 }
@@ -221,7 +228,7 @@ namespace hex::plugin::builtin::prv {
                 this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
                 std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8*>(buffer) + (startOffset - offset), currSize);
 
-                ::lseek64(this->m_diskHandle, sectorBase, SEEK_SET);
+                ::lseek(this->m_diskHandle, sectorBase, SEEK_SET);
                 ::write(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
 
                 offset += currSize;
