@@ -20,7 +20,7 @@ namespace hex::plugin::builtin::prv {
 
     bool FileProvider::isAvailable() const {
         #if defined(OS_WINDOWS)
-        return this->m_file != nullptr && this->m_mapping != nullptr && this->m_mappedFile != nullptr;
+        return this->m_file != INVALID_HANDLE_VALUE && this->m_mapping != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
         #else
         return this->m_file != -1 && this->m_mappedFile != nullptr;
         #endif

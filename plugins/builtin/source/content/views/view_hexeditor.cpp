@@ -481,7 +481,7 @@ namespace hex::plugin::builtin {
                 saveAs();
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.close"_lang, "", false, providerValid && provider->isAvailable())) {
+            if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.close"_lang, "", false, providerValid)) {
                 EventManager::post<EventFileUnloaded>();
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
                 providerValid = false;
@@ -728,6 +728,8 @@ namespace hex::plugin::builtin {
             fileProvider->setPath(path);
             if (!fileProvider->open()) {
                 View::showErrorPopup("hex.builtin.view.hexeditor.error.open"_lang);
+                ImHexApi::Provider::remove(provider);
+
                 return;
             }
         }

@@ -21,8 +21,6 @@ namespace hex::plugin::builtin {
 
     void ViewSettings::drawContent() {
 
-        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, FLT_MAX));
-
         ImGui::SetNextWindowSize(ImVec2(500, 300) * SharedData::globalScale, ImGuiCond_Always);
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.settings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoResize)) {
             if (ImGui::BeginTabBar("settings")) {

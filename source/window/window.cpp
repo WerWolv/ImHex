@@ -484,25 +484,27 @@ namespace hex {
             call();
         View::getDeferedCalls().clear();
 
+        View::drawCommonInterfaces();
+
         for (auto &view : ContentRegistry::Views::getEntries()) {
-            GImGui->NextWindowData.ClearFlags();
+            ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
+
             view->drawAlwaysVisible();
 
             if (!view->shouldProcess())
                 continue;
 
-            auto minSize = view->getMinSize();
-            minSize.x *= SharedData::globalScale;
-            minSize.y *= SharedData::globalScale;
+            if (view->isAvailable()) {
+                auto minSize = view->getMinSize();
+                minSize.x *= SharedData::globalScale;
+                minSize.y *= SharedData::globalScale;
 
-            ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
-            view->drawContent();
-            GImGui->NextWindowData.ClearFlags();
+                ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
+                view->drawContent();
+            }
 
             view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
         }
-
-        View::drawCommonInterfaces();
 
     #ifdef DEBUG
         if (this->m_demoWindowOpen) {
