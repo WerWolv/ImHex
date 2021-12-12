@@ -333,12 +333,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.store.loading", "正在加载仓库内容..." },
                 { "hex.builtin.view.diff.name", "差异" },
 
-                //{ "hex.builtin.view.gdb.name", "GDB Provider" },
-                    //{ "hex.builtin.view.gdb.settings", "Settings" },
-                    //{ "hex.builtin.view.gdb.ip", "IP Address" },
-                    //{ "hex.builtin.view.gdb.port", "Port" },
-                    //{ "hex.builtin.view.gdb.connect", "Connect" },
-                    //{ "hex.builtin.view.gdb.disconnect", "Disconnect" },
+                //{ "hex.builtin.view.provider_settings.name", "Provider Settings" },
+                    //{ "hex.builtin.view.provider_settings.load_popup", "Open Provider" },
 
                 { "hex.builtin.command.calc.desc", "计算器" },
                 { "hex.builtin.command.cmd.desc", "指令" },
@@ -680,6 +676,8 @@ namespace hex::plugin::builtin {
                 //{ "hex.builtin.provider.gdb", "GDB Server Provider" },
                     //{ "hex.builtin.provider.gdb.name", "GDB Server <{0}:{1}>" },
                     //{ "hex.builtin.provider.gdb.server", "Server" },
+                    //{ "hex.builtin.provider.gdb.ip", "IP Address" },
+                    //{ "hex.builtin.provider.gdb.port", "Port" },
                 //{ "hex.builtin.provider.disk", "Raw Disk Provider" },
                     //{ "hex.builtin.provider.disk.selected_disk", "Disk" },
                     //{ "hex.builtin.provider.disk.disk_size", "Disk Size" },

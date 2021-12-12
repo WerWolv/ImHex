@@ -335,12 +335,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.loading", "Store inhalt wird geladen..." },
                 { "hex.builtin.view.diff.name", "Diffing" },
 
-                { "hex.builtin.view.gdb.name", "GDB Provider" },
-                    { "hex.builtin.view.gdb.settings", "Einstellungen" },
-                    { "hex.builtin.view.gdb.ip", "IP Adresse" },
-                    { "hex.builtin.view.gdb.port", "Port" },
-                    { "hex.builtin.view.gdb.connect", "Verbinden" },
-                    { "hex.builtin.view.gdb.disconnect", "Trennen" },
+                { "hex.builtin.view.provider_settings.name", "Provider Einstellungen" },
+                    { "hex.builtin.view.provider_settings.load_popup", "Provider öffnen" },
 
                 { "hex.builtin.command.calc.desc", "Rechner" },
                 { "hex.builtin.command.cmd.desc", "Command" },
@@ -681,6 +677,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.provider.gdb", "GDB Server Provider" },
                     { "hex.builtin.provider.gdb.name", "GDB Server <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "Server" },
+                    { "hex.builtin.provider.gdb.ip", "IP Adresse" },
+                    { "hex.builtin.provider.gdb.port", "Port" },
                 { "hex.builtin.provider.disk", "Datenträger Provider" },
                     { "hex.builtin.provider.disk.selected_disk", "Datenträger" },
                     { "hex.builtin.provider.disk.disk_size", "Datenträgergrösse" },

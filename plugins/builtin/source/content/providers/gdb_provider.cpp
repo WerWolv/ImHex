@@ -122,7 +122,7 @@ namespace hex::plugin::builtin::prv {
 
 
     bool GDBProvider::isAvailable() const {
-        return true;
+        return this->m_socket.isConnected();
     }
 
     bool GDBProvider::isReadable() const {
@@ -300,8 +300,8 @@ namespace hex::plugin::builtin::prv {
 
 
     void GDBProvider::drawLoadInterface() {
-        ImGui::InputText("hex.builtin.view.gdb.ip"_lang, this->m_ipAddress.data(), this->m_ipAddress.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &this->m_ipAddress);
-        ImGui::InputInt("hex.builtin.view.gdb.port"_lang, &this->m_port, 0, 0);
+        ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, this->m_ipAddress.data(), this->m_ipAddress.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &this->m_ipAddress);
+        ImGui::InputInt("hex.builtin.provider.gdb.port"_lang, &this->m_port, 0, 0);
 
         if (this->m_port < 0)
             this->m_port = 0;
