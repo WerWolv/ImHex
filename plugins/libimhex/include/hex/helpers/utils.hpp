@@ -237,6 +237,8 @@ namespace hex {
             return *value;
     }
 
+    bool isProcessElevated();
+
     namespace scope_guard {
 
         #define SCOPE_GUARD ::hex::scope_guard::ScopeGuardOnExit() + [&]()

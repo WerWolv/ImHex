@@ -13,6 +13,12 @@ namespace hex::plugin::builtin {
 
     void addFooterItems() {
 
+        if (hex::isProcessElevated()) {
+            ContentRegistry::Interface::addFooterItem([] {
+                ImGui::TextUnformatted(ICON_VS_SHIELD);
+            });
+        }
+
         ContentRegistry::Interface::addFooterItem([] {
             static float framerate = 0;
             if (ImGui::HasSecondPassed()) {
