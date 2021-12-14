@@ -28,7 +28,7 @@ add_subdirectory(plugins/libimhex)
 include_directories(include)
 
 enable_testing()
-add_subdirectory(tests)
+add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 addVersionDefines()
 configurePackageCreation()
