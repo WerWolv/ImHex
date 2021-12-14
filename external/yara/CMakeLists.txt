@@ -104,6 +104,7 @@ add_compile_definitions("MAGIC_MODULE")
 add_compile_definitions("MACHO_MODULE")
 add_compile_definitions("DEX_MODULE")
 
+find_package(mbedTLS 2.26.0 REQUIRED)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-count-overflow")
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
@@ -115,10 +116,12 @@ target_include_directories(
         PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
 )
 
+target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
+
 if (UNIX)
-    target_link_libraries(libyara magic pthread)
+    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES} pthread)
 else ()
-    target_link_libraries(libyara magic)
+    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES})
 endif ()
 
 include(GNUInstallDirs)
