@@ -44,7 +44,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           ..
-        make -j 4 install
+        make -j4 unit_tests install
 
     - name: 🧪 Perform Unit Tests
       run: |
