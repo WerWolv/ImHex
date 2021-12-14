@@ -37,6 +37,8 @@ namespace hex {
     }
 
     std::vector<std::string> getPath(ImHexPath path) {
+        std::vector<std::string> result;
+
         #if defined(OS_WINDOWS)
             const auto exePath = getExecutablePath();
             const auto parentDir = std::filesystem::path(exePath).parent_path();
@@ -52,89 +54,91 @@ namespace hex {
             }
 
             std::vector<std::filesystem::path> paths = { parentDir, appDataDir / "imhex" };
-            std::vector<std::string> results;
 
             switch (path) {
                 case ImHexPath::Patterns:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "patterns").string();
                     });
                     break;
                 case ImHexPath::PatternsInclude:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "includes").string();
                     });
                     break;
                 case ImHexPath::Magic:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "magic").string();
                     });
                     break;
                 case ImHexPath::Python:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "python").string();
                     });
                     break;
                 case ImHexPath::Plugins:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "plugins").string();
                     });
                     break;
                 case ImHexPath::Yara:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "yara").string();
                     });
                     break;
                 case ImHexPath::Config:
                     return { (appDataDir / "imhex" / "config").string() };
                 case ImHexPath::Resources:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "resources").string();
                     });
                     break;
                 case ImHexPath::Constants:
-                    std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "constants").string();
                     });
                     break;
                 default: __builtin_unreachable();
             }
-
-            return results;
         #elif defined(OS_MACOS)
             // Get path to special directories
             const auto exePath = getExecutablePath();
             const std::filesystem::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
             std::vector<std::filesystem::path> paths = { exePath, applicationSupportDir };
-            std::vector<std::string> results;
 
             switch (path) {
             case ImHexPath::Patterns:
-                return { (applicationSupportDir / "patterns").string() };
+                result.push_back((applicationSupportDir / "patterns").string());
+                break;
             case ImHexPath::PatternsInclude:
-                return { (applicationSupportDir / "includes").string() };
+                result.push_back((applicationSupportDir / "includes").string());
+                break;
             case ImHexPath::Magic:
-                return { (applicationSupportDir / "magic").string() };
+                result.push_back((applicationSupportDir / "magic").string());
+                break;
             case ImHexPath::Python:
-                return { (applicationSupportDir / "python").string() };
+                result.push_back((applicationSupportDir / "python").string());
+                break;
             case ImHexPath::Plugins:
-                std::transform(paths.begin(), paths.end(), std::back_inserter(results), [](auto &path){
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                     return (path / "plugins").string();
                 });
                 break;
             case ImHexPath::Yara:
-                return { (applicationSupportDir / "yara").string() };
+                result.push_back((applicationSupportDir / "yara").string());
+                break;
             case ImHexPath::Config:
-                return { (applicationSupportDir / "config").string() };
+                result.push_back((applicationSupportDir / "config").string());
+                break;
             case ImHexPath::Resources:
-                return { (applicationSupportDir / "resources").string() };
+                result.push_back((applicationSupportDir / "resources").string());
+                break;
             case ImHexPath::Constants:
-                return { (applicationSupportDir / "constants").string() };
+                result.push_back((applicationSupportDir / "constants").string());
+                break;
             default: __builtin_unreachable();
             }
-
-            return results;
         #else
             std::vector<std::filesystem::path> configDirs = xdg::ConfigDirs();
             std::vector<std::filesystem::path> dataDirs = xdg::DataDirs();
@@ -149,8 +153,6 @@ namespace hex {
 
             if (!exePath.empty())
                 dataDirs.emplace(dataDirs.begin(), std::filesystem::path(exePath.data()).parent_path());
-
-            std::vector<std::string> result;
 
             switch (path) {
                 case ImHexPath::Patterns:
@@ -191,9 +193,13 @@ namespace hex {
                     break;
                 default: __builtin_unreachable();
             }
-
-            return result;
         #endif
+
+        result.erase(std::remove_if(result.begin(), result.end(), [](const auto& path){
+            return !std::filesystem::is_directory(path);
+        }), result.end());
+
+        return result;
     }
 
 }
