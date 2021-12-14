@@ -13,6 +13,9 @@ set(CMAKE_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
 set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
+# Find packages
+find_package(PkgConfig REQUIRED)
+
 if(NOT USE_SYSTEM_NLOHMANN_JSON)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json)
   set(NLOHMANN_JSON_LIBRARIES nlohmann_json)
@@ -50,6 +53,16 @@ if (NOT USE_SYSTEM_YARA)
 else()
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
+endif()
+
+find_package(mbedTLS 2.26.0 REQUIRED)
+configurePython()
+
+pkg_search_module(MAGIC libmagic>=5.39)
+if(NOT MAGIC_FOUND)
+    find_library(MAGIC 5.39 magic REQUIRED)
+else()
+    set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")

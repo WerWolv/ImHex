@@ -27,21 +27,12 @@ macro(addVersionDefines)
     set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -DRELEASE -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-ReleaseMinimumSize\"\\\"")
 endmacro()
 
-macro(findLibraries)
+macro(configurePython)
     set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
     set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 
     # Enforce that we use non system Python 3 on macOS.
     set(Python_FIND_FRAMEWORK NEVER)
-
-    # Find packages
-    find_package(PkgConfig REQUIRED)
-
-    find_package(mbedTLS 2.26.0 REQUIRED)
-
-    pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
-
-    find_package(OpenGL REQUIRED)
 
     find_package(Python COMPONENTS Development REQUIRED)
     if(Python_VERSION LESS 3)
@@ -59,13 +50,6 @@ macro(findLibraries)
     list(JOIN PYTHON_VERSION_MAJOR_MINOR "." PYTHON_VERSION_MAJOR_MINOR)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
-
-    pkg_search_module(MAGIC libmagic>=5.39)
-    if(NOT MAGIC_FOUND)
-        find_library(MAGIC 5.39 magic REQUIRED)
-    else()
-        set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
-    endif()
 endmacro()
 
 # Detect current OS / System

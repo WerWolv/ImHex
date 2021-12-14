@@ -18,8 +18,6 @@ set(PLUGINS
         # example_rust
         )
 
-findLibraries()
-
 detectOS()
 detectArch()
 
