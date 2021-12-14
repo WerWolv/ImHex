@@ -200,27 +200,32 @@ namespace hex::plugin::builtin::prv {
             return false;
         }
 
-        this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, nullptr);
-        if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
-            return false;
-        }
+        if (this->m_fileSize > 0) {
+            this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, nullptr);
+            if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
+                return false;
+            }
 
-        auto mappingCleanup = SCOPE_GUARD {
-            this->m_readable = false;
-            this->m_mapping = nullptr;
-            CloseHandle(this->m_mapping);
-        };
+            auto mappingCleanup = SCOPE_GUARD {
+                this->m_readable = false;
+                this->m_mapping = nullptr;
+                CloseHandle(this->m_mapping);
+            };
 
-        this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
-        if (this->m_mappedFile == nullptr) {
-            this->m_readable = false;
-            return false;
+            this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
+            if (this->m_mappedFile == nullptr) {
+                this->m_readable = false;
+                return false;
+            }
+
+            mappingCleanup.release();
+
+            ProjectFile::setFilePath(this->m_path);
+        } else {
+            this->resize(1);
         }
 
         fileCleanup.release();
-        mappingCleanup.release();
-
-        ProjectFile::setFilePath(this->m_path);
 
         #else
             this->m_file = ::open(this->m_path.data(), O_RDWR);
