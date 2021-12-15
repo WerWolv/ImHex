@@ -221,8 +221,11 @@ namespace hex::plugin::builtin::prv {
             mappingCleanup.release();
 
             ProjectFile::setFilePath(this->m_path);
-        } else {
+        } else if (!this->m_emptyFile) {
+            this->m_emptyFile = true;
             this->resize(1);
+        } else {
+            return false;
         }
 
         fileCleanup.release();

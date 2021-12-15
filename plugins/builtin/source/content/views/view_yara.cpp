@@ -203,16 +203,18 @@ namespace hex::plugin::builtin {
 
                 auto provider = ImHexApi::Provider::get();
 
-                context.buffer.resize(std::min<u64>(0xF'FFFF, provider->getSize() - context.currBlock.base));
+                context.buffer.resize(context.currBlock.size);
 
                 if (context.buffer.empty()) return nullptr;
+
+                block->size = context.currBlock.size;
 
                 provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
 
                 return context.buffer.data();
             };
             iterator.file_size = [](auto *iterator) -> u64 {
-                return ImHexApi::Provider::get()->getSize();
+                return ImHexApi::Provider::get()->getActualSize();
             };
 
             iterator.context = &context;
@@ -233,7 +235,7 @@ namespace hex::plugin::builtin {
 
                 iterator->last_error = ERROR_SUCCESS;
                 context.currBlock.base = address;
-                context.currBlock.size = std::min<u64>(0xF'FFFF, ImHexApi::Provider::get()->getSize() - address);
+                context.currBlock.size = ImHexApi::Provider::get()->getActualSize() - address;
                 context.currBlock.context = &context;
 
                 if (context.currBlock.size == 0) return nullptr;

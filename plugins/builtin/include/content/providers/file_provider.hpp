@@ -59,6 +59,7 @@ namespace hex::plugin::builtin::prv {
         size_t m_fileSize = 0;
 
         bool m_fileStatsValid = false;
+        bool m_emptyFile = false;
         struct stat m_fileStats = { 0 };
 
         bool m_readable = false, m_writable = false;
