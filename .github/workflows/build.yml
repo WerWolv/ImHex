@@ -26,8 +26,8 @@ jobs:
         path: |
           ~/.ccache
           .flatpak-builder
-        key: ${{ runner.os }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
 
     - name: ⬇️ Install dependencies
       run: |
@@ -159,8 +159,8 @@ jobs:
       id:    cache-ccache
       with:
         path: ${{ steps.prep-ccache.outputs.dir }}
-        key: ${{ runner.os }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
 
     - name: 🛠️ Build
       run: |
@@ -215,8 +215,8 @@ jobs:
       with:
         path: |
           ~/.ccache
-        key: ${{ runner.os }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
 
     - name: 🛠️ Build
       run: |
