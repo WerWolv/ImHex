@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
 
                 if (context.buffer.empty()) return nullptr;
 
-                provider->read(context.currBlock.base + provider->getBaseAddress() + provider->getCurrentPageAddress(), context.buffer.data(), context.buffer.size());
+                provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
 
                 return context.buffer.data();
             };
