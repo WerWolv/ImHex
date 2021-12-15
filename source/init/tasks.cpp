@@ -192,6 +192,7 @@ namespace hex::init {
 
         SharedData::welcomeScreenEntries.clear();
         SharedData::footerItems.clear();
+        SharedData::toolbarItems.clear();
 
         SharedData::dataProcessorNodes.clear();
 
