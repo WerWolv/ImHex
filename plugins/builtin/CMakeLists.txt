@@ -54,9 +54,6 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 # Add additional libraries here #
-find_package(PkgConfig REQUIRED)
-pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
-
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex LLVMDemangle capstone)
 
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #

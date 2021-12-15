@@ -22,6 +22,10 @@ namespace hex {
         TMS320C64X,
         M680X,
         EVM,
+        MOS65XX,
+        WASM,
+        BPF,
+        RISCV,
 
         MAX,
         MIN = ARM
@@ -37,7 +41,7 @@ namespace hex {
             return cs_support(toCapstoneArchictecture(architecture));
         }
 
-        constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum" };
+        constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "MOS65XX", "WebAssembly", "Berkeley Packet Filter", "RISC-V" };
 
         static inline s32 getArchitectureSupportedCount() {
             static s32 supportedCount = -1;

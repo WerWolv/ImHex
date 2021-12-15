@@ -18,3 +18,6 @@
 	path = external/curl
 	url = https://github.com/curl/curl
 	ignore = dirty
+[submodule "external/capstone"]
+	path = external/capstone
+	url = https://github.com/capstone-engine/capstone

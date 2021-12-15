@@ -37,7 +37,12 @@ namespace hex::plugin::builtin {
         bool m_shouldMatchSelection = false;
 
         Architecture m_architecture = Architecture::ARM;
-        cs_mode m_modeBasicARM = cs_mode(0), m_modeExtraARM = cs_mode(0), m_modeBasicMIPS = cs_mode(0), m_modeBasicPPC = cs_mode(0), m_modeBasicX86 = cs_mode(0);
+        cs_mode m_modeBasicARM = cs_mode(0);
+        cs_mode m_modeExtraARM = cs_mode(0);
+        cs_mode m_modeBasicMIPS = cs_mode(0);
+        cs_mode m_modeBasicPPC = cs_mode(0);
+        cs_mode m_modeBasicX86 = cs_mode(0);
+
         bool m_littleEndianMode = true, m_micoMode = false, m_sparcV9Mode = false;
 
         std::vector<Disassembly> m_disassembly;
