@@ -31,6 +31,11 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        
         sudo apt update
         sudo bash dist/get_deps_debian.sh
 
