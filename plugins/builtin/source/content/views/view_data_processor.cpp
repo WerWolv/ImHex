@@ -31,7 +31,11 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProjectFileLoad>(this, [this] {
-            this->loadNodes(ProjectFile::getDataProcessorContent());
+            try {
+                this->loadNodes(ProjectFile::getDataProcessorContent());
+            } catch (nlohmann::json::exception &e) {
+
+            }
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){

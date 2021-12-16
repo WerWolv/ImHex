@@ -9,6 +9,15 @@ using json = nlohmann::json;
 
 namespace hex {
 
+    std::string ProjectFile::s_currProjectFilePath;
+    bool ProjectFile::s_hasUnsavedChanged = false;
+
+    std::string ProjectFile::s_filePath;
+    std::string ProjectFile::s_pattern;
+    Patches ProjectFile::s_patches;
+    std::list<ImHexApi::Bookmarks::Entry> ProjectFile::s_bookmarks;
+    std::string ProjectFile::s_dataProcessorContent;
+
     void to_json(json& j, const ImHexApi::Bookmarks::Entry& b) {
         j = json{ { "address", b.region.address }, { "size", b.region.size }, { "name", b.name.data() }, { "comment", b.comment.data() }, { "locked", b.locked }, { "color", b.color } };
     }
@@ -16,12 +25,12 @@ namespace hex {
     void from_json(const json& j, ImHexApi::Bookmarks::Entry& b) {
         std::string name, comment;
 
-        j.at("address").get_to(b.region.address);
-        j.at("size").get_to(b.region.size);
-        j.at("name").get_to(name);
-        j.at("comment").get_to(comment);
-        j.at("locked").get_to(b.locked);
-        j.at("color").get_to(b.color);
+        if (j.contains("address")) j.at("address").get_to(b.region.address);
+        if (j.contains("size")) j.at("size").get_to(b.region.size);
+        if (j.contains("name")) j.at("name").get_to(name);
+        if (j.contains("comment")) j.at("comment").get_to(comment);
+        if (j.contains("locked")) j.at("locked").get_to(b.locked);
+        if (j.contains("color")) j.at("color").get_to(b.color);
 
         std::copy(name.begin(), name.end(), std::back_inserter(b.name));
         b.name.push_back('\0');

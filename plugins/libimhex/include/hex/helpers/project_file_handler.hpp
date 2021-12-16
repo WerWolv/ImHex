@@ -92,14 +92,14 @@ namespace hex {
         }
 
     private:
-        static inline std::string s_currProjectFilePath;
-        static inline bool s_hasUnsavedChanged = false;
+        static std::string s_currProjectFilePath;
+        static bool s_hasUnsavedChanged;
 
-        static inline std::string s_filePath;
-        static inline std::string s_pattern;
-        static inline Patches s_patches;
-        static inline std::list<ImHexApi::Bookmarks::Entry> s_bookmarks;
-        static inline std::string s_dataProcessorContent;
+        static std::string s_filePath;
+        static std::string s_pattern;
+        static Patches s_patches;
+        static std::list<ImHexApi::Bookmarks::Entry> s_bookmarks;
+        static std::string s_dataProcessorContent;
     };
 
 }
