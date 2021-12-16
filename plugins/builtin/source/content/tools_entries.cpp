@@ -741,9 +741,12 @@ namespace hex::plugin::builtin {
                         }
 
                         size_t fileSize = file.getSize();
+
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.tools.file_tools.shredder.shredding", fileSize);
                         for (const auto &pattern : overwritePattern) {
                             for (u64 offset = 0; offset < fileSize; offset += 3) {
                                 file.write(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
+                                task.update(offset);
                             }
 
                             file.flush();
@@ -851,8 +854,11 @@ namespace hex::plugin::builtin {
                             return;
                         }
 
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.tools.file_tools.splitter.splitting", file.getSize());
                         u32 index = 1;
                         for (u64 offset = 0; offset < file.getSize(); offset += splitSize) {
+                            task.update(offset);
+
                             File partFile(baseOutputPath + hex::format(".{:05}", index), File::Mode::Create);
 
                             if (!partFile.isValid()) {
@@ -978,9 +984,14 @@ namespace hex::plugin::builtin {
                             return;
                         }
 
-                        for (const auto &file : files) {
-                            File input(file, File::Mode::Read);
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.tools.file_tools.combiner.combining", files.size());
 
+                        u64 fileIndex = 0;
+                        for (const auto &file : files) {
+                            task.update(fileIndex);
+                            fileIndex++;
+
+                            File input(file, File::Mode::Read);
                             if (!input.isValid()) {
                                 View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, std::filesystem::path(file).filename().string()));
                                 return;

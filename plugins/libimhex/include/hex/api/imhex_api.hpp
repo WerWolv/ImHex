@@ -7,6 +7,7 @@
 #include <string>
 
 #include <hex/helpers/concepts.hpp>
+#include <hex/api/task.hpp>
 
 namespace hex {
 
@@ -15,7 +16,6 @@ namespace hex {
     namespace ImHexApi {
         namespace Common {
 
-            void sayHello();
             void closeImHex(bool noQuestions = false);
             void restartImHex();
 
@@ -54,6 +54,12 @@ namespace hex {
             void remove(prv::Provider *provider);
 
         };
+
+        namespace Tasks {
+
+            Task createTask(const std::string &unlocalizedName, u64 maxValue);
+
+        }
 
     };
 

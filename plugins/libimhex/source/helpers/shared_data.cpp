@@ -29,6 +29,9 @@ namespace hex {
     std::vector<ContentRegistry::Interface::DrawCallback> SharedData::footerItems;
     std::vector<ContentRegistry::Interface::DrawCallback> SharedData::toolbarItems;
 
+    std::mutex SharedData::tasksMutex;
+    std::list<Task*> SharedData::runningTasks;
+
     std::vector<std::string> SharedData::providerNames;
 
     std::vector<ContentRegistry::DataProcessorNode::impl::Entry> SharedData::dataProcessorNodes;

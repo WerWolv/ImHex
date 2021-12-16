@@ -492,4 +492,27 @@ namespace ImGui {
         return pressed;
     }
 
+    void SmallProgressBar(float fraction, float yOffset) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+
+        ImVec2 pos = window->DC.CursorPos + ImVec2(0, yOffset);
+        ImVec2 size = CalcItemSize(ImVec2(100, 5), 100, g.FontSize + style.FramePadding.y * 2.0f);
+        ImRect bb(pos, pos + size);
+        ItemSize(size, 0);
+        if (!ItemAdd(bb, 0))
+            return;
+
+        // Render
+        fraction = ImSaturate(fraction);
+        RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+        bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
+        const ImVec2 fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
+        RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+    }
+
 }

@@ -65,16 +65,19 @@ namespace hex::plugin::builtin {
 
         std::thread([this] {
             auto provider = ImHexApi::Provider::get();
+            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.strings.searching", provider->getActualSize());
 
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
 
-            for (u64 offset = 0; offset < provider->getSize(); offset += buffer.size()) {
-                size_t readSize = std::min(u64(buffer.size()), provider->getSize() - offset);
+            for (u64 offset = 0; offset < provider->getActualSize(); offset += buffer.size()) {
+                task.update(offset);
+
+                size_t readSize = std::min(u64(buffer.size()), provider->getActualSize() - offset);
                 provider->read(offset + provider->getBaseAddress(),  buffer.data(), readSize);
 
                 for (u32 i = 0; i < readSize; i++) {
-                    if (buffer[i] >= ' ' && buffer[i] <= '~' && offset < provider->getSize() - 1)
+                    if (buffer[i] >= ' ' && buffer[i] <= '~' && offset < provider->getActualSize() - 1)
                         foundCharacters++;
                     else {
                         if (foundCharacters >= this->m_minimumLength) {

@@ -66,7 +66,12 @@ namespace hex::plugin::builtin {
 
                 auto provider = ImHexApi::Provider::get();
                 std::vector<u8> buffer(2048, 0x00);
-                for (u64 address = 0; address < (this->m_codeRegion[1] - this->m_codeRegion[0] + 1); address += 2048) {
+                size_t size = (this->m_codeRegion[1] - this->m_codeRegion[0] + 1);
+
+                auto task = ImHexApi::Tasks::createTask("hex.builtin.view.disassembler.disassembling", size);
+                for (u64 address = 0; address < size; address += 2048) {
+                    task.update(address);
+
                     size_t bufferSize = std::min(u64(2048), (this->m_codeRegion[1] - this->m_codeRegion[0] + 1) - address);
                     provider->read(this->m_codeRegion[0] + address, buffer.data(), bufferSize);
 

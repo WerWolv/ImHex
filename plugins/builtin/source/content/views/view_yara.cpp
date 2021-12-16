@@ -144,6 +144,10 @@ namespace hex::plugin::builtin {
         this->m_matching = true;
 
         std::thread([this] {
+            if (!ImHexApi::Provider::isValid()) return;
+
+            auto provider = ImHexApi::Provider::get();
+            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.yara.matching", provider->getActualSize());
 
             YR_COMPILER *compiler = nullptr;
             yr_compiler_create(&compiler);
@@ -192,11 +196,13 @@ namespace hex::plugin::builtin {
             YR_MEMORY_BLOCK_ITERATOR iterator;
 
             struct ScanContext {
+                Task *task;
                 std::vector<u8> buffer;
                 YR_MEMORY_BLOCK currBlock;
             };
 
             ScanContext context;
+            context.task = &task;
             context.currBlock.base = 0;
             context.currBlock.fetch_data = [](auto *block) -> const u8* {
                 auto &context = *static_cast<ScanContext*>(block->context);
@@ -237,6 +243,7 @@ namespace hex::plugin::builtin {
                 context.currBlock.base = address;
                 context.currBlock.size = ImHexApi::Provider::get()->getActualSize() - address;
                 context.currBlock.context = &context;
+                context.task->update(address);
 
                 if (context.currBlock.size == 0) return nullptr;
 

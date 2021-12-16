@@ -86,4 +86,6 @@ namespace ImGui {
     void StyleCustomColorsDark();
     void StyleCustomColorsLight();
     void StyleCustomColorsClassic();
+
+    void SmallProgressBar(float fraction, float yOffset = 0.0F);
 }

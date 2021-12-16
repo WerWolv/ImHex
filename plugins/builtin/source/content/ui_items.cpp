@@ -9,6 +9,8 @@
 #include <imgui_internal.h>
 #include <imgui_imhex_extensions.h>
 
+#include <atomic>
+
 namespace hex::plugin::builtin {
 
     void addFooterItems() {
@@ -20,12 +22,43 @@ namespace hex::plugin::builtin {
         }
 
         ContentRegistry::Interface::addFooterItem([] {
+
             static float framerate = 0;
             if (ImGui::HasSecondPassed()) {
                 framerate = 1.0F / ImGui::GetIO().DeltaTime;
             }
 
             ImGui::TextUnformatted(hex::format("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100).c_str());
+
+        });
+
+        ContentRegistry::Interface::addFooterItem([] {
+            size_t taskCount = 0;
+            double taskProgress = 0.0;
+            std::string taskName;
+
+            {
+                std::scoped_lock lock(SharedData::tasksMutex);
+
+                taskCount = SharedData::runningTasks.size();
+                if (taskCount > 0) {
+                    taskProgress = SharedData::runningTasks.front()->getProgress();
+                    taskName = SharedData::runningTasks.front()->getName();
+                }
+            }
+
+            if (taskCount > 0) {
+                if (taskCount > 0)
+                    ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
+                else
+                    ImGui::TextSpinner("");
+
+                ImGui::SameLine();
+
+                ImGui::SmallProgressBar(taskProgress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10 * SharedData::globalScale) / 2.0);
+                ImGui::InfoTooltip(taskName.c_str());
+            }
+
         });
 
     }

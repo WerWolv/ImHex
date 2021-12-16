@@ -384,6 +384,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawAlwaysVisible() {
+
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
@@ -423,6 +425,7 @@ namespace hex::plugin::builtin {
         }
 
         bool opened = true;
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
 
             if (ImGui::BeginListBox("##patterns", ImVec2(-FLT_MIN, 0))) {

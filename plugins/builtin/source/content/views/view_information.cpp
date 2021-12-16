@@ -71,7 +71,18 @@ namespace hex::plugin::builtin {
         std::thread([this]{
             auto provider = ImHexApi::Provider::get();
 
+            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.information.analyzing", provider->getSize());
+
             this->m_analyzedRegion = { provider->getBaseAddress(), provider->getBaseAddress() + provider->getSize() };
+
+            {
+                magic::compile();
+
+                this->m_fileDescription = magic::getDescription(provider);
+                this->m_mimeType = magic::getMIMEType(provider);
+            }
+
+            this->m_dataValid = true;
 
             {
                 this->m_blockSize = std::max<u32>(std::ceil(provider->getSize() / 2048.0F), 256);
@@ -90,20 +101,11 @@ namespace hex::plugin::builtin {
                     }
 
                     this->m_blockEntropy.push_back(calculateEntropy(blockValueCounts, this->m_blockSize));
-
-                    this->m_bytesAnalyzed = i;
+                    task.update(i);
                 }
 
                 this->m_averageEntropy = calculateEntropy(this->m_valueCounts, provider->getSize());
                 this->m_highestBlockEntropy = *std::max_element(this->m_blockEntropy.begin(), this->m_blockEntropy.end());
-            }
-
-            {
-                magic::compile();
-
-                this->m_fileDescription = magic::getDescription(provider);
-                this->m_mimeType = magic::getMIMEType(provider);
-                this->m_dataValid = true;
             }
 
             this->m_analyzing = false;
@@ -127,9 +129,7 @@ namespace hex::plugin::builtin {
 
                     if (this->m_analyzing) {
                         ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
-                        ImGui::ProgressBar(this->m_bytesAnalyzed / static_cast<double>(provider->getSize()));
                     } else {
-                        ImGui::NewLine();
                         ImGui::NewLine();
                     }
 

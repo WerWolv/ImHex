@@ -92,6 +92,7 @@ set(LIBIMHEX_SOURCES
     source/api/event.cpp
     source/api/imhex_api.cpp
     source/api/content_registry.cpp
+    source/api/task.cpp
 
     source/data_processor/attribute.cpp
     source/data_processor/link.cpp

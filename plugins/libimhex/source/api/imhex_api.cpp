@@ -9,10 +9,6 @@
 
 namespace hex {
 
-    void ImHexApi::Common::sayHello() {
-        log::warn("Hello!");
-    }
-
     void ImHexApi::Common::closeImHex(bool noQuestions) {
         EventManager::post<RequestCloseImHex>(noQuestions);
     }
@@ -83,6 +79,11 @@ namespace hex {
             SharedData::currentProvider = 0;
 
         delete provider;
+    }
+
+
+    Task ImHexApi::Tasks::createTask(const std::string &unlocalizedName, u64 maxValue) {
+        return Task(unlocalizedName, maxValue);
     }
 
 }

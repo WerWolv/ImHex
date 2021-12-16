@@ -5,10 +5,12 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/task.hpp>
 #include <hex/views/view.hpp>
 
 #include <imgui.h>
@@ -76,6 +78,9 @@ namespace hex {
         static std::vector<ContentRegistry::Interface::DrawCallback> welcomeScreenEntries;
         static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
         static std::vector<ContentRegistry::Interface::DrawCallback> toolbarItems;
+
+        static std::mutex tasksMutex;
+        static std::list<Task*> runningTasks;
 
         static std::vector<std::string> providerNames;
 
