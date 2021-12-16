@@ -13,7 +13,6 @@ RUN pacman -S --needed --noconfirm      \
     glfw-x11                            \
     file                                \
     mbedtls                             \
-    capstone                            \
     python3                             \
     freetype2                           \
     gtk3

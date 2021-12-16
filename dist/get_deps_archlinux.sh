@@ -6,7 +6,6 @@ pacman -S --needed \
   glfw \
   file \
   mbedtls \
-  capstone \
   python3 \
   freetype2 \
   gtk3

@@ -3,7 +3,6 @@
 dnf install \
   cmake \
   gcc-c++ \
-  capstone-devel \
   file-devel \
   glfw-devel \
   mesa-libGL-devel \

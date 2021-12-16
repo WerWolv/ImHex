@@ -131,7 +131,6 @@ jobs:
           cmake:p
           make:p
           ccache:p
-          capstone:p
           glfw:p
           file:p
           mbedtls:p

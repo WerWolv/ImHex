@@ -12,16 +12,6 @@ finish-args:
   - --device=all
 
 modules:
-  - name: capstone
-    buildsystem: cmake-ninja
-    builddir: true
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
-    sources:
-      - type: archive
-        url: https://github.com/aquynh/capstone/archive/4.0.2.tar.gz
-        sha256: 7c81d798022f81e7507f1a60d6817f63aa76e489aa4e7055255f21a22f5e526a
-
   - name: libiconv
     sources:
       - type: archive
@@ -64,7 +54,7 @@ modules:
         sha256: 4cf0df69731494668bdd6460ed8cb269b68de9c19ad8c27abc24cd72605b2d5b
 
   - name: imhex
-    buildsystem: cmake-ninja
+    buildsystem: cmake
 
     sources:
       - type: git

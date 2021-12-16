@@ -22,7 +22,6 @@ apt install -y \
   libglm-dev            \
   libmagic-dev          \
   libmbedtls-dev        \
-  libcapstone-dev       \
   python3-dev           \
   libfreetype-dev       \
   libgtk-3-dev          \
