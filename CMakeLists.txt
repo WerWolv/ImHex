@@ -7,9 +7,6 @@ project(imhex VERSION ${IMHEX_VERSION})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 include("${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake")
-setDefaultBuiltTypeIfUnset()
-detectBadClone()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 # List plugin names here. Project name must match folder name
 set(PLUGINS
@@ -21,6 +18,8 @@ set(PLUGINS
 
 detectOS()
 detectArch()
+setDefaultBuiltTypeIfUnset()
+detectBadClone()
 
 # Add bundled dependencies
 add_subdirectory(plugins/libimhex)
@@ -51,7 +50,7 @@ add_executable(imhex ${application_type}
         )
 
 set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
-
+set_target_properties(imhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if (WIN32)
     target_link_libraries(imhex PUBLIC dl libimhex wsock32 ws2_32 Dwmapi.lib)
 else ()

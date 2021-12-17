@@ -12,8 +12,6 @@ if (UNIX)
     find_package(OpenGL REQUIRED)
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
 add_library(imgui OBJECT
         source/imgui.cpp
         source/imgui_demo.cpp

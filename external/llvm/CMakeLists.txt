@@ -3,8 +3,6 @@ project(LLVMDemangle)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
 add_library(LLVMDemangle STATIC
         Demangle/Demangle.cpp
         Demangle/ItaniumDemangle.cpp

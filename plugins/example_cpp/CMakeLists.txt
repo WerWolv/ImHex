@@ -26,6 +26,7 @@ if (WIN32)
 endif()
 
 add_compile_definitions(IMHEX_PLUGIN_NAME=${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if (NOT TARGET libimhex)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../libimhex ${CMAKE_CURRENT_BINARY_DIR}/plugins/libimhex)
