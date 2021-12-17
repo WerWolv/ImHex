@@ -7,8 +7,8 @@
 #include <cstdio>
 
 #include <mbedtls/ssl.h>
-#include <mbedtls/error.h>
 
+#include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
 #include <hex/resources.hpp>
@@ -74,7 +74,7 @@ namespace hex {
         return net.m_shouldCancel ? CURLE_ABORTED_BY_CALLBACK : CURLE_OK;
     }
 
-    void Net::setCommonSettings(std::string &response, const std::string &url, const std::map<std::string, std::string> &extraHeaders, const std::string &body) {
+    void Net::setCommonSettings(std::string &response, const std::string &url, u32 timeout, const std::map<std::string, std::string> &extraHeaders, const std::string &body) {
         this->m_headers = curl_slist_append(this->m_headers, "Cache-Control: no-cache");
 
         if (!extraHeaders.empty())
@@ -105,7 +105,7 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
         curl_easy_setopt(this->m_ctx, CURLOPT_WRITEDATA, &response);
         curl_easy_setopt(this->m_ctx, CURLOPT_TIMEOUT_MS, 0L);
-        curl_easy_setopt(this->m_ctx, CURLOPT_CONNECTTIMEOUT_MS, 2000L);
+        curl_easy_setopt(this->m_ctx, CURLOPT_CONNECTTIMEOUT_MS, timeout);
         curl_easy_setopt(this->m_ctx, CURLOPT_XFERINFODATA, this);
         curl_easy_setopt(this->m_ctx, CURLOPT_XFERINFOFUNCTION, progressCallback);
         curl_easy_setopt(this->m_ctx, CURLOPT_NOSIGNAL, 1L);
@@ -129,7 +129,7 @@ namespace hex {
             return responseCode;
     }
 
-    std::future<Response<std::string>> Net::getString(const std::string &url) {
+    std::future<Response<std::string>> Net::getString(const std::string &url, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this]{
@@ -138,7 +138,7 @@ namespace hex {
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
-            setCommonSettings(response, url);
+            setCommonSettings(response, url, timeout);
 
             auto responseCode = execute();
 
@@ -146,7 +146,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<nlohmann::json>> Net::getJson(const std::string &url) {
+    std::future<Response<nlohmann::json>> Net::getJson(const std::string &url, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this]{
@@ -155,7 +155,7 @@ namespace hex {
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
-            setCommonSettings(response, url, {});
+            setCommonSettings(response, url, timeout);
 
             auto responseCode = execute();
 
@@ -163,7 +163,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<std::string>> Net::uploadFile(const std::string &url, const std::filesystem::path &filePath) {
+    std::future<Response<std::string>> Net::uploadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this] {
@@ -196,7 +196,7 @@ namespace hex {
             curl_mime_filename(part, fileName.c_str());
             curl_mime_name(part, "file");
 
-            setCommonSettings(response, url);
+            setCommonSettings(response, url, timeout);
             curl_easy_setopt(this->m_ctx, CURLOPT_MIMEPOST, mime);
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "POST");
 
@@ -206,7 +206,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<void>> Net::downloadFile(const std::string &url, const std::filesystem::path &filePath) {
+    std::future<Response<void>> Net::downloadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this]{
@@ -218,7 +218,7 @@ namespace hex {
             if (!file.isValid())
                 return Response<void> { 400 };
 
-            setCommonSettings(response, url, {});
+            setCommonSettings(response, url, timeout);
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
             curl_easy_setopt(this->m_ctx, CURLOPT_WRITEFUNCTION, writeToFile);
             curl_easy_setopt(this->m_ctx, CURLOPT_WRITEDATA, file.getHandle());
@@ -226,6 +226,19 @@ namespace hex {
 
             return Response<void> { responseCode.value_or(0) };
         });
+    }
+
+    std::string Net::encode(const std::string &input) {
+        auto escapedString = curl_easy_escape(this->m_ctx, input.c_str(), std::strlen(input.c_str()));
+
+        if (escapedString != nullptr) {
+            std::string output = escapedString;
+            curl_free(escapedString);
+
+            return output;
+        }
+
+        return { };
     }
 
 }

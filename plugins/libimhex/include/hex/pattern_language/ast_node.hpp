@@ -1970,7 +1970,6 @@ namespace hex::pl {
 
     class ASTNodeAssignment : public ASTNode {
     public:
-        // TODO: Implement this
         ASTNodeAssignment(std::string lvalueName, ASTNode *rvalue) : m_lvalueName(std::move(lvalueName)), m_rvalue(rvalue) {
 
         }
@@ -2012,7 +2011,6 @@ namespace hex::pl {
 
     class ASTNodeReturnStatement : public ASTNode {
     public:
-        // TODO: Implement this
         explicit ASTNodeReturnStatement(ASTNode *rvalue) : m_rvalue(rvalue) {
 
         }
@@ -2052,7 +2050,6 @@ namespace hex::pl {
 
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
-        // TODO: Implement this
         ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode*>> params, std::vector<ASTNode*> body)
             : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
 

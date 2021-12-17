@@ -10,8 +10,10 @@
 #include <atomic>
 
 #include <nlohmann/json_fwd.hpp>
+#include <curl/system.h>
 
-#include <curl/curl.h>
+using CURL = void;
+struct curl_slist;
 
 namespace hex {
 
@@ -31,25 +33,14 @@ namespace hex {
         Net();
         ~Net();
 
-        std::future<Response<std::string>> getString(const std::string &url);
-        std::future<Response<nlohmann::json>> getJson(const std::string &url);
+        std::future<Response<std::string>> getString(const std::string &url, u32 timeout = 2000);
+        std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = 2000);
 
-        std::future<Response<std::string>> uploadFile(const std::string &url, const std::filesystem::path &filePath);
-        std::future<Response<void>> downloadFile(const std::string &url, const std::filesystem::path &filePath);
+        std::future<Response<std::string>> uploadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout = 2000);
+        std::future<Response<void>> downloadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout = 2000);
 
         [[nodiscard]]
-        std::string encode(const std::string &input) {
-            auto escapedString = curl_easy_escape(this->m_ctx, input.c_str(), std::strlen(input.c_str()));
-
-            if (escapedString != nullptr) {
-                std::string output = escapedString;
-                curl_free(escapedString);
-
-                return output;
-            }
-
-            return { };
-        }
+        std::string encode(const std::string &input);
 
         [[nodiscard]]
         float getProgress() const { return this->m_progress; }
@@ -57,13 +48,13 @@ namespace hex {
         void cancel() { this->m_shouldCancel = true; }
 
     private:
-        void setCommonSettings(std::string &response, const std::string &url, const std::map<std::string, std::string> &extraHeaders = { }, const std::string &body = { });
+        void setCommonSettings(std::string &response, const std::string &url, u32 timeout = 2000, const std::map<std::string, std::string> &extraHeaders = { }, const std::string &body = { });
         std::optional<s32> execute();
 
         friend int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow);
     private:
         CURL *m_ctx;
-        struct curl_slist *m_headers = nullptr;
+        curl_slist *m_headers = nullptr;
 
         std::mutex m_transmissionActive;
         float m_progress = 0.0F;

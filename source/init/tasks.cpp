@@ -25,7 +25,7 @@ namespace hex::init {
     static bool checkForUpdates() {
         hex::Net net;
 
-        auto releases = net.getJson(GitHubApiURL + "/releases/latest"s).get();
+        auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 200).get();
         if (releases.code != 200)
             return false;
 
@@ -45,7 +45,7 @@ namespace hex::init {
     static bool downloadInformation() {
         hex::Net net;
 
-        auto tip = net.getString(ImHexApiURL + "/tip"s).get();
+        auto tip = net.getString(ImHexApiURL + "/tip"s, 200).get();
         if (tip.code != 200)
             return false;
 
