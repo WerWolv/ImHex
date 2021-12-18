@@ -86,7 +86,13 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguageFunctions::add(nsStd, "env", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto name = Token::literalToString(params[0], false);
 
-                return ctx->getEnvVariable(name);
+                auto env = ctx->getEnvVariable(name);
+                if (env)
+                    return env;
+                else {
+                    ctx->getConsole().log(LogConsole::Level::Warning, hex::format("environment variable '{}' does not exist", name));
+                    return "";
+                }
             });
 
         }
