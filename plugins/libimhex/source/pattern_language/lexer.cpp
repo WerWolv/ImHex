@@ -416,6 +416,10 @@ namespace hex::pl {
                         tokens.emplace_back(TOKEN(Keyword, Return));
                     else if (identifier == "namespace")
                         tokens.emplace_back(TOKEN(Keyword, Namespace));
+                    else if (identifier == "in")
+                        tokens.emplace_back(TOKEN(Keyword, In));
+                    else if (identifier == "out")
+                        tokens.emplace_back(TOKEN(Keyword, Out));
 
                         // Check for built-in types
                     else if (identifier == "u8")

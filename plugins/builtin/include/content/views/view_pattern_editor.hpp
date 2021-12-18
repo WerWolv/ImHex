@@ -25,17 +25,32 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        pl::PatternLanguage *m_patternLanguageRuntime;
+        pl::PatternLanguage *m_parserRuntime, *m_evaluatorRuntime;
+
         std::vector<std::filesystem::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
         bool m_runAutomatically = false;
+
         bool m_evaluatorRunning = false;
+        bool m_parserRunning = false;
+
         bool m_hasUnevaluatedChanges = false;
 
         bool m_acceptPatternWindowOpen = false;
 
         TextEditor m_textEditor;
         std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;
+
+        struct PatternVariable {
+            bool inVariable;
+            bool outVariable;
+
+            pl::Token::ValueType type;
+            pl::Token::Literal value;
+        };
+
+        std::map<std::string, PatternVariable> m_patternVariables;
+        std::vector<std::string> m_patternTypes;
 
         enum class EnvVarType {
             Integer,
@@ -45,16 +60,28 @@ namespace hex::plugin::builtin {
         };
 
         struct EnvVar {
+            u64 id;
             std::string name;
             pl::Token::Literal value;
             EnvVarType type;
+
+            bool operator==(const EnvVar &other) const {
+                return this->id == other.id;
+            }
         };
 
-        std::vector<EnvVar> m_envVarEntries;
+        u64 m_envVarIdCounter;
+        std::list<EnvVar> m_envVarEntries;
+
+        void drawConsole(ImVec2 size);
+        void drawEnvVars(ImVec2 size);
+        void drawVariableSettings(ImVec2 size);
 
         void loadPatternFile(const std::string &path);
         void clearPatternData();
-        void parsePattern(char *buffer);
+
+        void parsePattern(const std::string &code);
+        void evaluatePattern(const std::string &code);
     };
 
 }

@@ -3,7 +3,7 @@
 
 namespace hex::pl {
 
-    void Evaluator::createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value) {
+    void Evaluator::createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value, bool outVariable) {
         auto &variables = *this->getScope(0).scope;
         for (auto &variable : variables) {
             if (variable->getVariableName() == name) {
@@ -44,6 +44,9 @@ namespace hex::pl {
 
         this->getStack().emplace_back();
         variables.push_back(pattern);
+
+        if (outVariable)
+            this->m_outVariables[name] = pattern->getOffset();
     }
 
     void Evaluator::setVariable(const std::string &name, const Token::Literal& value) {
@@ -115,6 +118,7 @@ namespace hex::pl {
             }, value);
 
         this->getStack()[pattern->getOffset()] = castedLiteral;
+
     }
 
     std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode*> &ast) {
@@ -153,7 +157,12 @@ namespace hex::pl {
                         auto type = varDeclNode->getType()->evaluate(this);
                         ON_SCOPE_EXIT { delete type; };
 
-                        this->createVariable(pattern->getVariableName(), type);
+                        auto &name = pattern->getVariableName();
+                        this->createVariable(name, type, std::nullopt, varDeclNode->isOutVariable());
+
+                        if (varDeclNode->isInVariable() && this->m_inVariables.contains(name))
+                            this->setVariable(name, this->m_inVariables[name]);
+
                         delete pattern;
                   } else {
                     patterns.push_back(pattern);

@@ -1024,16 +1024,22 @@ namespace hex::pl {
 
     // (parseType) Identifier @ Integer
     ASTNode* Parser::parseVariablePlacement(ASTNodeTypeDecl *type) {
+        bool inVariable = false;
+        bool outVariable = false;
+
         auto name = getValue<Token::Identifier>(-1).get();
 
-        ASTNode *placementOffset;
+        ASTNode *placementOffset = nullptr;
         if (MATCHES(sequence(OPERATOR_AT))) {
             placementOffset = parseMathematicalExpression();
-        } else {
-            placementOffset = nullptr;
+        } else if (MATCHES(sequence(KEYWORD_IN))) {
+            inVariable = true;
+        }
+        else if (MATCHES(sequence(KEYWORD_OUT))) {
+            outVariable = true;
         }
 
-        return create(new ASTNodeVariableDecl(name, type, placementOffset));
+        return create(new ASTNodeVariableDecl(name, type, placementOffset, inVariable, outVariable));
     }
 
     // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer

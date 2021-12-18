@@ -30,15 +30,27 @@ namespace hex::pl {
         PatternLanguage();
         ~PatternLanguage();
 
-        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = { });
-        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars = { });
+        [[nodiscard]]
+        std::optional<std::vector<ASTNode*>> parseString(const std::string &code);
+        [[nodiscard]]
+        std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = { }, const std::map<std::string, Token::Literal> &inVariables = { });
+        [[nodiscard]]
+        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars = { }, const std::map<std::string, Token::Literal> &inVariables = { });
+        [[nodiscard]]
+        const std::vector<ASTNode*>& getCurrentAST() const;
 
         void abort();
 
+        [[nodiscard]]
         const std::vector<std::pair<LogConsole::Level, std::string>>& getConsoleLog();
+        [[nodiscard]]
         const std::optional<std::pair<u32, std::string>>& getError();
+        [[nodiscard]]
+        std::map<std::string, Token::Literal> getOutVariables() const;
 
+        [[nodiscard]]
         u32 getCreatedPatternCount();
+        [[nodiscard]]
         u32 getMaximumPatternCount();
 
     private:

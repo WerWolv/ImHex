@@ -40,7 +40,9 @@ namespace hex::pl {
             For,
             Function,
             Return,
-            Namespace
+            Namespace,
+            In,
+            Out
         };
 
         enum class Operator {
@@ -285,6 +287,8 @@ namespace hex::pl {
 #define KEYWORD_FUNCTION                    COMPONENT(Keyword, Function)
 #define KEYWORD_RETURN                      COMPONENT(Keyword, Return)
 #define KEYWORD_NAMESPACE                   COMPONENT(Keyword, Namespace)
+#define KEYWORD_IN                          COMPONENT(Keyword, In)
+#define KEYWORD_OUT                         COMPONENT(Keyword, Out)
 
 #define INTEGER                             hex::pl::Token::Type::Integer, hex::pl::Token::Literal(u128(0))
 #define IDENTIFIER                          hex::pl::Token::Type::Identifier, ""

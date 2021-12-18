@@ -94,25 +94,8 @@ namespace hex::pl {
         delete this->m_validator;
     }
 
-
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars) {
-        this->m_currError.reset();
-        this->m_evaluator->getConsole().clear();
-        this->m_evaluator->setProvider(provider);
-        this->m_evaluator->setDefaultEndian(std::endian::native);
-        this->m_evaluator->setEvaluationDepth(32);
-        this->m_evaluator->setArrayLimit(0x1000);
-        this->m_evaluator->setPatternLimit(0x2000);
-        this->m_evaluator->setLoopLimit(0x1000);
-
-        for (const auto &[name, value] : envVars)
-            this->m_evaluator->setEnvVariable(name, value);
-
-        for (auto &node : this->m_currAST)
-            delete node;
-        this->m_currAST.clear();
-
-        auto preprocessedCode = this->m_preprocessor->preprocess(string);
+    std::optional<std::vector<ASTNode*>> PatternLanguage::parseString(const std::string &code) {
+        auto preprocessedCode = this->m_preprocessor->preprocess(code);
         if (!preprocessedCode.has_value()) {
             this->m_currError = this->m_preprocessor->getError();
             return { };
@@ -130,6 +113,31 @@ namespace hex::pl {
             return { };
         }
 
+        return ast;
+    }
+
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+        this->m_currError.reset();
+        this->m_evaluator->getConsole().clear();
+        this->m_evaluator->setProvider(provider);
+        this->m_evaluator->setDefaultEndian(std::endian::native);
+        this->m_evaluator->setEvaluationDepth(32);
+        this->m_evaluator->setArrayLimit(0x1000);
+        this->m_evaluator->setPatternLimit(0x2000);
+        this->m_evaluator->setLoopLimit(0x1000);
+        this->m_evaluator->setInVariables(inVariables);
+
+        for (const auto &[name, value] : envVars)
+            this->m_evaluator->setEnvVariable(name, value);
+
+        for (auto &node : this->m_currAST)
+            delete node;
+        this->m_currAST.clear();
+
+        auto ast = this->parseString(code);
+        if (!ast)
+            return { };
+
         this->m_currAST = ast.value();
 
         auto patterns = this->m_evaluator->evaluate(ast.value());
@@ -141,14 +149,23 @@ namespace hex::pl {
         return patterns;
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
         File file(path, File::Mode::Read);
 
-        return this->executeString(provider, file.readString(), envVars);
+        return this->executeString(provider, file.readString(), envVars, inVariables);
     }
 
     void PatternLanguage::abort() {
         this->m_evaluator->abort();
+    }
+
+    const std::vector<ASTNode*> &PatternLanguage::getCurrentAST() const {
+        return this->m_currAST;
+    }
+
+    [[nodiscard]]
+    std::map<std::string, Token::Literal> PatternLanguage::getOutVariables() const {
+        return this->m_evaluator->getOutVariables();
     }
 
 

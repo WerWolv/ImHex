@@ -64,6 +64,21 @@ namespace hex::pl {
             this->m_provider = provider;
         }
 
+        void setInVariables(const std::map<std::string, Token::Literal> &inVariables) {
+            this->m_inVariables = inVariables;
+        }
+
+        [[nodiscard]]
+        std::map<std::string, Token::Literal> getOutVariables() const {
+            std::map<std::string, Token::Literal> result;
+
+            for (const auto &[name, offset] : this->m_outVariables) {
+                result.insert({ name, this->getStack()[offset] });
+            }
+
+            return result;
+        }
+
         [[nodiscard]]
         prv::Provider *getProvider() const {
             return this->m_provider;
@@ -137,7 +152,12 @@ namespace hex::pl {
             return this->m_stack;
         }
 
-        void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt);
+        [[nodiscard]]
+        const std::vector<Token::Literal>& getStack() const {
+            return this->m_stack;
+        }
+
+        void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt, bool outVariable = false);
         void setVariable(const std::string &name, const Token::Literal& value);
 
         void abort() {
@@ -185,7 +205,10 @@ namespace hex::pl {
         std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
         std::vector<ASTNode*> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
+
         std::map<std::string, Token::Literal> m_envVariables;
+        std::map<std::string, Token::Literal> m_inVariables;
+        std::map<std::string, size_t> m_outVariables;
 
         friend class PatternCreationLimiter;
     };

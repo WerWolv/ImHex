@@ -714,8 +714,8 @@ namespace hex::pl {
 
     class ASTNodeVariableDecl : public ASTNode, public Attributable {
     public:
-        ASTNodeVariableDecl(std::string name, ASTNode *type, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(std::move(name)), m_type(type), m_placementOffset(placementOffset) { }
+        ASTNodeVariableDecl(std::string name, ASTNode *type, ASTNode *placementOffset = nullptr, bool inVariable = false, bool outVariable = false)
+                : ASTNode(), m_name(std::move(name)), m_type(type), m_placementOffset(placementOffset), m_inVariable(inVariable), m_outVariable(outVariable) { }
 
         ASTNodeVariableDecl(const ASTNodeVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -739,6 +739,9 @@ namespace hex::pl {
         [[nodiscard]] const std::string& getName() const { return this->m_name; }
         [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
+
+        [[nodiscard]] constexpr bool isInVariable() const { return this->m_inVariable; }
+        [[nodiscard]] constexpr bool isOutVariable() const { return this->m_outVariable; }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
@@ -770,6 +773,8 @@ namespace hex::pl {
         std::string m_name;
         ASTNode *m_type;
         ASTNode *m_placementOffset;
+
+        bool m_inVariable, m_outVariable;
     };
 
     class ASTNodeArrayVariableDecl : public ASTNode, public Attributable {
@@ -1459,7 +1464,8 @@ namespace hex::pl {
 
                     std::visit(overloaded {
                             [&](std::string &assignmentValue) { },
-                            [&](auto &&assignmentValue) { std::memcpy(&value, &assignmentValue, pattern->getSize()); }
+                            [&](PatternData *assignmentValue) { },
+                            [&](auto &&assignmentValue) { value = assignmentValue; }
                     }, literal);
                 }
                 else
