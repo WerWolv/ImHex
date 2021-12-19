@@ -127,6 +127,11 @@ namespace hex::pl {
         this->m_scopes.clear();
         this->m_aborted = false;
 
+        if (this->m_allowDangerousFunctions == DangerousFunctionPermission::Deny)
+            this->m_allowDangerousFunctions = DangerousFunctionPermission::Ask;
+
+        this->m_dangerousFunctionCalled = false;
+
         ON_SCOPE_EXIT {
             this->m_envVariables.clear();
         };

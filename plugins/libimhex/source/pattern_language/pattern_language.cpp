@@ -185,4 +185,13 @@ namespace hex::pl {
         return this->m_evaluator->getPatternLimit();
     }
 
+
+    void PatternLanguage::allowDangerousFunctions(bool allow) {
+        this->m_evaluator->allowDangerousFunctions(allow);
+    }
+
+    bool PatternLanguage::hasDangerousFunctionBeenCalled() const {
+        return this->m_evaluator->hasDangerousFunctionBeenCalled();
+    }
+
 }

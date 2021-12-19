@@ -6,8 +6,10 @@
 
 #include <algorithm>
 #include <bit>
+#include <chrono>
 #include <optional>
 #include <map>
+#include <thread>
 #include <variant>
 #include <vector>
 
@@ -1899,7 +1901,23 @@ namespace hex::pl {
             }
 
             try {
-                auto result = functions[this->m_functionName].func(evaluator, evaluatedParams);
+                auto &function = functions[this->m_functionName];
+
+                if (function.dangerous && evaluator->getDangerousFunctionPermission() != DangerousFunctionPermission::Allow) {
+                    evaluator->dangerousFunctionCalled();
+
+                    while (evaluator->getDangerousFunctionPermission() == DangerousFunctionPermission::Ask) {
+                        using namespace std::literals::chrono_literals;
+
+                        std::this_thread::sleep_for(100ms);
+                    }
+
+                    if (evaluator->getDangerousFunctionPermission() == DangerousFunctionPermission::Deny) {
+                        LogConsole::abortEvaluation(hex::format("calling of dangerous function '{}' is not allowed", this->m_functionName), this);
+                    }
+                }
+
+                auto result = function.func(evaluator, evaluatedParams);
 
                 if (result.has_value())
                     return new ASTNodeLiteral(result.value());

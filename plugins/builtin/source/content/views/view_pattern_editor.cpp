@@ -243,16 +243,16 @@ namespace hex::plugin::builtin {
                 auto size = ImGui::GetContentRegionAvail();
                 size.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5;
 
-                if (ImGui::BeginTabBar("settings")) {
-                    if (ImGui::BeginTabItem("Console")) {
+                if (ImGui::BeginTabBar("##settings")) {
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
                         this->drawConsole(size);
                         ImGui::EndTabItem();
                     }
-                    if (ImGui::BeginTabItem("Environment Variables")) {
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
                         this->drawEnvVars(size);
                         ImGui::EndTabItem();
                     }
-                    if (ImGui::BeginTabItem("Settings")) {
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.settings"_lang)) {
                         this->drawVariableSettings(size);
                         ImGui::EndTabItem();
                     }
@@ -307,6 +307,28 @@ namespace hex::plugin::builtin {
                     else
                         this->parsePattern(this->m_textEditor.GetText());
                 }
+            }
+
+            if (this->m_evaluatorRuntime->hasDangerousFunctionBeenCalled() && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
+                ImGui::OpenPopup(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str());
+            }
+
+            if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::NewLine();
+                ImGui::TextUnformatted("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang);
+                ImGui::NewLine();
+
+                View::confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang,
+                [this]{
+                    this->m_evaluatorRuntime->allowDangerousFunctions(true);
+                    ImGui::CloseCurrentPopup();
+                },
+                [this]{
+                    this->m_evaluatorRuntime->allowDangerousFunctions(false);
+                    ImGui::CloseCurrentPopup();
+                });
+
+                ImGui::EndPopup();
             }
 
             View::discardNavigationRequests();
@@ -442,7 +464,7 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawVariableSettings(ImVec2 size) {
         if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-            if (ImGui::BeginTable("##env_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
+            if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
                 ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
                 ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.6F);
 

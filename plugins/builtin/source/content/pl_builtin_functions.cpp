@@ -206,12 +206,12 @@ namespace hex::plugin::builtin {
                 auto string = Token::literalToString(params[0], false);
                 auto index = Token::literalToSigned(params[1]);
 
-#if defined(OS_MACOS)
-                const auto signIndex = index >> (sizeof(index) * 8 - 1);
-                const auto absIndex = (index ^ signIndex) - signIndex;
-#else
-                const auto absIndex = std::abs(index);
-#endif
+                #if defined(OS_MACOS)
+                    const auto signIndex = index >> (sizeof(index) * 8 - 1);
+                    const auto absIndex = (index ^ signIndex) - signIndex;
+                #else
+                    const auto absIndex = std::abs(index);
+                #endif
 
                 if (absIndex > string.length())
                     LogConsole::abortEvaluation("character index out of range");
@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
 
                 hex::Net net;
                 return net.getString(url).get().body;
-            });
+            }, true);
         }
 
 
@@ -292,7 +292,7 @@ namespace hex::plugin::builtin {
                 openFiles.emplace(std::pair{ fileCounter, std::move(file) });
 
                 return u128(fileCounter);
-            });
+            }, true);
 
             /* close(file) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "close", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -304,7 +304,7 @@ namespace hex::plugin::builtin {
                 openFiles.erase(file);
 
                 return { };
-            });
+            }, true);
 
             /* read(file, size) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "read", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -315,7 +315,7 @@ namespace hex::plugin::builtin {
                     LogConsole::abortEvaluation("failed to access invalid file");
 
                 return openFiles[file].readString(size);
-            });
+            }, true);
 
             /* write(file, data) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "write", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -328,7 +328,7 @@ namespace hex::plugin::builtin {
                 openFiles[file].write(data);
 
                 return { };
-            });
+            }, true);
 
             /* seek(file, offset) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "seek", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -341,7 +341,7 @@ namespace hex::plugin::builtin {
                 openFiles[file].seek(offset);
 
                 return { };
-            });
+            }, true);
 
             /* size(file) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "size", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
                     LogConsole::abortEvaluation("failed to access invalid file");
 
                 return u128(openFiles[file].getSize());
-            });
+            }, true);
 
             /* resize(file, size) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "resize", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -364,7 +364,7 @@ namespace hex::plugin::builtin {
                 openFiles[file].setSize(size);
 
                 return { };
-            });
+            }, true);
 
             /* flush(file) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "flush", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -376,7 +376,7 @@ namespace hex::plugin::builtin {
                 openFiles[file].flush();
 
                 return { };
-            });
+            }, true);
 
             /* remove(file) */
             ContentRegistry::PatternLanguageFunctions::add(nsStdFile, "remove", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
@@ -388,7 +388,7 @@ namespace hex::plugin::builtin {
                 openFiles[file].remove();
 
                 return { };
-            });
+            }, true);
         }
     }
 

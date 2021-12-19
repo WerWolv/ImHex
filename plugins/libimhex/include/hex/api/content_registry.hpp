@@ -94,9 +94,10 @@ namespace hex {
             struct Function {
                 u32 parameterCount;
                 Callback func;
+                bool dangerous;
             };
 
-            void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
+            void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func, bool dangerous = false);
             std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
         }
 

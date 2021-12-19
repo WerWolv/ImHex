@@ -53,6 +53,10 @@ namespace hex::pl {
         [[nodiscard]]
         u32 getMaximumPatternCount();
 
+        [[nodiscard]]
+        bool hasDangerousFunctionBeenCalled() const;
+        void allowDangerousFunctions(bool allow);
+
     private:
         Preprocessor *m_preprocessor;
         Lexer *m_lexer;

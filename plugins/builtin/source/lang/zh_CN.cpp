@@ -273,7 +273,11 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.open_pattern", "打开模式" },
                 { "hex.builtin.view.pattern_editor.evaluating", "计算中..." },
                 { "hex.builtin.view.pattern_editor.auto", "自动计算" },
+                //{ "hex.builtin.view.pattern_editor.console", "Console" },
                 //{ "hex.builtin.view.pattern_editor.env_vars", "Environment Variables" },
+                //{ "hex.builtin.view.pattern_editor.settings", "Settings" },
+                //{ "hex.builtin.view.pattern_editor.dangerous_function.name", "Allow dangerous function?" },
+                //{ "hex.builtin.view.pattern_editor.dangerous_function.desc", "This pattern tried to call a dangerous function.\nAre you sure you want to trust this pattern?" },
 
                 { "hex.builtin.view.pattern_data.name", "模式数据" },
                     { "hex.builtin.view.pattern_data.var_name", "名称" },

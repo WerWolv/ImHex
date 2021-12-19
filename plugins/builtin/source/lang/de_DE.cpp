@@ -273,7 +273,11 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.open_pattern", "Pattern öffnen" },
                 { "hex.builtin.view.pattern_editor.evaluating", "Evaluieren..." },
                 { "hex.builtin.view.pattern_editor.auto", "Auto evaluieren" },
+                { "hex.builtin.view.pattern_editor.console", "Konsole" },
                 { "hex.builtin.view.pattern_editor.env_vars", "Umgebungsvariablen" },
+                { "hex.builtin.view.pattern_editor.settings", "Einstellungen" },
+                { "hex.builtin.view.pattern_editor.dangerous_function.name", "Gefährliche funktion erlauben?" },
+                { "hex.builtin.view.pattern_editor.dangerous_function.desc", "Dieses Pattern hat versucht eine gefährliche Funktion aufzurufen.\nBist du sicher, dass du diesem Pattern vertraust?" },
 
                 { "hex.builtin.view.pattern_data.name", "Pattern Daten" },
                     { "hex.builtin.view.pattern_data.var_name", "Name" },

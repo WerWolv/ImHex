@@ -167,14 +167,14 @@ namespace hex {
     /* Pattern Language Functions */
 
 
-    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguageFunctions::Callback &func) {
+    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguageFunctions::Callback &func, bool dangerous) {
         std::string functionName;
         for (auto &scope : ns)
             functionName += scope + "::";
 
         functionName += name;
 
-        getEntries()[functionName] = Function { parameterCount, func };
+        getEntries()[functionName] = Function { parameterCount, func, dangerous };
     }
 
     std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& ContentRegistry::PatternLanguageFunctions::getEntries() {

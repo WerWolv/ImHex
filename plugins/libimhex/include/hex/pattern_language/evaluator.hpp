@@ -15,6 +15,12 @@ namespace hex::prv { class Provider; }
 
 namespace hex::pl {
 
+    enum class DangerousFunctionPermission {
+        Ask,
+        Deny,
+        Allow
+    };
+
     class PatternData;
     class PatternCreationLimiter;
     class ASTNode;
@@ -181,6 +187,25 @@ namespace hex::pl {
             this->m_envVariables[name] = value;
         }
 
+        [[nodiscard]]
+        bool hasDangerousFunctionBeenCalled() const {
+            return this->m_dangerousFunctionCalled;
+        }
+
+        void dangerousFunctionCalled() {
+            this->m_dangerousFunctionCalled = true;
+        }
+
+        void allowDangerousFunctions(bool allow) {
+            this->m_allowDangerousFunctions = allow ? DangerousFunctionPermission::Allow : DangerousFunctionPermission::Deny;
+            this->m_dangerousFunctionCalled = false;
+        }
+
+        [[nodiscard]]
+        DangerousFunctionPermission getDangerousFunctionPermission() const {
+            return this->m_allowDangerousFunctions;
+        }
+
     private:
 
         void patternCreated();
@@ -209,6 +234,9 @@ namespace hex::pl {
         std::map<std::string, Token::Literal> m_envVariables;
         std::map<std::string, Token::Literal> m_inVariables;
         std::map<std::string, size_t> m_outVariables;
+
+        std::atomic<bool> m_dangerousFunctionCalled = false;
+        std::atomic<DangerousFunctionPermission> m_allowDangerousFunctions = DangerousFunctionPermission::Ask;
 
         friend class PatternCreationLimiter;
     };
