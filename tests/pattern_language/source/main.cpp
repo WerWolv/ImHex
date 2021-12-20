@@ -16,8 +16,8 @@
 using namespace hex::test;
 
 void addFunctions() {
-    hex::ContentRegistry::PatternLanguageFunctions::Namespace nsStd = { "std" };
-    hex::ContentRegistry::PatternLanguageFunctions::add(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+    hex::ContentRegistry::PatternLanguage::Namespace nsStd = { "std" };
+    hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
         auto condition = Token::literalToBoolean(params[0]);
         auto message = Token::literalToString(params[1], false);
 

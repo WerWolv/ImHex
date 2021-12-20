@@ -167,17 +167,25 @@ namespace hex {
     /* Pattern Language Functions */
 
 
-    void ContentRegistry::PatternLanguageFunctions::add(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguageFunctions::Callback &func, bool dangerous) {
+    static std::string getFunctionName(const ContentRegistry::PatternLanguage::Namespace &ns, const std::string &name) {
         std::string functionName;
         for (auto &scope : ns)
             functionName += scope + "::";
 
         functionName += name;
 
-        getEntries()[functionName] = Function { parameterCount, func, dangerous };
+        return functionName;
     }
 
-    std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& ContentRegistry::PatternLanguageFunctions::getEntries() {
+    void ContentRegistry::PatternLanguage::addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguage::Callback &func) {
+        getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, false };
+    }
+
+    void ContentRegistry::PatternLanguage::addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguage::Callback &func) {
+        getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, true };
+    }
+
+    std::map<std::string, ContentRegistry::PatternLanguage::Function>& ContentRegistry::PatternLanguage::getFunctions() {
         return SharedData::patternLanguageFunctions;
     }
 

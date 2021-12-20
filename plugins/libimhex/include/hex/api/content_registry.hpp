@@ -81,7 +81,7 @@ namespace hex {
         }
 
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
-        namespace PatternLanguageFunctions {
+        namespace PatternLanguage {
 
             constexpr static u32 UnlimitedParameters   = 0xFFFF'FFFF;
             constexpr static u32 MoreParametersThan    = 0x8000'0000;
@@ -97,8 +97,9 @@ namespace hex {
                 bool dangerous;
             };
 
-            void add(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func, bool dangerous = false);
-            std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getEntries();
+            void addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
+            void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
+            std::map<std::string, ContentRegistry::PatternLanguage::Function>& getFunctions();
         }
 
         /* View Registry. Allows adding of new windows */

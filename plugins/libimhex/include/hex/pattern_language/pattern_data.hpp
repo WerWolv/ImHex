@@ -129,9 +129,9 @@ namespace hex::pl {
         [[nodiscard]] Evaluator* getEvaluator() const { return this->m_evaluator; }
 
         [[nodiscard]] const auto& getTransformFunction() const { return this->m_transformFunction; }
-        void setTransformFunction(const ContentRegistry::PatternLanguageFunctions::Function &function) { this->m_transformFunction = function; }
+        void setTransformFunction(const ContentRegistry::PatternLanguage::Function &function) { this->m_transformFunction = function; }
         [[nodiscard]] const auto& getFormatterFunction() const { return this->m_formatterFunction; }
-        void setFormatterFunction(const ContentRegistry::PatternLanguageFunctions::Function &function) { this->m_formatterFunction = function; }
+        void setFormatterFunction(const ContentRegistry::PatternLanguage::Function &function) { this->m_formatterFunction = function; }
 
         virtual void createEntry(prv::Provider* &provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
@@ -317,8 +317,8 @@ namespace hex::pl {
         std::string m_typeName;
 
         Evaluator *m_evaluator = nullptr;
-        std::optional<ContentRegistry::PatternLanguageFunctions::Function> m_formatterFunction;
-        std::optional<ContentRegistry::PatternLanguageFunctions::Function> m_transformFunction;
+        std::optional<ContentRegistry::PatternLanguage::Function> m_formatterFunction;
+        std::optional<ContentRegistry::PatternLanguage::Function> m_transformFunction;
 
         PatternData *m_parent;
         bool m_local = false;

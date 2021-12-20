@@ -142,14 +142,14 @@ namespace hex::pl {
 
         u64& dataOffset() { return this->m_currOffset; }
 
-        bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguageFunctions::Callback &function) {
+        bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguage::Callback &function) {
             const auto [iter, inserted] = this->m_customFunctions.insert({ name, { numParams, function } });
 
             return inserted;
         }
 
         [[nodiscard]]
-        const std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function>& getCustomFunctions() const {
+        const std::map<std::string, ContentRegistry::PatternLanguage::Function>& getCustomFunctions() const {
             return this->m_customFunctions;
         }
 
@@ -227,7 +227,7 @@ namespace hex::pl {
         std::atomic<bool> m_aborted;
 
         std::vector<Scope> m_scopes;
-        std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> m_customFunctions;
+        std::map<std::string, ContentRegistry::PatternLanguage::Function> m_customFunctions;
         std::vector<ASTNode*> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
 

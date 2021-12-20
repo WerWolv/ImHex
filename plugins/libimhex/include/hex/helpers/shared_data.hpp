@@ -62,7 +62,7 @@ namespace hex {
         static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> settingsEntries;
         static nlohmann::json settingsJson;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
-        static std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> patternLanguageFunctions;
+        static std::map<std::string, ContentRegistry::PatternLanguage::Function> patternLanguageFunctions;
         static std::vector<View*> views;
         static std::vector<ContentRegistry::Tools::impl::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::impl::Entry> dataInspectorEntries;

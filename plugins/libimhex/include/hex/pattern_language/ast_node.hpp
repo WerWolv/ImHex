@@ -1878,7 +1878,7 @@ namespace hex::pl {
             }
 
             auto &customFunctions = evaluator->getCustomFunctions();
-            auto functions = ContentRegistry::PatternLanguageFunctions::getEntries();
+            auto functions = ContentRegistry::PatternLanguage::getFunctions();
 
             for (auto &func : customFunctions)
                 functions.insert(func);
@@ -1887,15 +1887,15 @@ namespace hex::pl {
                 LogConsole::abortEvaluation(hex::format("call to unknown function '{}'", this->m_functionName), this);
 
             auto function = functions[this->m_functionName];
-            if (function.parameterCount == ContentRegistry::PatternLanguageFunctions::UnlimitedParameters) {
+            if (function.parameterCount == ContentRegistry::PatternLanguage::UnlimitedParameters) {
                 ; // Don't check parameter count
             }
-            else if (function.parameterCount & ContentRegistry::PatternLanguageFunctions::LessParametersThan) {
-                if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::LessParametersThan), this);
-            } else if (function.parameterCount & ContentRegistry::PatternLanguageFunctions::MoreParametersThan) {
-                if (evaluatedParams.size() <= (function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguageFunctions::MoreParametersThan), this);
+            else if (function.parameterCount & ContentRegistry::PatternLanguage::LessParametersThan) {
+                if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan))
+                    LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan), this);
+            } else if (function.parameterCount & ContentRegistry::PatternLanguage::MoreParametersThan) {
+                if (evaluatedParams.size() <= (function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan))
+                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan), this);
             } else if (function.parameterCount != evaluatedParams.size()) {
                 LogConsole::abortEvaluation(hex::format("invalid number of parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount), this);
             }

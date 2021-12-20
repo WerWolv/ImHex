@@ -12,7 +12,7 @@ namespace hex {
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> SharedData::settingsEntries;
     nlohmann::json SharedData::settingsJson;
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
-    std::map<std::string, ContentRegistry::PatternLanguageFunctions::Function> SharedData::patternLanguageFunctions;
+    std::map<std::string, ContentRegistry::PatternLanguage::Function> SharedData::patternLanguageFunctions;
     std::vector<View*> SharedData::views;
     std::vector<ContentRegistry::Tools::impl::Entry> SharedData::toolsEntries;
     std::vector<ContentRegistry::DataInspector::impl::Entry> SharedData::dataInspectorEntries;
