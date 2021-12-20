@@ -120,7 +120,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SetNextItemWidth(300.0F);
             ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(),
-                                ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHex);
+                                ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
             ImGui::NewLine();
         }
 
@@ -794,8 +794,6 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginChild("split_settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 7 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             ImGui::BeginDisabled(splitting);
             {
-                ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.input"_lang);
-                ImGui::SameLine();
                 ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...##input")) {
@@ -803,9 +801,9 @@ namespace hex::plugin::builtin {
                         selectedFile = path;
                     });
                 }
-
-                ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.output"_lang);
                 ImGui::SameLine();
+                ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.input"_lang);
+
                 ImGui::InputText("##base_path", baseOutputPath.data(), baseOutputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &baseOutputPath);
                 ImGui::SameLine();
                 if (ImGui::Button("...##output")) {
@@ -813,6 +811,8 @@ namespace hex::plugin::builtin {
                         baseOutputPath = path;
                     });
                 }
+                ImGui::SameLine();
+                ImGui::TextUnformatted("hex.builtin.tools.file_tools.splitter.output"_lang);
 
                 ImGui::Separator();
 
@@ -954,8 +954,6 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(combining);
         {
-            ImGui::TextUnformatted("hex.builtin.tools.file_tools.combiner.output"_lang);
-            ImGui::SameLine();
             ImGui::InputText("##output_path", outputPath.data(), outputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &outputPath);
             ImGui::SameLine();
             if (ImGui::Button("...")) {
@@ -963,6 +961,8 @@ namespace hex::plugin::builtin {
                     outputPath = path;
                 });
             }
+            ImGui::SameLine();
+            ImGui::TextUnformatted("hex.builtin.tools.file_tools.combiner.output"_lang);
         }
         ImGui::EndDisabled();
 
