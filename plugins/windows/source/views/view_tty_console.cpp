@@ -72,7 +72,7 @@ namespace hex::plugin::windows {
                     if (!this->connect())
                         View::showErrorPopup("hex.windows.view.tty_console.connect_error"_lang);
             } else {
-                if (ImGui::Button("hex.windows.view.tty_console.disconnect"))
+                if (ImGui::Button("hex.windows.view.tty_console.disconnect"_lang))
                     this->disconnect();
             }
 
@@ -195,6 +195,9 @@ namespace hex::plugin::windows {
 
         auto closeHandle = SCOPE_GUARD { CloseHandle(this->m_portHandle); };
 
+        if(!::SetupComm(this->m_portHandle, 10000, 10000))
+            return false;
+
         DCB serialParams;
         serialParams.DCBlength = sizeof(DCB);
 
@@ -218,9 +221,6 @@ namespace hex::plugin::windows {
         timeouts.WriteTotalTimeoutMultiplier = 100;
 
         if (!::SetCommTimeouts(this->m_portHandle, &timeouts))
-            return false;
-
-        if(!::SetupComm(this->m_portHandle, 10000, 10000))
             return false;
 
         closeHandle.release();
