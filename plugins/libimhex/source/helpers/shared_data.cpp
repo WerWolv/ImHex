@@ -43,6 +43,7 @@ namespace hex {
 
     int SharedData::mainArgc;
     char **SharedData::mainArgv;
+    char **SharedData::mainEnvp;
 
     ImFontAtlas *SharedData::fontAtlas;
     ImFontConfig SharedData::fontConfig;

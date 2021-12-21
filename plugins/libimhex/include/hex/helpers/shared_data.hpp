@@ -93,6 +93,7 @@ namespace hex {
 
         static int mainArgc;
         static char **mainArgv;
+        static char **mainEnvp;
 
         static ImFontAtlas *fontAtlas;
         static ImFontConfig fontConfig;

@@ -16,7 +16,7 @@ namespace hex {
     void ImHexApi::Common::restartImHex() {
         EventManager::post<RequestCloseImHex>(false);
         std::atexit([]{
-            execve(SharedData::mainArgv[0], SharedData::mainArgv, nullptr);
+            execve(SharedData::mainArgv[0], SharedData::mainArgv, SharedData::mainEnvp);
         });
     }
 
