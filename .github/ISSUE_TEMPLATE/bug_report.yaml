@@ -36,8 +36,9 @@ body:
     required: true
 - type: checkboxes
   attributes:
+    label: ImHex Build Type
     options:
-      - label: Nightly or built from sources
+    - label: Nightly or built from sources
 - type: textarea
   attributes:
     label: Additional context?

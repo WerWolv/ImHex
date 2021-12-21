@@ -17,5 +17,6 @@ body:
     required: true
 - type: checkboxes
   attributes:
+    label: Request Type
     options:
       - label: I can provide a PoC for this feature or am willing to work on it myself and submit a PR
