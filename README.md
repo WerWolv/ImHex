@@ -136,7 +136,7 @@ For working examples
 
 ### Windows
 
-On Windows, ImHex is built through msys2 / mingw. To install all dependencies, open a mys2 window and run the PKGCONFIG script in the (dist/msys2)[dist/msys2] folder.
+On Windows, ImHex is built through msys2 / mingw. To install all dependencies, open a mys2 window and run the PKGCONFIG script in the [dist/msys2](dist/msys2) folder.
 After all the dependencies are installed, run the following commands to build ImHex:
 
 ```sh
@@ -182,7 +182,7 @@ Resources: ~/Library/Application Support/imhex/resources
 
 ### Linux
 
-Dependency installation scripts are available for many common Linux distributions in the (/dist)[dist] folder.
+Dependency installation scripts are available for many common Linux distributions in the [/dist](dist) folder.
 After all the dependencies are installed, run the following commands to build ImHex:
 
 ```sh
