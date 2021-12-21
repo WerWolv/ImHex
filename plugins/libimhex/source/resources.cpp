@@ -10,7 +10,7 @@
         #name "_size:\n"                            \
             ".int " #name "_size - " #name "\n"     \
             ".align 8\n"                            \
-    )
+    );
 
     #define RESOURCE_NULL_TERMINATED(name, path)    \
     __asm__ (                                       \
@@ -23,7 +23,7 @@
         #name "_size:\n"                            \
             ".int " #name "_size - " #name "\n"     \
             ".align 8\n"                            \
-    )
+    );
 
 #elif defined(OS_MACOS)
 
@@ -37,7 +37,7 @@
         "_" #name "_size:\n"                        \
             ".int _" #name "_size - _" #name ";\n"  \
             ".align 8;\n"                           \
-    )
+    );
 
     #define RESOURCE_NULL_TERMINATED(name, path)    \
     __asm__ (                                       \
@@ -50,7 +50,7 @@
         "_" #name "_size:\n"                        \
             ".int _" #name "_size - _" #name ";\n"  \
             ".align 8;\n"                           \
-    )
+    );
 
 #elif defined(OS_LINUX)
 
@@ -67,7 +67,7 @@
         #name "_size:\n"                            \
             ".int " #name "_size - " #name "\n"     \
             ".align 8\n"                            \
-    )
+    );
 
     #define RESOURCE_NULL_TERMINATED(name, path)    \
     __asm__ (                                       \
@@ -82,7 +82,7 @@
         #name "_size:\n"                            \
             ".int " #name "_size - " #name "\n"     \
             ".align 8\n"                            \
-    )
+    );
 
 #endif
 
