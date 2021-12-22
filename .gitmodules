@@ -21,3 +21,6 @@
 [submodule "external/capstone"]
 	path = external/capstone
 	url = https://github.com/capstone-engine/capstone
+[submodule "external/libromfs"]
+	path = external/libromfs
+	url = https://github.com/WerWolv/libromfs

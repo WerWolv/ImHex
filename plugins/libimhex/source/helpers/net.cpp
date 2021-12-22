@@ -11,7 +11,7 @@
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
-#include <hex/resources.hpp>
+#include <romfs/romfs.hpp>
 
 namespace hex {
 
@@ -54,7 +54,9 @@ namespace hex {
 
         static mbedtls_x509_crt crt;
         mbedtls_x509_crt_init(&crt);
-        mbedtls_x509_crt_parse(&crt, cacert, cacert_size);
+
+        auto cacert = romfs::get("cacert.pem");
+        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8*>(cacert.data()), cacert.size());
 
         mbedtls_ssl_conf_ca_chain(cfg, &crt, nullptr);
 

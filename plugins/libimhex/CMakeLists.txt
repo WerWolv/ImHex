@@ -13,6 +13,10 @@ set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
 set_target_properties(nfd PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+set(LIBROMFS_RESOURCE_LOCATION ${CMAKE_SOURCE_DIR}/res/resources)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/external/libromfs EXCLUDE_FROM_ALL)
+set_target_properties(libromfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
 set(CMAKE_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
@@ -131,8 +135,7 @@ set(LIBIMHEX_SOURCES
 
     source/views/view.cpp
 
-    source/resources.cpp
-)
+        )
 
 if (APPLE)
     set(OSX_11_0_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk)
@@ -158,4 +161,4 @@ if (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES})
+target_link_libraries(libimhex PUBLIC imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs)

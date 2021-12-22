@@ -2,7 +2,6 @@
 
 #include <hex.hpp>
 
-#include <hex/resources.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
@@ -13,6 +12,8 @@
 #include <iostream>
 #include <numeric>
 #include <thread>
+
+#include <romfs/romfs.hpp>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -127,23 +128,38 @@ namespace hex {
             switch (theme) {
                 default:
                 case 1: /* Dark theme */
+                {
                     ImGui::StyleColorsDark();
                     ImGui::StyleCustomColorsDark();
                     ImPlot::StyleColorsDark();
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+
+                    auto banner = romfs::get("banner_dark.png");
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(banner.data()), banner.size());
+
                     break;
+                }
                 case 2: /* Light theme */
+                {
                     ImGui::StyleColorsLight();
                     ImGui::StyleCustomColorsLight();
                     ImPlot::StyleColorsLight();
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_light, banner_light_size);
+
+                    auto banner = romfs::get("banner_light.png");
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(banner.data()), banner.size());
+
                     break;
+                }
                 case 3: /* Classic theme */
+                {
                     ImGui::StyleColorsClassic();
                     ImGui::StyleCustomColorsClassic();
                     ImPlot::StyleColorsClassic();
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(banner_dark, banner_dark_size);
+
+                    auto banner = romfs::get("banner_dark.png");
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(banner.data()), banner.size());
+
                     break;
+                }
             }
 
             ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
@@ -255,7 +271,8 @@ namespace hex {
         std::signal(SIGABRT, signalHandler);
         std::signal(SIGFPE,  signalHandler);
 
-        this->m_logoTexture = ImGui::LoadImageFromMemory(imhex_logo, imhex_logo_size);
+        auto imhexLogo = romfs::get("logo.png");
+        this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(imhexLogo.data()), imhexLogo.size());
 
         ContentRegistry::Settings::store();
         EventManager::post<EventSettingsChanged>();

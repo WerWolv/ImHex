@@ -329,7 +329,7 @@ namespace ImGui {
         return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
     }
 
-    Texture LoadImageFromMemory(ImU8 *buffer, int size) {
+    Texture LoadImageFromMemory(const ImU8 *buffer, int size) {
         int imageWidth = 0;
         int imageHeight = 0;
 

@@ -4,7 +4,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/shared_data.hpp>
-#include <hex/resources.hpp>
+
+#include <romfs/romfs.hpp>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -70,7 +71,8 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
-        ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(splash, splash_size);
+        auto splash = romfs::get("splash.png");
+        ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(splash.data()), splash.size());
 
         if (splashTexture == nullptr) {
             log::fatal("Could not load splash screen image!");

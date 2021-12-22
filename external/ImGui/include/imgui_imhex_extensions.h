@@ -71,7 +71,7 @@ namespace ImGui {
     }
 
     Texture LoadImageFromPath(const char *path);
-    Texture LoadImageFromMemory(ImU8 *buffer, int size);
+    Texture LoadImageFromMemory(const ImU8 *buffer, int size);
     void UnloadImage(Texture &texture);
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name);
