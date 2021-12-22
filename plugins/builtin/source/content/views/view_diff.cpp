@@ -151,6 +151,8 @@ namespace hex::plugin::builtin {
                 // Draw byte
                 u8 byte = lineInfo[curr].bytes[col];
                 ImGui::TextColored(byte == 0x00 ? colorDisabled : colorText, "%s", hex::format(this->m_upperCaseHex ? "{:02X}" : "{:02x}", byte).c_str());
+                ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
+
                 ImGui::SetCursorPosY(startY);
 
                 // Draw highlighting
@@ -160,8 +162,6 @@ namespace hex::plugin::builtin {
                 } else {
                     lastHighlightEnd.reset();
                 }
-
-                ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 2.5F : glyphWidth * 0.5F);
             }
             ImGui::TableNextColumn();
         }
@@ -187,11 +187,11 @@ namespace hex::plugin::builtin {
             ImGui::PopID();
             ImGui::Separator();
 
-            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(20, 1));
+            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(20, 0));
             if (ImGui::BeginTable("diff", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
 
-                ImGui::TableNextColumn();
+                ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
 
@@ -201,17 +201,16 @@ namespace hex::plugin::builtin {
                     for (u8 i = 0; i < 2; i++) {
                         for (u8 col = 0; col < this->m_columnCount; col++) {
                             ImGui::TextUnformatted(hex::format(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col).c_str());
-                            ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 2.5F : glyphWidth * 0.5F);
+                            ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
                         }
                         ImGui::TableNextColumn();
                     }
                 }
 
-
                 if (this->m_providerA >= 0 && this->m_providerB >= 0) {
                     auto &providers = ImHexApi::Provider::getProviders();
                     ImGuiListClipper clipper;
-                    clipper.Begin(std::max(providers[this->m_providerA]->getSize() / this->m_columnCount, providers[this->m_providerB]->getSize() / this->m_columnCount) + 1, ImGui::GetTextLineHeightWithSpacing());
+                    clipper.Begin(std::max(providers[this->m_providerA]->getSize() / this->m_columnCount, providers[this->m_providerB]->getSize() / this->m_columnCount) + 1, ImGui::GetTextLineHeight());
 
                     // Draw diff lines
                     while (clipper.Step()) {
