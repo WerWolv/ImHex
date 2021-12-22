@@ -25,9 +25,10 @@ using namespace std::literals::chrono_literals;
 
 namespace hex::init {
 
-    WindowSplash::WindowSplash(int &argc, char **&argv) : m_window(nullptr) {
+    WindowSplash::WindowSplash(int &argc, char **&argv, char **&envp) : m_window(nullptr) {
         SharedData::mainArgc = argc;
         SharedData::mainArgv = argv;
+        SharedData::mainEnvp = envp;
 
         this->initGLFW();
         this->initImGui();

@@ -14,7 +14,7 @@ namespace hex::init {
 
     class WindowSplash {
     public:
-        WindowSplash(int &argc, char **&argv);
+        WindowSplash(int &argc, char **&argv, char **&envp);
         ~WindowSplash();
 
         bool loop();

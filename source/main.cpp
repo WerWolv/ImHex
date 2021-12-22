@@ -10,14 +10,14 @@
 
 #include <hex/helpers/file.hpp>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv, char **envp) {
     using namespace hex;
 
     // Initialization
     {
         Window::initNative();
 
-        init::WindowSplash splashWindow(argc, argv);
+        init::WindowSplash splashWindow(argc, argv, envp);
 
         for (const auto &[name, task] : init::getInitTasks())
             splashWindow.addStartupTask(name, task);
