@@ -58,8 +58,9 @@ namespace hex::prv {
     }
 
     void Provider::applyPatches() {
-        for (auto &[patchAddress, patch] : getPatches())
-            this->writeRaw( - this->getBaseAddress(), &patch, 1);
+        for (auto &[patchAddress, patch] : getPatches()) {
+            this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
+        }
     }
 
 

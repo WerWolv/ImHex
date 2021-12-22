@@ -244,7 +244,7 @@ namespace hex::plugin::builtin::prv {
 
             this->m_fileSize = this->m_fileStats.st_size;
 
-            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, this->m_file, 0);
+            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, this->m_file, 0);
             if (this->m_mappedFile == nullptr) {
                 ::close(this->m_file);
                 this->m_file = -1;
