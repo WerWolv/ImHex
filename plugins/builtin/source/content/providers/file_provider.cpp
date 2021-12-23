@@ -68,14 +68,14 @@ namespace hex::plugin::builtin::prv {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, size);
+        std::memcpy(buffer, reinterpret_cast<u8*>(this->m_mappedFile) + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + PageSize * this->m_currPage + offset, buffer, size);
+        std::memcpy(reinterpret_cast<u8*>(this->m_mappedFile) + offset, buffer, size);
     }
 
     void FileProvider::save() {
@@ -201,7 +201,7 @@ namespace hex::plugin::builtin::prv {
         }
 
         if (this->m_fileSize > 0) {
-            this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, fileSize.HighPart, fileSize.LowPart, nullptr);
+            this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
             if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
                 return false;
             }
