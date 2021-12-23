@@ -155,7 +155,13 @@ namespace hex {
             return *this;
         }
 
-        auto operator<=>(const Shortcut&) const = default;
+        bool operator<(const Shortcut &other) const {
+            return this->m_keys < other.m_keys;
+        }
+
+        bool operator==(const Shortcut &other) const {
+            return this->m_keys == other.m_keys;
+        }
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);
 
