@@ -6,6 +6,12 @@ namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View("hex.builtin.view.command_palette.name") {
         this->m_commandBuffer.resize(1024, 0x00);
+
+        ShortcutManager::addGlobalShortcut(CTRL + SHIFT + Keys::P, [this] {
+            EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
+            this->m_commandPaletteOpen = true;
+            this->m_justOpened = true;
+        });
     }
 
     ViewCommandPalette::~ViewCommandPalette() {
@@ -70,19 +76,6 @@ namespace hex::plugin::builtin {
 
     void ViewCommandPalette::drawMenu() {
 
-    }
-
-    bool ViewCommandPalette::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) {
-        if (ctrl && shift && keys['P']) {
-            View::doLater([this] {
-                ImGui::OpenPopup("hex.builtin.view.command_palette.name"_lang);
-                this->m_commandPaletteOpen = true;
-                this->m_justOpened = true;
-            });
-            return true;
-        }
-
-        return false;
     }
 
     std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(const std::string &input) {

@@ -5,6 +5,7 @@
     <mapping directory="$PROJECT_DIR$/external/capstone" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/curl" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/fmt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/external/libromfs" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/nativefiledialog" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/xdgpp" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/yara/yara" vcs="Git" />

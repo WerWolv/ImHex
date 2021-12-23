@@ -26,7 +26,6 @@ namespace hex::plugin::builtin {
         void drawContent() override;
         void drawAlwaysVisible() override;
         void drawMenu() override;
-        bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) override;
 
     private:
         MemoryEditor m_memoryEditor;
@@ -72,6 +71,8 @@ namespace hex::plugin::builtin {
         void copyHexView() const;
         void copyHexViewHTML() const;
 
+        void registerEvents();
+        void registerShortcuts();
     };
 
 }

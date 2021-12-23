@@ -104,6 +104,7 @@ set(LIBIMHEX_SOURCES
     source/api/imhex_api.cpp
     source/api/content_registry.cpp
     source/api/task.cpp
+    source/api/keybinding.cpp
 
     source/data_processor/attribute.cpp
     source/data_processor/link.cpp
@@ -134,8 +135,7 @@ set(LIBIMHEX_SOURCES
     source/providers/provider.cpp
 
     source/views/view.cpp
-
-        )
+)
 
 if (APPLE)
     set(OSX_11_0_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk)

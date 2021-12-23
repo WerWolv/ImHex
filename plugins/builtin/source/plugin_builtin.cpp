@@ -1,5 +1,7 @@
 #include <hex/plugin.hpp>
 
+#include <hex/api/imhex_api.hpp>
+
 namespace hex::plugin::builtin {
 
     void registerViews();

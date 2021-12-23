@@ -79,6 +79,8 @@ namespace hex {
         static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
         static std::vector<ContentRegistry::Interface::DrawCallback> toolbarItems;
 
+        static std::map<Shortcut, std::function<void()>> globalShortcuts;
+
         static std::mutex tasksMutex;
         static std::list<Task*> runningTasks;
 

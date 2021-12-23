@@ -68,6 +68,7 @@ namespace hex {
         std::filesystem::path m_safetyBackupPath;
 
         std::list<std::string> m_popupsToOpen;
+        std::vector<int> m_pressedKeys;
     };
 
 }

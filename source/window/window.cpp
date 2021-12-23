@@ -493,12 +493,6 @@ namespace hex {
     }
 
     void Window::frame() {
-        bool pressedKeys[512] = { false };
-
-        for (u16 i = 0; i < 512; i++)
-            pressedKeys[i] = ImGui::GetIO().KeysDown[i] && !this->m_prevKeysDown[i];
-        std::copy_n(ImGui::GetIO().KeysDown, 512, this->m_prevKeysDown);
-
         for (const auto &call : View::getDeferedCalls())
             call();
         View::getDeferedCalls().clear();
@@ -522,10 +516,25 @@ namespace hex {
                 view->drawContent();
             }
 
-            view->handleShortcut(pressedKeys, ImGui::GetIO().KeyCtrl, ImGui::GetIO().KeyShift, ImGui::GetIO().KeyAlt);
-        }
+            {
+                bool hasWindow = ImGui::FindWindowByName(View::toWindowName(view->getUnlocalizedName()).c_str()) != nullptr;
+                bool focused = false;
 
-    #ifdef DEBUG
+                if (hasWindow) {
+                    ImGui::Begin(View::toWindowName(view->getUnlocalizedName()).c_str());
+                    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+                    ImGui::End();
+                }
+
+                auto &io = ImGui::GetIO();
+                for (const auto &key : this->m_pressedKeys) {
+                    ShortcutManager::process(view, io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
+                }
+            }
+        }
+        this->m_pressedKeys.clear();
+
+#ifdef DEBUG
         if (this->m_demoWindowOpen) {
             ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
             ImPlot::ShowDemoWindow(&this->m_demoWindowOpen);
@@ -820,8 +829,12 @@ namespace hex {
             if (keyName != nullptr)
                 key = std::toupper(keyName[0]);
 
+            auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
             if (action == GLFW_PRESS) {
                 auto &io = ImGui::GetIO();
+
+                win->m_pressedKeys.push_back(key);
                 io.KeysDown[key] = true;
                 io.KeyCtrl  = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;

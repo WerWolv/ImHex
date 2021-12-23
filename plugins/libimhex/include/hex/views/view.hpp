@@ -33,7 +33,6 @@ namespace hex {
         virtual void drawContent() = 0;
         virtual void drawAlwaysVisible() { }
         virtual void drawMenu();
-        virtual bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt);
         virtual bool isAvailable();
         virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
 
@@ -64,6 +63,9 @@ namespace hex {
     private:
         std::string m_unlocalizedViewName;
         bool m_windowOpen = false;
+        std::map<Shortcut, std::function<void()>> m_shortcuts;
+
+        friend class ShortcutManager;
     };
 
 }

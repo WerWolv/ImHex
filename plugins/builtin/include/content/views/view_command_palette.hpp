@@ -23,8 +23,6 @@ namespace hex::plugin::builtin {
         bool isAvailable() override { return true; }
         bool shouldProcess() override { return true; }
 
-        bool handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) override;
-
         bool hasViewMenuItemEntry() override { return false; }
         ImVec2 getMinSize() override { return ImVec2(400, 100); }
         ImVec2 getMaxSize() override { return ImVec2(400, 100); }

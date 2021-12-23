@@ -141,134 +141,8 @@ namespace hex::plugin::builtin {
             return { std::string(decoded), advance, color };
         };
 
-        EventManager::subscribe<RequestOpenFile>(this, [this](const std::string &filePath) {
-            this->openFile(filePath);
-            this->getWindowOpenState() = true;
-        });
-
-        EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
-            auto provider = ImHexApi::Provider::get();
-            auto page = provider->getPageOfAddress(region.address);
-
-            if (!page.has_value())
-                return;
-
-            if (region.size != 0) {
-                provider->setCurrentPage(page.value());
-                u64 start = region.address - provider->getBaseAddress() - provider->getCurrentPageAddress();
-                this->m_memoryEditor.GotoAddrAndSelect(start, start + region.size - 1);
-            }
-
-            EventManager::post<EventRegionSelected>(Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1});
-        });
-
-        EventManager::subscribe<EventProjectFileLoad>(this, []() {
-            EventManager::post<RequestOpenFile>(ProjectFile::getFilePath());
-        });
-
-        EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
-            if (ProjectFile::hasUnsavedChanges()) {
-                glfwSetWindowShouldClose(window, GLFW_FALSE);
-                View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.exit_application.title"_lang); });
-            }
-        });
-
-        EventManager::subscribe<EventPatternChanged>(this, [this]() {
-            this->m_highlightedBytes.clear();
-
-            for (const auto &pattern : SharedData::patternData) {
-                this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
-            }
-        });
-
-        EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
-            if (name == "Create File") {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.create_file"_lang, DialogMode::Save, { }, [this](auto path) {
-                    if (!this->createFile(path)) {
-                        View::showErrorPopup("hex.builtin.view.hexeditor.error.create"_lang);
-                        return;
-                    }
-
-                    EventManager::post<RequestOpenFile>(path);
-                    this->getWindowOpenState() = true;
-                });
-            } else if (name == "Open File") {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
-                    EventManager::post<RequestOpenFile>(path);
-                    this->getWindowOpenState() = true;
-                });
-            } else if (name == "Open Project") {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
-                    ProjectFile::load(path);
-                    this->getWindowOpenState() = true;
-                });
-            }
-        });
-
-        EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            {
-                auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
-
-                if (alpha.is_number())
-                    this->m_highlightAlpha = alpha;
-            }
-
-            {
-                auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
-
-                if (columnCount.is_number())
-                    this->m_memoryEditor.Cols = static_cast<int>(columnCount);
-            }
-
-            {
-                auto hexii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii");
-
-                if (hexii.is_number())
-                    this->m_memoryEditor.OptShowHexII = static_cast<int>(hexii);
-            }
-
-            {
-                auto ascii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii");
-
-                if (ascii.is_number())
-                    this->m_memoryEditor.OptShowAscii = static_cast<int>(ascii);
-            }
-
-            {
-                auto advancedDecoding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding");
-
-                if (advancedDecoding.is_number())
-                    this->m_memoryEditor.OptShowAdvancedDecoding = static_cast<int>(advancedDecoding);
-            }
-
-            {
-                auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
-
-                if (greyOutZeros.is_number())
-                    this->m_memoryEditor.OptGreyOutZeroes = static_cast<int>(greyOutZeros);
-            }
-
-            {
-                auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
-
-                if (upperCaseHex.is_number())
-                    this->m_memoryEditor.OptUpperCaseHex = static_cast<int>(upperCaseHex);
-            }
-
-            {
-                auto showExtraInfo = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.extra_info");
-
-                if (showExtraInfo.is_number())
-                    this->m_memoryEditor.OptShowExtraInfo = static_cast<int>(showExtraInfo);
-            }
-        });
-
-        EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
-            u64 address = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-            size_t size = std::abs(s64(this->m_memoryEditor.DataPreviewAddrEnd) - s64(this->m_memoryEditor.DataPreviewAddr)) + 1;
-
-            region = Region { address, size };
-        });
+        registerEvents();
+        registerShortcuts();
     }
 
     ViewHexEditor::~ViewHexEditor() {
@@ -633,57 +507,6 @@ namespace hex::plugin::builtin {
             this->drawEditPopup();
             ImGui::EndMenu();
         }
-    }
-
-    bool ViewHexEditor::handleShortcut(bool keys[512], bool ctrl, bool shift, bool alt) {
-        if (ctrl && shift && keys['S']) {
-            saveAs();
-            return true;
-        } else if (ctrl && keys['S']) {
-            save();
-            return true;
-        }
-
-        ON_SCOPE_EXIT { ImGui::End(); };
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.hexeditor.name").c_str())) {
-
-            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) {
-                if (ctrl && keys['Z']) {
-                    if (ImHexApi::Provider::isValid())
-                        ImHexApi::Provider::get()->undo();
-                    return true;
-                } else if (ctrl && keys['Y']) {
-                    if (ImHexApi::Provider::isValid())
-                        ImHexApi::Provider::get()->redo();
-                } else if (ctrl && keys['F']) {
-                    ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), "hex.builtin.view.hexeditor.menu.file.search"_lang);
-                    return true;
-                } else if (ctrl && keys['G']) {
-                    ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), "hex.builtin.view.hexeditor.menu.file.goto"_lang);
-                    return true;
-                } else if (ctrl && keys['O']) {
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [](auto path) {
-                        EventManager::post<RequestOpenFile>(path);
-                    });
-                    return true;
-                } else if (ctrl && keys['C']) {
-                    this->copyBytes();
-                    return true;
-                } else if (ctrl && shift && keys['C']) {
-                    this->copyString();
-                    return true;
-                } else if (ctrl && keys['V']) {
-                    this->pasteBytes();
-                    return true;
-                } else if (ctrl && keys['A']) {
-                    auto provider = ImHexApi::Provider::get();
-                    EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     bool ViewHexEditor::createFile(const std::string &path) {
@@ -1359,6 +1182,192 @@ R"(
                 ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.resize"_lang);
             });
         }
+    }
+
+    void ViewHexEditor::registerEvents() {
+        EventManager::subscribe<RequestOpenFile>(this, [this](const std::string &filePath) {
+            this->openFile(filePath);
+            this->getWindowOpenState() = true;
+        });
+
+        EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
+            auto provider = ImHexApi::Provider::get();
+            auto page = provider->getPageOfAddress(region.address);
+
+            if (!page.has_value())
+                return;
+
+            if (region.size != 0) {
+                provider->setCurrentPage(page.value());
+                u64 start = region.address - provider->getBaseAddress() - provider->getCurrentPageAddress();
+                this->m_memoryEditor.GotoAddrAndSelect(start, start + region.size - 1);
+            }
+
+            EventManager::post<EventRegionSelected>(Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1});
+        });
+
+        EventManager::subscribe<EventProjectFileLoad>(this, []() {
+            EventManager::post<RequestOpenFile>(ProjectFile::getFilePath());
+        });
+
+        EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
+            if (ProjectFile::hasUnsavedChanges()) {
+                glfwSetWindowShouldClose(window, GLFW_FALSE);
+                View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.exit_application.title"_lang); });
+            }
+        });
+
+        EventManager::subscribe<EventPatternChanged>(this, [this]() {
+            this->m_highlightedBytes.clear();
+
+            for (const auto &pattern : SharedData::patternData) {
+                this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
+            }
+        });
+
+        EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
+            if (name == "Create File") {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.create_file"_lang, DialogMode::Save, { }, [this](auto path) {
+                    if (!this->createFile(path)) {
+                        View::showErrorPopup("hex.builtin.view.hexeditor.error.create"_lang);
+                        return;
+                    }
+
+                    EventManager::post<RequestOpenFile>(path);
+                    this->getWindowOpenState() = true;
+                });
+            } else if (name == "Open File") {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                    EventManager::post<RequestOpenFile>(path);
+                    this->getWindowOpenState() = true;
+                });
+            } else if (name == "Open Project") {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](auto path) {
+                    ProjectFile::load(path);
+                    this->getWindowOpenState() = true;
+                });
+            }
+        });
+
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+            {
+                auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
+
+                if (alpha.is_number())
+                    this->m_highlightAlpha = alpha;
+            }
+
+            {
+                auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
+
+                if (columnCount.is_number())
+                    this->m_memoryEditor.Cols = static_cast<int>(columnCount);
+            }
+
+            {
+                auto hexii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii");
+
+                if (hexii.is_number())
+                    this->m_memoryEditor.OptShowHexII = static_cast<int>(hexii);
+            }
+
+            {
+                auto ascii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii");
+
+                if (ascii.is_number())
+                    this->m_memoryEditor.OptShowAscii = static_cast<int>(ascii);
+            }
+
+            {
+                auto advancedDecoding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding");
+
+                if (advancedDecoding.is_number())
+                    this->m_memoryEditor.OptShowAdvancedDecoding = static_cast<int>(advancedDecoding);
+            }
+
+            {
+                auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
+
+                if (greyOutZeros.is_number())
+                    this->m_memoryEditor.OptGreyOutZeroes = static_cast<int>(greyOutZeros);
+            }
+
+            {
+                auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
+
+                if (upperCaseHex.is_number())
+                    this->m_memoryEditor.OptUpperCaseHex = static_cast<int>(upperCaseHex);
+            }
+
+            {
+                auto showExtraInfo = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.extra_info");
+
+                if (showExtraInfo.is_number())
+                    this->m_memoryEditor.OptShowExtraInfo = static_cast<int>(showExtraInfo);
+            }
+        });
+
+        EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
+            u64 address = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+            size_t size = std::abs(s64(this->m_memoryEditor.DataPreviewAddrEnd) - s64(this->m_memoryEditor.DataPreviewAddr)) + 1;
+
+            region = Region { address, size };
+        });
+    }
+
+    void ViewHexEditor::registerShortcuts() {
+        ShortcutManager::addGlobalShortcut(CTRL + Keys::S, [] {
+            save();
+        });
+
+        ShortcutManager::addGlobalShortcut(CTRL + SHIFT + Keys::S, [] {
+            saveAs();
+        });
+
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Z, [] {
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->undo();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Y, [] {
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->redo();
+        });
+
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::F, [] {
+            ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), "hex.builtin.view.hexeditor.menu.file.search"_lang);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::G, [] {
+            ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), "hex.builtin.view.hexeditor.menu.file.goto"_lang);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
+            hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [](auto path) {
+                EventManager::post<RequestOpenFile>(path);
+            });
+        });
+
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::C, [this] {
+            this->copyBytes();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C, [this] {
+            this->copyString();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::V, [this] {
+            this->pasteBytes();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::A, [this] {
+            auto provider = ImHexApi::Provider::get();
+            EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
+        });
+
     }
 
 }
