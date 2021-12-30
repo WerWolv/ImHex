@@ -880,6 +880,10 @@ namespace hex::pl {
             return parseConditional();
         else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
             throwParseError("unexpected end of program", -2);
+        else if (MATCHES(sequence(KEYWORD_BREAK)))
+            member = new ASTNodeControlFlowStatement(ControlFlowStatement::Break, nullptr);
+        else if (MATCHES(sequence(KEYWORD_CONTINUE)))
+            member = new ASTNodeControlFlowStatement(ControlFlowStatement::Continue, nullptr);
         else
             throwParseError("invalid struct member", 0);
 

@@ -561,7 +561,10 @@ namespace hex::pl {
             for (auto &statement : other.m_body)
                 this->m_body.push_back(statement->clone());
 
-            this->m_postExpression = other.m_postExpression->clone();
+            if (other.m_postExpression != nullptr)
+                this->m_postExpression = other.m_postExpression->clone();
+            else
+                this->m_postExpression = nullptr;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -974,6 +977,13 @@ namespace hex::pl {
                 evaluator->handleAbort();
             };
 
+            auto discardEntry = [&] {
+                delete entries.back();
+                entries.pop_back();
+                entryIndex--;
+
+            };
+
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete sizeNode; };
@@ -990,9 +1000,18 @@ namespace hex::pl {
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
                     for (u64 i = 0; i < entryCount; i++) {
-                        auto pattern = this->m_type->createPatterns(evaluator).front();
+                        auto patterns = this->m_type->createPatterns(evaluator);
 
-                        addEntry(pattern);
+                        if (!patterns.empty())
+                            addEntry(patterns.front());
+
+                        auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                        if (ctrlFlow == ControlFlowStatement::Break)
+                            break;
+                        else if (ctrlFlow == ControlFlowStatement::Continue) {
+                            discardEntry();
+                            continue;
+                        }
                     }
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
@@ -1000,9 +1019,18 @@ namespace hex::pl {
                         if (entryIndex > limit)
                             LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
-                        auto pattern = this->m_type->createPatterns(evaluator).front();
+                        auto patterns = this->m_type->createPatterns(evaluator);
 
-                        addEntry(pattern);
+                        if (!patterns.empty())
+                            addEntry(patterns.front());
+
+                        auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                        if (ctrlFlow == ControlFlowStatement::Break)
+                            break;
+                        else if (ctrlFlow == ControlFlowStatement::Continue) {
+                            discardEntry();
+                            continue;
+                        }
                     }
                 }
             } else {
@@ -1011,26 +1039,39 @@ namespace hex::pl {
                     if (entryIndex > limit)
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
-                    auto pattern = this->m_type->createPatterns(evaluator).front();
-                    std::vector<u8> buffer(pattern->getSize());
+                    auto patterns = this->m_type->createPatterns(evaluator);
 
-                    if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size()) {
-                        delete pattern;
-                        LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
-                    }
+                    if (!patterns.empty()) {
+                        auto pattern = patterns.front();
 
-                    addEntry(pattern);
+                        std::vector<u8> buffer(pattern->getSize());
 
-                    evaluator->getProvider()->read(evaluator->dataOffset() - pattern->getSize(), buffer.data(), buffer.size());
-                    bool reachedEnd = true;
-                    for (u8 &byte : buffer) {
-                        if (byte != 0x00) {
-                            reachedEnd = false;
-                            break;
+                        if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size()) {
+                            delete pattern;
+                            LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
                         }
-                    }
 
-                    if (reachedEnd) break;
+                        addEntry(pattern);
+
+                        auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                        if (ctrlFlow == ControlFlowStatement::Break)
+                            break;
+                        else if (ctrlFlow == ControlFlowStatement::Continue) {
+                            discardEntry();
+                            continue;
+                        }
+
+                        evaluator->getProvider()->read(evaluator->dataOffset() - pattern->getSize(), buffer.data(), buffer.size());
+                        bool reachedEnd = true;
+                        for (u8 &byte : buffer) {
+                            if (byte != 0x00) {
+                                reachedEnd = false;
+                                break;
+                            }
+                        }
+
+                        if (reachedEnd) break;
+                    }
                 }
             }
 
@@ -2044,7 +2085,11 @@ namespace hex::pl {
 
         ASTNodeControlFlowStatement(const ASTNodeControlFlowStatement &other) : ASTNode(other) {
             this->m_type = other.m_type;
-            this->m_rvalue = other.m_rvalue->clone();
+
+            if (other.m_rvalue != nullptr)
+                this->m_rvalue = other.m_rvalue->clone();
+            else
+                this->m_rvalue = nullptr;
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -2057,6 +2102,13 @@ namespace hex::pl {
 
         [[nodiscard]] ASTNode* getReturnValue() const {
             return this->m_rvalue;
+        }
+
+        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+
+            this->execute(evaluator);
+
+            return { };
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {
