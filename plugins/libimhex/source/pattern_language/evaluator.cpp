@@ -146,6 +146,7 @@ namespace hex::pl {
         std::vector<PatternData*> patterns;
 
         try {
+            this->setCurrentControlFlowStatement(ControlFlowStatement::None);
             pushScope(nullptr, patterns);
 
             for (auto node : ast) {

@@ -420,6 +420,10 @@ namespace hex::pl {
                         tokens.emplace_back(TOKEN(Keyword, In));
                     else if (identifier == "out")
                         tokens.emplace_back(TOKEN(Keyword, Out));
+                    else if (identifier == "break")
+                        tokens.emplace_back(TOKEN(Keyword, Break));
+                    else if (identifier == "continue")
+                        tokens.emplace_back(TOKEN(Keyword, Continue));
 
                         // Check for built-in types
                     else if (identifier == "u8")

@@ -496,8 +496,8 @@ namespace hex::pl {
 
         if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
             statement = parseFunctionVariableAssignment();
-        else if (MATCHES(sequence(KEYWORD_RETURN)))
-            statement = parseFunctionReturnStatement();
+        else if (MATCHES(oneOf(KEYWORD_RETURN, KEYWORD_BREAK, KEYWORD_CONTINUE)))
+            statement = parseFunctionControlFlowStatement();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN))) {
             statement = parseFunctionConditional();
             needsSemicolon = false;
@@ -546,11 +546,21 @@ namespace hex::pl {
         return create(new ASTNodeAssignment(lvalue, rvalue));
     }
 
-    ASTNode* Parser::parseFunctionReturnStatement() {
-        if (peek(SEPARATOR_ENDOFEXPRESSION))
-            return create(new ASTNodeReturnStatement(nullptr));
+    ASTNode* Parser::parseFunctionControlFlowStatement() {
+        ControlFlowStatement type;
+        if (peek(KEYWORD_RETURN, -1))
+            type = ControlFlowStatement::Return;
+        else if (peek(KEYWORD_BREAK, -1))
+            type = ControlFlowStatement::Break;
+        else if (peek(KEYWORD_CONTINUE, -1))
+            type = ControlFlowStatement::Continue;
         else
-            return create(new ASTNodeReturnStatement(this->parseMathematicalExpression()));
+            throwParseError("invalid control flow statement. Expected 'return', 'break' or 'continue'");
+
+        if (peek(SEPARATOR_ENDOFEXPRESSION))
+            return create(new ASTNodeControlFlowStatement(type, nullptr));
+        else
+            return create(new ASTNodeControlFlowStatement(type, this->parseMathematicalExpression()));
     }
 
     std::vector<ASTNode*> Parser::parseStatementBody() {
@@ -650,14 +660,12 @@ namespace hex::pl {
 
         body = parseStatementBody();
 
-        body.push_back(postExpression);
-
         variableCleanup.release();
         conditionCleanup.release();
         postExpressionCleanup.release();
         bodyCleanup.release();
 
-        return create(new ASTNodeCompoundStatement({ variable, create(new ASTNodeWhileStatement(condition, body)) }, true));
+        return create(new ASTNodeCompoundStatement({ variable, create(new ASTNodeWhileStatement(condition, body, postExpression)) }, true));
     }
 
     /* Control flow */

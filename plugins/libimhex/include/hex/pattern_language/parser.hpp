@@ -93,7 +93,7 @@ namespace hex::pl {
         ASTNode* parseFunctionVariableDecl();
         ASTNode* parseFunctionStatement();
         ASTNode* parseFunctionVariableAssignment();
-        ASTNode* parseFunctionReturnStatement();
+        ASTNode* parseFunctionControlFlowStatement();
         std::vector<ASTNode*> parseStatementBody();
         ASTNode* parseFunctionConditional();
         ASTNode* parseFunctionWhileLoop();

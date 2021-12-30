@@ -63,8 +63,8 @@ namespace hex::pl {
 
         [[nodiscard]] virtual std::vector<PatternData *> createPatterns(Evaluator *evaluator) const { return {}; }
 
-        using FunctionResult = std::pair<bool, std::optional<Token::Literal>>;
-        virtual FunctionResult execute(Evaluator *evaluator) const { throw std::pair<u32, std::string>(this->getLineNumber(), "cannot execute non-function statement"); }
+        using FunctionResult = std::optional<Token::Literal>;
+        virtual FunctionResult execute(Evaluator *evaluator) const { evaluator->getConsole().abortEvaluation("cannot execute non-function statement", this); }
 
     private:
         u32 m_lineNumber = 1;
@@ -543,14 +543,16 @@ namespace hex::pl {
 
     class ASTNodeWhileStatement : public ASTNode {
     public:
-        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode*> body)
-                : ASTNode(), m_condition(condition), m_body(std::move(body)) { }
+        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode*> body, ASTNode *postExpression = nullptr)
+                : ASTNode(), m_condition(condition), m_body(std::move(body)), m_postExpression(postExpression) { }
 
         ~ASTNodeWhileStatement() override {
             delete this->m_condition;
 
             for (auto &statement : this->m_body)
                 delete statement;
+
+            delete this->m_postExpression;
         }
 
         ASTNodeWhileStatement(const ASTNodeWhileStatement &other) : ASTNode(other) {
@@ -558,6 +560,8 @@ namespace hex::pl {
 
             for (auto &statement : other.m_body)
                 this->m_body.push_back(statement->clone());
+
+            this->m_postExpression = other.m_postExpression->clone();
         }
 
         [[nodiscard]] ASTNode* clone() const override {
@@ -593,21 +597,34 @@ namespace hex::pl {
                 evaluator->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT { evaluator->popScope(); };
 
+                auto ctrlFlow = ControlFlowStatement::None;
                 for (auto &statement : this->m_body) {
-                    auto [executionStopped, result] = statement->execute(evaluator);
-                    if (executionStopped) {
-                        return { true, result };
-                    }
+                    auto result = statement->execute(evaluator);
+
+                    ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
+                    if (ctrlFlow == ControlFlowStatement::Return)
+                        return result;
+                    else if (ctrlFlow != ControlFlowStatement::None)
+                        break;
                 }
+
+                if (this->m_postExpression != nullptr)
+                    this->m_postExpression->execute(evaluator);
 
                 loopIterations++;
                 if (loopIterations >= evaluator->getLoopLimit())
                     LogConsole::abortEvaluation(hex::format("loop iterations exceeded limit of {}", evaluator->getLoopLimit()), this);
 
                 evaluator->handleAbort();
+
+                if (ctrlFlow == ControlFlowStatement::Break)
+                    break;
+                else if (ctrlFlow == ControlFlowStatement::Continue)
+                    continue;
             }
 
-            return { false, { } };
+            return { };
         }
 
         [[nodiscard]]
@@ -625,6 +642,7 @@ namespace hex::pl {
     private:
         ASTNode *m_condition;
         std::vector<ASTNode*> m_body;
+        ASTNode *m_postExpression;
     };
 
     inline void applyVariableAttributes(Evaluator *evaluator, const Attributable *attributable, PatternData *pattern) {
@@ -768,7 +786,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             evaluator->createVariable(this->getName(), this->getType());
 
-            return { false, { } };
+            return { };
         }
 
     private:
@@ -942,22 +960,26 @@ namespace hex::pl {
             };
 
             size_t size = 0;
-            u64 entryCount = 0;
+            u64 entryIndex = 0;
+
+            auto addEntry = [&](PatternData *pattern) {
+                pattern->setVariableName(hex::format("[{}]", entryIndex));
+                pattern->setEndian(arrayPattern->getEndian());
+                pattern->setColor(arrayPattern->getColor());
+                entries.push_back(pattern);
+
+                size += pattern->getSize();
+                entryIndex++;
+
+                evaluator->handleAbort();
+            };
 
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete sizeNode; };
 
-                {
-                    auto templatePattern = this->m_type->createPatterns(evaluator).front();
-                    ON_SCOPE_EXIT { delete templatePattern; };
-
-                    arrayPattern->setTypeName(templatePattern->getTypeName());
-                    evaluator->dataOffset() -= templatePattern->getSize();
-                }
-
                 if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
-                    entryCount = std::visit(overloaded{
+                    auto entryCount = std::visit(overloaded{
                             [this](std::string) -> u128  { LogConsole::abortEvaluation("cannot use string to index array", this); },
                             [this](PatternData*) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                             [](auto &&size) -> u128 { return size; }
@@ -970,38 +992,23 @@ namespace hex::pl {
                     for (u64 i = 0; i < entryCount; i++) {
                         auto pattern = this->m_type->createPatterns(evaluator).front();
 
-                        pattern->setVariableName(hex::format("[{}]", i));
-                        pattern->setEndian(arrayPattern->getEndian());
-                        pattern->setColor(arrayPattern->getColor());
-                        entries.push_back(pattern);
-
-                        size += pattern->getSize();
-
-                        evaluator->handleAbort();
+                        addEntry(pattern);
                     }
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
                         auto limit = evaluator->getArrayLimit();
-                        if (entryCount > limit)
+                        if (entryIndex > limit)
                             LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
                         auto pattern = this->m_type->createPatterns(evaluator).front();
 
-                        pattern->setVariableName(hex::format("[{}]", entryCount));
-                        pattern->setEndian(arrayPattern->getEndian());
-                        pattern->setColor(arrayPattern->getColor());
-                        entries.push_back(pattern);
-
-                        entryCount++;
-                        size += pattern->getSize();
-
-                        evaluator->handleAbort();
+                        addEntry(pattern);
                     }
                 }
             } else {
                 while (true) {
                     auto limit = evaluator->getArrayLimit();
-                    if (entryCount > limit)
+                    if (entryIndex > limit)
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
                     auto pattern = this->m_type->createPatterns(evaluator).front();
@@ -1012,13 +1019,7 @@ namespace hex::pl {
                         LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
                     }
 
-                    pattern->setVariableName(hex::format("[{}]", entryCount));
-                    pattern->setEndian(arrayPattern->getEndian());
-                    pattern->setColor(arrayPattern->getColor());
-                    entries.push_back(pattern);
-
-                    size += pattern->getSize();
-                    entryCount++;
+                    addEntry(pattern);
 
                     evaluator->getProvider()->read(evaluator->dataOffset() - pattern->getSize(), buffer.data(), buffer.size());
                     bool reachedEnd = true;
@@ -1030,12 +1031,14 @@ namespace hex::pl {
                     }
 
                     if (reachedEnd) break;
-                    evaluator->handleAbort();
                 }
             }
 
             arrayPattern->setEntries(entries);
             arrayPattern->setSize(size);
+
+            if (auto &entries = arrayPattern->getEntries(); !entries.empty())
+                arrayPattern->setTypeName(entries.front()->getTypeName());
 
             arrayCleanup.release();
 
@@ -1163,7 +1166,7 @@ namespace hex::pl {
                 evaluator->createVariable(variableDecl->getName(), variableDecl->getType()->evaluate(evaluator));
             }
 
-            return { false, { } };
+            return { };
         }
 
     private:
@@ -1803,13 +1806,13 @@ namespace hex::pl {
             evaluator->pushScope(nullptr, variables);
             ON_SCOPE_EXIT { evaluator->popScope(); };
             for (auto &statement : body) {
-                auto [executionStopped, result] = statement->execute(evaluator);
-                if (executionStopped) {
-                    return { true, result };
+                auto result = statement->execute(evaluator);
+                if (auto ctrlStatement = evaluator->getCurrentControlFlowStatement(); ctrlStatement != ControlFlowStatement::None) {
+                    return result;
                 }
             }
 
-            return { false, { } };
+            return { };
         }
 
     private:
@@ -1933,7 +1936,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             delete this->evaluate(evaluator);
 
-            return { false, { } };
+            return { };
         }
 
     private:
@@ -2025,7 +2028,7 @@ namespace hex::pl {
 
             evaluator->setVariable(this->getLValueName(), literal->getValue());
 
-            return { false, { } };
+            return { };
         }
 
     private:
@@ -2033,21 +2036,22 @@ namespace hex::pl {
         ASTNode *m_rvalue;
     };
 
-    class ASTNodeReturnStatement : public ASTNode {
+    class ASTNodeControlFlowStatement : public ASTNode {
     public:
-        explicit ASTNodeReturnStatement(ASTNode *rvalue) : m_rvalue(rvalue) {
+        explicit ASTNodeControlFlowStatement(ControlFlowStatement type, ASTNode *rvalue) : m_type(type), m_rvalue(rvalue) {
 
         }
 
-        ASTNodeReturnStatement(const ASTNodeReturnStatement &other) : ASTNode(other) {
+        ASTNodeControlFlowStatement(const ASTNodeControlFlowStatement &other) : ASTNode(other) {
+            this->m_type = other.m_type;
             this->m_rvalue = other.m_rvalue->clone();
         }
 
         [[nodiscard]] ASTNode* clone() const override {
-            return new ASTNodeReturnStatement(*this);
+            return new ASTNodeControlFlowStatement(*this);
         }
 
-        ~ASTNodeReturnStatement() override {
+        ~ASTNodeControlFlowStatement() override {
             delete this->m_rvalue;
         }
 
@@ -2058,17 +2062,20 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             auto returnValue = this->getReturnValue();
 
+            evaluator->setCurrentControlFlowStatement(this->m_type);
+
             if (returnValue == nullptr)
-                return { true, std::nullopt };
+                return std::nullopt;
             else {
                 auto literal = dynamic_cast<ASTNodeLiteral*>(returnValue->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete literal; };
 
-                return { true, literal->getValue() };
+                return literal->getValue();
             }
         }
 
     private:
+        ControlFlowStatement m_type;
         ASTNode *m_rvalue;
     };
 
@@ -2137,9 +2144,18 @@ namespace hex::pl {
                 }
 
                 for (auto statement : this->m_body) {
-                    auto [executionStopped, result] = statement->execute(ctx);
+                    auto result = statement->execute(ctx);
 
-                    if (executionStopped) {
+                    if (ctx->getCurrentControlFlowStatement() != ControlFlowStatement::None) {
+                        switch (ctx->getCurrentControlFlowStatement()) {
+                            case ControlFlowStatement::Break:
+                                ctx->getConsole().abortEvaluation("break statement not within a loop", statement);
+                            case ControlFlowStatement::Continue:
+                                ctx->getConsole().abortEvaluation("continue statement not within a loop", statement);
+                            default: break;
+                        }
+
+                        ctx->setCurrentControlFlowStatement(ControlFlowStatement::None);
                         return result;
                     }
                 }
@@ -2214,7 +2230,7 @@ namespace hex::pl {
 
             for (const auto &statement : this->m_statements) {
                 result = statement->execute(evaluator);
-                if (result.first)
+                if (evaluator->getCurrentControlFlowStatement() != ControlFlowStatement::None)
                     return result;
             }
 

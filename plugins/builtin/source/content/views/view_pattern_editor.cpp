@@ -25,7 +25,12 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             static const char* const keywords[] = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "namespace", "in", "out"
+                "using", "struct", "union", "enum", "bitfield",
+                "be", "le", "if", "else", "false", "true",
+                "this", "parent", "addressof", "sizeof",
+                "$",
+                "while", "for", "fn", "return", "break", "continue",
+                "namespace", "in", "out"
             };
             for (auto& k : keywords)
                 langDef.mKeywords.insert(k);

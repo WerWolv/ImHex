@@ -21,6 +21,13 @@ namespace hex::pl {
         Allow
     };
 
+    enum class ControlFlowStatement {
+        None,
+        Continue,
+        Break,
+        Return
+    };
+
     class PatternData;
     class PatternCreationLimiter;
     class ASTNode;
@@ -206,6 +213,15 @@ namespace hex::pl {
             return this->m_allowDangerousFunctions;
         }
 
+        void setCurrentControlFlowStatement(ControlFlowStatement statement) {
+            this->m_currControlFlowStatement = statement;
+        }
+
+        [[nodiscard]]
+        ControlFlowStatement getCurrentControlFlowStatement() const {
+            return this->m_currControlFlowStatement;
+        }
+
     private:
 
         void patternCreated();
@@ -237,6 +253,7 @@ namespace hex::pl {
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPermission> m_allowDangerousFunctions = DangerousFunctionPermission::Ask;
+        ControlFlowStatement m_currControlFlowStatement;
 
         friend class PatternCreationLimiter;
     };
