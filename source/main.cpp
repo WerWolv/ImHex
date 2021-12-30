@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #include "window.hpp"
 
@@ -11,13 +12,17 @@
 #include <hex/helpers/file.hpp>
 
 int main(int argc, char **argv, char **envp) {
+    hex::SharedData::mainArgc = argc;
+    hex::SharedData::mainArgv = argv;
+    hex::SharedData::mainEnvp = envp;
+
     using namespace hex;
 
     // Initialization
     {
         Window::initNative();
 
-        init::WindowSplash splashWindow(argc, argv, envp);
+        init::WindowSplash splashWindow;
 
         for (const auto &[name, task] : init::getInitTasks())
             splashWindow.addStartupTask(name, task);

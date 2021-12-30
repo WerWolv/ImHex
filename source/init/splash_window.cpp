@@ -26,11 +26,7 @@ using namespace std::literals::chrono_literals;
 
 namespace hex::init {
 
-    WindowSplash::WindowSplash(int &argc, char **&argv, char **&envp) : m_window(nullptr) {
-        SharedData::mainArgc = argc;
-        SharedData::mainArgv = argv;
-        SharedData::mainEnvp = envp;
-
+    WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
         this->initImGui();
     }
@@ -179,7 +175,7 @@ namespace hex::init {
             }
         }
 
-        this->m_window = glfwCreateWindow(640 * SharedData::globalScale, 400 * SharedData::globalScale, "ImHex", nullptr, nullptr);
+        this->m_window = glfwCreateWindow(640 * SharedData::globalScale, 400 * SharedData::globalScale, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
             log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);

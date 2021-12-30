@@ -145,6 +145,19 @@
 
                     break;
                 }
+                case WM_COPYDATA:
+                {
+                    auto message = reinterpret_cast<COPYDATASTRUCT*>(lParam);
+                    if (message == nullptr) break;
+
+                    auto path = reinterpret_cast<const char*>(message->lpData);
+                    if (path == nullptr) break;
+
+                    log::info("Opening file in existing instance: {}", path);
+                    EventManager::post<RequestOpenFile>(path);
+                    break;
+                }
+
                 default: break;
             }
 
@@ -179,9 +192,44 @@
                     }
                 }
             }
+
+            // Open new files in already existing ImHex instance
+            constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
+
+            HANDLE globalMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
+            if (!globalMutex) {
+                globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
+            } else {
+                if (SharedData::mainArgc > 1) {
+                    ::EnumWindows([](HWND hWnd, LPARAM lparam) -> BOOL {
+                        auto length = ::GetWindowTextLength(hWnd);
+                        std::string windowName(length + 1, '\x00');
+                        ::GetWindowText(hWnd, windowName.data(), windowName.size());
+
+                        if (::IsWindowVisible(hWnd) && length != 0) {
+                            if (windowName.starts_with("ImHex")) {
+                                COPYDATASTRUCT message = {
+                                        .dwData = 0,
+                                        .cbData = static_cast<DWORD>(std::strlen(SharedData::mainArgv[1])) + 1,
+                                        .lpData = SharedData::mainArgv[1]
+                                };
+
+                                SendMessage(hWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWnd), reinterpret_cast<LPARAM>(&message));
+
+                                return FALSE;
+                            }
+                        }
+
+                        return TRUE;
+                    }, 0);
+
+                    std::exit(0);
+                }
+            }
         }
 
         void Window::setupNativeWindow() {
+            // Setup borderless window
             auto hwnd = glfwGetWin32Window(this->m_window);
 
             oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
@@ -195,6 +243,7 @@
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
 
+            // Setup system theme change detector
             bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
             EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem]{
                 if (!themeFollowSystem) return;
