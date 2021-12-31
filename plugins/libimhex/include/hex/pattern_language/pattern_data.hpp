@@ -115,7 +115,7 @@ namespace hex::pl {
         void setTypeName(std::string name) { this->m_typeName = std::move(name); }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
-        void setColor(u32 color) { this->m_color = color; }
+        virtual void setColor(u32 color) { this->m_color = color; }
 
         [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
         void setEndian(std::endian endian) { this->m_endian = endian; }
@@ -427,6 +427,11 @@ namespace hex::pl {
 
         [[nodiscard]] PatternData* getPointedAtPattern() {
             return this->m_pointedAt;
+        }
+
+        void setColor(u32 color) override {
+            PatternData::setColor(color);
+            this->m_pointedAt->setColor(color);
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
@@ -756,6 +761,12 @@ namespace hex::pl {
             PatternData::setOffset(offset);
         }
 
+        void setColor(u32 color) override {
+            PatternData::setColor(color);
+            for (auto &entry : this->m_entries)
+                entry->setColor(color);
+        }
+
         void createEntry(prv::Provider* &provider) override {
             if (this->m_entries.empty())
                 return;
@@ -956,6 +967,11 @@ namespace hex::pl {
             PatternData::clearHighlightedAddresses();
         }
 
+        void setColor(u32 color) override {
+            PatternData::setColor(color);
+            this->m_template->setColor(color);
+        }
+
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
         }
@@ -1077,6 +1093,12 @@ namespace hex::pl {
             for (auto &member : this->m_members)
                 member->clearHighlightedAddresses();
             PatternData::clearHighlightedAddresses();
+        }
+
+        void setColor(u32 color) override {
+            PatternData::setColor(color);
+            for (auto &member : this->m_members)
+                member->setColor(color);
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
@@ -1217,6 +1239,12 @@ namespace hex::pl {
             for (auto &member : this->m_members)
                 member->clearHighlightedAddresses();
             PatternData::clearHighlightedAddresses();
+        }
+
+        void setColor(u32 color) override {
+            PatternData::setColor(color);
+            for (auto &member : this->m_members)
+                member->setColor(color);
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
@@ -1512,6 +1540,12 @@ namespace hex::pl {
                 field->setColor(this->getColor());
                 field->setParent(this);
             }
+        }
+
+        void setColor(u32 color) override {
+            PatternData::setColor(color);
+            for (auto &field : this->m_fields)
+                field->setColor(color);
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {

@@ -522,6 +522,7 @@ namespace hex {
 
                 if (hasWindow) {
                     ImGui::Begin(View::toWindowName(view->getUnlocalizedName()).c_str());
+
                     focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
                     ImGui::End();
                 }
@@ -636,7 +637,7 @@ namespace hex {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
             ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.welcome.header.help"_lang);
+            ImGui:: UnderlinedText("hex.welcome.header.help"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
             {
                 if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
