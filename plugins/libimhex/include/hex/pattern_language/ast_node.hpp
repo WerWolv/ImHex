@@ -1138,6 +1138,8 @@ namespace hex::pl {
             auto pattern = new PatternDataPointer(offset, sizePattern->getSize(), evaluator);
             pattern->setVariableName(this->m_name);
 
+            applyVariableAttributes(evaluator, this, pattern);
+
             offset = evaluator->dataOffset();
 
             {
@@ -1154,8 +1156,6 @@ namespace hex::pl {
             }
 
             evaluator->dataOffset() = offset;
-
-            applyVariableAttributes(evaluator, this, pattern);
 
             return { pattern };
         }

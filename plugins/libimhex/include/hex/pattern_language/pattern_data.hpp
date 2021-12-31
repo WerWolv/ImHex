@@ -440,12 +440,14 @@ namespace hex::pl {
         }
 
         void rebase(u64 base) {
-            this->m_pointedAt->setOffset((this->m_pointedAt->getOffset() - this->m_pointerBase) + base);
+            if (this->m_pointedAt != nullptr)
+                this->m_pointedAt->setOffset((this->m_pointedAt->getOffset() - this->m_pointerBase) + base);
+
             this->m_pointerBase = base;
         }
 
     private:
-        PatternData *m_pointedAt;
+        PatternData *m_pointedAt = nullptr;
         u64 m_pointerBase = 0;
     };
 
