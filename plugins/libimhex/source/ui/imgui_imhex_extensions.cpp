@@ -1,4 +1,4 @@
-#include <imgui_imhex_extensions.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <imgui.h>
 #include <imgui_freetype.h>

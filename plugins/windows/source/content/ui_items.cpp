@@ -7,7 +7,7 @@
 #include <psapi.h>
 
 #include <imgui.h>
-#include <imgui_imhex_extensions.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 #include <fontawesome_font.h>
 
 namespace hex::plugin::windows {
@@ -71,7 +71,7 @@ namespace hex::plugin::windows {
                 cpuUsage *= 100;
             }
 
-            ImGui::TextUnformatted(hex::format(ICON_FA_TACHOMETER_ALT " {0:2}.{1:02}", u32(cpuUsage), u32(cpuUsage * 100) % 100).c_str());
+            ImGui::TextFormatted(ICON_FA_TACHOMETER_ALT " {0:2}.{1:02}", u32(cpuUsage), u32(cpuUsage * 100) % 100);
         });
 
         ContentRegistry::Interface::addFooterItem([] {
@@ -87,7 +87,7 @@ namespace hex::plugin::windows {
             auto totalMem = memInfo.ullTotalPhys;
             auto usedMem = pmc.PrivateUsage;
 
-            ImGui::TextUnformatted(hex::format(ICON_FA_MICROCHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem)).c_str());
+            ImGui::TextFormatted(ICON_FA_MICROCHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem));
         });
 
     }

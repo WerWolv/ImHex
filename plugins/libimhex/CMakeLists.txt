@@ -134,6 +134,8 @@ set(LIBIMHEX_SOURCES
 
     source/providers/provider.cpp
 
+    source/ui/imgui_imhex_extensions.cpp
+
     source/views/view.cpp
 )
 

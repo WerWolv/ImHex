@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 
+#include <hex/helpers/fmt.hpp>
 
 enum ImGuiCustomCol {
     ImGuiCustomCol_DescButton,
@@ -88,4 +89,12 @@ namespace ImGui {
     void StyleCustomColorsClassic();
 
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
+
+    void TextFormatted(const std::string &fmt, auto ... args) {
+        ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    }
+
+    void TextFormattedColored(ImColor color, const std::string &fmt, auto ... args) {
+        ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    }
 }

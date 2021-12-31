@@ -11,8 +11,6 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/literals.hpp>
 
-#include <imgui_imhex_extensions.h>
-
 #include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
@@ -291,11 +289,10 @@ namespace hex::plugin::builtin {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     ImGui::SameLine();
 
-                    ImGui::TextUnformatted(hex::format("{} / {}",
-                                                       this->m_evaluatorRuntime->getCreatedPatternCount(),
-                                                       this->m_evaluatorRuntime->getMaximumPatternCount()
-                                                       ).c_str()
-                                           );
+                    ImGui::TextFormatted("{} / {}",
+                        this->m_evaluatorRuntime->getCreatedPatternCount(),
+                        this->m_evaluatorRuntime->getMaximumPatternCount()
+                    );
 
                 }
 
@@ -540,7 +537,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::NewLine();
-            ImGui::Text("%s", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.question"_lang));
+            ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
             confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
                 this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());

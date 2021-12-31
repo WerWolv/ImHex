@@ -176,7 +176,7 @@ namespace hex::plugin::builtin {
                 if (provider->getPageCount() > 1) {
                     ImGui::SameLine();
 
-                    ImGui::TextUnformatted(hex::format("hex.builtin.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount()).c_str());
+                    ImGui::TextFormatted("hex.builtin.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount());
 
                     ImGui::SameLine();
 

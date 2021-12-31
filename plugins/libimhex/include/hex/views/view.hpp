@@ -5,7 +5,7 @@
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
-#include <imgui_imhex_extensions.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <fontawesome_font.h>
 #include <codicons_font.h>

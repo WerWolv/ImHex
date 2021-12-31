@@ -268,27 +268,27 @@ namespace hex::pl {
             }
             this->drawCommentTooltip();
             ImGui::SameLine();
-            ImGui::Text("%s", this->getDisplayName().c_str());
+            ImGui::TextUnformatted(this->getDisplayName().c_str());
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
+            ImGui::TextFormatted("0x{0:04X}", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
             ImGui::TableNextColumn();
 
             if (!this->m_formatterFunction.has_value())
-                ImGui::Text("%s", value.c_str());
+                ImGui::TextUnformatted(value.c_str());
             else {
                 auto result = this->m_formatterFunction->func(this->getEvaluator(), { literal });
 
                 if (result.has_value()) {
                     if (auto displayValue = std::get_if<std::string>(&result.value()); displayValue != nullptr)
-                        ImGui::Text("%s", displayValue->c_str());
+                        ImGui::TextUnformatted(displayValue->c_str());
                 } else {
-                    ImGui::Text("???");
+                    ImGui::TextUnformatted("???");
                 }
             }
         }
@@ -372,13 +372,13 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
+            ImGui::TextFormatted("0x{0:04X}", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->getFormattedName().c_str());
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
             ImGui::TableNextColumn();
-            ImGui::Text("*(0x%llX)", data);
+            ImGui::TextFormatted("*(0x{0})", data);
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
@@ -769,21 +769,21 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_entries[0]->getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", this->m_entries[0]->getTypeName());
                 ImGui::SameLine(0, 0);
 
                 ImGui::TextUnformatted("[");
                 ImGui::SameLine(0, 0);
-                ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entries.size());
+                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", this->m_entries.size());
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", "{ ... }");
+                ImGui::TextUnformatted("{ ... }");
             }
 
             if (open) {
@@ -889,21 +889,21 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFF9BC64D), "%s", this->m_template->getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", this->m_template->getTypeName().c_str());
                 ImGui::SameLine(0, 0);
 
                 ImGui::TextUnformatted("[");
                 ImGui::SameLine(0, 0);
-                ImGui::TextColored(ImColor(0xFF00FF00), "%llu", this->m_entryCount);
+                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", this->m_entryCount);
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", "{ ... }");
+                ImGui::TextUnformatted("{ ... }");
             }
 
             if (open) {
@@ -1035,13 +1035,13 @@ namespace hex::pl {
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::Text("%s", this->getTypeName().c_str());
+                ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::TextUnformatted(this->getTypeName().c_str());
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", "{ ... }");
+                ImGui::TextUnformatted("{ ... }");
             }
 
             if (open) {
@@ -1174,14 +1174,14 @@ namespace hex::pl {
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
+                ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
 
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", "{ ... }");
+                ImGui::TextUnformatted("{ ... }");
             }
 
             if (open) {
@@ -1319,17 +1319,17 @@ namespace hex::pl {
                 EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             ImGui::SameLine();
-            ImGui::Text("%s", this->getDisplayName().c_str());
+            ImGui::TextUnformatted(this->getDisplayName().c_str());
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
-            ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
             ImGui::TableNextColumn();
-            ImGui::Text("0x%04llX", this->getSize());
+            ImGui::TextFormatted("0x{0:04X}", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
+            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::Text("%s", hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2).c_str());
+            ImGui::TextFormatted("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -1385,19 +1385,19 @@ namespace hex::pl {
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::Text("%s", this->getDisplayName().c_str());
+            ImGui::TextUnformatted(this->getDisplayName().c_str());
             ImGui::TableNextColumn();
             ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
             if (this->m_bitSize == 1)
-                ImGui::Text("0x%08llX bit %u", this->getOffset() + this->m_bitOffset / 8, (this->m_bitOffset + (this->m_bitSize - 1)) % 8);
+                ImGui::TextFormatted("0x{0:08X} bit {1}", this->getOffset() + this->m_bitOffset / 8, (this->m_bitOffset + (this->m_bitSize - 1)) % 8);
             else
-                ImGui::Text("0x%08llX bits %u - %u", this->getOffset() + this->m_bitOffset / 8, this->m_bitOffset % 8, this->m_bitOffset % 8 + (this->m_bitSize - 1) % 8);
+                ImGui::TextFormatted("0x{0:08X} bits {1} - {2}", this->getOffset() + this->m_bitOffset / 8, this->m_bitOffset % 8, this->m_bitOffset % 8 + (this->m_bitSize - 1) % 8);
             ImGui::TableNextColumn();
             if (this->m_bitSize == 1)
-                ImGui::Text("%u bit", this->m_bitSize);
+                ImGui::TextFormatted("{0} bit", this->m_bitSize);
             else
-                ImGui::Text("%u bits", this->m_bitSize);
+                ImGui::TextFormatted("{0} bits", this->m_bitSize);
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFF9BC64D), "bits");
             ImGui::TableNextColumn();
@@ -1405,7 +1405,7 @@ namespace hex::pl {
                 u8 numBytes = (this->m_bitSize / 8) + 1;
 
                 u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
-                ImGui::Text("%llu (0x%llX)", extractedValue, extractedValue);
+                ImGui::TextFormatted("{0} (0x{1:X})", extractedValue, extractedValue);
             }
 
         }
@@ -1470,11 +1470,11 @@ namespace hex::pl {
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%08llX : 0x%08llX", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%04llX", this->getSize());
+                ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::Text("%s", PatternData::getTypeName().c_str());
+                ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
                 ImGui::TableNextColumn();
 
                 std::string valueString = "{ ";

@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
 
         auto startY = ImGui::GetCursorPosY();
 
-        ImGui::TextUnformatted(hex::format(this->m_upperCaseHex ? "{:0{}X}:" : "{:0{}x}:", row * this->m_columnCount, addressDigitCount).c_str());
+        ImGui::TextFormatted(this->m_upperCaseHex ? "{:0{}X}:" : "{:0{}x}:", row * this->m_columnCount, addressDigitCount);
         ImGui::SetCursorPosY(startY);
         ImGui::TableNextColumn();
 
@@ -200,7 +200,7 @@ namespace hex::plugin::builtin {
                     auto glyphWidth = ImGui::CalcTextSize("0").x + 1;
                     for (u8 i = 0; i < 2; i++) {
                         for (u8 col = 0; col < this->m_columnCount; col++) {
-                            ImGui::TextUnformatted(hex::format(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col).c_str());
+                            ImGui::TextFormatted(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col);
                             ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
                         }
                         ImGui::TableNextColumn();

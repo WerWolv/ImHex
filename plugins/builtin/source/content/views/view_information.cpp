@@ -15,7 +15,6 @@
 
 #include <hex/helpers/magic.hpp>
 
-#include <imgui_imhex_extensions.h>
 #include <implot.h>
 
 namespace hex::plugin::builtin {

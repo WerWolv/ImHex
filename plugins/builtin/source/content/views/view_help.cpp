@@ -1,8 +1,6 @@
 #include "content/views/view_help.hpp"
 #include <hex/helpers/paths.hpp>
 
-#include <imgui_imhex_extensions.h>
-
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
@@ -21,7 +19,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHelp::drawAboutMainPage() {
-        ImGui::Text("ImHex Hex Editor v%s by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
+        ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
 
         #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
             ImGui::SameLine();

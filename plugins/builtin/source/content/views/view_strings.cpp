@@ -8,7 +8,7 @@
 #include <regex>
 
 #include <llvm/Demangle/Demangle.h>
-#include <imgui_imhex_extensions.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 using namespace std::literals::string_literals;
 
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
                 }
                 else if (this->m_foundStrings.size() > 0) {
                     ImGui::SameLine();
-                    ImGui::TextUnformatted(hex::format("hex.builtin.view.strings.results"_lang, this->m_filterIndices.size()).c_str());
+                    ImGui::TextFormatted("hex.builtin.view.strings.results"_lang, this->m_filterIndices.size());
                 }
 
 
@@ -211,12 +211,12 @@ namespace hex::plugin::builtin {
                             createStringContextMenu(foundString);
                             ImGui::PopID();
                             ImGui::SameLine();
-                            ImGui::Text("0x%08lx : 0x%08lx", foundString.offset, foundString.offset + foundString.size);
+                            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", foundString.offset, foundString.offset + foundString.size);
                             ImGui::TableNextColumn();
-                            ImGui::Text("0x%04lx", foundString.size);
+                            ImGui::TextFormatted("0x{0:04X}", foundString.size);
                             ImGui::TableNextColumn();
 
-                            ImGui::Text("%s", string.c_str());
+                            ImGui::TextUnformatted(string.c_str());
                         }
                     }
                     clipper.End();

@@ -81,7 +81,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::CollapsingHeader((std::string(name.data()) + "###bookmark").c_str())) {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
-                        ImGui::TextUnformatted(hex::format("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size).c_str());
+                        ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
 
                         if (ImGui::BeginChild("hexData", ImVec2(0, ImGui::GetTextLineHeight() * 8), true)) {
                             size_t offset = region.address % 0x10;
@@ -105,7 +105,7 @@ namespace hex::plugin::builtin {
                                     if (byte < offset)
                                         ImGui::TextUnformatted("  ");
                                     else
-                                        ImGui::Text("%02X", bytes[byte]);
+                                        ImGui::TextFormatted("{0:02X}", bytes[byte]);
                                     ImGui::SameLine();
                                 }
                                 ImGui::NewLine();
@@ -119,7 +119,7 @@ namespace hex::plugin::builtin {
                                     ImHexApi::Provider::get()->read(region.address + i, bytes.data(), byteCount);
 
                                     for (size_t byte = 0; byte < byteCount; byte++) {
-                                        ImGui::Text("%02X", bytes[byte]);
+                                        ImGui::TextFormatted("{0:02X}", bytes[byte]);
                                         ImGui::SameLine();
                                     }
                                     ImGui::NewLine();

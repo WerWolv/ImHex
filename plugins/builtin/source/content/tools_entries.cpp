@@ -68,18 +68,18 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 
                     ImGui::TableNextColumn();
-                    ImGui::Text("%02d", i + 32 * tablePart);
+                    ImGui::TextFormatted("{0:03d}", i + 32 * tablePart);
 
                     if (asciiTableShowOctal) {
                         ImGui::TableNextColumn();
-                        ImGui::Text("0o%02o", i + 32 * tablePart);
+                        ImGui::TextFormatted("0o{0:03o}", i + 32 * tablePart);
                     }
 
                     ImGui::TableNextColumn();
-                    ImGui::Text("0x%02x", i + 32 * tablePart);
+                    ImGui::TextFormatted("0x{0:02X}", i + 32 * tablePart);
 
                     ImGui::TableNextColumn();
-                    ImGui::Text("%s", hex::makePrintable(i + 32 * tablePart).c_str());
+                    ImGui::TextFormatted("{0}", hex::makePrintable(i + 32 * tablePart));
 
                     ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
 
@@ -295,16 +295,16 @@ namespace hex::plugin::builtin {
 
                             switch (mathDisplayType) {
                                 case MathDisplayType::Standard:
-                                    ImGui::Text("%.3Lf", mathHistory[(mathHistory.size() - 1) - i]);
+                                    ImGui::TextFormatted("{0:.3Lf}", mathHistory[(mathHistory.size() - 1) - i]);
                                     break;
                                 case MathDisplayType::Scientific:
-                                    ImGui::Text("%.6Le", mathHistory[(mathHistory.size() - 1) - i]);
+                                    ImGui::TextFormatted("{0:.6Le}", mathHistory[(mathHistory.size() - 1) - i]);
                                     break;
                                 case MathDisplayType::Engineering:
-                                    ImGui::Text("%s", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
+                                    ImGui::TextFormatted("{0}", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
                                     break;
                                 case MathDisplayType::Programmer:
-                                    ImGui::Text("0x%llX (%llu)",
+                                    ImGui::TextFormatted("0x{0:X} ({1})",
                                                 u64(mathHistory[(mathHistory.size() - 1) - i]),
                                                 u64(mathHistory[(mathHistory.size() - 1) - i]));
                                     break;
@@ -335,16 +335,16 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         switch (mathDisplayType) {
                             case MathDisplayType::Standard:
-                                ImGui::Text("%.3Lf", value);
+                                ImGui::TextFormatted("{0:.3Lf}", value);
                                 break;
                             case MathDisplayType::Scientific:
-                                ImGui::Text("%.6Le", value);
+                                ImGui::TextFormatted("{0:.6Le}", value);
                                 break;
                             case MathDisplayType::Engineering:
-                                ImGui::Text("%s", hex::toEngineeringString(value).c_str());
+                                ImGui::TextFormatted("{}", hex::toEngineeringString(value));
                                 break;
                             case MathDisplayType::Programmer:
-                                ImGui::Text("0x%llX (%llu)", u64(value),  u64(value));
+                                ImGui::TextFormatted("0x{0:X} ({1})", u64(value),  u64(value));
                                 break;
                         }
                     }

@@ -7,7 +7,7 @@
 #include <codicons_font.h>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <imgui_imhex_extensions.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <atomic>
 
@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                 framerate = 1.0F / ImGui::GetIO().DeltaTime;
             }
 
-            ImGui::TextUnformatted(hex::format("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100).c_str());
+            ImGui::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
 
         });
 

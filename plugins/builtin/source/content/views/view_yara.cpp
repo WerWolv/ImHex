@@ -9,7 +9,6 @@
 #include <filesystem>
 #include <thread>
 
-#include <imgui_imhex_extensions.h>
 #include <hex/helpers/paths.hpp>
 
 namespace hex::plugin::builtin {
@@ -98,9 +97,9 @@ namespace hex::plugin::builtin {
 
                         if (!wholeDataMatch) {
                             ImGui::TableNextColumn();
-                            ImGui::Text("0x%llX : 0x%llX", address, address + size - 1);
+                            ImGui::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
                             ImGui::TableNextColumn();
-                            ImGui::Text("0x%lX", size);
+                            ImGui::TextFormatted("0x{0:X}", size);
                         } else {
                             ImGui::TableNextColumn();
                             ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.builtin.view.yara.whole_data"_lang));

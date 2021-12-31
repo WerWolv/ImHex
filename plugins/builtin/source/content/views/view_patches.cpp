@@ -58,15 +58,15 @@ namespace hex::plugin::builtin {
                             this->m_selectedPatch = address;
                         }
                         ImGui::SameLine();
-                        ImGui::Text("0x%08lX", address);
+                        ImGui::TextFormatted("0x{0:08X}", address);
 
                         ImGui::TableNextColumn();
                         u8 previousValue = 0x00;
                         provider->readRaw(address, &previousValue, sizeof(u8));
-                        ImGui::Text("0x%02X", previousValue);
+                        ImGui::TextFormatted("0x{0:02X}", previousValue);
 
                         ImGui::TableNextColumn();
-                        ImGui::Text("0x%02X", patch);
+                        ImGui::TextFormatted("0x{0:02X}", patch);
                         index += 1;
                     }
 

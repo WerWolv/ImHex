@@ -26,8 +26,6 @@ add_library(imgui OBJECT
 
         source/TextEditor.cpp
 
-        source/imgui_imhex_extensions.cpp
-
         source/imnodes.cpp
 
         source/implot.cpp

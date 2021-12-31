@@ -6,8 +6,6 @@
 #include <cstring>
 #include <thread>
 
-#include <imgui_imhex_extensions.h>
-
 using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
@@ -295,13 +293,13 @@ namespace hex::plugin::builtin {
                                 EventManager::post<RequestSelectionChange>(Region { this->m_disassembly[i].offset, this->m_disassembly[i].size });
                             }
                             ImGui::SameLine();
-                            ImGui::Text("0x%llx", this->m_disassembly[i].address);
+                            ImGui::TextFormatted("0x{0:X}", this->m_disassembly[i].address);
                             ImGui::TableNextColumn();
-                            ImGui::Text("0x%llx", this->m_disassembly[i].offset);
+                            ImGui::TextFormatted("0x{0:X}", this->m_disassembly[i].offset);
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(this->m_disassembly[i].bytes.c_str());
                             ImGui::TableNextColumn();
-                            ImGui::TextColored(ImColor(0xFFD69C56), "%s", this->m_disassembly[i].mnemonic.c_str());
+                            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "{}", this->m_disassembly[i].mnemonic);
                             ImGui::SameLine();
                             ImGui::TextUnformatted(this->m_disassembly[i].operators.c_str());
                         }

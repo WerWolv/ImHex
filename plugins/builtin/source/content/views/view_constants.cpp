@@ -136,13 +136,13 @@ namespace hex::plugin::builtin {
                         auto &constant = this->m_constants[this->m_filterIndices[i]];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::Text("%s", constant.category.c_str());
+                        ImGui::TextUnformatted(constant.category.c_str());
                         ImGui::TableNextColumn();
-                        ImGui::Text("%s", constant.name.c_str());
+                        ImGui::TextUnformatted(constant.name.c_str());
                         ImGui::TableNextColumn();
-                        ImGui::Text("%s", constant.description.c_str());
+                        ImGui::TextUnformatted(constant.description.c_str());
                         ImGui::TableNextColumn();
-                        ImGui::Text("%s", constant.value.c_str());
+                        ImGui::TextUnformatted(constant.value.c_str());
                     }
                 }
                 clipper.End();

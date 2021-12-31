@@ -9,7 +9,7 @@ public:
 
     void drawContent() override {
         if (ImGui::Begin("Example")) {
-            ImGui::Text("Custom plugin window");
+            ImGui::TextUnformatted("Custom plugin window");
         }
         ImGui::End();
     }

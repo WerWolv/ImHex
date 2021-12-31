@@ -21,7 +21,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_freetype.h>
-#include <imgui_imhex_extensions.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
 #include <imnodes.h>
@@ -516,7 +516,7 @@ namespace hex {
                 view->drawContent();
             }
 
-            {
+            if (view->getWindowOpenState()) {
                 bool hasWindow = ImGui::FindWindowByName(View::toWindowName(view->getUnlocalizedName()).c_str()) != nullptr;
                 bool focused = false;
 

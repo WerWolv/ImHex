@@ -244,7 +244,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(150);
             if (this->m_value.has_value())
-                ImGui::Text("0x%llx", this->m_value.value());
+                ImGui::TextFormatted("0x{0:X}", this->m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();
@@ -270,7 +270,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(150);
             if (this->m_value.has_value())
-                ImGui::Text("%f", this->m_value.value());
+                ImGui::TextFormatted("{0}", this->m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();

@@ -1,6 +1,5 @@
 #include "views/view_tty_console.hpp"
 
-#include <imgui_imhex_extensions.h>
 #include <imgui_internal.h>
 
 #include <hex/helpers/utils.hpp>
