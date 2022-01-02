@@ -333,6 +333,15 @@ namespace hex::plugin::builtin {
                     }
                 }
 
+                ImGui::Separator();
+                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.clear_recent"_lang)) {
+                    SharedData::recentFilePaths.clear();
+                    ContentRegistry::Settings::write(
+                            "hex.builtin.setting.imhex",
+                            "hex.builtin.setting.imhex.recent_files",
+                            std::vector<std::string>{});
+                }
+
                 ImGui::EndMenu();
             }
 

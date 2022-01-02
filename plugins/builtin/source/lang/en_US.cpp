@@ -23,6 +23,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.start.open_file", "Open File" },
                     { "hex.welcome.start.open_project", "Open Project" },
                     { "hex.welcome.start.recent", "Recent Files" },
+                    { "hex.welcome.start.clear_recent", "Clear" },
                     { "hex.welcome.start.open_other", "Other Providers" },
                 { "hex.welcome.header.help", "Help" },
                     { "hex.welcome.help.repo", "GitHub Repository" },
@@ -191,6 +192,7 @@ namespace hex::plugin::builtin {
 
                     { "hex.builtin.view.hexeditor.menu.file.open_file", "Open File..." },
                     { "hex.builtin.view.hexeditor.menu.file.open_recent", "Open Recent" },
+                    { "hex.builtin.view.hexeditor.menu.file.clear_recent", "Clear" },
                     { "hex.builtin.view.hexeditor.menu.file.open_other", "Open Other..." },
                     { "hex.builtin.view.hexeditor.menu.file.save", "Save" },
                     { "hex.builtin.view.hexeditor.menu.file.save_as", "Save As..." },

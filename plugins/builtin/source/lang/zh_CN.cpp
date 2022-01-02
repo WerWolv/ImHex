@@ -23,6 +23,7 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.start.open_file", "打开文件" },
                     { "hex.welcome.start.open_project", "打开工程" },
                     { "hex.welcome.start.recent", "最近文件" },
+                    { "hex.welcome.start.clear_recent", "熄灭" },
                     //{ "hex.welcome.start.open_other", "Other Providers" },
                 { "hex.welcome.header.help", "帮助" },
                     { "hex.welcome.help.repo", "GitHub仓库" },
@@ -188,6 +189,7 @@ namespace hex::plugin::builtin {
 
                     { "hex.builtin.view.hexeditor.menu.file.open_file", "打开文件..." },
                     { "hex.builtin.view.hexeditor.menu.file.open_recent", "打开最近" },
+                    { "hex.builtin.view.hexeditor.menu.file.clear_recent", "熄灭" },
                     //{ "hex.builtin.view.hexeditor.menu.file.open_other", "Open Other..." },
                     { "hex.builtin.view.hexeditor.menu.file.save", "保存" },
                     { "hex.builtin.view.hexeditor.menu.file.save_as", "另存为..." },
