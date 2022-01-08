@@ -23,7 +23,6 @@ namespace hex::plugin::builtin {
                     { "hex.welcome.start.open_file", "Datei Öffnen" },
                     { "hex.welcome.start.open_project", "Projekt Öffnen" },
                     { "hex.welcome.start.recent", "Kürzlich geöffnet" },
-                    { "hex.welcome.start.clear_recent", "Löschen" },
                     { "hex.welcome.start.open_other", "Andere Provider" },
                 { "hex.welcome.header.help", "Hilfe" },
                     { "hex.welcome.help.repo", "GitHub Repository" },

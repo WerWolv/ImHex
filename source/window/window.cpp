@@ -613,15 +613,6 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
             ImGui::UnderlinedText("hex.welcome.start.recent"_lang);
-            if (!SharedData::recentFilePaths.empty()) {
-                ImGui::SameLine();
-                if (ImGui::Hyperlink("hex.welcome.start.clear_recent"_lang)) {
-                    SharedData::recentFilePaths.clear();
-                    ContentRegistry::Settings::write("hex.builtin.setting.imhex",
-                                                     "hex.builtin.setting.imhex.recent_files",
-                                                     std::vector<std::string>{});
-                }
-            }
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
             {
                 if (!SharedData::recentFilePaths.empty()) {
