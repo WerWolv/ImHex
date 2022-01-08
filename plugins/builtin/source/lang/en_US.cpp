@@ -191,6 +191,7 @@ namespace hex::plugin::builtin {
 
                     { "hex.builtin.view.hexeditor.menu.file.open_file", "Open File..." },
                     { "hex.builtin.view.hexeditor.menu.file.open_recent", "Open Recent" },
+                    { "hex.builtin.view.hexeditor.menu.file.clear_recent", "Clear" },
                     { "hex.builtin.view.hexeditor.menu.file.open_other", "Open Other..." },
                     { "hex.builtin.view.hexeditor.menu.file.save", "Save" },
                     { "hex.builtin.view.hexeditor.menu.file.save_as", "Save As..." },

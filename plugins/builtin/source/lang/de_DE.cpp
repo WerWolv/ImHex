@@ -188,6 +188,7 @@ namespace hex::plugin::builtin {
 
                     { "hex.builtin.view.hexeditor.menu.file.open_file", "Datei öffnen..." },
                     { "hex.builtin.view.hexeditor.menu.file.open_recent", "Kürzlich geöffnete Dateien" },
+                    { "hex.builtin.view.hexeditor.menu.file.clear_recent", "Löschen" },
                     { "hex.builtin.view.hexeditor.menu.file.open_other", "Provider öffnen..." },
                     { "hex.builtin.view.hexeditor.menu.file.save", "Speichern" },
                     { "hex.builtin.view.hexeditor.menu.file.save_as", "Speichern unter..." },
