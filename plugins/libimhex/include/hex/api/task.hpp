@@ -11,6 +11,7 @@ namespace hex {
         Task(const std::string& unlocalizedName, u64 maxValue);
         ~Task();
 
+        void setMaxValue(u64 maxValue);
         void update(u64 currValue);
         void finish();
 
@@ -19,6 +20,9 @@ namespace hex {
 
         [[nodiscard]]
         const std::string& getName() const;
+
+        [[nodiscard]]
+        bool isPending() const;
 
     private:
         std::string m_name;

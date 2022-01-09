@@ -54,6 +54,8 @@ namespace hex::plugin::builtin {
         hex::EncodingFile m_currEncodingFile;
         u8 m_highlightAlpha = 0x80;
 
+        bool m_processingImportExport = false;
+
         void drawSearchPopup();
         void drawGotoPopup();
         void drawEditPopup();

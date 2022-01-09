@@ -63,7 +63,8 @@ namespace hex::prv {
         [[nodiscard]] virtual bool open() = 0;
         virtual void close() = 0;
 
-        void addPatch(u64 offset, const void *buffer, size_t size);
+        void addPatch(u64 offset, const void *buffer, size_t size, bool createUndo = false);
+        void createUndoPoint();
 
         void undo();
         void redo();
@@ -81,7 +82,7 @@ namespace hex::prv {
         u64 m_baseAddress = 0;
 
         u32 m_patchTreeOffset = 0;
-        std::vector<std::map<u64, u8>> m_patches;
+        std::list<std::map<u64, u8>> m_patches;
         std::list<Overlay*> m_overlays;
     };
 

@@ -19,6 +19,7 @@
 #undef __STRICT_ANSI__
 #include <cstdio>
 
+#include <thread>
 #include <filesystem>
 
 #if defined(OS_WINDOWS)
@@ -426,31 +427,61 @@ namespace hex::plugin::builtin {
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.ips"_lang)) {
+                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.ips"_lang, nullptr, false, !this->m_processingImportExport)) {
 
                    hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
-                        auto patchData = File(path, File::Mode::Read).readBytes();
-                        auto patch = hex::loadIPSPatch(patchData);
+                       this->m_processingImportExport = true;
+                       std::thread([this, path] {
+                           auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
 
-                        auto provider = ImHexApi::Provider::get();
-                        for (auto &[address, value] : patch) {
-                            provider->write(address, &value, 1);
-                        }
+                           auto patchData = File(path, File::Mode::Read).readBytes();
+                           auto patch = hex::loadIPSPatch(patchData);
+
+                           task.setMaxValue(patch.size());
+
+                           auto provider = ImHexApi::Provider::get();
+
+                           u64 progress = 0;
+                           for (auto &[address, value] : patch) {
+                               provider->addPatch(address, &value, 1);
+                               progress++;
+                               task.update(progress);
+                           }
+
+                           provider->createUndoPoint();
+                           this->m_processingImportExport = false;
+                       }).detach();
+
                        this->getWindowOpenState() = true;
                    });
 
 
                 }
 
-                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.ips32"_lang)) {
+                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.ips32"_lang, nullptr, false, !this->m_processingImportExport)) {
                     hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](auto path) {
-                        auto patchData = File(path, File::Mode::Read).readBytes();
-                        auto patch = hex::loadIPS32Patch(patchData);
+                        this->m_processingImportExport = true;
+                        std::thread([this, path] {
+                            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
 
-                        auto provider = ImHexApi::Provider::get();
-                        for (auto &[address, value] : patch) {
-                            provider->write(address, &value, 1);
-                        }
+                            auto patchData = File(path, File::Mode::Read).readBytes();
+                            auto patch = hex::loadIPS32Patch(patchData);
+
+                            task.setMaxValue(patch.size());
+
+                            auto provider = ImHexApi::Provider::get();
+
+                            u64 progress = 0;
+                            for (auto &[address, value] : patch) {
+                                provider->addPatch(address, &value, 1);
+                                progress++;
+                                task.update(progress);
+                            }
+
+                            provider->createUndoPoint();
+                            this->m_processingImportExport = false;
+                        }).detach();
+
                         this->getWindowOpenState() = true;
                     });
                 }
@@ -465,7 +496,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.export"_lang, providerValid && provider->isWritable())) {
-                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.export.ips"_lang)) {
+                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.export.ips"_lang, nullptr, false, !this->m_processingImportExport)) {
                     Patches patches = provider->getPatches();
                     if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
                         u8 value = 0;
@@ -473,12 +504,21 @@ namespace hex::plugin::builtin {
                         patches[0x00454F45] = value;
                     }
 
-                    this->m_dataToSave = generateIPSPatch(patches);
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
-                        this->saveToFile(path, this->m_dataToSave);
-                    });
+                    this->m_processingImportExport = true;
+                    std::thread([this, patches]{
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
+
+                        this->m_dataToSave = generateIPSPatch(patches);
+                        this->m_processingImportExport = false;
+
+                        View::doLater([this]{
+                            hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
+                                this->saveToFile(path, this->m_dataToSave);
+                            });
+                        });
+                    }).detach();
                 }
-                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.export.ips32"_lang)) {
+                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.export.ips32"_lang, nullptr, false, !this->m_processingImportExport)) {
                     Patches patches = provider->getPatches();
                     if (!patches.contains(0x00454F45) && patches.contains(0x45454F46)) {
                         u8 value = 0;
@@ -486,10 +526,19 @@ namespace hex::plugin::builtin {
                         patches[0x45454F45] = value;
                     }
 
-                    this->m_dataToSave = generateIPS32Patch(patches);
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
-                        this->saveToFile(path, this->m_dataToSave);
-                    });
+                    this->m_processingImportExport = true;
+                    std::thread([this, patches]{
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
+
+                        this->m_dataToSave = generateIPS32Patch(patches);
+                        this->m_processingImportExport = false;
+
+                        View::doLater([this]{
+                            hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](auto path) {
+                                this->saveToFile(path, this->m_dataToSave);
+                            });
+                        });
+                    }).detach();
                 }
 
                 ImGui::EndMenu();

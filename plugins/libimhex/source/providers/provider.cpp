@@ -50,11 +50,19 @@ namespace hex::prv {
 
 
     std::map<u64, u8>& Provider::getPatches() {
-        return *(this->m_patches.end() - 1 - this->m_patchTreeOffset);
+        auto iter = this->m_patches.end();
+        for (auto i = 0; i < this->m_patchTreeOffset + 1; i++)
+            iter--;
+
+        return *(iter);
     }
 
     const std::map<u64, u8>& Provider::getPatches() const {
-        return *(this->m_patches.end() - 1 - this->m_patchTreeOffset);
+        auto iter = this->m_patches.end();
+        for (auto i = 0; i < this->m_patchTreeOffset + 1; i++)
+            iter--;
+
+        return *(iter);
     }
 
     void Provider::applyPatches() {
@@ -117,16 +125,25 @@ namespace hex::prv {
         return page;
     }
 
-    void Provider::addPatch(u64 offset, const void *buffer, size_t size) {
+    void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
         if (this->m_patchTreeOffset > 0) {
-            this->m_patches.erase(this->m_patches.end() - this->m_patchTreeOffset, this->m_patches.end());
+            auto iter = this->m_patches.end();
+            for (auto i = 0; i < this->m_patchTreeOffset; i++)
+                iter--;
+
+            this->m_patches.erase(iter, this->m_patches.end());
             this->m_patchTreeOffset = 0;
         }
 
-        this->m_patches.push_back(getPatches());
+        if (createUndo)
+            createUndoPoint();
 
         for (u64 i = 0; i < size; i++)
             getPatches()[offset + i] = reinterpret_cast<const u8*>(buffer)[i];
+    }
+
+    void Provider::createUndoPoint() {
+        this->m_patches.push_back(getPatches());
     }
 
     void Provider::undo() {
