@@ -178,22 +178,23 @@ namespace hex::plugin::builtin::prv {
         }
 
         LARGE_INTEGER fileSize = { 0 };
-        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
         GetFileSizeEx(this->m_file, &fileSize);
         this->m_fileSize = fileSize.QuadPart;
         CloseHandle(this->m_file);
 
-        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
             this->m_writable = false;
         }
 
         auto fileCleanup = SCOPE_GUARD {
+            CloseHandle(this->m_file);
+
             this->m_readable = false;
             this->m_file = nullptr;
-            CloseHandle(this->m_file);
         };
 
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
@@ -203,19 +204,29 @@ namespace hex::plugin::builtin::prv {
         if (this->m_fileSize > 0) {
             this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
             if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
-                return false;
+
+                this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
+
+                if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE)
+                    return false;
             }
 
             auto mappingCleanup = SCOPE_GUARD {
-                this->m_readable = false;
-                this->m_mapping = nullptr;
                 CloseHandle(this->m_mapping);
+
+                this->m_mapping = nullptr;
+                this->m_readable = false;
             };
 
             this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
             if (this->m_mappedFile == nullptr) {
-                this->m_readable = false;
-                return false;
+
+                this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
+                if (this->m_mappedFile == nullptr) {
+                    this->m_readable = false;
+
+                    return false;
+                }
             }
 
             mappingCleanup.release();
