@@ -378,7 +378,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("*(0x{0})", data);
+            ImGui::TextFormatted("*(0x{0:X})", data);
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
@@ -423,6 +423,15 @@ namespace hex::pl {
         void setPointedAtPattern(PatternData *pattern) {
             this->m_pointedAt = pattern;
             this->m_pointedAt->setVariableName(hex::format("*({})", this->getVariableName()));
+            this->m_pointedAt->setOffset(this->m_pointedAtAddress);
+        }
+
+        void setPointedAtAddress(u64 address) {
+            this->m_pointedAtAddress = address;
+        }
+
+        [[nodiscard]] u64 getPointedAtAddress() const {
+            return this->m_pointedAtAddress;
         }
 
         [[nodiscard]] PatternData* getPointedAtPattern() {
@@ -440,14 +449,18 @@ namespace hex::pl {
         }
 
         void rebase(u64 base) {
-            if (this->m_pointedAt != nullptr)
-                this->m_pointedAt->setOffset((this->m_pointedAt->getOffset() - this->m_pointerBase) + base);
+            if (this->m_pointedAt != nullptr) {
+                this->m_pointedAtAddress = (this->m_pointedAt->getOffset() - this->m_pointerBase) + base;
+                this->m_pointedAt->setOffset(this->m_pointedAtAddress);
+            }
 
             this->m_pointerBase = base;
         }
 
     private:
         PatternData *m_pointedAt = nullptr;
+        u64 m_pointedAtAddress = 0;
+
         u64 m_pointerBase = 0;
     };
 

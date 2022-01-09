@@ -718,16 +718,14 @@ namespace hex::pl {
                     LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
 
                 if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(pattern)) {
-                    u128 value = 0;
-                    evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
-                    value = hex::changeEndianess(value, pattern->getSize(), pattern->getEndian());
+                    u128 pointerValue = pointerPattern->getPointedAtAddress();
 
-                    auto result = function.func(evaluator, { value });
+                    auto result = function.func(evaluator, { pointerValue });
 
                     if (!result.has_value())
                         LogConsole::abortEvaluation("pointer base function did not return a value", node);
 
-                    pointerPattern->rebase(Token::literalToUnsigned(result.value()));
+                    pointerPattern->setPointedAtAddress(Token::literalToUnsigned(result.value()) + pointerValue);
                 } else {
                     LogConsole::abortEvaluation("pointer_base attribute may only be applied to a pointer");
                 }
@@ -1130,24 +1128,27 @@ namespace hex::pl {
                 }, offset->getValue());
             }
 
-            auto offset = evaluator->dataOffset();
+            auto startOffset = evaluator->dataOffset();
 
             auto sizePattern = this->m_sizeType->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete sizePattern; };
 
-            auto pattern = new PatternDataPointer(offset, sizePattern->getSize(), evaluator);
+            auto pattern = new PatternDataPointer(startOffset, sizePattern->getSize(), evaluator);
             pattern->setVariableName(this->m_name);
 
-            applyVariableAttributes(evaluator, this, pattern);
-
-            offset = evaluator->dataOffset();
+            auto endOffset = evaluator->dataOffset();
 
             {
                 u128 pointerAddress = 0;
                 evaluator->getProvider()->read(pattern->getOffset(), &pointerAddress, pattern->getSize());
                 pointerAddress = hex::changeEndianess(pointerAddress, sizePattern->getSize(), sizePattern->getEndian());
 
-                evaluator->dataOffset() = pointerAddress;
+                evaluator->dataOffset() = startOffset;
+
+                pattern->setPointedAtAddress(pointerAddress);
+                applyVariableAttributes(evaluator, this, pattern);
+
+                evaluator->dataOffset() = pattern->getPointedAtAddress();
 
                 auto pointedAtPattern = this->m_type->createPatterns(evaluator).front();
 
@@ -1155,7 +1156,7 @@ namespace hex::pl {
                 pattern->setEndian(sizePattern->getEndian());
             }
 
-            evaluator->dataOffset() = offset;
+            evaluator->dataOffset() = endOffset;
 
             return { pattern };
         }
