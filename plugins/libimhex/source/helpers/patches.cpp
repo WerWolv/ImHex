@@ -8,7 +8,7 @@
 
 namespace hex {
 
-    static void pushBytesBack(std::vector<u8> &buffer, const std::string &string) {
+    static void pushStringBack(std::vector<u8> &buffer, const std::string &string) {
         std::copy(string.begin(), string.end(), std::back_inserter(buffer));
     }
 
@@ -21,7 +21,7 @@ namespace hex {
     std::vector<u8> generateIPSPatch(const Patches &patches) {
         std::vector<u8> result;
 
-        pushBytesBack(result, "PATCH");
+        pushStringBack(result, "PATCH");
 
         std::vector<u64> addresses;
         std::vector<u8> values;
@@ -59,7 +59,7 @@ namespace hex {
             }
         }
 
-        pushBytesBack(result, "EOF");
+        pushStringBack(result, "EOF");
 
         return result;
     }
@@ -67,7 +67,7 @@ namespace hex {
     std::vector<u8> generateIPS32Patch(const Patches &patches) {
         std::vector<u8> result;
 
-        pushBytesBack(result, "IPS32");
+        pushStringBack(result, "IPS32");
 
         std::vector<u64> addresses;
         std::vector<u8> values;
@@ -105,7 +105,7 @@ namespace hex {
             }
         }
 
-        pushBytesBack(result, "EEOF");
+        pushStringBack(result, "EEOF");
 
         return result;
     }
