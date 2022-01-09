@@ -6730,8 +6730,9 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
                 if (window == window->RootWindow)
                 {
                     ImGuiWindow* blocking_modal = FindBlockingModal(window);
-                    IM_ASSERT(blocking_modal != NULL);
-                    BringWindowToDisplayBehind(window, blocking_modal);
+
+                    if (blocking_modal != NULL)
+                        BringWindowToDisplayBehind(window, blocking_modal);
                 }
             }
         }
