@@ -10,6 +10,8 @@ namespace hex::test {
             // placementPointer
             {
                 auto placementPointer = create<PatternDataPointer>("", "placementPointer", 0x0C, sizeof(u8), nullptr);
+                placementPointer->setPointedAtAddress(0x49);
+
                 auto pointedTo = create<PatternDataUnsigned>("u32", "", 0x49, sizeof(u32), nullptr);
                 placementPointer->setPointedAtPattern(pointedTo);
                 addPattern(placementPointer);
