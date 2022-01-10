@@ -1717,15 +1717,21 @@ namespace hex::pl {
                     currPattern = newPattern;
                 }
 
-                if (auto structPattern = dynamic_cast<PatternDataStruct*>(currPattern))
+                PatternData *indexPattern;
+                if (currPattern->isLocal())
+                    indexPattern = std::get<PatternData*>(evaluator->getStack()[currPattern->getOffset()]);
+                else
+                    indexPattern = currPattern;
+
+                if (auto structPattern = dynamic_cast<PatternDataStruct*>(indexPattern))
                     searchScope = structPattern->getMembers();
-                else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(currPattern))
+                else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(indexPattern))
                     searchScope = unionPattern->getMembers();
-                else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield*>(currPattern))
+                else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield*>(indexPattern))
                     searchScope = bitfieldPattern->getFields();
-                else if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern))
+                else if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(indexPattern))
                     searchScope = dynamicArrayPattern->getEntries();
-                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(currPattern))
+                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(indexPattern))
                     searchScope = { staticArrayPattern->getTemplate() };
 
             }
