@@ -123,7 +123,9 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
   - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
 - Linux • __x86_64__
   - [ELF](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20ELF.zip)
+  - [DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20DEB.zip)
   - [Flatpak](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20Flatpak.zip)
+  - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
 
 ## Compiling
 
