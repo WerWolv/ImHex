@@ -17,6 +17,10 @@ namespace hex::plugin::builtin {
         bool isAvailable() override { return true; }
 
         bool hasViewMenuItemEntry() override { return false; }
+
+        ImVec2 getMinSize() {
+            return ImVec2(0, 0);
+        }
     };
 
 }
