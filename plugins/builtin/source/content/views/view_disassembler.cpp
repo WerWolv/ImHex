@@ -281,31 +281,34 @@ namespace hex::plugin::builtin {
                     ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.bytes"_lang);
                     ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.title"_lang);
 
-                    ImGuiListClipper clipper;
-                    clipper.Begin(this->m_disassembly.size());
+                    if (!this->m_disassembling) {
+                        ImGuiListClipper clipper;
+                        clipper.Begin(this->m_disassembly.size());
 
-                    ImGui::TableHeadersRow();
-                    while (clipper.Step()) {
-                        for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
-                            if (ImGui::Selectable(("##DisassemblyLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                EventManager::post<RequestSelectionChange>(Region { this->m_disassembly[i].offset, this->m_disassembly[i].size });
+                        ImGui::TableHeadersRow();
+                        while (clipper.Step()) {
+                            for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                                const auto &instruction = this->m_disassembly[i];
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                if (ImGui::Selectable(("##DisassemblyLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                    EventManager::post<RequestSelectionChange>(Region { instruction.offset, instruction.size });
+                                }
+                                ImGui::SameLine();
+                                ImGui::TextFormatted("0x{0:X}", instruction.address);
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormatted("0x{0:X}", instruction.offset);
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted(instruction.bytes.c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "{}", instruction.mnemonic);
+                                ImGui::SameLine();
+                                ImGui::TextUnformatted(instruction.operators.c_str());
                             }
-                            ImGui::SameLine();
-                            ImGui::TextFormatted("0x{0:X}", this->m_disassembly[i].address);
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormatted("0x{0:X}", this->m_disassembly[i].offset);
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(this->m_disassembly[i].bytes.c_str());
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "{}", this->m_disassembly[i].mnemonic);
-                            ImGui::SameLine();
-                            ImGui::TextUnformatted(this->m_disassembly[i].operators.c_str());
                         }
-                    }
 
-                    clipper.End();
+                        clipper.End();
+                    }
 
                     ImGui::EndTable();
                 }
