@@ -6,6 +6,7 @@ project(imhex VERSION ${IMHEX_VERSION})
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 include("${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake")
 
 # List plugin names here. Project name must match folder name
