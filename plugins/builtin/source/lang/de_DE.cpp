@@ -185,6 +185,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.hexeditor.script.script.title", "Loader Script: Skript öffnen" },
                     { "hex.builtin.view.hexeditor.script.file", "Datei" },
                     { "hex.builtin.view.hexeditor.script.file.title", "Loader Script: Datei öffnen" },
+                    { "hex.builtin.view.hexeditor.processing", "Importieren / Exportieren" },
 
                     { "hex.builtin.view.hexeditor.menu.file.open_file", "Datei öffnen..." },
                     { "hex.builtin.view.hexeditor.menu.file.open_recent", "Kürzlich geöffnete Dateien" },
