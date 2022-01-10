@@ -13,14 +13,14 @@ namespace hex::plugin::builtin {
     class ViewProviderSettings : public hex::View {
     public:
         ViewProviderSettings();
-        ~ViewProviderSettings();
+        ~ViewProviderSettings() override;
 
         void drawContent() override;
         void drawAlwaysVisible() override;
 
-        bool hasViewMenuItemEntry() override;
+        [[nodiscard]] bool hasViewMenuItemEntry() const override;
 
-        bool isAvailable();
+        [[nodiscard]] bool isAvailable() const override;
     };
 
 }

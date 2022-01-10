@@ -14,12 +14,12 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawMenu() override;
-        bool isAvailable() override { return true; }
+        [[nodiscard]] bool isAvailable() const override { return true; }
 
-        bool hasViewMenuItemEntry() override { return false; }
+        [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
-        ImVec2 getMinSize() {
-            return ImVec2(0, 0);
+        [[nodiscard]] ImVec2 getMinSize() const override {
+            return ImVec2(500, 300) * SharedData::globalScale;
         }
     };
 

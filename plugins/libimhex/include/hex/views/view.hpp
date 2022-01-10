@@ -33,8 +33,8 @@ namespace hex {
         virtual void drawContent() = 0;
         virtual void drawAlwaysVisible() { }
         virtual void drawMenu();
-        virtual bool isAvailable();
-        virtual bool shouldProcess() { return this->isAvailable() && this->getWindowOpenState(); }
+        virtual bool isAvailable() const;
+        virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
 
         static void doLater(std::function<void()> &&function);
         static std::vector<std::function<void()>>& getDeferedCalls();
@@ -45,11 +45,12 @@ namespace hex {
         static void showErrorPopup(const std::string &errorMessage);
         static void showFatalPopup(const std::string &errorMessage);
 
-        virtual bool hasViewMenuItemEntry();
-        virtual ImVec2 getMinSize();
-        virtual ImVec2 getMaxSize();
+        virtual bool hasViewMenuItemEntry() const;
+        virtual ImVec2 getMinSize() const;
+        virtual ImVec2 getMaxSize() const;
 
         bool& getWindowOpenState();
+        const bool& getWindowOpenState() const;
 
         [[nodiscard]] const std::string& getUnlocalizedName() const;
 

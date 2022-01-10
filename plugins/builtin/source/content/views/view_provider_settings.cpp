@@ -52,11 +52,11 @@ namespace hex::plugin::builtin {
         }
     }
 
-    bool ViewProviderSettings::hasViewMenuItemEntry() {
+    bool ViewProviderSettings::hasViewMenuItemEntry() const {
         return this->isAvailable();
     }
 
-    bool ViewProviderSettings::isAvailable() {
+    bool ViewProviderSettings::isAvailable() const {
         auto provider = hex::ImHexApi::Provider::get();
 
         return provider != nullptr && provider->hasInterface();

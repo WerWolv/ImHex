@@ -20,11 +20,11 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawMenu() override;
-        bool isAvailable() override { return true; }
+        bool isAvailable() const override { return true; }
 
-        bool hasViewMenuItemEntry() override { return false; }
+        bool hasViewMenuItemEntry() const override { return false; }
 
-        ImVec2 getMinSize() override {
+        ImVec2 getMinSize() const override {
             return ImVec2(400, 300);
         }
 

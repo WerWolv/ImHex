@@ -35,8 +35,8 @@ namespace hex::plugin::builtin {
         void drawContent() override;
         void drawMenu() override;
 
-        bool isAvailable() override { return true; }
-        bool hasViewMenuItemEntry() override { return false; }
+        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
     private:
         Net m_net;

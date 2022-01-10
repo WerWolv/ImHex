@@ -11,8 +11,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
-
     class ViewCommandPalette : public View {
     public:
         ViewCommandPalette();
@@ -20,12 +18,12 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawMenu() override;
-        bool isAvailable() override { return true; }
-        bool shouldProcess() override { return true; }
+        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldProcess() const override { return true; }
 
-        bool hasViewMenuItemEntry() override { return false; }
-        ImVec2 getMinSize() override { return ImVec2(400, 100); }
-        ImVec2 getMaxSize() override { return ImVec2(400, 100); }
+        [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
+        [[nodiscard]] ImVec2 getMinSize() const override { return ImVec2(400, 100); }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return ImVec2(400, 100); }
 
     private:
         enum class MatchType {

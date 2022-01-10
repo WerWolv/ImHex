@@ -14,7 +14,7 @@ namespace hex {
 
     void View::drawMenu() { }
 
-    bool View::isAvailable() {
+    bool View::isAvailable() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
@@ -80,20 +80,24 @@ namespace hex {
         View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
     }
 
-    bool View::hasViewMenuItemEntry() {
+    bool View::hasViewMenuItemEntry() const {
         return true;
     }
 
-    ImVec2 View::getMinSize() {
+    ImVec2 View::getMinSize() const {
         return ImVec2(480, 720) * SharedData::globalScale;
     }
 
-    ImVec2 View::getMaxSize() {
+    ImVec2 View::getMaxSize() const {
         return { FLT_MAX, FLT_MAX };
     }
 
 
     bool& View::getWindowOpenState() {
+        return this->m_windowOpen;
+    }
+
+    const bool& View::getWindowOpenState() const {
         return this->m_windowOpen;
     }
 
