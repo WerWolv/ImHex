@@ -74,14 +74,14 @@ namespace hex::pl {
             this->m_evaluator->patternDestroyed();
         }
 
-    private:
+    protected:
         Evaluator *m_evaluator = nullptr;
     };
 
     class PatternData : public PatternCreationLimiter {
     public:
         PatternData(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
-        : PatternCreationLimiter(evaluator), m_offset(offset), m_size(size), m_color(color), m_parent(nullptr), m_evaluator(evaluator) {
+        : PatternCreationLimiter(evaluator), m_offset(offset), m_size(size), m_color(color) {
             constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
@@ -100,7 +100,7 @@ namespace hex::pl {
         virtual PatternData* clone() = 0;
 
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
-        virtual void setOffset(u64 offset) { this->m_offset = offset; }
+        void setOffset(u64 offset) { this->m_offset = offset; }
 
         [[nodiscard]] size_t getSize() const { return this->m_size; }
         void setSize(size_t size) { this->m_size = size; }
@@ -120,9 +120,6 @@ namespace hex::pl {
         [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
         void setEndian(std::endian endian) { this->m_endian = endian; }
 
-        [[nodiscard]] PatternData* getParent() const { return this->m_parent; }
-        void setParent(PatternData *parent) { this->m_parent = parent; }
-
         [[nodiscard]] std::string getDisplayName() const {  return this->m_displayName.value_or(this->m_variableName); }
         void setDisplayName(const std::string &name) { this->m_displayName = name; }
 
@@ -136,26 +133,14 @@ namespace hex::pl {
         virtual void createEntry(prv::Provider* &provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
-        virtual std::optional<u32> highlightBytes(size_t offset) {
-            auto currOffset = this->getOffset();
-            if (offset >= currOffset && offset < (currOffset + this->getSize()))
-                return this->getColor();
-            else
-                return { };
-        }
-
         virtual std::map<u64, u32> getHighlightedAddresses() {
             if (this->isHidden()) return { };
-            if (this->m_highlightedAddresses.empty()) {
-                for (u64 i = 0; i < this->getSize(); i++)
-                    this->m_highlightedAddresses.insert({ this->getOffset() + i, this->getColor() });
-            }
 
-            return this->m_highlightedAddresses;
-        }
+            std::map<u64, u32> result;
+            for (u64 i = 0; i < this->getSize(); i++)
+                result.insert({ this->getOffset() + i, this->getColor() });
 
-        virtual void clearHighlightedAddresses() {
-            this->m_highlightedAddresses.clear();
+            return result;
         }
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
@@ -313,7 +298,6 @@ namespace hex::pl {
 
     protected:
         std::endian m_endian = std::endian::native;
-        std::map<u64, u32> m_highlightedAddresses;
         bool m_hidden = false;
 
     private:
@@ -326,11 +310,9 @@ namespace hex::pl {
         std::optional<std::string> m_comment;
         std::string m_typeName;
 
-        Evaluator *m_evaluator = nullptr;
         std::optional<ContentRegistry::PatternLanguage::Function> m_formatterFunction;
         std::optional<ContentRegistry::PatternLanguage::Function> m_transformFunction;
 
-        PatternData *m_parent;
         bool m_local = false;
     };
 
@@ -397,25 +379,13 @@ namespace hex::pl {
             }
         }
 
-        std::optional<u32> highlightBytes(size_t offset) override {
-            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
-                return this->getColor();
-            else if (auto color = this->m_pointedAt->highlightBytes(offset); color.has_value())
-                return color.value();
-            else
-                return { };
-        }
-
         std::map<u64, u32> getHighlightedAddresses() override {
-            if (this->m_highlightedAddresses.empty()) {
                 auto ownAddresses = PatternData::getHighlightedAddresses();
                 auto pointedToAddresses = this->m_pointedAt->getHighlightedAddresses();
 
                 ownAddresses.merge(pointedToAddresses);
-                this->m_highlightedAddresses = ownAddresses;
-            }
 
-            return this->m_highlightedAddresses;
+            return ownAddresses;
         }
         [[nodiscard]] std::string getFormattedName() const override {
             std::string result = this->m_pointedAt->getFormattedName() + "* : ";
@@ -775,17 +745,6 @@ namespace hex::pl {
             return new PatternDataDynamicArray(*this);
         }
 
-        void setOffset(u64 offset) override {
-            if (!this->isLocal()) {
-                for (auto &entry : this->m_entries) {
-                    entry->setOffset(offset + (entry->getOffset() - this->getOffset()));
-                }
-            }
-
-
-            PatternData::setOffset(offset);
-        }
-
         void setColor(u32 color) override {
             PatternData::setColor(color);
             for (auto &entry : this->m_entries)
@@ -841,19 +800,13 @@ namespace hex::pl {
         }
 
         std::map<u64, u32> getHighlightedAddresses() override {
-            if (this->m_highlightedAddresses.empty()) {
-                for (auto &entry : this->m_entries) {
-                    this->m_highlightedAddresses.merge(entry->getHighlightedAddresses());
-                }
+            std::map<u64, u32> result;
+
+            for (auto &entry : this->m_entries) {
+                result.merge(entry->getHighlightedAddresses());
             }
 
-            return this->m_highlightedAddresses;
-        }
-
-        void clearHighlightedAddresses() override {
-            for (auto &entry : this->m_entries)
-                entry->clearHighlightedAddresses();
-            PatternData::clearHighlightedAddresses();
+            return result;
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -869,7 +822,6 @@ namespace hex::pl {
 
             for (auto &entry : this->m_entries) {
                 entry->setColor(this->getColor());
-                entry->setParent(this);
             }
         }
 
@@ -956,40 +908,18 @@ namespace hex::pl {
             }
         }
 
-        std::optional<u32> highlightBytes(size_t offset) override{
-            auto entry = this->m_template->clone();
-            ON_SCOPE_EXIT { delete entry; };
-
-            if (offset < this->getOffset() || offset >= this->getOffset() + this->getSize())
-                return { };
-
-            auto index = (offset - this->getOffset()) / this->m_template->getSize();
-            entry->setOffset(this->getOffset() + this->m_template->getSize() * index);
-            if (auto color = entry->highlightBytes(offset); color.has_value())
-                return color.value();
-            else
-                return { };
-        }
-
         std::map<u64, u32> getHighlightedAddresses() override {
-            if (this->m_highlightedAddresses.empty()) {
-                auto entry = this->m_template->clone();
+            auto startOffset = this->m_template->getOffset();
 
-                for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += this->m_template->getSize()) {
-                    entry->setOffset(address);
-                    entry->clearHighlightedAddresses();
-                    this->m_highlightedAddresses.merge(entry->getHighlightedAddresses());
-                }
-
-                delete entry;
+            std::map<u64, u32> result;
+            for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += this->m_template->getSize()) {
+                this->m_template->setOffset(address);
+                result.merge(this->m_template->getHighlightedAddresses());
             }
 
-            return this->m_highlightedAddresses;
-        }
+            this->m_template->setOffset(startOffset);
 
-        void clearHighlightedAddresses() override {
-            this->m_template->clearHighlightedAddresses();
-            PatternData::clearHighlightedAddresses();
+            return result;
         }
 
         void setColor(u32 color) override {
@@ -1019,7 +949,6 @@ namespace hex::pl {
 
             this->setColor(this->m_template->getColor());
             this->m_template->setEndian(templ->getEndian());
-            this->m_template->setParent(this);
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
@@ -1056,16 +985,6 @@ namespace hex::pl {
             return new PatternDataStruct(*this);
         }
 
-        void setOffset(u64 offset) override {
-            if (!this->isLocal()) {
-                for (auto &member: this->m_members) {
-                    member->setOffset(offset + (member->getOffset() - this->getOffset()));
-                }
-            }
-
-            PatternData::setOffset(offset);
-        }
-
         void createEntry(prv::Provider* &provider) override {
             bool open = true;
 
@@ -1095,29 +1014,13 @@ namespace hex::pl {
 
         }
 
-        std::optional<u32> highlightBytes(size_t offset) override{
-            for (auto &member : this->m_members) {
-                if (auto color = member->highlightBytes(offset); color.has_value())
-                    return color.value();
-            }
-
-            return { };
-        }
-
         std::map<u64, u32> getHighlightedAddresses() override {
-            if (this->m_highlightedAddresses.empty()) {
-                for (auto &member : this->m_members) {
-                    this->m_highlightedAddresses.merge(member->getHighlightedAddresses());
-                }
+            std::map<u64, u32> result;
+            for (auto &member : this->m_members) {
+                result.merge(member->getHighlightedAddresses());
             }
 
-            return this->m_highlightedAddresses;
-        }
-
-        void clearHighlightedAddresses() override {
-            for (auto &member : this->m_members)
-                member->clearHighlightedAddresses();
-            PatternData::clearHighlightedAddresses();
+            return result;
         }
 
         void setColor(u32 color) override {
@@ -1152,7 +1055,6 @@ namespace hex::pl {
                 if (member == nullptr) continue;
 
                 this->m_members.push_back(member);
-                member->setParent(this);
             }
 
             this->m_sortedMembers = this->m_members;
@@ -1201,16 +1103,6 @@ namespace hex::pl {
             return new PatternDataUnion(*this);
         }
 
-        void setOffset(u64 offset) override {
-            if (!this->isLocal()) {
-                for (auto &member: this->m_members) {
-                    member->setOffset(offset + (member->getOffset() - this->getOffset()));
-                }
-            }
-
-            PatternData::setOffset(offset);
-        }
-
         void createEntry(prv::Provider* &provider) override {
             bool open = true;
 
@@ -1241,29 +1133,14 @@ namespace hex::pl {
 
         }
 
-        std::optional<u32> highlightBytes(size_t offset) override{
-            for (auto &member : this->m_members) {
-                if (auto color = member->highlightBytes(offset); color.has_value())
-                    return color.value();
-            }
-
-            return { };
-        }
-
         std::map<u64, u32> getHighlightedAddresses() override {
-            if (this->m_highlightedAddresses.empty()) {
-                for (auto &member : this->m_members) {
-                    this->m_highlightedAddresses.merge(member->getHighlightedAddresses());
-                }
+            std::map<u64, u32> result;
+
+            for (auto &member : this->m_members) {
+                result.merge(member->getHighlightedAddresses());
             }
 
-            return this->m_highlightedAddresses;
-        }
-
-        void clearHighlightedAddresses() override {
-            for (auto &member : this->m_members)
-                member->clearHighlightedAddresses();
-            PatternData::clearHighlightedAddresses();
+            return result;
         }
 
         void setColor(u32 color) override {
@@ -1297,7 +1174,6 @@ namespace hex::pl {
                 if (member == nullptr) continue;
 
                 this->m_members.push_back(member);
-                member->setParent(this);
             }
 
             this->m_sortedMembers = this->m_members;
@@ -1420,8 +1296,8 @@ namespace hex::pl {
 
     class PatternDataBitfieldField : public PatternData {
     public:
-        PatternDataBitfieldField(u64 offset, u8 bitOffset, u8 bitSize, Evaluator *evaluator, u32 color = 0)
-        : m_bitOffset(bitOffset), m_bitSize(bitSize), PatternData(offset, 0, evaluator, color) {
+        PatternDataBitfieldField(u64 offset, u8 bitOffset, u8 bitSize, PatternData *bitField, Evaluator *evaluator, u32 color = 0)
+        : m_bitOffset(bitOffset), m_bitSize(bitSize), m_bitField(bitField), PatternData(offset, 0, evaluator, color) {
 
         }
 
@@ -1430,10 +1306,10 @@ namespace hex::pl {
         }
 
         void createEntry(prv::Provider* &provider) override {
-            std::vector<u8> value(this->getParent()->getSize(), 0);
-            provider->read(this->getParent()->getOffset(), &value[0], value.size());
+            std::vector<u8> value(this->m_bitField->getSize(), 0);
+            provider->read(this->m_bitField->getOffset(), &value[0], value.size());
 
-            if (this->getParent()->getEndian() == std::endian::little)
+            if (this->m_bitField->getEndian() == std::endian::little)
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
@@ -1485,6 +1361,7 @@ namespace hex::pl {
 
     private:
         u8 m_bitOffset, m_bitSize;
+        PatternData *m_bitField;
     };
 
     class PatternDataBitfield : public PatternData, public Inlinable {
@@ -1563,7 +1440,6 @@ namespace hex::pl {
             for (auto &field : this->m_fields) {
                 field->setSize(this->getSize());
                 field->setColor(this->getColor());
-                field->setParent(this);
             }
         }
 

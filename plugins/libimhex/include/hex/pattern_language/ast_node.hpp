@@ -1448,7 +1448,7 @@ namespace hex::pl {
 
                 // If a field is named padding, it was created through a padding expression and only advances the bit position
                 if (name != "padding") {
-                    auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize, evaluator);
+                    auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize, pattern, evaluator);
                     field->setVariableName(name);
                     fields.push_back(field);
                 }
