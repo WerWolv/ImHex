@@ -782,21 +782,26 @@ namespace hex::pl {
             }
 
             if (open) {
-                for (auto &member : this->m_entries)
-                    member->draw(provider);
+                for (u64 i = 0; i < this->m_entries.size(); i++) {
+                    this->m_entries[i]->draw(provider);
+
+                    if (i >= (this->m_displayEnd - 1)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            this->m_displayEnd += 50;
+
+                        break;
+                    }
+                }
 
                 if (!this->isInlined())
                     ImGui::TreePop();
+            } else {
+                this->m_displayEnd = 50;
             }
-        }
-
-        std::optional<u32> highlightBytes(size_t offset) override{
-            for (auto &entry : this->m_entries) {
-                if (auto color = entry->highlightBytes(offset); color.has_value())
-                    return color.value();
-            }
-
-            return { };
         }
 
         std::map<u64, u32> getHighlightedAddresses() override {
@@ -843,6 +848,7 @@ namespace hex::pl {
 
     private:
         std::vector<PatternData*> m_entries;
+        u64 m_displayEnd = 50;
     };
 
     class PatternDataStaticArray : public PatternData, public Inlinable {
@@ -900,11 +906,24 @@ namespace hex::pl {
                     entry->setVariableName(hex::format("[{0}]", index));
                     entry->setOffset(this->getOffset() + index * this->m_template->getSize());
                     entry->draw(provider);
+
+                    if (index >= (this->m_displayEnd - 1)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            this->m_displayEnd += 50;
+
+                        break;
+                    }
                 }
                 delete entry;
 
                 if (!this->isInlined())
                     ImGui::TreePop();
+            } else {
+                this->m_displayEnd = 50;
             }
         }
 
@@ -962,6 +981,7 @@ namespace hex::pl {
     private:
         PatternData *m_template;
         size_t m_entryCount;
+        u64 m_displayEnd = 50;
     };
 
     class PatternDataStruct : public PatternData, public Inlinable {
