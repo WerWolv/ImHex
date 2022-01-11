@@ -12,6 +12,7 @@
 #include <iostream>
 #include <numeric>
 #include <thread>
+#include <assert.h>
 
 #include <romfs/romfs.hpp>
 
@@ -259,9 +260,19 @@ namespace hex {
         auto signalHandler = [](int signalNumber) {
             EventManager::post<EventAbnormalTermination>(signalNumber);
 
+            if (std::uncaught_exceptions() > 0) {
+                log::fatal("Uncaught exception thrown!");
+            }
+
             // Let's not loop on this...
             std::signal(signalNumber, nullptr);
-            std::raise(signalNumber);
+
+            #if defined(DEBUG)
+                assert(false);
+            #else
+                std::raise(signalNumber);
+            #endif
+
         };
 
         std::signal(SIGTERM, signalHandler);
