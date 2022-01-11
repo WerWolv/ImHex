@@ -175,11 +175,11 @@ namespace hex::plugin::builtin {
                 }
 
                 if (provider->getPageCount() > 1) {
-                    ImGui::SameLine();
+                    ImGui::NewLine();
 
-                    ImGui::TextFormatted("hex.builtin.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount());
+                    auto linePos = ImGui::GetCursorPosY() - 15 * SharedData::globalScale;
 
-                    ImGui::SameLine();
+                    ImGui::SetCursorPosY(linePos);
 
                     if (ImGui::ArrowButton("prevPage", ImGuiDir_Left)) {
                         provider->setCurrentPage(provider->getCurrentPage() - 1);
@@ -194,6 +194,13 @@ namespace hex::plugin::builtin {
 
                         EventManager::post<EventRegionSelected>(Region { std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), 1 });
                     }
+
+                    ImGui::SameLine();
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosY(linePos);
+
+                    ImGui::TextFormatted("hex.builtin.view.hexeditor.page"_lang, provider->getCurrentPage() + 1, provider->getPageCount());
                 }
 
                 this->drawSearchPopup();

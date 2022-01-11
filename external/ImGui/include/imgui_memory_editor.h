@@ -268,7 +268,7 @@ struct MemoryEditor
         const float height_separator = style.ItemSpacing.y;
         float footer_height = 0;
         if (OptShowOptions)
-            footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 1;
+            footer_height += height_separator + ImGui::GetFrameHeightWithSpacing() * 2;
 
         ImGui::BeginChild("offset", ImVec2(0, s.LineHeight), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav);
         ImGui::Text("%*c   ", s.AddrDigitsCount, ' ');
@@ -731,7 +731,7 @@ struct MemoryEditor
             if (GotoAddr < mem_size)
             {
                 ImGui::BeginChild("##scrolling");
-                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (GotoAddr / Cols) * ImGui::GetTextLineHeight());
+                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (GotoAddr / Cols) * ImGui::GetTextLineHeight() * 2);
                 ImGui::EndChild();
             }
             GotoAddr = (size_t)-1;
