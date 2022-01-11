@@ -528,10 +528,12 @@ namespace hex {
             }
 
             if (view->getWindowOpenState()) {
-                bool hasWindow = ImGui::FindWindowByName(View::toWindowName(view->getUnlocalizedName()).c_str()) != nullptr;
+                auto window = ImGui::FindWindowByName(View::toWindowName(view->getUnlocalizedName()).c_str());
+                bool hasWindow = window != nullptr;
                 bool focused = false;
 
-                if (hasWindow) {
+
+                if (hasWindow && !(window->Flags & ImGuiWindowFlags_Popup)) {
                     ImGui::Begin(View::toWindowName(view->getUnlocalizedName()).c_str());
 
                     focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
