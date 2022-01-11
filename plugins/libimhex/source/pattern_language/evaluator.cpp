@@ -102,7 +102,7 @@ namespace hex::pl {
                         LogConsole::abortEvaluation(hex::format("cannot cast type '{}' to type '{}'", value->getTypeName(), pattern->getTypeName()));
                 },
                 [&](auto &&value) -> Token::Literal {
-                    if (dynamic_cast<PatternDataUnsigned*>(pattern))
+                    if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern))
                         return u128(value);
                     else if (dynamic_cast<PatternDataSigned*>(pattern))
                         return s128(value);
@@ -113,7 +113,7 @@ namespace hex::pl {
                     else if (dynamic_cast<PatternDataFloat*>(pattern))
                         return double(value);
                     else
-                        LogConsole::abortEvaluation(hex::format("cannot cast type 'string' to type '{}'", pattern->getTypeName()));
+                        LogConsole::abortEvaluation(hex::format("cannot cast integer literal to type '{}'", pattern->getTypeName()));
                     }
             }, value);
 

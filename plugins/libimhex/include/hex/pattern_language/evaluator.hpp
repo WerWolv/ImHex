@@ -7,9 +7,11 @@
 #include <vector>
 
 #include <hex/pattern_language/log_console.hpp>
+
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/concepts.hpp>
 
 namespace hex::prv { class Provider; }
 

@@ -1505,69 +1505,37 @@ namespace hex::pl {
             auto pattern = this->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete pattern; };
 
-            auto readValue = [&evaluator](auto &value, PatternData *pattern) {
-                if (pattern->isLocal()) {
-                    auto &literal = evaluator->getStack()[pattern->getOffset()];
-
-                    std::visit(overloaded {
-                            [&](std::string &assignmentValue) { },
-                            [&](PatternData *assignmentValue) { },
-                            [&](auto &&assignmentValue) { value = assignmentValue; }
-                    }, literal);
-                }
-                else
-                    evaluator->getProvider()->read(pattern->getOffset(), &value, pattern->getSize());
-
-                value = hex::changeEndianess(value, pattern->getSize(), pattern->getEndian());
-            };
-
-            auto readString = [&evaluator](std::string &value, PatternData *pattern) {
-                if (pattern->isLocal()) {
-                    auto &literal = evaluator->getStack()[pattern->getOffset()];
-
-                    std::visit(overloaded {
-                            [&](std::string &assignmentValue) { value = assignmentValue; },
-                            [&](auto &&assignmentValue) { }
-                    }, literal);
-                }
-                else {
-                    value.resize(pattern->getSize());
-                    evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
-                    value.erase(std::find(value.begin(), value.end(), '\0'), value.end());
-                }
-            };
-
             Token::Literal literal;
             if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern)) {
                 u128 value = 0;
-                readValue(value, pattern);
+                readVariable(evaluator, value, pattern);
                 literal = value;
             } else if (dynamic_cast<PatternDataSigned*>(pattern)) {
                 s128 value = 0;
-                readValue(value, pattern);
+                readVariable(evaluator, value, pattern);
                 value = hex::signExtend(pattern->getSize() * 8, value);
                 literal = value;
             } else if (dynamic_cast<PatternDataFloat*>(pattern)) {
                 if (pattern->getSize() == sizeof(u16)) {
                     u16 value = 0;
-                    readValue(value, pattern);
+                    readVariable(evaluator, value, pattern);
                     literal = double(float16ToFloat32(value));
                 } else if (pattern->getSize() == sizeof(float)) {
                     float value = 0;
-                    readValue(value, pattern);
+                    readVariable(evaluator, value, pattern);
                     literal = double(value);
                 } else if (pattern->getSize() == sizeof(double)) {
                     double value = 0;
-                    readValue(value, pattern);
+                    readVariable(evaluator, value, pattern);
                     literal = value;
                 } else LogConsole::abortEvaluation("invalid floating point type access", this);
             } else if (dynamic_cast<PatternDataCharacter*>(pattern)) {
                 char value = 0;
-                readValue(value, pattern);
+                readVariable(evaluator, value, pattern);
                 literal = value;
             } else if (dynamic_cast<PatternDataBoolean*>(pattern)) {
                 bool value = false;
-                readValue(value, pattern);
+                readVariable(evaluator, value, pattern);
                 literal = value;
             } else if (dynamic_cast<PatternDataString*>(pattern)) {
                 std::string value;
@@ -1582,7 +1550,7 @@ namespace hex::pl {
                                 if (!dynamic_cast<PatternDataString*>(assignmentValue) && !dynamic_cast<PatternDataCharacter*>(assignmentValue))
                                     LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this);
 
-                                readString(value, assignmentValue);
+                                readVariable(evaluator, value, assignmentValue);
                             },
                             [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); }
                     }, literal);
@@ -1596,7 +1564,7 @@ namespace hex::pl {
                 literal = value;
             } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(pattern)) {
                 u64 value = 0;
-                readValue(value, pattern);
+                readVariable(evaluator, value, pattern);
                 literal = u128(hex::extract(bitfieldFieldPattern->getBitOffset() + (bitfieldFieldPattern->getBitSize() - 1), bitfieldFieldPattern->getBitOffset(), value));
             } else {
                 literal = pattern->clone();
@@ -1718,8 +1686,13 @@ namespace hex::pl {
                 }
 
                 PatternData *indexPattern;
-                if (currPattern->isLocal())
-                    indexPattern = std::get<PatternData*>(evaluator->getStack()[currPattern->getOffset()]);
+                if (currPattern->isLocal()) {
+                    auto stackLiteral = evaluator->getStack()[currPattern->getOffset()];
+                    if (auto stackPattern = std::get_if<PatternData*>(&stackLiteral); stackPattern != nullptr)
+                        indexPattern = *stackPattern;
+                    else
+                        return { currPattern };
+                }
                 else
                     indexPattern = currPattern;
 
@@ -1744,6 +1717,34 @@ namespace hex::pl {
 
     private:
         Path m_path;
+
+        void readVariable(Evaluator *evaluator, auto &value, PatternData *variablePattern) const {
+            constexpr bool isString = std::same_as<std::remove_cvref_t<decltype(value)>, std::string>;
+
+            if (variablePattern->isLocal()) {
+                auto &literal = evaluator->getStack()[variablePattern->getOffset()];
+
+                std::visit(overloaded {
+                        [&](std::string &assignmentValue) {
+                            if constexpr (isString) value = assignmentValue;
+                        },
+                        [&](PatternData *assignmentValue) { readVariable(evaluator, value, assignmentValue); },
+                        [&](auto &&assignmentValue) { value = assignmentValue; }
+                }, literal);
+            }
+            else {
+                if constexpr (isString) {
+                    value.resize(variablePattern->getSize());
+                    evaluator->getProvider()->read(variablePattern->getOffset(), value.data(), value.size());
+                    value.erase(std::find(value.begin(), value.end(), '\0'), value.end());
+                } else {
+                    evaluator->getProvider()->read(variablePattern->getOffset(), &value, variablePattern->getSize());
+                }
+            }
+
+            if constexpr (!isString)
+                value = hex::changeEndianess(value, variablePattern->getSize(), variablePattern->getEndian());
+        }
     };
 
     class ASTNodeScopeResolution : public ASTNode {

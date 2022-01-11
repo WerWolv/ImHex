@@ -258,6 +258,28 @@ namespace hex::pl {
                 this->m_local == other.m_local;
         }
 
+        [[nodiscard]]
+        std::string formatDisplayValue(const std::string &value, const Token::Literal &literal) const {
+            if (!this->m_formatterFunction.has_value())
+                return value;
+            else {
+                try {
+                    auto result = this->m_formatterFunction->func(this->getEvaluator(), { literal });
+
+                    if (result.has_value()) {
+                        if (auto displayValue = std::get_if<std::string>(&result.value()); displayValue != nullptr)
+                            return *displayValue;
+                        else
+                            return "???";
+                    } else {
+                        return "???";
+                    }
+                } catch (LogConsole::EvaluateError &error) {
+                    return "Error: " + error.second;
+                }
+            }
+        }
+
     protected:
         void createDefaultEntry(const std::string &value, const Token::Literal &literal) const {
             ImGui::TableNextRow();
@@ -278,19 +300,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
             ImGui::TableNextColumn();
-
-            if (!this->m_formatterFunction.has_value())
-                ImGui::TextUnformatted(value.c_str());
-            else {
-                auto result = this->m_formatterFunction->func(this->getEvaluator(), { literal });
-
-                if (result.has_value()) {
-                    if (auto displayValue = std::get_if<std::string>(&result.value()); displayValue != nullptr)
-                        ImGui::TextUnformatted(displayValue->c_str());
-                } else {
-                    ImGui::TextUnformatted("???");
-                }
-            }
+            ImGui::TextFormatted("{}", formatDisplayValue(value, literal));
         }
 
         void drawCommentTooltip() const {
@@ -378,7 +388,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("*(0x{0:X})", data);
+            ImGui::TextFormatted("{}", formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
@@ -809,7 +819,7 @@ namespace hex::pl {
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("{ ... }");
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
 
             if (open) {
@@ -929,7 +939,7 @@ namespace hex::pl {
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("{ ... }");
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
 
             if (open) {
@@ -1072,7 +1082,7 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::TextUnformatted(this->getTypeName().c_str());
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("{ ... }");
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
 
             if (open) {
@@ -1218,7 +1228,7 @@ namespace hex::pl {
                 ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
 
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("{ ... }");
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
 
             if (open) {
@@ -1372,7 +1382,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2);
+            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -1448,7 +1458,7 @@ namespace hex::pl {
                 u8 numBytes = (this->m_bitSize / 8) + 1;
 
                 u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
-                ImGui::TextFormatted("{0} (0x{1:X})", extractedValue, extractedValue);
+                ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), this));
             }
 
         }
@@ -1525,7 +1535,7 @@ namespace hex::pl {
                     valueString += hex::format("{0:02X} ", i);
                 valueString += "}";
 
-                ImGui::TextUnformatted(valueString.c_str());
+                ImGui::TextFormatted("{}", this->formatDisplayValue(valueString, this));
             }
 
             if (open) {
