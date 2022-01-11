@@ -23,7 +23,13 @@
 #define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
 #define ANONYMOUS_VARIABLE(prefix) TOKEN_CONCAT(prefix, __COUNTER__)
 
+struct ImVec2;
+
 namespace hex {
+
+    long double operator""_scaled(long double value);
+    long double operator""_scaled(unsigned long long value);
+    ImVec2 scaled(const ImVec2 &vector);
 
     std::string to_string(u128 value);
     std::string to_string(s128 value);

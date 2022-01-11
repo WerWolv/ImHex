@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
                 if (provider->getPageCount() > 1) {
                     ImGui::NewLine();
 
-                    auto linePos = ImGui::GetCursorPosY() - 15 * SharedData::globalScale;
+                    auto linePos = ImGui::GetCursorPosY() - 15_scaled;
 
                     ImGui::SetCursorPosY(linePos);
 

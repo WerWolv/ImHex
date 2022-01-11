@@ -218,7 +218,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::drawContent() {
-        ImGui::SetNextWindowSizeConstraints(ImVec2(600, 400) * SharedData::globalScale, ImVec2(FLT_MAX, FLT_MAX));
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(600, 400)), ImVec2(FLT_MAX, FLT_MAX));
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
             if (this->m_apiRequest.valid()) {
                 if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)

@@ -136,7 +136,7 @@ namespace hex::init {
             fonts->Clear();
 
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = 13.0f * SharedData::fontScale;
+            cfg.SizePixels = 13.0F * SharedData::fontScale;
             fonts->AddFontDefault(&cfg);
         } else {
             // Load custom font
@@ -151,9 +151,9 @@ namespace hex::init {
 
         cfg.MergeMode = true;
 
-        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0f * SharedData::fontScale, &cfg, fontAwesomeRange);
-        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0f * SharedData::fontScale, &cfg, codiconsRange);
-        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 13.0f * SharedData::fontScale, &cfg, unifontRange);
+        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0F * SharedData::fontScale, &cfg, fontAwesomeRange);
+        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0F * SharedData::fontScale, &cfg, codiconsRange);
+        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 13.0F * SharedData::fontScale, &cfg, unifontRange);
 
         ImGuiFreeType::BuildFontAtlas(fonts);
 

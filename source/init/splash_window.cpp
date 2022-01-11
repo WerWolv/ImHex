@@ -175,7 +175,7 @@ namespace hex::init {
             }
         }
 
-        this->m_window = glfwCreateWindow(640 * SharedData::globalScale, 400 * SharedData::globalScale, "Starting ImHex...", nullptr, nullptr);
+        this->m_window = glfwCreateWindow(640_scaled, 400_scaled, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
             log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);
@@ -203,7 +203,7 @@ namespace hex::init {
 
         ImFontConfig cfg;
         cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-        cfg.SizePixels = 13.0f * SharedData::globalScale;
+        cfg.SizePixels = 13.0_scaled;
         io.Fonts->AddFontDefault(&cfg);
 
         cfg.MergeMode = true;
@@ -214,7 +214,7 @@ namespace hex::init {
         };
         std::uint8_t *px;
         int w, h;
-        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0f * SharedData::globalScale, &cfg, fontAwesomeRange);
+        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0_scaled, &cfg, fontAwesomeRange);
         io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
         // Create new font atlas

@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override {
-            return ImVec2(500, 300) * SharedData::globalScale;
+            return scaled(ImVec2(500, 300));
         }
     };
 

@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::SameLine();
 
-                ImGui::SmallProgressBar(taskProgress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10 * SharedData::globalScale) / 2.0);
+                ImGui::SmallProgressBar(taskProgress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
                 ImGui::InfoTooltip(taskName.c_str());
             }
 
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid())
                     preview = providers[SharedData::currentProvider]->getName();
 
-                ImGui::SetNextItemWidth(200 * SharedData::globalScale);
+                ImGui::SetNextItemWidth(200_scaled);
                 if (ImGui::BeginCombo("", preview.c_str())) {
 
                     for (int i = 0; i < providers.size(); i++) {

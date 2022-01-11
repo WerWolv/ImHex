@@ -417,7 +417,7 @@ namespace hex {
                 static char title[256];
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
                 if (ImGui::Begin(title)) {
-                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10 * SharedData::globalScale, 10 * SharedData::globalScale));
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
                     if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
                         this->drawWelcomeScreen();
                     }
@@ -598,7 +598,7 @@ namespace hex {
 
 
             ImGui::UnderlinedText("hex.welcome.header.start"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.welcome.start.create_file"_lang))
                     EventManager::post<RequestOpenWindow>("Create File");
@@ -626,7 +626,7 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
             ImGui::UnderlinedText("hex.welcome.start.recent"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (!SharedData::recentFilePaths.empty()) {
                     for (auto &path : SharedData::recentFilePaths) {
@@ -651,7 +651,7 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
             ImGui::TableNextColumn();
             ImGui:: UnderlinedText("hex.welcome.header.help"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5 * SharedData::globalScale);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
                 if (ImGui::IconHyperlink(ICON_VS_ORGANIZATION, "hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
@@ -778,7 +778,7 @@ namespace hex {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
         this->m_windowTitle = "ImHex";
-        this->m_window = glfwCreateWindow(1280 * SharedData::globalScale, 720 * SharedData::globalScale, this->m_windowTitle.c_str(), nullptr, nullptr);
+        this->m_window = glfwCreateWindow(1280_scaled, 720_scaled, this->m_windowTitle.c_str(), nullptr, nullptr);
 
         glfwSetWindowUserPointer(this->m_window, this);
 
@@ -903,7 +903,7 @@ namespace hex {
             EventManager::post<EventWindowClosing>(window);
         });
 
-        glfwSetWindowSizeLimits(this->m_window, 720 * SharedData::globalScale, 480 * SharedData::globalScale, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(this->m_window, 720_scaled, 480_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         glfwShowWindow(this->m_window);
     }

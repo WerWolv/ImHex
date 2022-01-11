@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHelp::drawAboutPopup() {
-        ImGui::SetNextWindowSize(ImVec2(600, 350) * SharedData::globalScale, ImGuiCond_Always);
+        ImGui::SetNextWindowSize(scaled(ImVec2(600, 350)), ImGuiCond_Always);
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.help.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_NoResize)) {
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))

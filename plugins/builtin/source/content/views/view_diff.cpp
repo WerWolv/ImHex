@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid() && provider >= 0)
             preview = providers[provider]->getName();
 
-        ImGui::SetNextItemWidth(200 * SharedData::globalScale);
+        ImGui::SetNextItemWidth(200_scaled);
         if (ImGui::BeginCombo("", preview.c_str())) {
 
             for (int i = 0; i < providers.size(); i++) {

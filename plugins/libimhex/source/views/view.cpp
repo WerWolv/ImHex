@@ -23,7 +23,7 @@ namespace hex {
     }
 
     void View::drawCommonInterfaces() {
-        ImGui::SetNextWindowSizeConstraints(ImVec2(400, 100) * SharedData::globalScale, ImVec2(600, 300) * SharedData::globalScale);
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
             ImGui::NewLine();
@@ -35,7 +35,7 @@ namespace hex {
             ImGui::EndPopup();
         }
 
-        ImGui::SetNextWindowSizeConstraints(ImVec2(400, 100) * SharedData::globalScale, ImVec2(600, 300) * SharedData::globalScale);
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
             ImGui::NewLine();
@@ -47,7 +47,7 @@ namespace hex {
             ImGui::EndPopup();
         }
 
-        ImGui::SetNextWindowSizeConstraints(ImVec2(400, 100) * SharedData::globalScale, ImVec2(600, 300) * SharedData::globalScale);
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
             ImGui::NewLine();
@@ -85,7 +85,7 @@ namespace hex {
     }
 
     ImVec2 View::getMinSize() const {
-        return ImVec2(480, 720) * SharedData::globalScale;
+        return scaled(ImVec2(480, 720));
     }
 
     ImVec2 View::getMaxSize() const {

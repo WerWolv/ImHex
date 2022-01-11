@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/shared_data.hpp>
 
 #if defined (OS_WINDOWS)
     #include <windows.h>
@@ -17,6 +18,18 @@
 #endif
 
 namespace hex {
+
+    long double operator""_scaled(long double value) {
+        return value * SharedData::globalScale;
+    }
+
+    long double operator""_scaled(unsigned long long value) {
+        return value * SharedData::globalScale;
+    }
+
+    ImVec2 scaled(const ImVec2 &vector) {
+        return vector * SharedData::globalScale;
+    }
 
     std::string to_string(u128 value) {
         char data[45] = { 0 };
