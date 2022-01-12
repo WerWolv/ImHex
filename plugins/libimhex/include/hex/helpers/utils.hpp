@@ -116,8 +116,8 @@ namespace hex {
     }
 
     [[nodiscard]]
-    constexpr uint64_t bitmask(uint8_t bits) {
-        return (uint64_t(1) << (bits)) - 1;
+    constexpr u128 bitmask(u8 bits) {
+        return u128(-1) >> (128 - bits);
     }
 
     template<typename T>
