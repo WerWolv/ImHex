@@ -24,5 +24,6 @@ The Pattern Language is ImHex' custom C-like language for defining patterns and 
    namespaces
    functions
    attributes
+   in_out
    preprocessor
    standard_library/standard_library

@@ -13,6 +13,7 @@ Libraries
    std_bit
    std_cint
    std_ctype
+   std_file
    std_fxpt
    std_http
    std_limits

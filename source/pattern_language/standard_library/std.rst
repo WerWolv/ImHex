@@ -40,7 +40,7 @@ Please check its documentation for further informatiom
 **Formats a set of values and returns the result as a string**
 
 This function works identical to libfmt's ``fmt::format()`` and C++20's ``std::format()``.
-Please check its documentation for further informatiom
+Please check its `documentation <https://fmt.dev/latest/syntax.html>`_ for further informatiom
 
 
 .. table::
@@ -51,6 +51,7 @@ Please check its documentation for further informatiom
     =========== =========================================================
     ``format``  A libfmt / C++20 std::format format string
     ``args...`` A list of arguments to be inserted into the format string
+    ``return``  Formatted string
     =========== =========================================================
 
 .. code-block:: hexpat
@@ -62,7 +63,7 @@ Please check its documentation for further informatiom
 ``std::assert(bool condition, str message)``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Aborts evaluation and prints an error to the console if ``condition`` evaluates to false**
+**Aborts evaluation and prints an error to the console if condition evaluates to false**
 
 
 .. table::
@@ -80,7 +81,7 @@ Please check its documentation for further informatiom
 ``std::assert_warn(bool condition, str message)``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Prints a warning to the console if ``condition`` evaluates to false**
+**Prints a warning to the console if condition evaluates to false**
 
 
 .. table::
@@ -91,4 +92,25 @@ Please check its documentation for further informatiom
     =============== =========================================================================
     ``condition``   Condition that needs to be met
     ``message``     Message to be printed to the console if ``condition`` evaluated to false.
+    =============== =========================================================================
+
+------------------------
+
+``std::env(str var) -> auto`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Gets the value of a environment variable specified in the Environment Variables tab**
+
+.. note::
+
+    The type returned from this function depends on the type specified in the Environment Variables tab.
+
+.. table::
+    :align: left
+
+    =============== =========================================================================
+    Parameter       Description
+    =============== =========================================================================
+    ``var``         Name of environment variable to query
+    ``return``      Integer, floating point, bool or string with the value of that env var
     =============== =========================================================================

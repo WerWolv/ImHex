@@ -173,7 +173,7 @@ Functions
 
 ------------------------
 
-``std::string::reverse(str string) -> str`` :version:`1.11.0`
+``std::string::reverse(str string) -> str`` :version:`1.12.0`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Reverses the string `string`**

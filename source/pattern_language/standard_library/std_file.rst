@@ -1,8 +1,12 @@
-``std::file`` :version:`1.11.0`
-===============================
+``std::file`` :version:`1.12.0`
+================================
 
 | This namespace contains various pointer helper functions
 |
+
+.. warning::
+
+    These functions are considered dangerous and require the user to confirm that they really want to run this pattern.
 
 ------------------------
 
@@ -24,8 +28,8 @@ Types
 Functions
 ---------
 
-``std::file::open(str path, std::file::Mode mode) -> std::file::Handle`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::open(str path, std::file::Mode mode) -> std::file::Handle`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Opens a file on disk and returns a handle to it**
 Similar to C's ``fopen``
@@ -48,8 +52,8 @@ Similar to C's ``fopen``
 
 ------------------------
 
-``std::file::close(std::file::Handle handle)`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::close(std::file::Handle handle)`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Closes a file previously opened with** ``std::file::open()``
 Similar to C's ``fclose``
@@ -65,8 +69,8 @@ Similar to C's ``fclose``
 
 ------------------------
 
-``std::file::read(std::file::Handle handle, u128 size) -> str`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::read(std::file::Handle handle, u128 size) -> str`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Reads data as a string from a file**
 Similar to C's ``fread``
@@ -84,8 +88,8 @@ Similar to C's ``fread``
 
 ------------------------
 
-``std::file::write(std::file::Handle handle, str data)`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::write(std::file::Handle handle, str data)`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Writes data in form of a string to a file**
 Similar to C's ``fwrite``
@@ -102,8 +106,8 @@ Similar to C's ``fwrite``
 
 ------------------------
 
-``std::file::seek(std::file::Handle handle, u128 offset)`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::seek(std::file::Handle handle, u128 offset)`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Seeks to a specific offset in the file**
 Similar to C's ``fseek``
@@ -120,8 +124,8 @@ Similar to C's ``fseek``
 
 ------------------------
 
-``std::file::size(std::file::Handle handle) -> u128`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::size(std::file::Handle handle) -> u128`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Queries the length of a file**
 
@@ -137,8 +141,8 @@ Similar to C's ``fseek``
 
 ------------------------
 
-``std::file::resize(std::file::Handle handle, u128 size)`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::resize(std::file::Handle handle, u128 size)`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Resizes a file**
 Similar to C's ``ftruncate``
@@ -155,8 +159,8 @@ Similar to C's ``ftruncate``
 
 ------------------------
 
-``std::file::flush(std::file::Handle handle)`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::flush(std::file::Handle handle)`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Flushes all currently pending disk operations**
 Similar to C's ``fflush``
@@ -172,8 +176,8 @@ Similar to C's ``fflush``
 
 ------------------------
 
-``std::file::remove(std::file::Handle handle)`` :version:`1.11.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``std::file::remove(std::file::Handle handle)`` :version:`1.12.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Deletes a file from disk**
 

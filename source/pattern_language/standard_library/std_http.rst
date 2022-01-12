@@ -4,6 +4,10 @@
 | This namespace contains networking functions
 |
 
+.. warning::
+
+    These functions are considered dangerous and require the user to confirm that they really want to run this pattern.
+
 ------------------------
 
 Functions

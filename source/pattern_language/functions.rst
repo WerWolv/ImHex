@@ -59,7 +59,7 @@ Curly braces are optional and only required if more than one statement is presen
 
 
 While-Loops
-----------------
+-----------
 
 While loops work similarly to if statements. As long as the condition in the head evaluates to true, the body will continuously be executed.
 
@@ -70,7 +70,7 @@ While loops work similarly to if statements. As long as the condition in the hea
     }
 
 
-For-Statement :version:`1.11.0`
+For-Statement :version:`1.12.0`
 --------------------------------
 
 For loops are another kind of loop similar to the while loop. Its head consists of three blocks separated by commas.
@@ -86,6 +86,14 @@ The third block is a variable assignment which will be executed after all statem
 
         // At the end, increment i by 1
     }
+
+Loop control flow statements :version:`1.13.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inside of loops, the ``break`` and ``continue`` keyword may be used to to control the execution flow inside the loop.
+
+When a ``break`` statement is reached, the loop is terminated immediately and code flow continues after the loop.
+When a ``continue`` statement is reached, the current iteration is terminated immediately and code flow continues at the start of the loop again, checking the condition again.
 
 Return statements
 ^^^^^^^^^^^^^^^^^

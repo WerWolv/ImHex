@@ -81,7 +81,7 @@ To prevent ImHex from crashing when evaluating infinitely deep recursive types, 
 This pragma sets the maximum number of entries allowed in an array.
 To prevent ImHex using up a lot of memory when creating huge arrays, ImHex will abort evaluation prematurely if an array with too many entries is evaluated. This pragma can adjust the maximum number of entries allowed
 
-``pattern_limit`` :version:`1.11.0`
+``pattern_limit`` :version:`1.12.0`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Possible values:** Any integer value
