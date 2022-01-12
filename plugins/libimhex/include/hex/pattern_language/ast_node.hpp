@@ -966,7 +966,6 @@ namespace hex::pl {
             auto addEntry = [&](PatternData *pattern) {
                 pattern->setVariableName(hex::format("[{}]", entryIndex));
                 pattern->setEndian(arrayPattern->getEndian());
-                pattern->setColor(arrayPattern->getColor());
                 entries.push_back(pattern);
 
                 size += pattern->getSize();

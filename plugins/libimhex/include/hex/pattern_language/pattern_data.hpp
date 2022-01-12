@@ -88,6 +88,7 @@ namespace hex::pl {
                 return;
 
             this->m_color = Palette[SharedData::patternPaletteOffset++];
+            this->m_manualColor = false;
 
             if (SharedData::patternPaletteOffset >= (sizeof(Palette) / sizeof(u32)))
                 SharedData::patternPaletteOffset = 0;
@@ -115,7 +116,8 @@ namespace hex::pl {
         void setTypeName(std::string name) { this->m_typeName = std::move(name); }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
-        virtual void setColor(u32 color) { this->m_color = color; }
+        virtual void setColor(u32 color) { this->m_color = color; this->m_manualColor = true; }
+        [[nodiscard]] bool hasOverriddenColor() const { return this->m_manualColor; }
 
         [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
         void setEndian(std::endian endian) { this->m_endian = endian; }
@@ -314,6 +316,7 @@ namespace hex::pl {
         std::optional<ContentRegistry::PatternLanguage::Function> m_transformFunction;
 
         bool m_local = false;
+        bool m_manualColor = false;
     };
 
     class PatternDataPadding : public PatternData {
@@ -825,8 +828,10 @@ namespace hex::pl {
         void setEntries(const std::vector<PatternData*> &entries) {
             this->m_entries = entries;
 
-            for (auto &entry : this->m_entries) {
-                entry->setColor(this->getColor());
+            if (this->hasOverriddenColor()) {
+                for (auto &entry : this->m_entries) {
+                    entry->setColor(this->getColor());
+                }
             }
         }
 
@@ -966,7 +971,7 @@ namespace hex::pl {
             this->m_template = templ;
             this->m_entryCount = count;
 
-            this->setColor(this->m_template->getColor());
+            if (this->hasOverriddenColor()) this->setColor(this->m_template->getColor());
             this->m_template->setEndian(templ->getEndian());
         }
 
