@@ -15,31 +15,10 @@
 
 namespace hex::pl {
 
-    class ASTNode;
-    class ASTNodeAttribute;
-
     class PatternData;
     class Evaluator;
 
-    class Attributable {
-    protected:
-        Attributable() = default;
-
-        Attributable(const Attributable &) = default;
-
-    public:
-
-        void addAttribute(ASTNodeAttribute *attribute) {
-            this->m_attributes.push_back(attribute);
-        }
-
-        [[nodiscard]] const auto &getAttributes() const {
-            return this->m_attributes;
-        }
-
-    private:
-        std::vector<ASTNodeAttribute *> m_attributes;
-    };
+    class ASTNode;
 
     class Clonable {
     public:
@@ -97,6 +76,33 @@ namespace hex::pl {
     private:
         std::string m_attribute;
         std::optional<std::string> m_value;
+    };
+
+    class Attributable {
+    protected:
+        Attributable() = default;
+        ~Attributable() {
+            for (auto &attribute : this->m_attributes)
+                delete attribute;
+        }
+
+        Attributable(const Attributable &other) {
+            for (auto &attribute : other.m_attributes)
+                this->m_attributes.push_back(static_cast<ASTNodeAttribute*>(attribute->clone()));
+        }
+
+    public:
+
+        void addAttribute(ASTNodeAttribute *attribute) {
+            this->m_attributes.push_back(attribute);
+        }
+
+        [[nodiscard]] const auto &getAttributes() const {
+            return this->m_attributes;
+        }
+
+    private:
+        std::vector<ASTNodeAttribute *> m_attributes;
     };
 
     class ASTNodeLiteral : public ASTNode {
@@ -429,7 +435,14 @@ namespace hex::pl {
         [[nodiscard]] std::optional<std::endian> getEndian() const { return this->m_endian; }
 
         [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
-            return this->m_type->evaluate(evaluator);
+            auto type = this->m_type->evaluate(evaluator);
+
+            if (auto attributable = dynamic_cast<Attributable*>(type)) {
+                for (auto &attribute : this->getAttributes())
+                    attributable->addAttribute(static_cast<ASTNodeAttribute*>(attribute->clone()));
+            }
+
+            return type;
         }
 
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
@@ -978,7 +991,6 @@ namespace hex::pl {
                 delete entries.back();
                 entries.pop_back();
                 entryIndex--;
-
             };
 
             if (this->m_size != nullptr) {

@@ -30,8 +30,6 @@ namespace hex::plugin::builtin {
     private:
         MemoryEditor m_memoryEditor;
 
-        std::map<u64, u32> m_highlightedBytes;
-
         std::vector<char> m_searchStringBuffer;
         std::vector<char> m_searchHexBuffer;
         SearchFunction m_searchFunction = nullptr;
@@ -47,6 +45,7 @@ namespace hex::plugin::builtin {
         u64 m_resizeSize = 0;
 
         std::vector<u8> m_dataToSave;
+        std::set<pl::PatternData*> m_highlightedPatterns;
 
         std::string m_loaderScriptScriptPath;
         std::string m_loaderScriptFilePath;

@@ -75,13 +75,24 @@ namespace hex::plugin::builtin {
                     prevColor = (color & 0x00FFFFFF) | alpha;
             }
 
-            if (_this->m_highlightedBytes.contains(off)) {
-                auto color = (_this->m_highlightedBytes[off] & 0x00FFFFFF) | alpha;
-                currColor = currColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
-            }
-            if (_this->m_highlightedBytes.contains(off - 1)) {
-                auto color = (_this->m_highlightedBytes[off - 1] & 0x00FFFFFF) | alpha;
-                prevColor = prevColor.has_value() ? ImAlphaBlendColors(color, prevColor.value()) : color;
+            {
+                for (const auto &pattern : SharedData::patternData) {
+                    auto child = pattern->getPattern(off);
+                    if (child != nullptr) {
+                        auto color = (child->getColor() & 0x00FFFFFF) | alpha;
+                        currColor = currColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
+                        break;
+                    }
+                }
+
+                for (const auto &pattern : SharedData::patternData) {
+                    auto child = pattern->getPattern(off - 1);
+                    if (child != nullptr) {
+                        auto color = (child->getColor() & 0x00FFFFFF) | alpha;
+                        prevColor = prevColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
+                        break;
+                    }
+                }
             }
 
             if (next && prevColor != currColor) {
@@ -151,7 +162,6 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<RequestSelectionChange>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<EventWindowClosing>(this);
-        EventManager::unsubscribe<EventPatternChanged>(this);
         EventManager::unsubscribe<RequestOpenWindow>(this);
         EventManager::unsubscribe<EventSettingsChanged>(this);
     }
@@ -642,7 +652,11 @@ namespace hex::plugin::builtin {
 
         EventManager::post<EventFileLoaded>(path);
         EventManager::post<EventDataChanged>();
-        EventManager::post<EventPatternChanged>();
+
+        {
+            std::vector<pl::PatternData*> patterns;
+            EventManager::post<EventPatternChanged>(patterns);
+        }
     }
 
     bool ViewHexEditor::saveToFile(const std::string &path, const std::vector<u8>& data) {
@@ -1279,14 +1293,6 @@ R"(
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.exit_application.title"_lang); });
-            }
-        });
-
-        EventManager::subscribe<EventPatternChanged>(this, [this]() {
-            this->m_highlightedBytes.clear();
-
-            for (const auto &pattern : SharedData::patternData) {
-                this->m_highlightedBytes.merge(pattern->getHighlightedAddresses());
             }
         });
 

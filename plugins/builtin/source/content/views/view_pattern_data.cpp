@@ -7,7 +7,7 @@ namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
 
-        EventManager::subscribe<EventPatternChanged>(this, [this]() {
+        EventManager::subscribe<EventPatternChanged>(this, [this](auto&) {
             this->m_sortedPatternData.clear();
         });
     }

@@ -661,7 +661,11 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetErrorMarkers({ });
         this->m_console.clear();
         this->clearPatternData();
-        EventManager::post<EventPatternChanged>();
+
+        {
+            std::vector<pl::PatternData*> patterns;
+            EventManager::post<EventPatternChanged>(patterns);
+        }
 
         std::thread([this, code] {
             std::map<std::string, pl::Token::Literal> envVars;
@@ -691,7 +695,7 @@ namespace hex::plugin::builtin {
 
             if (result.has_value()) {
                 SharedData::patternData = std::move(result.value());
-                EventManager::post<EventPatternChanged>();
+                EventManager::post<EventPatternChanged>(SharedData::patternData);
             }
 
             this->m_evaluatorRunning = false;

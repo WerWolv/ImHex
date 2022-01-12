@@ -101,7 +101,7 @@ namespace hex::pl {
         virtual PatternData* clone() = 0;
 
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
-        void setOffset(u64 offset) { this->m_offset = offset; }
+        virtual void setOffset(u64 offset) { this->m_offset = offset; }
 
         [[nodiscard]] size_t getSize() const { return this->m_size; }
         void setSize(size_t size) { this->m_size = size; }
@@ -135,14 +135,21 @@ namespace hex::pl {
         virtual void createEntry(prv::Provider* &provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
-        virtual std::map<u64, u32> getHighlightedAddresses() {
-            if (this->isHidden()) return { };
+        [[nodiscard]]
+        virtual const PatternData* getPattern(u64 offset) const {
+            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
+                return this;
+            else
+                return nullptr;
+        }
 
-            std::map<u64, u32> result;
+        virtual void getHighlightedAddresses(std::map<u64, u32> &highlight) const {
+            if (this->isHidden()) return;
+
             for (u64 i = 0; i < this->getSize(); i++)
-                result.insert({ this->getOffset() + i, this->getColor() });
+                highlight.insert({ this->getOffset() + i, this->getColor() });
 
-            return result;
+            this->m_evaluator->handleAbort();
         }
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
@@ -382,14 +389,11 @@ namespace hex::pl {
             }
         }
 
-        std::map<u64, u32> getHighlightedAddresses() override {
-                auto ownAddresses = PatternData::getHighlightedAddresses();
-                auto pointedToAddresses = this->m_pointedAt->getHighlightedAddresses();
-
-                ownAddresses.merge(pointedToAddresses);
-
-            return ownAddresses;
+        void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
+            PatternData::getHighlightedAddresses(highlight);
+            this->m_pointedAt->getHighlightedAddresses(highlight);
         }
+
         [[nodiscard]] std::string getFormattedName() const override {
             std::string result = this->m_pointedAt->getFormattedName() + "* : ";
             switch (this->getSize()) {
@@ -438,6 +442,14 @@ namespace hex::pl {
             }
 
             this->m_pointerBase = base;
+        }
+
+        [[nodiscard]]
+        const PatternData* getPattern(u64 offset) const override {
+            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
+                return this;
+            else
+                return this->m_pointedAt->getPattern(offset);
         }
 
     private:
@@ -807,18 +819,21 @@ namespace hex::pl {
             }
         }
 
-        std::map<u64, u32> getHighlightedAddresses() override {
-            std::map<u64, u32> result;
-
+        void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             for (auto &entry : this->m_entries) {
-                result.merge(entry->getHighlightedAddresses());
+                entry->getHighlightedAddresses(highlight);
             }
-
-            return result;
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
+        }
+
+        void setOffset(u64 offset) override {
+            for (auto &entry : this->m_entries)
+                entry->setOffset(entry->getOffset() - this->getOffset() + offset);
+
+            PatternData::setOffset(offset);
         }
 
         [[nodiscard]] const std::vector<PatternData*>& getEntries() {
@@ -851,6 +866,18 @@ namespace hex::pl {
             return true;
         }
 
+        [[nodiscard]]
+        const PatternData* getPattern(u64 offset) const override {
+            auto iter = std::find_if(this->m_entries.begin(), this->m_entries.end(), [this, offset](PatternData *pattern){
+               return offset >= this->getOffset() && offset < (this->getOffset() + this->getSize());
+            });
+
+            if (iter == this->m_entries.end())
+                return nullptr;
+            else
+                return *iter;
+        }
+
     private:
         std::vector<PatternData*> m_entries;
         u64 m_displayEnd = 50;
@@ -868,6 +895,7 @@ namespace hex::pl {
 
         ~PatternDataStaticArray() override {
             delete this->m_template;
+            delete this->m_highlightTemplate;
         }
 
         PatternData* clone() override {
@@ -932,18 +960,21 @@ namespace hex::pl {
             }
         }
 
-        std::map<u64, u32> getHighlightedAddresses() override {
-            auto startOffset = this->m_template->getOffset();
+        void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
+            auto entry = this->m_template->clone();
 
-            std::map<u64, u32> result;
-            for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += this->m_template->getSize()) {
-                this->m_template->setOffset(address);
-                result.merge(this->m_template->getHighlightedAddresses());
+            for (u64 address = this->getOffset(); address < this->getOffset() + this->getSize(); address += entry->getSize()) {
+                entry->setOffset(address);
+                entry->getHighlightedAddresses(highlight);
             }
 
-            this->m_template->setOffset(startOffset);
+            delete entry;
+        }
 
-            return result;
+        void setOffset(u64 offset) override {
+            this->m_template->setOffset(this->m_template->getOffset() - this->getOffset() + offset);
+
+            PatternData::setOffset(offset);
         }
 
         void setColor(u32 color) override {
@@ -969,6 +1000,7 @@ namespace hex::pl {
 
         void setEntries(PatternData* templ, size_t count) {
             this->m_template = templ;
+            this->m_highlightTemplate = this->m_template->clone();
             this->m_entryCount = count;
 
             if (this->hasOverriddenColor()) this->setColor(this->m_template->getColor());
@@ -983,8 +1015,19 @@ namespace hex::pl {
             return *this->m_template == *otherArray.m_template && this->m_entryCount == otherArray.m_entryCount;
         }
 
+        [[nodiscard]]
+        const PatternData* getPattern(u64 offset) const override {
+            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize())) {
+                this->m_highlightTemplate->setOffset((offset / this->m_highlightTemplate->getSize()) * this->m_highlightTemplate->getSize());
+                return this->m_highlightTemplate;
+            } else {
+                return nullptr;
+            }
+        }
+
     private:
         PatternData *m_template;
+        mutable PatternData *m_highlightTemplate;
         size_t m_entryCount;
         u64 m_displayEnd = 50;
     };
@@ -1039,13 +1082,17 @@ namespace hex::pl {
 
         }
 
-        std::map<u64, u32> getHighlightedAddresses() override {
-            std::map<u64, u32> result;
+        void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             for (auto &member : this->m_members) {
-                result.merge(member->getHighlightedAddresses());
+                member->getHighlightedAddresses(highlight);
             }
+        }
 
-            return result;
+        void setOffset(u64 offset) override {
+            for (auto &member : this->m_members)
+                member->setOffset(member->getOffset() - this->getOffset() + offset);
+
+            PatternData::setOffset(offset);
         }
 
         void setColor(u32 color) override {
@@ -1099,6 +1146,19 @@ namespace hex::pl {
             }
 
             return true;
+        }
+
+        [[nodiscard]]
+        const PatternData* getPattern(u64 offset) const override {
+
+            auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](PatternData *pattern){
+                return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
+            });
+
+            if (iter == this->m_members.end())
+                return nullptr;
+            else
+                return *iter;
         }
 
     private:
@@ -1158,14 +1218,17 @@ namespace hex::pl {
 
         }
 
-        std::map<u64, u32> getHighlightedAddresses() override {
-            std::map<u64, u32> result;
-
+        void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             for (auto &member : this->m_members) {
-                result.merge(member->getHighlightedAddresses());
+                member->getHighlightedAddresses(highlight);
             }
+        }
 
-            return result;
+        void setOffset(u64 offset) override {
+            for (auto &member : this->m_members)
+                member->setOffset(member->getOffset() - this->getOffset() + offset);
+
+            PatternData::setOffset(offset);
         }
 
         void setColor(u32 color) override {
@@ -1218,6 +1281,19 @@ namespace hex::pl {
             }
 
             return true;
+        }
+
+        [[nodiscard]]
+        const PatternData* getPattern(u64 offset) const override {
+
+            auto largestMember = std::find_if(this->m_members.begin(), this->m_members.end(), [this](PatternData *pattern) {
+                return pattern->getSize() == this->getSize();
+            });
+
+            if (largestMember == this->m_members.end())
+                return nullptr;
+            else
+                return *largestMember;
         }
 
     private:
@@ -1449,6 +1525,13 @@ namespace hex::pl {
                     ImGui::TreePop();
             }
 
+        }
+
+        void setOffset(u64 offset) override {
+            for (auto &field : this->m_fields)
+                field->setOffset(field->getOffset() - this->getOffset() + offset);
+
+            PatternData::setOffset(offset);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {

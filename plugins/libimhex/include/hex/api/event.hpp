@@ -95,11 +95,13 @@ namespace hex {
         static EventList s_events;
     };
 
+    namespace pl { class PatternData; }
+
     /* Default Events */
     EVENT_DEF(EventFileLoaded, std::string);
     EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
-    EVENT_DEF(EventPatternChanged);
+    EVENT_DEF(EventPatternChanged, std::vector<pl::PatternData*>&);
     EVENT_DEF(EventWindowClosing, GLFWwindow*);
     EVENT_DEF(EventRegionSelected, Region);
     EVENT_DEF(EventProjectFileStore);
