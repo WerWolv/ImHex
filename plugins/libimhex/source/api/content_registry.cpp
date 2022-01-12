@@ -288,4 +288,19 @@ namespace hex {
     const std::vector<std::string> &ContentRegistry::Provider::getEntries() {
         return SharedData::providerNames;
     }
+
+
+
+    /* Data Formatters */
+
+    void ContentRegistry::DataFormatter::add(const std::string &unlocalizedName, const impl::Callback &callback) {
+        ContentRegistry::DataFormatter::getEntries().push_back({
+            unlocalizedName,
+            callback
+        });
+    }
+
+    std::vector<ContentRegistry::DataFormatter::impl::Entry> &ContentRegistry::DataFormatter::getEntries() {
+        return SharedData::dataFormatters;
+    }
 }

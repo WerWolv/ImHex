@@ -91,6 +91,8 @@ namespace hex {
         static u32 dataProcessorLinkIdCounter;
         static u32 dataProcessorAttrIdCounter;
 
+        static std::vector<ContentRegistry::DataFormatter::impl::Entry> dataFormatters;
+
         static std::list<std::string> recentFilePaths;
 
         static int mainArgc;

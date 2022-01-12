@@ -253,6 +253,24 @@ namespace hex {
             const std::vector<std::string>& getEntries();
 
         }
+
+        namespace DataFormatter {
+
+            namespace impl {
+
+                using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size)>;
+                struct Entry {
+                    std::string unlocalizedName;
+                    Callback callback;
+                };
+
+            }
+
+            void add(const std::string &unlocalizedName, const impl::Callback &callback);
+
+            std::vector<impl::Entry>& getEntries();
+
+        }
     };
 
 }

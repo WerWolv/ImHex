@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/ui_items.cpp
         source/content/providers.cpp
         source/content/views.cpp
+        source/content/data_formatters.cpp
 
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp

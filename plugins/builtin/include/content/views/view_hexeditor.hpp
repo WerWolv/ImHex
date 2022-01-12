@@ -68,9 +68,6 @@ namespace hex::plugin::builtin {
         void copyBytes() const;
         void pasteBytes() const;
         void copyString() const;
-        void copyLanguageArray(Language language) const;
-        void copyHexView() const;
-        void copyHexViewHTML() const;
 
         void registerEvents();
         void registerShortcuts();

@@ -741,224 +741,10 @@ namespace hex::plugin::builtin {
         size_t copySize = (end - start) + 1;
 
         std::string buffer(copySize, 0x00);
-        buffer.reserve(copySize + 1);
+        buffer.reserve(copySize);
         provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), copySize);
 
         ImGui::SetClipboardText(buffer.c_str());
-    }
-
-    void ViewHexEditor::copyLanguageArray(Language language) const {
-        auto provider = ImHexApi::Provider::get();
-
-        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-
-        size_t copySize = (end - start) + 1;
-
-        std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
-
-        std::string str;
-        switch (language) {
-            case Language::C:
-                str += "const unsigned char data[" + std::to_string(buffer.size()) + "] = { ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " };";
-                break;
-            case Language::Cpp:
-                str += "constexpr std::array<unsigned char, " + std::to_string(buffer.size()) + "> data = { ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " };";
-                break;
-            case Language::Java:
-                str += "final byte[] data = { ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " };";
-                break;
-            case Language::CSharp:
-                str += "const byte[] data = { ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " };";
-                break;
-            case Language::Rust:
-                str += "let data: [u8; " + std::to_string(buffer.size()) + "] = [ ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " ];";
-                break;
-            case Language::Python:
-                str += "data = bytes([ ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " ]);";
-                break;
-            case Language::JavaScript:
-                str += "const data = new Uint8Array([ ";
-
-                for (const auto &byte : buffer)
-                    str += hex::format("0x{0:02X}, ", byte);
-
-                // Remove trailing comma
-                str.pop_back();
-                str.pop_back();
-
-                str += " ]);";
-                break;
-        }
-
-        ImGui::SetClipboardText(str.c_str());
-    }
-
-    void ViewHexEditor::copyHexView() const {
-        auto provider = ImHexApi::Provider::get();
-
-        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-
-        size_t copySize = (end - start) + 1;
-
-        std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
-
-        std::string str = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
-
-
-        for (u32 col = start >> 4; col <= (end >> 4); col++) {
-            str += hex::format("{0:08X}  ", col << 4);
-            for (u64 i = 0 ; i < 16; i++) {
-
-                if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
-                    str += "   ";
-                else
-                    str += hex::format("{0:02X} ", buffer[((col << 4) - start) + i]);
-
-                if ((i & 0xF) == 0x7)
-                    str += " ";
-            }
-
-            str += " ";
-
-            for (u64 i = 0 ; i < 16; i++) {
-
-                if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
-                    str += " ";
-                else {
-                    u8 c = buffer[((col << 4) - start) + i];
-                    char displayChar = (c < 32 || c >= 128) ? '.' : c;
-                    str += hex::format("{0}", displayChar);
-                }
-            }
-
-            str += "\n";
-        }
-
-
-        ImGui::SetClipboardText(str.c_str());
-    }
-
-    void ViewHexEditor::copyHexViewHTML() const {
-        auto provider = ImHexApi::Provider::get();
-
-        size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-        size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-
-        size_t copySize = (end - start) + 1;
-
-        std::vector<u8> buffer(copySize, 0x00);
-        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
-
-        std::string str =
-R"(
-<div>
-    <style type="text/css">
-        .offsetheader { color:#0000A0; line-height:200% }
-        .offsetcolumn { color:#0000A0 }
-        .hexcolumn { color:#000000 }
-        .textcolumn { color:#000000 }
-    </style>
-
-    <code>
-        <span class="offsetheader">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span><br/>
-)";
-
-
-        for (u32 col = start >> 4; col <= (end >> 4); col++) {
-            str += hex::format("        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", col << 4);
-            for (u64 i = 0 ; i < 16; i++) {
-
-                if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
-                    str += "&nbsp&nbsp ";
-                else
-                    str += hex::format("{0:02X} ", buffer[((col << 4) - start) + i]);
-
-                if ((i & 0xF) == 0x7)
-                    str += "&nbsp";
-            }
-
-            str += "</span>&nbsp&nbsp<span class=\"textcolumn\">";
-
-            for (u64 i = 0 ; i < 16; i++) {
-
-                if (col == (start >> 4) && i < (start & 0xF) || col == (end >> 4) && i > (end & 0xF))
-                    str += "&nbsp";
-                else {
-                    u8 c = buffer[((col << 4) - start) + i];
-                    char displayChar = (c < 32 || c >= 128) ? '.' : c;
-                    str += hex::format("{0}", displayChar);
-                }
-            }
-
-            str += "</span><br/>\n";
-        }
-
-        str +=
-R"(
-    </code>
-</div>
-)";
-
-
-        ImGui::SetClipboardText(str.c_str());
     }
 
     static std::vector<std::pair<u64, u64>> findString(hex::prv::Provider* &provider, std::string string) {
@@ -1208,27 +994,16 @@ R"(
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.c"_lang))
-                this->copyLanguageArray(Language::C);
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.cpp"_lang))
-                this->copyLanguageArray(Language::Cpp);
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.csharp"_lang))
-                this->copyLanguageArray(Language::CSharp);
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.rust"_lang))
-                this->copyLanguageArray(Language::Rust);
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.python"_lang))
-                this->copyLanguageArray(Language::Python);
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.java"_lang))
-                this->copyLanguageArray(Language::Java);
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.js"_lang))
-                this->copyLanguageArray(Language::JavaScript);
+            for (const auto&[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
+                if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
+                    size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                    size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
-            ImGui::Separator();
+                    size_t copySize = (end - start) + 1;
 
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.ascii"_lang))
-                this->copyHexView();
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.copy.html"_lang))
-                this->copyHexViewHTML();
+                    ImGui::SetClipboardText(callback(provider, start + provider->getBaseAddress() + provider->getCurrentPageAddress(), copySize).c_str());
+                }
+            }
 
             ImGui::EndMenu();
         }
