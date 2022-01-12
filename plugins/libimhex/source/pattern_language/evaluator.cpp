@@ -81,11 +81,11 @@ namespace hex::pl {
         Token::Literal castedLiteral = std::visit(overloaded {
                 [&](double &value) -> Token::Literal {
                     if (dynamic_cast<PatternDataUnsigned*>(pattern))
-                        return u128(value);
+                        return u128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataSigned*>(pattern))
-                        return s128(value);
+                        return s128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataFloat*>(pattern))
-                        return value;
+                        return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
                     else
                         LogConsole::abortEvaluation(hex::format("cannot cast type 'double' to type '{}'", pattern->getTypeName()));
                 },
@@ -103,15 +103,15 @@ namespace hex::pl {
                 },
                 [&](auto &&value) -> Token::Literal {
                     if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern))
-                        return u128(value);
+                        return u128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataSigned*>(pattern))
-                        return s128(value);
+                        return s128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataCharacter*>(pattern))
                         return char(value);
                     else if (dynamic_cast<PatternDataBoolean*>(pattern))
                         return bool(value);
                     else if (dynamic_cast<PatternDataFloat*>(pattern))
-                        return double(value);
+                        return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
                     else
                         LogConsole::abortEvaluation(hex::format("cannot cast integer literal to type '{}'", pattern->getTypeName()));
                     }

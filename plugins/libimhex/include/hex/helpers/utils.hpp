@@ -115,6 +115,11 @@ namespace hex {
         return result;
     }
 
+    [[nodiscard]]
+    constexpr uint64_t bitmask(uint8_t bits) {
+        return (uint64_t(1) << (bits)) - 1;
+    }
+
     template<typename T>
     constexpr T changeEndianess(T value, size_t size, std::endian endian) {
         if (endian == std::endian::native)
