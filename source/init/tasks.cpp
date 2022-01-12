@@ -70,7 +70,7 @@ namespace hex::init {
         };
 
         for (auto path : paths) {
-            for (auto &folder : hex::getPath(path)) {
+            for (auto &folder : hex::getPath(path, true)) {
                 try {
                     std::filesystem::create_directories(folder);
                 } catch (...) {

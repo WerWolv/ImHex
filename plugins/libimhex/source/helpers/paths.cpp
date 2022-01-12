@@ -36,7 +36,7 @@ namespace hex {
         #endif
     }
 
-    std::vector<std::string> getPath(ImHexPath path) {
+    std::vector<std::string> getPath(ImHexPath path, bool listNonExisting) {
         std::vector<std::string> result;
 
         #if defined(OS_WINDOWS)
@@ -195,9 +195,11 @@ namespace hex {
             }
         #endif
 
-        result.erase(std::remove_if(result.begin(), result.end(), [](const auto& path){
-            return !std::filesystem::is_directory(path);
-        }), result.end());
+        if (!listNonExisting) {
+            result.erase(std::remove_if(result.begin(), result.end(), [](const auto& path){
+                return !std::filesystem::is_directory(path);
+            }), result.end());
+        }
 
         return result;
     }

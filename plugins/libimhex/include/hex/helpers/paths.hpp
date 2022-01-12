@@ -19,6 +19,6 @@ namespace hex {
 
     std::string getExecutablePath();
 
-    std::vector<std::string> getPath(ImHexPath path);
+    std::vector<std::string> getPath(ImHexPath path, bool listNonExisting = false);
 
 }
