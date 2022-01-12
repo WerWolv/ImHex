@@ -10,10 +10,10 @@ namespace hex::test {
             auto testBitfield = create<PatternDataBitfield>("TestBitfield", "testBitfield", 0x12, (4 * 4) / 8, nullptr);
             testBitfield->setEndian(std::endian::big);
             testBitfield->setFields({
-                    create<PatternDataBitfieldField>("", "a", 0x12, 0, 4, nullptr),
-                    create<PatternDataBitfieldField>("", "b", 0x12, 4, 4, nullptr),
-                    create<PatternDataBitfieldField>("", "c", 0x12, 8, 4, nullptr),
-                    create<PatternDataBitfieldField>("", "d", 0x12, 12, 4, nullptr)
+                    create<PatternDataBitfieldField>("", "a", 0x12, 0, 4, testBitfield, nullptr),
+                    create<PatternDataBitfieldField>("", "b", 0x12, 4, 4, testBitfield, nullptr),
+                    create<PatternDataBitfieldField>("", "c", 0x12, 8, 4, testBitfield, nullptr),
+                    create<PatternDataBitfieldField>("", "d", 0x12, 12, 4, testBitfield, nullptr)
             });
 
             addPattern(testBitfield);
