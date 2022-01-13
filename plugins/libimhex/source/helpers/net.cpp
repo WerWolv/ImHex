@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <filesystem>
 #include <cstdio>
@@ -56,7 +57,7 @@ namespace hex {
         mbedtls_x509_crt_init(&crt);
 
         auto cacert = romfs::get("cacert.pem");
-        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8*>(cacert.data()), cacert.size());
+        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8*>(cacert.data()), cacert.size() + 1);
 
         mbedtls_ssl_conf_ca_chain(cfg, &crt, nullptr);
 
@@ -116,6 +117,8 @@ namespace hex {
 
     std::optional<s32> Net::execute() {
         CURLcode result = curl_easy_perform(this->m_ctx);
+        if (result != CURLE_OK)
+            log::error("Net request failed with error {}!", curl_easy_strerror(result));
 
         s32 responseCode = 0;
         curl_easy_getinfo(this->m_ctx, CURLINFO_RESPONSE_CODE, &responseCode);
