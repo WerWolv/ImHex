@@ -295,13 +295,27 @@ namespace hex {
     /* Data Formatters */
 
     void ContentRegistry::DataFormatter::add(const std::string &unlocalizedName, const impl::Callback &callback) {
-        ContentRegistry::DataFormatter::getEntries().push_back({
-            unlocalizedName,
-            callback
-        });
+        log::info("Registered new data formatter: {}", unlocalizedName);
+
+        ContentRegistry::DataFormatter::getEntries().push_back({ unlocalizedName, callback });
     }
 
     std::vector<ContentRegistry::DataFormatter::impl::Entry> &ContentRegistry::DataFormatter::getEntries() {
         return SharedData::dataFormatters;
+    }
+
+
+
+    /* File Handlers */
+
+    void ContentRegistry::FileHandler::add(const std::vector<std::string> &extensions, const impl::Callback &callback) {
+        for (const auto &extension : extensions)
+            log::info("Registered new data handler for extensions: {}", extension);
+
+        ContentRegistry::FileHandler::getEntries().push_back({  extensions, callback });
+    }
+
+    std::vector<ContentRegistry::FileHandler::impl::Entry> &ContentRegistry::FileHandler::getEntries() {
+        return SharedData::fileHandlers;
     }
 }

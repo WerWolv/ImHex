@@ -4,13 +4,14 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
-
-#include "content/providers/file_provider.hpp"
-
+#include <hex/helpers/paths.hpp>
 #include <hex/helpers/patches.hpp>
 #include <hex/helpers/project_file_handler.hpp>
 #include <hex/helpers/loader_script_handler.hpp>
+
+#include <hex/pattern_language/pattern_data.hpp>
+#include <content/providers/file_provider.hpp>
+
 
 #include <GLFW/glfw3.h>
 
@@ -35,6 +36,10 @@ namespace hex::plugin::builtin {
 
         this->m_searchStringBuffer.resize(0xFFF, 0x00);
         this->m_searchHexBuffer.resize(0xFFF, 0x00);
+
+        ContentRegistry::FileHandler::add({ ".hexproj" }, [](const auto &path) {
+            return ProjectFile::load(path.string());
+        });
 
         this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
             auto provider = ImHexApi::Provider::get();
@@ -346,7 +351,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_recent"_lang, !SharedData::recentFilePaths.empty())) {
                 for (auto &path : SharedData::recentFilePaths) {
-                    if (ImGui::MenuItem(std::filesystem::path(path).filename().string().c_str())) {
+                    if (ImGui::MenuItem(fs::path(path).filename().string().c_str())) {
                         EventManager::post<RequestOpenFile>(path);
                     }
                 }

@@ -86,8 +86,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.open", "打开" },
                 { "hex.common.browse", "浏览..." },
 
-                { "hex.message.yara_rule_added", "Yara规则已添加！" },
-                { "hex.message.magic_db_added", "魔术数据库已添加！" },
+                //{ "hex.message.file_handler_failed", "Failed to open file with registered file handler." },
 
                 /* Builtin plugin features */
 
@@ -260,6 +259,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.information.file_entropy", "文件熵" },
                     { "hex.builtin.view.information.highest_entropy", "最高熵" },
                     { "hex.builtin.view.information.encrypted", "此数据似乎经过了加密或压缩！" },
+                    { "hex.builtin.view.information.magic_db_added", "魔术数据库已添加！" },
 
                 { "hex.builtin.view.patches.name", "补丁" },
                     { "hex.builtin.view.patches.offset", "偏移" },
@@ -319,6 +319,7 @@ namespace hex::plugin::builtin {
                         //{ "hex.builtin.view.yara.matches.variable", "Variable" },
                         { "hex.builtin.view.yara.whole_data", "全文件匹配！" },
                         { "hex.builtin.view.yara.no_rules", "没有找到YARA规则。请将规则放到ImHex的'yara'目录下。" },
+                    //{ "hex.builtin.view.yara.rule_added", "Yara规则已添加！" },
 
                 { "hex.builtin.view.constants.name", "常量" },
                     { "hex.builtin.view.constants.row.category", "分类" },

@@ -201,6 +201,8 @@ namespace hex::init {
 
         SharedData::recentFilePaths.clear();
 
+        SharedData::dataFormatters.clear();
+        SharedData::fileHandlers.clear();
 
         SharedData::clearVariables();
 

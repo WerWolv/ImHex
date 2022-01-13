@@ -273,6 +273,24 @@ namespace hex {
             std::vector<impl::Entry>& getEntries();
 
         }
+
+        namespace FileHandler {
+
+            namespace impl {
+
+                using Callback = std::function<bool(fs::path)>;
+                struct Entry {
+                    std::vector<std::string> extensions;
+                    Callback callback;
+                };
+
+            }
+
+            void add(const std::vector<std::string> &extensions, const impl::Callback &callback);
+
+            std::vector<impl::Entry>& getEntries();
+
+        }
     };
 
 }

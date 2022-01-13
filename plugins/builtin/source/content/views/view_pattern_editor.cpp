@@ -183,6 +183,17 @@ namespace hex::plugin::builtin {
             });
 
         }
+
+        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const fs::path &path) -> bool{
+            File file(path.string(), File::Mode::Read);
+
+            if (file.isValid()) {
+                EventManager::post<RequestSetPatternLanguageCode>(file.readString());
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
 
     ViewPatternEditor::~ViewPatternEditor() {

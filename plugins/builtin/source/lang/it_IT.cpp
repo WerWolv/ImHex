@@ -85,8 +85,7 @@ namespace hex::plugin::builtin {
                 //{ "hex.common.open", "Open" },
                 //{ "hex.common.browse", "Browse..." },
 
-                //{ "hex.message.yara_rule_added", "Yara rule added!" },
-                //{ "hex.message.magic_db_added", "Magic database added!" },
+                //{ "hex.message.file_handler_failed", "Failed to open file with registered file handler." },
 
                 /* Builtin plugin features */
 
@@ -260,6 +259,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.information.file_entropy", "Entropia dei File" },
                     { "hex.builtin.view.information.highest_entropy", "Highest entropy block" },
                     { "hex.builtin.view.information.encrypted", "Questi dati sono probabilmente codificati o compressi!" },
+                    //{ "hex.builtin.view.information.magic_db_added", "Magic database added!" },
+
 
                 { "hex.builtin.view.patches.name", "Patches" },
                     { "hex.builtin.view.patches.offset", "Offset" },
@@ -319,6 +320,7 @@ namespace hex::plugin::builtin {
                         //{ "hex.builtin.view.yara.matches.variable", "Variable" },
                         { "hex.builtin.view.yara.whole_data", "Tutti i file combaciano!" },
                         { "hex.builtin.view.yara.no_rules", "Nessuna regola di YARA. Aggiungile in nella cartella 'yara' di 'ImHex'" },
+                    //{ "hex.builtin.view.yara.rule_added", "Yara rule added!" },
 
                 { "hex.builtin.view.constants.name", "Costanti" },
                     { "hex.builtin.view.constants.row.category", "Categoria" },

@@ -42,6 +42,7 @@ namespace hex {
     u32 SharedData::dataProcessorAttrIdCounter = 1;
 
     std::vector<ContentRegistry::DataFormatter::impl::Entry> SharedData::dataFormatters;
+    std::vector<ContentRegistry::FileHandler::impl::Entry> SharedData::fileHandlers;
 
     std::list<std::string> SharedData::recentFilePaths;
 
