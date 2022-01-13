@@ -25,7 +25,7 @@ namespace hex::magic {
 
         std::error_code error;
         for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
-            for (const auto &entry : std::filesystem::directory_iterator(dir, error)) {
+            for (const auto &entry : fs::directory_iterator(dir, error)) {
                 if (entry.is_regular_file() && ((sourceFiles && entry.path().extension().empty()) || (!sourceFiles && entry.path().extension() == ".mgc")))
                     magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
             }

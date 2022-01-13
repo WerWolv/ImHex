@@ -3,6 +3,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <yara.h>
@@ -12,8 +13,6 @@
 #include <hex/helpers/paths.hpp>
 
 namespace hex::plugin::builtin {
-
-    namespace fs = std::filesystem;
 
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
         yr_initialize();

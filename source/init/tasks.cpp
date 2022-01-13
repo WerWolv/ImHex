@@ -25,7 +25,7 @@ namespace hex::init {
     static bool checkForUpdates() {
         hex::Net net;
 
-        auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 200).get();
+        auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();
         if (releases.code != 200)
             return false;
 
@@ -72,7 +72,7 @@ namespace hex::init {
         for (auto path : paths) {
             for (auto &folder : hex::getPath(path, true)) {
                 try {
-                    std::filesystem::create_directories(folder);
+                    fs::create_directories(folder);
                 } catch (...) {
                     result = false;
                 }
@@ -92,10 +92,10 @@ namespace hex::init {
         fonts = IM_NEW(ImFontAtlas)();
         cfg = { };
 
-        std::string fontFile;
+        fs::path fontFile;
         for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
-            auto path = dir + "/font.ttf";
-            if (std::filesystem::exists(path)) {
+            auto path = dir / "font.ttf";
+            if (fs::exists(path)) {
                 fontFile = path;
                 break;
             }
@@ -146,7 +146,7 @@ namespace hex::init {
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = fontSize * SharedData::fontScale;
 
-            fonts->AddFontFromFileTTF(fontFile.c_str(), std::floor(fontSize * SharedData::fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+            fonts->AddFontFromFileTTF(fontFile.string().c_str(), std::floor(fontSize * SharedData::fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
         }
 
         cfg.MergeMode = true;

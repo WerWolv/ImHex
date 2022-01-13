@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
     private:
         pl::PatternLanguage *m_parserRuntime, *m_evaluatorRuntime;
 
-        std::vector<std::filesystem::path> m_possiblePatternFiles;
+        std::vector<fs::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
         bool m_runAutomatically = false;
 

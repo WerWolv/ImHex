@@ -105,7 +105,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
                 for (auto &path : hex::getPath(type))
-                    ImGui::TextUnformatted(path.c_str());
+                    ImGui::TextUnformatted(path.string().c_str());
             }
 
             ImGui::EndTable();

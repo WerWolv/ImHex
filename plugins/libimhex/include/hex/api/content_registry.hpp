@@ -2,6 +2,8 @@
 
 #include <hex.hpp>
 #include <hex/helpers/concepts.hpp>
+#include <hex/helpers/paths.hpp>
+
 #include <hex/pattern_language/token.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>

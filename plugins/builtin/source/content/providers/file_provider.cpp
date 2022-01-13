@@ -138,7 +138,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string FileProvider::getName() const {
-        return std::filesystem::path(this->m_path).filename().string();
+        return fs::path(this->m_path).filename().string();
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {

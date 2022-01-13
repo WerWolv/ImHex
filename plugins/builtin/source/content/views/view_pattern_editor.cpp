@@ -16,7 +16,6 @@
 namespace hex::plugin::builtin {
 
     using namespace hex::literals;
-    namespace fs = std::filesystem;
 
     static const TextEditor::LanguageDefinition& PatternLanguage() {
         static bool initialized = false;
@@ -136,7 +135,7 @@ namespace hex::plugin::builtin {
 
             std::error_code errorCode;
             for (const auto &dir : hex::getPath(ImHexPath::Patterns)) {
-                for (auto &entry : std::filesystem::directory_iterator(dir, errorCode)) {
+                for (auto &entry : fs::directory_iterator(dir, errorCode)) {
                     foundCorrectType = false;
                     if (!entry.is_regular_file())
                         continue;
@@ -521,7 +520,7 @@ namespace hex::plugin::builtin {
             entries.resize(this->m_possiblePatternFiles.size());
 
             for (u32 i = 0; i < entries.size(); i++) {
-                entries[i] = std::filesystem::path(this->m_possiblePatternFiles[i]).filename().string();
+                entries[i] = fs::path(this->m_possiblePatternFiles[i]).filename().string();
             }
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {

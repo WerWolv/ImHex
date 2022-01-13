@@ -26,9 +26,9 @@ namespace hex::plugin::builtin {
         this->m_filterIndices.clear();
 
         for (auto &path : hex::getPath(ImHexPath::Constants)) {
-            if (!std::filesystem::exists(path)) continue;
+            if (!fs::exists(path)) continue;
 
-            for (auto &file : std::filesystem::directory_iterator(path)) {
+            for (auto &file : fs::directory_iterator(path)) {
                 if (!file.is_regular_file()) continue;
 
                 try {

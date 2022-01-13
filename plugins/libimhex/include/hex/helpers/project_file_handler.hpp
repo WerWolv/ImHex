@@ -8,7 +8,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
 
-#include <filesystem>
+#include <hex/helpers/paths.hpp>
 
 namespace hex {
 
@@ -29,7 +29,7 @@ namespace hex {
             ProjectFile::s_hasUnsavedChanged = true;
 
             if (setWindowTitle)
-                EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(getFilePath()).filename().string());
+                EventManager::post<RequestChangeWindowTitle>(fs::path(getFilePath()).filename().string());
         }
 
         [[nodiscard]] static const std::string& getProjectFilePath() {
@@ -48,7 +48,7 @@ namespace hex {
         static void setFilePath(const std::string &filePath) {
             ProjectFile::s_filePath = filePath;
 
-            EventManager::post<RequestChangeWindowTitle>(std::filesystem::path(filePath).filename().string());
+            EventManager::post<RequestChangeWindowTitle>(fs::path(filePath).filename().string());
         }
 
 

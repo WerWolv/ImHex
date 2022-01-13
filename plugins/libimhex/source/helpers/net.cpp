@@ -168,7 +168,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<std::string>> Net::uploadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout) {
+    std::future<Response<std::string>> Net::uploadFile(const std::string &url, const fs::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this] {
@@ -211,7 +211,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<void>> Net::downloadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout) {
+    std::future<Response<void>> Net::downloadFile(const std::string &url, const fs::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this]{

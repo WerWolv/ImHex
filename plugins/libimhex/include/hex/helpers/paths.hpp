@@ -2,8 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <filesystem>
 
 namespace hex {
+
+    namespace fs = std::filesystem;
 
     enum class ImHexPath {
         Patterns,
@@ -19,6 +22,6 @@ namespace hex {
 
     std::string getExecutablePath();
 
-    std::vector<std::string> getPath(ImHexPath path, bool listNonExisting = false);
+    std::vector<fs::path> getPath(ImHexPath path, bool listNonExisting = false);
 
 }

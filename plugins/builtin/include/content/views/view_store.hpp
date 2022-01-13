@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
         Net m_net;
         std::future<Response<std::string>> m_apiRequest;
         std::future<Response<void>> m_download;
-        std::filesystem::path m_downloadPath;
+        fs::path m_downloadPath;
 
         std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara;
 

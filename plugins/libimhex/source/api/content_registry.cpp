@@ -2,6 +2,7 @@
 
 #include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/paths.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -15,7 +16,7 @@ namespace hex {
     void ContentRegistry::Settings::load() {
         bool loaded = false;
         for (const auto &dir : hex::getPath(ImHexPath::Config)) {
-            std::ifstream settingsFile(dir + "/settings.json");
+            std::ifstream settingsFile(dir / "settings.json");
 
             if (settingsFile.good()) {
                 settingsFile >> getSettingsData();
@@ -30,7 +31,7 @@ namespace hex {
 
     void ContentRegistry::Settings::store() {
         for (const auto &dir : hex::getPath(ImHexPath::Config)) {
-            std::ofstream settingsFile(dir + "/settings.json", std::ios::trunc);
+            std::ofstream settingsFile(dir / "settings.json", std::ios::trunc);
 
             if (settingsFile.good()) {
                 settingsFile << getSettingsData();

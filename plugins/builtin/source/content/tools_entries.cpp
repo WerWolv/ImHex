@@ -7,6 +7,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/literals.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -506,7 +507,7 @@ namespace hex::plugin::builtin {
 
         static hex::Net net;
         static std::future<Response<std::string>> uploadProcess;
-        static std::filesystem::path currFile;
+        static fs::path currFile;
         static std::vector<UploadedFile> links;
 
         bool uploading = uploadProcess.valid() && uploadProcess.wait_for(0s) != std::future_status::ready;
@@ -899,7 +900,7 @@ namespace hex::plugin::builtin {
 
                 s32 index = 0;
                 for (auto &file : files) {
-                    if (ImGui::Selectable(std::filesystem::path(file).filename().string().c_str(), index == selectedIndex))
+                    if (ImGui::Selectable(fs::path(file).filename().string().c_str(), index == selectedIndex))
                         selectedIndex = index;
                     index++;
                 }
@@ -993,7 +994,7 @@ namespace hex::plugin::builtin {
 
                             File input(file, File::Mode::Read);
                             if (!input.isValid()) {
-                                View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, std::filesystem::path(file).filename().string()));
+                                View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, fs::path(file).filename().string()));
                                 return;
                             }
 

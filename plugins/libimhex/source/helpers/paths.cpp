@@ -36,14 +36,14 @@ namespace hex {
         #endif
     }
 
-    std::vector<std::string> getPath(ImHexPath path, bool listNonExisting) {
-        std::vector<std::string> result;
+    std::vector<fs::path> getPath(ImHexPath path, bool listNonExisting) {
+        std::vector<fs::path> result;
 
         #if defined(OS_WINDOWS)
             const auto exePath = getExecutablePath();
-            const auto parentDir = std::filesystem::path(exePath).parent_path();
+            const auto parentDir = fs::path(exePath).parent_path();
 
-            std::filesystem::path appDataDir;
+            fs::path appDataDir;
             {
                 LPWSTR wAppDataPath = nullptr;
                 if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath)))
@@ -53,7 +53,7 @@ namespace hex {
                 CoTaskMemFree(wAppDataPath);
             }
 
-            std::vector<std::filesystem::path> paths = { parentDir, appDataDir / "imhex" };
+            std::vector<fs::path> paths = { parentDir, appDataDir / "imhex" };
 
             switch (path) {
                 case ImHexPath::Patterns:
@@ -103,9 +103,9 @@ namespace hex {
         #elif defined(OS_MACOS)
             // Get path to special directories
             const auto exePath = getExecutablePath();
-            const std::filesystem::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
+            const fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
-            std::vector<std::filesystem::path> paths = { exePath, applicationSupportDir };
+            std::vector<fs::path> paths = { exePath, applicationSupportDir };
 
             switch (path) {
             case ImHexPath::Patterns:
@@ -140,8 +140,8 @@ namespace hex {
             default: __builtin_unreachable();
             }
         #else
-            std::vector<std::filesystem::path> configDirs = xdg::ConfigDirs();
-            std::vector<std::filesystem::path> dataDirs = xdg::DataDirs();
+            std::vector<fs::path> configDirs = xdg::ConfigDirs();
+            std::vector<fs::path> dataDirs = xdg::DataDirs();
 
             configDirs.insert(configDirs.begin(), xdg::ConfigHomeDir());
             dataDirs.insert(dataDirs.begin(), xdg::DataHomeDir());
@@ -152,7 +152,7 @@ namespace hex {
             const auto exePath = getExecutablePath();
 
             if (!exePath.empty())
-                dataDirs.emplace(dataDirs.begin(), std::filesystem::path(exePath.data()).parent_path());
+                dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
 
             switch (path) {
                 case ImHexPath::Patterns:
@@ -197,7 +197,7 @@ namespace hex {
 
         if (!listNonExisting) {
             result.erase(std::remove_if(result.begin(), result.end(), [](const auto& path){
-                return !std::filesystem::is_directory(path);
+                return !fs::is_directory(path);
             }), result.end());
         }
 

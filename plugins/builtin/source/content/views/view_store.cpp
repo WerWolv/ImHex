@@ -8,20 +8,19 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/magic.hpp>
+#include <hex/helpers/file.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <fstream>
 #include <filesystem>
 #include <functional>
 #include <nlohmann/json.hpp>
 #include <microtar.h>
-#include <hex/helpers/file.hpp>
 
 namespace hex::plugin::builtin {
 
     using namespace std::literals::string_literals;
     using namespace std::literals::chrono_literals;
-    
-    namespace fs = std::filesystem;
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
         this->refresh();

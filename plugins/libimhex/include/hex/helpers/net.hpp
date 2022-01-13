@@ -12,6 +12,8 @@
 #include <nlohmann/json_fwd.hpp>
 #include <curl/system.h>
 
+#include <hex/helpers/paths.hpp>
+
 using CURL = void;
 struct curl_slist;
 
@@ -36,8 +38,8 @@ namespace hex {
         std::future<Response<std::string>> getString(const std::string &url, u32 timeout = 2000);
         std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = 2000);
 
-        std::future<Response<std::string>> uploadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout = 2000);
-        std::future<Response<void>> downloadFile(const std::string &url, const std::filesystem::path &filePath, u32 timeout = 2000);
+        std::future<Response<std::string>> uploadFile(const std::string &url, const fs::path &filePath, u32 timeout = 2000);
+        std::future<Response<void>> downloadFile(const std::string &url, const fs::path &filePath, u32 timeout = 2000);
 
         [[nodiscard]]
         std::string encode(const std::string &input);

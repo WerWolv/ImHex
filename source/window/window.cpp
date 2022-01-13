@@ -237,7 +237,7 @@ namespace hex {
                 return;
 
             for (const auto &path : hex::getPath(ImHexPath::Config)) {
-                if (ProjectFile::store((std::filesystem::path(path) / CrashBackupFileName).string()))
+                if (ProjectFile::store((fs::path(path) / CrashBackupFileName).string()))
                     break;
             }
         });
@@ -247,7 +247,7 @@ namespace hex {
         });
 
         for (const auto &path : hex::getPath(ImHexPath::Config)) {
-            if (auto filePath = std::filesystem::path(path) / CrashBackupFileName; std::filesystem::exists(filePath)) {
+            if (auto filePath = fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
                 this->m_safetyBackupPath = filePath;
                 View::doLater([]{ ImGui::OpenPopup("hex.safety_backup.title"_lang); });
             }
@@ -478,14 +478,14 @@ namespace hex {
                 ProjectFile::markDirty();
 
                 ProjectFile::clearProjectFilePath();
-                std::filesystem::remove(this->m_safetyBackupPath);
+                fs::remove(this->m_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
             if (ImGui::Button("hex.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
-                std::filesystem::remove(this->m_safetyBackupPath);
+                fs::remove(this->m_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
             }
@@ -630,7 +630,7 @@ namespace hex {
             {
                 if (!SharedData::recentFilePaths.empty()) {
                     for (auto &path : SharedData::recentFilePaths) {
-                        if (ImGui::BulletHyperlink(std::filesystem::path(path).filename().string().c_str())) {
+                        if (ImGui::BulletHyperlink(fs::path(path).filename().string().c_str())) {
                             EventManager::post<RequestOpenFile>(path);
                             break;
                         }
@@ -997,7 +997,7 @@ namespace hex {
         static std::string iniFileName;
         for (const auto &dir : hex::getPath(ImHexPath::Config)) {
             if (std::filesystem::exists(dir)) {
-                iniFileName = dir + "/interface.ini";
+                iniFileName = (dir / "interface.ini").string();
                 break;
             }
         }

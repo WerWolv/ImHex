@@ -67,8 +67,8 @@ namespace hex::pl {
 
                         if (includeFile[0] != '/') {
                             for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                               std::string tempPath = hex::format("{0}/{1}", dir.c_str(), includeFile.c_str());
-                                if (std::filesystem::exists(tempPath)) {
+                               std::string tempPath = hex::format("{0}/{1}", dir.string().c_str(), includeFile.c_str());
+                                if (fs::exists(tempPath)) {
                                     includePath = tempPath;
                                     break;
                                 }

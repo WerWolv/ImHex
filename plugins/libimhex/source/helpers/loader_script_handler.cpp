@@ -182,8 +182,8 @@ namespace hex {
         Py_SetProgramName(Py_DecodeLocale((SharedData::mainArgv)[0], nullptr));
 
         for (const auto &dir : hex::getPath(ImHexPath::Python)) {
-            if (std::filesystem::exists(std::filesystem::path(dir + "/lib/python" PYTHON_VERSION_MAJOR_MINOR))) {
-                Py_SetPythonHome(Py_DecodeLocale(dir.c_str(), nullptr));
+            if (fs::exists(fs::path(dir / "lib" / "python" PYTHON_VERSION_MAJOR_MINOR))) {
+                Py_SetPythonHome(Py_DecodeLocale(dir.string().c_str(), nullptr));
                 break;
             }
         }

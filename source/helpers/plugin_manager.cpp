@@ -1,12 +1,11 @@
 #include "helpers/plugin_manager.hpp"
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <filesystem>
 
 namespace hex {
-
-    namespace fs = std::filesystem;
 
     // hex::plugin::<pluginName>::internal::initializePlugin()
     constexpr auto InitializePluginSymbol       = "_ZN3hex6plugin{0}{1}8internal16initializePluginEv";
@@ -84,13 +83,13 @@ namespace hex {
             this->m_setImGuiContextFunction(ctx);
     }
 
-    bool PluginManager::load(const std::string &pluginFolder) {
-        if (!std::filesystem::exists(pluginFolder))
+    bool PluginManager::load(const fs::path &pluginFolder) {
+        if (!fs::exists(pluginFolder))
             return false;
 
         PluginManager::s_pluginFolder = pluginFolder;
 
-        for (auto& pluginPath : std::filesystem::directory_iterator(pluginFolder)) {
+        for (auto& pluginPath : fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
                 PluginManager::s_plugins.emplace_back(pluginPath.path().string());
         }

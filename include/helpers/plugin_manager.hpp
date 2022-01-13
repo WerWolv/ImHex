@@ -5,6 +5,7 @@
 #include <hex/views/view.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <string_view>
 #include <dlfcn.h>
@@ -53,7 +54,7 @@ namespace hex {
     public:
         PluginManager() = delete;
 
-        static bool load(const std::string &pluginFolder);
+        static bool load(const fs::path &pluginFolder);
         static void unload();
         static void reload();
 
@@ -62,7 +63,7 @@ namespace hex {
         }
 
     private:
-        static inline std::string s_pluginFolder;
+        static inline fs::path s_pluginFolder;
         static inline std::vector<Plugin> s_plugins;
     };
 
