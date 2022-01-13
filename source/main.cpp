@@ -22,6 +22,8 @@ int main(int argc, char **argv, char **envp) {
     {
         Window::initNative();
 
+        hex::log::info("Welcome to ImHex!");
+
         init::WindowSplash splashWindow;
 
         for (const auto &[name, task] : init::getInitTasks())
@@ -46,11 +48,9 @@ int main(int argc, char **argv, char **envp) {
         else if (argc == 2)
             EventManager::post<RequestOpenFile>(argv[1]);
         else {
-            hex::log::fatal("Usage: imhex [file_name]");
+            hex::log::fatal("Usage: {} [<file_name>]", argv[0]);
             return EXIT_FAILURE;
         }
-
-        hex::log::info("Welcome to ImHex!");
 
         window.loop();
     }

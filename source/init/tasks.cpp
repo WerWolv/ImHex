@@ -74,6 +74,7 @@ namespace hex::init {
                 try {
                     fs::create_directories(folder);
                 } catch (...) {
+                    log::error("Failed to create folder {}!", folder.string());
                     result = false;
                 }
             }
@@ -96,6 +97,8 @@ namespace hex::init {
         for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
             auto path = dir / "font.ttf";
             if (fs::exists(path)) {
+                log::info("Loading custom front from {}", path.string());
+
                 fontFile = path;
                 break;
             }
@@ -215,6 +218,8 @@ namespace hex::init {
         }
 
         if (PluginManager::getPlugins().empty()) {
+            log::error("No plugins found!");
+
             getInitArguments().push_back({ "no-plugins", { } });
             return false;
         }
@@ -235,7 +240,8 @@ namespace hex::init {
     bool loadSettings() {
         try {
             ContentRegistry::Settings::load();
-        } catch (...) {
+        } catch (std::exception &e) {
+            log::error("Failed to load configuration! {}", e.what());
             return false;
         }
 
@@ -264,7 +270,8 @@ namespace hex::init {
     bool storeSettings() {
         try {
             ContentRegistry::Settings::store();
-        } catch (...) {
+        } catch (std::exception &e) {
+            log::error("Failed to store configuration! {}", e.what());
             return false;
         }
         return true;

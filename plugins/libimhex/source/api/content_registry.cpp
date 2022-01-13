@@ -41,6 +41,8 @@ namespace hex {
     }
 
     void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const ContentRegistry::Settings::Callback &callback) {
+        log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+
         ContentRegistry::Settings::getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry{ unlocalizedName.c_str(), callback });
 
         auto &json = getSettingsData();
@@ -52,6 +54,8 @@ namespace hex {
     }
 
     void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const ContentRegistry::Settings::Callback &callback) {
+        log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+
         ContentRegistry::Settings::getEntries()[unlocalizedCategory].emplace_back(Entry{ unlocalizedName, callback });
 
         auto &json = getSettingsData();
@@ -157,6 +161,8 @@ namespace hex {
     /* Command Palette Commands */
 
     void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, const std::string &command, const std::string &unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
+        log::info("Registered new command palette command: {}", command);
+
         getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command, unlocalizedDescription, displayCallback, executeCallback });
     }
 
@@ -179,10 +185,14 @@ namespace hex {
     }
 
     void ContentRegistry::PatternLanguage::addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguage::Callback &func) {
+        log::info("Registered new pattern language function: {}", getFunctionName(ns, name));
+
         getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, false };
     }
 
     void ContentRegistry::PatternLanguage::addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguage::Callback &func) {
+        log::info("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
+
         getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, true };
     }
 
@@ -194,6 +204,8 @@ namespace hex {
     /* Views */
 
     void ContentRegistry::Views::impl::add(View *view) {
+        log::info("Registered new view: {}", view->getUnlocalizedName());
+
         getEntries().emplace_back(view);
     }
 
@@ -205,6 +217,8 @@ namespace hex {
     /* Tools */
 
     void ContentRegistry::Tools:: add(const std::string &unlocalizedName, const std::function<void()> &function) {
+        log::info("Registered new tool: {}", unlocalizedName);
+
         getEntries().emplace_back(impl::Entry{ unlocalizedName, function });
     }
 
@@ -216,6 +230,8 @@ namespace hex {
     /* Data Inspector */
 
     void ContentRegistry::DataInspector::add(const std::string &unlocalizedName, size_t requiredSize, ContentRegistry::DataInspector::impl::GeneratorFunction function) {
+        log::info("Registered new data inspector format: {}", unlocalizedName);
+
         getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
     }
 
@@ -226,6 +242,8 @@ namespace hex {
     /* Data Processor Nodes */
 
     void ContentRegistry::DataProcessorNode::impl::add(const impl::Entry &entry) {
+        log::info("Registered new data processor node type: [{}]: ", entry.category, entry.name);
+
         getEntries().push_back(entry);
     }
 
@@ -240,10 +258,14 @@ namespace hex {
     /* Languages */
 
     void ContentRegistry::Language::registerLanguage(const std::string &name, const std::string &languageCode) {
+        log::info("Registered new language: {} ({})", name, languageCode);
+
         getLanguages().insert({ languageCode, name });
     }
 
     void ContentRegistry::Language::addLocalizations(const std::string &languageCode, const LanguageDefinition &definition) {
+        log::info("Registered new localization for language {} with {} entries", languageCode, definition.getEntries().size());
+
         getLanguageDefinitions()[languageCode].push_back(definition);
     }
 
@@ -255,6 +277,9 @@ namespace hex {
         return SharedData::languageDefinitions;
     }
 
+
+
+    /* Interface */
 
     void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::DrawCallback &function) {
         getWelcomeScreenEntries().push_back(function);
@@ -283,6 +308,8 @@ namespace hex {
     /* Providers */
 
     void ContentRegistry::Provider::impl::addProviderName(const std::string &unlocalizedName) {
+        log::info("Registered new provider: {}", unlocalizedName);
+
         SharedData::providerNames.push_back(unlocalizedName);
     }
 

@@ -762,8 +762,10 @@ namespace hex {
             log::error("GLFW Error [{}] : {}", error, desc);
         });
 
-        if (!glfwInit())
-            throw std::runtime_error("Failed to initialize GLFW!");
+        if (!glfwInit()) {
+            log::fatal("Failed to initialize GLFW!");
+            std::abort();
+        }
 
         #if defined(OS_WINDOWS)
             glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -782,8 +784,10 @@ namespace hex {
 
         glfwSetWindowUserPointer(this->m_window, this);
 
-        if (this->m_window == nullptr)
-            throw std::runtime_error("Failed to create window!");
+        if (this->m_window == nullptr) {
+            log::fatal("Failed to create window!");
+            std::abort();
+        }
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
@@ -870,32 +874,21 @@ namespace hex {
             for (u32 i = 0; i < count; i++) {
                 auto path = std::filesystem::path(paths[i]);
 
-                if (path.extension() == ".hexpat" || path.extension() == ".pat") {
-                    File file(path.string(), File::Mode::Read);
+                bool handled = false;
+                for (const auto &[extensions, handler] : ContentRegistry::FileHandler::getEntries()) {
+                    for (const auto &extension : extensions) {
+                        if (path.extension() == extension) {
+                            if (!handler(path))
+                                View::showMessagePopup("hex.message.file_handler_failed"_lang);
 
-                    if (file.isValid())
-                        EventManager::post<RequestSetPatternLanguageCode>(file.readString());
-                } else if (path.extension() == ".hexproj") {
-                    ProjectFile::load(path.string());
-                } else if (path.extension() == ".yar") {
-                    for (auto &destPath : hex::getPath(ImHexPath::Yara)) {
-                        std::error_code error;
-                        if (std::filesystem::copy_file(path, destPath / path.filename(), std::filesystem::copy_options::overwrite_existing, error)) {
-                            View::showMessagePopup("hex.message.yara_rule_added"_lang);
+                            handled = true;
                             break;
                         }
                     }
-                } else if (path.extension() == ".mgc") {
-                    for (auto &destPath : hex::getPath(ImHexPath::Magic)) {
-                        std::error_code error;
-                        if (std::filesystem::copy_file(path, destPath / path.filename(), std::filesystem::copy_options::overwrite_existing, error)) {
-                            View::showMessagePopup("hex.message.magic_db_added"_lang);
-                            break;
-                        }
-                    }
-                } else {
-                    EventManager::post<RequestOpenFile>(path.string());
                 }
+
+                if (!handled)
+                    EventManager::post<RequestOpenFile>(path.string());
             }
         });
 
