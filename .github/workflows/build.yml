@@ -50,11 +50,14 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=gcc-10 CXX=g++-10 cmake \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+        CC=gcc-10 CXX=g++-10 cmake              \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DRUST_PATH="$HOME/.cargo/bin/" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
+          -DRUST_PATH="$HOME/.cargo/bin/"       \
           ..
         make -j 4 install
 
@@ -128,6 +131,7 @@ jobs:
         msystem: mingw64
         pacboy: >-
           gcc:p
+          lld:p
           cmake:p
           make:p
           ccache:p
@@ -169,13 +173,16 @@ jobs:
         PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//' | sed 's/ //')
         PYTHON_LIB_PATH=$(cygpath -m $(which lib${PYTHON_LIB_NAME}.dll))
 
-        cmake -G "MinGW Makefiles" \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install" \
-          -DCREATE_PACKAGE=ON \
-          -DPython_LIBRARY="$PYTHON_LIB_PATH" \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-          -DRUST_PATH="$USERPROFILE/.cargo/bin/" \
+        cmake -G "MinGW Makefiles"                \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
+          -DCREATE_PACKAGE=ON                     \
+          -DPython_LIBRARY="$PYTHON_LIB_PATH"     \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
+          -DRUST_PATH="$USERPROFILE/.cargo/bin/"  \
           ..
         mingw32-make -j4 install
         cpack
@@ -225,11 +232,14 @@ jobs:
         CXX=$(brew --prefix llvm)/bin/clang++ \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
         MACOSX_DEPLOYMENT_TARGET="10.15" \
-        cmake \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
-          -DCREATE_BUNDLE=ON \
-          -DCREATE_PACKAGE=ON \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+        cmake                                   \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
+          -DCREATE_BUNDLE=ON                    \
+          -DCREATE_PACKAGE=ON                   \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
           ..
         make -j4 package
 

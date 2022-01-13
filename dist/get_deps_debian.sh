@@ -14,6 +14,7 @@ apt install -y \
   build-essential       \
   gcc-10                \
   g++-10                \
+  lld                   \
   ${PKGCONF:-}          \
   cmake                 \
   make                  \
