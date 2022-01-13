@@ -18,7 +18,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../external/libromfs ${CMAKE_CUR
 set_target_properties(libromfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../external/xdgpp")
-set(CMAKE_USE_MBEDTLS ON)
+set(CURL_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
 set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
