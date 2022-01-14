@@ -218,7 +218,7 @@ macro(createPackage)
         include(PostprocessBundle)
 
         # Fix rpath
-        add_custom_command(TARGET main POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
+        add_custom_command(TARGET imhex POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
 
         # FIXME: Remove this once we move/integrate the plugins directory.
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
