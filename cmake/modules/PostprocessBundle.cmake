@@ -59,4 +59,3 @@ endif()
 
 # Add a necessary rpath to the imhex binary
 get_bundle_main_executable("${BUNDLE_PATH}" IMHEX_EXECUTABLE)
-execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath @executable_path/../Frameworks/ "${IMHEX_EXECUTABLE}")
