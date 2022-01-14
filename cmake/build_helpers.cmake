@@ -229,7 +229,7 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        install(TARGETS main BUNDLE DESTINATION .)
+        install(TARGETS main BUNDLE DESTINATION ${CMAKE_BINARY_DIR})
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()

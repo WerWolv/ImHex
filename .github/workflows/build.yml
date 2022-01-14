@@ -9,106 +9,7 @@ env:
 
 jobs:
 
-  linux:
-    runs-on: ubuntu-20.04
-    name: 🐧 Ubuntu 20.04
-    steps:
-
-    - name: 🧰 Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-        submodules: recursive
-
-    - name: 📜 Restore cache
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.ccache
-          .flatpak-builder
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-
-    - name: ⬇️ Install dependencies
-      run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-        
-        sudo apt update
-        sudo bash dist/get_deps_debian.sh
-
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
-        sh rustup-init.sh -y --default-toolchain none
-        rm rustup-init.sh
-        $HOME/.cargo/bin/rustup install nightly
-        $HOME/.cargo/bin/rustup target add x86_64-unknown-linux-gnu
-        $HOME/.cargo/bin/rustup default nightly
-
-    - name: 🛠️ Build
-      run: |
-        mkdir -p build
-        cd build
-        CC=gcc-10 CXX=g++-10 cmake              \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install" \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
-          -DRUST_PATH="$HOME/.cargo/bin/"       \
-          ..
-        make -j 4 install
-
-    - name: 📦 Bundle Flatpak
-      run: |
-        sudo apt install flatpak flatpak-builder
-        flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak --user install -y flathub org.freedesktop.Platform//20.08
-        flatpak --user install -y flathub org.freedesktop.Sdk//20.08
-        flatpak-builder --jobs=4 --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
-        flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
-        
-    - name: 📦 Bundle DEB
-      run: |
-        dpkg-deb --build build/install
-        mv build/install.deb imhex.deb
-
-    - name: 📦 Bundle AppImage
-      run: |
-        dist/AppImage/package.sh build
-        mv build/ImHex-x86_64.AppImage imhex.AppImage
-
-    - name: ⬆️ Upload ELF
-      uses: actions/upload-artifact@v2
-      with:
-        name: Linux ELF
-        path: |
-          build/install/*
-
-    - name: ⬆️ Upload Flatpak
-      uses: actions/upload-artifact@v2
-      with:
-        name: Linux Flatpak
-        path: |
-          imhex.flatpak
-         
-    - name: ⬆️ Upload .deb
-      uses: actions/upload-artifact@v2
-      with:
-        name: Linux DEB
-        path: |
-          imhex.deb
-
-    - name: ⬆️ Upload AppImage
-      uses: actions/upload-artifact@v2
-      with:
-        name: Linux AppImage
-        path: |
-          imhex.AppImage
-
+  # Windows build
   win:
     runs-on: windows-latest
     name: 🟦 Windows MINGW64
@@ -164,8 +65,7 @@ jobs:
       with:
         path: ${{ steps.prep-ccache.outputs.dir }}
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
       run: |
@@ -203,6 +103,7 @@ jobs:
         path: |
           build/*.msi
 
+  # MacOS build
   macos:
     runs-on: macos-11.0
     name: 🍎 macOS 11.0
@@ -224,8 +125,7 @@ jobs:
         path: |
           ~/.ccache
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
       run: |
@@ -241,8 +141,6 @@ jobs:
           -DCREATE_PACKAGE=ON                   \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
           ..
         make -j4 package
 
@@ -251,3 +149,103 @@ jobs:
       with:
         name: macOS DMG
         path: build/*.dmg
+
+  # Linux build
+  linux:
+    runs-on: ubuntu-20.04
+    name: 🐧 Ubuntu 20.04
+    steps:
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: 📜 Restore cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.ccache
+            .flatpak-builder
+          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+
+      - name: ⬇️ Install dependencies
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          sudo apt update
+          sudo bash dist/get_deps_debian.sh
+          
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+          sh rustup-init.sh -y --default-toolchain none
+          rm rustup-init.sh
+          $HOME/.cargo/bin/rustup install nightly
+          $HOME/.cargo/bin/rustup target add x86_64-unknown-linux-gnu
+          $HOME/.cargo/bin/rustup default nightly
+
+      - name: 🛠️ Build
+        run: |
+          mkdir -p build
+          cd build
+          CC=gcc-10 CXX=g++-10 cmake              \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
+            -DCMAKE_INSTALL_PREFIX="$PWD/install" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
+            -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
+            -DRUST_PATH="$HOME/.cargo/bin/"       \
+            ..
+          make -j 4 install
+
+      - name: 📦 Bundle Flatpak
+        run: |
+          sudo apt install flatpak flatpak-builder
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak --user install -y flathub org.freedesktop.Platform//20.08
+          flatpak --user install -y flathub org.freedesktop.Sdk//20.08
+          flatpak-builder --jobs=4 --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
+          flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
+
+      - name: 📦 Bundle DEB
+        run: |
+          dpkg-deb --build build/install
+          mv build/install.deb imhex.deb
+
+      - name: 📦 Bundle AppImage
+        run: |
+          dist/AppImage/package.sh build
+          mv build/ImHex-x86_64.AppImage imhex.AppImage
+
+      - name: ⬆️ Upload ELF
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux ELF
+          path: |
+            build/install/*
+
+      - name: ⬆️ Upload Flatpak
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux Flatpak
+          path: |
+            imhex.flatpak
+
+      - name: ⬆️ Upload .deb
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux DEB
+          path: |
+            imhex.deb
+
+      - name: ⬆️ Upload AppImage
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux AppImage
+          path: |
+            imhex.AppImage
