@@ -9,53 +9,30 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 include("${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake")
 
-# List plugin names here. Project name must match folder name
-set(PLUGINS
-        builtin
-        windows
-        # example_cpp
-        # example_rust
-        )
-
-detectOS()
-detectArch()
+# Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
 detectBadClone()
 
-# Add bundled dependencies
+# List plugin names here. Project name must match folder name
+set(PLUGINS
+    builtin
+    windows
+)
+
+# Add various defines
+detectOS()
+detectArch()
+addVersionDefines()
+
+# Add ImHex sources
 add_subdirectory(plugins/libimhex)
+add_subdirectory(main)
+add_custom_target(imhex ALL DEPENDS main)
 
-# Add include directories
-include_directories(include)
-
+# Add unit tests
 enable_testing()
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
-addVersionDefines()
+# Configure packaging
 configurePackageCreation()
-
-add_executable(imhex ${application_type}
-        source/main.cpp
-
-        source/window/window.cpp
-        source/window/win_window.cpp
-        source/window/macos_window.cpp
-        source/window/linux_window.cpp
-
-        source/init/splash_window.cpp
-        source/init/tasks.cpp
-
-        source/helpers/plugin_manager.cpp
-
-        ${imhex_icon}
-        )
-
-set_target_properties(imhex PROPERTIES CXX_VISIBILITY_PRESET hidden)
-set_target_properties(imhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
-if (WIN32)
-    target_link_libraries(imhex PUBLIC dl libimhex wsock32 ws2_32 Dwmapi.lib)
-else ()
-    target_link_libraries(imhex PUBLIC dl libimhex pthread)
-endif ()
-
 createPackage()

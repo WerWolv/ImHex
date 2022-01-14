@@ -96,7 +96,7 @@ macro(configurePackageCreation)
 
     if (WIN32)
         set(application_type)
-        set(imhex_icon "${CMAKE_SOURCE_DIR}/res/resource.rc")
+        set(IMHEX_ICON "${CMAKE_SOURCE_DIR}/res/resource.rc")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--allow-multiple-definition")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-subsystem,windows")
 
@@ -107,17 +107,17 @@ macro(configurePackageCreation)
             set(CPACK_WIX_UPGRADE_GUID "05000E99-9659-42FD-A1CF-05C554B39285")
             set(CPACK_WIX_PRODUCT_ICON "${PROJECT_SOURCE_DIR}/res/icon.ico")
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
-            set_property(INSTALL "$<TARGET_FILE_NAME:imhex>"
+            set_property(INSTALL "$<TARGET_FILE_NAME:main>"
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
                     )
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/res/LICENSE.rtf")
         endif()
     elseif (APPLE)
-        set (imhex_icon "${CMAKE_SOURCE_DIR}/res/mac/AppIcon.icns")
+        set (IMHEX_ICON "${CMAKE_SOURCE_DIR}/res/mac/AppIcon.icns")
 
         if (CREATE_BUNDLE)
             set(application_type MACOSX_BUNDLE)
-            set_source_files_properties(${imhex_icon} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+            set_source_files_properties(${IMHEX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
             set(MACOSX_BUNDLE_ICON_FILE "AppIcon.icns")
             set(MACOSX_BUNDLE_INFO_STRING "WerWolv")
             set(MACOSX_BUNDLE_BUNDLE_NAME "ImHex")
@@ -157,7 +157,7 @@ macro(createPackage)
                     install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
                 elseif (APPLE)
                     if (CREATE_BUNDLE)
-                        set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:imhex>/${PLUGINS_INSTALL_LOCATION})
+                        set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:main>/${PLUGINS_INSTALL_LOCATION})
                     else ()
                         set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
                     endif ()
@@ -183,7 +183,7 @@ macro(createPackage)
         INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES $<TARGET_FILE:builtin> $<TARGET_FILE:libimhex> $<TARGET_FILE:imhex>
+            EXECUTABLES $<TARGET_FILE:builtin> $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
             CONFLICTING_DEPENDENCIES_PREFIX _c_deps
@@ -218,20 +218,20 @@ macro(createPackage)
         include(PostprocessBundle)
 
         # Fix rpath
-        add_custom_command(TARGET imhex POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:imhex>)
+        add_custom_command(TARGET main POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
 
         # FIXME: Remove this once we move/integrate the plugins directory.
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
 
         # Update library references to make the bundle portable
-        postprocess_bundle(imhex)
+        postprocess_bundle(main)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        install(TARGETS imhex BUNDLE DESTINATION .)
+        install(TARGETS main BUNDLE DESTINATION .)
     else()
-        install(TARGETS imhex RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 
 
