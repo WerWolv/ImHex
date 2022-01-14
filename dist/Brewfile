@@ -1,4 +1,4 @@
-brew "glfw3"
+brew "glfw"
 brew "mbedtls"
 brew "nlohmann-json"
 brew "cmake"
