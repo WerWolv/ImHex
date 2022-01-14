@@ -144,10 +144,6 @@ jobs:
           ..
         make -j4 package
 
-    - name: Setup tmate session
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
-
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v2
       with:
