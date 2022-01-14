@@ -23,6 +23,7 @@ set(PLUGINS
 detectOS()
 detectArch()
 addVersionDefines()
+configurePackingResources()
 
 # Add ImHex sources
 add_subdirectory(plugins/libimhex)
@@ -34,5 +35,4 @@ enable_testing()
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 # Configure packaging
-configurePackageCreation()
 createPackage()

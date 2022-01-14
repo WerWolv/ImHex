@@ -87,7 +87,7 @@ macro(detectArch)
 endmacro()
 
 
-macro(configurePackageCreation)
+macro(configurePackingResources)
     option (CREATE_PACKAGE "Create a package with CPack" OFF)
 
     if (APPLE)
