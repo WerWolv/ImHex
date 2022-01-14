@@ -13,9 +13,9 @@
 if(CMAKE_GENERATOR)
 	# Being called as include(PostprocessBundle), so define a helper function.
 	set(_POSTPROCESS_BUNDLE_MODULE_LOCATION "${CMAKE_CURRENT_LIST_FILE}")
-	function(postprocess_bundle target)
-		add_custom_command(TARGET ${target} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${target}>/../.." -DCODE_SIGN_CERTIFICATE_ID="${CODE_SIGN_CERTIFICATE_ID}"
+	function(postprocess_bundle out_target in_target)
+		add_custom_command(TARGET ${out_target} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${in_target}>/../.." -DCODE_SIGN_CERTIFICATE_ID="${CODE_SIGN_CERTIFICATE_ID}"
 				-P "${_POSTPROCESS_BUNDLE_MODULE_LOCATION}"
 		)
 	endfunction()
@@ -59,4 +59,3 @@ endif()
 
 # Add a necessary rpath to the imhex binary
 get_bundle_main_executable("${BUNDLE_PATH}" IMHEX_EXECUTABLE)
-execute_process(COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath @executable_path/../Frameworks/ "${IMHEX_EXECUTABLE}")

@@ -27,8 +27,8 @@ jobs:
       with:
         path: |
           ~/.ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
