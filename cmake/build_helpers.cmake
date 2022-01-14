@@ -224,7 +224,7 @@ macro(createPackage)
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
 
         # Update library references to make the bundle portable
-        postprocess_bundle(main)
+        postprocess_bundle(imhex main)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
