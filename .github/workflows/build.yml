@@ -26,8 +26,9 @@ jobs:
         path: |
           ~/.ccache
           .flatpak-builder
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
@@ -162,8 +163,9 @@ jobs:
       id:    cache-ccache
       with:
         path: ${{ steps.prep-ccache.outputs.dir }}
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
       run: |
@@ -221,8 +223,9 @@ jobs:
       with:
         path: |
           ~/.ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
       run: |
