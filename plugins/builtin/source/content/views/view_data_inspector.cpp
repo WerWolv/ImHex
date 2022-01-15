@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
 
             if (ImHexApi::Provider::isValid() && provider->isReadable() && this->m_validBytes > 0) {
                 if (ImGui::BeginTable("##datainspector", 2,
-                    ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg,
+                    ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg,
                     ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang);

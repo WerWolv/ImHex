@@ -418,16 +418,24 @@ struct MemoryEditor
                         size_t min = std::min(DataPreviewAddr, DataPreviewAddrEnd);
                         size_t max = std::max(DataPreviewAddr, DataPreviewAddrEnd);
 
+                        // Draw vertical line at the left of first byte and the start of the line
                         if (n == 0 || addr == min)
                             draw_list->AddLine(pos, pos + ImVec2(0, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+
+                        // Draw vertical line at the right of the last byte and the end of the line
                         if (n == Cols - 1 || addr == max) {
                             draw_list->AddRectFilled(pos + ImVec2(highlight_width, 0), pos + ImVec2(highlight_width + 1, s.LineHeight), color);
                             draw_list->AddLine(pos + ImVec2(highlight_width + 1, -1), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
                         }
 
-                        if (addr - Cols < min)
+                        // Draw horizontal line at the top of the bytes
+                        if ((addr - Cols) < min)
                             draw_list->AddLine(pos, pos + ImVec2(highlight_width + 1, 0), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
-                        if (addr + Cols > max)
+
+                        // Draw horizontal line at the bottom of the bytes
+                        if ((addr + Cols) == (max + 1) && OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 1)
+                            draw_list->AddLine(pos + ImVec2(-s.SpacingBetweenMidCols, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                        else if ((addr + Cols) > max)
                             draw_list->AddLine(pos + ImVec2(0, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
                     }
                 }
