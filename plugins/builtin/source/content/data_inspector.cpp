@@ -6,7 +6,6 @@
 #include <hex/api/event.hpp>
 
 #include <cstring>
-#include <ctime>
 #include <codecvt>
 #include <locale>
 #include <string>
@@ -157,28 +156,28 @@ namespace hex::plugin::builtin {
 
 #if defined(OS_WINDOWS) && defined(ARCH_64_BIT)
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(__time32_t), [](auto buffer, auto endian, auto style) {
-                auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<__time32_t*>(buffer.data()), endian);
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
+                auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<u32*>(buffer.data()), endian);
 
-                struct tm ptm = { 0 };
                 std::string value;
-                if (_localtime32_s(&ptm, &endianAdjustedTime) == 0)
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", ptm);
-                else
+                try {
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                } catch (fmt::format_error &e) {
                     value = "Invalid";
+                }
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             });
 
-            ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(__time64_t), [](auto buffer, auto endian, auto style) {
-                auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<__time64_t*>(buffer.data()), endian);
+            ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(u64), [](auto buffer, auto endian, auto style) {
+                auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<u64*>(buffer.data()), endian);
 
-                struct tm ptm = { 0 };
                 std::string value;
-                if (_localtime64_s(&ptm, &endianAdjustedTime) == 0)
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", ptm);
-                else
+                try {
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+                } catch (fmt::format_error &e) {
                     value = "Invalid";
+                }
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             });
@@ -187,12 +186,13 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
             auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<time_t*>(buffer.data()), endian);
-            struct tm *ptm = localtime(&endianAdjustedTime);
+
             std::string value;
-            if (ptm != nullptr)
-                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *ptm);
-            else
+            try {
+                value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
+            } catch (fmt::format_error &e) {
                 value = "Invalid";
+            }
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
