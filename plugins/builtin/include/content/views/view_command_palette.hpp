@@ -22,8 +22,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool shouldProcess() const override { return true; }
 
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
-        [[nodiscard]] ImVec2 getMinSize() const override { return ImVec2(400, 100); }
-        [[nodiscard]] ImVec2 getMaxSize() const override { return ImVec2(400, 100); }
+        [[nodiscard]] ImVec2 getMinSize() const override { return { 400, 100 }; }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return { 400, 100 }; }
 
     private:
         enum class MatchType {

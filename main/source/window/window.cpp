@@ -519,11 +519,7 @@ namespace hex {
                 continue;
 
             if (view->isAvailable()) {
-                auto minSize = view->getMinSize();
-                minSize.x *= SharedData::globalScale;
-                minSize.y *= SharedData::globalScale;
-
-                ImGui::SetNextWindowSizeConstraints(minSize, view->getMaxSize());
+                ImGui::SetNextWindowSizeConstraints(scaled(view->getMinSize()), scaled(view->getMaxSize()));
                 view->drawContent();
             }
 

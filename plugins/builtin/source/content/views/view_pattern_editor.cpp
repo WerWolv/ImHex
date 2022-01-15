@@ -566,7 +566,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-            if (ImGui::BeginListBox("##patterns", ImVec2(-FLT_MIN, 0))) {
+            if (ImGui::BeginListBox("##patterns", ImVec2(300_scaled, 0))) {
 
                 u32 index = 0;
                 for (auto &path : this->m_possiblePatternFiles) {
