@@ -56,8 +56,8 @@ namespace hex {
         static mbedtls_x509_crt crt;
         mbedtls_x509_crt_init(&crt);
 
-        auto cacert = romfs::get("cacert.pem");
-        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8*>(cacert.data()), cacert.size() + 1);
+        auto cacert = romfs::get("cacert.pem").string();
+        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8*>(cacert.data()), cacert.size());
 
         mbedtls_ssl_conf_ca_chain(cfg, &crt, nullptr);
 
