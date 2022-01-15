@@ -81,6 +81,8 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::NewLine();
+                ImGui::Separator();
+                ImGui::NewLine();
 
                 if (ImGui::RadioButton("hex.common.little_endian"_lang, this->m_endian == std::endian::little)) {
                     this->m_endian = std::endian::little;
