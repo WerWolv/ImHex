@@ -179,6 +179,8 @@ namespace hex::plugin::builtin {
         this->m_memoryEditor.DrawWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), &this->getWindowOpenState(), this, dataSize, dataSize == 0 ? 0x00 : provider->getBaseAddress() + provider->getCurrentPageAddress());
 
         if (dataSize != 0x00) {
+            this->m_memoryEditor.OptShowAdvancedDecoding = this->m_advancedDecodingEnabled && this->m_currEncodingFile.valid();
+
             if (ImGui::Begin(View::toWindowName("hex.builtin.view.hexeditor.name").c_str())) {
 
                 if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
@@ -421,7 +423,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.load_encoding_file"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.load_enconding_file"_lang, DialogMode::Open, { }, [this](auto path) {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.load_enconding_file"_lang, DialogMode::Open, { { "Thingy Table File", "tbl" } }, [this](auto path) {
                     this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
                 });
             }
@@ -1133,7 +1135,7 @@ namespace hex::plugin::builtin {
                 auto advancedDecoding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding");
 
                 if (advancedDecoding.is_number())
-                    this->m_memoryEditor.OptShowAdvancedDecoding = static_cast<int>(advancedDecoding);
+                    this->m_advancedDecodingEnabled = static_cast<int>(advancedDecoding);
             }
 
             {

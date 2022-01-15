@@ -54,6 +54,7 @@ namespace hex::plugin::builtin {
         u8 m_highlightAlpha = 0x80;
 
         bool m_processingImportExport = false;
+        bool m_advancedDecodingEnabled = false;
 
         void drawSearchPopup();
         void drawGotoPopup();

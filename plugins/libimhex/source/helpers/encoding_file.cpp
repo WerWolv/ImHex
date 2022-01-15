@@ -13,6 +13,8 @@ namespace hex {
             case Type::Thingy: parseThingyFile(encodingFile); break;
             default: throw std::runtime_error("Invalid encoding file type");
         }
+
+        this->m_valid = true;
     }
 
     std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(const std::vector<u8> &buffer) const {

@@ -28,8 +28,14 @@ namespace hex {
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(const std::vector<u8> &buffer) const;
         [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
 
+        bool valid() const {
+            return this->m_valid;
+        }
+
     private:
         void parseThingyFile(std::ifstream &content);
+
+        bool m_valid = false;
 
         std::map<u32, std::map<std::vector<u8>, std::string>> m_mapping;
         size_t m_longestSequence = 0;

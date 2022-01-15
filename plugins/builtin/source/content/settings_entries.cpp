@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding", 0, [](auto name, nlohmann::json &setting) {
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding", 1, [](auto name, nlohmann::json &setting) {
             static bool advancedDecoding = static_cast<int>(setting);
 
             if (ImGui::Checkbox(name.data(), &advancedDecoding)) {
