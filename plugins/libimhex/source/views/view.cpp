@@ -25,7 +25,7 @@ namespace hex {
     void View::drawCommonInterfaces() {
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
@@ -37,7 +37,7 @@ namespace hex {
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
@@ -49,7 +49,7 @@ namespace hex {
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("%s", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {

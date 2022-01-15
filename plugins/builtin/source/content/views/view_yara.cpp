@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             if (this->m_rules.empty()) {
-                ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.builtin.view.yara.no_rules"_lang));
+                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.no_rules"_lang);
 
                 if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
             } else {
@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextFormatted("0x{0:X}", size);
                         } else {
                             ImGui::TableNextColumn();
-                            ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.builtin.view.yara.whole_data"_lang));
+                            ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted("");
                         }

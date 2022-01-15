@@ -148,9 +148,16 @@ namespace hex::plugin::builtin::prv {
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStatsValid) {
-            result.emplace_back("hex.builtin.provider.file.creation"_lang, ctime(&this->m_fileStats.st_ctime));
-            result.emplace_back("hex.builtin.provider.file.access"_lang, ctime(&this->m_fileStats.st_atime));
-            result.emplace_back("hex.builtin.provider.file.modification"_lang, ctime(&this->m_fileStats.st_mtime));
+            std::string buffer(0xFF, '\x00');
+
+            if (ctime_s(buffer.data(), buffer.size(), &this->m_fileStats.st_ctime) == 0)
+                result.emplace_back("hex.builtin.provider.file.creation"_lang, buffer);
+
+            if (ctime_s(buffer.data(), buffer.size(), &this->m_fileStats.st_atime) == 0)
+                result.emplace_back("hex.builtin.provider.file.access"_lang, buffer);
+
+            if (ctime_s(buffer.data(), buffer.size(), &this->m_fileStats.st_mtime) == 0)
+                result.emplace_back("hex.builtin.provider.file.modification"_lang, buffer);
         }
 
         return result;

@@ -165,13 +165,13 @@ namespace hex::plugin::builtin {
 
                         if (!this->m_fileDescription.empty()) {
                             ImGui::TextUnformatted("hex.builtin.view.information.description"_lang);
-                            ImGui::TextWrapped("%s", this->m_fileDescription.c_str());
+                            ImGui::TextFormattedWrapped("{}", this->m_fileDescription.c_str());
                             ImGui::NewLine();
                         }
 
                         if (!this->m_mimeType.empty()) {
                             ImGui::TextUnformatted("hex.builtin.view.information.mime"_lang);
-                            ImGui::TextWrapped("%s", this->m_mimeType.c_str());
+                            ImGui::TextFormattedWrapped("{}", this->m_mimeType.c_str());
                             ImGui::NewLine();
                         }
 
@@ -222,7 +222,7 @@ namespace hex::plugin::builtin {
 
                         if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
                             ImGui::NewLine();
-                            ImGui::TextColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "%s", static_cast<const char*>("hex.builtin.view.information.encrypted"_lang));
+                            ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
                         }
 
                     }

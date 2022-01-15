@@ -90,11 +90,19 @@ namespace ImGui {
 
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
 
-    void TextFormatted(const std::string &fmt, auto ... args) {
+    void TextFormatted(const std::string &fmt, auto&& ... args) {
         ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedColored(ImColor color, const std::string &fmt, auto ... args) {
+    void TextFormattedColored(ImColor color, const std::string &fmt, auto&& ... args) {
         ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    }
+
+    void TextFormattedDisabled(const std::string &fmt, auto&& ... args) {
+        ImGui::TextDisabled("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    }
+
+    void TextFormattedWrapped(const std::string &fmt, auto&& ... args) {
+        ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 }

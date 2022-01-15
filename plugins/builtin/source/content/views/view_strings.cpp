@@ -136,7 +136,7 @@ namespace hex::plugin::builtin {
                         return 0;
                     }, this);
                     if (this->m_regex && !this->m_pattern_parsed) {
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "hex.builtin.view.strings.regex_error"_lang);
+                        ImGui::TextFormattedColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "{}", "hex.builtin.view.strings.regex_error"_lang);
                     }
 
                     if (ImGui::Button("hex.builtin.view.strings.extract"_lang))
@@ -231,7 +231,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginChild("##scrolling", ImVec2(500, 150))) {
                 ImGui::TextUnformatted("hex.builtin.view.strings.demangle.title"_lang);
                 ImGui::Separator();
-                ImGui::TextWrapped("%s", this->m_demangledName.c_str());
+                ImGui::TextFormattedWrapped("{}", this->m_demangledName.c_str());
                 ImGui::NewLine();
                 if (ImGui::Button("hex.builtin.view.strings.demangle.copy"_lang))
                     ImGui::SetClipboardText(this->m_demangledName.c_str());

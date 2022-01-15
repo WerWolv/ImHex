@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
 
         constexpr const char* Links[] = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
 
-        ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
+        ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
 
         ImGui::NewLine();
 

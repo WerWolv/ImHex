@@ -440,7 +440,7 @@ namespace hex {
         if (ImGui::BeginPopup("hex.welcome.tip_of_the_day"_lang)) {
             ImGui::Header("hex.welcome.tip_of_the_day"_lang, true);
 
-            ImGui::TextWrapped("%s", this->m_tipOfTheDay.c_str());
+            ImGui::TextFormattedWrapped("{}", this->m_tipOfTheDay.c_str());
             ImGui::NewLine();
 
             bool dontShowAgain = !this->m_showTipOfTheDay;
@@ -591,7 +591,7 @@ namespace hex {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 3);
             ImGui::TableNextColumn();
 
-            ImGui::TextWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
+            ImGui::TextFormattedWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
             ImGui::TableNextColumn();

@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
 
                 // Draw byte
                 u8 byte = lineInfo[curr].bytes[col];
-                ImGui::TextColored(byte == 0x00 ? colorDisabled : colorText, "%s", hex::format(this->m_upperCaseHex ? "{:02X}" : "{:02x}", byte).c_str());
+                ImGui::TextFormattedColored(byte == 0x00 ? colorDisabled : colorText, this->m_upperCaseHex ? "{:02X}" : "{:02x}", byte);
                 ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
 
                 ImGui::SetCursorPosY(startY);
@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
                 {
                     auto glyphWidth = ImGui::CalcTextSize("0").x + 1;
                     for (u8 i = 0; i < 2; i++) {
-                        for (u8 col = 0; col < this->m_columnCount; col++) {
+                        for (u32 col = 0; col < this->m_columnCount; col++) {
                             ImGui::TextFormatted(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col);
                             ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
                         }

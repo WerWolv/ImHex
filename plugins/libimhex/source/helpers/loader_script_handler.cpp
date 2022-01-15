@@ -110,7 +110,7 @@ namespace hex {
 
         std::string code = keyword + " " + instance->ob_type->tp_name + " {\n";
 
-        for (u16 i = 0; i < PyList_Size(list); i++) {
+        for (Py_ssize_t i = 0; i < PyList_Size(list); i++) {
             auto item = PyList_GetItem(list, i);
 
             auto memberName = PyUnicode_AsUTF8(PyTuple_GetItem(item, 0));

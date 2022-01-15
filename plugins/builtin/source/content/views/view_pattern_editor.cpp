@@ -525,7 +525,7 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
+            ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
             std::vector<std::string> entries;
             entries.resize(this->m_possiblePatternFiles.size());

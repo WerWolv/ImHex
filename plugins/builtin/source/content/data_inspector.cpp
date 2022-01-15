@@ -107,7 +107,10 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(wchar_t), [](auto buffer, auto endian, auto style) {
-            auto c = hex::changeEndianess(*reinterpret_cast<wchar_t*>(buffer.data()), endian);
+            wchar_t wideChar = '\x00';
+            std::memcpy(&wideChar, buffer.data(), std::min(sizeof(wchar_t), buffer.size()));
+
+            auto c = hex::changeEndianess(wideChar, endian);
 
             std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
 
@@ -156,10 +159,11 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(__time32_t), [](auto buffer, auto endian, auto style) {
                 auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<__time32_t*>(buffer.data()), endian);
-                struct tm *ptm = _localtime32(&endianAdjustedTime);
+
+                struct tm ptm = { 0 };
                 std::string value;
-                if (ptm != nullptr)
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *ptm);
+                if (_localtime32_s(&ptm, &endianAdjustedTime) == 0)
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", ptm);
                 else
                     value = "Invalid";
 
@@ -168,10 +172,11 @@ namespace hex::plugin::builtin {
 
             ContentRegistry::DataInspector::add("hex.builtin.inspector.time64", sizeof(__time64_t), [](auto buffer, auto endian, auto style) {
                 auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<__time64_t*>(buffer.data()), endian);
-                struct tm *ptm = _localtime64(&endianAdjustedTime);
+
+                struct tm ptm = { 0 };
                 std::string value;
-                if (ptm != nullptr)
-                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", *ptm);
+                if (_localtime64_s(&ptm, &endianAdjustedTime) == 0)
+                    value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", ptm);
                 else
                     value = "Invalid";
 

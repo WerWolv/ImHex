@@ -364,7 +364,7 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
 
             if (!lastMathError.empty())
-                ImGui::TextColored(ImColor(0xA00040FF), "%s", hex::format("hex.builtin.tools.error"_lang, lastMathError).c_str());
+                ImGui::TextFormattedColored(ImColor(0xA00040FF), "hex.builtin.tools.error"_lang, lastMathError);
             else
                 ImGui::NewLine();
 
@@ -492,11 +492,11 @@ namespace hex::plugin::builtin {
 
         static const auto WarningColor = ImColor(0.92F, 0.25F, 0.2F, 1.0F);
         if (setuid && !x[0])
-            ImGui::TextColored(WarningColor, "%s", static_cast<const char*>("hex.builtin.tools.permissions.setuid_error"_lang));
+            ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setuid_error"_lang);
         if (setgid && !x[1])
-            ImGui::TextColored(WarningColor, "%s", static_cast<const char*>("hex.builtin.tools.permissions.setgid_error"_lang));
+            ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setgid_error"_lang);
         if (sticky && !x[2])
-            ImGui::TextColored(WarningColor, "%s", static_cast<const char*>("hex.builtin.tools.permissions.sticky_error"_lang));
+            ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.sticky_error"_lang);
 
     }
 
@@ -629,7 +629,7 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginChild("##summary", ImVec2(0, 300), true)) {
             if (!resultTitle.empty() && !resultExtract.empty()) {
                 ImGui::HeaderColored(resultTitle.c_str(), ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight),true);
-                ImGui::TextWrapped("%s", resultExtract.c_str());
+                ImGui::TextFormattedWrapped("{}", resultExtract.c_str());
             }
         }
         ImGui::EndChild();

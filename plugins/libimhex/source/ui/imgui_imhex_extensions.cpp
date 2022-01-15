@@ -213,7 +213,7 @@ namespace ImGui {
     void HeaderColored(const char *label, ImColor color, bool firstEntry) {
         if (!firstEntry)
             ImGui::NewLine();
-        ImGui::TextColored(color, "%s", label);
+        ImGui::TextFormattedColored(color, "{}", label);
         ImGui::Separator();
     }
 

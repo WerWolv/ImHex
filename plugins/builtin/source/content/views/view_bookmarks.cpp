@@ -86,8 +86,8 @@ namespace hex::plugin::builtin {
                         if (ImGui::BeginChild("hexData", ImVec2(0, ImGui::GetTextLineHeight() * 8), true)) {
                             size_t offset = region.address % 0x10;
 
-                            for (size_t byte = 0; byte < 0x10; byte++) {
-                                ImGui::TextDisabled("%02X", byte);
+                            for (u8 byte = 0; byte < 0x10; byte++) {
+                                ImGui::TextFormattedDisabled("{0:02X}", byte);
                                 ImGui::SameLine();
                             }
 
@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
 
                         if (locked)
-                            ImGui::TextWrapped("%s", comment.data());
+                            ImGui::TextFormattedWrapped("{}", comment.data());
                         else
                             ImGui::InputTextMultiline("##commentInput", comment.data(), 0xF'FFFF);
 

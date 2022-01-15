@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.script.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::SetCursorPosX(10);
-            ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.hexeditor.script.desc"_lang));
+            ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.hexeditor.script.desc"_lang));
 
             ImGui::NewLine();
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);

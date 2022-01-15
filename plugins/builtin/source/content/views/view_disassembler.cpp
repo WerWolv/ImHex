@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
                         disassembly.mnemonic = instructions[instr].mnemonic;
                         disassembly.operators = instructions[instr].op_str;
 
-                        for (u8 i = 0; i < instructions[instr].size; i++)
+                        for (u16 i = 0; i < instructions[instr].size; i++)
                             disassembly.bytes += hex::format("{0:02X} ", instructions[instr].bytes[i]);
                         disassembly.bytes.pop_back();
 

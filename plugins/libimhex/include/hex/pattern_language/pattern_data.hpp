@@ -1067,7 +1067,7 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::TextUnformatted(this->getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::TextUnformatted(this->getTypeName().c_str());
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
@@ -1202,7 +1202,7 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
 
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
@@ -1357,7 +1357,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormatted("0x{0:04X}", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
+            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this));
         }
@@ -1429,7 +1429,7 @@ namespace hex::pl {
             else
                 ImGui::TextFormatted("{0} bits", this->m_bitSize);
             ImGui::TableNextColumn();
-            ImGui::TextColored(ImColor(0xFF9BC64D), "bits");
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
             ImGui::TableNextColumn();
             {
                 u8 numBytes = (this->m_bitSize / 8) + 1;
@@ -1505,7 +1505,7 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
                 ImGui::TableNextColumn();
 
                 std::string valueString = "{ ";
