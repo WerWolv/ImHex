@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path){
+        EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path){
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
             }

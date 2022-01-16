@@ -14,8 +14,8 @@ namespace hex {
     constexpr auto GetPluginDescriptionSymbol   = "_ZN3hex6plugin{0}{1}8internal20getPluginDescriptionEv";
     constexpr auto SetImGuiContextSymbol        = "_ZN3hex6plugin{0}{1}8internal15setImGuiContextEP12ImGuiContext";
 
-    Plugin::Plugin(const std::string &path) {
-        this->m_handle = dlopen(path.data(), RTLD_LAZY);
+    Plugin::Plugin(const fs::path &path) {
+        this->m_handle = dlopen(path.string().c_str(), RTLD_LAZY);
 
         if (this->m_handle == nullptr) {
             log::error("dlopen failed: {}", dlerror());

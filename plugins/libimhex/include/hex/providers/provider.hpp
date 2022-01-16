@@ -31,7 +31,7 @@ namespace hex::prv {
         virtual void resize(ssize_t newSize);
 
         virtual void save();
-        virtual void saveAs(const std::string &path);
+        virtual void saveAs(const fs::path &path);
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;

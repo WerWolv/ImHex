@@ -44,7 +44,7 @@ namespace hex {
     std::vector<ContentRegistry::DataFormatter::impl::Entry> SharedData::dataFormatters;
     std::vector<ContentRegistry::FileHandler::impl::Entry> SharedData::fileHandlers;
 
-    std::list<std::string> SharedData::recentFilePaths;
+    std::list<fs::path> SharedData::recentFilePaths;
 
     int SharedData::mainArgc;
     char **SharedData::mainArgv;

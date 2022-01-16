@@ -29,7 +29,7 @@ class GDBProvider : public hex::prv::Provider {
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
-        void saveAs(const std::string &path) override;
+        void saveAs(const fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;

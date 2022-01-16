@@ -149,7 +149,7 @@ namespace hex::pl {
         return patterns;
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
         File file(path, File::Mode::Read);
 
         return this->executeString(provider, file.readString(), envVars, inVariables);

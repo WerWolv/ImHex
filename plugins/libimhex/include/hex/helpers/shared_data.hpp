@@ -94,7 +94,7 @@ namespace hex {
         static std::vector<ContentRegistry::DataFormatter::impl::Entry> dataFormatters;
         static std::vector<ContentRegistry::FileHandler::impl::Entry> fileHandlers;
 
-        static std::list<std::string> recentFilePaths;
+        static std::list<fs::path> recentFilePaths;
 
         static int mainArgc;
         static char **mainArgv;

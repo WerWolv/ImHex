@@ -208,7 +208,7 @@ namespace hex {
 
     }
 
-    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback, const std::string &defaultPath) {
+    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 
         nfdchar_t *outPath;

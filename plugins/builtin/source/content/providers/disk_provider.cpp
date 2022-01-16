@@ -54,7 +54,7 @@ namespace hex::plugin::builtin::prv {
     }
 
 
-    void DiskProvider::setPath(const std::string &path) {
+    void DiskProvider::setPath(const fs::path &path) {
         this->m_path = path;
     }
 
@@ -64,19 +64,11 @@ namespace hex::plugin::builtin::prv {
 
         #if defined (OS_WINDOWS)
 
-            std::wstring widePath;
-            {
-                auto length = this->m_path.length() + 1;
-                auto wideLength = MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, 0, 0);
-                auto buffer = new wchar_t[wideLength];
-                MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, buffer, wideLength);
-                widePath = buffer;
-                delete[] buffer;
-            }
+            const auto &path = this->m_path.native();
 
-            this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
             if (this->m_diskHandle == INVALID_HANDLE_VALUE) {
-                this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+                this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
                 this->m_writable = false;
 
                 if (this->m_diskHandle == INVALID_HANDLE_VALUE)
@@ -245,12 +237,12 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string DiskProvider::getName() const {
-        return this->m_path;
+        return this->m_path.string();
     }
 
     std::vector<std::pair<std::string, std::string>> DiskProvider::getDataInformation() const {
         return {
-                { "hex.builtin.provider.disk.selected_disk"_lang, this->m_path },
+                { "hex.builtin.provider.disk.selected_disk"_lang, this->m_path.string() },
                 { "hex.builtin.provider.disk.disk_size"_lang, hex::toByteString(this->m_diskSize) },
                 { "hex.builtin.provider.disk.sector_size"_lang, hex::toByteString(this->m_sectorSize) }
         };

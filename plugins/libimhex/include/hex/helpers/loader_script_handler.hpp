@@ -3,6 +3,8 @@
 #include <string>
 #include <string_view>
 
+#include <hex/helpers/paths.hpp>
+
 struct _object;
 typedef struct _object PyObject;
 
@@ -14,12 +16,12 @@ namespace hex {
     public:
         LoaderScript() = delete;
 
-        static bool processFile(const std::string &scriptPath);
+        static bool processFile(const fs::path &scriptPath);
 
-        static void setFilePath(const std::string &filePath) { LoaderScript::s_filePath = filePath; }
+        static void setFilePath(const fs::path &filePath) { LoaderScript::s_filePath = filePath; }
         static void setDataProvider(prv::Provider* provider) { LoaderScript::s_dataProvider = provider; }
     private:
-        static inline std::string s_filePath;
+        static inline fs::path s_filePath;
         static inline prv::Provider* s_dataProvider;
 
         static PyObject* Py_getFilePath(PyObject *self, PyObject *args);

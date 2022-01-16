@@ -32,7 +32,7 @@ namespace hex::prv {
     }
 
     void Provider::save() { }
-    void Provider::saveAs(const std::string &path) { }
+    void Provider::saveAs(const fs::path &path) { }
 
     void Provider::resize(ssize_t newSize) { }
 

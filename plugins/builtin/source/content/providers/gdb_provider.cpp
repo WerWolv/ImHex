@@ -214,7 +214,7 @@ namespace hex::plugin::builtin::prv {
         this->applyPatches();
     }
 
-    void GDBProvider::saveAs(const std::string &path) {
+    void GDBProvider::saveAs(const fs::path &path) {
 
     }
 

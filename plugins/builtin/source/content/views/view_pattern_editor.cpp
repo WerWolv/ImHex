@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
              this->m_textEditor.InsertText(code);
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const std::string &path) {
+        EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path) {
             if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
                 return;
 
@@ -232,7 +232,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, { { "Pattern", "hexpat" }}, [this](const std::string &path) {
+                hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, { { "Pattern", "hexpat" }}, [this](const auto &path) {
                     File file(path, File::Mode::Create);
 
                     file.write(this->m_textEditor.GetText());
@@ -586,7 +586,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             if (ImGui::Button("hex.common.browse"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.pattern_editor.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](auto path) {
+                hex::openFileBrowser("hex.builtin.view.pattern_editor.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](const auto &path) {
                     this->loadPatternFile(path);
                     ImGui::CloseCurrentPopup();
                 });
@@ -597,27 +597,13 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewPatternEditor::loadPatternFile(const std::string &path) {
-        FILE *file = fopen(path.c_str(), "rb");
+    void ViewPatternEditor::loadPatternFile(const fs::path &path) {
+        File file(path, File::Mode::Read);
+        if (file.isValid()) {
+            auto code = file.readString();
 
-        if (file != nullptr) {
-            char *buffer;
-            fseek(file, 0, SEEK_END);
-            size_t size = ftell(file);
-            rewind(file);
-
-            buffer = new char[size + 1];
-
-            fread(buffer, size, 1, file);
-            buffer[size] = 0x00;
-
-
-            fclose(file);
-
-            this->evaluatePattern(buffer);
-            this->m_textEditor.SetText(buffer);
-
-            delete[] buffer;
+            this->evaluatePattern(code);
+            this->m_textEditor.SetText(code);
         }
     }
 

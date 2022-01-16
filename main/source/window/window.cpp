@@ -174,11 +174,11 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [](const std::string &path){
+        EventManager::subscribe<EventFileLoaded>(this, [](const auto &path){
             SharedData::recentFilePaths.push_front(path);
 
             {
-                std::list<std::string> uniques;
+                std::list<fs::path> uniques;
                 for (auto &file : SharedData::recentFilePaths) {
 
                     bool exists = false;
@@ -198,7 +198,8 @@ namespace hex {
 
             {
                 std::vector<std::string> recentFilesVector;
-                std::copy(SharedData::recentFilePaths.begin(), SharedData::recentFilePaths.end(), std::back_inserter(recentFilesVector));
+                for (const auto &recentPath : SharedData::recentFilePaths)
+                    recentFilesVector.push_back(recentPath.string());
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }

@@ -9,10 +9,10 @@ using json = nlohmann::json;
 
 namespace hex {
 
-    std::string ProjectFile::s_currProjectFilePath;
+    fs::path ProjectFile::s_currProjectFilePath;
     bool ProjectFile::s_hasUnsavedChanged = false;
 
-    std::string ProjectFile::s_filePath;
+    fs::path ProjectFile::s_filePath;
     std::string ProjectFile::s_pattern;
     Patches ProjectFile::s_patches;
     std::list<ImHexApi::Bookmarks::Entry> ProjectFile::s_bookmarks;
@@ -39,7 +39,7 @@ namespace hex {
     }
 
 
-    bool ProjectFile::load(const std::string &filePath) {
+    bool ProjectFile::load(const fs::path &filePath) {
         ProjectFile::s_hasUnsavedChanged = false;
 
         json projectFileData;
@@ -48,7 +48,7 @@ namespace hex {
             std::ifstream projectFile(filePath.c_str());
             projectFile >> projectFileData;
 
-            ProjectFile::s_filePath             = projectFileData["filePath"];
+            ProjectFile::s_filePath             = fs::path(projectFileData["filePath"].get<std::string>());
             ProjectFile::s_pattern              = projectFileData["pattern"];
             ProjectFile::s_patches              = projectFileData["patches"].get<Patches>();
             ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
@@ -73,7 +73,7 @@ namespace hex {
         return true;
     }
 
-    bool ProjectFile::store(std::string filePath) {
+    bool ProjectFile::store(fs::path filePath) {
         EventManager::post<EventProjectFileStore>();
 
         json projectFileData;

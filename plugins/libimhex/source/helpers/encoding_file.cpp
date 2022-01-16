@@ -6,12 +6,12 @@
 
 namespace hex {
 
-    EncodingFile::EncodingFile(Type type, const std::string &path) {
+    EncodingFile::EncodingFile(Type type, const fs::path &path) {
         std::ifstream encodingFile(path.c_str());
 
         switch (type) {
             case Type::Thingy: parseThingyFile(encodingFile); break;
-            default: throw std::runtime_error("Invalid encoding file type");
+            default: return;
         }
 
         this->m_valid = true;

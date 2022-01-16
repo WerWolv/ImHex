@@ -18,7 +18,7 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     PyObject* LoaderScript::Py_getFilePath(PyObject *self, PyObject *args) {
-        return PyUnicode_FromString(LoaderScript::s_filePath.c_str());
+        return PyUnicode_FromString(LoaderScript::s_filePath.string().c_str());
     }
 
     PyObject* LoaderScript::Py_addPatch(PyObject *self, PyObject *args) {
@@ -178,7 +178,7 @@ namespace hex {
         return createStructureType("union", args);
     }
 
-    bool LoaderScript::processFile(const std::string &scriptPath) {
+    bool LoaderScript::processFile(const fs::path &scriptPath) {
         Py_SetProgramName(Py_DecodeLocale((SharedData::mainArgv)[0], nullptr));
 
         for (const auto &dir : hex::getPath(ImHexPath::Python)) {
@@ -220,7 +220,7 @@ namespace hex {
         }
 
         File scriptFile(scriptPath, File::Mode::Read);
-        PyRun_SimpleFile(scriptFile.getHandle(), scriptPath.c_str());
+        PyRun_SimpleFile(scriptFile.getHandle(), scriptFile.getPath().string().c_str());
 
         Py_Finalize();
 

@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include <hex/helpers/paths.hpp>
+
 #if defined(OS_MACOS)
     #define off64_t off_t
     #define fopen64 fopen
@@ -24,7 +26,7 @@ namespace hex {
             Create
         };
 
-        explicit File(const std::string &path, Mode mode);
+        explicit File(const fs::path &path, Mode mode);
         File();
         File(const File&) = delete;
         File(File &&other) noexcept;
@@ -51,11 +53,11 @@ namespace hex {
         void remove();
 
         auto getHandle() { return this->m_file; }
-        const std::string& getPath() { return this->m_path; }
+        const fs::path& getPath() { return this->m_path; }
 
     private:
         FILE *m_file;
-        std::string m_path;
+        fs::path m_path;
     };
 
 }

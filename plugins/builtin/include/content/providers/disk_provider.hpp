@@ -27,13 +27,13 @@ namespace hex::plugin::builtin::prv {
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override;
 
-        void setPath(const std::string &path);
+        void setPath(const fs::path &path);
 
         [[nodiscard]] bool open() override;
         void close() override;
 
-        [[nodiscard]] virtual std::string getName() const;
-        [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataInformation() const;
+        [[nodiscard]] std::string getName() const override;
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
         void drawLoadInterface() override;
@@ -42,7 +42,7 @@ namespace hex::plugin::builtin::prv {
         void reloadDrives();
 
         std::set<std::string> m_availableDrives;
-        std::string m_path;
+        fs::path m_path;
 
         #if defined(OS_WINDOWS)
             HANDLE m_diskHandle = INVALID_HANDLE_VALUE;

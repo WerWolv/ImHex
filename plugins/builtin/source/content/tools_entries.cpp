@@ -682,8 +682,8 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...")) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, DialogMode::Open, {}, [](const std::string &path) {
-                        selectedFile = path;
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, DialogMode::Open, {}, [](const auto &path) {
+                        selectedFile = path.string();
                     });
                 }
 
@@ -798,8 +798,8 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##path", selectedFile.data(), selectedFile.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...##input")) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, DialogMode::Open, {}, [](const std::string &path) {
-                        selectedFile = path;
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, DialogMode::Open, {}, [](const auto &path) {
+                        selectedFile = path.string();
                     });
                 }
                 ImGui::SameLine();
@@ -808,8 +808,8 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##base_path", baseOutputPath.data(), baseOutputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &baseOutputPath);
                 ImGui::SameLine();
                 if (ImGui::Button("...##output")) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, DialogMode::Save, {}, [](const std::string &path) {
-                        baseOutputPath = path;
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, DialogMode::Save, {}, [](const auto &path) {
+                        baseOutputPath = path.string();
                     });
                 }
                 ImGui::SameLine();
@@ -934,8 +934,8 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(combining);
             {
                 if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.add.picker"_lang, DialogMode::Open, {}, [](const std::string &path) {
-                        files.push_back(path);
+                    hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.add.picker"_lang, DialogMode::Open, {}, [](const auto &path) {
+                        files.push_back(path.string());
                     });
                 }
                 ImGui::SameLine();
@@ -958,8 +958,8 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##output_path", outputPath.data(), outputPath.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &outputPath);
             ImGui::SameLine();
             if (ImGui::Button("...")) {
-                hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, DialogMode::Save, {}, [](const std::string &path) {
-                    outputPath = path;
+                hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, DialogMode::Save, {}, [](const auto &path) {
+                    outputPath = path.string();
                 });
             }
             ImGui::SameLine();

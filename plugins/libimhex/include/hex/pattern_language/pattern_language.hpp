@@ -35,7 +35,7 @@ namespace hex::pl {
         [[nodiscard]]
         std::optional<std::vector<PatternData*>> executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = { }, const std::map<std::string, Token::Literal> &inVariables = { });
         [[nodiscard]]
-        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const std::string &path, const std::map<std::string, Token::Literal> &envVars = { }, const std::map<std::string, Token::Literal> &inVariables = { });
+        std::optional<std::vector<PatternData*>> executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars = { }, const std::map<std::string, Token::Literal> &inVariables = { });
         [[nodiscard]]
         const std::vector<ASTNode*>& getCurrentAST() const;
 

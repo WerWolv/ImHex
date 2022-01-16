@@ -8,6 +8,7 @@
 #include <functional>
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/helpers/paths.hpp>
 
 #define EVENT_DEF(event_name, ...)                                                  \
     struct event_name final : public hex::Event<__VA_ARGS__> {                      \
@@ -98,7 +99,7 @@ namespace hex {
     namespace pl { class PatternData; }
 
     /* Default Events */
-    EVENT_DEF(EventFileLoaded, std::string);
+    EVENT_DEF(EventFileLoaded, fs::path);
     EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
     EVENT_DEF(EventPatternChanged, std::vector<pl::PatternData*>&);
@@ -117,7 +118,7 @@ namespace hex {
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
     EVENT_DEF(RequestChangeWindowTitle, std::string);
     EVENT_DEF(RequestCloseImHex, bool);
-    EVENT_DEF(RequestOpenFile, std::string);
+    EVENT_DEF(RequestOpenFile, fs::path);
     EVENT_DEF(RequestChangeTheme, u32);
     EVENT_DEF(RequestOpenPopup, std::string);
     EVENT_DEF(RequestCreateProvider, std::string, hex::prv::Provider **);

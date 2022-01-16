@@ -82,7 +82,7 @@ namespace hex::plugin::builtin::prv {
         this->applyPatches();
     }
 
-    void FileProvider::saveAs(const std::string &path) {
+    void FileProvider::saveAs(const fs::path &path) {
         File file(path, File::Mode::Create);
 
         if (file.isValid()) {
@@ -104,31 +104,9 @@ namespace hex::plugin::builtin::prv {
     void FileProvider::resize(ssize_t newSize) {
         this->close();
 
-    #if defined(OS_WINDOWS)
-        std::wstring widePath;
         {
-            auto length = static_cast<int>(this->m_path.length() + 1);
-            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, nullptr, 0);
-            auto buffer = new wchar_t[wideLength];
-            MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, buffer, wideLength);
-            widePath = buffer;
-            delete[] buffer;
+            File(this->m_path, File::Mode::Write).setSize(newSize);
         }
-
-        auto handle = ::CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-
-        if (handle != INVALID_HANDLE_VALUE) {
-            ::SetFilePointerEx(handle, LARGE_INTEGER { .QuadPart = newSize }, nullptr, FILE_BEGIN);
-            ::SetEndOfFile(handle);
-            ::CloseHandle(handle);
-        }
-    #else
-        auto handle = ::open(this->m_path.data(), 0644);
-
-        ::ftruncate(handle, newSize - 1);
-
-        ::close(handle);
-    #endif
 
         this->open();
     }
@@ -144,7 +122,7 @@ namespace hex::plugin::builtin::prv {
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {
         std::vector<std::pair<std::string, std::string>> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path);
+        result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path.string());
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStatsValid) {
@@ -156,90 +134,82 @@ namespace hex::plugin::builtin::prv {
         return result;
     }
 
-    void FileProvider::setPath(const std::string &path) {
+    void FileProvider::setPath(const fs::path &path) {
         this->m_path = path;
     }
 
     bool FileProvider::open() {
-        this->m_fileStatsValid = stat(this->m_path.data(), &this->m_fileStats) == 0;
+        this->m_fileStatsValid = stat(this->m_path.string().data(), &this->m_fileStats) == 0;
 
         this->m_readable = true;
         this->m_writable = true;
 
         #if defined(OS_WINDOWS)
-        std::wstring widePath;
-        {
-            auto length = this->m_path.length() + 1;
-            auto wideLength = MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, 0, 0);
-            auto buffer = new wchar_t[wideLength];
-            MultiByteToWideChar(CP_UTF8, 0, this->m_path.data(), length, buffer, wideLength);
-            widePath = buffer;
-            delete[] buffer;
-        }
+            const auto &path = this->m_path.native();
 
-        LARGE_INTEGER fileSize = { 0 };
-        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            LARGE_INTEGER fileSize = { 0 };
+            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
-        GetFileSizeEx(this->m_file, &fileSize);
-        this->m_fileSize = fileSize.QuadPart;
-        CloseHandle(this->m_file);
-
-        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(widePath.data(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-            this->m_writable = false;
-        }
-
-        auto fileCleanup = SCOPE_GUARD {
+            GetFileSizeEx(this->m_file, &fileSize);
+            this->m_fileSize = fileSize.QuadPart;
             CloseHandle(this->m_file);
 
-            this->m_readable = false;
-            this->m_file = nullptr;
-        };
-
-        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            return false;
-        }
-
-        if (this->m_fileSize > 0) {
-            this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
-            if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
-
-                this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
-
-                if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE)
-                    return false;
+            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+                this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+                this->m_writable = false;
             }
 
-            auto mappingCleanup = SCOPE_GUARD {
-                CloseHandle(this->m_mapping);
+            auto fileCleanup = SCOPE_GUARD {
+                CloseHandle(this->m_file);
 
-                this->m_mapping = nullptr;
                 this->m_readable = false;
+                this->m_file = nullptr;
             };
 
-            this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
-            if (this->m_mappedFile == nullptr) {
-
-                this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
-                if (this->m_mappedFile == nullptr) {
-                    this->m_readable = false;
-
-                    return false;
-                }
+            if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+                return false;
             }
 
-            mappingCleanup.release();
+            if (this->m_fileSize > 0) {
+                this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
+                if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
 
-            ProjectFile::setFilePath(this->m_path);
-        } else if (!this->m_emptyFile) {
-            this->m_emptyFile = true;
-            this->resize(1);
-        } else {
-            return false;
-        }
+                    this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
 
-        fileCleanup.release();
+                    if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE)
+                        return false;
+                }
+
+                auto mappingCleanup = SCOPE_GUARD {
+                    CloseHandle(this->m_mapping);
+
+                    this->m_mapping = nullptr;
+                    this->m_readable = false;
+                };
+
+                this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
+                if (this->m_mappedFile == nullptr) {
+
+                    this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
+                    if (this->m_mappedFile == nullptr) {
+                        this->m_readable = false;
+
+                        return false;
+                    }
+                }
+
+                mappingCleanup.release();
+
+                ProjectFile::setFilePath(this->m_path);
+            } else if (!this->m_emptyFile) {
+                this->m_emptyFile = true;
+                this->resize(1);
+            } else {
+                return false;
+            }
+
+            fileCleanup.release();
 
         #else
             this->m_file = ::open(this->m_path.data(), O_RDWR);

@@ -60,12 +60,8 @@ namespace hex::plugin::builtin {
         void drawGotoPopup();
         void drawEditPopup();
 
-        bool createFile(const std::string &path);
-        void openFile(const std::string &path);
-        bool saveToFile(const std::string &path, const std::vector<u8>& data);
-        bool loadFromFile(const std::string &path, std::vector<u8>& data);
+        void openFile(const fs::path &path);
 
-        enum class Language { C, Cpp, CSharp, Rust, Python, Java, JavaScript };
         void copyBytes() const;
         void pasteBytes() const;
         void copyString() const;

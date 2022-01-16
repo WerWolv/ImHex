@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <hex/helpers/concepts.hpp>
+#include <hex/helpers/paths.hpp>
 
 #include <array>
 #include <bit>
@@ -221,7 +222,7 @@ namespace hex {
         Folder
     };
 
-    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::string)> &callback, const std::string &defaultPath = {});
+    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath = {});
 
     float float16ToFloat32(u16 float16);
 

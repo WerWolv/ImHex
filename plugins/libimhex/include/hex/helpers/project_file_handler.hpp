@@ -16,8 +16,8 @@ namespace hex {
     public:
         ProjectFile() = delete;
 
-        static bool load(const std::string &filePath);
-        static bool store(std::string filePath = "");
+        static bool load(const fs::path &filePath);
+        static bool store(fs::path filePath = { });
 
         [[nodiscard]] static bool hasUnsavedChanges() {
             return ProjectFile::s_hasUnsavedChanged;
@@ -32,7 +32,7 @@ namespace hex {
                 EventManager::post<RequestChangeWindowTitle>(fs::path(getFilePath()).filename().string());
         }
 
-        [[nodiscard]] static const std::string& getProjectFilePath() {
+        [[nodiscard]] static const fs::path& getProjectFilePath() {
             return ProjectFile::s_currProjectFilePath;
         }
 
@@ -41,14 +41,14 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const std::string& getFilePath() {
+        [[nodiscard]] static const fs::path& getFilePath() {
             return ProjectFile::s_filePath;
         }
 
-        static void setFilePath(const std::string &filePath) {
+        static void setFilePath(const fs::path &filePath) {
             ProjectFile::s_filePath = filePath;
 
-            EventManager::post<RequestChangeWindowTitle>(fs::path(filePath).filename().string());
+            EventManager::post<RequestChangeWindowTitle>(filePath.filename().string());
         }
 
 
@@ -92,10 +92,10 @@ namespace hex {
         }
 
     private:
-        static std::string s_currProjectFilePath;
+        static fs::path s_currProjectFilePath;
         static bool s_hasUnsavedChanged;
 
-        static std::string s_filePath;
+        static fs::path s_filePath;
         static std::string s_pattern;
         static Patches s_patches;
         static std::list<ImHexApi::Bookmarks::Entry> s_bookmarks;

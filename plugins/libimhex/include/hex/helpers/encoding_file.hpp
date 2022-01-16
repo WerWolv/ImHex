@@ -6,31 +6,23 @@
 #include <string_view>
 #include <vector>
 
-namespace hex {
+#include <hex/helpers/paths.hpp>
 
-    template<typename T>
-    struct SizeSorter {
-        bool operator() (const T& lhs, const T& rhs) const {
-            return lhs.size() < rhs.size();
-        }
-    };
+namespace hex {
 
     class EncodingFile {
     public:
         enum class Type {
-            Thingy,
-            CSV
+            Thingy
         };
 
         EncodingFile() = default;
-        EncodingFile(Type type, const std::string &path);
+        EncodingFile(Type type, const fs::path &path);
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(const std::vector<u8> &buffer) const;
         [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
 
-        bool valid() const {
-            return this->m_valid;
-        }
+        [[nodiscard]] bool valid() const { return this->m_valid; }
 
     private:
         void parseThingyFile(std::ifstream &content);

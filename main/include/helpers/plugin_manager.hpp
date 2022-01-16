@@ -16,7 +16,7 @@ namespace hex {
 
     class Plugin {
     public:
-        Plugin(const std::string &path);
+        Plugin(const fs::path &path);
         Plugin(const Plugin&) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();

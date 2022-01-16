@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
         void drawEnvVars(ImVec2 size);
         void drawVariableSettings(ImVec2 size);
 
-        void loadPatternFile(const std::string &path);
+        void loadPatternFile(const fs::path &path);
         void clearPatternData();
 
         void parsePattern(const std::string &code);
