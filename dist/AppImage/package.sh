@@ -41,7 +41,7 @@ chmod a+x ${BUILDDIR}/ImHex.AppDir/AppRun
 ## Add all dependencies
 ldd ${BUILDDIR}/imhex | awk '/ => /{print $3}' | awk '!/(libc|libstdc++|libc++|libdl|libpthread|libselinux|ld-linux|libgdk)/' | xargs -I '{}' cp '{}' ${APPDIR}/usr/lib
 ldd ${BUILDDIR}/plugins/builtin/builtin.hexplug | awk '/ => /{print $3}' | awk '!/(libc|libstdc++|libc++|libdl|libpthread|libselinux|ld-linux|libgdk)/' | xargs -I '{}' cp '{}' ${APPDIR}/usr/lib
-ldd ${BUILDDIR}/plugins/libimhex/libimhex.so | awk '/ => /{print $3}' | awk '!/(libc|libstdc++|libc++|libdl|libpthread|libselinux|ld-linux|libgdk)/' | xargs -I '{}' cp '{}' ${APPDIR}/usr/lib
+ldd ${BUILDDIR}/lib/libimhex/libimhex.so | awk '/ => /{print $3}' | awk '!/(libc|libstdc++|libc++|libdl|libpthread|libselinux|ld-linux|libgdk)/' | xargs -I '{}' cp '{}' ${APPDIR}/usr/lib
 
 # Package it up as described here:
 # https://github.com/AppImage/AppImageKit#appimagetool-usage
