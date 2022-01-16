@@ -139,7 +139,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     bool FileProvider::open() {
-        this->m_fileStatsValid = stat(this->m_path.string().data(), &this->m_fileStats) == 0;
+        this->m_fileStatsValid = stat(this->m_path.string().c_str(), &this->m_fileStats) == 0;
 
         this->m_readable = true;
         this->m_writable = true;
@@ -212,9 +212,11 @@ namespace hex::plugin::builtin::prv {
             fileCleanup.release();
 
         #else
-            this->m_file = ::open(this->m_path.data(), O_RDWR);
+            const auto &path = this->m_path.native();
+
+            this->m_file = ::open(path.c_str(), O_RDWR);
             if (this->m_file == -1) {
-                this->m_file = ::open(this->m_path.data(), O_RDONLY);
+                this->m_file = ::open(path.c_str(), O_RDONLY);
                 this->m_writable = false;
             }
 
@@ -238,17 +240,17 @@ namespace hex::plugin::builtin::prv {
     }
 
     void FileProvider::close() {
-    #if defined(OS_WINDOWS)
-        if (this->m_mappedFile != nullptr)
-            ::UnmapViewOfFile(this->m_mappedFile);
-        if (this->m_mapping != nullptr)
-            ::CloseHandle(this->m_mapping);
-        if (this->m_file != nullptr)
-            ::CloseHandle(this->m_file);
-    #else
-        ::munmap(this->m_mappedFile, this->m_fileSize);
-        ::close(this->m_file);
-    #endif
+        #if defined(OS_WINDOWS)
+            if (this->m_mappedFile != nullptr)
+                ::UnmapViewOfFile(this->m_mappedFile);
+            if (this->m_mapping != nullptr)
+                ::CloseHandle(this->m_mapping);
+            if (this->m_file != nullptr)
+                ::CloseHandle(this->m_file);
+        #else
+            ::munmap(this->m_mappedFile, this->m_fileSize);
+            ::close(this->m_file);
+        #endif
     }
 
 }

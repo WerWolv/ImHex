@@ -47,6 +47,7 @@ namespace hex::plugin::builtin::prv {
         #if defined(OS_WINDOWS)
             HANDLE m_diskHandle = INVALID_HANDLE_VALUE;
         #else
+            std::string m_pathBuffer;
             int m_diskHandle = -1;
         #endif
 

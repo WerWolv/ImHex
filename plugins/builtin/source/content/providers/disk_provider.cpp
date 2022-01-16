@@ -103,15 +103,17 @@ namespace hex::plugin::builtin::prv {
 
 
         #else
+            const auto &path = this->m_path.native();
+
             struct stat driveStat;
 
-            ::stat(this->m_path.data(), &driveStat) == 0;
+            ::stat(path.c_str(), &driveStat) == 0;
             this->m_diskSize = driveStat.st_size;
             this->m_sectorSize = 0;
 
-            this->m_diskHandle = ::open(this->m_path.data(), O_RDWR);
+            this->m_diskHandle = ::open(path.c_str(), O_RDWR);
             if (this->m_diskHandle == -1) {
-                this->m_diskHandle = ::open(this->m_path.data(), O_RDONLY);
+                this->m_diskHandle = ::open(path.c_str(), O_RDONLY);
                 this->m_writable = false;
             }
 
@@ -306,7 +308,8 @@ namespace hex::plugin::builtin::prv {
 
         #else
 
-            ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_path.data(), this->m_path.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_path);
+            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer))
+                this->m_path = this->m_pathBuffer;
 
         #endif
     }
