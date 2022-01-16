@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "macros"
+name = "hex-macros"
 version = "0.1.0"
 dependencies = [
  "quote",

@@ -152,7 +152,7 @@ make -j
 
 To create a standalone zipfile on Windows, get the Python standard library (e.g. from https://github.com/python/cpython/tree/master/Lib) and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` and `libwinpthread-1.dll` from your mingw setup next to the executable.
 
-- Copy the files from `python_libs` in the `lib` folder next to your built executable.
+- Copy the files inside the `/resources/lib/python` folder into the `lib` folder next to your built executable.
 - Place your magic databases in the `magic` folder next to your built executable
 - Place your patterns in the `pattern` folder next to your built executable
 - Place your include pattern files in the `include` folder next to your built executable

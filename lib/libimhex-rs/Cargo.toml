@@ -1,5 +1,5 @@
 [package]
-name = "hex"
+name = "libimhex-rs"
 version = "0.1.0"
 edition = "2018"
 build = "build.rs"
@@ -7,7 +7,7 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-macros = { path = "proc_macros" }
+imhex-macros = { path = "proc_macros" }
 imgui = { path = "imgui-rs" }
 
 cxx = "1.0.55"

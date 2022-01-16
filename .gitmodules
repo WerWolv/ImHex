@@ -1,26 +1,26 @@
-[submodule "external/nativefiledialog"]
-	path = external/nativefiledialog
+[submodule "lib/external/nativefiledialog"]
+	path = lib/external/nativefiledialog
 	url = https://github.com/btzy/nativefiledialog-extended
 	ignore = dirty
-[submodule "external/yara/yara"]
-	path = external/yara/yara
+[submodule "lib/external/yara/yara"]
+	path = lib/external/yara/yara
 	url = https://github.com/VirusTotal/yara
 	ignore = dirty
-[submodule "external/xdgpp"]
-	path = external/xdgpp
+[submodule "lib/external/xdgpp"]
+	path = lib/external/xdgpp
 	url = https://git.sr.ht/~danyspin97/xdgpp
 	ignore = dirty
-[submodule "external/fmt"]
-	path = external/fmt
+[submodule "lib/external/fmt"]
+	path = lib/external/fmt
 	url = https://github.com/fmtlib/fmt
 	ignore = dirty
-[submodule "external/curl"]
-	path = external/curl
+[submodule "lib/external/curl"]
+	path = lib/external/curl
 	url = https://github.com/curl/curl
 	ignore = dirty
-[submodule "external/capstone"]
-	path = external/capstone
+[submodule "lib/external/capstone"]
+	path = lib/external/capstone
 	url = https://github.com/capstone-engine/capstone
-[submodule "external/libromfs"]
-	path = external/libromfs
+[submodule "lib/external/libromfs"]
+	path = lib/external/libromfs
 	url = https://github.com/WerWolv/libromfs

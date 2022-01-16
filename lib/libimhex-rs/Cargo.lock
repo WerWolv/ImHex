@@ -81,7 +81,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hex"
+name = "libimhex-rs"
 version = "0.1.0"
 dependencies = [
  "cxx",

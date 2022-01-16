@@ -84,17 +84,7 @@ dependencies = [
 name = "example_rust"
 version = "0.1.0"
 dependencies = [
- "hex",
-]
-
-[[package]]
-name = "hex"
-version = "0.1.0"
-dependencies = [
- "cxx",
- "cxx-build",
- "imgui",
- "macros",
+ "libimhex-rs",
 ]
 
 [[package]]
@@ -112,6 +102,14 @@ version = "0.8.0"
 dependencies = [
  "cc",
  "chlorine",
+]
+
+[[package]]
+name = "imhex-macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -136,6 +134,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd8f7255a17a627354f321ef0055d63b898c6fb27eff628af4d1b66b7331edf6"
 
 [[package]]
+name = "libimhex-rs"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "imgui",
+ "imhex-macros",
+]
+
+[[package]]
 name = "link-cplusplus"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -151,14 +159,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712a4d093c9976e24e7dbca41db895dabcbac38eb5f4045393d17a95bdfb1109"
 dependencies = [
  "scopeguard",
-]
-
-[[package]]
-name = "macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn",
 ]
 
 [[package]]

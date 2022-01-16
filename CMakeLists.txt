@@ -17,6 +17,9 @@ detectBadClone()
 set(PLUGINS
     builtin
     windows
+
+    example_cpp
+    example_rust
 )
 
 # Add various defines
@@ -26,7 +29,7 @@ addVersionDefines()
 configurePackingResources()
 
 # Add ImHex sources
-add_subdirectory(plugins/libimhex)
+add_subdirectory(lib/libimhex)
 add_subdirectory(main)
 add_custom_target(imhex ALL DEPENDS main)
 

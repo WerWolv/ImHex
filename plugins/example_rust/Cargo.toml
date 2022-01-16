@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 path = "source/plugin_example.rs"
 
 [dependencies]
-hex = { path = "../libimhex-rust" }
+hex = { package = "libimhex-rs", path = "../../lib/libimhex-rs" }
 
 [profile.release]
 lto = true

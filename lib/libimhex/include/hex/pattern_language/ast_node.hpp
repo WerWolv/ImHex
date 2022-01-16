@@ -107,7 +107,7 @@ namespace hex::pl {
 
     class ASTNodeLiteral : public ASTNode {
     public:
-        explicit ASTNodeLiteral(Token::Literal literal) : ASTNode(), m_literal(literal) { }
+        explicit ASTNodeLiteral(Token::Literal literal) : ASTNode(), m_literal(std::move(literal)) { }
 
         ASTNodeLiteral(const ASTNodeLiteral&) = default;
 
