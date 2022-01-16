@@ -17,9 +17,6 @@ detectBadClone()
 set(PLUGINS
     builtin
     windows
-
-    example_cpp
-    example_rust
 )
 
 # Add various defines
