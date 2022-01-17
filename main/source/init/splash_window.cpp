@@ -171,6 +171,13 @@ namespace hex::init {
 
             SharedData::globalScale = SharedData::fontScale = std::midpoint(xScale, yScale);
 
+            // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
+            // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
+            // extremely huge with native scaling on MacOS.
+            #if defined(OS_MACOS)
+                SharedData::globalScale /= 2;
+            #endif
+
             if (SharedData::globalScale <= 0) {
                 SharedData::globalScale = 1.0;
             }
