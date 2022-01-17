@@ -63,7 +63,7 @@ namespace hex {
         static nlohmann::json settingsJson;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
         static std::map<std::string, ContentRegistry::PatternLanguage::Function> patternLanguageFunctions;
-        static std::vector<View*> views;
+        static std::map<std::string, View*> views;
         static std::vector<ContentRegistry::Tools::impl::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::impl::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;
@@ -75,9 +75,13 @@ namespace hex {
         static std::map<std::string, std::vector<LanguageDefinition>> languageDefinitions;
         static std::map<std::string, std::string> loadedLanguageStrings;
 
-        static std::vector<ContentRegistry::Interface::DrawCallback> welcomeScreenEntries;
-        static std::vector<ContentRegistry::Interface::DrawCallback> footerItems;
-        static std::vector<ContentRegistry::Interface::DrawCallback> toolbarItems;
+        static ImGuiID dockSpaceId;
+
+        static std::vector<ContentRegistry::Interface::impl::MainMenuItem> mainMenuItems;
+        static std::vector<ContentRegistry::Interface::impl::DrawCallback> welcomeScreenEntries;
+        static std::vector<ContentRegistry::Interface::impl::DrawCallback> footerItems;
+        static std::vector<ContentRegistry::Interface::impl::DrawCallback> toolbarItems;
+        static std::vector<ContentRegistry::Interface::impl::Layout> layouts;
 
         static std::map<Shortcut, std::function<void()>> globalShortcuts;
 

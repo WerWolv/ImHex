@@ -111,6 +111,8 @@ namespace hex {
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventProviderCreated, prv::Provider*);
+    EVENT_DEF(EventFrameBegin);
+    EVENT_DEF(EventFrameEnd);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);

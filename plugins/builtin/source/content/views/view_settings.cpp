@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewSettings::drawMenu() {
-        if (ImGui::BeginMenu("hex.menu.help"_lang)) {
+        if (ImGui::BeginMenu("hex.builtin.menu.help"_lang)) {
 
             ImGui::Separator();
 

@@ -32,8 +32,8 @@ namespace hex::init {
     }
 
     WindowSplash::~WindowSplash() {
-        this->deinitImGui();
-        this->deinitGLFW();
+        this->exitImGui();
+        this->exitGLFW();
     }
 
 
@@ -235,12 +235,12 @@ namespace hex::init {
         io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
     }
 
-    void WindowSplash::deinitGLFW() {
+    void WindowSplash::exitGLFW() {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
     }
 
-    void WindowSplash::deinitImGui() {
+    void WindowSplash::exitImGui() {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();

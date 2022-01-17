@@ -8,12 +8,6 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Language::addLocalizations("de-DE", {
             /* ImHex default functionality */
-                { "hex.menu.file", "Datei" },
-                { "hex.menu.edit", "Bearbeiten" },
-                { "hex.menu.view", "Ansicht" },
-                    { "hex.menu.view.fps", "FPS anzeigen" },
-                    { "hex.menu.view.demo", "ImGui Demo anzeigen" },
-                { "hex.menu.help", "Hilfe" },
                 { "hex.menu.feedback", "Feedback hinterlassen" },
                 { "hex.menu.debug_build", "Debug build"},
 
@@ -90,6 +84,14 @@ namespace hex::plugin::builtin {
 
 
                 /* Builtin plugin features */
+
+                { "hex.builtin.menu.file", "Datei" },
+                { "hex.builtin.menu.edit", "Bearbeiten" },
+                { "hex.builtin.menu.view", "Ansicht" },
+                { "hex.builtin.menu.layout", "Layout" },
+                    { "hex.builtin.menu.view.fps", "FPS anzeigen" },
+                    { "hex.builtin.menu.view.demo", "ImGui Demo anzeigen" },
+                { "hex.builtin.menu.help", "Hilfe" },
 
                 { "hex.builtin.view.bookmarks.name", "Lesezeichen" },
                     { "hex.builtin.view.bookmarks.default_title", "Lesezeichen [0x{0:X} - 0x{1:X}]" },
@@ -695,6 +697,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.disk_size", "Datenträgergrösse" },
                     { "hex.builtin.provider.disk.sector_size", "Sektorgrösse" },
                     { "hex.builtin.provider.disk.reload", "Neu laden" },
+
+                { "hex.builtin.layouts.default", "Standard" }
         });
     }
 

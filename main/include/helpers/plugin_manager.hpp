@@ -2,13 +2,10 @@
 
 #include <hex.hpp>
 
-#include <hex/views/view.hpp>
-#include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/paths.hpp>
 
-#include <string_view>
-#include <dlfcn.h>
+#include <string>
 
 struct ImGuiContext;
 
@@ -39,17 +36,19 @@ namespace hex {
         void *m_handle = nullptr;
         fs::path m_path;
 
-        InitializePluginFunc m_initializePluginFunction             = nullptr;
-        GetPluginNameFunc m_getPluginNameFunction                   = nullptr;
-        GetPluginAuthorFunc m_getPluginAuthorFunction               = nullptr;
-        GetPluginDescriptionFunc m_getPluginDescriptionFunction     = nullptr;
-        SetImGuiContextFunc m_setImGuiContextFunction               = nullptr;
+        InitializePluginFunc        m_initializePluginFunction      = nullptr;
+        GetPluginNameFunc           m_getPluginNameFunction         = nullptr;
+        GetPluginAuthorFunc         m_getPluginAuthorFunction       = nullptr;
+        GetPluginDescriptionFunc    m_getPluginDescriptionFunction  = nullptr;
+        SetImGuiContextFunc         m_setImGuiContextFunction       = nullptr;
 
         template<typename T>
-        auto getPluginFunction(const std::string &pluginName, const std::string &symbol) {
-            auto symbolName = hex::format(symbol.data(), pluginName.length(), pluginName.data());
-            return reinterpret_cast<T>(dlsym(this->m_handle, symbolName.c_str()));
-        };
+        [[nodiscard]] auto getPluginFunction(const std::string &pluginName, const std::string &symbol) {
+            return reinterpret_cast<T>(this->getPluginFunction(pluginName, symbol));
+        }
+
+    private:
+        [[nodiscard]] void* getPluginFunction(const std::string &pluginName, const std::string &symbol);
     };
 
     class PluginManager {

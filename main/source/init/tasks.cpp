@@ -176,7 +176,7 @@ namespace hex::init {
         SharedData::commandPaletteCommands.clear();
         SharedData::patternLanguageFunctions.clear();
 
-        for (auto &view : SharedData::views)
+        for (auto &[name, view] : ContentRegistry::Views::getEntries())
             delete view;
         SharedData::views.clear();
 

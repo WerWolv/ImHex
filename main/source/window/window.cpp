@@ -49,7 +49,7 @@ namespace hex {
     }
 
     void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
-        for (auto &view : ContentRegistry::Views::getEntries()) {
+        for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             std::string format = std::string(view->getUnlocalizedName()) + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
@@ -60,8 +60,8 @@ namespace hex {
 
         buf->appendf("[%s][General]\n", handler->TypeName);
 
-        for (auto &view : ContentRegistry::Views::getEntries()) {
-            buf->appendf("%s=%d\n", view->getUnlocalizedName().data(), view->getWindowOpenState());
+        for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+            buf->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
         }
 
         buf->append("\n");
@@ -291,8 +291,8 @@ namespace hex {
     }
 
     Window::~Window() {
-        this->deinitImGui();
-        this->deinitGLFW();
+        this->exitImGui();
+        this->exitGLFW();
 
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
@@ -350,7 +350,7 @@ namespace hex {
 
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
             ImGui::PopStyleVar();
-            ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2 - 1));
+            SharedData::dockSpaceId = ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2 - 1));
 
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
@@ -374,32 +374,20 @@ namespace hex {
                 ImGui::SetCursorPosX(5);
                 ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
 
-                for (const auto& menu : { "hex.menu.file"_lang, "hex.menu.edit"_lang, "hex.menu.view"_lang, "hex.menu.help"_lang })
-                    if (ImGui::BeginMenu(menu)) ImGui::EndMenu();
-
-                    if (ImGui::BeginMenu("hex.menu.view"_lang)) {
-                        for (auto &view : ContentRegistry::Views::getEntries()) {
-                            if (view->hasViewMenuItemEntry())
-                                ImGui::MenuItem(LangEntry(view->getUnlocalizedName()), "", &view->getWindowOpenState());
-                        }
+                for (const auto &[name, function] : ContentRegistry::Interface::getMainMenuItems()) {
+                    if (ImGui::BeginMenu(LangEntry(name))) {
+                        function();
                         ImGui::EndMenu();
                     }
+                }
 
-                    for (auto &view : ContentRegistry::Views::getEntries()) {
-                        view->drawMenu();
-                    }
+                for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+                    view->drawMenu();
+                }
 
-                    if (ImGui::BeginMenu("hex.menu.view"_lang)) {
-                    #if defined(DEBUG)
-                        ImGui::Separator();
-                        ImGui::MenuItem("hex.menu.view.demo"_lang, "", &this->m_demoWindowOpen);
-                    #endif
-                        ImGui::EndMenu();
-                    }
+                this->drawTitleBar();
 
-                    this->drawTitleBar();
-
-                    ImGui::EndMainMenuBar();
+                ImGui::EndMainMenuBar();
             }
             ImGui::PopStyleVar();
 
@@ -502,6 +490,8 @@ namespace hex {
 
             return false;
         });
+
+        EventManager::post<EventFrameBegin>();
     }
 
     void Window::frame() {
@@ -511,7 +501,7 @@ namespace hex {
 
         View::drawCommonInterfaces();
 
-        for (auto &view : ContentRegistry::Views::getEntries()) {
+        for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
             view->drawAlwaysVisible();
@@ -525,13 +515,13 @@ namespace hex {
             }
 
             if (view->getWindowOpenState()) {
-                auto window = ImGui::FindWindowByName(View::toWindowName(view->getUnlocalizedName()).c_str());
+                auto window = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused = false;
 
 
                 if (hasWindow && !(window->Flags & ImGuiWindowFlags_Popup)) {
-                    ImGui::Begin(View::toWindowName(view->getUnlocalizedName()).c_str());
+                    ImGui::Begin(View::toWindowName(name).c_str());
 
                     focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
                     ImGui::End();
@@ -543,17 +533,13 @@ namespace hex {
                 }
             }
         }
-        this->m_pressedKeys.clear();
 
-#ifdef DEBUG
-        if (this->m_demoWindowOpen) {
-            ImGui::ShowDemoWindow(&this->m_demoWindowOpen);
-            ImPlot::ShowDemoWindow(&this->m_demoWindowOpen);
-        }
-    #endif
+        this->m_pressedKeys.clear();
     }
 
     void Window::frameEnd() {
+        EventManager::post<EventFrameEnd>();
+
         this->endNativeWindowFrame();
         ImGui::Render();
 
@@ -731,27 +717,14 @@ namespace hex {
         }
     }
 
-    void Window::resetLayout() {
-        auto dockId = ImGui::GetID("MainDock");
+    void Window::resetLayout() const {
 
-        ImGui::DockBuilderRemoveNode(dockId);
-        ImGui::DockBuilderAddNode(dockId, ImGuiDockNodeFlags_DockSpace);
-        ImGui::DockBuilderSetNodeSize(dockId, ImGui::GetWindowSize());
+        if (auto &layouts = ContentRegistry::Interface::getLayouts(); !layouts.empty()) {
+            auto &[name, function] = layouts[0];
 
-        ImGuiID mainWindowId, splitWindowId, hexEditorId, utilitiesId, inspectorId, patternDataId;
+            function(ContentRegistry::Interface::getDockSpaceId());
+        }
 
-        ImGui::DockBuilderSplitNode(dockId, ImGuiDir_Left, 0.8, &mainWindowId, &utilitiesId);
-        ImGui::DockBuilderSplitNode(mainWindowId, ImGuiDir_Down, 0.3, &patternDataId, &splitWindowId);
-        ImGui::DockBuilderSplitNode(splitWindowId, ImGuiDir_Right, 0.3, &inspectorId, &hexEditorId);
-
-        for (auto &view : ContentRegistry::Views::getEntries())
-            ImGui::DockBuilderDockWindow(view->getUnlocalizedName().data(), utilitiesId);
-
-        ImGui::DockBuilderDockWindow("hex.builtin.view.hexeditor.name", hexEditorId);
-        ImGui::DockBuilderDockWindow("hex.builtin.view.data_inspector.name", inspectorId);
-        ImGui::DockBuilderDockWindow("hex.builtin.view.pattern_data.name", patternDataId);
-
-        ImGui::DockBuilderFinish(dockId);
     }
 
     void Window::initGLFW() {
@@ -1001,12 +974,12 @@ namespace hex {
             plugin.setImGuiContext(ImGui::GetCurrentContext());
     }
 
-    void Window::deinitGLFW() {
+    void Window::exitGLFW() {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
     }
 
-    void Window::deinitImGui() {
+    void Window::exitImGui() {
         delete static_cast<ImGui::ImHexCustomData*>(ImGui::GetIO().UserData);
 
         ImNodes::PopAttributeFlag();

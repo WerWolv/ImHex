@@ -13,6 +13,8 @@ namespace hex::plugin::builtin {
     void registerDataProcessorNodes();
     void registerProviders();
     void registerDataFormatters();
+    void registerLayouts();
+    void registerMainMenuEntries();
 
     void addFooterItems();
     void addToolbarItems();
@@ -40,6 +42,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     addFooterItems();
     addToolbarItems();
+    registerLayouts();
+    registerMainMenuEntries();
 
     registerLanguageEnUS();
     registerLanguageDeDE();

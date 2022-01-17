@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewProviderSettings::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.provider_settings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(this->getName().c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = hex::ImHexApi::Provider::get();
 
             if (provider != nullptr)

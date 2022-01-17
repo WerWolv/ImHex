@@ -32,8 +32,8 @@ namespace hex::init {
         void initGLFW();
         void initImGui();
 
-        void deinitGLFW();
-        void deinitImGui();
+        void exitGLFW();
+        void exitImGui();
 
         std::future<bool> processTasksAsync();
 

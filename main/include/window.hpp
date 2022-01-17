@@ -34,12 +34,12 @@ namespace hex {
         void frameEnd();
 
         void drawWelcomeScreen();
-        void resetLayout();
+        void resetLayout() const;
 
         void initGLFW();
         void initImGui();
-        void deinitGLFW();
-        void deinitImGui();
+        void exitGLFW();
+        void exitImGui();
 
         friend void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *);
         friend void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line);
@@ -48,14 +48,11 @@ namespace hex {
         GLFWwindow* m_window = nullptr;
 
         double m_targetFps = 60.0;
-        bool m_demoWindowOpen = false;
         bool m_layoutConfigured = false;
 
         std::string m_windowTitle;
 
         double m_lastFrameTime;
-
-        bool m_prevKeysDown[512];
 
         std::string m_availableUpdate;
 

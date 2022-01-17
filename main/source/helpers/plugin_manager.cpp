@@ -1,9 +1,9 @@
 #include "helpers/plugin_manager.hpp"
 
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/paths.hpp>
 
 #include <filesystem>
+#include <dlfcn.h>
 
 namespace hex {
 
@@ -89,8 +89,13 @@ namespace hex {
             this->m_setImGuiContextFunction(ctx);
     }
 
-    const fs::path &Plugin::getPath() const {
+    const fs::path& Plugin::getPath() const {
         return this->m_path;
+    }
+
+    void* Plugin::getPluginFunction(const std::string &pluginName, const std::string &symbol) {
+        auto symbolName = hex::format(symbol.data(), pluginName.length(), pluginName.data());
+        return dlsym(this->m_handle, symbolName.c_str());
     }
 
 

@@ -206,11 +206,20 @@ namespace hex {
     void ContentRegistry::Views::impl::add(View *view) {
         log::info("Registered new view: {}", view->getUnlocalizedName());
 
-        getEntries().emplace_back(view);
+        getEntries().insert({ view->getUnlocalizedName(), view });
     }
 
-    std::vector<View*>& ContentRegistry::Views::getEntries() {
+    std::map<std::string, View*>& ContentRegistry::Views::getEntries() {
         return SharedData::views;
+    }
+
+    View *ContentRegistry::Views::getViewByName(const std::string &unlocalizedName) {
+        auto &views = getEntries();
+
+        if (views.contains(unlocalizedName))
+            return views[unlocalizedName];
+        else
+            return nullptr;
     }
 
 
@@ -281,27 +290,51 @@ namespace hex {
 
     /* Interface */
 
-    void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::DrawCallback &function) {
+    u32 ContentRegistry::Interface::getDockSpaceId() {
+        return SharedData::dockSpaceId;
+    }
+
+    void ContentRegistry::Interface::registerMainMenuItem(const std::string &unlocalizedName, const impl::DrawCallback &function) {
+        log::info("Registered new main menu item: {}", unlocalizedName);
+
+        getMainMenuItems().push_back({ unlocalizedName, function });
+    }
+
+    void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::impl::DrawCallback &function) {
         getWelcomeScreenEntries().push_back(function);
     }
 
-    void ContentRegistry::Interface::addFooterItem(const ContentRegistry::Interface::DrawCallback &function){
+    void ContentRegistry::Interface::addFooterItem(const ContentRegistry::Interface::impl::DrawCallback &function){
         getFooterItems().push_back(function);
     }
 
-    void ContentRegistry::Interface::addToolbarItem(const ContentRegistry::Interface::DrawCallback &function){
+    void ContentRegistry::Interface::addToolbarItem(const ContentRegistry::Interface::impl::DrawCallback &function){
         getToolbarItems().push_back(function);
     }
 
+    void ContentRegistry::Interface::addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
+        log::info("Added new layout: {}", unlocalizedName);
 
-    std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getWelcomeScreenEntries() {
+        getLayouts().push_back({ unlocalizedName, function });
+    }
+
+
+    std::vector<ContentRegistry::Interface::impl::MainMenuItem> &ContentRegistry::Interface::getMainMenuItems() {
+        return SharedData::mainMenuItems;
+    }
+
+    std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getWelcomeScreenEntries() {
         return SharedData::welcomeScreenEntries;
     }
-    std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getFooterItems() {
+    std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getFooterItems() {
         return SharedData::footerItems;
     }
-    std::vector<ContentRegistry::Interface::DrawCallback>& ContentRegistry::Interface::getToolbarItems() {
+    std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getToolbarItems() {
         return SharedData::toolbarItems;
+    }
+
+    std::vector<ContentRegistry::Interface::impl::Layout>& ContentRegistry::Interface::getLayouts() {
+        return SharedData::layouts;
     }
 
 

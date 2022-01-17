@@ -8,12 +8,6 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Language::addLocalizations("zh-CN", {
             /* ImHex default functionality */
-                { "hex.menu.file", "文件" },
-                { "hex.menu.edit", "编辑" },
-                { "hex.menu.view", "视图" },
-                    { "hex.menu.view.fps", "显示FPS" },
-                    { "hex.menu.view.demo", "显示ImGui演示" },
-                { "hex.menu.help", "帮助" },
                 { "hex.menu.feedback", "反馈" },
                 { "hex.menu.debug_build", "调试构建"},
 
@@ -89,6 +83,14 @@ namespace hex::plugin::builtin {
                 //{ "hex.message.file_handler_failed", "Failed to open file with registered file handler." },
 
                 /* Builtin plugin features */
+
+                { "hex.builtin.menu.file", "文件" },
+                { "hex.builtin.menu.edit", "编辑" },
+                { "hex.builtin.menu.view", "视图" },
+                //{ "hex.builtin.menu.layout", "Layout" },
+                    { "hex.builtin.menu.view.fps", "显示FPS" },
+                    { "hex.builtin.menu.view.demo", "显示ImGui演示" },
+                { "hex.builtin.menu.help", "帮助" },
 
                 { "hex.builtin.view.bookmarks.name", "书签" },
                     { "hex.builtin.view.bookmarks.default_title", "书签 [0x{0:X} - 0x{1:X}]" },
@@ -693,6 +695,8 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.provider.disk.disk_size", "Disk Size" },
                     //{ "hex.builtin.provider.disk.sector_size", "Sector Size" },
                     //{ "hex.builtin.provider.disk.reload", "Reload" },
+
+                //{ "hex.builtin.layouts.default", "Default" }
         });
     }
 

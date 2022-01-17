@@ -113,13 +113,14 @@ namespace hex {
 
             }
 
-
             template<hex::derived_from<View> T, typename ... Args>
             void add(Args&& ... args) {
                 return impl::add(new T(std::forward<Args>(args)...));
             }
 
-            std::vector<View*>& getEntries();
+            std::map<std::string, View*>& getEntries();
+
+            View* getViewByName(const std::string &unlocalizedName);
 
         }
 
@@ -215,15 +216,39 @@ namespace hex {
 
         /* Interface Registry. Allows adding new items to various interfaces */
         namespace Interface {
-            using DrawCallback = std::function<void()>;
 
-            void addWelcomeScreenEntry(const DrawCallback &function);
-            void addFooterItem(const DrawCallback &function);
-            void addToolbarItem(const DrawCallback &function);
+            namespace impl {
 
-            std::vector<DrawCallback>& getWelcomeScreenEntries();
-            std::vector<DrawCallback>& getFooterItems();
-            std::vector<DrawCallback>& getToolbarItems();
+                using DrawCallback = std::function<void()>;
+                using LayoutFunction = std::function<void(u32)>;
+
+                struct Layout {
+                    std::string unlocalizedName;
+                    LayoutFunction callback;
+                };
+
+                struct MainMenuItem {
+                    std::string unlocalizedName;
+                    DrawCallback callback;
+                };
+
+            }
+
+            u32 getDockSpaceId();
+
+            void registerMainMenuItem(const std::string &unlocalizedName, const impl::DrawCallback &function = []{});
+            void addWelcomeScreenEntry(const impl::DrawCallback &function);
+            void addFooterItem(const impl::DrawCallback &function);
+            void addToolbarItem(const impl::DrawCallback &function);
+
+            void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function);
+
+            std::vector<impl::MainMenuItem>& getMainMenuItems();
+            std::vector<impl::DrawCallback>& getWelcomeScreenEntries();
+            std::vector<impl::DrawCallback>& getFooterItems();
+            std::vector<impl::DrawCallback>& getToolbarItems();
+
+            std::vector<impl::Layout>& getLayouts();
         }
 
         /* Provider Registry. Allows adding new data providers to be created from the UI */

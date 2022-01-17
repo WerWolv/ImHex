@@ -235,7 +235,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::drawMenu() {
-        if (ImGui::BeginMenu("hex.menu.help"_lang)) {
+        if (ImGui::BeginMenu("hex.builtin.menu.help"_lang)) {
             if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
                 View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
                 this->getWindowOpenState() = true;

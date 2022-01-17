@@ -13,7 +13,7 @@ namespace hex {
     nlohmann::json SharedData::settingsJson;
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
     std::map<std::string, ContentRegistry::PatternLanguage::Function> SharedData::patternLanguageFunctions;
-    std::vector<View*> SharedData::views;
+    std::map<std::string, View*> SharedData::views;
     std::vector<ContentRegistry::Tools::impl::Entry> SharedData::toolsEntries;
     std::vector<ContentRegistry::DataInspector::impl::Entry> SharedData::dataInspectorEntries;
     u32 SharedData::patternPaletteOffset;
@@ -25,9 +25,13 @@ namespace hex {
     std::map<std::string, std::vector<LanguageDefinition>> SharedData::languageDefinitions;
     std::map<std::string, std::string> SharedData::loadedLanguageStrings;
 
-    std::vector<ContentRegistry::Interface::DrawCallback> SharedData::welcomeScreenEntries;
-    std::vector<ContentRegistry::Interface::DrawCallback> SharedData::footerItems;
-    std::vector<ContentRegistry::Interface::DrawCallback> SharedData::toolbarItems;
+    ImGuiID SharedData::dockSpaceId;
+
+    std::vector<ContentRegistry::Interface::impl::MainMenuItem> SharedData::mainMenuItems;
+    std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::welcomeScreenEntries;
+    std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::footerItems;
+    std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::toolbarItems;
+    std::vector<ContentRegistry::Interface::impl::Layout> SharedData::layouts;
 
     std::map<Shortcut, std::function<void()>> SharedData::globalShortcuts;
 

@@ -105,6 +105,10 @@ namespace hex {
         return this->m_unlocalizedViewName;
     }
 
+    std::string View::getName() const {
+        return View::toWindowName(this->m_unlocalizedViewName);
+    }
+
     void View::discardNavigationRequests() {
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;

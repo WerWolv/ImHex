@@ -209,7 +209,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawMenu() {
-        if (ImGui::BeginMenu("hex.menu.file"_lang)) {
+        if (ImGui::BeginMenu("hex.builtin.menu.file"_lang)) {
 
             ImGui::Separator();
 

@@ -8,12 +8,6 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Language::addLocalizations("it-IT", {
             /* ImHex default functionality */
-                { "hex.menu.file", "File" },
-                { "hex.menu.edit", "Modifica" },
-                { "hex.menu.view", "Vista" },
-                    { "hex.menu.view.fps", "Mostra FPS" },
-                    { "hex.menu.view.demo", "Mostra la demo di ImGui" },
-                { "hex.menu.help", "Aiuto" },
                 { "hex.menu.feedback", "Lascia una Recensione" },
                 { "hex.menu.debug_build", "Build di Debug"},
 
@@ -88,6 +82,14 @@ namespace hex::plugin::builtin {
                 //{ "hex.message.file_handler_failed", "Failed to open file with registered file handler." },
 
                 /* Builtin plugin features */
+
+                { "hex.builtin.menu.file", "File" },
+                { "hex.builtin.menu.edit", "Modifica" },
+                { "hex.builtin.menu.view", "Vista" },
+                //{ "hex.builtin.menu.layout", "Layout" },
+                    { "hex.builtin.menu.view.fps", "Mostra FPS" },
+                    { "hex.builtin.menu.view.demo", "Mostra la demo di ImGui" },
+                { "hex.builtin.menu.help", "Aiuto" },
 
                 { "hex.builtin.view.bookmarks.name", "Segnalibri" },
                     { "hex.builtin.view.bookmarks.default_title", "Segnalibro [0x{0:X} - 0x{1:X}]" },
@@ -692,6 +694,8 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.provider.disk.disk_size", "Disk Size" },
                     //{ "hex.builtin.provider.disk.sector_size", "Sector Size" },
                     //{ "hex.builtin.provider.disk.reload", "Reload" },
+
+                //{ "hex.builtin.layouts.default", "Default" }
         });
     }
 

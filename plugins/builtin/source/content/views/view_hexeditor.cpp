@@ -180,9 +180,9 @@ namespace hex::plugin::builtin {
             if (ImGui::Begin(View::toWindowName("hex.builtin.view.hexeditor.name").c_str())) {
 
                 if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
-                    ImGui::OpenPopup("hex.menu.edit"_lang);
+                    ImGui::OpenPopup("hex.builtin.menu.edit"_lang);
 
-                if (ImGui::BeginPopup("hex.menu.edit"_lang)) {
+                if (ImGui::BeginPopup("hex.builtin.menu.edit"_lang)) {
                     this->drawEditPopup();
                     ImGui::EndPopup();
                 }
@@ -339,7 +339,7 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         bool providerValid = ImHexApi::Provider::isValid();
 
-        if (ImGui::BeginMenu("hex.menu.file"_lang)) {
+        if (ImGui::BeginMenu("hex.builtin.menu.file"_lang)) {
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
                 hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [](const auto &path) {
@@ -598,7 +598,7 @@ namespace hex::plugin::builtin {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("hex.menu.edit"_lang)) {
+        if (ImGui::BeginMenu("hex.builtin.menu.edit"_lang)) {
             this->drawEditPopup();
             ImGui::EndMenu();
         }

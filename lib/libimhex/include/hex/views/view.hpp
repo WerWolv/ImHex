@@ -53,6 +53,7 @@ namespace hex {
         const bool& getWindowOpenState() const;
 
         [[nodiscard]] const std::string& getUnlocalizedName() const;
+        [[nodiscard]] std::string getName() const;
 
         static void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
         static void discardNavigationRequests();
