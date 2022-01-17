@@ -17,7 +17,8 @@ namespace hex {
         Yara,
         Config,
         Resources,
-        Constants
+        Constants,
+        Logs
     };
 
     std::string getExecutablePath();

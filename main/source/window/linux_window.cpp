@@ -3,13 +3,18 @@
 #if defined(OS_LINUX)
 
     #include <hex/helpers/utils.hpp>
+    #include <hex/helpers/logger.hpp>
+
     #include <nlohmann/json.hpp>
     #include <sys/wait.h>
+    #include <unistd.h>
 
     namespace hex {
 
         void Window::initNative() {
-
+            if (!isatty(STDOUT_FILENO)) {
+                log::redirectToFile();
+            }
         }
 
         void Window::setupNativeWindow() {

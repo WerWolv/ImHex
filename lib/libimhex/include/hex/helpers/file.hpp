@@ -26,12 +26,15 @@ namespace hex {
             Create
         };
 
-        explicit File(const fs::path &path, Mode mode);
-        File();
+        explicit File(const fs::path &path, Mode mode) noexcept;
+        File() noexcept;
         File(const File&) = delete;
         File(File &&other) noexcept;
 
         ~File();
+
+        File& operator=(File &&other) noexcept;
+
 
         [[nodiscard]] bool isValid() const { return this->m_file != nullptr; }
 

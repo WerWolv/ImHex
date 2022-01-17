@@ -123,6 +123,7 @@ set(LIBIMHEX_SOURCES
     source/helpers/project_file_handler.cpp
     source/helpers/encoding_file.cpp
     source/helpers/loader_script_handler.cpp
+    source/helpers/logger.cpp
 
     source/pattern_language/pattern_language.cpp
     source/pattern_language/preprocessor.cpp

@@ -9,5 +9,12 @@
     <mapping directory="$PROJECT_DIR$/external/nativefiledialog" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/xdgpp" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/external/yara/yara" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/capstone" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/curl" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/fmt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/libromfs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/nativefiledialog" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/xdgpp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/external/yara/yara" vcs="Git" />
   </component>
 </project>

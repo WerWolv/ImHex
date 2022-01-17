@@ -16,17 +16,18 @@ namespace hex {
 
     class Plugin {
     public:
-        Plugin(const fs::path &path);
+        explicit Plugin(const fs::path &path);
         Plugin(const Plugin&) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
 
-        void initializePlugin() const;
+        [[nodiscard]] bool initializePlugin() const;
         [[nodiscard]] std::string getPluginName() const;
         [[nodiscard]] std::string getPluginAuthor() const;
         [[nodiscard]] std::string getPluginDescription() const;
         void setImGuiContext(ImGuiContext *ctx) const;
 
+        [[nodiscard]] const fs::path& getPath() const;
 
     private:
         using InitializePluginFunc      = void(*)();
@@ -36,6 +37,7 @@ namespace hex {
         using SetImGuiContextFunc       = void(*)(ImGuiContext*);
 
         void *m_handle = nullptr;
+        fs::path m_path;
 
         InitializePluginFunc m_initializePluginFunction             = nullptr;
         GetPluginNameFunc m_getPluginNameFunction                   = nullptr;

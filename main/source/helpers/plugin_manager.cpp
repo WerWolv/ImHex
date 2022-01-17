@@ -14,7 +14,7 @@ namespace hex {
     constexpr auto GetPluginDescriptionSymbol   = "_ZN3hex6plugin{0}{1}8internal20getPluginDescriptionEv";
     constexpr auto SetImGuiContextSymbol        = "_ZN3hex6plugin{0}{1}8internal15setImGuiContextEP12ImGuiContext";
 
-    Plugin::Plugin(const fs::path &path) {
+    Plugin::Plugin(const fs::path &path) : m_path(path) {
         this->m_handle = dlopen(path.string().c_str(), RTLD_LAZY);
 
         if (this->m_handle == nullptr) {
@@ -33,6 +33,8 @@ namespace hex {
 
     Plugin::Plugin(Plugin &&other) noexcept {
         this->m_handle = other.m_handle;
+        this->m_path = std::move(other.m_path);
+
         this->m_initializePluginFunction        = other.m_initializePluginFunction;
         this->m_getPluginNameFunction           = other.m_getPluginNameFunction;
         this->m_getPluginAuthorFunction         = other.m_getPluginAuthorFunction;
@@ -52,9 +54,13 @@ namespace hex {
             dlclose(this->m_handle);
     }
 
-    void Plugin::initializePlugin() const {
-        if (this->m_initializePluginFunction != nullptr)
+    bool Plugin::initializePlugin() const {
+        if (this->m_initializePluginFunction != nullptr) {
             this->m_initializePluginFunction();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     std::string Plugin::getPluginName() const {
@@ -82,6 +88,12 @@ namespace hex {
         if (this->m_setImGuiContextFunction != nullptr)
             this->m_setImGuiContextFunction(ctx);
     }
+
+    const fs::path &Plugin::getPath() const {
+        return this->m_path;
+    }
+
+
 
     bool PluginManager::load(const fs::path &pluginFolder) {
         if (!fs::exists(pluginFolder))

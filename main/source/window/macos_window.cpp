@@ -2,12 +2,17 @@
 
 #if defined(OS_MACOS)
 
+    #include <hex/helpers/logger.hpp>
+
     #include <nlohmann/json.hpp>
+    #include <unistd.h>
 
     namespace hex {
 
         void Window::initNative() {
-
+            if (!isatty(STDOUT_FILENO)) {
+                log::redirectToFile();
+            }
         }
 
         void Window::setupNativeWindow() {

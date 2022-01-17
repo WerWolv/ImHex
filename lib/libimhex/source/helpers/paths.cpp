@@ -98,6 +98,11 @@ namespace hex {
                         return (path / "constants").string();
                     });
                     break;
+                case ImHexPath::Logs:
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
+                        return (path / "logs").string();
+                    });
+                    break;
                 default: __builtin_unreachable();
             }
         #elif defined(OS_MACOS)
@@ -136,6 +141,9 @@ namespace hex {
                 break;
             case ImHexPath::Constants:
                 result.push_back((applicationSupportDir / "constants").string());
+                break;
+            case ImHexPath::Logs:
+                result.push_back((applicationSupportDir / "logs").string());
                 break;
             default: __builtin_unreachable();
             }
@@ -190,6 +198,10 @@ namespace hex {
                 case ImHexPath::Constants:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
                         [](auto p) { return (p / "constants").string(); });
+                    break;
+                case ImHexPath::Logs:
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "logs").string(); });
                     break;
                 default: __builtin_unreachable();
             }

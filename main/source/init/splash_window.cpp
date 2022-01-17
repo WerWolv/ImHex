@@ -49,7 +49,8 @@ namespace hex::init {
 
                 try {
                     status = task() && status;
-                } catch (...) {
+                } catch (std::exception &e) {
+                    log::error("Init task {} threw an exception: {}", name, e.what());
                     status = false;
                 }
 

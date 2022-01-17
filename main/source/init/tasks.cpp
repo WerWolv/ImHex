@@ -57,7 +57,7 @@ namespace hex::init {
     bool createDirectories() {
         bool result = true;
 
-        std::array paths = {
+        constexpr std::array paths = {
             ImHexPath::Patterns,
             ImHexPath::PatternsInclude,
             ImHexPath::Magic,
@@ -66,7 +66,8 @@ namespace hex::init {
             ImHexPath::Config,
             ImHexPath::Constants,
             ImHexPath::Yara,
-            ImHexPath::Python
+            ImHexPath::Python,
+            ImHexPath::Logs
         };
 
         for (auto path : paths) {
@@ -225,7 +226,8 @@ namespace hex::init {
         }
 
         for (const auto &plugin : PluginManager::getPlugins()) {
-            plugin.initializePlugin();
+            if (!plugin.initializePlugin())
+                log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
         }
 
         return true;

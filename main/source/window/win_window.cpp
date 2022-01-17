@@ -172,25 +172,26 @@
                 // Redirect cin, cout and cerr to that console
                 freopen("CONIN$", "r", stdin);
                 freopen("CONOUT$", "w", stdout);
-                freopen("CONERR$", "w", stderr);
+                freopen("CONOUT$", "w", stderr);
                 setvbuf(stdin,  nullptr, _IONBF, 0);
                 setvbuf(stdout, nullptr, _IONBF, 0);
                 setvbuf(stderr, nullptr, _IONBF, 0);
 
                 fmt::print("\n");
-            }
 
-
-            // Enable color format specifiers in console
-            {
-                auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
-                if (hConsole != INVALID_HANDLE_VALUE) {
-                    DWORD mode = 0;
-                    if (::GetConsoleMode(hConsole, &mode)) {
-                        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
-                        ::SetConsoleMode(hConsole, mode);
+                // Enable color format specifiers in console
+                {
+                    auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
+                    if (hConsole != INVALID_HANDLE_VALUE) {
+                        DWORD mode = 0;
+                        if (::GetConsoleMode(hConsole, &mode)) {
+                            mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+                            ::SetConsoleMode(hConsole, mode);
+                        }
                     }
                 }
+            } else {
+                log::redirectToFile();
             }
 
             // Open new files in already existing ImHex instance

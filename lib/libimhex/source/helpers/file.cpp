@@ -3,7 +3,7 @@
 
 namespace hex {
 
-    File::File(const fs::path &path, Mode mode) : m_path(path) {
+    File::File(const fs::path &path, Mode mode) noexcept : m_path(path) {
         if (mode == File::Mode::Read)
             this->m_file = fopen64(path.string().c_str(), "rb");
         else if (mode == File::Mode::Write)
@@ -13,7 +13,7 @@ namespace hex {
             this->m_file = fopen64(path.string().c_str(), "w+b");
     }
 
-    File::File() {
+    File::File() noexcept {
         this->m_file = nullptr;
     }
 
@@ -25,6 +25,16 @@ namespace hex {
     File::~File() {
         this->close();
     }
+
+    File& File::operator=(File &&other) noexcept {
+        this->m_file = other.m_file;
+        other.m_file = nullptr;
+
+        this->m_path = std::move(other.m_path);
+
+        return *this;
+    }
+
 
     void File::seek(u64 offset) {
         fseeko64(this->m_file, offset, SEEK_SET);
