@@ -538,7 +538,7 @@ namespace hex::plugin::builtin {
                 throwNodeError("'from' input out of range");
             if (to < 0 || from >= input.size())
                 throwNodeError("'to' input out of range");
-            if (to >= from)
+            if (to <= from)
                 throwNodeError("'to' input needs to be greater than 'from' input");
 
             this->setBufferOnOutput(3, std::vector(input.begin() + from, input.begin() + to));
