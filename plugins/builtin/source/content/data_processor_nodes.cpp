@@ -427,8 +427,11 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            u64 output;
-            std::memcpy(&output, input.data(), sizeof(u64));
+            if (input.size() == 0 || input.size() > sizeof(u64))
+                throwNodeError("Buffer is empty or bigger than 64 bits");
+
+            u64 output = 0;
+            std::memcpy(&output, input.data(), input.size());
 
             this->setIntegerOnOutput(1, output);
         }
