@@ -109,10 +109,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            std::vector<u8> data(sizeof(this->m_value), 0);
-
-            std::memcpy(data.data(), &this->m_value, sizeof(u64));
-            this->setBufferOnOutput(0, data);
+            this->setIntegerOnOutput(0, this->m_value);
         }
 
         void store(nlohmann::json &j) override {
@@ -140,11 +137,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            std::vector<u8> data;
-            data.resize(sizeof(this->m_value));
-
-            std::copy(&this->m_value, &this->m_value + 1, data.data());
-            this->setBufferOnOutput(0, data);
+            this->setFloatOnOutput(0, this->m_value);
         }
 
         void store(nlohmann::json &j) override {
