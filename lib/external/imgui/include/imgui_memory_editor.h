@@ -739,7 +739,7 @@ struct MemoryEditor
             if (GotoAddr < mem_size)
             {
                 ImGui::BeginChild("##scrolling");
-                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (GotoAddr / Cols) * ImGui::GetTextLineHeight() * 2);
+                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (GotoAddr / Cols) * ImGui::GetTextLineHeight());
                 ImGui::EndChild();
             }
             GotoAddr = (size_t)-1;
