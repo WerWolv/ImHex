@@ -243,7 +243,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hexeditor.menu.edit.select_all", "Seleziona tutti" },
                     { "hex.builtin.view.hexeditor.menu.edit.bookmark", "Crea segnalibro" },
                     { "hex.builtin.view.hexeditor.menu.edit.set_base", "Imposta indirizzo di base" },
-                    { "hex.builtin.view.hexeditor.menu.edit.resize", "Ridimensiona" },
+                    { "hex.builtin.view.hexeditor.menu.edit.resize", "Ridimensiona..." },
+                    //{ "hex.builtin.view.hexeditor.menu.edit.insert", "Insert..." },
 
                 { "hex.builtin.view.information.name", "Informazione sui Dati" },
                     { "hex.builtin.view.information.control", "Controllo" },

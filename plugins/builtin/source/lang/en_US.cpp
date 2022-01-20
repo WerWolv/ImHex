@@ -246,7 +246,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hexeditor.menu.edit.select_all", "Select all" },
                     { "hex.builtin.view.hexeditor.menu.edit.bookmark", "Create bookmark" },
                     { "hex.builtin.view.hexeditor.menu.edit.set_base", "Set base address" },
-                    { "hex.builtin.view.hexeditor.menu.edit.resize", "Resize" },
+                    { "hex.builtin.view.hexeditor.menu.edit.resize", "Resize..." },
+                    { "hex.builtin.view.hexeditor.menu.edit.insert", "Insert..." },
 
                 { "hex.builtin.view.information.name", "Data Information" },
                     { "hex.builtin.view.information.control", "Control" },

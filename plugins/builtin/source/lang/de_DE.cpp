@@ -244,7 +244,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hexeditor.menu.edit.select_all", "Alles auswählen" },
                     { "hex.builtin.view.hexeditor.menu.edit.bookmark", "Lesezeichen erstellen" },
                     { "hex.builtin.view.hexeditor.menu.edit.set_base", "Basisadresse setzen" },
-                    { "hex.builtin.view.hexeditor.menu.edit.resize", "Grösse ändern" },
+                    { "hex.builtin.view.hexeditor.menu.edit.resize", "Grösse ändern..." },
+                    { "hex.builtin.view.hexeditor.menu.edit.insert", "Einsetzen..." },
 
                 { "hex.builtin.view.information.name", "Dateninformationen" },
                     { "hex.builtin.view.information.control", "Einstellungen" },

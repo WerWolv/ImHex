@@ -34,7 +34,23 @@ namespace hex::prv {
     void Provider::save() { }
     void Provider::saveAs(const fs::path &path) { }
 
-    void Provider::resize(ssize_t newSize) { }
+    void Provider::resize(size_t newSize) { }
+
+    void Provider::insert(u64 offset, size_t size) {
+        auto &patches = getPatches();
+
+        std::vector<std::pair<u64, u8>> patchesToMove;
+
+        for (auto &[address, value] : patches) {
+            if (address > offset)
+                patchesToMove.emplace_back(address, value);
+        }
+
+        for (const auto &[address, value] : patchesToMove)
+            patches.erase(address);
+        for (const auto &[address, value] : patchesToMove)
+            patches.insert({ address + offset, value });
+    }
 
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
         for (auto &overlay : this->m_overlays) {

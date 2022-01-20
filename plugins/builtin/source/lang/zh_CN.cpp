@@ -243,7 +243,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hexeditor.menu.edit.select_all", "全选" },
                     { "hex.builtin.view.hexeditor.menu.edit.bookmark", "添加书签" },
                     { "hex.builtin.view.hexeditor.menu.edit.set_base", "设置基地址" },
-                    { "hex.builtin.view.hexeditor.menu.edit.resize", "修改大小" },
+                    { "hex.builtin.view.hexeditor.menu.edit.resize", "修改大小..." },
+                    //{ "hex.builtin.view.hexeditor.menu.edit.insert", "Insert..." },
 
                 { "hex.builtin.view.information.name", "数据信息" },
                     { "hex.builtin.view.information.control", "控制" },

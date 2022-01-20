@@ -317,16 +317,40 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.menu.edit.resize"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "0x%016llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::TextUnformatted("0x");
+            ImGui::SameLine();
+            ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
-                           [this, &provider]{
-                               provider->resize(this->m_resizeSize);
-                               ImGui::CloseCurrentPopup();
-                           }, []{
-                        ImGui::CloseCurrentPopup();
-                    });
+                [this, &provider]{
+                    provider->resize(this->m_resizeSize);
+                    ImGui::CloseCurrentPopup();
+                },
+                [] {
+                    ImGui::CloseCurrentPopup();
+                });
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.menu.edit.insert"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextUnformatted("0x");
+            ImGui::SameLine();
+            ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::NewLine();
+
+            confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
+                [this, &provider] {
+                    provider->insert(std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), this->m_resizeSize);
+                    ImGui::CloseCurrentPopup();
+                },
+                [] {
+                    ImGui::CloseCurrentPopup();
+                });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -1008,6 +1032,13 @@ namespace hex::plugin::builtin {
             View::doLater([this]{
                 this->m_resizeSize = ImHexApi::Provider::get()->getActualSize();
                 ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.resize"_lang);
+            });
+        }
+
+        if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable())) {
+            View::doLater([this]{
+                this->m_resizeSize = 0;
+                ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.insert"_lang);
             });
         }
     }

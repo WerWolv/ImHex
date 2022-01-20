@@ -101,14 +101,38 @@ namespace hex::plugin::builtin::prv {
         }
     }
 
-    void FileProvider::resize(ssize_t newSize) {
+    void FileProvider::resize(size_t newSize) {
         this->close();
 
         {
-            File(this->m_path, File::Mode::Write).setSize(newSize);
+            auto file = File(this->m_path, File::Mode::Write);
+
+            file.setSize(newSize);
+            this->m_fileSize = file.getSize();
         }
 
         this->open();
+    }
+
+    void FileProvider::insert(u64 offset, size_t size) {
+        auto oldSize = this->getActualSize();
+        this->resize(oldSize + size);
+
+        std::vector<u8> buffer(0x1000);
+        const std::vector<u8> zeroBuffer(0x1000);
+
+        auto position = oldSize;
+        while (position > offset) {
+            size_t readSize = (position >= (offset + buffer.size())) ? buffer.size() : (position - offset);
+
+            position -= readSize;
+
+            this->readRaw(position, buffer.data(), readSize);
+            this->writeRaw(position, zeroBuffer.data(), readSize);
+            this->writeRaw(position + size, buffer.data(), readSize);
+        }
+
+        Provider::insert(offset, size);
     }
 
     size_t FileProvider::getActualSize() const {

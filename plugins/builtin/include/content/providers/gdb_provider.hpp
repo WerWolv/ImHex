@@ -22,7 +22,6 @@ class GDBProvider : public hex::prv::Provider {
 
         void read(u64 offset, void *buffer, size_t size, bool overlays) override;
         void write(u64 offset, const void *buffer, size_t size) override;
-        void resize(ssize_t newSize) override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
@@ -47,6 +46,8 @@ class GDBProvider : public hex::prv::Provider {
 
         std::string m_ipAddress;
         int m_port;
+
+        u64 m_size;
 
         constexpr static size_t CacheLineSize = 0x1000;
 

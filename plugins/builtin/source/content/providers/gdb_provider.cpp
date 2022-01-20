@@ -112,7 +112,7 @@ namespace hex::plugin::builtin::prv {
 
     }
 
-    GDBProvider::GDBProvider() : Provider() {
+    GDBProvider::GDBProvider() : Provider(), m_size(0xFFFF'FFFF) {
 
     }
 
@@ -218,12 +218,8 @@ namespace hex::plugin::builtin::prv {
 
     }
 
-    void GDBProvider::resize(ssize_t newSize) {
-
-    }
-
     size_t GDBProvider::getActualSize() const {
-        return 0xFFFF'FFFF;
+        return this->m_size;
     }
 
     std::string GDBProvider::getName() const {
@@ -302,6 +298,12 @@ namespace hex::plugin::builtin::prv {
     void GDBProvider::drawLoadInterface() {
         ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, this->m_ipAddress.data(), this->m_ipAddress.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &this->m_ipAddress);
         ImGui::InputInt("hex.builtin.provider.gdb.port"_lang, &this->m_port, 0, 0);
+
+        ImGui::Separator();
+
+        ImGui::TextUnformatted("0x");
+        ImGui::SameLine();
+        ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_size, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
 
         if (this->m_port < 0)
             this->m_port = 0;

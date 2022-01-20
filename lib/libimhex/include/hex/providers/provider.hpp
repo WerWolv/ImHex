@@ -28,7 +28,8 @@ namespace hex::prv {
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
         virtual void write(u64 offset, const void *buffer, size_t size);
 
-        virtual void resize(ssize_t newSize);
+        virtual void resize(size_t newSize);
+        virtual void insert(u64 offset, size_t size);
 
         virtual void save();
         virtual void saveAs(const fs::path &path);

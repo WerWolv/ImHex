@@ -23,10 +23,10 @@
 
     namespace hex {
 
-        static LONG_PTR oldWndProc;
-        static float titleBarHeight;
-        static ImGuiMouseCursor mouseCursorIcon;
-        static BOOL compositionEnabled = false;
+        static LONG_PTR g_oldWndProc;
+        static float g_titleBarHeight;
+        static ImGuiMouseCursor g_mouseCursorIcon;
+        static BOOL g_compositionEnabled = false;
 
         static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             switch (uMsg) {
@@ -37,7 +37,7 @@
                     RECT &rect = *reinterpret_cast<RECT*>(lParam);
                     RECT client = rect;
 
-                    CallWindowProc((WNDPROC)oldWndProc, hwnd, uMsg, wParam, lParam);
+                    CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
 
                     if (IsMaximized(hwnd)) {
                         WINDOWINFO windowInfo = { .cbSize = sizeof(WINDOWINFO) };
@@ -60,23 +60,23 @@
                     switch (cursorPos) {
                         case HTRIGHT:
                         case HTLEFT:
-                            mouseCursorIcon = ImGuiMouseCursor_ResizeEW;
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeEW;
                             break;
                         case HTTOP:
                         case HTBOTTOM:
-                            mouseCursorIcon = ImGuiMouseCursor_ResizeNS;
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeNS;
                             break;
                         case HTTOPLEFT:
                         case HTBOTTOMRIGHT:
-                            mouseCursorIcon = ImGuiMouseCursor_ResizeNWSE;
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeNWSE;
                             break;
                         case HTTOPRIGHT:
                         case HTBOTTOMLEFT:
-                            mouseCursorIcon = ImGuiMouseCursor_ResizeNESW;
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeNESW;
                             break;
                         case HTCAPTION:
                         case HTCLIENT:
-                            mouseCursorIcon = ImGuiMouseCursor_None;
+                            g_mouseCursorIcon = ImGuiMouseCursor_None;
                             break;
                     }
 
@@ -129,7 +129,7 @@
                             return HTBOTTOMRIGHT;
                         case RegionClient:
                         default:
-                            if ((cursor.y < (window.top + titleBarHeight * 2)) && !(ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
+                            if ((cursor.y < (window.top + g_titleBarHeight * 2)) && !(ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
                                 return HTCAPTION;
                             else break;
                     }
@@ -161,7 +161,7 @@
                 default: break;
             }
 
-            return CallWindowProc((WNDPROC)oldWndProc, hwnd, uMsg, wParam, lParam);
+            return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
         }
 
 
@@ -233,7 +233,7 @@
             // Setup borderless window
             auto hwnd = glfwGetWin32Window(this->m_window);
 
-            oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
+            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
 
             MARGINS borderless = { 1, 1, 1, 1 };
             ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
@@ -266,12 +266,12 @@
         }
 
         void Window::beginNativeWindowFrame() {
-            titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+            g_titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
         }
 
         void Window::endNativeWindowFrame() {
-            if (mouseCursorIcon != ImGuiMouseCursor_None) {
-                ImGui::SetMouseCursor(mouseCursorIcon);
+            if (g_mouseCursorIcon != ImGuiMouseCursor_None) {
+                ImGui::SetMouseCursor(g_mouseCursorIcon);
             }
 
             switch (ImGui::GetMouseCursor()) {
@@ -310,7 +310,7 @@
         }
 
         void Window::drawTitleBar() {
-            auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
+            auto buttonSize = ImVec2(g_titleBarHeight * 1.5F, g_titleBarHeight - 1);
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
