@@ -1009,6 +1009,8 @@ namespace hex::pl {
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
                     for (u64 i = 0; i < entryCount; i++) {
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
+
                         auto patterns = this->m_type->createPatterns(evaluator);
 
                         if (!patterns.empty())
@@ -1027,6 +1029,8 @@ namespace hex::pl {
                         auto limit = evaluator->getArrayLimit();
                         if (entryIndex > limit)
                             LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
+
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
 
                         auto patterns = this->m_type->createPatterns(evaluator);
 
@@ -1047,6 +1051,8 @@ namespace hex::pl {
                     auto limit = evaluator->getArrayLimit();
                     if (entryIndex > limit)
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
+
+                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
 
                     auto patterns = this->m_type->createPatterns(evaluator);
 
