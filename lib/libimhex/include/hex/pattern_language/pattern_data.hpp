@@ -68,7 +68,7 @@ namespace hex::pl {
             this->m_evaluator->patternCreated();
         }
 
-        ~PatternCreationLimiter() {
+        virtual ~PatternCreationLimiter() {
             if (this->m_evaluator == nullptr) return;
 
             this->m_evaluator->patternDestroyed();
@@ -869,7 +869,7 @@ namespace hex::pl {
         [[nodiscard]]
         const PatternData* getPattern(u64 offset) const override {
             auto iter = std::find_if(this->m_entries.begin(), this->m_entries.end(), [this, offset](PatternData *pattern){
-               return offset >= this->getOffset() && offset < (this->getOffset() + this->getSize());
+               return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
             });
 
             if (iter == this->m_entries.end())
