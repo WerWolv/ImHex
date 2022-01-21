@@ -98,6 +98,7 @@ namespace hex::dp {
         void setFloatOnOutput(u32 index, float floatingPoint);
 
         void setOverlayData(u64 address, const std::vector<u8> &data);
+        void allowImmediateOnInput(u32 index, bool allow);
     };
 
 }

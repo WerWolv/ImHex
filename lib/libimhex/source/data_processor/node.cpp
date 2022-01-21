@@ -35,49 +35,73 @@ namespace hex::dp {
     }
 
     u64 Node::getIntegerOnInput(u32 index) {
-        auto attribute = this->getConnectedInputAttribute(index);
+        if (index >= this->getAttributes().size())
+            throw std::runtime_error("Attribute index out of bounds");
 
-        if (attribute == nullptr)
+        auto &localAttribute = this->getAttributes()[index];
+        auto connectedAttribute = this->getConnectedInputAttribute(index);
+
+        if (connectedAttribute == nullptr && !localAttribute.allowsImmediate())
             throwNodeError(hex::format("Nothing connected to input '{0}'", LangEntry(this->m_attributes[index].getUnlocalizedName())));
 
-        if (attribute->getType() != Attribute::Type::Integer)
+        auto connectedIsInteger = connectedAttribute != nullptr ?
+            connectedAttribute->getType() == Attribute::Type::Integer : false;
+
+        if (!connectedIsInteger && localAttribute.getType() != Attribute::Type::Integer)
             throwNodeError("Tried to read integer from non-integer attribute");
 
-        markInputProcessed(index);
-        attribute->getParentNode()->process();
+        if (connectedAttribute != nullptr)
+        {
+            markInputProcessed(index);
+            connectedAttribute->getParentNode()->process();
 
-        auto &outputData = attribute->getOutputData();
+            auto &outputData = connectedAttribute->getOutputData();
 
-        if (!outputData.has_value())
-            throw std::runtime_error("No data available at connected attribute");
+            if (!outputData.has_value())
+                throw std::runtime_error("No data available at connected attribute");
 
-        if (outputData->size() < sizeof(u64))
-            throw std::runtime_error("Not enough data provided for integer");
+            if (outputData->size() < sizeof(u64))
+                throw std::runtime_error("Not enough data provided for integer");
 
-        return *reinterpret_cast<u64 *>(outputData->data());
+            return *reinterpret_cast<u64*>(outputData->data());
+        }
+
+        return localAttribute.integerImmediate();
     }
 
     float Node::getFloatOnInput(u32 index) {
-        auto attribute = this->getConnectedInputAttribute(index);
+        if (index >= this->getAttributes().size())
+            throw std::runtime_error("Attribute index out of bounds");
 
-        if (attribute == nullptr)
+        auto &localAttribute = this->getAttributes()[index];
+        auto connectedAttribute = this->getConnectedInputAttribute(index);
+
+        if (connectedAttribute == nullptr && !localAttribute.allowsImmediate())
             throwNodeError(hex::format("Nothing connected to input '{0}'", LangEntry(this->m_attributes[index].getUnlocalizedName())));
 
-        if (attribute->getType() != Attribute::Type::Float)
+        auto connectedIsFloat = connectedAttribute != nullptr ?
+            connectedAttribute->getType() == Attribute::Type::Float : false;
+
+        if (!connectedIsFloat && localAttribute.getType() != Attribute::Type::Float)
             throwNodeError("Tried to read float from non-float attribute");
 
-        markInputProcessed(index);
-        attribute->getParentNode()->process();
+        if (connectedAttribute != nullptr)
+        {
+            markInputProcessed(index);
+            connectedAttribute->getParentNode()->process();
 
-        auto &outputData = attribute->getOutputData();
+            auto &outputData = connectedAttribute->getOutputData();
 
-        if (!outputData.has_value())
-            throw std::runtime_error("No data available at connected attribute");
+            if (!outputData.has_value())
+                throw std::runtime_error("No data available at connected attribute");
 
-        if (outputData->size() < sizeof(float))
-            throw std::runtime_error("Not enough data provided for float");
+            if (outputData->size() < sizeof(float))
+                throw std::runtime_error("Not enough data provided for float");
 
-        return *reinterpret_cast<float *>(outputData->data());
+            return *reinterpret_cast<float*>(outputData->data());
+        }
+
+        return localAttribute.floatImmediate();
     }
 
     void Node::setBufferOnOutput(u32 index, std::vector<u8> data) {
@@ -130,4 +154,19 @@ namespace hex::dp {
         this->m_overlay->getData() = data;
     }
 
+    void Node::allowImmediateOnInput(u32 index, bool allow) {
+        if (index >= this->getAttributes().size())
+            throw std::runtime_error("Attribute index out of bounds!");
+
+        auto &attribute = this->getAttributes()[index];
+
+        if (attribute.getIOType() != Attribute::IOType::In)
+            throw std::runtime_error("Only input attributes can have immediate values!");
+
+        if (attribute.getType() == Attribute::Type::Buffer)
+            throw std::runtime_error("Buffer attributes can't have immediate values");
+
+        attribute.m_allowsImmediate = allow;
+    }
 }
+

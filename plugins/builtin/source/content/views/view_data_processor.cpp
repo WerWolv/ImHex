@@ -321,6 +321,25 @@ namespace hex::plugin::builtin {
                         if (attribute.getIOType() == dp::Attribute::IOType::In) {
                             ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
                             ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+
+                            // Immediate entry if no nodes are connected
+                            if (attribute.getConnectedAttributes().size() == 0 && attribute.allowsImmediate()) {
+                                ImGui::PushItemWidth(80);
+                                ImGui::SameLine();
+
+                                switch (attribute.getType()) {
+                                    case dp::Attribute::Type::Integer:
+                                        ImGui::InputHexadecimal("##integer_value", attribute.integerImmediatePtr());
+                                        break;
+
+                                    case dp::Attribute::Type::Float:
+                                        ImGui::InputScalar("##floatValue", ImGuiDataType_Float, attribute.floatImmediatePtr(), nullptr, nullptr, "%f", ImGuiInputTextFlags_CharsDecimal);
+                                        break;
+                                }
+
+                                ImGui::PopItemWidth();
+                            }
+
                             ImNodes::EndInputAttribute();
                         } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
                             ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
@@ -436,6 +455,7 @@ namespace hex::plugin::builtin {
             };
             currNodeOutput["attrs"] = json::array();
             currNodeOutput["id"]    = id;
+            currNodeOutput["imm"]   = json::array();
 
             json nodeData;
             node->store(nodeData);
@@ -444,6 +464,21 @@ namespace hex::plugin::builtin {
             u32 attrIndex = 0;
             for (auto &attr : node->getAttributes()) {
                 currNodeOutput["attrs"][attrIndex] = attr.getId();
+
+                if (attr.allowsImmediate()) {
+                    switch (attr.getType()) {
+                        case dp::Attribute::Type::Integer:
+                            currNodeOutput["imm"][attrIndex] = attr.integerImmediate();
+                            break;
+
+                        case dp::Attribute::Type::Float:
+                            currNodeOutput["imm"][attrIndex] = attr.floatImmediate();
+                            break;
+                    }
+                }
+                else
+                    currNodeOutput["imm"][attrIndex] = nullptr;
+
                 attrIndex++;
             }
         }
@@ -499,14 +534,30 @@ namespace hex::plugin::builtin {
             bool hasInput  = false;
             u32 attrIndex  = 0;
             for (auto &attr : newNode->getAttributes()) {
+                u32 attrId = node["attrs"][attrIndex];
+                maxAttrId = std::max(attrId, maxAttrId);
+
                 if (attr.getIOType() == dp::Attribute::IOType::Out)
                     hasOutput = true;
 
-                if (attr.getIOType() == dp::Attribute::IOType::In)
+                if (attr.getIOType() == dp::Attribute::IOType::In) {
                     hasInput = true;
 
-                u32 attrId = node["attrs"][attrIndex];
-                maxAttrId  = std::max(attrId, maxAttrId);
+                    // Set immediate value if available
+                    if (attr.allowsImmediate() && !node["imm"][attrIndex].is_null()) {
+                        auto immediate = node["imm"][attrIndex];
+
+                        switch (attr.getType()) {
+                            case dp::Attribute::Type::Integer:
+                                attr.setIntegerImmediate(immediate);
+                                break;
+
+                            case dp::Attribute::Type::Float:
+                                attr.setFloatImmediate(immediate);
+                                break;
+                        }
+                    }
+                }
 
                 attr.setId(attrId);
                 attrIndex++;
