@@ -182,6 +182,10 @@ Configuration: ~/Library/Application Support/imhex/config
 Resources: ~/Library/Application Support/imhex/resources
 ```
 
+If the build fails while trying to find the macOS libraries, make sure you have
+XCode installed with `xcode-select --install`. Homebrew will also help get the
+most recent SDK installed and configured with `brew doctor`.
+
 ### Linux
 
 Dependency installation scripts are available for many common Linux distributions in the [/dist](dist) folder.
