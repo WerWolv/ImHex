@@ -165,6 +165,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.help.about.contributor", "Mitwirkende" },
                         { "hex.builtin.view.help.about.libs", "Benutzte Libraries" },
                         { "hex.builtin.view.help.about.paths", "ImHex Ordner" },
+                        { "hex.builtin.view.help.about.license", "Lizenz" },
                     { "hex.builtin.view.help.documentation", "ImHex Dokumentation" },
                     { "hex.builtin.view.help.pattern_cheat_sheet", "Pattern Language Cheat Sheet"},
                     { "hex.builtin.view.help.calc_cheat_sheet", "Rechner Cheat Sheet" },

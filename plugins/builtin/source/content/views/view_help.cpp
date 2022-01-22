@@ -4,6 +4,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <romfs/romfs.hpp>
+
 namespace hex::plugin::builtin {
 
     ViewHelp::ViewHelp() : View("hex.builtin.view.help.about.name") {
@@ -112,6 +114,10 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewHelp::drawLicensePage() {
+        ImGui::TextFormattedWrapped("{}", romfs::get("LICENSE").string());
+    }
+
     void ViewHelp::drawAboutPopup() {
         ImGui::SetNextWindowSize(scaled(ImVec2(600, 350)), ImGuiCond_Always);
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.help.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_NoResize)) {
@@ -142,6 +148,12 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.help.about.paths"_lang)) {
                     ImGui::NewLine();
                     this->drawPathsPage();
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("hex.builtin.view.help.about.license"_lang)) {
+                    ImGui::NewLine();
+                    this->drawLicensePage();
                     ImGui::EndTabItem();
                 }
 

@@ -164,6 +164,7 @@ namespace hex::plugin::builtin {
                         //{ "hex.builtin.view.help.about.contributor", "Contributors" },
                         { "hex.builtin.view.help.about.libs", "使用的库" },
                         { "hex.builtin.view.help.about.paths", "ImHex目录" },
+                        // "hex.builtin.view.help.about.license", "License" },
                     { "hex.builtin.view.help.documentation", "ImHex文档" },
                     { "hex.builtin.view.help.pattern_cheat_sheet", "模式语言帮助"},
                     { "hex.builtin.view.help.calc_cheat_sheet", "计算器帮助" },

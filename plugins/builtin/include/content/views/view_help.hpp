@@ -37,6 +37,7 @@ namespace hex::plugin::builtin {
         void drawContributorPage();
         void drawLibraryCreditsPage();
         void drawPathsPage();
+        void drawLicensePage();
     };
 
 }

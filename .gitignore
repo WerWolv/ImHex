@@ -1,10 +1,7 @@
 .vscode/
 .idea/
 
-cmake-build-debug/
-cmake-build-release/
-cmake-build-relwithdebinfo/
-cmake-build-wsl/
+cmake-build-*/
 
 build-linux/
 build*/
