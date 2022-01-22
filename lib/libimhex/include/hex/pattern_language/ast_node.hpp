@@ -693,6 +693,8 @@ namespace hex::pl {
                 pattern->setComment(*value);
             } else if (name == "hidden" && noValue()) {
                 pattern->setHidden(true);
+            } else if (name == "no_unique_address" && noValue()) {
+                endOffset -= pattern->getSize();
             } else if (name == "inline" && noValue()) {
                 auto inlinable = dynamic_cast<Inlinable*>(pattern);
 
