@@ -108,7 +108,7 @@ namespace hex::pl {
 
             switch (type) {
                 case Token::ValueType::Unsigned128Bit: return { u128(integer) };
-                case Token::ValueType::Signed128Bit:   return { s128(integer) };
+                case Token::ValueType::Signed128Bit:   return { i128(integer) };
                 default: return { };
             }
         } else if (Token::isFloatingPoint(type)) {

@@ -419,9 +419,9 @@ namespace hex::plugin::builtin {
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
                     switch (type) {
                         case EnvVarType::Integer: {
-                            s64 displayValue = hex::get_or<s128>(value, 0);
+                            i64 displayValue = hex::get_or<i128>(value, 0);
                             ImGui::InputScalar("###value",  ImGuiDataType_S64, &displayValue);
-                            value = s128(displayValue);
+                            value = i128(displayValue);
                             break;
                         }
                         case EnvVarType::Float: {
@@ -449,7 +449,7 @@ namespace hex::plugin::builtin {
 
                     if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         iter++;
-                        this->m_envVarEntries.insert(iter, { this->m_envVarIdCounter++, "", s128(0), EnvVarType::Integer });
+                        this->m_envVarEntries.insert(iter, { this->m_envVarIdCounter++, "", i128(0), EnvVarType::Integer });
                         iter--;
                     }
 
@@ -492,9 +492,9 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted(pl::Token::literalToString(variable.value, true).c_str());
                     } else if (variable.inVariable) {
                         if (pl::Token::isSigned(variable.type)) {
-                            s64 value = hex::get_or<s128>(variable.value, 0);
+                            i64 value = hex::get_or<i128>(variable.value, 0);
                             ImGui::InputScalar("", ImGuiDataType_S64, &value);
-                            variable.value = s128(value);
+                            variable.value = i128(value);
                         } else if (pl::Token::isUnsigned(variable.type)) {
                             u64 value = hex::get_or<u128>(variable.value, 0);
                             ImGui::InputScalar("", ImGuiDataType_U64, &value);

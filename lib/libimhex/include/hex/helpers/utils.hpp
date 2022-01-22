@@ -33,7 +33,7 @@ namespace hex {
     ImVec2 scaled(const ImVec2 &vector);
 
     std::string to_string(u128 value);
-    std::string to_string(s128 value);
+    std::string to_string(i128 value);
 
     std::string toByteString(u64 bytes);
     std::string makePrintable(u8 c);
@@ -66,8 +66,8 @@ namespace hex {
         return (value & mask) >> to;
     }
 
-    constexpr inline s128 signExtend(size_t numBits, s128 value) {
-        s128 mask = 1U << (numBits - 1);
+    constexpr inline i128 signExtend(size_t numBits, i128 value) {
+        i128 mask = 1U << (numBits - 1);
         return (value ^ mask) - mask;
     }
 
@@ -193,7 +193,7 @@ namespace hex {
         if (number == 0) return "0";
 
         std::string result;
-        for (s16 bit = hex::bit_width(number) - 1; bit >= 0; bit--)
+        for (i16 bit = hex::bit_width(number) - 1; bit >= 0; bit--)
             result += (number & (0b1 << bit)) == 0 ? '0' : '1';
 
         return result;

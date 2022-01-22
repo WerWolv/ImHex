@@ -21,13 +21,13 @@ namespace hex {
 
     template<typename T>
     struct Response {
-        s32 code;
+        i32 code;
         T body;
     };
 
     template<>
     struct Response<void> {
-        s32 code;
+        i32 code;
     };
 
     class Net {
@@ -51,7 +51,7 @@ namespace hex {
 
     private:
         void setCommonSettings(std::string &response, const std::string &url, u32 timeout = 2000, const std::map<std::string, std::string> &extraHeaders = { }, const std::string &body = { });
-        std::optional<s32> execute();
+        std::optional<i32> execute();
 
         friend int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow);
     private:

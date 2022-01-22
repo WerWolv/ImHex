@@ -500,7 +500,7 @@ namespace hex::pl {
         }
 
        void createEntry(prv::Provider* &provider) override {
-            s128 data = 0;
+            i128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 

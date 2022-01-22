@@ -44,7 +44,7 @@ namespace hex {
         return std::string(data + index + 1);
     }
 
-    std::string to_string(s128 value) {
+    std::string to_string(i128 value) {
         char data[45] = { 0 };
 
         u128 unsignedValue = value < 0 ? -value : value;

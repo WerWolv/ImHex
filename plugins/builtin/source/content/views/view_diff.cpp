@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
     enum class DiffResult { Same, Changed, Added, Removed };
     struct LineInfo {
         std::vector<u8> bytes;
-        s64 validBytes = 0;
+        i64 validBytes = 0;
     };
 
     static DiffResult diffBytes(u8 index, const LineInfo &a, const LineInfo &b) {
@@ -97,7 +97,7 @@ namespace hex::plugin::builtin {
             // Read one line of each provider
             lineInfo[i].bytes.resize(this->m_columnCount);
             provider->read(row * this->m_columnCount, lineInfo[i].bytes.data(), lineInfo[i].bytes.size());
-            lineInfo[i].validBytes = std::min<s64>(this->m_columnCount, provider->getSize() - row * this->m_columnCount);
+            lineInfo[i].validBytes = std::min<i64>(this->m_columnCount, provider->getSize() - row * this->m_columnCount);
 
             // Calculate address width
             u8 addressDigits = 0;
@@ -122,12 +122,12 @@ namespace hex::plugin::builtin {
         const ImColor colorDisabled = this->m_greyedOutZeros ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : static_cast<u32>(colorText);
 
 
-        for (s8 curr = 0; curr < 2; curr++) {
+        for (i8 curr = 0; curr < 2; curr++) {
             auto other = !curr;
 
             std::optional<ImVec2> lastHighlightEnd;
 
-            for (s64 col = 0; col < lineInfo[curr].validBytes; col++) {
+            for (i64 col = 0; col < lineInfo[curr].validBytes; col++) {
                 auto pos = ImGui::GetCursorScreenPos();
 
                 // Diff bytes

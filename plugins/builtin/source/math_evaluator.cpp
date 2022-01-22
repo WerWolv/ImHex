@@ -11,8 +11,8 @@
 
 namespace hex {
 
-    s16 comparePrecedence(const Operator& a, const Operator& b) {
-        return (static_cast<s8>(a) & 0x0F0) - (static_cast<s8>(b) & 0x0F0);
+    i16 comparePrecedence(const Operator& a, const Operator& b) {
+        return (static_cast<i8>(a) & 0x0F0) - (static_cast<i8>(b) & 0x0F0);
     }
 
     bool isLeftAssociative(const Operator op) {
@@ -226,13 +226,13 @@ namespace hex {
                     case Operator::Invalid:
                         throw std::invalid_argument("Invalid operator!");
                     case Operator::And:
-                        result = static_cast<s64>(leftOperand) && static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
                         break;
                     case Operator::Or:
-                        result = static_cast<s64>(leftOperand) && static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
                         break;
                     case Operator::Xor:
-                        result = (static_cast<s64>(leftOperand) ^ static_cast<s64>(rightOperand)) > 0;
+                        result = (static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand)) > 0;
                         break;
                     case Operator::GreaterThan:
                         result = leftOperand > rightOperand;
@@ -253,25 +253,25 @@ namespace hex {
                         result = leftOperand != rightOperand;
                         break;
                     case Operator::Not:
-                        result = !static_cast<s64>(rightOperand);
+                        result = !static_cast<i64>(rightOperand);
                         break;
                     case Operator::BitwiseOr:
-                        result = static_cast<s64>(leftOperand) | static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) | static_cast<i64>(rightOperand);
                         break;
                     case Operator::BitwiseXor:
-                        result = static_cast<s64>(leftOperand) ^ static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand);
                         break;
                     case Operator::BitwiseAnd:
-                        result = static_cast<s64>(leftOperand) & static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) & static_cast<i64>(rightOperand);
                         break;
                     case Operator::BitwiseNot:
-                        result = ~static_cast<s64>(rightOperand);
+                        result = ~static_cast<i64>(rightOperand);
                         break;
                     case Operator::ShiftLeft:
-                        result = static_cast<s64>(leftOperand) << static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) << static_cast<i64>(rightOperand);
                         break;
                     case Operator::ShiftRight:
-                        result = static_cast<s64>(leftOperand) >> static_cast<s64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) >> static_cast<i64>(rightOperand);
                         break;
                     case Operator::Addition:
                         result = leftOperand + rightOperand;

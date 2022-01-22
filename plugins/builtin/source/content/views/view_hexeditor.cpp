@@ -937,7 +937,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.hexeditor.goto.offset.current"_lang)) {
                     ImGui::InputScalar("dec", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal);
 
-                    s64 currSelectionOffset = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
+                    i64 currSelectionOffset = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
                     if (currSelectionOffset + this->m_gotoAddress < 0)
                         this->m_gotoAddress = -currSelectionOffset;
@@ -1164,7 +1164,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
             u64 address = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
-            size_t size = std::abs(s64(this->m_memoryEditor.DataPreviewAddrEnd) - s64(this->m_memoryEditor.DataPreviewAddr)) + 1;
+            size_t size = std::abs(i64(this->m_memoryEditor.DataPreviewAddrEnd) - i64(this->m_memoryEditor.DataPreviewAddr)) + 1;
 
             region = Region { address, size };
         });

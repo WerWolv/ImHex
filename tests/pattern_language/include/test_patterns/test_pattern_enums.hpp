@@ -10,7 +10,7 @@ namespace hex::test {
             auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x08, sizeof(u32), nullptr);
             testEnum->setEnumValues({
                 { u128(0x0000), "A" },
-                { s128(0x0C), "B" },
+                { i128(0x0C), "B" },
                 { u128(0x0D), "C" },
                 { u128(0x0E), "D" },
             });

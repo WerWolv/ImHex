@@ -9,7 +9,7 @@
 
 namespace hex {
 
-    enum class Architecture : s32 {
+    enum class Architecture : i32 {
         ARM,
         ARM64,
         MIPS,
@@ -43,14 +43,14 @@ namespace hex {
 
         constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "MOS65XX", "WebAssembly", "Berkeley Packet Filter", "RISC-V" };
 
-        static inline s32 getArchitectureSupportedCount() {
-            static s32 supportedCount = -1;
+        static inline i32 getArchitectureSupportedCount() {
+            static i32 supportedCount = -1;
 
             if (supportedCount != -1) {
                 return supportedCount;
             }
 
-            for (supportedCount = static_cast<s32>(Architecture::MIN); supportedCount < static_cast<s32>(Architecture::MAX); supportedCount++) {
+            for (supportedCount = static_cast<i32>(Architecture::MIN); supportedCount < static_cast<i32>(Architecture::MAX); supportedCount++) {
                 if (!cs_support(supportedCount)) {
                     break;
                 }

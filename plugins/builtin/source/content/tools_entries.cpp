@@ -543,7 +543,7 @@ namespace hex::plugin::builtin {
             clipper.Begin(links.size());
 
             while (clipper.Step()) {
-                for (s32 i = clipper.DisplayEnd - 1; i >= clipper.DisplayStart; i--) {
+                for (i32 i = clipper.DisplayEnd - 1; i >= clipper.DisplayStart; i--) {
                     auto &[fileName, link, size] = links[i];
 
                     ImGui::TableNextRow();
@@ -888,7 +888,7 @@ namespace hex::plugin::builtin {
         static bool combining = false;
         static std::vector<std::string> files;
         static auto outputPath = []{ std::string s; s.reserve(0x1000); return s; }();
-        static s32 selectedIndex;
+        static i32 selectedIndex;
 
         if (ImGui::BeginTable("files_table", 2, ImGuiTableFlags_SizingStretchProp)) {
             ImGui::TableSetupColumn("file list", ImGuiTableColumnFlags_NoHeaderLabel, 10);
@@ -898,7 +898,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
 
-                s32 index = 0;
+                i32 index = 0;
                 for (auto &file : files) {
                     if (ImGui::Selectable(fs::path(file).filename().string().c_str(), index == selectedIndex))
                         selectedIndex = index;

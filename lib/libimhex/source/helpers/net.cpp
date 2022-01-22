@@ -115,12 +115,12 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_NOPROGRESS, 0L);
     }
 
-    std::optional<s32> Net::execute() {
+    std::optional<i32> Net::execute() {
         CURLcode result = curl_easy_perform(this->m_ctx);
         if (result != CURLE_OK)
             log::error("Net request failed with error {}!", curl_easy_strerror(result));
 
-        s32 responseCode = 0;
+        i32 responseCode = 0;
         curl_easy_getinfo(this->m_ctx, CURLINFO_RESPONSE_CODE, &responseCode);
 
         curl_slist_free_all(this->m_headers);

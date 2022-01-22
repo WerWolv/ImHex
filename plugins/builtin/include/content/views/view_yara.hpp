@@ -19,8 +19,8 @@ namespace hex::plugin::builtin {
         struct YaraMatch {
             std::string identifier;
             std::string variable;
-            s64 address;
-            s32 size;
+            i64 address;
+            i32 size;
             bool wholeDataMatch;
         };
 

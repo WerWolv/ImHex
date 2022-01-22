@@ -133,7 +133,7 @@ namespace hex::pl {
             std::string m_identifier;
         };
 
-        using Literal = std::variant<char, bool, u128, s128, double, std::string, PatternData*>;
+        using Literal = std::variant<char, bool, u128, i128, double, std::string, PatternData*>;
         using ValueTypes = std::variant<Keyword, Identifier, Operator, Literal, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -165,11 +165,11 @@ namespace hex::pl {
                               literal);
         }
 
-        static s128 literalToSigned(const pl::Token::Literal &literal) {
+        static i128 literalToSigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
-                                      [](std::string) -> s128 { throw std::string("expected integral type, got string"); },
-                                      [](PatternData*) -> s128 { throw std::string("expected integral type, got custom type"); },
-                                      [](auto &&value) -> s128 { return value; }
+                                      [](std::string) -> i128 { throw std::string("expected integral type, got string"); },
+                                      [](PatternData*) -> i128 { throw std::string("expected integral type, got custom type"); },
+                                      [](auto &&value) -> i128 { return value; }
                               },
                               literal);
         }
@@ -199,7 +199,7 @@ namespace hex::pl {
             return std::visit(overloaded {
                                       [](std::string value) -> std::string { return value; },
                                       [](u128 value)   -> std::string { return std::to_string(u64(value)); },
-                                      [](s128 value)   -> std::string { return std::to_string(s64(value)); },
+                                      [](i128 value)   -> std::string { return std::to_string(i64(value)); },
                                       [](bool value)   -> std::string { return value ? "true" : "false"; },
                                       [](char value)   -> std::string { return std::string() + value; },
                                       [](PatternData*) -> std::string { throw std::string("expected integral type, got custom type"); },

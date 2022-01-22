@@ -13,31 +13,31 @@ namespace hex {
     struct is_integral_helper<u8> : public std::true_type { };
 
     template<>
-    struct is_integral_helper<s8> : public std::true_type { };
+    struct is_integral_helper<i8> : public std::true_type { };
 
     template<>
     struct is_integral_helper<u16> : public std::true_type { };
 
     template<>
-    struct is_integral_helper<s16> : public std::true_type { };
+    struct is_integral_helper<i16> : public std::true_type { };
 
     template<>
     struct is_integral_helper<u32> : public std::true_type { };
 
     template<>
-    struct is_integral_helper<s32> : public std::true_type { };
+    struct is_integral_helper<i32> : public std::true_type { };
 
     template<>
     struct is_integral_helper<u64> : public std::true_type { };
 
     template<>
-    struct is_integral_helper<s64> : public std::true_type { };
+    struct is_integral_helper<i64> : public std::true_type { };
 
     template<>
     struct is_integral_helper<u128> : public std::true_type { };
 
     template<>
-    struct is_integral_helper<s128> : public std::true_type { };
+    struct is_integral_helper<i128> : public std::true_type { };
 
     template<>
     struct is_integral_helper<bool> : public std::true_type { };
@@ -65,19 +65,19 @@ namespace hex {
     struct is_signed_helper : public std::false_type { };
 
     template<>
-    struct is_signed_helper<s8> : public std::true_type { };
+    struct is_signed_helper<i8> : public std::true_type { };
 
     template<>
-    struct is_signed_helper<s16> : public std::true_type { };
+    struct is_signed_helper<i16> : public std::true_type { };
 
     template<>
-    struct is_signed_helper<s32> : public std::true_type { };
+    struct is_signed_helper<i32> : public std::true_type { };
 
     template<>
-    struct is_signed_helper<s64> : public std::true_type { };
+    struct is_signed_helper<i64> : public std::true_type { };
 
     template<>
-    struct is_signed_helper<s128> : public std::true_type { };
+    struct is_signed_helper<i128> : public std::true_type { };
 
     template<>
     struct is_signed_helper<char> : public std::true_type { };

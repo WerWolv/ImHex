@@ -189,13 +189,13 @@ namespace hex::pl {
             return std::visit(overloaded {
                     // TODO: :notlikethis:
                     [this](u128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](s128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](i128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](double left, PatternData * const &right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](char left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](bool left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](std::string left, PatternData * const &right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](PatternData * const &left, u128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, s128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, i128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](PatternData * const &left, double right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](PatternData * const &left, char right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                     [this](PatternData * const &left, bool right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
@@ -512,15 +512,15 @@ namespace hex::pl {
                             case Token::ValueType::Unsigned128Bit:
                                 return new ASTNodeLiteral(u128(endianAdjustedValue));
                             case Token::ValueType::Signed8Bit:
-                                return new ASTNodeLiteral(s128(s8(endianAdjustedValue)));
+                                return new ASTNodeLiteral(i128(i8(endianAdjustedValue)));
                             case Token::ValueType::Signed16Bit:
-                                return new ASTNodeLiteral(s128(s16(endianAdjustedValue)));
+                                return new ASTNodeLiteral(i128(i16(endianAdjustedValue)));
                             case Token::ValueType::Signed32Bit:
-                                return new ASTNodeLiteral(s128(s32(endianAdjustedValue)));
+                                return new ASTNodeLiteral(i128(i32(endianAdjustedValue)));
                             case Token::ValueType::Signed64Bit:
-                                return new ASTNodeLiteral(s128(s64(endianAdjustedValue)));
+                                return new ASTNodeLiteral(i128(i64(endianAdjustedValue)));
                             case Token::ValueType::Signed128Bit:
-                                return new ASTNodeLiteral(s128(endianAdjustedValue));
+                                return new ASTNodeLiteral(i128(endianAdjustedValue));
                             case Token::ValueType::Float:
                                 return new ASTNodeLiteral(double(float(endianAdjustedValue)));
                             case Token::ValueType::Double:
@@ -601,7 +601,7 @@ namespace hex::pl {
                 auto variables = *evaluator->getScope(0).scope;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
-                                  s64 stackSize = evaluator->getStack().size();
+                                  i64 stackSize = evaluator->getStack().size();
                                   for (u32 i = startVariableCount; i < variables.size(); i++) {
                                       stackSize--;
                                       delete variables[i];
@@ -1540,7 +1540,7 @@ namespace hex::pl {
                 readVariable(evaluator, value, pattern);
                 literal = value;
             } else if (dynamic_cast<PatternDataSigned*>(pattern)) {
-                s128 value = 0;
+                i128 value = 0;
                 readVariable(evaluator, value, pattern);
                 value = hex::signExtend(pattern->getSize() * 8, value);
                 literal = value;
@@ -1613,7 +1613,7 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
             std::vector<PatternData*> searchScope;
             PatternData *currPattern = nullptr;
-            s32 scopeIndex = 0;
+            i32 scopeIndex = 0;
 
             if (!evaluator->isGlobalScope()){
                 auto globalScope = evaluator->getGlobalScope().scope;
@@ -1873,7 +1873,7 @@ namespace hex::pl {
             auto variables = *evaluator->getScope(0).scope;
             u32 startVariableCount = variables.size();
             ON_SCOPE_EXIT {
-                              s64 stackSize = evaluator->getStack().size();
+                              i64 stackSize = evaluator->getStack().size();
                               for (u32 i = startVariableCount; i < variables.size(); i++) {
                                   stackSize--;
                                   delete variables[i];
@@ -2325,7 +2325,7 @@ namespace hex::pl {
             }
 
             if (this->m_newScope) {
-                s64 stackSize = evaluator->getStack().size();
+                i64 stackSize = evaluator->getStack().size();
                 for (u32 i = startVariableCount; i < variables.size(); i++) {
                     stackSize--;
                     delete variables[i];

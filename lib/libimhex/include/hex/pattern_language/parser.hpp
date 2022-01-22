@@ -33,7 +33,7 @@ namespace hex::pl {
         std::vector<TokenIter> m_matchedOptionals;
         std::vector<std::vector<std::string>> m_currNamespace;
 
-        u32 getLineNumber(s32 index) const {
+        u32 getLineNumber(i32 index) const {
             return this->m_curr[index].lineNumber;
         }
 
@@ -43,7 +43,7 @@ namespace hex::pl {
         }
 
         template<typename T>
-        const T& getValue(s32 index) const {
+        const T& getValue(i32 index) const {
             auto value = std::get_if<T>(&this->m_curr[index].value);
 
             if (value == nullptr)
@@ -52,7 +52,7 @@ namespace hex::pl {
             return *value;
         }
 
-        Token::Type getType(s32 index) const {
+        Token::Type getType(i32 index) const {
             return this->m_curr[index].type;
         }
 
@@ -141,7 +141,7 @@ namespace hex::pl {
             return program;
         }
 
-        [[noreturn]] void throwParseError(const std::string &error, s32 token = -1) const {
+        [[noreturn]] void throwParseError(const std::string &error, i32 token = -1) const {
             throw ParseError(this->m_curr[token].lineNumber, "Parser: " + error);
         }
 
@@ -245,7 +245,7 @@ namespace hex::pl {
             return true;
         }
 
-        bool peek(Token::Type type, auto value, s32 index = 0) {
+        bool peek(Token::Type type, auto value, i32 index = 0) {
             return this->m_curr[index].type == type && this->m_curr[index] == value;
         }
 

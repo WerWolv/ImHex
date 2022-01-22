@@ -22,8 +22,8 @@ namespace hex::pl {
 
             if (std::get_if<u128>(&value.value()) != nullptr)
                 pattern = new PatternDataUnsigned(0, sizeof(u128), this);
-            else if (std::get_if<s128>(&value.value()) != nullptr)
-                pattern = new PatternDataSigned(0, sizeof(s128), this);
+            else if (std::get_if<i128>(&value.value()) != nullptr)
+                pattern = new PatternDataSigned(0, sizeof(i128), this);
             else if (std::get_if<double>(&value.value()) != nullptr)
                 pattern = new PatternDataFloat(0, sizeof(double), this);
             else if (std::get_if<bool>(&value.value()) != nullptr)
@@ -83,7 +83,7 @@ namespace hex::pl {
                     if (dynamic_cast<PatternDataUnsigned*>(pattern))
                         return u128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataSigned*>(pattern))
-                        return s128(value) & bitmask(pattern->getSize() * 8);
+                        return i128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataFloat*>(pattern))
                         return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
                     else
@@ -105,7 +105,7 @@ namespace hex::pl {
                     if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern))
                         return u128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataSigned*>(pattern))
-                        return s128(value) & bitmask(pattern->getSize() * 8);
+                        return i128(value) & bitmask(pattern->getSize() * 8);
                     else if (dynamic_cast<PatternDataCharacter*>(pattern))
                         return char(value);
                     else if (dynamic_cast<PatternDataBoolean*>(pattern))

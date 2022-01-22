@@ -43,14 +43,14 @@ namespace hex {
             void load();
             void store();
 
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const Callback &callback);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback);
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
 
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 value);
+            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value);
 
-            s64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue);
+            i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue);
             std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
             std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue = { });
 

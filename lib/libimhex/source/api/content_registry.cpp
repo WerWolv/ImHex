@@ -40,7 +40,7 @@ namespace hex {
         }
     }
 
-    void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue, const ContentRegistry::Settings::Callback &callback) {
+    void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const ContentRegistry::Settings::Callback &callback) {
         log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
         ContentRegistry::Settings::getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry{ unlocalizedName.c_str(), callback });
@@ -66,7 +66,7 @@ namespace hex {
             json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
     }
 
-    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 value) {
+    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
         auto &json = getSettingsData();
 
         if (!json.contains(unlocalizedCategory))
@@ -94,7 +94,7 @@ namespace hex {
     }
 
 
-    s64 ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, s64 defaultValue) {
+    i64 ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue) {
         auto &json = getSettingsData();
 
         if (!json.contains(unlocalizedCategory))
@@ -105,7 +105,7 @@ namespace hex {
         if (!json[unlocalizedCategory][unlocalizedName].is_number())
             json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
-        return json[unlocalizedCategory][unlocalizedName].get<s64>();
+        return json[unlocalizedCategory][unlocalizedName].get<i64>();
     }
 
     std::string ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {

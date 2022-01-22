@@ -59,7 +59,7 @@ namespace hex::pl {
             this->m_scopes.pop_back();
         }
 
-        const Scope& getScope(s32 index) {
+        const Scope& getScope(i32 index) {
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 

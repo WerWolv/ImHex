@@ -45,10 +45,10 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.s8", sizeof(s8), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i8", sizeof(i8), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:02X}" : "{0}0o{1:03o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<s8*>(buffer.data()), endian);
+            auto number = hex::changeEndianess(*reinterpret_cast<i8*>(buffer.data()), endian);
             bool negative = number < 0;
             auto value = hex::format(format, negative ? "-" : "", std::abs(number));
 
@@ -63,10 +63,10 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.s16", sizeof(s16), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i16", sizeof(i16), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:04X}" : "{0}0o{1:06o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<s16*>(buffer.data()), endian);
+            auto number = hex::changeEndianess(*reinterpret_cast<i16*>(buffer.data()), endian);
             bool negative = number < 0;
             auto value = hex::format(format, negative ? "-" : "", std::abs(number));
 
@@ -81,10 +81,10 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.s32", sizeof(s32), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i32", sizeof(i32), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:08X}" : "{0}0o{1:011o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<s32*>(buffer.data()), endian);
+            auto number = hex::changeEndianess(*reinterpret_cast<i32*>(buffer.data()), endian);
             bool negative = number < 0;
             auto value = hex::format(format, negative ? "-" : "", std::abs(number));
 
@@ -99,10 +99,10 @@ namespace hex::plugin::builtin {
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.s64", sizeof(s64), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i64", sizeof(i64), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:016X}" : "{0}0o{1:022o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<s64*>(buffer.data()), endian);
+            auto number = hex::changeEndianess(*reinterpret_cast<i64*>(buffer.data()), endian);
             bool negative = number < 0;
             auto value = hex::format(format, negative ? "-" : "", std::abs(number));
 

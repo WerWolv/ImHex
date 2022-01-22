@@ -381,7 +381,7 @@ namespace hex {
             {
                 ImGui::SetCursorPos(sidebarPos);
 
-                static s32 openWindow = -1;
+                static i32 openWindow = -1;
                 u32 index = 0;
                 ImGui::PushID("SideBarWindows");
                 for (const auto &[icon, callback] : ContentRegistry::Interface::getSidebarItems()) {

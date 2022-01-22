@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
                 if (size > 16)
                     LogConsole::abortEvaluation("read size out of range");
 
-                s128 value;
+                i128 value;
                 ctx->getProvider()->read(address, &value, size);
                 return hex::signExtend(size * 8, value);
             });
@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
                 auto string = Token::literalToString(params[0], false);
                 auto base = Token::literalToUnsigned(params[1]);
 
-                return s128(std::strtoll(string.c_str(), nullptr, base));
+                return i128(std::strtoll(string.c_str(), nullptr, base));
             });
 
             /* parse_float(string) */
