@@ -217,6 +217,7 @@ jobs:
           cp -r build/DEBIAN build/install
           dpkg-deb --build build/install
           mv build/install.deb imhex.deb
+          rm -rf build/install/DEBIAN
 
       - name: 📦 Bundle AppImage
         run: |
