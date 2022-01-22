@@ -1051,7 +1051,7 @@ namespace hex::pl {
             outVariable = true;
         }
 
-        return create(new ASTNodeVariableDecl(name, type, placementOffset, inVariable, outVariable));
+        return create(new ASTNodeVariableDecl(name, type->clone(), placementOffset, inVariable, outVariable));
     }
 
     // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer
@@ -1078,7 +1078,7 @@ namespace hex::pl {
 
         sizeCleanup.release();
 
-        return create(new ASTNodeArrayVariableDecl(name, type, size, placementOffset));
+        return create(new ASTNodeArrayVariableDecl(name, type->clone(), size, placementOffset));
     }
 
     // (parseType) *Identifier : (parseType) @ Integer
@@ -1102,7 +1102,7 @@ namespace hex::pl {
 
         sizeCleanup.release();
 
-        return create(new ASTNodePointerVariableDecl(name, type, sizeType, placementOffset));
+        return create(new ASTNodePointerVariableDecl(name, type->clone(), sizeType, placementOffset));
     }
 
     std::vector<ASTNode*> Parser::parseNamespace() {
@@ -1137,6 +1137,7 @@ namespace hex::pl {
 
     ASTNode* Parser::parsePlacement() {
         auto type = parseType();
+        ON_SCOPE_EXIT { delete type; };
 
         if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)))
             return parseArrayVariablePlacement(type);
@@ -1151,7 +1152,10 @@ namespace hex::pl {
 
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
     std::vector<ASTNode*> Parser::parseStatements() {
-        ASTNode *statement;
+        ASTNode *statement = nullptr;
+        auto statementGuard = SCOPE_GUARD {
+            delete statement;
+        };
 
         if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER)))
             statement = parseUsingDeclaration();
@@ -1193,6 +1197,8 @@ namespace hex::pl {
 
         // Consume superfluous semicolons
         while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+
+        statementGuard.release();
 
         return { statement };
     }

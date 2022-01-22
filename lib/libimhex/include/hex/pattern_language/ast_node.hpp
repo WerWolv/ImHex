@@ -124,7 +124,7 @@ namespace hex::pl {
     };
 
     class ASTNodeMathematicalExpression : public ASTNode {
-        #define FLOAT_BIT_OPERATION(name) \
+#define FLOAT_BIT_OPERATION(name) \
             auto name(hex::floating_point auto left, auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
             auto name(auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
             auto name(hex::floating_point auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
@@ -158,7 +158,7 @@ namespace hex::pl {
             return left % right;
         }
 
-    #undef FLOAT_BIT_OPERATION
+#undef FLOAT_BIT_OPERATION
     public:
         ASTNodeMathematicalExpression(ASTNode *left, ASTNode *right, Token::Operator op)
                 : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
@@ -187,63 +187,55 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete left; delete right; };
 
             return std::visit(overloaded {
-                // TODO: :notlikethis:
-                [this](u128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](s128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](double left, PatternData * const &right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](char left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](bool left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](std::string left, PatternData * const &right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, u128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, s128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, double right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, char right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, bool right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, std::string right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](PatternData * const &left, PatternData *right) -> ASTNode*   { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    // TODO: :notlikethis:
+                    [this](u128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](s128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](double left, PatternData * const &right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](char left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](bool left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](std::string left, PatternData * const &right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, u128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, s128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, double right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, char right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, bool right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, std::string right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](PatternData * const &left, PatternData *right) -> ASTNode*   { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
 
-                [this](auto&& left, std::string right) -> ASTNode*          { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                [this](std::string left, auto&& right) -> ASTNode* {
-                    switch (this->getOperator()) {
-                        case Token::Operator::Star: {
-                            std::string result;
-                            for (auto i = 0; i < right; i++)
-                                result += left;
-                            return new ASTNodeLiteral(result);
+                    [this](auto&& left, std::string right) -> ASTNode*          { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                    [this](std::string left, auto&& right) -> ASTNode* {
+                        switch (this->getOperator()) {
+                            case Token::Operator::Star: {
+                                std::string result;
+                                for (auto i = 0; i < right; i++)
+                                    result += left;
+                                return new ASTNodeLiteral(result);
+                            }
+                            default:
+                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                         }
-                        default:
-                            LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                    }
-                },
-                [this](std::string left, std::string right) -> ASTNode* {
-                    switch (this->getOperator()) {
-                        case Token::Operator::Plus:
-                            return new ASTNodeLiteral(left + right);
-                        case Token::Operator::BoolEquals:
-                            return new ASTNodeLiteral(left == right);
-                        case Token::Operator::BoolNotEquals:
-                            return new ASTNodeLiteral(left != right);
-                        case Token::Operator::BoolGreaterThan:
-                            return new ASTNodeLiteral(left > right);
-                        case Token::Operator::BoolLessThan:
-                            return new ASTNodeLiteral(left < right);
-                        case Token::Operator::BoolGreaterThanOrEquals:
-                            return new ASTNodeLiteral(left >= right);
-                        case Token::Operator::BoolLessThanOrEquals:
-                            return new ASTNodeLiteral(left <= right);
-                        default:
-                            LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                    }
-                },
-                [this](std::string left, char right) -> ASTNode* {
-                    switch (this->getOperator()) {
-                        case Token::Operator::Plus:
-                            return new ASTNodeLiteral(left + right);
-                        default:
-                            LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                    }
-                },
-                [this](char left, std::string right) -> ASTNode* {
+                    },
+                    [this](std::string left, std::string right) -> ASTNode* {
+                        switch (this->getOperator()) {
+                            case Token::Operator::Plus:
+                                return new ASTNodeLiteral(left + right);
+                            case Token::Operator::BoolEquals:
+                                return new ASTNodeLiteral(left == right);
+                            case Token::Operator::BoolNotEquals:
+                                return new ASTNodeLiteral(left != right);
+                            case Token::Operator::BoolGreaterThan:
+                                return new ASTNodeLiteral(left > right);
+                            case Token::Operator::BoolLessThan:
+                                return new ASTNodeLiteral(left < right);
+                            case Token::Operator::BoolGreaterThanOrEquals:
+                                return new ASTNodeLiteral(left >= right);
+                            case Token::Operator::BoolLessThanOrEquals:
+                                return new ASTNodeLiteral(left <= right);
+                            default:
+                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                        }
+                    },
+                    [this](std::string left, char right) -> ASTNode* {
                         switch (this->getOperator()) {
                             case Token::Operator::Plus:
                                 return new ASTNodeLiteral(left + right);
@@ -251,56 +243,64 @@ namespace hex::pl {
                                 LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                         }
                     },
-                [this](auto &&left, auto &&right) -> ASTNode* {
-                    switch (this->getOperator()) {
-                        case Token::Operator::Plus:
-                            return new ASTNodeLiteral(left + right);
-                        case Token::Operator::Minus:
-                            return new ASTNodeLiteral(left - right);
-                        case Token::Operator::Star:
-                            return new ASTNodeLiteral(left * right);
-                        case Token::Operator::Slash:
-                            if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
-                            return new ASTNodeLiteral(left / right);
-                        case Token::Operator::Percent:
-                            if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
-                            return new ASTNodeLiteral(modulus(left, right));
-                        case Token::Operator::ShiftLeft:
-                            return new ASTNodeLiteral(shiftLeft(left, right));
-                        case Token::Operator::ShiftRight:
-                            return new ASTNodeLiteral(shiftRight(left, right));
-                        case Token::Operator::BitAnd:
-                            return new ASTNodeLiteral(bitAnd(left, right));
-                        case Token::Operator::BitXor:
-                            return new ASTNodeLiteral(bitXor(left, right));
-                        case Token::Operator::BitOr:
-                            return new ASTNodeLiteral(bitOr(left, right));
-                        case Token::Operator::BitNot:
-                            return new ASTNodeLiteral(bitNot(left, right));
-                        case Token::Operator::BoolEquals:
-                            return new ASTNodeLiteral(bool(left == right));
-                        case Token::Operator::BoolNotEquals:
-                            return new ASTNodeLiteral(bool(left != right));
-                        case Token::Operator::BoolGreaterThan:
-                            return new ASTNodeLiteral(bool(left > right));
-                        case Token::Operator::BoolLessThan:
-                            return new ASTNodeLiteral(bool(left < right));
-                        case Token::Operator::BoolGreaterThanOrEquals:
-                            return new ASTNodeLiteral(bool(left >= right));
-                        case Token::Operator::BoolLessThanOrEquals:
-                            return new ASTNodeLiteral(bool(left <= right));
-                        case Token::Operator::BoolAnd:
-                            return new ASTNodeLiteral(bool(left && right));
-                        case Token::Operator::BoolXor:
-                            return new ASTNodeLiteral(bool(left && !right || !left && right));
-                        case Token::Operator::BoolOr:
-                            return new ASTNodeLiteral(bool(left || right));
-                        case Token::Operator::BoolNot:
-                            return new ASTNodeLiteral(bool(!right));
-                        default:
-                            LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                    [this](char left, std::string right) -> ASTNode* {
+                        switch (this->getOperator()) {
+                            case Token::Operator::Plus:
+                                return new ASTNodeLiteral(left + right);
+                            default:
+                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                        }
+                    },
+                    [this](auto &&left, auto &&right) -> ASTNode* {
+                        switch (this->getOperator()) {
+                            case Token::Operator::Plus:
+                                return new ASTNodeLiteral(left + right);
+                            case Token::Operator::Minus:
+                                return new ASTNodeLiteral(left - right);
+                            case Token::Operator::Star:
+                                return new ASTNodeLiteral(left * right);
+                            case Token::Operator::Slash:
+                                if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
+                                return new ASTNodeLiteral(left / right);
+                            case Token::Operator::Percent:
+                                if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
+                                return new ASTNodeLiteral(modulus(left, right));
+                            case Token::Operator::ShiftLeft:
+                                return new ASTNodeLiteral(shiftLeft(left, right));
+                            case Token::Operator::ShiftRight:
+                                return new ASTNodeLiteral(shiftRight(left, right));
+                            case Token::Operator::BitAnd:
+                                return new ASTNodeLiteral(bitAnd(left, right));
+                            case Token::Operator::BitXor:
+                                return new ASTNodeLiteral(bitXor(left, right));
+                            case Token::Operator::BitOr:
+                                return new ASTNodeLiteral(bitOr(left, right));
+                            case Token::Operator::BitNot:
+                                return new ASTNodeLiteral(bitNot(left, right));
+                            case Token::Operator::BoolEquals:
+                                return new ASTNodeLiteral(bool(left == right));
+                            case Token::Operator::BoolNotEquals:
+                                return new ASTNodeLiteral(bool(left != right));
+                            case Token::Operator::BoolGreaterThan:
+                                return new ASTNodeLiteral(bool(left > right));
+                            case Token::Operator::BoolLessThan:
+                                return new ASTNodeLiteral(bool(left < right));
+                            case Token::Operator::BoolGreaterThanOrEquals:
+                                return new ASTNodeLiteral(bool(left >= right));
+                            case Token::Operator::BoolLessThanOrEquals:
+                                return new ASTNodeLiteral(bool(left <= right));
+                            case Token::Operator::BoolAnd:
+                                return new ASTNodeLiteral(bool(left && right));
+                            case Token::Operator::BoolXor:
+                                return new ASTNodeLiteral(bool(left && !right || !left && right));
+                            case Token::Operator::BoolOr:
+                                return new ASTNodeLiteral(bool(left || right));
+                            case Token::Operator::BoolNot:
+                                return new ASTNodeLiteral(bool(!right));
+                            default:
+                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                        }
                     }
-                }
             }, left->getValue(), right->getValue());
         }
 
@@ -345,14 +345,14 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete first; delete second; delete third; };
 
             auto condition = std::visit(overloaded {
-                [this](std::string value) -> bool { return !value.empty(); },
-                [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
-                [](auto &&value) -> bool { return bool(value); }
+                    [this](std::string value) -> bool { return !value.empty(); },
+                    [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                    [](auto &&value) -> bool { return bool(value); }
             }, first->getValue());
 
             return std::visit(overloaded {
-                [condition]<typename T>(const T &second, const T &third) -> ASTNode* { return new ASTNodeLiteral(condition ? second : third); },
-                [this](auto &&second, auto &&third) -> ASTNode* { LogConsole::abortEvaluation("operands to ternary expression have different types", this); }
+                    [condition]<typename T>(const T &second, const T &third) -> ASTNode* { return new ASTNodeLiteral(condition ? second : third); },
+                    [this](auto &&second, auto &&third) -> ASTNode* { LogConsole::abortEvaluation("operands to ternary expression have different types", this); }
             }, second->getValue(), third->getValue());
         }
 
@@ -491,9 +491,9 @@ namespace hex::pl {
 
             auto typePattern = this->m_type->createPatterns(evaluator).front();
             ON_SCOPE_EXIT {
-                evaluator->dataOffset() = startOffset;
-                delete typePattern;
-            };
+                              evaluator->dataOffset() = startOffset;
+                              delete typePattern;
+                          };
 
             return std::visit(overloaded {
                     [&, this](PatternData * value) -> ASTNode* { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(type)), this); },
@@ -601,14 +601,14 @@ namespace hex::pl {
                 auto variables = *evaluator->getScope(0).scope;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
-                    s64 stackSize = evaluator->getStack().size();
-                    for (u32 i = startVariableCount; i < variables.size(); i++) {
-                        stackSize--;
-                        delete variables[i];
-                    }
-                    if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
-                    evaluator->getStack().resize(stackSize);
-                };
+                                  s64 stackSize = evaluator->getStack().size();
+                                  for (u32 i = startVariableCount; i < variables.size(); i++) {
+                                      stackSize--;
+                                      delete variables[i];
+                                  }
+                                  if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                                  evaluator->getStack().resize(stackSize);
+                              };
 
                 evaluator->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT { evaluator->popScope(); };
@@ -783,9 +783,9 @@ namespace hex::pl {
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                    [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                    [this](PatternData * const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
-                    [](auto &&offset) -> u64 { return offset; }
+                        [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                        [this](PatternData * const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                        [](auto &&offset) -> u64 { return offset; }
                 }, offset->getValue());
             }
 
@@ -976,21 +976,25 @@ namespace hex::pl {
             size_t size = 0;
             u64 entryIndex = 0;
 
-            auto addEntry = [&](PatternData *pattern) {
-                pattern->setVariableName(hex::format("[{}]", entryIndex));
-                pattern->setEndian(arrayPattern->getEndian());
-                entries.push_back(pattern);
+            auto addEntries = [&](const std::vector<PatternData*> &patterns) {
+                for (auto pattern : patterns) {
+                    pattern->setVariableName(hex::format("[{}]", entryIndex));
+                    pattern->setEndian(arrayPattern->getEndian());
+                    entries.push_back(pattern);
 
-                size += pattern->getSize();
-                entryIndex++;
+                    size += pattern->getSize();
+                    entryIndex++;
 
-                evaluator->handleAbort();
+                    evaluator->handleAbort();
+                }
             };
 
-            auto discardEntry = [&] {
-                delete entries.back();
-                entries.pop_back();
-                entryIndex--;
+            auto discardEntries = [&](u32 count) {
+                for (u32 i = 0; i < count; i++) {
+                    delete entries.back();
+                    entries.pop_back();
+                    entryIndex--;
+                }
             };
 
             if (this->m_size != nullptr) {
@@ -1014,13 +1018,14 @@ namespace hex::pl {
                         auto patterns = this->m_type->createPatterns(evaluator);
 
                         if (!patterns.empty())
-                            addEntry(patterns.front());
+                            addEntries(patterns);
 
                         auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
                         if (ctrlFlow == ControlFlowStatement::Break)
                             break;
                         else if (ctrlFlow == ControlFlowStatement::Continue) {
-                            discardEntry();
+
+                            discardEntries(patterns.size());
                             continue;
                         }
                     }
@@ -1035,19 +1040,20 @@ namespace hex::pl {
                         auto patterns = this->m_type->createPatterns(evaluator);
 
                         if (!patterns.empty())
-                            addEntry(patterns.front());
+                            addEntries(patterns);
 
                         auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
                         if (ctrlFlow == ControlFlowStatement::Break)
                             break;
                         else if (ctrlFlow == ControlFlowStatement::Continue) {
-                            discardEntry();
+                            discardEntries(patterns.size());
                             continue;
                         }
                     }
                 }
             } else {
                 while (true) {
+                    bool reachedEnd = true;
                     auto limit = evaluator->getArrayLimit();
                     if (entryIndex > limit)
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
@@ -1056,9 +1062,7 @@ namespace hex::pl {
 
                     auto patterns = this->m_type->createPatterns(evaluator);
 
-                    if (!patterns.empty()) {
-                        auto pattern = patterns.front();
-
+                    for (auto pattern : patterns) {
                         std::vector<u8> buffer(pattern->getSize());
 
                         if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size()) {
@@ -1066,18 +1070,14 @@ namespace hex::pl {
                             LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
                         }
 
-                        addEntry(pattern);
+                        addEntries({ pattern });
 
                         auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
-                        if (ctrlFlow == ControlFlowStatement::Break)
+                        if (ctrlFlow == ControlFlowStatement::None)
                             break;
-                        else if (ctrlFlow == ControlFlowStatement::Continue) {
-                            discardEntry();
-                            continue;
-                        }
 
                         evaluator->getProvider()->read(evaluator->dataOffset() - pattern->getSize(), buffer.data(), buffer.size());
-                        bool reachedEnd = true;
+                        reachedEnd = true;
                         for (u8 &byte : buffer) {
                             if (byte != 0x00) {
                                 reachedEnd = false;
@@ -1087,6 +1087,16 @@ namespace hex::pl {
 
                         if (reachedEnd) break;
                     }
+
+                    auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                    if (ctrlFlow == ControlFlowStatement::Break)
+                        break;
+                    else if (ctrlFlow == ControlFlowStatement::Continue) {
+                        discardEntries(1);
+                        continue;
+                    }
+
+                    if (reachedEnd) break;
                 }
             }
 
@@ -1270,8 +1280,8 @@ namespace hex::pl {
             for (auto inheritance : this->m_inheritance) {
                 auto inheritancePatterns = inheritance->createPatterns(evaluator).front();
                 ON_SCOPE_EXIT {
-                    delete inheritancePatterns;
-                };
+                                  delete inheritancePatterns;
+                              };
 
                 if (auto structPattern = dynamic_cast<PatternDataStruct*>(inheritancePatterns)) {
                     for (auto member : structPattern->getMembers()) {
@@ -1669,27 +1679,27 @@ namespace hex::pl {
                     ON_SCOPE_EXIT { delete index; };
 
                     std::visit(overloaded {
-                        [](std::string) { throw std::string("cannot use string to index array"); },
-                        [](PatternData * const &) { throw std::string("cannot use custom type to index array"); },
-                        [&, this](auto &&index) {
-                            if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern)) {
-                                if (index >= searchScope.size() || index < 0)
-                                    LogConsole::abortEvaluation("array index out of bounds", this);
+                            [](std::string) { throw std::string("cannot use string to index array"); },
+                            [](PatternData * const &) { throw std::string("cannot use custom type to index array"); },
+                            [&, this](auto &&index) {
+                                if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern)) {
+                                    if (index >= searchScope.size() || index < 0)
+                                        LogConsole::abortEvaluation("array index out of bounds", this);
 
-                                auto newPattern = searchScope[index]->clone();
-                                delete currPattern;
-                                currPattern = newPattern;
-                            }
-                            else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(currPattern)) {
-                                if (index >= staticArrayPattern->getEntryCount() || index < 0)
-                                    LogConsole::abortEvaluation("array index out of bounds", this);
+                                    auto newPattern = searchScope[index]->clone();
+                                    delete currPattern;
+                                    currPattern = newPattern;
+                                }
+                                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(currPattern)) {
+                                    if (index >= staticArrayPattern->getEntryCount() || index < 0)
+                                        LogConsole::abortEvaluation("array index out of bounds", this);
 
-                                auto newPattern = searchScope.front()->clone();
-                                newPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getTemplate()->getSize());
-                                delete currPattern;
-                                currPattern = newPattern;
+                                    auto newPattern = searchScope.front()->clone();
+                                    newPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getTemplate()->getSize());
+                                    delete currPattern;
+                                    currPattern = newPattern;
+                                }
                             }
-                        }
                     }, index->getValue());
                 }
 
@@ -1805,7 +1815,7 @@ namespace hex::pl {
     class ASTNodeConditionalStatement : public ASTNode {
     public:
         explicit ASTNodeConditionalStatement(ASTNode *condition, std::vector<ASTNode*> trueBody, std::vector<ASTNode*> falseBody)
-            : ASTNode(), m_condition(condition), m_trueBody(std::move(trueBody)), m_falseBody(std::move(falseBody)) { }
+                : ASTNode(), m_condition(condition), m_trueBody(std::move(trueBody)), m_falseBody(std::move(falseBody)) { }
 
         ~ASTNodeConditionalStatement() override {
             delete this->m_condition;
@@ -1835,8 +1845,9 @@ namespace hex::pl {
 
             for (auto &node : body) {
                 auto newPatterns = node->createPatterns(evaluator);
-                for (auto &pattern : newPatterns)
-                    scope.push_back(pattern->clone());
+                for (auto &pattern : newPatterns) {
+                    scope.push_back(pattern);
+                }
             }
 
             return { };
@@ -1860,14 +1871,14 @@ namespace hex::pl {
             auto variables = *evaluator->getScope(0).scope;
             u32 startVariableCount = variables.size();
             ON_SCOPE_EXIT {
-                s64 stackSize = evaluator->getStack().size();
-                for (u32 i = startVariableCount; i < variables.size(); i++) {
-                    stackSize--;
-                    delete variables[i];
-                }
-                if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
-                    evaluator->getStack().resize(stackSize);
-            };
+                              s64 stackSize = evaluator->getStack().size();
+                              for (u32 i = startVariableCount; i < variables.size(); i++) {
+                                  stackSize--;
+                                  delete variables[i];
+                              }
+                              if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                              evaluator->getStack().resize(stackSize);
+                          };
 
             evaluator->pushScope(nullptr, variables);
             ON_SCOPE_EXIT { evaluator->popScope(); };
@@ -1888,10 +1899,10 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete literal; };
 
             return std::visit(overloaded {
-                [](std::string value) -> bool { return !value.empty(); },
-                [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
-                [](auto &&value) -> bool { return value != 0; }
-                }, literal->getValue());
+                    [](std::string value) -> bool { return !value.empty(); },
+                    [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                    [](auto &&value) -> bool { return value != 0; }
+            }, literal->getValue());
         }
 
         ASTNode *m_condition;
@@ -2159,7 +2170,7 @@ namespace hex::pl {
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
         ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode*>> params, std::vector<ASTNode*> body)
-            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
+                : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
 
         }
 
@@ -2206,11 +2217,11 @@ namespace hex::pl {
 
                 ctx->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT {
-                    for (auto variable : variables)
-                        delete variable;
+                                  for (auto variable : variables)
+                                      delete variable;
 
-                    ctx->popScope();
-                };
+                                  ctx->popScope();
+                              };
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {

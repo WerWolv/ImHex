@@ -175,7 +175,7 @@ namespace hex::pl {
                   }
                 } else {
                     auto newPatterns = node->createPatterns(this);
-                    patterns.insert(patterns.end(), newPatterns.begin(), newPatterns.end());
+                    std::copy(newPatterns.begin(), newPatterns.end(), std::back_inserter(patterns));
                 }
             }
 
