@@ -137,7 +137,7 @@ namespace hex::pl {
 
         [[nodiscard]]
         virtual const PatternData* getPattern(u64 offset) const {
-            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
+            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()) && !this->isHidden())
                 return this;
             else
                 return nullptr;
@@ -446,7 +446,7 @@ namespace hex::pl {
 
         [[nodiscard]]
         const PatternData* getPattern(u64 offset) const override {
-            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()))
+            if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()) && !this->isHidden())
                 return this;
             else
                 return this->m_pointedAt->getPattern(offset);
@@ -868,6 +868,8 @@ namespace hex::pl {
 
         [[nodiscard]]
         const PatternData* getPattern(u64 offset) const override {
+            if (this->isHidden()) return nullptr;
+
             auto iter = std::find_if(this->m_entries.begin(), this->m_entries.end(), [this, offset](PatternData *pattern){
                return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
             });
@@ -1017,6 +1019,8 @@ namespace hex::pl {
 
         [[nodiscard]]
         const PatternData* getPattern(u64 offset) const override {
+            if (this->isHidden()) return nullptr;
+
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize())) {
                 this->m_highlightTemplate->setOffset((offset / this->m_highlightTemplate->getSize()) * this->m_highlightTemplate->getSize());
                 return this->m_highlightTemplate->getPattern(offset);
@@ -1150,6 +1154,7 @@ namespace hex::pl {
 
         [[nodiscard]]
         const PatternData* getPattern(u64 offset) const override {
+            if (this->isHidden()) return nullptr;
 
             auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](PatternData *pattern){
                 return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
@@ -1285,6 +1290,7 @@ namespace hex::pl {
 
         [[nodiscard]]
         const PatternData* getPattern(u64 offset) const override {
+            if (this->isHidden()) return nullptr;
 
             auto largestMember = std::find_if(this->m_members.begin(), this->m_members.end(), [this](PatternData *pattern) {
                 return pattern->getSize() == this->getSize();
