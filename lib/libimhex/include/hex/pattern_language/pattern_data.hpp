@@ -875,7 +875,7 @@ namespace hex::pl {
             if (iter == this->m_entries.end())
                 return nullptr;
             else
-                return *iter;
+                return (*iter)->getPattern(offset);
         }
 
     private:
@@ -1019,7 +1019,7 @@ namespace hex::pl {
         const PatternData* getPattern(u64 offset) const override {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize())) {
                 this->m_highlightTemplate->setOffset((offset / this->m_highlightTemplate->getSize()) * this->m_highlightTemplate->getSize());
-                return this->m_highlightTemplate;
+                return this->m_highlightTemplate->getPattern(offset);
             } else {
                 return nullptr;
             }
@@ -1158,7 +1158,7 @@ namespace hex::pl {
             if (iter == this->m_members.end())
                 return nullptr;
             else
-                return *iter;
+                return (*iter)->getPattern(offset);
         }
 
     private:
@@ -1293,7 +1293,7 @@ namespace hex::pl {
             if (largestMember == this->m_members.end())
                 return nullptr;
             else
-                return *largestMember;
+                return (*largestMember)->getPattern(offset);;
         }
 
     private:
