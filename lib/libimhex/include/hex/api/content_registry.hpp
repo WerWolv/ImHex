@@ -232,6 +232,11 @@ namespace hex {
                     DrawCallback callback;
                 };
 
+                struct SidebarItem {
+                    std::string icon;
+                    DrawCallback callback;
+                };
+
             }
 
             u32 getDockSpaceId();
@@ -240,6 +245,7 @@ namespace hex {
             void addWelcomeScreenEntry(const impl::DrawCallback &function);
             void addFooterItem(const impl::DrawCallback &function);
             void addToolbarItem(const impl::DrawCallback &function);
+            void addSidebarItem(const std::string &icon, const impl::DrawCallback &function);
 
             void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function);
 
@@ -247,6 +253,7 @@ namespace hex {
             std::vector<impl::DrawCallback>& getWelcomeScreenEntries();
             std::vector<impl::DrawCallback>& getFooterItems();
             std::vector<impl::DrawCallback>& getToolbarItems();
+            std::vector<impl::SidebarItem>&  getSidebarItems();
 
             std::vector<impl::Layout>& getLayouts();
         }

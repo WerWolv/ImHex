@@ -349,15 +349,26 @@ namespace hex {
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
+            auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
-            SharedData::dockSpaceId = ImGui::DockSpace(ImGui::GetID("MainDock"), ImVec2(0.0f, ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2 - 1));
+            auto sidebarPos = ImGui::GetCursorPos();
+            auto sidebarWidth = ContentRegistry::Interface::getSidebarItems().empty() ? 0 : 30_scaled;
+
+            ImGui::SetCursorPosX(sidebarWidth);
+
+            auto footerHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
+            auto dockSpaceSize = ImVec2(SharedData::windowSize.x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
+
+            SharedData::dockSpaceId = ImGui::DockSpace(ImGui::GetID("MainDock"), dockSpaceSize);
+
+            drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));
 
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
-                auto prevIdx = ImGui::GetWindowDrawList()->_VtxCurrentIdx;
+                auto prevIdx = drawList->_VtxCurrentIdx;
                 callback();
-                auto currIdx = ImGui::GetWindowDrawList()->_VtxCurrentIdx;
+                auto currIdx = drawList->_VtxCurrentIdx;
 
                 // Only draw separator if something was actually drawn
                 if (prevIdx != currIdx) {
@@ -365,6 +376,51 @@ namespace hex {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     ImGui::SameLine();
                 }
+            }
+
+            {
+                ImGui::SetCursorPos(sidebarPos);
+
+                static s32 openWindow = -1;
+                u32 index = 0;
+                ImGui::PushID("SideBarWindows");
+                for (const auto &[icon, callback] : ContentRegistry::Interface::getSidebarItems()) {
+                    ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
+
+                    ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
+                    {
+                        if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
+                            if (openWindow == index)
+                                openWindow = -1;
+                            else
+                                openWindow = index;
+                        }
+                    }
+                    ImGui::EndDisabled();
+
+                    ImGui::PopStyleColor(3);
+
+                    bool open = openWindow == index;
+                    if (open) {
+                        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 2_scaled, 0));
+                        ImGui::SetNextWindowSize(ImVec2(250_scaled, dockSpaceSize.y + ImGui::GetStyle().FramePadding.y + 2_scaled));
+
+                        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
+                        if (ImGui::Begin("Window", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
+                            callback();
+                        }
+                        ImGui::End();
+                        ImGui::PopStyleVar();
+                    }
+
+                    ImGui::NewLine();
+                    index++;
+                }
+                ImGui::PopID();
             }
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -420,6 +476,9 @@ namespace hex {
             }
 
             this->beginNativeWindowFrame();
+
+            drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth - 2, 0), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 2, footerHeight - ImGui::GetStyle().FramePadding.y - 2), ImGui::GetColorU32(ImGuiCol_Separator));
+            drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetWindowPos() + ImVec2(ImGui::GetWindowSize().x, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetColorU32(ImGuiCol_Separator));
         }
         ImGui::End();
         ImGui::PopStyleVar(2);

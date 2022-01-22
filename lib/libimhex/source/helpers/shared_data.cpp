@@ -30,6 +30,7 @@ namespace hex {
     std::vector<ContentRegistry::Interface::impl::MainMenuItem> SharedData::mainMenuItems;
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::welcomeScreenEntries;
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::footerItems;
+    std::vector<ContentRegistry::Interface::impl::SidebarItem>  SharedData::sidebarItems;
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::toolbarItems;
     std::vector<ContentRegistry::Interface::impl::Layout> SharedData::layouts;
 

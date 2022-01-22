@@ -81,6 +81,7 @@ namespace hex {
         static std::vector<ContentRegistry::Interface::impl::DrawCallback> welcomeScreenEntries;
         static std::vector<ContentRegistry::Interface::impl::DrawCallback> footerItems;
         static std::vector<ContentRegistry::Interface::impl::DrawCallback> toolbarItems;
+        static std::vector<ContentRegistry::Interface::impl::SidebarItem> sidebarItems;
         static std::vector<ContentRegistry::Interface::impl::Layout> layouts;
 
         static std::map<Shortcut, std::function<void()>> globalShortcuts;

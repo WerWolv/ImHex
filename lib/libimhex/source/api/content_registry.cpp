@@ -312,6 +312,10 @@ namespace hex {
         getToolbarItems().push_back(function);
     }
 
+    void ContentRegistry::Interface::addSidebarItem(const std::string &icon, const impl::DrawCallback &function) {
+        getSidebarItems().push_back({ icon, function });
+    }
+
     void ContentRegistry::Interface::addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
         log::info("Added new layout: {}", unlocalizedName);
 
@@ -331,6 +335,9 @@ namespace hex {
     }
     std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getToolbarItems() {
         return SharedData::toolbarItems;
+    }
+    std::vector<ContentRegistry::Interface::impl::SidebarItem>& ContentRegistry::Interface::getSidebarItems() {
+        return SharedData::sidebarItems;
     }
 
     std::vector<ContentRegistry::Interface::impl::Layout>& ContentRegistry::Interface::getLayouts() {
