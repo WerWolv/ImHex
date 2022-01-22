@@ -163,7 +163,7 @@ namespace hex::init {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-        glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+        glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
 
         if (GLFWmonitor *monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
             float xScale = 0, yScale = 0;
