@@ -344,28 +344,33 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
-        if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-            for (auto &[level, message] : this->m_console) {
-                switch (level) {
-                    case pl::LogConsole::Level::Debug:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
-                        break;
-                    case pl::LogConsole::Level::Info:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
-                        break;
-                    case pl::LogConsole::Level::Warning:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
-                        break;
-                    case pl::LogConsole::Level::Error:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
-                        break;
-                    default: continue;
+        if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
+            ImGuiListClipper clipper(this->m_console.size());
+            while (clipper.Step())
+                for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                    const auto &[level, message] = this->m_console[i];
+
+                    switch (level) {
+                        case pl::LogConsole::Level::Debug:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
+                            break;
+                        case pl::LogConsole::Level::Info:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
+                            break;
+                        case pl::LogConsole::Level::Warning:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
+                            break;
+                        case pl::LogConsole::Level::Error:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
+                            break;
+                        default: continue;
+                    }
+
+                    if (ImGui::Selectable(message.c_str()))
+                        ImGui::SetClipboardText(message.c_str());
+
+                    ImGui::PopStyleColor();
                 }
-
-                ImGui::TextUnformatted(message.c_str());
-
-                ImGui::PopStyleColor();
-            }
 
         }
         ImGui::EndChild();
@@ -470,46 +475,50 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawVariableSettings(ImVec2 size) {
         if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-            if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
-                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
-                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.6F);
+            if (this->m_patternVariables.empty()) {
+                ImGui::TextFormattedCentered("hex.builtin.view.pattern_editor.no_in_out_vars"_lang);
+            } else {
+                if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
+                    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
+                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.6F);
 
-                for (auto &[name, variable] : this->m_patternVariables) {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
+                    for (auto &[name, variable] : this->m_patternVariables) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
 
-                    ImGui::TextUnformatted(name.c_str());
+                        ImGui::TextUnformatted(name.c_str());
 
-                    ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
 
-                    if (variable.outVariable) {
-                        ImGui::TextUnformatted(pl::Token::literalToString(variable.value, true).c_str());
-                    } else if (variable.inVariable) {
-                        if (pl::Token::isSigned(variable.type)) {
-                            i64 value = hex::get_or<i128>(variable.value, 0);
-                            ImGui::InputScalar("", ImGuiDataType_S64, &value);
-                            variable.value = i128(value);
-                        } else if (pl::Token::isUnsigned(variable.type)) {
-                            u64 value = hex::get_or<u128>(variable.value, 0);
-                            ImGui::InputScalar("", ImGuiDataType_U64, &value);
-                            variable.value = u128(value);
-                        } else if (pl::Token::isFloatingPoint(variable.type)) {
-                            double value = hex::get_or<double>(variable.value, 0.0);
-                            ImGui::InputScalar("", ImGuiDataType_Double, &value);
-                            variable.value = value;
-                        } else if (variable.type == pl::Token::ValueType::Boolean) {
-                            bool value = hex::get_or<bool>(variable.value, false);
-                            ImGui::Checkbox("", &value);
-                            variable.value = value;
-                        } else if (variable.type == pl::Token::ValueType::Character) {
-                            char buffer[2];
-                            ImGui::InputText("", buffer, 2);
-                            variable.value = buffer[0];
+                        if (variable.outVariable) {
+                            ImGui::TextUnformatted(pl::Token::literalToString(variable.value, true).c_str());
+                        } else if (variable.inVariable) {
+                            if (pl::Token::isSigned(variable.type)) {
+                                i64 value = hex::get_or<i128>(variable.value, 0);
+                                ImGui::InputScalar("", ImGuiDataType_S64, &value);
+                                variable.value = i128(value);
+                            } else if (pl::Token::isUnsigned(variable.type)) {
+                                u64 value = hex::get_or<u128>(variable.value, 0);
+                                ImGui::InputScalar("", ImGuiDataType_U64, &value);
+                                variable.value = u128(value);
+                            } else if (pl::Token::isFloatingPoint(variable.type)) {
+                                double value = hex::get_or<double>(variable.value, 0.0);
+                                ImGui::InputScalar("", ImGuiDataType_Double, &value);
+                                variable.value = value;
+                            } else if (variable.type == pl::Token::ValueType::Boolean) {
+                                bool value = hex::get_or<bool>(variable.value, false);
+                                ImGui::Checkbox("", &value);
+                                variable.value = value;
+                            } else if (variable.type == pl::Token::ValueType::Character) {
+                                char buffer[2];
+                                ImGui::InputText("", buffer, 2);
+                                variable.value = buffer[0];
+                            }
                         }
                     }
-                }
 
-                ImGui::EndTable();
+                    ImGui::EndTable();
+                }
             }
         }
         ImGui::EndChild();

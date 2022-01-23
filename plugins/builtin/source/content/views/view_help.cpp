@@ -158,32 +158,46 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginTabBar("about_tab_bar")) {
 
                 if (ImGui::BeginTabItem("ImHex")) {
-                    ImGui::NewLine();
-                    this->drawAboutMainPage();
+                    if (ImGui::BeginChild(1)) {
+                        this->drawAboutMainPage();
+                    }
+                    ImGui::EndChild();
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.help.about.contributor"_lang)) {
                     ImGui::NewLine();
-                    this->drawContributorPage();
+                    if (ImGui::BeginChild(1)) {
+                        this->drawContributorPage();
+                    }
+                    ImGui::EndChild();
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.help.about.libs"_lang)) {
                     ImGui::NewLine();
-                    this->drawLibraryCreditsPage();
+                    if (ImGui::BeginChild(1)) {
+                        this->drawLibraryCreditsPage();
+                    }
+                    ImGui::EndChild();
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.help.about.paths"_lang)) {
                     ImGui::NewLine();
-                    this->drawPathsPage();
+                    if (ImGui::BeginChild(1)) {
+                        this->drawPathsPage();
+                    }
+                    ImGui::EndChild();
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.help.about.license"_lang)) {
                     ImGui::NewLine();
-                    this->drawLicensePage();
+                    if (ImGui::BeginChild(1)) {
+                        this->drawLicensePage();
+                    }
+                    ImGui::EndChild();
                     ImGui::EndTabItem();
                 }
 
