@@ -5,6 +5,7 @@ namespace hex::plugin::builtin {
 
     void registerLanguageEnUS() {
         ContentRegistry::Language::registerLanguage("English (US)", "en-US");
+        LangEntry::setFallbackLanguage("en-US");
 
         ContentRegistry::Language::addLocalizations("en-US", {
             /* ImHex default functionality */

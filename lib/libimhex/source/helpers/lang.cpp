@@ -4,6 +4,8 @@
 
 namespace hex {
 
+    std::string LangEntry::s_fallbackLanguage;
+
     LanguageDefinition::LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries) {
         for (auto pair : entries)
             this->m_entries.insert(pair);
@@ -18,7 +20,7 @@ namespace hex {
     LangEntry::LangEntry(std::string_view unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
 
     LangEntry::operator std::string() const {
-        return std::string(get());
+        return get();
     }
 
     LangEntry::operator std::string_view() const {
@@ -26,7 +28,7 @@ namespace hex {
     }
 
     LangEntry::operator const char*() const {
-        return get().data();
+        return get().c_str();
     }
 
     std::string operator+(const std::string &&left, const LangEntry &&right) {
@@ -57,35 +59,42 @@ namespace hex {
         return static_cast<std::string>(left) + right;
     }
 
-    std::string_view LangEntry::get() const {
+    const std::string& LangEntry::get() const {
         auto &lang = SharedData::loadedLanguageStrings;
-        if (lang.find(this->m_unlocalizedString) != lang.end())
+        if (lang.contains(this->m_unlocalizedString))
             return lang[this->m_unlocalizedString];
         else
             return this->m_unlocalizedString;
     }
 
-    void LangEntry::loadLanguage(std::string_view language) {
-        constexpr auto DefaultLanguage = "en-US";
-
+    void LangEntry::loadLanguage(const std::string &language) {
         SharedData::loadedLanguageStrings.clear();
 
         auto &definitions = ContentRegistry::Language::getLanguageDefinitions();
 
-        if (!definitions.contains(language.data()))
+        if (!definitions.contains(language))
             return;
 
-        for (auto &definition : definitions[language.data()])
+        for (auto &definition : definitions[language])
             SharedData::loadedLanguageStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
 
-        if (language != DefaultLanguage) {
-            for (auto &definition : definitions[DefaultLanguage])
+        const auto fallbackLanguage = LangEntry::getFallbackLanguage();
+        if (language != fallbackLanguage) {
+            for (auto &definition : definitions[fallbackLanguage])
                 SharedData::loadedLanguageStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
         }
     }
 
     const std::map<std::string, std::string>& LangEntry::getSupportedLanguages() {
         return ContentRegistry::Language::getLanguages();
+    }
+
+    void LangEntry::setFallbackLanguage(const std::string &language) {
+        LangEntry::s_fallbackLanguage = language;
+    }
+
+    const std::string& LangEntry::getFallbackLanguage() {
+        return LangEntry::s_fallbackLanguage;
     }
 
 }

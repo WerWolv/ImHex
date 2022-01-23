@@ -27,13 +27,18 @@ namespace hex {
         operator std::string_view() const;
         operator const char*() const;
 
-        [[nodiscard]] std::string_view get() const;
+        [[nodiscard]] const std::string& get() const;
 
-        static void loadLanguage(std::string_view language);
+        static void loadLanguage(const std::string &language);
         static const std::map<std::string, std::string>& getSupportedLanguages();
+
+        static void setFallbackLanguage(const std::string &language);
+        static const std::string& getFallbackLanguage();
 
     private:
         std::string m_unlocalizedString;
+
+        static std::string s_fallbackLanguage;
     };
 
     std::string operator+(const std::string &&left, const LangEntry &&right);
