@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
         ~ViewCommandPalette() override;
 
         void drawContent() override;
-        void drawMenu() override;
+
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool shouldProcess() const override { return true; }
 

@@ -18,7 +18,6 @@ namespace hex::plugin::builtin {
         ~ViewTools() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     };
 

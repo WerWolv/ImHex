@@ -69,8 +69,4 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewPatternData::drawMenu() {
-
-    }
-
 }

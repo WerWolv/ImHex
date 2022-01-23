@@ -120,8 +120,4 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewDataInspector::drawMenu() {
-
-    }
-
 }

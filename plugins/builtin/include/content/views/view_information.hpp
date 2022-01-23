@@ -18,7 +18,6 @@ namespace hex::plugin::builtin {
         ~ViewInformation() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         bool m_dataValid = false;

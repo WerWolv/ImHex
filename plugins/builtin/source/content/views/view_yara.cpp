@@ -129,10 +129,6 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewYara::drawMenu() {
-
-    }
-
     void ViewYara::reloadRules() {
         this->m_rules.clear();
 

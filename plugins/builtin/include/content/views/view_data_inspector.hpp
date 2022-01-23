@@ -18,7 +18,6 @@ namespace hex::plugin::builtin {
         ~ViewDataInspector() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         struct InspectorCacheEntry {

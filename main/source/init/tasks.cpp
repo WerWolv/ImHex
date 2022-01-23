@@ -197,6 +197,8 @@ namespace hex::init {
         SharedData::welcomeScreenEntries.clear();
         SharedData::footerItems.clear();
         SharedData::toolbarItems.clear();
+        SharedData::mainMenuItems.clear();
+        SharedData::menuItems.clear();
 
         SharedData::globalShortcuts.clear();
         SharedData::runningTasks.clear();

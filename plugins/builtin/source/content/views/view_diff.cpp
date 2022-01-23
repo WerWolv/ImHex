@@ -229,8 +229,4 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewDiff::drawMenu() {
-
-    }
-
 }

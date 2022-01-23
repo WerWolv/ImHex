@@ -369,10 +369,6 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewDataProcessor::drawMenu() {
-
-    }
-
     std::string ViewDataProcessor::saveNodes() {
         using json = nlohmann::json;
         json output;

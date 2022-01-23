@@ -16,7 +16,6 @@ namespace hex::plugin::builtin {
         ~ViewHashes() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         enum class HashFunctions { Crc8, Crc16, Crc32, Md5, Sha1, Sha224, Sha256, Sha384, Sha512 };

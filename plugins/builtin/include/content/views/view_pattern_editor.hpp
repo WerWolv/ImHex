@@ -20,7 +20,6 @@ namespace hex::plugin::builtin {
         ViewPatternEditor();
         ~ViewPatternEditor() override;
 
-        void drawMenu() override;
         void drawAlwaysVisible() override;
         void drawContent() override;
 

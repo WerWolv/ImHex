@@ -12,8 +12,6 @@ namespace hex {
 
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
-    void View::drawMenu() { }
-
     bool View::isAvailable() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }

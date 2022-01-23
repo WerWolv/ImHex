@@ -25,7 +25,6 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
         void drawAlwaysVisible() override;
-        void drawMenu() override;
 
     private:
         MemoryEditor m_memoryEditor;
@@ -68,6 +67,7 @@ namespace hex::plugin::builtin {
 
         void registerEvents();
         void registerShortcuts();
+        void registerMenuItems();
     };
 
 }

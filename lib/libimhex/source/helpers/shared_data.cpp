@@ -28,6 +28,8 @@ namespace hex {
     ImGuiID SharedData::dockSpaceId;
 
     std::vector<ContentRegistry::Interface::impl::MainMenuItem> SharedData::mainMenuItems;
+    std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> SharedData::menuItems;
+
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::welcomeScreenEntries;
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::footerItems;
     std::vector<ContentRegistry::Interface::impl::SidebarItem>  SharedData::sidebarItems;

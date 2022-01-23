@@ -13,7 +13,6 @@ namespace hex::plugin::builtin {
         ~ViewYara() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         struct YaraMatch {

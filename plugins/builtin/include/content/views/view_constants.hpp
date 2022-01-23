@@ -26,7 +26,6 @@ namespace hex::plugin::builtin {
         ~ViewConstants() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         void reloadConstants();

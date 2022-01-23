@@ -32,7 +32,6 @@ namespace hex {
 
         virtual void drawContent() = 0;
         virtual void drawAlwaysVisible() { }
-        virtual void drawMenu();
         virtual bool isAvailable() const;
         virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
 

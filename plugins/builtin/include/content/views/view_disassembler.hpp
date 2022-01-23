@@ -27,7 +27,6 @@ namespace hex::plugin::builtin {
         ~ViewDisassembler() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         bool m_disassembling = false;

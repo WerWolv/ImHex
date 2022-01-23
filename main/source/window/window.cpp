@@ -11,6 +11,7 @@
 #include <csignal>
 #include <iostream>
 #include <numeric>
+#include <set>
 #include <thread>
 #include <assert.h>
 
@@ -437,8 +438,16 @@ namespace hex {
                     }
                 }
 
-                for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
-                    view->drawMenu();
+                std::set<std::string> encounteredMenus;
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
+                    if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
+                        auto [iter, inserted] = encounteredMenus.insert(menuItem.unlocalizedName);
+                        if (!inserted)
+                            ImGui::Separator();
+
+                        menuItem.callback();
+                        ImGui::EndMenu();
+                    }
                 }
 
                 this->drawTitleBar();

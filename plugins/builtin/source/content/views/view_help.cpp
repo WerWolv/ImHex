@@ -9,6 +9,19 @@
 namespace hex::plugin::builtin {
 
     ViewHelp::ViewHelp() : View("hex.builtin.view.help.about.name") {
+
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1000, [&, this] {
+            if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
+                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
+                this->m_aboutWindowOpen = true;
+                this->getWindowOpenState() = true;
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.help.documentation"_lang, "")) {
+                hex::openWebpage("https://imhex.werwolv.net/docs");
+            }
+        });
+
     }
 
     ViewHelp::~ViewHelp() {
@@ -169,20 +182,6 @@ namespace hex::plugin::builtin {
             this->getWindowOpenState() = false;
 
         this->drawAboutPopup();
-    }
-
-    void ViewHelp::drawMenu() {
-        if (ImGui::BeginMenu("hex.builtin.menu.help"_lang)) {
-            if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
-                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
-                this->m_aboutWindowOpen = true;
-                this->getWindowOpenState() = true;
-            }
-            if (ImGui::MenuItem("hex.builtin.view.help.documentation"_lang, "")) {
-                hex::openWebpage("https://imhex.werwolv.net/docs");
-            }
-            ImGui::EndMenu();
-        }
     }
 
 }

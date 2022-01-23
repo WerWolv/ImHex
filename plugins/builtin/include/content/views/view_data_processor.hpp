@@ -20,7 +20,6 @@ namespace hex::plugin::builtin {
         ~ViewDataProcessor() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         std::list<dp::Node*> m_endNodes;

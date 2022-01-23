@@ -98,8 +98,4 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewPatches::drawMenu() {
-
-    }
-
 }

@@ -25,7 +25,6 @@ namespace hex::plugin::builtin {
         ~ViewPatternData() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         std::vector<pl::PatternData*> m_sortedPatternData;

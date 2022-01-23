@@ -300,6 +300,12 @@ namespace hex {
         getMainMenuItems().push_back({ unlocalizedName, function });
     }
 
+    void ContentRegistry::Interface::addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
+        log::info("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
+
+        getMenuItems().insert({ priority, { unlocalizedMainMenuName, function }});
+    }
+
     void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::impl::DrawCallback &function) {
         getWelcomeScreenEntries().push_back(function);
     }
@@ -323,8 +329,11 @@ namespace hex {
     }
 
 
-    std::vector<ContentRegistry::Interface::impl::MainMenuItem> &ContentRegistry::Interface::getMainMenuItems() {
+    std::vector<ContentRegistry::Interface::impl::MainMenuItem>& ContentRegistry::Interface::getMainMenuItems() {
         return SharedData::mainMenuItems;
+    }
+    std::multimap<u32, ContentRegistry::Interface::impl::MenuItem>& ContentRegistry::Interface::getMenuItems() {
+        return SharedData::menuItems;
     }
 
     std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getWelcomeScreenEntries() {

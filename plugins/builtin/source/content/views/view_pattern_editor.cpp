@@ -194,25 +194,8 @@ namespace hex::plugin::builtin {
                 return false;
             }
         });
-    }
 
-    ViewPatternEditor::~ViewPatternEditor() {
-        delete this->m_evaluatorRuntime;
-        delete this->m_parserRuntime;
-
-        EventManager::unsubscribe<EventProjectFileStore>(this);
-        EventManager::unsubscribe<EventProjectFileLoad>(this);
-        EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
-        EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<RequestChangeTheme>(this);
-        EventManager::unsubscribe<EventFileUnloaded>(this);
-    }
-
-    void ViewPatternEditor::drawMenu() {
-        if (ImGui::BeginMenu("hex.builtin.menu.file"_lang)) {
-
-            ImGui::Separator();
-
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang)) {
 
                 this->m_selectedPatternFile = 0;
@@ -238,9 +221,19 @@ namespace hex::plugin::builtin {
                     file.write(this->m_textEditor.GetText());
                 });
             }
+        });
+    }
 
-            ImGui::EndMenu();
-        }
+    ViewPatternEditor::~ViewPatternEditor() {
+        delete this->m_evaluatorRuntime;
+        delete this->m_parserRuntime;
+
+        EventManager::unsubscribe<EventProjectFileStore>(this);
+        EventManager::unsubscribe<EventProjectFileLoad>(this);
+        EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
+        EventManager::unsubscribe<EventFileLoaded>(this);
+        EventManager::unsubscribe<RequestChangeTheme>(this);
+        EventManager::unsubscribe<EventFileUnloaded>(this);
     }
 
     void ViewPatternEditor::drawContent() {

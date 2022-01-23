@@ -18,7 +18,6 @@ namespace hex::plugin::windows {
         ~ViewTTYConsole() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         std::vector<std::pair<std::string, std::string>> m_comPorts;

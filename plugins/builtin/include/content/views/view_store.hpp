@@ -33,7 +33,6 @@ namespace hex::plugin::builtin {
         ~ViewStore() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }

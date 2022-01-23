@@ -157,10 +157,6 @@ namespace hex::plugin::windows {
         ImGui::End();
     }
 
-    void ViewTTYConsole::drawMenu() {
-
-    }
-
     std::vector<std::pair<std::string, std::string>> ViewTTYConsole::getAvailablePorts() {
         std::vector<std::pair<std::string, std::string>> result;
         std::vector<char> buffer(0xFFF, 0x00);

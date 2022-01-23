@@ -15,7 +15,6 @@ namespace hex::plugin::builtin {
         ~ViewBookmarks() override;
 
         void drawContent() override;
-        void drawMenu() override;
     };
 
 }

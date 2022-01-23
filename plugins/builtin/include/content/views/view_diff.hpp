@@ -19,7 +19,6 @@ namespace hex::plugin::builtin {
         ~ViewDiff() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         void drawDiffLine(const std::array<int, 2> &providerIds, u64 row) const;

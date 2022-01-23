@@ -233,8 +233,4 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewInformation::drawMenu() {
-
-    }
-
 }

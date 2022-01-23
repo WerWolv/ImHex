@@ -242,8 +242,4 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewStrings::drawMenu() {
-
-    }
-
 }

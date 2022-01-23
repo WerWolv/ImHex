@@ -74,10 +74,6 @@ namespace hex::plugin::builtin {
 
     }
 
-    void ViewCommandPalette::drawMenu() {
-
-    }
-
     std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(const std::string &input) {
         constexpr auto MatchCommand = [](const std::string &currCommand, const std::string &commandToMatch) -> std::pair<MatchType, std::string_view> {
             if (currCommand.empty()) {

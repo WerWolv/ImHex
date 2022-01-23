@@ -13,6 +13,13 @@ namespace hex::plugin::builtin {
                 this->getWindowOpenState() = true;
             }
         });
+
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 2000, [&, this] {
+            if (ImGui::MenuItem("hex.builtin.view.settings.name"_lang)) {
+                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+                this->getWindowOpenState() = true;
+            }
+        });
     }
 
     ViewSettings::~ViewSettings() {
@@ -43,20 +50,6 @@ namespace hex::plugin::builtin {
         } else
             this->getWindowOpenState() = false;
 
-    }
-
-    void ViewSettings::drawMenu() {
-        if (ImGui::BeginMenu("hex.builtin.menu.help"_lang)) {
-
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("hex.builtin.view.settings.name"_lang)) {
-                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
-                this->getWindowOpenState() = true;
-            }
-
-            ImGui::EndMenu();
-        }
     }
 
 }

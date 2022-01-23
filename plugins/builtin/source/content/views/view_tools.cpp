@@ -19,8 +19,4 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewTools::drawMenu() {
-
-    }
-
 }

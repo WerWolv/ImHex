@@ -20,7 +20,6 @@ namespace hex::plugin::builtin {
         ~ViewStrings() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         bool m_searching = false;

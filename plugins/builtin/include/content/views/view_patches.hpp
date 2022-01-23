@@ -17,7 +17,6 @@ namespace hex::plugin::builtin {
         ~ViewPatches() override;
 
         void drawContent() override;
-        void drawMenu() override;
 
     private:
         u64 m_selectedPatch;

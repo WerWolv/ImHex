@@ -24,6 +24,13 @@ namespace hex::plugin::builtin {
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
         this->refresh();
+
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
+            if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
+                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
+                this->getWindowOpenState() = true;
+            }
+        });
     }
 
     ViewStore::~ViewStore() { }
@@ -233,18 +240,6 @@ namespace hex::plugin::builtin {
             this->getWindowOpenState() = false;
         }
     }
-
-    void ViewStore::drawMenu() {
-        if (ImGui::BeginMenu("hex.builtin.menu.help"_lang)) {
-            if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
-                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
-                this->getWindowOpenState() = true;
-            }
-
-            ImGui::EndMenu();
-        }
-    }
-
 
     void ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
         if (!update) {

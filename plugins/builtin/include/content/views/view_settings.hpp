@@ -13,9 +13,8 @@ namespace hex::plugin::builtin {
         ~ViewSettings() override;
 
         void drawContent() override;
-        void drawMenu() override;
-        [[nodiscard]] bool isAvailable() const override { return true; }
 
+        [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override { return { 500, 300 }; }
