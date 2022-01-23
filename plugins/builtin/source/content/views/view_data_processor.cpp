@@ -1,5 +1,7 @@
 #include "content/views/view_data_processor.hpp"
 
+#include <hex/helpers/file.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/project_file_handler.hpp>
 
@@ -43,6 +45,25 @@ namespace hex::plugin::builtin {
                 node->setCurrentOverlay(nullptr);
             }
             this->m_dataOverlays.clear();
+        });
+
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
+            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang)) {
+                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, DialogMode::Open, { { "hex.builtin.view.data_processor.name"_lang, "hexnode"} }, [this](const fs::path &path){
+                    File file(path, File::Mode::Read);
+                    if (file.isValid())
+                        this->loadNodes(file.readString());
+                });
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty())) {
+                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, DialogMode::Save, { { "hex.builtin.view.data_processor.name"_lang, "hexnode"} }, [this](const fs::path &path){
+                    File file(path, File::Mode::Create);
+                    if (file.isValid())
+                        file.write(this->saveNodes());
+                });
+
+            }
         });
     }
 

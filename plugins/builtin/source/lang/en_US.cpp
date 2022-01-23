@@ -114,6 +114,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_processor.menu.remove_selection", "Remove Selected" },
                     { "hex.builtin.view.data_processor.menu.remove_node", "Remove Node" },
                     { "hex.builtin.view.data_processor.menu.remove_link", "Remove Link" },
+                    { "hex.builtin.view.data_processor.menu.file.load_processor", "Load data processor..." },
+                    { "hex.builtin.view.data_processor.menu.file.save_processor", "Save data processor..." },
 
                 { "hex.builtin.view.disassembler.name", "Disassembler" },
                     { "hex.builtin.view.disassembler.position", "Position" },
