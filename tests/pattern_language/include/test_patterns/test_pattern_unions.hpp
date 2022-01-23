@@ -9,8 +9,8 @@ namespace hex::test {
         TestPatternUnions() : TestPattern("Unions")  {
             auto testUnion = create<PatternDataUnion>("TestUnion", "testUnion", 0x200, sizeof(u128), nullptr);
 
-            auto array = create<PatternDataStaticArray>("s32", "array", 0x200, sizeof(s32[2]), nullptr);
-            array->setEntries(create<PatternDataSigned>("s32", "", 0x200, sizeof(s32), nullptr), 2);
+            auto array = create<PatternDataStaticArray>("s32", "array", 0x200, sizeof(i32[2]), nullptr);
+            array->setEntries(create<PatternDataSigned>("s32", "", 0x200, sizeof(i32), nullptr), 2);
             auto variable = create<PatternDataUnsigned>("u128", "variable", 0x200, sizeof(u128), nullptr);
 
             testUnion->setMembers({ array, variable });
