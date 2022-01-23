@@ -3,6 +3,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
 
@@ -25,28 +26,44 @@ namespace hex::plugin::builtin {
     }
 
     ViewHelp::~ViewHelp() {
-
+        ImGui::UnloadImage(this->m_logoTexture);
     }
 
     static void link(const std::string &label, const std::string &url) {
         if (ImGui::BulletHyperlink(label.data()))
-            hex::openWebpage(url.data());
+            hex::openWebpage(url);
     }
 
     void ViewHelp::drawAboutMainPage() {
-        ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
+        if (ImGui::BeginTable("about_table", 2, ImGuiTableFlags_SizingFixedFit)) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
-        #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
-            ImGui::SameLine();
-            if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
-                hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH);
-        #endif
+            if (!this->m_logoTexture.valid()) {
+                auto logo = romfs::get("logo.png");
+                this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(logo.data()), logo.size());
+            }
 
-        ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
+            ImGui::Image(this->m_logoTexture.textureId, scaled(this->m_logoTexture.size()));
+            ImGui::TableNextColumn();
 
-        ImGui::TextUnformatted("hex.builtin.view.help.about.source"_lang); ImGui::SameLine();
-        if (ImGui::Hyperlink("WerWolv/ImHex"))
-            hex::openWebpage("https://github.com/WerWolv/ImHex");
+            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
+
+            #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
+                ImGui::SameLine();
+                if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
+                    hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH);
+            #endif
+
+            ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
+
+            ImGui::TextUnformatted("hex.builtin.view.help.about.source"_lang); ImGui::SameLine();
+            if (ImGui::Hyperlink("WerWolv/ImHex"))
+                hex::openWebpage("https://github.com/WerWolv/ImHex");
+
+            ImGui::EndTable();
+        }
+
         ImGui::NewLine();
 
         ImGui::TextUnformatted("hex.builtin.view.help.about.donations"_lang);

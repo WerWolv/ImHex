@@ -37,6 +37,8 @@ namespace hex::plugin::builtin {
         void drawLibraryCreditsPage();
         void drawPathsPage();
         void drawLicensePage();
+
+        ImGui::Texture m_logoTexture;
     };
 
 }
