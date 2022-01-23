@@ -16,15 +16,25 @@ macro(addVersionDefines)
                 OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGIT_COMMIT_HASH=\"\\\"${GIT_COMMIT_HASH}\"\\\"")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGIT_BRANCH=\"\\\"${GIT_BRANCH}\"\\\"")
-    endif()
+        add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
+    endif ()
 
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}\"\\\"")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-Debug\"\\\"")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -DRELEASE -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-ReleaseWithDebugInfo\"\\\"")
-    set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -DRELEASE -DIMHEX_VERSION=\"\\\"${PROJECT_VERSION}-ReleaseMinimumSize\"\\\"")
+
+    add_compile_definitions(
+            $<$<CONFIG:Release>:IMHEX_VERSION="${PROJECT_VERSION}">
+            $<$<CONFIG:Debug>:IMHEX_VERSION="${PROJECT_VERSION}-Debug">
+            $<$<CONFIG:RelWithDebInfo>:IMHEX_VERSION="${PROJECT_VERSION}-ReleaseWithDebugInfo">
+            $<$<CONFIG:MinSizeRel>:IMHEX_VERSION="${PROJECT_VERSION}-ReleaseMinimumSize">
+    )
+
+    add_compile_definitions(
+            $<$<CONFIG:Release>:RELEASE>
+            $<$<CONFIG:Debug>:DEBUG>
+            $<$<CONFIG:RelWithDebInfo>:RELEASE>
+            $<$<CONFIG:MinSizeRel>:RELEASE>
+    )
+
 endmacro()
 
 macro(configurePython)
@@ -49,30 +59,30 @@ macro(configurePython)
     endif ()
     list(JOIN PYTHON_VERSION_MAJOR_MINOR "." PYTHON_VERSION_MAJOR_MINOR)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -DPYTHON_VERSION_MAJOR_MINOR=\"\\\"${PYTHON_VERSION_MAJOR_MINOR}\"\\\"")
+    add_compile_definitions(PYTHON_VERSION_MAJOR_MINOR="${PYTHON_VERSION_MAJOR_MINOR}")
 endmacro()
 
 # Detect current OS / System
 macro(detectOS)
     if (WIN32)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_WINDOWS")
+        add_compile_definitions(OS_WINDOWS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         set(MAGIC_INSTALL_LOCATION "magic")
-    elseif(APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_MACOS")
+    elseif (APPLE)
+        add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
         set(MAGIC_INSTALL_LOCATION "magic")
-    elseif(UNIX AND NOT APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOS_LINUX")
+    elseif (UNIX AND NOT APPLE)
+        add_compile_definitions(OS_LINUX)
         set(CMAKE_INSTALL_BINDIR "bin")
         set(CMAKE_INSTALL_LIBDIR "lib")
         set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
         set(MAGIC_INSTALL_LOCATION "share/imhex/magic")
-    else()
+    else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()
 endmacro()
@@ -80,9 +90,9 @@ endmacro()
 # Detect 32 vs. 64 bit system
 macro(detectArch)
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARCH_64_BIT")
+        add_compile_definitions(ARCH_64_BIT)
     elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARCH_32_BIT")
+        add_compile_definitions(ARCH_32_BIT)
     endif()
 endmacro()
 

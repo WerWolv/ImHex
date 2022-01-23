@@ -15,7 +15,7 @@ namespace hex::plugin::windows {
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     using namespace hex::plugin::windows;
 
-    ContentRegistry::Views::add<ViewTTYConsole>();
+    hex::ContentRegistry::Views::add<ViewTTYConsole>();
 
     registerLanguageEnUS();
     registerLanguageZhCN();

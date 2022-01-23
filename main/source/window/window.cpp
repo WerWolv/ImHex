@@ -715,11 +715,12 @@ namespace hex {
                 const auto &plugins = PluginManager::getPlugins();
 
                 if (!plugins.empty()) {
-                    if (ImGui::BeginTable("plugins", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+                    if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                         ImGui::TableSetupScrollFreeze(0, 1);
-                        ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang);
-                        ImGui::TableSetupColumn("hex.welcome.plugins.author"_lang);
-                        ImGui::TableSetupColumn("hex.welcome.plugins.desc"_lang);
+                        ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang, ImGuiTableColumnFlags_WidthStretch, 0.2);
+                        ImGui::TableSetupColumn("hex.welcome.plugins.author"_lang, ImGuiTableColumnFlags_WidthStretch, 0.2);
+                        ImGui::TableSetupColumn("hex.welcome.plugins.desc"_lang, ImGuiTableColumnFlags_WidthStretch, 0.6);
+                        ImGui::TableSetupColumn("##loaded", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
                         ImGui::TableHeadersRow();
 
@@ -728,13 +729,17 @@ namespace hex {
 
                         while (clipper.Step()) {
                             for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                                const auto &plugin = plugins[i];
+
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextUnformatted((plugins[i].getPluginName() + "   ").c_str());
+                                ImGui::TextUnformatted(plugin.getPluginName().c_str());
                                 ImGui::TableNextColumn();
-                                ImGui::TextUnformatted((plugins[i].getPluginAuthor() + "   ").c_str());
+                                ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
                                 ImGui::TableNextColumn();
-                                ImGui::TextUnformatted(plugins[i].getPluginDescription().c_str());
+                                ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
                             }
                         }
 
