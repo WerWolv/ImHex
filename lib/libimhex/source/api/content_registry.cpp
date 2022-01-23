@@ -294,10 +294,10 @@ namespace hex {
         return SharedData::dockSpaceId;
     }
 
-    void ContentRegistry::Interface::registerMainMenuItem(const std::string &unlocalizedName, const impl::DrawCallback &function) {
+    void ContentRegistry::Interface::registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
         log::info("Registered new main menu item: {}", unlocalizedName);
 
-        getMainMenuItems().push_back({ unlocalizedName, function });
+        getMainMenuItems().insert({ priority, { unlocalizedName } });
     }
 
     void ContentRegistry::Interface::addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
@@ -329,7 +329,7 @@ namespace hex {
     }
 
 
-    std::vector<ContentRegistry::Interface::impl::MainMenuItem>& ContentRegistry::Interface::getMainMenuItems() {
+    std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem>& ContentRegistry::Interface::getMainMenuItems() {
         return SharedData::mainMenuItems;
     }
     std::multimap<u32, ContentRegistry::Interface::impl::MenuItem>& ContentRegistry::Interface::getMenuItems() {

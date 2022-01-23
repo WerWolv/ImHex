@@ -229,7 +229,6 @@ namespace hex {
 
                 struct MainMenuItem {
                     std::string unlocalizedName;
-                    DrawCallback callback;
                 };
 
                 struct MenuItem {
@@ -246,7 +245,7 @@ namespace hex {
 
             u32 getDockSpaceId();
 
-            void registerMainMenuItem(const std::string &unlocalizedName, const impl::DrawCallback &function = []{});
+            void registerMainMenuItem(const std::string &unlocalizedName, u32 priority);
             void addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function);
 
             void addWelcomeScreenEntry(const impl::DrawCallback &function);
@@ -256,7 +255,7 @@ namespace hex {
 
             void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function);
 
-            std::vector<impl::MainMenuItem>& getMainMenuItems();
+            std::multimap<u32, impl::MainMenuItem>& getMainMenuItems();
             std::multimap<u32, impl::MenuItem>& getMenuItems();
 
             std::vector<impl::DrawCallback>& getWelcomeScreenEntries();

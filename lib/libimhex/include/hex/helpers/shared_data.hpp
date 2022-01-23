@@ -77,7 +77,7 @@ namespace hex {
 
         static ImGuiID dockSpaceId;
 
-        static std::vector<ContentRegistry::Interface::impl::MainMenuItem> mainMenuItems;
+        static std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem> mainMenuItems;
         static std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> menuItems;
         static std::vector<ContentRegistry::Interface::impl::DrawCallback> welcomeScreenEntries;
         static std::vector<ContentRegistry::Interface::impl::DrawCallback> footerItems;

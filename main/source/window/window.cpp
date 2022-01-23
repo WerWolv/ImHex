@@ -431,9 +431,8 @@ namespace hex {
                 ImGui::SetCursorPosX(5);
                 ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
 
-                for (const auto &[name, function] : ContentRegistry::Interface::getMainMenuItems()) {
-                    if (ImGui::BeginMenu(LangEntry(name))) {
-                        function();
+                for (const auto &[priority, menuItem] : ContentRegistry::Interface::getMainMenuItems()) {
+                    if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
                         ImGui::EndMenu();
                     }
                 }
