@@ -2,7 +2,9 @@
 
 #include <functional>
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <hex/helpers/fmt.hpp>
 
@@ -104,5 +106,17 @@ namespace ImGui {
 
     void TextFormattedWrapped(const std::string &fmt, auto&& ... args) {
         ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    }
+
+    void TextFormattedCentered(const std::string &fmt, auto&& ... args) {
+        auto text = hex::format(fmt);
+        auto availableSpace = ImGui::GetContentRegionAvail();
+        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
+
+        ImGui::SetCursorPos(((availableSpace - textSize) / 2.0F));
+
+        ImGui::PushTextWrapPos(availableSpace.x * 0.75F);
+        ImGui::TextFormattedWrapped("{}", text);
+        ImGui::PopTextWrapPos();
     }
 }

@@ -1,7 +1,5 @@
 #include <hex/api/content_registry.hpp>
 
-#include <imgui.h>
-#include <imgui_internal.h>
 #include <hex/views/view.hpp>
 
 namespace hex::plugin::builtin {

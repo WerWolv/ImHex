@@ -290,6 +290,7 @@ namespace hex::plugin::builtin {
                 //{ "hex.builtin.view.pattern_editor.settings", "Settings" },
                 //{ "hex.builtin.view.pattern_editor.dangerous_function.name", "Allow dangerous function?" },
                 //{ "hex.builtin.view.pattern_editor.dangerous_function.desc", "This pattern tried to call a dangerous function.\nAre you sure you want to trust this pattern?" },
+                //{ "hex.builtin.view.pattern_editor.no_in_out_vars", "Define some global variables with the 'in' or 'out' specifier for them to appear here." },
 
                 { "hex.builtin.view.pattern_data.name", "Dati dei Pattern" },
                     { "hex.builtin.view.pattern_data.var_name", "Nome" },

@@ -290,6 +290,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.settings", "Einstellungen" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "Gefährliche funktion erlauben?" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "Dieses Pattern hat versucht eine gefährliche Funktion aufzurufen.\nBist du sicher, dass du diesem Pattern vertraust?" },
+                { "hex.builtin.view.pattern_editor.no_in_out_vars", "Definiere einige globale Variablen mit dem 'in' oder 'out' specifier damit diese hier auftauchen." },
 
                 { "hex.builtin.view.pattern_data.name", "Pattern Daten" },
                     { "hex.builtin.view.pattern_data.var_name", "Name" },

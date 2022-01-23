@@ -57,12 +57,7 @@ namespace hex::plugin::builtin {
                 auto &bookmarks = ImHexApi::Bookmarks::getEntries();
 
                 if (bookmarks.empty()) {
-                    std::string text = "hex.builtin.view.bookmarks.no_bookmarks"_lang;
-                    auto textSize = ImGui::CalcTextSize(text.c_str());
-                    auto availableSpace = ImGui::GetContentRegionAvail();
-
-                    ImGui::SetCursorPos((availableSpace - textSize) / 2.0F);
-                    ImGui::TextUnformatted(text.c_str());
+                    ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
                 u32 id = 1;
