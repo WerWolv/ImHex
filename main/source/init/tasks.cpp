@@ -66,6 +66,7 @@ namespace hex::init {
             ImHexPath::Config,
             ImHexPath::Constants,
             ImHexPath::Yara,
+            ImHexPath::Encodings,
             ImHexPath::Python,
             ImHexPath::Logs
         };

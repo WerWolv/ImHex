@@ -345,8 +345,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.libraries", "Librerie" },
                     { "hex.builtin.view.store.tab.magics", "File Magici" },
                     { "hex.builtin.view.store.tab.constants", "Costanti" },
+                    //{ "hex.builtin.view.store.tab.encodings", "Encodings" },
                     { "hex.builtin.view.store.tab.yara", "Regole di Yara" },
                     { "hex.builtin.view.store.loading", "Caricamento del content store..." },
+                    //{ "hex.builtin.view.store.download_error", "Failed to download file! Destination folder does not exist." },
+
                 //{ "hex.builtin.view.diff.name", "Diffing" },
 
                 //{ "hex.builtin.view.provider_settings.name", "Provider Settings" },

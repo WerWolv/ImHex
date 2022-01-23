@@ -348,8 +348,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.libraries", "Libraries" },
                     { "hex.builtin.view.store.tab.magics", "Magic Files" },
                     { "hex.builtin.view.store.tab.constants", "Konstanten" },
+                    { "hex.builtin.view.store.tab.encodings", "Encodings" },
                     { "hex.builtin.view.store.tab.yara", "Yara Rules" },
                     { "hex.builtin.view.store.loading", "Store inhalt wird geladen..." },
+                    { "hex.builtin.view.store.download_error", "Datei konnte nicht heruntergeladen werden! Zielordner konnte nicht gefunden werden." },
+
                 { "hex.builtin.view.diff.name", "Diffing" },
 
                 { "hex.builtin.view.provider_settings.name", "Provider Einstellungen" },

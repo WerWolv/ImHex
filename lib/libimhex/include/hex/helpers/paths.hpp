@@ -18,6 +18,7 @@ namespace hex {
         Config,
         Resources,
         Constants,
+        Encodings,
         Logs
     };
 

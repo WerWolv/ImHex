@@ -43,15 +43,15 @@ namespace hex::plugin::builtin {
         std::future<Response<void>> m_download;
         fs::path m_downloadPath;
 
-        std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara;
+        std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara, m_encodings;
 
         void drawStore();
 
         void refresh();
         void parseResponse();
 
-        void download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
-        void remove(ImHexPath pathType, const std::string &fileName);
+        bool download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
+        bool remove(ImHexPath pathType, const std::string &fileName);
     };
 
 }

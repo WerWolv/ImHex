@@ -346,7 +346,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.magics", "魔术数据库" },
                     { "hex.builtin.view.store.tab.constants", "常量" },
                     { "hex.builtin.view.store.tab.yara", "Yara规则" },
-                { "hex.builtin.view.store.loading", "正在加载仓库内容..." },
+                    //{ "hex.builtin.view.store.tab.encodings", "Encodings" },
+                    { "hex.builtin.view.store.loading", "正在加载仓库内容..." },
+                    //{ "hex.builtin.view.store.download_error", "Failed to download file! Destination folder does not exist." },
+
                 { "hex.builtin.view.diff.name", "差异" },
 
                 //{ "hex.builtin.view.provider_settings.name", "Provider Settings" },

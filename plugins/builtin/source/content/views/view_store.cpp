@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
             this->refresh();
         }
 
-        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, std::function<void(const StoreEntry&)> downloadDoneCallback) {
+        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, const std::function<void(const StoreEntry&)> &downloadDoneCallback) {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -116,18 +116,15 @@ namespace hex::plugin::builtin {
 
                             } else if (entry.hasUpdate) {
                                 if (ImGui::Button("hex.builtin.view.store.update"_lang)) {
-                                    this->download(pathType, entry.fileName, entry.link, true);
-                                    entry.downloading = true;
+                                    entry.downloading = this->download(pathType, entry.fileName, entry.link, true);
                                 }
                             } else if (!entry.installed) {
                                 if (ImGui::Button("hex.builtin.view.store.download"_lang)) {
-                                    this->download(pathType, entry.fileName, entry.link, false);
-                                    entry.downloading = true;
+                                    entry.downloading = this->download(pathType, entry.fileName, entry.link, false);
                                 }
                             } else {
                                 if (ImGui::Button("hex.builtin.view.store.remove"_lang)) {
-                                    this->remove(pathType, entry.fileName);
-                                    entry.installed = false;
+                                    entry.installed = !this->remove(pathType, entry.fileName);
                                 }
                             }
                         }
@@ -143,17 +140,12 @@ namespace hex::plugin::builtin {
         };
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            auto extractTar = []{
-
-            };
-
-            drawTab("hex.builtin.view.store.tab.patterns"_lang, ImHexPath::Patterns, this->m_patterns, [](auto){});
-            drawTab("hex.builtin.view.store.tab.libraries"_lang, ImHexPath::PatternsInclude, this->m_includes, [](auto){});
-            drawTab("hex.builtin.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, [](auto){
-                magic::compile();
-            });
-            drawTab("hex.builtin.view.store.tab.constants"_lang, ImHexPath::Constants, this->m_constants, [](auto){});
-            drawTab("hex.builtin.view.store.tab.yara"_lang, ImHexPath::Yara, this->m_yara, [](auto){});
+            drawTab("hex.builtin.view.store.tab.patterns"_lang, ImHexPath::Patterns, this->m_patterns, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.libraries"_lang, ImHexPath::PatternsInclude, this->m_includes, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, [](auto) { magic::compile(); });
+            drawTab("hex.builtin.view.store.tab.constants"_lang, ImHexPath::Constants, this->m_constants, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.encodings"_lang, ImHexPath::Encodings, this->m_encodings, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.yara"_lang, ImHexPath::Yara, this->m_yara, [](auto) {});
 
             ImGui::EndTabBar();
         }
@@ -165,6 +157,7 @@ namespace hex::plugin::builtin {
         this->m_magics.clear();
         this->m_constants.clear();
         this->m_yara.clear();
+        this->m_encodings.clear();
 
         this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s);
     }
@@ -217,6 +210,7 @@ namespace hex::plugin::builtin {
             parseStoreEntries(json, "magic", ImHexPath::Magic, this->m_magics);
             parseStoreEntries(json, "constants", ImHexPath::Constants, this->m_constants);
             parseStoreEntries(json, "yara", ImHexPath::Yara, this->m_yara);
+            parseStoreEntries(json, "encodings", ImHexPath::Encodings, this->m_encodings);
 
         }
         this->m_apiRequest = { };
@@ -241,26 +235,36 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
-        if (!update) {
-            this->m_downloadPath = hex::getPath(pathType).back() / fs::path(fileName);
-            this->m_download = this->m_net.downloadFile(url, this->m_downloadPath);
-        } else {
-            for (const auto &path : hex::getPath(pathType)) {
-                auto fullPath = path / fs::path(fileName);
-                if (fs::exists(fullPath)) {
-                    this->m_downloadPath = fullPath;
-                    this->m_download = this->m_net.downloadFile(url, fullPath);
-                }
+    bool ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
+        bool downloading = false;
+        for (const auto &path : hex::getPath(pathType)) {
+            auto fullPath = path / fs::path(fileName);
+            if (!update || fs::exists(fullPath)) {
+                downloading = true;
+                this->m_downloadPath = fullPath;
+                this->m_download = this->m_net.downloadFile(url, fullPath);
+                break;
             }
         }
+
+        if (!downloading) {
+            View::showErrorPopup("hex.builtin.view.store.download_error"_lang);
+            return false;
+        }
+
+        return true;
     }
     
-    void ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
+    bool ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
+        bool removed = false;
         for (const auto &path : hex::getPath(pathType)) {
-            fs::remove(path / fs::path(fileName));
-            fs::remove(path / fs::path(fileName).stem());
+            bool removedFile = fs::remove(path / fs::path(fileName));
+            bool removedFolder = fs::remove(path / fs::path(fileName).stem());
+
+            removed = removedFile || removedFolder;
         }
+
+        return removed;
     }
 
 }

@@ -98,6 +98,11 @@ namespace hex {
                         return (path / "constants").string();
                     });
                     break;
+                case ImHexPath::Encodings:
+                    std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
+                        return (path / "encodings").string();
+                    });
+                    break;
                 case ImHexPath::Logs:
                     std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path){
                         return (path / "logs").string();
@@ -141,6 +146,9 @@ namespace hex {
                 break;
             case ImHexPath::Constants:
                 result.push_back((applicationSupportDir / "constants").string());
+                break;
+            case ImHexPath::Encodings:
+                result.push_back((applicationSupportDir / "encodings").string());
                 break;
             case ImHexPath::Logs:
                 result.push_back((applicationSupportDir / "logs").string());
@@ -198,6 +206,10 @@ namespace hex {
                 case ImHexPath::Constants:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
                         [](auto p) { return (p / "constants").string(); });
+                    break;
+                case ImHexPath::Encodings:
+                    std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
+                        [](auto p) { return (p / "encodings").string(); });
                     break;
                 case ImHexPath::Logs:
                     std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result),
