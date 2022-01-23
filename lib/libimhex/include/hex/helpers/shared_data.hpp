@@ -71,6 +71,11 @@ namespace hex {
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
         static std::vector<pl::PatternData*> patternData;
 
+        static u32 selectableFileIndex;
+        static std::vector<fs::path> selectableFiles;
+        static std::function<void(fs::path)> selectableFileOpenCallback;
+        static std::vector<nfdfilteritem_t> selectableFilesValidExtensions;
+
         static std::map<std::string, std::string> languageNames;
         static std::map<std::string, std::vector<LanguageDefinition>> languageDefinitions;
         static std::map<std::string, std::string> loadedLanguageStrings;

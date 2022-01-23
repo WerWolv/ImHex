@@ -1048,7 +1048,16 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.load_encoding_file"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.load_enconding_file"_lang, DialogMode::Open, { { "Thingy Table File", "tbl" } }, [this](const auto &path) {
+                std::vector<fs::path> paths;
+                for (const auto &path : hex::getPath(ImHexPath::Encodings)) {
+                    for (const auto &entry : fs::recursive_directory_iterator(path)) {
+                        if (!entry.is_regular_file()) continue;
+
+                        paths.push_back(entry);
+                    }
+                }
+
+                View::showFileChooserPopup(paths, { { "Thingy Table File", "tbl" } }, [this](const auto &path) {
                     this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
                 });
             }

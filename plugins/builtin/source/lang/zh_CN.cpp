@@ -79,6 +79,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.file", "文件" },
                 { "hex.common.open", "打开" },
                 { "hex.common.browse", "浏览..." },
+                //{ "hex.common.choose_file", "Choose file" },
 
                 //{ "hex.message.file_handler_failed", "Failed to open file with registered file handler." },
 

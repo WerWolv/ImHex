@@ -79,6 +79,7 @@ namespace hex::plugin::builtin {
                 { "hex.common.file", "Datei" },
                 { "hex.common.open", "Öffnen" },
                 { "hex.common.browse", "Druchsuchen..." },
+                { "hex.common.choose_file", "Datei auswählen" },
 
                 { "hex.message.file_handler_failed", "Datei konnte nicht mit registriertem Dateihandler geöffnet werden." },
 

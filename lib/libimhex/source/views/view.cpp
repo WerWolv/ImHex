@@ -58,6 +58,39 @@ namespace hex {
             ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
+
+        bool opened = true;
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+        if (ImGui::BeginPopupModal("hex.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+            if (ImGui::BeginListBox("##files", ImVec2(300_scaled, 0))) {
+
+                u32 index = 0;
+                for (auto &path : SharedData::selectableFiles) {
+                    if (ImGui::Selectable(path.filename().string().c_str(), index == SharedData::selectableFileIndex))
+                        SharedData::selectableFileIndex = index;
+                    index++;
+                }
+
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("hex.common.open"_lang)) {
+                SharedData::selectableFileOpenCallback(SharedData::selectableFiles[SharedData::selectableFileIndex]);
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("hex.common.browse"_lang)) {
+                hex::openFileBrowser("hex.common.open"_lang, DialogMode::Open, SharedData::selectableFilesValidExtensions, [](const auto &path) {
+                    SharedData::selectableFileOpenCallback(path);
+                    ImGui::CloseCurrentPopup();
+                });
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
     void View::showMessagePopup(const std::string &message) {
@@ -76,6 +109,15 @@ namespace hex {
         SharedData::popupMessage = errorMessage;
 
         View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
+    }
+
+    void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {
+        SharedData::selectableFileIndex = 0;
+        SharedData::selectableFiles = paths;
+        SharedData::selectableFilesValidExtensions = validExtensions;
+        SharedData::selectableFileOpenCallback = callback;
+
+        View::doLater([] { ImGui::OpenPopup("hex.common.choose_file"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() const {

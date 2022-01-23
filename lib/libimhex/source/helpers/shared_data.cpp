@@ -21,6 +21,11 @@ namespace hex {
     std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
     std::vector<pl::PatternData*> SharedData::patternData;
 
+    u32 SharedData::selectableFileIndex;
+    std::vector<fs::path> SharedData::selectableFiles;
+    std::function<void(fs::path)> SharedData::selectableFileOpenCallback;
+    std::vector<nfdfilteritem_t> SharedData::selectableFilesValidExtensions;
+
     std::map<std::string, std::string> SharedData::languageNames;
     std::map<std::string, std::vector<LanguageDefinition>> SharedData::languageDefinitions;
     std::map<std::string, std::string> SharedData::loadedLanguageStrings;

@@ -198,20 +198,21 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang)) {
 
-                this->m_selectedPatternFile = 0;
-                this->m_possiblePatternFiles.clear();
+                std::vector<fs::path> paths;
 
                 for (auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
                     if (!fs::exists(imhexPath)) continue;
 
                     for (auto &entry: fs::recursive_directory_iterator(imhexPath)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
-                            this->m_possiblePatternFiles.push_back(entry.path());
+                            paths.push_back(entry.path());
                         }
                     }
                 }
 
-                View::doLater([]{ ImGui::OpenPopup("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang); });
+                View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, [this](const fs::path &path){
+                    this->loadPatternFile(path);
+                });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
@@ -551,39 +552,6 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
-
-            ImGui::EndPopup();
-        }
-
-        bool opened = true;
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-            if (ImGui::BeginListBox("##patterns", ImVec2(300_scaled, 0))) {
-
-                u32 index = 0;
-                for (auto &path : this->m_possiblePatternFiles) {
-                    if (ImGui::Selectable(path.filename().string().c_str(), index == this->m_selectedPatternFile))
-                        this->m_selectedPatternFile = index;
-                    index++;
-                }
-
-                ImGui::EndListBox();
-            }
-
-            if (ImGui::Button("hex.common.open"_lang)) {
-                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
-                ImGui::CloseCurrentPopup();
-            }
-
-            ImGui::SameLine();
-
-            if (ImGui::Button("hex.common.browse"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.pattern_editor.open_pattern"_lang, DialogMode::Open, { { "Pattern File", "hexpat" } }, [this](const auto &path) {
-                    this->loadPatternFile(path);
-                    ImGui::CloseCurrentPopup();
-                });
-            }
 
             ImGui::EndPopup();
         }

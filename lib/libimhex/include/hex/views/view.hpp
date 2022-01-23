@@ -44,6 +44,8 @@ namespace hex {
         static void showErrorPopup(const std::string &errorMessage);
         static void showFatalPopup(const std::string &errorMessage);
 
+        static void showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback);
+
         virtual bool hasViewMenuItemEntry() const;
         virtual ImVec2 getMinSize() const;
         virtual ImVec2 getMaxSize() const;
