@@ -23,7 +23,8 @@ namespace hex::plugin::builtin {
             }
 
             // Remove trailing comma
-            result.pop_back(); result.pop_back();
+            result.pop_back();
+            result.pop_back();
         }
 
         result += "\n";
@@ -35,52 +36,31 @@ namespace hex::plugin::builtin {
     void registerDataFormatters() {
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.c", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       hex::format("const uint8_t data[{0}] = {{", size),
-                                       "0x{0:02X}, ",
-                                       "};");
+            return formatLanguageArray(provider, offset, size, hex::format("const uint8_t data[{0}] = {{", size), "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       hex::format("constexpr std::array<uint8_t, {0}> data = {{", size),
-                                       "0x{0:02X}, ",
-                                       "};");
+            return formatLanguageArray(provider, offset, size, hex::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.java", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       "final byte[] data = {",
-                                       "0x{0:02X}, ",
-                                       "};");
+            return formatLanguageArray(provider, offset, size, "final byte[] data = {", "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       "const byte[] data = {",
-                                       "0x{0:02X}, ",
-                                       "};");
+            return formatLanguageArray(provider, offset, size, "const byte[] data = {", "0x{0:02X}, ", "};");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       hex::format("let data: [u8; 0x{0:02X}] = [", size),
-                                       "0x{0:02X}, ",
-                                       "];");
+            return formatLanguageArray(provider, offset, size, hex::format("let data: [u8; 0x{0:02X}] = [", size), "0x{0:02X}, ", "];");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.python", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       "data = bytes([",
-                                       "0x{0:02X}, ",
-                                       "]);");
+            return formatLanguageArray(provider, offset, size, "data = bytes([", "0x{0:02X}, ", "]);");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size,
-                                       "const data = new Uint8Array([",
-                                       "0x{0:02X}, ",
-                                       "]);");
+            return formatLanguageArray(provider, offset, size, "const data = new Uint8Array([", "0x{0:02X}, ", "]);");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.ascii", [](prv::Provider *provider, u64 offset, size_t size) {
@@ -95,7 +75,7 @@ namespace hex::plugin::builtin {
 
                 for (u32 col = offset >> 4; col <= (end >> 4); col++) {
                     result += hex::format("{0:08X}  ", col << 4);
-                    for (u64 i = 0 ; i < 16; i++) {
+                    for (u64 i = 0; i < 16; i++) {
 
                         if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
                             result += "   ";
@@ -108,7 +88,7 @@ namespace hex::plugin::builtin {
 
                     result += " ";
 
-                    for (u64 i = 0 ; i < 16; i++) {
+                    for (u64 i = 0; i < 16; i++) {
 
                         if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
                             result += " ";
@@ -121,22 +101,21 @@ namespace hex::plugin::builtin {
 
                     result += "\n";
                 }
-
             }
             return result;
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.html", [](prv::Provider *provider, u64 offset, size_t size) {
             std::string result =
-                    "<div>\n"
-                    "    <style type=\"text/css\">\n"
-                    "        .offsetheader { color:#0000A0; line-height:200% }\n"
-                    "        .offsetcolumn { color:#0000A0 }\n"
-                    "        .hexcolumn { color:#000000 }\n"
-                    "        .textcolumn { color:#000000 }\n"
-                    "    </style>\n\n"
-                    "    <code>\n"
-                    "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span><br>\n";
+                "<div>\n"
+                "    <style type=\"text/css\">\n"
+                "        .offsetheader { color:#0000A0; line-height:200% }\n"
+                "        .offsetcolumn { color:#0000A0 }\n"
+                "        .hexcolumn { color:#000000 }\n"
+                "        .textcolumn { color:#000000 }\n"
+                "    </style>\n\n"
+                "    <code>\n"
+                "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span><br>\n";
 
 
             std::vector<u8> buffer(0x1'0000, 0x00);
@@ -148,7 +127,7 @@ namespace hex::plugin::builtin {
 
                 for (u32 col = offset >> 4; col <= (end >> 4); col++) {
                     result += hex::format("        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", col << 4);
-                    for (u64 i = 0 ; i < 16; i++) {
+                    for (u64 i = 0; i < 16; i++) {
 
                         if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
                             result += "&nbsp&nbsp ";
@@ -161,7 +140,7 @@ namespace hex::plugin::builtin {
 
                     result += "</span>&nbsp&nbsp<span class=\"textcolumn\">";
 
-                    for (u64 i = 0 ; i < 16; i++) {
+                    for (u64 i = 0; i < 16; i++) {
 
                         if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
                             result += "&nbsp";
@@ -174,16 +153,14 @@ namespace hex::plugin::builtin {
 
                     result += "</span><br>\n";
                 }
-
             }
 
             result +=
-                    "    </code>\n"
-                    "</div>\n";
+                "    </code>\n"
+                "</div>\n";
 
             return result;
         });
-
     }
 
 }

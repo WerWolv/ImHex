@@ -36,17 +36,17 @@ namespace hex::prv {
 
         virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
-        [[nodiscard]] virtual size_t getActualSize() const  = 0;
+        [[nodiscard]] virtual size_t getActualSize() const = 0;
 
         void applyOverlays(u64 offset, void *buffer, size_t size);
 
-        [[nodiscard]] std::map<u64, u8>& getPatches();
-        [[nodiscard]] const std::map<u64, u8>& getPatches() const;
+        [[nodiscard]] std::map<u64, u8> &getPatches();
+        [[nodiscard]] const std::map<u64, u8> &getPatches() const;
         void applyPatches();
 
-        [[nodiscard]] Overlay* newOverlay();
+        [[nodiscard]] Overlay *newOverlay();
         void deleteOverlay(Overlay *overlay);
-        [[nodiscard]] const std::list<Overlay*>& getOverlays();
+        [[nodiscard]] const std::list<Overlay *> &getOverlays();
 
         [[nodiscard]] u32 getPageCount() const;
         [[nodiscard]] u32 getCurrentPage() const;
@@ -84,7 +84,7 @@ namespace hex::prv {
 
         u32 m_patchTreeOffset = 0;
         std::list<std::map<u64, u8>> m_patches;
-        std::list<Overlay*> m_overlays;
+        std::list<Overlay *> m_overlays;
     };
 
 }

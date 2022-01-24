@@ -28,17 +28,17 @@ namespace hex::test {
         }
 
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override {
-            return { };
+            return {};
         }
 
         void readRaw(u64 offset, void *buffer, size_t size) override {
             this->m_testFile.seek(offset);
-            this->m_testFile.readBuffer(static_cast<u8*>(buffer), size);
+            this->m_testFile.readBuffer(static_cast<u8 *>(buffer), size);
         }
 
         void writeRaw(u64 offset, const void *buffer, size_t size) override {
             this->m_testFile.seek(offset);
-            this->m_testFile.write(static_cast<const u8*>(buffer), size);
+            this->m_testFile.write(static_cast<const u8 *>(buffer), size);
         }
 
         size_t getActualSize() const override {

@@ -11,7 +11,7 @@ namespace hex {
     public:
         LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries);
 
-        const std::map<std::string, std::string>& getEntries() const;
+        const std::map<std::string, std::string> &getEntries() const;
 
     private:
         std::map<std::string, std::string> m_entries;
@@ -25,15 +25,15 @@ namespace hex {
 
         operator std::string() const;
         operator std::string_view() const;
-        operator const char*() const;
+        operator const char *() const;
 
-        [[nodiscard]] const std::string& get() const;
+        [[nodiscard]] const std::string &get() const;
 
         static void loadLanguage(const std::string &language);
-        static const std::map<std::string, std::string>& getSupportedLanguages();
+        static const std::map<std::string, std::string> &getSupportedLanguages();
 
         static void setFallbackLanguage(const std::string &language);
-        static const std::string& getFallbackLanguage();
+        static const std::string &getFallbackLanguage();
 
     private:
         std::string m_unlocalizedString;
@@ -56,7 +56,6 @@ namespace hex {
         }
 
     }
-
 
 
 }

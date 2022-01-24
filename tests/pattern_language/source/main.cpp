@@ -24,7 +24,7 @@ void addFunctions() {
         if (!condition)
             LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
 
-        return { };
+        return {};
     });
 }
 

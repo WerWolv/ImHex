@@ -6,13 +6,11 @@ namespace hex::test {
 
     class TestPatternNamespaces : public TestPattern {
     public:
-        TestPatternNamespaces() : TestPattern("Namespaces")  {
-
+        TestPatternNamespaces() : TestPattern("Namespaces") {
         }
         ~TestPatternNamespaces() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 namespace A {
                     struct Test {
@@ -36,7 +34,6 @@ namespace hex::test {
                 std::assert(sizeof(test2) != sizeof(test3), "error differentiating two namespace types with same name");
             )";
         }
-
     };
 
 }

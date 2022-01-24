@@ -16,9 +16,7 @@ namespace hex::plugin::builtin {
             if (bookmark.name.empty()) {
                 bookmark.name.resize(64);
                 std::memset(bookmark.name.data(), 0x00, 64);
-                std::strcpy(bookmark.name.data(), hex::format("hex.builtin.view.bookmarks.default_title"_lang,
-                                                              bookmark.region.address,
-                                                              bookmark.region.address + bookmark.region.size - 1).c_str());
+                std::strcpy(bookmark.name.data(), hex::format("hex.builtin.view.bookmarks.default_title"_lang, bookmark.region.address, bookmark.region.address + bookmark.region.size - 1).c_str());
             }
 
             if (bookmark.comment.empty())
@@ -30,15 +28,15 @@ namespace hex::plugin::builtin {
             ProjectFile::markDirty();
         });
 
-        EventManager::subscribe<EventProjectFileLoad>(this, []{
+        EventManager::subscribe<EventProjectFileLoad>(this, [] {
             SharedData::bookmarkEntries = ProjectFile::getBookmarks();
         });
 
-        EventManager::subscribe<EventProjectFileStore>(this, []{
+        EventManager::subscribe<EventProjectFileStore>(this, [] {
             ProjectFile::setBookmarks(SharedData::bookmarkEntries);
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, []{
+        EventManager::subscribe<EventFileUnloaded>(this, [] {
             ImHexApi::Bookmarks::getEntries().clear();
         });
     }
@@ -141,7 +139,7 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
                         ImGui::Separator();
 
-                        ImGui::ColorEdit4("hex.builtin.view.bookmarks.header.color"_lang, (float*)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha | (locked ? ImGuiColorEditFlags_NoPicker : ImGuiColorEditFlags_None));
+                        ImGui::ColorEdit4("hex.builtin.view.bookmarks.header.color"_lang, (float *)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha | (locked ? ImGuiColorEditFlags_NoPicker : ImGuiColorEditFlags_None));
                         color = headerColor;
                         ImGui::SameLine();
 
@@ -160,7 +158,6 @@ namespace hex::plugin::builtin {
                             ImGui::InputTextMultiline("##commentInput", comment.data(), 0xF'FFFF);
 
                         ImGui::NewLine();
-
                     }
                     ImGui::PopID();
                     ImGui::PopStyleColor(3);
@@ -171,7 +168,6 @@ namespace hex::plugin::builtin {
                     bookmarks.erase(bookmarkToRemove);
                     ProjectFile::markDirty();
                 }
-
             }
             ImGui::EndChild();
         }

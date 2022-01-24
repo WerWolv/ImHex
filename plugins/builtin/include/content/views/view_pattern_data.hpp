@@ -11,8 +11,12 @@
 
 namespace hex {
 
-    namespace prv { class Provider; }
-    namespace lang { class PatternData; }
+    namespace prv {
+        class Provider;
+    }
+    namespace lang {
+        class PatternData;
+    }
 
 }
 
@@ -27,7 +31,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::vector<pl::PatternData*> m_sortedPatternData;
+        std::vector<pl::PatternData *> m_sortedPatternData;
     };
 
 }

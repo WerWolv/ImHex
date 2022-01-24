@@ -61,14 +61,14 @@ namespace hex::plugin::builtin::prv {
             auto receivedPacket = socket.readString(size * 2 + 4);
 
             if (receivedPacket.empty())
-                return { };
+                return {};
 
             auto receivedData = parsePacket(receivedPacket);
             if (!receivedData.has_value())
-                return { };
+                return {};
 
             if (receivedData->size() == 3 && receivedData->starts_with("E"))
-                return { };
+                return {};
 
             auto data = crypt::decode16(receivedData.value());
 
@@ -113,7 +113,6 @@ namespace hex::plugin::builtin::prv {
     }
 
     GDBProvider::GDBProvider() : Provider(), m_size(0xFFFF'FFFF) {
-
     }
 
     GDBProvider::~GDBProvider() {
@@ -153,7 +152,7 @@ namespace hex::plugin::builtin::prv {
         if (size <= CacheLineSize) {
             std::scoped_lock lock(this->m_cacheLock);
 
-            const auto &cacheLine = std::find_if(this->m_cache.begin(), this->m_cache.end(), [&](auto &line){
+            const auto &cacheLine = std::find_if(this->m_cache.begin(), this->m_cache.end(), [&](auto &line) {
                 return line.address == alignedOffset;
             });
 
@@ -180,7 +179,7 @@ namespace hex::plugin::builtin::prv {
 
         for (u64 i = 0; i < size; i++)
             if (getPatches().contains(offset + i))
-                reinterpret_cast<u8*>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
+                reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
 
         if (overlays)
             this->applyOverlays(offset, buffer, size);
@@ -215,7 +214,6 @@ namespace hex::plugin::builtin::prv {
     }
 
     void GDBProvider::saveAs(const fs::path &path) {
-
     }
 
     size_t GDBProvider::getActualSize() const {
@@ -238,7 +236,7 @@ namespace hex::plugin::builtin::prv {
 
     std::vector<std::pair<std::string, std::string>> GDBProvider::getDataInformation() const {
         return {
-                { "hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", this->m_ipAddress, this->m_port) },
+            {"hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", this->m_ipAddress, this->m_port)},
         };
     }
 
@@ -292,7 +290,6 @@ namespace hex::plugin::builtin::prv {
     bool GDBProvider::isConnected() const {
         return this->m_socket.isConnected();
     }
-
 
 
     void GDBProvider::drawLoadInterface() {

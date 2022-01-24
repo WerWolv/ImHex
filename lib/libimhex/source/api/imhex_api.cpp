@@ -15,7 +15,7 @@ namespace hex {
 
     void ImHexApi::Common::restartImHex() {
         EventManager::post<RequestCloseImHex>(false);
-        std::atexit([]{
+        std::atexit([] {
             execve(SharedData::mainArgv[0], SharedData::mainArgv, SharedData::mainEnvp);
         });
     }
@@ -38,22 +38,22 @@ namespace hex {
     }
 
     void ImHexApi::Bookmarks::add(u64 addr, size_t size, const std::string &name, const std::string &comment, u32 color) {
-        Bookmarks::add(Region{addr, size}, name, comment, color);
+        Bookmarks::add(Region { addr, size }, name, comment, color);
     }
 
-    std::list<ImHexApi::Bookmarks::Entry>& ImHexApi::Bookmarks::getEntries() {
+    std::list<ImHexApi::Bookmarks::Entry> &ImHexApi::Bookmarks::getEntries() {
         return SharedData::bookmarkEntries;
     }
 
 
-    prv::Provider* ImHexApi::Provider::get() {
+    prv::Provider *ImHexApi::Provider::get() {
         if (!ImHexApi::Provider::isValid())
             return nullptr;
 
         return SharedData::providers[SharedData::currentProvider];
     }
 
-    const std::vector<prv::Provider*>& ImHexApi::Provider::getProviders() {
+    const std::vector<prv::Provider *> &ImHexApi::Provider::getProviders() {
         return SharedData::providers;
     }
 

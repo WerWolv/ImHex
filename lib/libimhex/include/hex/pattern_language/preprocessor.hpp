@@ -15,12 +15,12 @@ namespace hex::pl {
     public:
         Preprocessor();
 
-        std::optional<std::string> preprocess(const std::string& code, bool initialRun = true);
+        std::optional<std::string> preprocess(const std::string &code, bool initialRun = true);
 
-        void addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string&)> &function);
+        void addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string &)> &function);
         void addDefaultPragmaHandlers();
 
-        const std::pair<u32, std::string>& getError() { return this->m_error; }
+        const std::pair<u32, std::string> &getError() { return this->m_error; }
 
     private:
         using PreprocessorError = std::pair<u32, std::string>;

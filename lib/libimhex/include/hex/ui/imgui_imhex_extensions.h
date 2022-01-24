@@ -32,42 +32,39 @@ namespace ImGui {
         ImTextureID textureId;
         int width, height;
 
-        [[nodiscard]]
-        constexpr bool valid() const noexcept {
+        [[nodiscard]] constexpr bool valid() const noexcept {
             return this->textureId != nullptr;
         }
 
-        [[nodiscard]]
-        constexpr operator ImTextureID() {
+        [[nodiscard]] constexpr operator ImTextureID() {
             return this->textureId;
         }
 
-        [[nodiscard]]
-        auto size() const noexcept {
+        [[nodiscard]] auto size() const noexcept {
             return ImVec2(this->width, this->height);
         }
     };
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data);
 
-    bool IconHyperlink(const char *icon, const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
-    bool Hyperlink(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
-    bool BulletHyperlink(const char* label, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
-    bool DescriptionButton(const char* label, const char* description, const ImVec2& size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+    bool IconHyperlink(const char *icon, const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+    bool Hyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+    bool BulletHyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+    bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
-    void UnderlinedText(const char* label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2& size_arg = ImVec2(0, 0));
+    void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
 
     void Disabled(const std::function<void()> &widgets, bool disabled);
-    void TextSpinner(const char* label);
+    void TextSpinner(const char *label);
 
     void Header(const char *label, bool firstEntry = false);
     void HeaderColored(const char *label, ImColor color, bool firstEntry);
 
     void InfoTooltip(const char *text);
 
-    bool TitleBarButton(const char* label, ImVec2 size_arg);
-    bool ToolBarButton(const char* symbol, ImVec4 color);
-    bool IconButton(const char* symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
+    bool TitleBarButton(const char *label, ImVec2 size_arg);
+    bool ToolBarButton(const char *symbol, ImVec4 color);
+    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
 
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
@@ -92,23 +89,23 @@ namespace ImGui {
 
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
 
-    void TextFormatted(const std::string &fmt, auto&& ... args) {
+    void TextFormatted(const std::string &fmt, auto &&...args) {
         ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedColored(ImColor color, const std::string &fmt, auto&& ... args) {
+    void TextFormattedColored(ImColor color, const std::string &fmt, auto &&...args) {
         ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedDisabled(const std::string &fmt, auto&& ... args) {
+    void TextFormattedDisabled(const std::string &fmt, auto &&...args) {
         ImGui::TextDisabled("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedWrapped(const std::string &fmt, auto&& ... args) {
+    void TextFormattedWrapped(const std::string &fmt, auto &&...args) {
         ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedCentered(const std::string &fmt, auto&& ... args) {
+    void TextFormattedCentered(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt);
         auto availableSpace = ImGui::GetContentRegionAvail();
         auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);

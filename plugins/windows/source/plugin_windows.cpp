@@ -23,5 +23,3 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     addFooterItems();
     registerSettings();
 }
-
-

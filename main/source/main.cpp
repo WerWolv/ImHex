@@ -30,7 +30,7 @@ int main(int argc, char **argv, char **envp) {
             splashWindow.addStartupTask(name, task);
 
         if (!splashWindow.loop())
-            init::getInitArguments().push_back({ "tasks-failed", { } });
+            init::getInitArguments().push_back({ "tasks-failed", {} });
     }
 
     // Clean up
@@ -44,7 +44,7 @@ int main(int argc, char **argv, char **envp) {
         Window window;
 
         if (argc == 1)
-            ; // No arguments provided
+            ;    // No arguments provided
         else if (argc == 2)
             EventManager::post<RequestOpenFile>(argv[1]);
         else {

@@ -10,7 +10,9 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     class ViewDataInspector : public View {
     public:
@@ -28,7 +30,7 @@ namespace hex::plugin::builtin {
         bool m_shouldInvalidate = true;
 
         std::endian m_endian = std::endian::native;
-        ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle =ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
+        ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
 
         u64 m_startAddress = 0;
         size_t m_validBytes = 0;

@@ -9,7 +9,10 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-namespace hex::prv { class Provider; class Overlay; }
+namespace hex::prv {
+    class Provider;
+    class Overlay;
+}
 
 namespace hex::dp {
 
@@ -22,11 +25,11 @@ namespace hex::dp {
         [[nodiscard]] u32 getID() const { return this->m_id; }
         void setID(u32 id) { this->m_id = id; }
 
-        [[nodiscard]] const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
+        [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
         void setUnlocalizedName(const std::string &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
 
-        [[nodiscard]] const std::string& getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
-        [[nodiscard]] std::vector<Attribute>& getAttributes() { return this->m_attributes; }
+        [[nodiscard]] const std::string &getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
+        [[nodiscard]] std::vector<Attribute> &getAttributes() { return this->m_attributes; }
 
         void setCurrentOverlay(prv::Overlay *overlay) {
             this->m_overlay = overlay;
@@ -38,7 +41,7 @@ namespace hex::dp {
         virtual void store(nlohmann::json &j) { }
         virtual void load(nlohmann::json &j) { }
 
-        using NodeError = std::pair<Node*, std::string>;
+        using NodeError = std::pair<Node *, std::string>;
 
         void resetOutputData() {
             for (auto &attribute : this->m_attributes)
@@ -56,7 +59,7 @@ namespace hex::dp {
         std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;
 
-        Attribute* getConnectedInputAttribute(u32 index) {
+        Attribute *getConnectedInputAttribute(u32 index) {
             if (index >= this->getAttributes().size())
                 throw std::runtime_error("Attribute index out of bounds!");
 
@@ -75,7 +78,6 @@ namespace hex::dp {
         }
 
     protected:
-
         [[noreturn]] void throwNodeError(const std::string &message) {
             throw NodeError(this, message);
         }
@@ -89,7 +91,6 @@ namespace hex::dp {
         void setFloatOnOutput(u32 index, float floatingPoint);
 
         void setOverlayData(u64 address, const std::vector<u8> &data);
-
     };
 
 }

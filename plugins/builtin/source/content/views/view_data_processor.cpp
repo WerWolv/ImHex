@@ -13,16 +13,16 @@ namespace hex::plugin::builtin {
     ViewDataProcessor::ViewDataProcessor() : View("hex.builtin.view.data_processor.name") {
         EventManager::subscribe<RequestChangeTheme>(this, [](u32 theme) {
             switch (theme) {
-                default:
-                case 1: /* Dark theme */
-                    ImNodes::StyleColorsDark();
-                    break;
-                case 2: /* Light theme */
-                    ImNodes::StyleColorsLight();
-                    break;
-                case 3: /* Classic theme */
-                    ImNodes::StyleColorsClassic();
-                    break;
+            default:
+            case 1: /* Dark theme */
+                ImNodes::StyleColorsDark();
+                break;
+            case 2: /* Light theme */
+                ImNodes::StyleColorsLight();
+                break;
+            case 3: /* Classic theme */
+                ImNodes::StyleColorsClassic();
+                break;
             }
 
             ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
@@ -36,11 +36,10 @@ namespace hex::plugin::builtin {
             try {
                 this->loadNodes(ProjectFile::getDataProcessorContent());
             } catch (nlohmann::json::exception &e) {
-
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path){
+        EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path) {
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
             }
@@ -49,20 +48,25 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, DialogMode::Open, { { "hex.builtin.view.data_processor.name"_lang, "hexnode"} }, [this](const fs::path &path){
-                    File file(path, File::Mode::Read);
-                    if (file.isValid())
-                        this->loadNodes(file.readString());
-                });
+                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, DialogMode::Open, {
+                                                                                                                            {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
+                },
+                                     [this](const fs::path &path) {
+                                         File file(path, File::Mode::Read);
+                                         if (file.isValid())
+                                             this->loadNodes(file.readString());
+                                     });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty())) {
-                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, DialogMode::Save, { { "hex.builtin.view.data_processor.name"_lang, "hexnode"} }, [this](const fs::path &path){
-                    File file(path, File::Mode::Create);
-                    if (file.isValid())
-                        file.write(this->saveNodes());
-                });
-
+                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, DialogMode::Save, {
+                                                                                                                            {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
+                },
+                                     [this](const fs::path &path) {
+                                         File file(path, File::Mode::Create);
+                                         if (file.isValid())
+                                             file.write(this->saveNodes());
+                                     });
             }
         });
     }
@@ -79,7 +83,7 @@ namespace hex::plugin::builtin {
 
 
     void ViewDataProcessor::eraseLink(u32 id) {
-        auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link){ return link.getID() == id; });
+        auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link) { return link.getID() == id; });
 
         if (link == this->m_links.end())
             return;
@@ -97,7 +101,7 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
         for (const int id : ids) {
-            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
+            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getID() == id; });
 
             for (auto &attr : (*node)->getAttributes()) {
                 std::vector<u32> linksToRemove;
@@ -110,9 +114,9 @@ namespace hex::plugin::builtin {
         }
 
         for (const int id : ids) {
-            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node){ return node->getID() == id; });
+            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getID() == id; });
 
-            std::erase_if(this->m_endNodes, [&id](auto node){ return node->getID() == id; });
+            std::erase_if(this->m_endNodes, [&id](auto node) { return node->getID() == id; });
 
             delete *node;
 
@@ -159,7 +163,6 @@ namespace hex::plugin::builtin {
         } catch (std::runtime_error &e) {
             printf("Node implementation bug! %s\n", e.what());
         }
-
     }
 
     void ViewDataProcessor::drawContent() {
@@ -268,7 +271,7 @@ namespace hex::plugin::builtin {
 
             ImNodes::BeginNodeEditor();
 
-            for (auto& node : this->m_nodes) {
+            for (auto &node : this->m_nodes) {
                 const bool hasError = this->m_currNodeError.has_value() && this->m_currNodeError->first == node;
 
                 if (hasError)
@@ -282,13 +285,19 @@ namespace hex::plugin::builtin {
 
                 node->drawNode();
 
-                for (auto& attribute : node->getAttributes()) {
+                for (auto &attribute : node->getAttributes()) {
                     ImNodesPinShape pinShape;
 
                     switch (attribute.getType()) {
-                        case dp::Attribute::Type::Integer: pinShape = ImNodesPinShape_Circle; break;
-                        case dp::Attribute::Type::Float: pinShape = ImNodesPinShape_Triangle; break;
-                        case dp::Attribute::Type::Buffer: pinShape = ImNodesPinShape_Quad; break;
+                    case dp::Attribute::Type::Integer:
+                        pinShape = ImNodesPinShape_Circle;
+                        break;
+                    case dp::Attribute::Type::Float:
+                        pinShape = ImNodesPinShape_Triangle;
+                        break;
+                    case dp::Attribute::Type::Buffer:
+                        pinShape = ImNodesPinShape_Quad;
+                        break;
                     }
 
                     if (attribute.getIOType() == dp::Attribute::IOType::In) {
@@ -354,7 +363,6 @@ namespace hex::plugin::builtin {
                         fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
                         toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
                     } while (false);
-
                 }
             }
 
@@ -368,7 +376,6 @@ namespace hex::plugin::builtin {
                     for (const int id : selectedLinks) {
                         eraseLink(id);
                     }
-
                 }
             }
 
@@ -380,12 +387,10 @@ namespace hex::plugin::builtin {
                     ImNodes::GetSelectedNodes(selectedNodes.data());
 
                     this->eraseNodes(selectedNodes);
-
                 }
             }
 
             this->processNodes();
-
         }
         ImGui::End();
     }
@@ -401,7 +406,10 @@ namespace hex::plugin::builtin {
             auto pos = ImNodes::GetNodeGridSpacePos(id);
 
             currNodeOutput["type"] = node->getUnlocalizedName();
-            currNodeOutput["pos"] = { { "x", pos.x }, { "y", pos.y } };
+            currNodeOutput["pos"] = {
+                {"x",  pos.x},
+                { "y", pos.y}
+            };
             currNodeOutput["attrs"] = json::array();
             currNodeOutput["id"] = id;
 

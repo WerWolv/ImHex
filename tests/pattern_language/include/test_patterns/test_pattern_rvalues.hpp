@@ -6,13 +6,11 @@ namespace hex::test {
 
     class TestPatternRValues : public TestPattern {
     public:
-        TestPatternRValues() : TestPattern("RValues")  {
-
+        TestPatternRValues() : TestPattern("RValues") {
         }
         ~TestPatternRValues() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 union C {
                     u8 y;
@@ -34,7 +32,6 @@ namespace hex::test {
                 std::assert(a.b.c.y == a.b.c.array[0], "RValue array access test failed!");
             )";
         }
-
     };
 
 }

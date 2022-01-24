@@ -9,14 +9,14 @@ namespace hex::plugin::builtin {
     ViewSettings::ViewSettings() : View("hex.builtin.view.settings.name") {
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
             if (name == "Settings") {
-                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 2000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.settings.name"_lang)) {
-                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });
@@ -49,7 +49,6 @@ namespace hex::plugin::builtin {
             ImGui::EndPopup();
         } else
             this->getWindowOpenState() = false;
-
     }
 
 }

@@ -26,7 +26,7 @@ namespace hex {
         this->close();
     }
 
-    File& File::operator=(File &&other) noexcept {
+    File &File::operator=(File &&other) noexcept {
         this->m_file = other.m_file;
         other.m_file = nullptr;
 
@@ -54,10 +54,10 @@ namespace hex {
     }
 
     std::vector<u8> File::readBytes(size_t numBytes) {
-        if (!isValid()) return { };
+        if (!isValid()) return {};
 
         std::vector<u8> bytes(numBytes ?: getSize());
-        auto bytesRead = fread(bytes.data(), 1,  bytes.size(), this->m_file);
+        auto bytesRead = fread(bytes.data(), 1, bytes.size(), this->m_file);
 
         bytes.resize(bytesRead);
 
@@ -65,13 +65,13 @@ namespace hex {
     }
 
     std::string File::readString(size_t numBytes) {
-        if (!isValid()) return { };
+        if (!isValid()) return {};
 
-        if (getSize() == 0) return { };
+        if (getSize() == 0) return {};
 
         auto bytes = readBytes(numBytes);
 
-        return { reinterpret_cast<char*>(bytes.data()), bytes.size() };
+        return { reinterpret_cast<char *>(bytes.data()), bytes.size() };
     }
 
     void File::write(const u8 *buffer, size_t size) {

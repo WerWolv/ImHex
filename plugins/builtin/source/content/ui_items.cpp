@@ -22,14 +22,12 @@ namespace hex::plugin::builtin {
         }
 
         ContentRegistry::Interface::addFooterItem([] {
-
             static float framerate = 0;
             if (ImGui::HasSecondPassed()) {
                 framerate = 1.0F / ImGui::GetIO().DeltaTime;
             }
 
             ImGui::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
-
         });
 
         ContentRegistry::Interface::addFooterItem([] {
@@ -58,9 +56,7 @@ namespace hex::plugin::builtin {
                 ImGui::SmallProgressBar(taskProgress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
                 ImGui::InfoTooltip(taskName.c_str());
             }
-
         });
-
     }
 
     void addToolbarItems() {
@@ -71,13 +67,15 @@ namespace hex::plugin::builtin {
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->undo();
-            }, !ImHexApi::Provider::isValid() || !provider->canUndo());
+            },
+                            !ImHexApi::Provider::isValid() || !provider->canUndo());
 
             // Redo
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->redo();
-            }, !ImHexApi::Provider::isValid() || !provider->canRedo());
+            },
+                            !ImHexApi::Provider::isValid() || !provider->canRedo());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -97,15 +95,17 @@ namespace hex::plugin::builtin {
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->save();
-            }, !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
+            },
+                            !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
 
             // Save file as
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [&provider](auto path) {
+                    hex::openFileBrowser("hex.builtin.view.hexeditor.save_as"_lang, DialogMode::Save, {}, [&provider](auto path) {
                         provider->saveAs(path);
                     });
-            }, !ImHexApi::Provider::isValid() || !provider->isSavable());
+            },
+                            !ImHexApi::Provider::isValid() || !provider->isSavable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -117,9 +117,10 @@ namespace hex::plugin::builtin {
                     Region region = { 0 };
                     EventManager::post<QuerySelection>(region);
 
-                    ImHexApi::Bookmarks::add(region.address, region.size, { }, { });
+                    ImHexApi::Bookmarks::add(region.address, region.size, {}, {});
                 }
-            }, !ImHexApi::Provider::isValid() || !provider->isReadable());
+            },
+                            !ImHexApi::Provider::isValid() || !provider->isReadable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -144,10 +145,9 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndCombo();
                 }
-
-            }, !ImHexApi::Provider::isValid());
+            },
+                            !ImHexApi::Provider::isValid());
         });
-
     }
 
 }

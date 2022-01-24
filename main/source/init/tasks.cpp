@@ -83,7 +83,7 @@ namespace hex::init {
         }
 
         if (!result)
-            getInitArguments().push_back({ "folder-creation-error", { } });
+            getInitArguments().push_back({ "folder-creation-error", {} });
 
         return result;
     }
@@ -93,7 +93,7 @@ namespace hex::init {
         auto &cfg = SharedData::fontConfig;
 
         fonts = IM_NEW(ImFontAtlas)();
-        cfg = { };
+        cfg = {};
 
         fs::path fontFile;
         for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
@@ -120,18 +120,15 @@ namespace hex::init {
         }
 
         ImWchar fontAwesomeRange[] = {
-                ICON_MIN_FA, ICON_MAX_FA,
-                0
+            ICON_MIN_FA, ICON_MAX_FA, 0
         };
 
         ImWchar codiconsRange[] = {
-                ICON_MIN_VS, ICON_MAX_VS,
-                0
+            ICON_MIN_VS, ICON_MAX_VS, 0
         };
 
         ImWchar unifontRange[] = {
-                0x0020, 0xFFF0,
-                0
+            0x0020, 0xFFF0, 0
         };
 
 
@@ -151,7 +148,7 @@ namespace hex::init {
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = fontSize * SharedData::fontScale;
 
-            fonts->AddFontFromFileTTF(fontFile.string().c_str(), std::floor(fontSize * SharedData::fontScale), &cfg, ranges.Data); // Needs conversion to char for Windows
+            fonts->AddFontFromFileTTF(fontFile.string().c_str(), std::floor(fontSize * SharedData::fontScale), &cfg, ranges.Data);    // Needs conversion to char for Windows
         }
 
         cfg.MergeMode = true;
@@ -224,7 +221,7 @@ namespace hex::init {
         if (PluginManager::getPlugins().empty()) {
             log::error("No plugins found!");
 
-            getInitArguments().push_back({ "no-plugins", { } });
+            getInitArguments().push_back({ "no-plugins", {} });
             return false;
         }
 
@@ -251,22 +248,22 @@ namespace hex::init {
         }
 
         switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                // Native scaling
-                break;
-            case 1:
-                SharedData::globalScale = SharedData::fontScale = 0.5F;
-                break;
-            case 2:
-                SharedData::globalScale = SharedData::fontScale = 1.0F;
-                break;
-            case 3:
-                SharedData::globalScale = SharedData::fontScale = 1.5F;
-                break;
-            case 4:
-                SharedData::globalScale = SharedData::fontScale = 2.0F;
-                break;
+        default:
+        case 0:
+            // Native scaling
+            break;
+        case 1:
+            SharedData::globalScale = SharedData::fontScale = 0.5F;
+            break;
+        case 2:
+            SharedData::globalScale = SharedData::fontScale = 1.0F;
+            break;
+        case 3:
+            SharedData::globalScale = SharedData::fontScale = 1.5F;
+            break;
+        case 4:
+            SharedData::globalScale = SharedData::fontScale = 2.0F;
+            break;
         }
 
         return true;
@@ -284,24 +281,24 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
-                { "Checking for updates...",    checkForUpdates     },
-                { "Downloading information...", downloadInformation },
-                { "Creating directories...",    createDirectories   },
-                { "Loading settings...",        loadSettings        },
-                { "Loading plugins...",         loadPlugins         },
-                { "Loading fonts...",           loadFonts           },
+            {"Checking for updates...",     checkForUpdates    },
+            { "Downloading information...", downloadInformation},
+            { "Creating directories...",    createDirectories  },
+            { "Loading settings...",        loadSettings       },
+            { "Loading plugins...",         loadPlugins        },
+            { "Loading fonts...",           loadFonts          },
         };
     }
 
     std::vector<Task> getExitTasks() {
         return {
-                { "Saving settings...",         storeSettings       },
-                { "Cleaning up shared data...", deleteSharedData    },
-                { "Unloading plugins...",       unloadPlugins       },
+            {"Saving settings...",          storeSettings   },
+            { "Cleaning up shared data...", deleteSharedData},
+            { "Unloading plugins...",       unloadPlugins   },
         };
     }
 
-    std::vector<Argument>& getInitArguments() {
+    std::vector<Argument> &getInitArguments() {
         static std::vector<Argument> initArguments;
 
         return initArguments;

@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    Task::Task(const std::string& unlocalizedName, u64 maxValue) : m_name(LangEntry(unlocalizedName)), m_maxValue(maxValue), m_currValue(0) {
+    Task::Task(const std::string &unlocalizedName, u64 maxValue) : m_name(LangEntry(unlocalizedName)), m_maxValue(maxValue), m_currValue(0) {
         SharedData::runningTasks.push_back(this);
     }
 
@@ -36,7 +36,7 @@ namespace hex {
         return this->m_maxValue == 0;
     }
 
-    const std::string& Task::getName() const {
+    const std::string &Task::getName() const {
         return this->m_name;
     }
 

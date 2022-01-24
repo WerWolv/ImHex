@@ -30,8 +30,8 @@ namespace hex::pl {
                 pattern = new PatternDataBoolean(0, this);
             else if (std::get_if<char>(&value.value()) != nullptr)
                 pattern = new PatternDataCharacter(0, this);
-            else if (std::get_if<PatternData*>(&value.value()) != nullptr)
-                pattern = std::get<PatternData*>(value.value())->clone();
+            else if (std::get_if<PatternData *>(&value.value()) != nullptr)
+                pattern = std::get<PatternData *>(value.value())->clone();
             else if (std::get_if<std::string>(&value.value()) != nullptr)
                 pattern = new PatternDataString(0, 1, this);
             else
@@ -49,7 +49,7 @@ namespace hex::pl {
             this->m_outVariables[name] = pattern->getOffset();
     }
 
-    void Evaluator::setVariable(const std::string &name, const Token::Literal& value) {
+    void Evaluator::setVariable(const std::string &name, const Token::Literal &value) {
         PatternData *pattern = nullptr;
 
         {
@@ -79,49 +79,48 @@ namespace hex::pl {
             LogConsole::abortEvaluation(hex::format("no variable with name '{}' found", name));
 
         Token::Literal castedLiteral = std::visit(overloaded {
-                [&](double &value) -> Token::Literal {
-                    if (dynamic_cast<PatternDataUnsigned*>(pattern))
-                        return u128(value) & bitmask(pattern->getSize() * 8);
-                    else if (dynamic_cast<PatternDataSigned*>(pattern))
-                        return i128(value) & bitmask(pattern->getSize() * 8);
-                    else if (dynamic_cast<PatternDataFloat*>(pattern))
-                        return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
-                    else
-                        LogConsole::abortEvaluation(hex::format("cannot cast type 'double' to type '{}'", pattern->getTypeName()));
-                },
-                [&](const std::string &value) -> Token::Literal {
-                    if (dynamic_cast<PatternDataString*>(pattern))
-                        return value;
-                    else
-                        LogConsole::abortEvaluation(hex::format("cannot cast type 'string' to type '{}'", pattern->getTypeName()));
-                },
-                [&](PatternData * const &value) -> Token::Literal {
-                    if (value->getTypeName() == pattern->getTypeName())
-                        return value;
-                    else
-                        LogConsole::abortEvaluation(hex::format("cannot cast type '{}' to type '{}'", value->getTypeName(), pattern->getTypeName()));
-                },
-                [&](auto &&value) -> Token::Literal {
-                    if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern))
-                        return u128(value) & bitmask(pattern->getSize() * 8);
-                    else if (dynamic_cast<PatternDataSigned*>(pattern))
-                        return i128(value) & bitmask(pattern->getSize() * 8);
-                    else if (dynamic_cast<PatternDataCharacter*>(pattern))
-                        return char(value);
-                    else if (dynamic_cast<PatternDataBoolean*>(pattern))
-                        return bool(value);
-                    else if (dynamic_cast<PatternDataFloat*>(pattern))
-                        return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
-                    else
-                        LogConsole::abortEvaluation(hex::format("cannot cast integer literal to type '{}'", pattern->getTypeName()));
-                    }
-            }, value);
+                                                      [&](double &value) -> Token::Literal {
+                                                          if (dynamic_cast<PatternDataUnsigned *>(pattern))
+                                                              return u128(value) & bitmask(pattern->getSize() * 8);
+                                                          else if (dynamic_cast<PatternDataSigned *>(pattern))
+                                                              return i128(value) & bitmask(pattern->getSize() * 8);
+                                                          else if (dynamic_cast<PatternDataFloat *>(pattern))
+                                                              return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
+                                                          else
+                                                              LogConsole::abortEvaluation(hex::format("cannot cast type 'double' to type '{}'", pattern->getTypeName()));
+                                                      },
+                                                      [&](const std::string &value) -> Token::Literal {
+                                                          if (dynamic_cast<PatternDataString *>(pattern))
+                                                              return value;
+                                                          else
+                                                              LogConsole::abortEvaluation(hex::format("cannot cast type 'string' to type '{}'", pattern->getTypeName()));
+                                                      },
+                                                      [&](PatternData *const &value) -> Token::Literal {
+                                                          if (value->getTypeName() == pattern->getTypeName())
+                                                              return value;
+                                                          else
+                                                              LogConsole::abortEvaluation(hex::format("cannot cast type '{}' to type '{}'", value->getTypeName(), pattern->getTypeName()));
+                                                      },
+                                                      [&](auto &&value) -> Token::Literal {
+                                                          if (dynamic_cast<PatternDataUnsigned *>(pattern) || dynamic_cast<PatternDataEnum *>(pattern))
+                                                              return u128(value) & bitmask(pattern->getSize() * 8);
+                                                          else if (dynamic_cast<PatternDataSigned *>(pattern))
+                                                              return i128(value) & bitmask(pattern->getSize() * 8);
+                                                          else if (dynamic_cast<PatternDataCharacter *>(pattern))
+                                                              return char(value);
+                                                          else if (dynamic_cast<PatternDataBoolean *>(pattern))
+                                                              return bool(value);
+                                                          else if (dynamic_cast<PatternDataFloat *>(pattern))
+                                                              return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
+                                                          else
+                                                              LogConsole::abortEvaluation(hex::format("cannot cast integer literal to type '{}'", pattern->getTypeName()));
+                                                      } },
+                                                  value);
 
         this->getStack()[pattern->getOffset()] = castedLiteral;
-
     }
 
-    std::optional<std::vector<PatternData*>> Evaluator::evaluate(const std::vector<ASTNode*> &ast) {
+    std::optional<std::vector<PatternData *>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
         this->m_stack.clear();
         this->m_customFunctions.clear();
         this->m_scopes.clear();
@@ -143,20 +142,20 @@ namespace hex::pl {
             delete func;
         this->m_customFunctionDefinitions.clear();
 
-        std::vector<PatternData*> patterns;
+        std::vector<PatternData *> patterns;
 
         try {
             this->setCurrentControlFlowStatement(ControlFlowStatement::None);
             pushScope(nullptr, patterns);
 
             for (auto node : ast) {
-                if (dynamic_cast<ASTNodeTypeDecl*>(node)) {
-                    ;// Don't create patterns from type declarations
-                } else if (dynamic_cast<ASTNodeFunctionCall*>(node)) {
+                if (dynamic_cast<ASTNodeTypeDecl *>(node)) {
+                    ;    // Don't create patterns from type declarations
+                } else if (dynamic_cast<ASTNodeFunctionCall *>(node)) {
                     delete node->evaluate(this);
-                } else if (dynamic_cast<ASTNodeFunctionDefinition*>(node)) {
+                } else if (dynamic_cast<ASTNodeFunctionDefinition *>(node)) {
                     this->m_customFunctionDefinitions.push_back(node->evaluate(this));
-                } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl*>(node)) {
+                } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl *>(node)) {
                     auto pattern = node->createPatterns(this).front();
 
                     if (varDeclNode->getPlacementOffset() == nullptr) {
@@ -170,9 +169,9 @@ namespace hex::pl {
                             this->setVariable(name, this->m_inVariables[name]);
 
                         delete pattern;
-                  } else {
-                    patterns.push_back(pattern);
-                  }
+                    } else {
+                        patterns.push_back(pattern);
+                    }
                 } else {
                     auto newPatterns = node->createPatterns(this);
                     std::copy(newPatterns.begin(), newPatterns.end(), std::back_inserter(patterns));
@@ -185,7 +184,7 @@ namespace hex::pl {
                 if (mainFunction.parameterCount > 0)
                     LogConsole::abortEvaluation("main function may not accept any arguments");
 
-                auto result = mainFunction.func(this, { });
+                auto result = mainFunction.func(this, {});
                 if (result) {
                     auto returnCode = Token::literalToSigned(*result);
 

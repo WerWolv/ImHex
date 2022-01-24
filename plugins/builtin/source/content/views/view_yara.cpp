@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
             } else {
-                ImGui::Disabled([this]{
+                ImGui::Disabled([this] {
                     if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
                             const bool selected = (this->m_selectedRule == i);
@@ -67,7 +67,8 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
                     if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
-                }, this->m_matching);
+                },
+                                this->m_matching);
 
                 if (this->m_matching) {
                     ImGui::SameLine();
@@ -124,7 +125,6 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
-
         }
         ImGui::End();
     }
@@ -163,25 +163,25 @@ namespace hex::plugin::builtin {
             };
 
             yr_compiler_set_include_callback(
-                    compiler,
-                    [](const char *includeName, const char *callingRuleFileName, const char *callingRuleNamespace, void *userData) -> const char * {
-                        auto currFilePath = static_cast<const char*>(userData);
+                compiler,
+                [](const char *includeName, const char *callingRuleFileName, const char *callingRuleNamespace, void *userData) -> const char * {
+                    auto currFilePath = static_cast<const char *>(userData);
 
-                        File file((fs::path(currFilePath).parent_path() / includeName).string(), File::Mode::Read);
-                        if (!file.isValid())
-                            return nullptr;
+                    File file((fs::path(currFilePath).parent_path() / includeName).string(), File::Mode::Read);
+                    if (!file.isValid())
+                        return nullptr;
 
-                        auto size = file.getSize();
-                        char *buffer = new char[size + 1];
-                        file.readBuffer(reinterpret_cast<u8*>(buffer), size);
-                        buffer[size] = 0x00;
+                    auto size = file.getSize();
+                    char *buffer = new char[size + 1];
+                    file.readBuffer(reinterpret_cast<u8 *>(buffer), size);
+                    buffer[size] = 0x00;
 
-                        return buffer;
-                    },
-                    [](const char *ptr, void *userData) {
-                        delete[] ptr;
-                    },
-                    this->m_rules[this->m_selectedRule].second.data());
+                    return buffer;
+                },
+                [](const char *ptr, void *userData) {
+                    delete[] ptr;
+                },
+                this->m_rules[this->m_selectedRule].second.data());
 
 
             File file(this->m_rules[this->m_selectedRule].second, File::Mode::Read);
@@ -210,8 +210,8 @@ namespace hex::plugin::builtin {
             ScanContext context;
             context.task = &task;
             context.currBlock.base = 0;
-            context.currBlock.fetch_data = [](auto *block) -> const u8* {
-                auto &context = *static_cast<ScanContext*>(block->context);
+            context.currBlock.fetch_data = [](auto *block) -> const u8 * {
+                auto &context = *static_cast<ScanContext *>(block->context);
 
                 auto provider = ImHexApi::Provider::get();
 
@@ -230,8 +230,8 @@ namespace hex::plugin::builtin {
             };
 
             iterator.context = &context;
-            iterator.first = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
-                auto &context = *static_cast<ScanContext*>(iterator->context);
+            iterator.first = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
+                auto &context = *static_cast<ScanContext *>(iterator->context);
 
                 context.currBlock.base = 0;
                 context.currBlock.size = 0;
@@ -240,8 +240,8 @@ namespace hex::plugin::builtin {
 
                 return iterator->next(iterator);
             };
-            iterator.next = [](YR_MEMORY_BLOCK_ITERATOR* iterator) -> YR_MEMORY_BLOCK* {
-                auto &context = *static_cast<ScanContext*>(iterator->context);
+            iterator.next = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
+                auto &context = *static_cast<ScanContext *>(iterator->context);
 
                 u64 address = context.currBlock.base + context.currBlock.size;
 
@@ -257,32 +257,33 @@ namespace hex::plugin::builtin {
             };
 
 
-            yr_rules_scan_mem_blocks(rules, &iterator, 0, [](YR_SCAN_CONTEXT* context, int message, void *data, void *userData) -> int {
-                if (message == CALLBACK_MSG_RULE_MATCHING) {
-                    auto &newMatches = *static_cast<std::vector<YaraMatch>*>(userData);
-                    auto rule  = static_cast<YR_RULE*>(data);
+            yr_rules_scan_mem_blocks(
+                rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
+                    if (message == CALLBACK_MSG_RULE_MATCHING) {
+                        auto &newMatches = *static_cast<std::vector<YaraMatch> *>(userData);
+                        auto rule = static_cast<YR_RULE *>(data);
 
-                    YR_STRING *string;
-                    YR_MATCH *match;
+                        YR_STRING *string;
+                        YR_MATCH *match;
 
-                    if (rule->strings != nullptr) {
-                        yr_rule_strings_foreach(rule, string) {
-                            yr_string_matches_foreach(context, string, match) {
-                                newMatches.push_back({ rule->identifier, string->identifier, match->offset, match->match_length, false });
+                        if (rule->strings != nullptr) {
+                            yr_rule_strings_foreach(rule, string) {
+                                yr_string_matches_foreach(context, string, match) {
+                                    newMatches.push_back({ rule->identifier, string->identifier, match->offset, match->match_length, false });
+                                }
                             }
+                        } else {
+                            newMatches.push_back({ rule->identifier, "", 0, 0, true });
                         }
-                    } else {
-                        newMatches.push_back({ rule->identifier, "", 0, 0, true });
                     }
 
-                }
-
-                return CALLBACK_CONTINUE;
-            }, &newMatches, 0);
+                    return CALLBACK_CONTINUE;
+                },
+                &newMatches,
+                0);
 
             std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
         }).detach();
-
     }
 
 }

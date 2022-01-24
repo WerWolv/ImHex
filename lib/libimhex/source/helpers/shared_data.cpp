@@ -6,20 +6,20 @@ namespace hex {
 
     std::vector<std::function<void()>> SharedData::deferredCalls;
 
-    std::vector<prv::Provider*> SharedData::providers;
+    std::vector<prv::Provider *> SharedData::providers;
     u32 SharedData::currentProvider;
 
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> SharedData::settingsEntries;
     nlohmann::json SharedData::settingsJson;
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
     std::map<std::string, ContentRegistry::PatternLanguage::Function> SharedData::patternLanguageFunctions;
-    std::map<std::string, View*> SharedData::views;
+    std::map<std::string, View *> SharedData::views;
     std::vector<ContentRegistry::Tools::impl::Entry> SharedData::toolsEntries;
     std::vector<ContentRegistry::DataInspector::impl::Entry> SharedData::dataInspectorEntries;
     u32 SharedData::patternPaletteOffset;
     std::string SharedData::popupMessage;
     std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
-    std::vector<pl::PatternData*> SharedData::patternData;
+    std::vector<pl::PatternData *> SharedData::patternData;
 
     u32 SharedData::selectableFileIndex;
     std::vector<fs::path> SharedData::selectableFiles;
@@ -37,14 +37,14 @@ namespace hex {
 
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::welcomeScreenEntries;
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::footerItems;
-    std::vector<ContentRegistry::Interface::impl::SidebarItem>  SharedData::sidebarItems;
+    std::vector<ContentRegistry::Interface::impl::SidebarItem> SharedData::sidebarItems;
     std::vector<ContentRegistry::Interface::impl::DrawCallback> SharedData::toolbarItems;
     std::vector<ContentRegistry::Interface::impl::Layout> SharedData::layouts;
 
     std::map<Shortcut, std::function<void()>> SharedData::globalShortcuts;
 
     std::mutex SharedData::tasksMutex;
-    std::list<Task*> SharedData::runningTasks;
+    std::list<Task *> SharedData::runningTasks;
 
     std::vector<std::string> SharedData::providerNames;
 

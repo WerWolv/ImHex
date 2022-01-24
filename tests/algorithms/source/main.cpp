@@ -25,9 +25,12 @@ int test(int argc, char **argv) {
 
     if (test.shouldFail) {
         switch (result) {
-            case EXIT_SUCCESS: return EXIT_FAILURE;
-            case EXIT_FAILURE: return EXIT_SUCCESS;
-            default: return result;
+        case EXIT_SUCCESS:
+            return EXIT_FAILURE;
+        case EXIT_FAILURE:
+            return EXIT_SUCCESS;
+        default:
+            return result;
         }
     } else {
         return result;

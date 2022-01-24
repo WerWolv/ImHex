@@ -13,9 +13,9 @@ namespace hex::pl {
     public:
         Validator();
 
-        bool validate(const std::vector<ASTNode*>& ast);
+        bool validate(const std::vector<ASTNode *> &ast);
 
-        const std::pair<u32, std::string>& getError() { return this->m_error; }
+        const std::pair<u32, std::string> &getError() { return this->m_error; }
 
     private:
         std::pair<u32, std::string> m_error;
@@ -25,7 +25,6 @@ namespace hex::pl {
         [[noreturn]] void throwValidateError(std::string_view error, u32 lineNumber) const {
             throw ValidatorError(lineNumber, error);
         }
-
     };
 
 }

@@ -9,10 +9,10 @@
 #include <hex/helpers/paths.hpp>
 
 #if defined(OS_MACOS)
-    #define off64_t off_t
-    #define fopen64 fopen
-    #define fseeko64 fseek
-    #define ftello64 ftell
+    #define off64_t     off_t
+    #define fopen64     fopen
+    #define fseeko64    fseek
+    #define ftello64    ftell
     #define ftruncate64 ftruncate
 #endif
 
@@ -28,12 +28,12 @@ namespace hex {
 
         explicit File(const fs::path &path, Mode mode) noexcept;
         File() noexcept;
-        File(const File&) = delete;
+        File(const File &) = delete;
         File(File &&other) noexcept;
 
         ~File();
 
-        File& operator=(File &&other) noexcept;
+        File &operator=(File &&other) noexcept;
 
 
         [[nodiscard]] bool isValid() const { return this->m_file != nullptr; }
@@ -56,7 +56,7 @@ namespace hex {
         void remove();
 
         auto getHandle() { return this->m_file; }
-        const fs::path& getPath() { return this->m_path; }
+        const fs::path &getPath() { return this->m_path; }
 
     private:
         FILE *m_file;

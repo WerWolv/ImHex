@@ -6,7 +6,7 @@ namespace hex::test {
 
     class TestPatternUnions : public TestPattern {
     public:
-        TestPatternUnions() : TestPattern("Unions")  {
+        TestPatternUnions() : TestPattern("Unions") {
             auto testUnion = create<PatternDataUnion>("TestUnion", "testUnion", 0x200, sizeof(u128), nullptr);
 
             auto array = create<PatternDataStaticArray>("s32", "array", 0x200, sizeof(i32[2]), nullptr);
@@ -19,8 +19,7 @@ namespace hex::test {
         }
         ~TestPatternUnions() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 union TestUnion {
                     s32 array[2];
@@ -30,7 +29,6 @@ namespace hex::test {
                 TestUnion testUnion @ 0x200;
             )";
         }
-
     };
 
 }

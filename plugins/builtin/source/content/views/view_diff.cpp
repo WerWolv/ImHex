@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
 
     ViewDiff::ViewDiff() : View("hex.builtin.view.diff.name") {
 
-        EventManager::subscribe<EventSettingsChanged>(this, [this]{
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
                 auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
 
@@ -34,7 +34,6 @@ namespace hex::plugin::builtin {
                     this->m_upperCaseHex = static_cast<int>(upperCaseHex);
             }
         });
-        
     }
 
     ViewDiff::~ViewDiff() {
@@ -65,7 +64,12 @@ namespace hex::plugin::builtin {
         return (color & 0x00FFFFFF) | 0x40000000;
     }
 
-    enum class DiffResult { Same, Changed, Added, Removed };
+    enum class DiffResult {
+        Same,
+        Changed,
+        Added,
+        Removed
+    };
     struct LineInfo {
         std::vector<u8> bytes;
         i64 validBytes = 0;
@@ -107,7 +111,7 @@ namespace hex::plugin::builtin {
             addressDigitCount = std::max(addressDigits, addressDigitCount);
         }
 
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
 
         auto glyphWidth = ImGui::CalcTextSize("0").x + 1;
         static auto highlightSize = ImGui::CalcTextSize("00");
@@ -133,19 +137,19 @@ namespace hex::plugin::builtin {
                 // Diff bytes
                 std::optional<u32> highlightColor;
                 switch (diffBytes(col, lineInfo[curr], lineInfo[other])) {
-                    default:
-                    case DiffResult::Same:
-                        /* No highlight */
-                        break;
-                    case DiffResult::Changed:
-                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
-                        break;
-                    case DiffResult::Added:
-                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
-                        break;
-                    case DiffResult::Removed:
-                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                        break;
+                default:
+                case DiffResult::Same:
+                    /* No highlight */
+                    break;
+                case DiffResult::Changed:
+                    highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
+                    break;
+                case DiffResult::Added:
+                    highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+                    break;
+                case DiffResult::Removed:
+                    highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                    break;
                 }
 
                 // Draw byte
@@ -165,7 +169,6 @@ namespace hex::plugin::builtin {
             }
             ImGui::TableNextColumn();
         }
-
     }
 
     void ViewDiff::drawContent() {
@@ -217,14 +220,13 @@ namespace hex::plugin::builtin {
                         for (u64 row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
-                            drawDiffLine({this->m_providerA, this->m_providerB}, row);
+                            drawDiffLine({ this->m_providerA, this->m_providerB }, row);
                         }
                     }
                 }
                 ImGui::EndTable();
             }
             ImGui::PopStyleVar();
-
         }
         ImGui::End();
     }

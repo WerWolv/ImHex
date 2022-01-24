@@ -16,7 +16,7 @@ namespace hex {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
-    std::vector<std::function<void()>>& View::getDeferedCalls() {
+    std::vector<std::function<void()>> &View::getDeferedCalls() {
         return SharedData::deferredCalls;
     }
 
@@ -133,15 +133,15 @@ namespace hex {
     }
 
 
-    bool& View::getWindowOpenState() {
+    bool &View::getWindowOpenState() {
         return this->m_windowOpen;
     }
 
-    const bool& View::getWindowOpenState() const {
+    const bool &View::getWindowOpenState() const {
         return this->m_windowOpen;
     }
 
-    const std::string& View::getUnlocalizedName() const {
+    const std::string &View::getUnlocalizedName() const {
         return this->m_unlocalizedViewName;
     }
 

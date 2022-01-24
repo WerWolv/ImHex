@@ -20,8 +20,8 @@
 
 #include <nfd.hpp>
 
-#define TOKEN_CONCAT_IMPL(x, y) x ## y
-#define TOKEN_CONCAT(x, y) TOKEN_CONCAT_IMPL(x, y)
+#define TOKEN_CONCAT_IMPL(x, y)    x##y
+#define TOKEN_CONCAT(x, y)         TOKEN_CONCAT_IMPL(x, y)
 #define ANONYMOUS_VARIABLE(prefix) TOKEN_CONCAT(prefix, __COUNTER__)
 
 struct ImVec2;
@@ -50,7 +50,7 @@ namespace hex {
 
     [[nodiscard]] inline u64 extract(u32 from, u32 to, const std::vector<u8> &bytes) {
         u8 index = 0;
-        while(from > 32 && to > 32) {
+        while (from > 32 && to > 32) {
             if (from - 8 < 0 || to - 8 < 0)
                 return 0;
 
@@ -71,17 +71,24 @@ namespace hex {
         return (value ^ mask) - mask;
     }
 
-    template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-    template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+    template<class... Ts>
+    struct overloaded : Ts... { using Ts::operator()...; };
+    template<class... Ts>
+    overloaded(Ts...) -> overloaded<Ts...>;
 
     template<size_t Size>
     struct SizeTypeImpl { };
 
-    template<> struct SizeTypeImpl<1>  { using Type = u8;   };
-    template<> struct SizeTypeImpl<2>  { using Type = u16;  };
-    template<> struct SizeTypeImpl<4>  { using Type = u32;  };
-    template<> struct SizeTypeImpl<8>  { using Type = u64;  };
-    template<> struct SizeTypeImpl<16> { using Type = u128; };
+    template<>
+    struct SizeTypeImpl<1> { using Type = u8; };
+    template<>
+    struct SizeTypeImpl<2> { using Type = u16; };
+    template<>
+    struct SizeTypeImpl<4> { using Type = u32; };
+    template<>
+    struct SizeTypeImpl<8> { using Type = u64; };
+    template<>
+    struct SizeTypeImpl<16> { using Type = u128; };
 
     template<size_t Size>
     using SizeType = typename SizeTypeImpl<Size>::Type;
@@ -99,15 +106,26 @@ namespace hex {
         SizeType<Size> swapped;
 
         if constexpr (!std::has_single_bit(Size) || Size > 16)
-                static_assert(always_false<T>::value, "Invalid type provided!");
+            static_assert(always_false<T>::value, "Invalid type provided!");
 
         switch (Size) {
-            case 1:  swapped = unswapped; break;
-            case 2:  swapped = __builtin_bswap16(unswapped); break;
-            case 4:  swapped = __builtin_bswap32(unswapped); break;
-            case 8:  swapped = __builtin_bswap64(unswapped); break;
-            case 16: swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64); break;
-            default: __builtin_unreachable();
+        case 1:
+            swapped = unswapped;
+            break;
+        case 2:
+            swapped = __builtin_bswap16(unswapped);
+            break;
+        case 4:
+            swapped = __builtin_bswap32(unswapped);
+            break;
+        case 8:
+            swapped = __builtin_bswap64(unswapped);
+            break;
+        case 16:
+            swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
+            break;
+        default:
+            __builtin_unreachable();
         }
 
         T result;
@@ -116,8 +134,7 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]]
-    constexpr u128 bitmask(u8 bits) {
+    [[nodiscard]] constexpr u128 bitmask(u8 bits) {
         return u128(-1) >> (128 - bits);
     }
 
@@ -132,12 +149,23 @@ namespace hex {
         u128 swapped;
 
         switch (size) {
-            case 1:  swapped = unswapped; break;
-            case 2:  swapped = __builtin_bswap16(unswapped); break;
-            case 4:  swapped = __builtin_bswap32(unswapped); break;
-            case 8:  swapped = __builtin_bswap64(unswapped); break;
-            case 16: swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64); break;
-            default: __builtin_unreachable();
+        case 1:
+            swapped = unswapped;
+            break;
+        case 2:
+            swapped = __builtin_bswap16(unswapped);
+            break;
+        case 4:
+            swapped = __builtin_bswap32(unswapped);
+            break;
+        case 8:
+            swapped = __builtin_bswap64(unswapped);
+            break;
+        case 16:
+            swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
+            break;
+        default:
+            __builtin_unreachable();
         }
 
         T result = 0;
@@ -146,7 +174,7 @@ namespace hex {
         return result;
     }
 
-    template< class T >
+    template<class T>
     constexpr T bit_width(T x) noexcept {
         return std::numeric_limits<T>::digits - std::countl_zero(x);
     }
@@ -176,12 +204,12 @@ namespace hex {
         auto byteString = std::string(string);
         byteString.erase(std::remove(byteString.begin(), byteString.end(), ' '), byteString.end());
 
-        if ((byteString.length() % 2) != 0) return { };
+        if ((byteString.length() % 2) != 0) return {};
 
         std::vector<u8> result;
         for (u32 i = 0; i < byteString.length(); i += 2) {
             if (!std::isxdigit(byteString[i]) || !std::isxdigit(byteString[i + 1]))
-                return { };
+                return {};
 
             result.push_back(std::strtoul(byteString.substr(i, 2).c_str(), nullptr, 16));
         }
@@ -201,14 +229,15 @@ namespace hex {
 
     inline void trimLeft(std::string &s) {
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-            return !std::isspace(ch) && ch >= 0x20;
-        }));
+                    return !std::isspace(ch) && ch >= 0x20;
+                }));
     }
 
-     inline void trimRight(std::string &s) {
+    inline void trimRight(std::string &s) {
         s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-            return !std::isspace(ch) && ch >= 0x20;
-        }).base(), s.end());
+                    return !std::isspace(ch) && ch >= 0x20;
+                }).base(),
+                s.end());
     }
 
     inline void trim(std::string &s) {
@@ -233,14 +262,14 @@ namespace hex {
     }
 
     inline bool containsIgnoreCase(const std::string &a, const std::string &b) {
-        auto iter = std::search(a.begin(), a.end(), b.begin(),   b.end(), [](char ch1, char ch2) {
+        auto iter = std::search(a.begin(), a.end(), b.begin(), b.end(), [](char ch1, char ch2) {
             return std::toupper(ch1) == std::toupper(ch2);
         });
 
         return iter != a.end();
     }
 
-    template<typename T, typename ... VariantTypes>
+    template<typename T, typename... VariantTypes>
     T get_or(const std::variant<VariantTypes...> &variant, T alt) {
         const T *value = std::get_if<T>(&variant);
         if (value == nullptr)
@@ -253,30 +282,33 @@ namespace hex {
 
     namespace scope_guard {
 
-        #define SCOPE_GUARD ::hex::scope_guard::ScopeGuardOnExit() + [&]()
-        #define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
+#define SCOPE_GUARD   ::hex::scope_guard::ScopeGuardOnExit() + [&]()
+#define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
 
         template<class F>
         class ScopeGuard {
         private:
             F m_func;
             bool m_active;
+
         public:
             constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
-            ~ScopeGuard() { if (this->m_active) { this->m_func(); } }
+            ~ScopeGuard() {
+                if (this->m_active) { this->m_func(); }
+            }
             void release() { this->m_active = false; }
 
             ScopeGuard(ScopeGuard &&other) noexcept : m_func(std::move(other.m_func)), m_active(other.m_active) {
                 other.cancel();
             }
 
-            ScopeGuard& operator=(ScopeGuard &&) = delete;
+            ScopeGuard &operator=(ScopeGuard &&) = delete;
         };
 
         enum class ScopeGuardOnExit { };
 
-        template <typename F>
-        constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F&& f) {
+        template<typename F>
+        constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F &&f) {
             return ScopeGuard<F>(std::forward<F>(f));
         }
 
@@ -284,20 +316,20 @@ namespace hex {
 
     namespace first_time_exec {
 
-        #define FIRST_TIME static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
+#define FIRST_TIME static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
 
         template<class F>
         class FirstTimeExecute {
         public:
             constexpr FirstTimeExecute(F func) { func(); }
 
-            FirstTimeExecute& operator=(FirstTimeExecute &&) = delete;
+            FirstTimeExecute &operator=(FirstTimeExecute &&) = delete;
         };
 
         enum class FirstTimeExecutor { };
 
-        template <typename F>
-        constexpr FirstTimeExecute<F> operator+(FirstTimeExecutor, F&& f) {
+        template<typename F>
+        constexpr FirstTimeExecute<F> operator+(FirstTimeExecutor, F &&f) {
             return FirstTimeExecute<F>(std::forward<F>(f));
         }
 
@@ -305,22 +337,23 @@ namespace hex {
 
     namespace final_cleanup {
 
-        #define FINAL_CLEANUP static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
+#define FINAL_CLEANUP static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
 
         template<class F>
         class FinalCleanupExecute {
             F m_func;
+
         public:
             constexpr FinalCleanupExecute(F func) : m_func(func) { }
             constexpr ~FinalCleanupExecute() { this->m_func(); }
 
-            FinalCleanupExecute& operator=(FinalCleanupExecute &&) = delete;
+            FinalCleanupExecute &operator=(FinalCleanupExecute &&) = delete;
         };
 
         enum class FinalCleanupExecutor { };
 
-        template <typename F>
-        constexpr FinalCleanupExecute<F> operator+(FinalCleanupExecutor, F&& f) {
+        template<typename F>
+        constexpr FinalCleanupExecute<F> operator+(FinalCleanupExecutor, F &&f) {
             return FinalCleanupExecute<F>(std::forward<F>(f));
         }
 

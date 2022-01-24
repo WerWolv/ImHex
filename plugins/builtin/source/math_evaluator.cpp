@@ -11,7 +11,7 @@
 
 namespace hex {
 
-    i16 comparePrecedence(const Operator& a, const Operator& b) {
+    i16 comparePrecedence(const Operator &a, const Operator &b) {
         return (static_cast<i8>(a) & 0x0F0) - (static_cast<i8>(b) & 0x0F0);
     }
 
@@ -20,30 +20,30 @@ namespace hex {
     }
 
     std::pair<Operator, size_t> toOperator(std::string input) {
-        if (input.starts_with("##"))  return { Operator::Combine,               2 };
-        if (input.starts_with("=="))  return { Operator::Equals,                2 };
-        if (input.starts_with("!="))  return { Operator::NotEquals,             2 };
-        if (input.starts_with(">="))  return { Operator::GreaterThanOrEquals,   2 };
-        if (input.starts_with("<="))  return { Operator::LessThanOrEquals,      2 };
-        if (input.starts_with(">>"))  return { Operator::ShiftRight,            2 };
-        if (input.starts_with("<<"))  return { Operator::ShiftLeft,             2 };
-        if (input.starts_with("||"))  return { Operator::Or,                    2 };
-        if (input.starts_with("^^"))  return { Operator::Xor,                   2 };
-        if (input.starts_with("&&"))  return { Operator::And,                   2 };
-        if (input.starts_with("**"))  return { Operator::Exponentiation,        2 };
-        if (input.starts_with(">"))   return { Operator::GreaterThan,           1 };
-        if (input.starts_with("<"))   return { Operator::LessThan,              1 };
-        if (input.starts_with("!"))   return { Operator::Not,                   1 };
-        if (input.starts_with("|"))   return { Operator::BitwiseOr,             1 };
-        if (input.starts_with("^"))   return { Operator::BitwiseXor,            1 };
-        if (input.starts_with("&"))   return { Operator::BitwiseAnd,            1 };
-        if (input.starts_with("~"))   return { Operator::BitwiseNot,            1 };
-        if (input.starts_with("+"))   return { Operator::Addition,              1 };
-        if (input.starts_with("-"))   return { Operator::Subtraction,           1 };
-        if (input.starts_with("*"))   return { Operator::Multiplication,        1 };
-        if (input.starts_with("/"))   return { Operator::Division,              1 };
-        if (input.starts_with("%"))   return { Operator::Modulus,               1 };
-        if (input.starts_with("="))   return { Operator::Assign,                1 };
+        if (input.starts_with("##")) return { Operator::Combine, 2 };
+        if (input.starts_with("==")) return { Operator::Equals, 2 };
+        if (input.starts_with("!=")) return { Operator::NotEquals, 2 };
+        if (input.starts_with(">=")) return { Operator::GreaterThanOrEquals, 2 };
+        if (input.starts_with("<=")) return { Operator::LessThanOrEquals, 2 };
+        if (input.starts_with(">>")) return { Operator::ShiftRight, 2 };
+        if (input.starts_with("<<")) return { Operator::ShiftLeft, 2 };
+        if (input.starts_with("||")) return { Operator::Or, 2 };
+        if (input.starts_with("^^")) return { Operator::Xor, 2 };
+        if (input.starts_with("&&")) return { Operator::And, 2 };
+        if (input.starts_with("**")) return { Operator::Exponentiation, 2 };
+        if (input.starts_with(">")) return { Operator::GreaterThan, 1 };
+        if (input.starts_with("<")) return { Operator::LessThan, 1 };
+        if (input.starts_with("!")) return { Operator::Not, 1 };
+        if (input.starts_with("|")) return { Operator::BitwiseOr, 1 };
+        if (input.starts_with("^")) return { Operator::BitwiseXor, 1 };
+        if (input.starts_with("&")) return { Operator::BitwiseAnd, 1 };
+        if (input.starts_with("~")) return { Operator::BitwiseNot, 1 };
+        if (input.starts_with("+")) return { Operator::Addition, 1 };
+        if (input.starts_with("-")) return { Operator::Subtraction, 1 };
+        if (input.starts_with("*")) return { Operator::Multiplication, 1 };
+        if (input.starts_with("/")) return { Operator::Division, 1 };
+        if (input.starts_with("%")) return { Operator::Modulus, 1 };
+        if (input.starts_with("=")) return { Operator::Assign, 1 };
 
         return { Operator::Invalid, 0 };
     }
@@ -51,7 +51,7 @@ namespace hex {
     std::queue<Token> MathEvaluator::parseInput(const char *input) {
         std::queue<Token> inputQueue;
 
-        char *prevPos = const_cast<char*>(input);
+        char *prevPos = const_cast<char *>(input);
         for (char *pos = prevPos; *pos != 0x00;) {
             if (std::isdigit(*pos) || *pos == '.') {
                 auto number = std::strtold(pos, &pos);
@@ -61,12 +61,12 @@ namespace hex {
                     number = std::strtoull(pos, &pos, 0);
                 }
 
-                inputQueue.push(Token{ .type = TokenType::Number, .number = number });
+                inputQueue.push(Token { .type = TokenType::Number, .number = number });
             } else if (*pos == '(') {
-                inputQueue.push(Token{ .type = TokenType::Bracket, .bracketType = BracketType::Left});
+                inputQueue.push(Token { .type = TokenType::Bracket, .bracketType = BracketType::Left });
                 pos++;
             } else if (*pos == ')') {
-                inputQueue.push(Token{ .type = TokenType::Bracket, .bracketType = BracketType::Right});
+                inputQueue.push(Token { .type = TokenType::Bracket, .bracketType = BracketType::Right });
                 pos++;
             } else if (std::isspace(*pos)) {
                 pos++;
@@ -74,7 +74,7 @@ namespace hex {
                 auto [op, width] = toOperator(pos);
 
                 if (op != Operator::Invalid) {
-                    inputQueue.push(Token{ .type = TokenType::Operator, .op = op });
+                    inputQueue.push(Token { .type = TokenType::Operator, .op = op });
                     pos += width;
                 } else {
                     Token token;
@@ -134,8 +134,6 @@ namespace hex {
                         inputQueue.push(token);
                     }
                 }
-
-
             }
 
             if (prevPos == pos)
@@ -158,9 +156,7 @@ namespace hex {
             if (currToken.type == TokenType::Number || currToken.type == TokenType::Variable || currToken.type == TokenType::Function)
                 outputQueue.push(currToken);
             else if (currToken.type == TokenType::Operator) {
-                while ((!operatorStack.empty())
-                       && (operatorStack.top().type == TokenType::Operator && currToken.type == TokenType::Operator && (comparePrecedence(operatorStack.top().op, currToken.op) > 0) || (comparePrecedence(operatorStack.top().op, currToken.op) == 0 && isLeftAssociative(currToken.op)))
-                       && operatorStack.top().type != TokenType::Bracket) {
+                while ((!operatorStack.empty()) && (operatorStack.top().type == TokenType::Operator && currToken.type == TokenType::Operator && (comparePrecedence(operatorStack.top().op, currToken.op) > 0) || (comparePrecedence(operatorStack.top().op, currToken.op) == 0 && isLeftAssociative(currToken.op))) && operatorStack.top().type != TokenType::Bracket) {
                     outputQueue.push(operatorStack.top());
                     operatorStack.pop();
                 }
@@ -211,89 +207,91 @@ namespace hex {
                 long double rightOperand, leftOperand;
                 if (evaluationStack.size() < 2) {
                     if ((front.op == Operator::Addition || front.op == Operator::Subtraction || front.op == Operator::Not || front.op == Operator::BitwiseNot) && evaluationStack.size() == 1) {
-                        rightOperand = evaluationStack.top(); evaluationStack.pop();
+                        rightOperand = evaluationStack.top();
+                        evaluationStack.pop();
                         leftOperand = 0;
-                    }
-                    else throw std::invalid_argument("Not enough operands for operator!");
+                    } else throw std::invalid_argument("Not enough operands for operator!");
                 } else {
-                    rightOperand = evaluationStack.top(); evaluationStack.pop();
-                    leftOperand = evaluationStack.top(); evaluationStack.pop();
+                    rightOperand = evaluationStack.top();
+                    evaluationStack.pop();
+                    leftOperand = evaluationStack.top();
+                    evaluationStack.pop();
                 }
 
                 long double result = std::numeric_limits<long double>::quiet_NaN();
                 switch (front.op) {
-                    default:
-                    case Operator::Invalid:
-                        throw std::invalid_argument("Invalid operator!");
-                    case Operator::And:
-                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::Or:
-                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::Xor:
-                        result = (static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand)) > 0;
-                        break;
-                    case Operator::GreaterThan:
-                        result = leftOperand > rightOperand;
-                        break;
-                    case Operator::LessThan:
-                        result = leftOperand < rightOperand;
-                        break;
-                    case Operator::GreaterThanOrEquals:
-                        result = leftOperand >= rightOperand;
-                        break;
-                    case Operator::LessThanOrEquals:
-                        result = leftOperand <= rightOperand;
-                        break;
-                    case Operator::Equals:
-                        result = leftOperand == rightOperand;
-                        break;
-                    case Operator::NotEquals:
-                        result = leftOperand != rightOperand;
-                        break;
-                    case Operator::Not:
-                        result = !static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::BitwiseOr:
-                        result = static_cast<i64>(leftOperand) | static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::BitwiseXor:
-                        result = static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::BitwiseAnd:
-                        result = static_cast<i64>(leftOperand) & static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::BitwiseNot:
-                        result = ~static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::ShiftLeft:
-                        result = static_cast<i64>(leftOperand) << static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::ShiftRight:
-                        result = static_cast<i64>(leftOperand) >> static_cast<i64>(rightOperand);
-                        break;
-                    case Operator::Addition:
-                        result = leftOperand + rightOperand;
-                        break;
-                    case Operator::Subtraction:
-                        result = leftOperand - rightOperand;
-                        break;
-                    case Operator::Multiplication:
-                        result = leftOperand * rightOperand;
-                        break;
-                    case Operator::Division:
-                        result = leftOperand / rightOperand;
-                        break;
-                    case Operator::Modulus:
-                        result = std::fmod(leftOperand, rightOperand);
-                        break;
-                    case Operator::Exponentiation:
-                        result = std::pow(leftOperand, rightOperand);
-                        break;
-                    case Operator::Combine:
-                        result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
-                        break;
+                default:
+                case Operator::Invalid:
+                    throw std::invalid_argument("Invalid operator!");
+                case Operator::And:
+                    result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
+                    break;
+                case Operator::Or:
+                    result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
+                    break;
+                case Operator::Xor:
+                    result = (static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand)) > 0;
+                    break;
+                case Operator::GreaterThan:
+                    result = leftOperand > rightOperand;
+                    break;
+                case Operator::LessThan:
+                    result = leftOperand < rightOperand;
+                    break;
+                case Operator::GreaterThanOrEquals:
+                    result = leftOperand >= rightOperand;
+                    break;
+                case Operator::LessThanOrEquals:
+                    result = leftOperand <= rightOperand;
+                    break;
+                case Operator::Equals:
+                    result = leftOperand == rightOperand;
+                    break;
+                case Operator::NotEquals:
+                    result = leftOperand != rightOperand;
+                    break;
+                case Operator::Not:
+                    result = !static_cast<i64>(rightOperand);
+                    break;
+                case Operator::BitwiseOr:
+                    result = static_cast<i64>(leftOperand) | static_cast<i64>(rightOperand);
+                    break;
+                case Operator::BitwiseXor:
+                    result = static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand);
+                    break;
+                case Operator::BitwiseAnd:
+                    result = static_cast<i64>(leftOperand) & static_cast<i64>(rightOperand);
+                    break;
+                case Operator::BitwiseNot:
+                    result = ~static_cast<i64>(rightOperand);
+                    break;
+                case Operator::ShiftLeft:
+                    result = static_cast<i64>(leftOperand) << static_cast<i64>(rightOperand);
+                    break;
+                case Operator::ShiftRight:
+                    result = static_cast<i64>(leftOperand) >> static_cast<i64>(rightOperand);
+                    break;
+                case Operator::Addition:
+                    result = leftOperand + rightOperand;
+                    break;
+                case Operator::Subtraction:
+                    result = leftOperand - rightOperand;
+                    break;
+                case Operator::Multiplication:
+                    result = leftOperand * rightOperand;
+                    break;
+                case Operator::Division:
+                    result = leftOperand / rightOperand;
+                    break;
+                case Operator::Modulus:
+                    result = std::fmod(leftOperand, rightOperand);
+                    break;
+                case Operator::Exponentiation:
+                    result = std::pow(leftOperand, rightOperand);
+                    break;
+                case Operator::Combine:
+                    result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
+                    break;
                 }
 
                 evaluationStack.push(result);
@@ -312,11 +310,10 @@ namespace hex {
                     evaluationStack.push(result.value());
             } else
                 throw std::invalid_argument("Parenthesis in postfix expression!");
-
         }
 
         if (evaluationStack.empty())
-            return { };
+            return {};
         else if (evaluationStack.size() > 1)
             throw std::invalid_argument("Undigested input left!");
         else
@@ -373,18 +370,29 @@ namespace hex {
     }
 
     void MathEvaluator::registerStandardFunctions() {
-        this->setFunction("sin",   [](auto args){ return std::sin(args[0]); }, 1, 1);
-        this->setFunction("cos",   [](auto args){ return std::cos(args[0]); }, 1, 1);
-        this->setFunction("tan",   [](auto args){ return std::tan(args[0]); }, 1, 1);
-        this->setFunction("sqrt",  [](auto args){ return std::sqrt(args[0]); }, 1, 1);
-        this->setFunction("ceil",  [](auto args){ return std::ceil(args[0]); }, 1, 1);
-        this->setFunction("floor", [](auto args){ return std::floor(args[0]); }, 1, 1);
-        this->setFunction("sign",  [](auto args){ return (args[0] > 0) ? 1 : (args[0] == 0) ? 0 : -1; }, 1, 1);
-        this->setFunction("abs",   [](auto args){ return std::abs(args[0]); }, 1, 1);
-        this->setFunction("ln",    [](auto args){ return std::log(args[0]); }, 1, 1);
-        this->setFunction("lb",    [](auto args){ return std::log2(args[0]); }, 1, 1);
-        this->setFunction("log",   [](auto args){ return args.size() == 1 ? std::log10(args[0]) : std::log(args[1]) / std::log(args[0]); }, 1, 2);
+        this->setFunction(
+            "sin", [](auto args) { return std::sin(args[0]); }, 1, 1);
+        this->setFunction(
+            "cos", [](auto args) { return std::cos(args[0]); }, 1, 1);
+        this->setFunction(
+            "tan", [](auto args) { return std::tan(args[0]); }, 1, 1);
+        this->setFunction(
+            "sqrt", [](auto args) { return std::sqrt(args[0]); }, 1, 1);
+        this->setFunction(
+            "ceil", [](auto args) { return std::ceil(args[0]); }, 1, 1);
+        this->setFunction(
+            "floor", [](auto args) { return std::floor(args[0]); }, 1, 1);
+        this->setFunction(
+            "sign", [](auto args) { return (args[0] > 0) ? 1 : (args[0] == 0) ? 0
+                                                                              : -1; }, 1, 1);
+        this->setFunction(
+            "abs", [](auto args) { return std::abs(args[0]); }, 1, 1);
+        this->setFunction(
+            "ln", [](auto args) { return std::log(args[0]); }, 1, 1);
+        this->setFunction(
+            "lb", [](auto args) { return std::log2(args[0]); }, 1, 1);
+        this->setFunction(
+            "log", [](auto args) { return args.size() == 1 ? std::log10(args[0]) : std::log(args[1]) / std::log(args[0]); }, 1, 2);
     }
 
 }
-

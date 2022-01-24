@@ -8,19 +8,17 @@ namespace hex::pl {
         this->m_consoleLog.emplace_back(level, message);
     }
 
-    [[noreturn]]
-    void LogConsole::abortEvaluation(const std::string &message) {
+    [[noreturn]] void LogConsole::abortEvaluation(const std::string &message) {
         throw EvaluateError(0, message);
     }
 
-    [[noreturn]]
-    void LogConsole::abortEvaluation(const std::string &message, const ASTNode *node) {
-        throw EvaluateError(static_cast<const ASTNode*>(node)->getLineNumber(), message);
+    [[noreturn]] void LogConsole::abortEvaluation(const std::string &message, const ASTNode *node) {
+        throw EvaluateError(static_cast<const ASTNode *>(node)->getLineNumber(), message);
     }
 
     void LogConsole::clear() {
         this->m_consoleLog.clear();
-        this->m_lastHardError = { };
+        this->m_lastHardError = {};
     }
 
 }

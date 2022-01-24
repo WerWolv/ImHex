@@ -20,7 +20,8 @@ namespace hex::dp {
         };
 
         enum class IOType {
-            In, Out
+            In,
+            Out
         };
 
         Attribute(IOType ioType, Type type, std::string unlocalizedName);
@@ -31,21 +32,22 @@ namespace hex::dp {
 
         [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
-        [[nodiscard]] const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
+        [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
 
         void addConnectedAttribute(u32 linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
         void removeConnectedAttribute(u32 linkId) { this->m_connectedAttributes.erase(linkId); }
-        [[nodiscard]] std::map<u32, Attribute*>& getConnectedAttributes() { return this->m_connectedAttributes; }
+        [[nodiscard]] std::map<u32, Attribute *> &getConnectedAttributes() { return this->m_connectedAttributes; }
 
-        [[nodiscard]] Node* getParentNode() { return this->m_parentNode; }
+        [[nodiscard]] Node *getParentNode() { return this->m_parentNode; }
 
-        [[nodiscard]] std::optional<std::vector<u8>>& getOutputData() { return this->m_outputData; }
+        [[nodiscard]] std::optional<std::vector<u8>> &getOutputData() { return this->m_outputData; }
+
     private:
         u32 m_id;
         IOType m_ioType;
         Type m_type;
         std::string m_unlocalizedName;
-        std::map<u32, Attribute*> m_connectedAttributes;
+        std::map<u32, Attribute *> m_connectedAttributes;
         Node *m_parentNode = nullptr;
 
         std::optional<std::vector<u8>> m_outputData;

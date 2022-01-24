@@ -20,9 +20,15 @@ namespace hex {
 
     class View;
     class LanguageDefinition;
-    namespace pl { class Evaluator; }
-    namespace dp { class Node; }
-    namespace prv { class Provider; }
+    namespace pl {
+        class Evaluator;
+    }
+    namespace dp {
+        class Node;
+    }
+    namespace prv {
+        class Provider;
+    }
 
     /*
         The Content Registry is the heart of all features in ImHex that are in some way extendable by Plugins.
@@ -33,7 +39,7 @@ namespace hex {
 
         /* Settings Registry. Allows adding of new entries into the ImHex preferences window. */
         namespace Settings {
-            using Callback = std::function<bool(const std::string&, nlohmann::json&)>;
+            using Callback = std::function<bool(const std::string &, nlohmann::json &)>;
 
             struct Entry {
                 std::string name;
@@ -48,15 +54,15 @@ namespace hex {
 
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value);
+            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value);
 
             i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue);
             std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
-            std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue = { });
+            std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue = {});
 
-            std::map<std::string, std::vector<Entry>>& getEntries();
+            std::map<std::string, std::vector<Entry>> &getEntries();
             nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
-            nlohmann::json& getSettingsData();
+            nlohmann::json &getSettingsData();
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
@@ -78,20 +84,21 @@ namespace hex {
                 ExecuteCallback executeCallback;
             };
 
-            void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto){});
-            std::vector<Entry>& getEntries();
+            void add(
+                Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto) {});
+            std::vector<Entry> &getEntries();
         }
 
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         namespace PatternLanguage {
 
-            constexpr static u32 UnlimitedParameters   = 0xFFFF'FFFF;
-            constexpr static u32 MoreParametersThan    = 0x8000'0000;
-            constexpr static u32 LessParametersThan    = 0x4000'0000;
-            constexpr static u32 NoParameters          = 0x0000'0000;
+            constexpr static u32 UnlimitedParameters = 0xFFFF'FFFF;
+            constexpr static u32 MoreParametersThan = 0x8000'0000;
+            constexpr static u32 LessParametersThan = 0x4000'0000;
+            constexpr static u32 NoParameters = 0x0000'0000;
 
             using Namespace = std::vector<std::string>;
-            using Callback = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator*, const std::vector<hex::pl::Token::Literal>&)>;
+            using Callback = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator *, const std::vector<hex::pl::Token::Literal> &)>;
 
             struct Function {
                 u32 parameterCount;
@@ -101,7 +108,7 @@ namespace hex {
 
             void addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
             void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
-            std::map<std::string, ContentRegistry::PatternLanguage::Function>& getFunctions();
+            std::map<std::string, ContentRegistry::PatternLanguage::Function> &getFunctions();
         }
 
         /* View Registry. Allows adding of new windows */
@@ -113,14 +120,14 @@ namespace hex {
 
             }
 
-            template<hex::derived_from<View> T, typename ... Args>
-            void add(Args&& ... args) {
+            template<hex::derived_from<View> T, typename... Args>
+            void add(Args &&...args) {
                 return impl::add(new T(std::forward<Args>(args)...));
             }
 
-            std::map<std::string, View*>& getEntries();
+            std::map<std::string, View *> &getEntries();
 
-            View* getViewByName(const std::string &unlocalizedName);
+            View *getViewByName(const std::string &unlocalizedName);
 
         }
 
@@ -140,7 +147,7 @@ namespace hex {
 
             void add(const std::string &unlocalizedName, const impl::Callback &function);
 
-            std::vector<impl::Entry>& getEntries();
+            std::vector<impl::Entry> &getEntries();
         }
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
@@ -155,7 +162,7 @@ namespace hex {
             namespace impl {
 
                 using DisplayFunction = std::function<std::string()>;
-                using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8>&, std::endian, NumberDisplayStyle)>;
+                using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8> &, std::endian, NumberDisplayStyle)>;
 
                 struct Entry {
                     std::string unlocalizedName;
@@ -167,7 +174,7 @@ namespace hex {
 
             void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction function);
 
-            std::vector<impl::Entry>& getEntries();
+            std::vector<impl::Entry> &getEntries();
         }
 
         /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
@@ -175,7 +182,7 @@ namespace hex {
 
             namespace impl {
 
-                using CreatorFunction = std::function<dp::Node*()>;
+                using CreatorFunction = std::function<dp::Node *()>;
 
                 struct Entry {
                     std::string category;
@@ -188,20 +195,18 @@ namespace hex {
             }
 
 
-            template<hex::derived_from<dp::Node> T, typename ... Args>
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args&& ... args) {
-                add(impl::Entry{ unlocalizedCategory.c_str(), unlocalizedName.c_str(),
-                   [=]{
-                        auto node = new T(std::forward<Args>(args)...);
-                        node->setUnlocalizedName(unlocalizedName);
-                        return node;
-                   }
-                });
+            template<hex::derived_from<dp::Node> T, typename... Args>
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args &&...args) {
+                add(impl::Entry { unlocalizedCategory.c_str(), unlocalizedName.c_str(), [=] {
+                                     auto node = new T(std::forward<Args>(args)...);
+                                     node->setUnlocalizedName(unlocalizedName);
+                                     return node;
+                                 } });
             }
 
             void addSeparator();
 
-            std::vector<impl::Entry>& getEntries();
+            std::vector<impl::Entry> &getEntries();
 
         }
 
@@ -210,8 +215,8 @@ namespace hex {
             void registerLanguage(const std::string &name, const std::string &languageCode);
             void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition);
 
-            std::map<std::string, std::string>& getLanguages();
-            std::map<std::string, std::vector<LanguageDefinition>>& getLanguageDefinitions();
+            std::map<std::string, std::string> &getLanguages();
+            std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions();
         }
 
         /* Interface Registry. Allows adding new items to various interfaces */
@@ -255,15 +260,15 @@ namespace hex {
 
             void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function);
 
-            std::multimap<u32, impl::MainMenuItem>& getMainMenuItems();
-            std::multimap<u32, impl::MenuItem>& getMenuItems();
+            std::multimap<u32, impl::MainMenuItem> &getMainMenuItems();
+            std::multimap<u32, impl::MenuItem> &getMenuItems();
 
-            std::vector<impl::DrawCallback>& getWelcomeScreenEntries();
-            std::vector<impl::DrawCallback>& getFooterItems();
-            std::vector<impl::DrawCallback>& getToolbarItems();
-            std::vector<impl::SidebarItem>&  getSidebarItems();
+            std::vector<impl::DrawCallback> &getWelcomeScreenEntries();
+            std::vector<impl::DrawCallback> &getFooterItems();
+            std::vector<impl::DrawCallback> &getToolbarItems();
+            std::vector<impl::SidebarItem> &getSidebarItems();
 
-            std::vector<impl::Layout>& getLayouts();
+            std::vector<impl::Layout> &getLayouts();
         }
 
         /* Provider Registry. Allows adding new data providers to be created from the UI */
@@ -277,7 +282,7 @@ namespace hex {
 
             template<hex::derived_from<hex::prv::Provider> T>
             void add(const std::string &unlocalizedName, bool addToList = true) {
-                (void) EventManager::subscribe<RequestCreateProvider>([expectedName = unlocalizedName](const std::string &name, hex::prv::Provider **provider){
+                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = unlocalizedName](const std::string &name, hex::prv::Provider **provider) {
                     if (name != expectedName) return;
 
                     auto newProvider = new T();
@@ -292,7 +297,7 @@ namespace hex {
                     impl::addProviderName(unlocalizedName);
             }
 
-            const std::vector<std::string>& getEntries();
+            const std::vector<std::string> &getEntries();
 
         }
 
@@ -310,7 +315,7 @@ namespace hex {
 
             void add(const std::string &unlocalizedName, const impl::Callback &callback);
 
-            std::vector<impl::Entry>& getEntries();
+            std::vector<impl::Entry> &getEntries();
 
         }
 
@@ -328,7 +333,7 @@ namespace hex {
 
             void add(const std::vector<std::string> &extensions, const impl::Callback &callback);
 
-            std::vector<impl::Entry>& getEntries();
+            std::vector<impl::Entry> &getEntries();
 
         }
     };

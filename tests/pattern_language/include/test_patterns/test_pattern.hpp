@@ -5,7 +5,7 @@
 
 #include <hex/pattern_language/pattern_data.hpp>
 
-#define TEST(name) (hex::test::TestPattern*) new hex::test::TestPattern ## name ()
+#define TEST(name) (hex::test::TestPattern *)new hex::test::TestPattern##name()
 
 namespace hex::test {
 
@@ -28,7 +28,7 @@ namespace hex::test {
         }
 
         template<typename T>
-        static T* create(const std::string &typeName, const std::string &varName, auto ... args) {
+        static T *create(const std::string &typeName, const std::string &varName, auto... args) {
             auto pattern = new T(args...);
             pattern->setTypeName(typeName);
             pattern->setVariableName(varName);
@@ -36,37 +36,32 @@ namespace hex::test {
             return pattern;
         }
 
-        [[nodiscard]]
-        virtual std::string getSourceCode() const = 0;
+        [[nodiscard]] virtual std::string getSourceCode() const = 0;
 
-        [[nodiscard]]
-        virtual const std::vector<PatternData*>& getPatterns() const final { return this->m_patterns; }
+        [[nodiscard]] virtual const std::vector<PatternData *> &getPatterns() const final { return this->m_patterns; }
         virtual void addPattern(PatternData *pattern) final {
             this->m_patterns.push_back(pattern);
         }
 
-        [[nodiscard]]
-        auto failing() {
+        [[nodiscard]] auto failing() {
             this->m_mode = Mode::Failing;
 
             return this;
         }
 
-        [[nodiscard]]
-        Mode getMode() {
+        [[nodiscard]] Mode getMode() {
             return this->m_mode;
         }
 
-        [[nodiscard]]
-        static auto& getTests() {
+        [[nodiscard]] static auto &getTests() {
             return TestPattern::s_tests;
         }
 
     private:
-        std::vector<PatternData*> m_patterns;
+        std::vector<PatternData *> m_patterns;
         Mode m_mode;
 
-        static inline std::map<std::string, TestPattern*> s_tests;
+        static inline std::map<std::string, TestPattern *> s_tests;
     };
 
 }

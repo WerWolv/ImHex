@@ -10,8 +10,11 @@ namespace hex {
         std::ifstream encodingFile(path.c_str());
 
         switch (type) {
-            case Type::Thingy: parseThingyFile(encodingFile); break;
-            default: return;
+        case Type::Thingy:
+            parseThingyFile(encodingFile);
+            break;
+        default:
+            return;
         }
 
         this->m_valid = true;
@@ -55,7 +58,7 @@ namespace hex {
             if (fromBytes.empty()) continue;
 
             if (!this->m_mapping.contains(fromBytes.size()))
-                this->m_mapping.insert({ fromBytes.size(), { } });
+                this->m_mapping.insert({ fromBytes.size(), {} });
             this->m_mapping[fromBytes.size()].insert({ fromBytes, to });
 
             this->m_longestSequence = std::max(this->m_longestSequence, fromBytes.size());

@@ -19,7 +19,7 @@ namespace hex::plugin::windows {
         void addImHexContextMenuEntry() {
             // Create ImHex Root Key
             HKEY imHexRootKey;
-            RegCreateKeyExA(HKEY_CURRENT_USER, ImHexContextMenuKey, 0x00, nullptr, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE , nullptr, &imHexRootKey, nullptr);
+            RegCreateKeyExA(HKEY_CURRENT_USER, ImHexContextMenuKey, 0x00, nullptr, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr, &imHexRootKey, nullptr);
             RegSetValueA(imHexRootKey, nullptr, REG_SZ, "Open with ImHex", 0x00);
 
             // Add Icon key to use first icon embedded in exe
@@ -70,7 +70,6 @@ namespace hex::plugin::windows {
 
             return false;
         });
-
     }
 
 }

@@ -7,7 +7,9 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     struct FoundString {
         u64 offset;

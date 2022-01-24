@@ -46,18 +46,18 @@ namespace hex {
     using namespace std::literals::chrono_literals;
 
     void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
-        return ctx; // Unused, but the return value has to be non-null
+        return ctx;    // Unused, but the return value has to be non-null
     }
 
-    void ImHexSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler *handler, void *, const char* line) {
+    void ImHexSettingsHandler_ReadLine(ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line) {
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             std::string format = std::string(view->getUnlocalizedName()) + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
     }
 
-    void ImHexSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
-        buf->reserve(buf->size() + 0x20); // Ballpark reserve
+    void ImHexSettingsHandler_WriteAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
+        buf->reserve(buf->size() + 0x20);    // Ballpark reserve
 
         buf->appendf("[%s][General]\n", handler->TypeName);
 
@@ -74,13 +74,13 @@ namespace hex {
                 if (argument == "update-available") {
                     this->m_availableUpdate = value;
                 } else if (argument == "no-plugins") {
-                    View::doLater([]{ ImGui::OpenPopup("No Plugins"); });
+                    View::doLater([] { ImGui::OpenPopup("No Plugins"); });
                 } else if (argument == "tip-of-the-day") {
                     this->m_tipOfTheDay = value;
 
                     this->m_showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
                     if (this->m_showTipOfTheDay)
-                        View::doLater([]{ ImGui::OpenPopup("hex.welcome.tip_of_the_day"_lang); });
+                        View::doLater([] { ImGui::OpenPopup("hex.welcome.tip_of_the_day"_lang); });
                 }
             }
         }
@@ -128,37 +128,37 @@ namespace hex {
                 ImGui::UnloadImage(this->m_bannerTexture);
 
             switch (theme) {
-                default:
-                case 1: /* Dark theme */
+            default:
+            case 1: /* Dark theme */
                 {
                     ImGui::StyleColorsDark();
                     ImGui::StyleCustomColorsDark();
                     ImPlot::StyleColorsDark();
 
                     auto banner = romfs::get("banner_dark.png");
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(banner.data()), banner.size());
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
 
                     break;
                 }
-                case 2: /* Light theme */
+            case 2: /* Light theme */
                 {
                     ImGui::StyleColorsLight();
                     ImGui::StyleCustomColorsLight();
                     ImPlot::StyleColorsLight();
 
                     auto banner = romfs::get("banner_light.png");
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(banner.data()), banner.size());
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
 
                     break;
                 }
-                case 3: /* Classic theme */
+            case 3: /* Classic theme */
                 {
                     ImGui::StyleColorsClassic();
                     ImGui::StyleCustomColorsClassic();
                     ImPlot::StyleColorsClassic();
 
                     auto banner = romfs::get("banner_dark.png");
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(banner.data()), banner.size());
+                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
 
                     break;
                 }
@@ -175,7 +175,7 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [](const auto &path){
+        EventManager::subscribe<EventFileLoaded>(this, [](const auto &path) {
             SharedData::recentFilePaths.push_front(path);
 
             {
@@ -206,7 +206,7 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, []{
+        EventManager::subscribe<EventFileUnloaded>(this, [] {
             EventManager::post<RequestChangeWindowTitle>("");
         });
 
@@ -244,14 +244,14 @@ namespace hex {
             }
         });
 
-        EventManager::subscribe<RequestOpenPopup>(this, [this](auto name){
+        EventManager::subscribe<RequestOpenPopup>(this, [this](auto name) {
             this->m_popupsToOpen.push_back(name);
         });
 
         for (const auto &path : hex::getPath(ImHexPath::Config)) {
             if (auto filePath = fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
                 this->m_safetyBackupPath = filePath;
-                View::doLater([]{ ImGui::OpenPopup("hex.safety_backup.title"_lang); });
+                View::doLater([] { ImGui::OpenPopup("hex.safety_backup.title"_lang); });
             }
         }
 
@@ -269,23 +269,22 @@ namespace hex {
             // Let's not loop on this...
             std::signal(signalNumber, nullptr);
 
-            #if defined(DEBUG)
-                assert(false);
-            #else
-                std::raise(signalNumber);
-            #endif
-
+#if defined(DEBUG)
+            assert(false);
+#else
+            std::raise(signalNumber);
+#endif
         };
 
         std::signal(SIGTERM, signalHandler);
         std::signal(SIGSEGV, signalHandler);
-        std::signal(SIGINT,  signalHandler);
-        std::signal(SIGILL,  signalHandler);
+        std::signal(SIGINT, signalHandler);
+        std::signal(SIGILL, signalHandler);
         std::signal(SIGABRT, signalHandler);
-        std::signal(SIGFPE,  signalHandler);
+        std::signal(SIGFPE, signalHandler);
 
         auto imhexLogo = romfs::get("logo.png");
-        this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(imhexLogo.data()), imhexLogo.size());
+        this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(imhexLogo.data()), imhexLogo.size());
 
         ContentRegistry::Settings::store();
         EventManager::post<EventSettingsChanged>();
@@ -333,7 +332,7 @@ namespace hex {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
@@ -341,11 +340,7 @@ namespace hex {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar     | ImGuiWindowFlags_NoDocking
-                | ImGuiWindowFlags_NoTitleBar  | ImGuiWindowFlags_NoCollapse
-                | ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoResize
-                | ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBringToFrontOnFocus
-                | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
@@ -617,7 +612,7 @@ namespace hex {
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        GLFWwindow *backup_current_context = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup_current_context);
@@ -700,7 +695,7 @@ namespace hex {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
             ImGui::TableNextColumn();
-            ImGui:: UnderlinedText("hex.welcome.header.help"_lang);
+            ImGui::UnderlinedText("hex.welcome.header.help"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
@@ -796,11 +791,10 @@ namespace hex {
 
             function(ContentRegistry::Interface::getDockSpaceId());
         }
-
     }
 
     void Window::initGLFW() {
-        glfwSetErrorCallback([](int error, const char* desc) {
+        glfwSetErrorCallback([](int error, const char *desc) {
             log::error("GLFW Error [{}] : {}", error, desc);
         });
 
@@ -809,11 +803,11 @@ namespace hex {
             std::abort();
         }
 
-        #if defined(OS_WINDOWS)
-            glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-        #elif defined(OS_MACOS)
-            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        #endif
+#if defined(OS_WINDOWS)
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+#elif defined(OS_MACOS)
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -866,7 +860,7 @@ namespace hex {
 
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
-            auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->frameBegin();
             win->frame();
             win->frameEnd();
@@ -877,35 +871,33 @@ namespace hex {
 
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
-            auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->frameBegin();
             win->frame();
             win->frameEnd();
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-
             auto keyName = glfwGetKeyName(key, scancode);
             if (keyName != nullptr)
                 key = std::toupper(keyName[0]);
 
-            auto win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
             if (action == GLFW_PRESS) {
                 auto &io = ImGui::GetIO();
 
                 win->m_pressedKeys.push_back(key);
                 io.KeysDown[key] = true;
-                io.KeyCtrl  = (mods & GLFW_MOD_CONTROL) != 0;
+                io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
-                io.KeyAlt   = (mods & GLFW_MOD_ALT) != 0;
-            }
-            else if (action == GLFW_RELEASE) {
+                io.KeyAlt = (mods & GLFW_MOD_ALT) != 0;
+            } else if (action == GLFW_RELEASE) {
                 auto &io = ImGui::GetIO();
                 io.KeysDown[key] = false;
-                io.KeyCtrl  = (mods & GLFW_MOD_CONTROL) != 0;
+                io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
-                io.KeyAlt   = (mods & GLFW_MOD_ALT) != 0;
+                io.KeyAlt = (mods & GLFW_MOD_ALT) != 0;
             }
         });
 
@@ -950,43 +942,43 @@ namespace hex {
         GImPlot = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
 
-        ImGuiIO& io = ImGui::GetIO();
-        ImGuiStyle& style = ImGui::GetStyle();
+        ImGuiIO &io = ImGui::GetIO();
+        ImGuiStyle &style = ImGui::GetStyle();
 
         style.Alpha = 1.0F;
         style.WindowRounding = 0.0F;
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
-        #if !defined(OS_LINUX)
+#if !defined(OS_LINUX)
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-        #endif
+#endif
 
         for (auto &entry : SharedData::fontAtlas->ConfigData)
             io.Fonts->ConfigData.push_back(entry);
 
         io.ConfigViewportsNoTaskBarIcon = false;
-        io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
-        io.KeyMap[ImGuiKey_LeftArrow]   = GLFW_KEY_LEFT;
-        io.KeyMap[ImGuiKey_RightArrow]  = GLFW_KEY_RIGHT;
-        io.KeyMap[ImGuiKey_UpArrow]     = GLFW_KEY_UP;
-        io.KeyMap[ImGuiKey_DownArrow]   = GLFW_KEY_DOWN;
-        io.KeyMap[ImGuiKey_PageUp]      = GLFW_KEY_PAGE_UP;
-        io.KeyMap[ImGuiKey_PageDown]    = GLFW_KEY_PAGE_DOWN;
-        io.KeyMap[ImGuiKey_Home]        = GLFW_KEY_HOME;
-        io.KeyMap[ImGuiKey_End]         = GLFW_KEY_END;
-        io.KeyMap[ImGuiKey_Insert]      = GLFW_KEY_INSERT;
-        io.KeyMap[ImGuiKey_Delete]      = GLFW_KEY_DELETE;
-        io.KeyMap[ImGuiKey_Backspace]   = GLFW_KEY_BACKSPACE;
-        io.KeyMap[ImGuiKey_Space]       = GLFW_KEY_SPACE;
-        io.KeyMap[ImGuiKey_Enter]       = GLFW_KEY_ENTER;
-        io.KeyMap[ImGuiKey_Escape]      = GLFW_KEY_ESCAPE;
+        io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
+        io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
+        io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
+        io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
+        io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
+        io.KeyMap[ImGuiKey_PageUp] = GLFW_KEY_PAGE_UP;
+        io.KeyMap[ImGuiKey_PageDown] = GLFW_KEY_PAGE_DOWN;
+        io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
+        io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
+        io.KeyMap[ImGuiKey_Insert] = GLFW_KEY_INSERT;
+        io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
+        io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
+        io.KeyMap[ImGuiKey_Space] = GLFW_KEY_SPACE;
+        io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
+        io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
         io.KeyMap[ImGuiKey_KeyPadEnter] = GLFW_KEY_KP_ENTER;
-        io.KeyMap[ImGuiKey_A]           = GLFW_KEY_A;
-        io.KeyMap[ImGuiKey_C]           = GLFW_KEY_C;
-        io.KeyMap[ImGuiKey_V]           = GLFW_KEY_V;
-        io.KeyMap[ImGuiKey_X]           = GLFW_KEY_X;
-        io.KeyMap[ImGuiKey_Y]           = GLFW_KEY_Y;
-        io.KeyMap[ImGuiKey_Z]           = GLFW_KEY_Z;
+        io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
+        io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
+        io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
+        io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
+        io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
+        io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkCreationOnSnap);
@@ -1026,7 +1018,7 @@ namespace hex {
         handler.ReadOpenFn = ImHexSettingsHandler_ReadOpenFn;
         handler.ReadLineFn = ImHexSettingsHandler_ReadLine;
         handler.WriteAllFn = ImHexSettingsHandler_WriteAll;
-        handler.UserData   = this;
+        handler.UserData = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
         static std::string iniFileName;
@@ -1052,7 +1044,7 @@ namespace hex {
     }
 
     void Window::exitImGui() {
-        delete static_cast<ImGui::ImHexCustomData*>(ImGui::GetIO().UserData);
+        delete static_cast<ImGui::ImHexCustomData *>(ImGui::GetIO().UserData);
 
         ImNodes::PopAttributeFlag();
         ImNodes::PopAttributeFlag();

@@ -11,7 +11,7 @@ namespace hex {
             this->m_entries.insert(pair);
     }
 
-    const std::map<std::string, std::string>& LanguageDefinition::getEntries() const {
+    const std::map<std::string, std::string> &LanguageDefinition::getEntries() const {
         return this->m_entries;
     }
 
@@ -27,7 +27,7 @@ namespace hex {
         return get();
     }
 
-    LangEntry::operator const char*() const {
+    LangEntry::operator const char *() const {
         return get().c_str();
     }
 
@@ -59,7 +59,7 @@ namespace hex {
         return static_cast<std::string>(left) + right;
     }
 
-    const std::string& LangEntry::get() const {
+    const std::string &LangEntry::get() const {
         auto &lang = SharedData::loadedLanguageStrings;
         if (lang.contains(this->m_unlocalizedString))
             return lang[this->m_unlocalizedString];
@@ -85,7 +85,7 @@ namespace hex {
         }
     }
 
-    const std::map<std::string, std::string>& LangEntry::getSupportedLanguages() {
+    const std::map<std::string, std::string> &LangEntry::getSupportedLanguages() {
         return ContentRegistry::Language::getLanguages();
     }
 
@@ -93,7 +93,7 @@ namespace hex {
         LangEntry::s_fallbackLanguage = language;
     }
 
-    const std::string& LangEntry::getFallbackLanguage() {
+    const std::string &LangEntry::getFallbackLanguage() {
         return LangEntry::s_fallbackLanguage;
     }
 

@@ -10,7 +10,7 @@ namespace hex::plugin::builtin {
 
     void ViewTools::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.tools.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            for (const auto& [name, function] : ContentRegistry::Tools::getEntries()) {
+            for (const auto &[name, function] : ContentRegistry::Tools::getEntries()) {
                 if (ImGui::CollapsingHeader(LangEntry(name))) {
                     function();
                 }

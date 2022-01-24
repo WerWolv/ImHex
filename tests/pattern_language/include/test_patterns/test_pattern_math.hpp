@@ -6,13 +6,11 @@ namespace hex::test {
 
     class TestPatternMath : public TestPattern {
     public:
-        TestPatternMath() : TestPattern("Math")  {
-
+        TestPatternMath() : TestPattern("Math") {
         }
         ~TestPatternMath() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 // Compare operations
                 std::assert(123 == 123, "== operation error");
@@ -70,7 +68,6 @@ namespace hex::test {
                 std::assert(10F / (20F + 30F) != 10F / 20F + 10F / 30F, "/ operator distributivity error");
             )";
         }
-
     };
 
 }

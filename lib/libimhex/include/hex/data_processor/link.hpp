@@ -8,11 +8,11 @@ namespace hex::dp {
     public:
         Link(u32 from, u32 to);
 
-        [[nodiscard]] u32 getID()     const { return this->m_id;   }
+        [[nodiscard]] u32 getID() const { return this->m_id; }
         void setID(u32 id) { this->m_id = id; }
 
         [[nodiscard]] u32 getFromID() const { return this->m_from; }
-        [[nodiscard]] u32 getToID()   const { return this->m_to;   }
+        [[nodiscard]] u32 getToID() const { return this->m_to; }
 
     private:
         u32 m_id;

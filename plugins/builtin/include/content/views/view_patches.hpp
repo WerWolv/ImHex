@@ -9,7 +9,9 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     class ViewPatches : public View {
     public:

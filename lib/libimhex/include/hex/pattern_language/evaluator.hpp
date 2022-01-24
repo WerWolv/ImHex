@@ -13,7 +13,9 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>
 
-namespace hex::prv { class Provider; }
+namespace hex::prv {
+    class Provider;
+}
 
 namespace hex::pl {
 
@@ -38,15 +40,17 @@ namespace hex::pl {
     public:
         Evaluator() = default;
 
-        std::optional<std::vector<PatternData*>> evaluate(const std::vector<ASTNode*> &ast);
+        std::optional<std::vector<PatternData *>> evaluate(const std::vector<ASTNode *> &ast);
 
-        [[nodiscard]]
-        LogConsole& getConsole() {
+        [[nodiscard]] LogConsole &getConsole() {
             return this->m_console;
         }
 
-        struct Scope { PatternData *parent; std::vector<PatternData*>* scope; };
-        void pushScope(PatternData *parent, std::vector<PatternData*> &scope) {
+        struct Scope {
+            PatternData *parent;
+            std::vector<PatternData *> *scope;
+        };
+        void pushScope(PatternData *parent, std::vector<PatternData *> &scope) {
             if (this->m_scopes.size() > this->getEvaluationDepth())
                 LogConsole::abortEvaluation(hex::format("evaluation depth exceeded set limit of {}", this->getEvaluationDepth()));
 
@@ -59,11 +63,11 @@ namespace hex::pl {
             this->m_scopes.pop_back();
         }
 
-        const Scope& getScope(i32 index) {
+        const Scope &getScope(i32 index) {
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
-        const Scope& getGlobalScope() {
+        const Scope &getGlobalScope() {
             return this->m_scopes.front();
         }
 
@@ -83,8 +87,7 @@ namespace hex::pl {
             this->m_inVariables = inVariables;
         }
 
-        [[nodiscard]]
-        std::map<std::string, Token::Literal> getOutVariables() const {
+        [[nodiscard]] std::map<std::string, Token::Literal> getOutVariables() const {
             std::map<std::string, Token::Literal> result;
 
             for (const auto &[name, offset] : this->m_outVariables) {
@@ -94,8 +97,7 @@ namespace hex::pl {
             return result;
         }
 
-        [[nodiscard]]
-        prv::Provider *getProvider() const {
+        [[nodiscard]] prv::Provider *getProvider() const {
             return this->m_provider;
         }
 
@@ -103,8 +105,7 @@ namespace hex::pl {
             this->m_defaultEndian = endian;
         }
 
-        [[nodiscard]]
-        std::endian getDefaultEndian() const {
+        [[nodiscard]] std::endian getDefaultEndian() const {
             return this->m_defaultEndian;
         }
 
@@ -112,8 +113,7 @@ namespace hex::pl {
             this->m_evalDepth = evalDepth;
         }
 
-        [[nodiscard]]
-        u64 getEvaluationDepth() const {
+        [[nodiscard]] u64 getEvaluationDepth() const {
             return this->m_evalDepth;
         }
 
@@ -121,8 +121,7 @@ namespace hex::pl {
             this->m_arrayLimit = arrayLimit;
         }
 
-        [[nodiscard]]
-        u64 getArrayLimit() const {
+        [[nodiscard]] u64 getArrayLimit() const {
             return this->m_arrayLimit;
         }
 
@@ -130,13 +129,11 @@ namespace hex::pl {
             this->m_patternLimit = limit;
         }
 
-        [[nodiscard]]
-        u64 getPatternLimit() {
+        [[nodiscard]] u64 getPatternLimit() {
             return this->m_patternLimit;
         }
 
-        [[nodiscard]]
-        u64 getPatternCount() {
+        [[nodiscard]] u64 getPatternCount() {
             return this->m_currPatternCount;
         }
 
@@ -144,36 +141,34 @@ namespace hex::pl {
             this->m_loopLimit = limit;
         }
 
-        [[nodiscard]]
-        u64 getLoopLimit() {
+        [[nodiscard]] u64 getLoopLimit() {
             return this->m_loopLimit;
         }
 
-        u64& dataOffset() { return this->m_currOffset; }
+        u64 &dataOffset() { return this->m_currOffset; }
 
         bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguage::Callback &function) {
-            const auto [iter, inserted] = this->m_customFunctions.insert({ name, { numParams, function } });
+            const auto [iter, inserted] = this->m_customFunctions.insert({
+                name, {numParams, function}
+            });
 
             return inserted;
         }
 
-        [[nodiscard]]
-        const std::map<std::string, ContentRegistry::PatternLanguage::Function>& getCustomFunctions() const {
+        [[nodiscard]] const std::map<std::string, ContentRegistry::PatternLanguage::Function> &getCustomFunctions() const {
             return this->m_customFunctions;
         }
 
-        [[nodiscard]]
-        std::vector<Token::Literal>& getStack() {
+        [[nodiscard]] std::vector<Token::Literal> &getStack() {
             return this->m_stack;
         }
 
-        [[nodiscard]]
-        const std::vector<Token::Literal>& getStack() const {
+        [[nodiscard]] const std::vector<Token::Literal> &getStack() const {
             return this->m_stack;
         }
 
         void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt, bool outVariable = false);
-        void setVariable(const std::string &name, const Token::Literal& value);
+        void setVariable(const std::string &name, const Token::Literal &value);
 
         void abort() {
             this->m_aborted = true;
@@ -184,8 +179,7 @@ namespace hex::pl {
                 LogConsole::abortEvaluation("evaluation aborted by user");
         }
 
-        [[nodiscard]]
-        std::optional<Token::Literal> getEnvVariable(const std::string &name) const {
+        [[nodiscard]] std::optional<Token::Literal> getEnvVariable(const std::string &name) const {
             if (this->m_envVariables.contains(name))
                 return this->m_envVariables.at(name);
             else
@@ -196,8 +190,7 @@ namespace hex::pl {
             this->m_envVariables[name] = value;
         }
 
-        [[nodiscard]]
-        bool hasDangerousFunctionBeenCalled() const {
+        [[nodiscard]] bool hasDangerousFunctionBeenCalled() const {
             return this->m_dangerousFunctionCalled;
         }
 
@@ -210,8 +203,7 @@ namespace hex::pl {
             this->m_dangerousFunctionCalled = false;
         }
 
-        [[nodiscard]]
-        DangerousFunctionPermission getDangerousFunctionPermission() const {
+        [[nodiscard]] DangerousFunctionPermission getDangerousFunctionPermission() const {
             return this->m_allowDangerousFunctions;
         }
 
@@ -219,13 +211,11 @@ namespace hex::pl {
             this->m_currControlFlowStatement = statement;
         }
 
-        [[nodiscard]]
-        ControlFlowStatement getCurrentControlFlowStatement() const {
+        [[nodiscard]] ControlFlowStatement getCurrentControlFlowStatement() const {
             return this->m_currControlFlowStatement;
         }
 
     private:
-
         void patternCreated();
         void patternDestroyed();
 
@@ -246,7 +236,7 @@ namespace hex::pl {
 
         std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguage::Function> m_customFunctions;
-        std::vector<ASTNode*> m_customFunctionDefinitions;
+        std::vector<ASTNode *> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
 
         std::map<std::string, Token::Literal> m_envVariables;

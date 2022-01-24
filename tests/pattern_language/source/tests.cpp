@@ -16,18 +16,18 @@
 #include "test_patterns/test_pattern_pointers.hpp"
 
 std::array Tests = {
-        TEST(Placement),
-        TEST(Structs),
-        TEST(Unions),
-        TEST(Enums),
-        TEST(Literals),
-        TEST(Padding),
-        TEST(SucceedingAssert),
-        TEST(FailingAssert),
-        TEST(Bitfields),
-        TEST(Math),
-        TEST(RValues),
-        TEST(Namespaces),
-        TEST(ExtraSemicolon),
-        TEST(Pointers)
+    TEST(Placement),
+    TEST(Structs),
+    TEST(Unions),
+    TEST(Enums),
+    TEST(Literals),
+    TEST(Padding),
+    TEST(SucceedingAssert),
+    TEST(FailingAssert),
+    TEST(Bitfields),
+    TEST(Math),
+    TEST(RValues),
+    TEST(Namespaces),
+    TEST(ExtraSemicolon),
+    TEST(Pointers)
 };

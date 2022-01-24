@@ -6,18 +6,15 @@ namespace hex::test {
 
     class TestPatternExample : public TestPattern {
     public:
-        TestPatternExample() : TestPattern("")  {
-
+        TestPatternExample() : TestPattern("") {
         }
         ~TestPatternExample() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
 
             )";
         }
-
     };
 
 }

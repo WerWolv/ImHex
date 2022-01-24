@@ -10,13 +10,15 @@
 #include <random>
 #include <vector>
 
-namespace hex::prv { class Provider; }
+namespace hex::prv {
+    class Provider;
+}
 
 
 namespace hex::plugin::builtin {
 
 
-    using SearchFunction = std::vector<std::pair<u64, u64>> (*)(prv::Provider* &provider, std::string string);
+    using SearchFunction = std::vector<std::pair<u64, u64>> (*)(prv::Provider *&provider, std::string string);
 
     class ViewHexEditor : public View {
     public:
@@ -44,7 +46,7 @@ namespace hex::plugin::builtin {
         u64 m_resizeSize = 0;
 
         std::vector<u8> m_dataToSave;
-        std::set<pl::PatternData*> m_highlightedPatterns;
+        std::set<pl::PatternData *> m_highlightedPatterns;
 
         std::string m_loaderScriptScriptPath;
         std::string m_loaderScriptFilePath;

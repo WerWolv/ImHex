@@ -10,10 +10,10 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/paths.hpp>
 
-#define EVENT_DEF(event_name, ...)                                                  \
-    struct event_name final : public hex::Event<__VA_ARGS__> {                      \
-        constexpr static auto id = [] { return hex::EventId(); }();                 \
-        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }    \
+#define EVENT_DEF(event_name, ...)                                               \
+    struct event_name final : public hex::Event<__VA_ARGS__> {                   \
+        constexpr static auto id = [] { return hex::EventId(); }();              \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { } \
     }
 
 class GLFWwindow;
@@ -25,12 +25,12 @@ namespace hex {
         explicit constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
             this->m_hash = line ^ 123456789;
             for (auto c : std::string_view(func)) {
-                this->m_hash  = (this->m_hash >> 5) | (this->m_hash << 27);
+                this->m_hash = (this->m_hash >> 5) | (this->m_hash << 27);
                 this->m_hash ^= c;
             }
         }
 
-        constexpr bool operator ==(const EventId &rhs) const = default;
+        constexpr bool operator==(const EventId &rhs) const = default;
 
     private:
         u32 m_hash;
@@ -40,11 +40,11 @@ namespace hex {
         EventBase() noexcept = default;
     };
 
-    template<typename ... Params>
+    template<typename... Params>
     struct Event : public EventBase {
         using Callback = std::function<void(Params...)>;
 
-        explicit Event(Callback func) noexcept : m_func(std::move(func)) {}
+        explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
         void operator()(Params... params) const noexcept {
             this->m_func(params...);
@@ -56,7 +56,7 @@ namespace hex {
 
     class EventManager {
     public:
-        using EventList = std::list<std::pair<EventId, EventBase*>>;
+        using EventList = std::list<std::pair<EventId, EventBase *>>;
 
         template<typename E>
         [[nodiscard]] static EventList::iterator subscribe(typename E::Callback function) {
@@ -74,7 +74,7 @@ namespace hex {
 
         template<typename E>
         static void unsubscribe(void *token) noexcept {
-            auto iter = std::find_if(s_tokenStore.begin(), s_tokenStore.end(), [&](auto &item){
+            auto iter = std::find_if(s_tokenStore.begin(), s_tokenStore.end(), [&](auto &item) {
                 return item.first == token && item.second->first == E::id;
             });
 
@@ -84,33 +84,35 @@ namespace hex {
         }
 
         template<typename E>
-        static void post(auto&& ... args) noexcept {
+        static void post(auto &&...args) noexcept {
             for (const auto &[id, event] : s_events) {
                 if (id == E::id)
                     (*reinterpret_cast<E *>(event))(std::forward<decltype(args)>(args)...);
             }
         }
-        
+
     private:
-        static std::map<void*, EventList::iterator> s_tokenStore;
+        static std::map<void *, EventList::iterator> s_tokenStore;
         static EventList s_events;
     };
 
-    namespace pl { class PatternData; }
+    namespace pl {
+        class PatternData;
+    }
 
     /* Default Events */
     EVENT_DEF(EventFileLoaded, fs::path);
     EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
-    EVENT_DEF(EventPatternChanged, std::vector<pl::PatternData*>&);
-    EVENT_DEF(EventWindowClosing, GLFWwindow*);
+    EVENT_DEF(EventPatternChanged, std::vector<pl::PatternData *> &);
+    EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, Region);
     EVENT_DEF(EventProjectFileStore);
     EVENT_DEF(EventProjectFileLoad);
     EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
-    EVENT_DEF(EventProviderCreated, prv::Provider*);
+    EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
 
@@ -125,6 +127,6 @@ namespace hex {
     EVENT_DEF(RequestOpenPopup, std::string);
     EVENT_DEF(RequestCreateProvider, std::string, hex::prv::Provider **);
 
-    EVENT_DEF(QuerySelection, Region&);
+    EVENT_DEF(QuerySelection, Region &);
 
 }

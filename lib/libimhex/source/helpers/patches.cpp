@@ -17,7 +17,7 @@ namespace hex {
         buffer.resize(buffer.size() + sizeof(T));
         std::memcpy((&buffer.back() - sizeof(T)) + 1, &bytes, sizeof(T));
     }
-    
+
     std::vector<u8> generateIPSPatch(const Patches &patches) {
         std::vector<u8> result;
 
@@ -43,19 +43,21 @@ namespace hex {
                 bytes.push_back(values[i]);
 
                 if (bytes.size() > 0xFFFF || startAddress > 0xFF'FFFF)
-                    return { };
+                    return {};
 
                 u32 address = startAddress.value();
-                auto addressBytes = reinterpret_cast<u8*>(&address);
+                auto addressBytes = reinterpret_cast<u8 *>(&address);
 
-                result.push_back(addressBytes[2]); result.push_back(addressBytes[1]); result.push_back(addressBytes[0]);
+                result.push_back(addressBytes[2]);
+                result.push_back(addressBytes[1]);
+                result.push_back(addressBytes[0]);
                 pushBytesBack<u16>(result, changeEndianess<u16>(bytes.size(), std::endian::big));
 
                 for (auto byte : bytes)
                     result.push_back(byte);
 
                 bytes.clear();
-                startAddress = { };
+                startAddress = {};
             }
         }
 
@@ -89,19 +91,22 @@ namespace hex {
                 bytes.push_back(values[i]);
 
                 if (bytes.size() > 0xFFFF || startAddress > 0xFFFF'FFFF)
-                    return { };
+                    return {};
 
                 u32 address = startAddress.value();
-                auto addressBytes = reinterpret_cast<u8*>(&address);
+                auto addressBytes = reinterpret_cast<u8 *>(&address);
 
-                result.push_back(addressBytes[3]); result.push_back(addressBytes[2]); result.push_back(addressBytes[1]); result.push_back(addressBytes[0]);
+                result.push_back(addressBytes[3]);
+                result.push_back(addressBytes[2]);
+                result.push_back(addressBytes[1]);
+                result.push_back(addressBytes[0]);
                 pushBytesBack<u16>(result, changeEndianess<u16>(bytes.size(), std::endian::big));
 
                 for (auto byte : bytes)
                     result.push_back(byte);
 
                 bytes.clear();
-                startAddress = { };
+                startAddress = {};
             }
         }
 
@@ -112,10 +117,10 @@ namespace hex {
 
     Patches loadIPSPatch(const std::vector<u8> &ipsPatch) {
         if (ipsPatch.size() < (5 + 3))
-            return { };
+            return {};
 
         if (std::memcmp(ipsPatch.data(), "PATCH", 5) != 0)
-            return { };
+            return {};
 
         Patches result;
         bool foundEOF = false;
@@ -130,7 +135,7 @@ namespace hex {
             // Handle normal record
             if (size > 0x0000) {
                 if (ipsOffset + size > ipsPatch.size() - 3)
-                    return { };
+                    return {};
 
                 for (u16 i = 0; i < size; i++)
                     result[offset + i] = ipsPatch[ipsOffset + i];
@@ -139,7 +144,7 @@ namespace hex {
             // Handle RLE record
             else {
                 if (ipsOffset + 3 > ipsPatch.size() - 3)
-                    return { };
+                    return {};
 
                 u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
 
@@ -158,15 +163,15 @@ namespace hex {
         if (foundEOF)
             return result;
         else
-            return { };
+            return {};
     }
 
     Patches loadIPS32Patch(const std::vector<u8> &ipsPatch) {
         if (ipsPatch.size() < (5 + 4))
-            return { };
+            return {};
 
         if (std::memcmp(ipsPatch.data(), "IPS32", 5) != 0)
-            return { };
+            return {};
 
         Patches result;
         bool foundEEOF = false;
@@ -181,7 +186,7 @@ namespace hex {
             // Handle normal record
             if (size > 0x0000) {
                 if (ipsOffset + size > ipsPatch.size() - 3)
-                    return { };
+                    return {};
 
                 for (u16 i = 0; i < size; i++)
                     result[offset + i] = ipsPatch[ipsOffset + i];
@@ -190,7 +195,7 @@ namespace hex {
             // Handle RLE record
             else {
                 if (ipsOffset + 3 > ipsPatch.size() - 3)
-                    return { };
+                    return {};
 
                 u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
 
@@ -209,7 +214,7 @@ namespace hex {
         if (foundEEOF)
             return result;
         else
-            return { };
+            return {};
     }
 
 }

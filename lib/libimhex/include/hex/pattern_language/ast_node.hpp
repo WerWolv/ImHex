@@ -22,8 +22,7 @@ namespace hex::pl {
 
     class Clonable {
     public:
-        [[nodiscard]]
-        virtual ASTNode* clone() const = 0;
+        [[nodiscard]] virtual ASTNode *clone() const = 0;
     };
 
     class ASTNode : public Clonable {
@@ -52,7 +51,7 @@ namespace hex::pl {
     class ASTNodeAttribute : public ASTNode {
     public:
         explicit ASTNodeAttribute(std::string attribute, std::optional<std::string> value = std::nullopt)
-                : ASTNode(), m_attribute(std::move(attribute)), m_value(std::move(value)) { }
+            : ASTNode(), m_attribute(std::move(attribute)), m_value(std::move(value)) { }
 
         ~ASTNodeAttribute() override = default;
 
@@ -61,15 +60,15 @@ namespace hex::pl {
             this->m_value = other.m_value;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeAttribute(*this);
         }
 
-        [[nodiscard]] const std::string& getAttribute() const {
+        [[nodiscard]] const std::string &getAttribute() const {
             return this->m_attribute;
         }
 
-        [[nodiscard]] const std::optional<std::string>& getValue() const {
+        [[nodiscard]] const std::optional<std::string> &getValue() const {
             return this->m_value;
         }
 
@@ -88,11 +87,10 @@ namespace hex::pl {
 
         Attributable(const Attributable &other) {
             for (auto &attribute : other.m_attributes)
-                this->m_attributes.push_back(static_cast<ASTNodeAttribute*>(attribute->clone()));
+                this->m_attributes.push_back(static_cast<ASTNodeAttribute *>(attribute->clone()));
         }
 
     public:
-
         void addAttribute(ASTNodeAttribute *attribute) {
             this->m_attributes.push_back(attribute);
         }
@@ -109,13 +107,13 @@ namespace hex::pl {
     public:
         explicit ASTNodeLiteral(Token::Literal literal) : ASTNode(), m_literal(std::move(literal)) { }
 
-        ASTNodeLiteral(const ASTNodeLiteral&) = default;
+        ASTNodeLiteral(const ASTNodeLiteral &) = default;
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeLiteral(*this);
         }
 
-        [[nodiscard]] const auto& getValue() const {
+        [[nodiscard]] const auto &getValue() const {
             return this->m_literal;
         }
 
@@ -124,11 +122,20 @@ namespace hex::pl {
     };
 
     class ASTNodeMathematicalExpression : public ASTNode {
-#define FLOAT_BIT_OPERATION(name) \
-            auto name(hex::floating_point auto left, auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
-            auto name(auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
-            auto name(hex::floating_point auto left, hex::floating_point auto right) const { LogConsole::abortEvaluation("invalid floating point operation", this); return 0; } \
-            auto name(hex::integral auto left, hex::integral auto right) const
+#define FLOAT_BIT_OPERATION(name)                                                    \
+    auto name(hex::floating_point auto left, auto right) const {                     \
+        LogConsole::abortEvaluation("invalid floating point operation", this);       \
+        return 0;                                                                    \
+    }                                                                                \
+    auto name(auto left, hex::floating_point auto right) const {                     \
+        LogConsole::abortEvaluation("invalid floating point operation", this);       \
+        return 0;                                                                    \
+    }                                                                                \
+    auto name(hex::floating_point auto left, hex::floating_point auto right) const { \
+        LogConsole::abortEvaluation("invalid floating point operation", this);       \
+        return 0;                                                                    \
+    }                                                                                \
+    auto name(hex::integral auto left, hex::integral auto right) const
 
         FLOAT_BIT_OPERATION(shiftLeft) {
             return left << right;
@@ -161,7 +168,7 @@ namespace hex::pl {
 #undef FLOAT_BIT_OPERATION
     public:
         ASTNodeMathematicalExpression(ASTNode *left, ASTNode *right, Token::Operator op)
-                : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
+            : ASTNode(), m_left(left), m_right(right), m_operator(op) { }
 
         ~ASTNodeMathematicalExpression() override {
             delete this->m_left;
@@ -174,134 +181,139 @@ namespace hex::pl {
             this->m_right = other.m_right->clone();
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeMathematicalExpression(*this);
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             if (this->getLeftOperand() == nullptr || this->getRightOperand() == nullptr)
                 LogConsole::abortEvaluation("attempted to use void expression in mathematical expression", this);
 
-            auto *left = dynamic_cast<ASTNodeLiteral*>(this->getLeftOperand()->evaluate(evaluator));
-            auto *right = dynamic_cast<ASTNodeLiteral*>(this->getRightOperand()->evaluate(evaluator));
-            ON_SCOPE_EXIT { delete left; delete right; };
+            auto *left = dynamic_cast<ASTNodeLiteral *>(this->getLeftOperand()->evaluate(evaluator));
+            auto *right = dynamic_cast<ASTNodeLiteral *>(this->getRightOperand()->evaluate(evaluator));
+            ON_SCOPE_EXIT {
+                delete left;
+                delete right;
+            };
 
             return std::visit(overloaded {
-                    // TODO: :notlikethis:
-                    [this](u128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](i128 left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](double left, PatternData * const &right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](char left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](bool left, PatternData * const &right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](std::string left, PatternData * const &right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, u128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, i128 right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, double right) -> ASTNode*         { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, char right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, bool right) -> ASTNode*           { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, std::string right) -> ASTNode*    { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](PatternData * const &left, PatternData *right) -> ASTNode*   { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  // TODO: :notlikethis:
+                                  [this](u128 left, PatternData *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](i128 left, PatternData *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](double left, PatternData *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](char left, PatternData *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](bool left, PatternData *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](std::string left, PatternData *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, u128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, i128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, double right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, char right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, bool right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, std::string right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](PatternData *const &left, PatternData *right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
 
-                    [this](auto&& left, std::string right) -> ASTNode*          { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                    [this](std::string left, auto&& right) -> ASTNode* {
-                        switch (this->getOperator()) {
-                            case Token::Operator::Star: {
-                                std::string result;
-                                for (auto i = 0; i < right; i++)
-                                    result += left;
-                                return new ASTNodeLiteral(result);
-                            }
-                            default:
-                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                        }
-                    },
-                    [this](std::string left, std::string right) -> ASTNode* {
-                        switch (this->getOperator()) {
-                            case Token::Operator::Plus:
-                                return new ASTNodeLiteral(left + right);
-                            case Token::Operator::BoolEquals:
-                                return new ASTNodeLiteral(left == right);
-                            case Token::Operator::BoolNotEquals:
-                                return new ASTNodeLiteral(left != right);
-                            case Token::Operator::BoolGreaterThan:
-                                return new ASTNodeLiteral(left > right);
-                            case Token::Operator::BoolLessThan:
-                                return new ASTNodeLiteral(left < right);
-                            case Token::Operator::BoolGreaterThanOrEquals:
-                                return new ASTNodeLiteral(left >= right);
-                            case Token::Operator::BoolLessThanOrEquals:
-                                return new ASTNodeLiteral(left <= right);
-                            default:
-                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                        }
-                    },
-                    [this](std::string left, char right) -> ASTNode* {
-                        switch (this->getOperator()) {
-                            case Token::Operator::Plus:
-                                return new ASTNodeLiteral(left + right);
-                            default:
-                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                        }
-                    },
-                    [this](char left, std::string right) -> ASTNode* {
-                        switch (this->getOperator()) {
-                            case Token::Operator::Plus:
-                                return new ASTNodeLiteral(left + right);
-                            default:
-                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                        }
-                    },
-                    [this](auto &&left, auto &&right) -> ASTNode* {
-                        switch (this->getOperator()) {
-                            case Token::Operator::Plus:
-                                return new ASTNodeLiteral(left + right);
-                            case Token::Operator::Minus:
-                                return new ASTNodeLiteral(left - right);
-                            case Token::Operator::Star:
-                                return new ASTNodeLiteral(left * right);
-                            case Token::Operator::Slash:
-                                if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
-                                return new ASTNodeLiteral(left / right);
-                            case Token::Operator::Percent:
-                                if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
-                                return new ASTNodeLiteral(modulus(left, right));
-                            case Token::Operator::ShiftLeft:
-                                return new ASTNodeLiteral(shiftLeft(left, right));
-                            case Token::Operator::ShiftRight:
-                                return new ASTNodeLiteral(shiftRight(left, right));
-                            case Token::Operator::BitAnd:
-                                return new ASTNodeLiteral(bitAnd(left, right));
-                            case Token::Operator::BitXor:
-                                return new ASTNodeLiteral(bitXor(left, right));
-                            case Token::Operator::BitOr:
-                                return new ASTNodeLiteral(bitOr(left, right));
-                            case Token::Operator::BitNot:
-                                return new ASTNodeLiteral(bitNot(left, right));
-                            case Token::Operator::BoolEquals:
-                                return new ASTNodeLiteral(bool(left == right));
-                            case Token::Operator::BoolNotEquals:
-                                return new ASTNodeLiteral(bool(left != right));
-                            case Token::Operator::BoolGreaterThan:
-                                return new ASTNodeLiteral(bool(left > right));
-                            case Token::Operator::BoolLessThan:
-                                return new ASTNodeLiteral(bool(left < right));
-                            case Token::Operator::BoolGreaterThanOrEquals:
-                                return new ASTNodeLiteral(bool(left >= right));
-                            case Token::Operator::BoolLessThanOrEquals:
-                                return new ASTNodeLiteral(bool(left <= right));
-                            case Token::Operator::BoolAnd:
-                                return new ASTNodeLiteral(bool(left && right));
-                            case Token::Operator::BoolXor:
-                                return new ASTNodeLiteral(bool(left && !right || !left && right));
-                            case Token::Operator::BoolOr:
-                                return new ASTNodeLiteral(bool(left || right));
-                            case Token::Operator::BoolNot:
-                                return new ASTNodeLiteral(bool(!right));
-                            default:
-                                LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
-                        }
-                    }
-            }, left->getValue(), right->getValue());
+                                  [this](auto &&left, std::string right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                  [this](std::string left, auto &&right) -> ASTNode * {
+                                      switch (this->getOperator()) {
+                                      case Token::Operator::Star:
+                                          {
+                                              std::string result;
+                                              for (auto i = 0; i < right; i++)
+                                                  result += left;
+                                              return new ASTNodeLiteral(result);
+                                          }
+                                      default:
+                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                      }
+                                  },
+                                  [this](std::string left, std::string right) -> ASTNode * {
+                                      switch (this->getOperator()) {
+                                      case Token::Operator::Plus:
+                                          return new ASTNodeLiteral(left + right);
+                                      case Token::Operator::BoolEquals:
+                                          return new ASTNodeLiteral(left == right);
+                                      case Token::Operator::BoolNotEquals:
+                                          return new ASTNodeLiteral(left != right);
+                                      case Token::Operator::BoolGreaterThan:
+                                          return new ASTNodeLiteral(left > right);
+                                      case Token::Operator::BoolLessThan:
+                                          return new ASTNodeLiteral(left < right);
+                                      case Token::Operator::BoolGreaterThanOrEquals:
+                                          return new ASTNodeLiteral(left >= right);
+                                      case Token::Operator::BoolLessThanOrEquals:
+                                          return new ASTNodeLiteral(left <= right);
+                                      default:
+                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                      }
+                                  },
+                                  [this](std::string left, char right) -> ASTNode * {
+                                      switch (this->getOperator()) {
+                                      case Token::Operator::Plus:
+                                          return new ASTNodeLiteral(left + right);
+                                      default:
+                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                      }
+                                  },
+                                  [this](char left, std::string right) -> ASTNode * {
+                                      switch (this->getOperator()) {
+                                      case Token::Operator::Plus:
+                                          return new ASTNodeLiteral(left + right);
+                                      default:
+                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                      }
+                                  },
+                                  [this](auto &&left, auto &&right) -> ASTNode * {
+                                      switch (this->getOperator()) {
+                                      case Token::Operator::Plus:
+                                          return new ASTNodeLiteral(left + right);
+                                      case Token::Operator::Minus:
+                                          return new ASTNodeLiteral(left - right);
+                                      case Token::Operator::Star:
+                                          return new ASTNodeLiteral(left * right);
+                                      case Token::Operator::Slash:
+                                          if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
+                                          return new ASTNodeLiteral(left / right);
+                                      case Token::Operator::Percent:
+                                          if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
+                                          return new ASTNodeLiteral(modulus(left, right));
+                                      case Token::Operator::ShiftLeft:
+                                          return new ASTNodeLiteral(shiftLeft(left, right));
+                                      case Token::Operator::ShiftRight:
+                                          return new ASTNodeLiteral(shiftRight(left, right));
+                                      case Token::Operator::BitAnd:
+                                          return new ASTNodeLiteral(bitAnd(left, right));
+                                      case Token::Operator::BitXor:
+                                          return new ASTNodeLiteral(bitXor(left, right));
+                                      case Token::Operator::BitOr:
+                                          return new ASTNodeLiteral(bitOr(left, right));
+                                      case Token::Operator::BitNot:
+                                          return new ASTNodeLiteral(bitNot(left, right));
+                                      case Token::Operator::BoolEquals:
+                                          return new ASTNodeLiteral(bool(left == right));
+                                      case Token::Operator::BoolNotEquals:
+                                          return new ASTNodeLiteral(bool(left != right));
+                                      case Token::Operator::BoolGreaterThan:
+                                          return new ASTNodeLiteral(bool(left > right));
+                                      case Token::Operator::BoolLessThan:
+                                          return new ASTNodeLiteral(bool(left < right));
+                                      case Token::Operator::BoolGreaterThanOrEquals:
+                                          return new ASTNodeLiteral(bool(left >= right));
+                                      case Token::Operator::BoolLessThanOrEquals:
+                                          return new ASTNodeLiteral(bool(left <= right));
+                                      case Token::Operator::BoolAnd:
+                                          return new ASTNodeLiteral(bool(left && right));
+                                      case Token::Operator::BoolXor:
+                                          return new ASTNodeLiteral(bool(left && !right || !left && right));
+                                      case Token::Operator::BoolOr:
+                                          return new ASTNodeLiteral(bool(left || right));
+                                      case Token::Operator::BoolNot:
+                                          return new ASTNodeLiteral(bool(!right));
+                                      default:
+                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                      }
+                                  } },
+                              left->getValue(),
+                              right->getValue());
         }
 
         [[nodiscard]] ASTNode *getLeftOperand() const { return this->m_left; }
@@ -316,7 +328,7 @@ namespace hex::pl {
     class ASTNodeTernaryExpression : public ASTNode {
     public:
         ASTNodeTernaryExpression(ASTNode *first, ASTNode *second, ASTNode *third, Token::Operator op)
-                : ASTNode(), m_first(first), m_second(second), m_third(third), m_operator(op) { }
+            : ASTNode(), m_first(first), m_second(second), m_third(third), m_operator(op) { }
 
         ~ASTNodeTernaryExpression() override {
             delete this->m_first;
@@ -331,29 +343,34 @@ namespace hex::pl {
             this->m_third = other.m_third->clone();
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeTernaryExpression(*this);
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             if (this->getFirstOperand() == nullptr || this->getSecondOperand() == nullptr || this->getThirdOperand() == nullptr)
                 LogConsole::abortEvaluation("attempted to use void expression in mathematical expression", this);
 
-            auto *first = dynamic_cast<ASTNodeLiteral*>(this->getFirstOperand()->evaluate(evaluator));
-            auto *second = dynamic_cast<ASTNodeLiteral*>(this->getSecondOperand()->evaluate(evaluator));
-            auto *third = dynamic_cast<ASTNodeLiteral*>(this->getThirdOperand()->evaluate(evaluator));
-            ON_SCOPE_EXIT { delete first; delete second; delete third; };
+            auto *first = dynamic_cast<ASTNodeLiteral *>(this->getFirstOperand()->evaluate(evaluator));
+            auto *second = dynamic_cast<ASTNodeLiteral *>(this->getSecondOperand()->evaluate(evaluator));
+            auto *third = dynamic_cast<ASTNodeLiteral *>(this->getThirdOperand()->evaluate(evaluator));
+            ON_SCOPE_EXIT {
+                delete first;
+                delete second;
+                delete third;
+            };
 
             auto condition = std::visit(overloaded {
-                    [this](std::string value) -> bool { return !value.empty(); },
-                    [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
-                    [](auto &&value) -> bool { return bool(value); }
-            }, first->getValue());
+                                            [this](std::string value) -> bool { return !value.empty(); },
+                                            [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                                            [](auto &&value) -> bool { return bool(value); } },
+                                        first->getValue());
 
             return std::visit(overloaded {
-                    [condition]<typename T>(const T &second, const T &third) -> ASTNode* { return new ASTNodeLiteral(condition ? second : third); },
-                    [this](auto &&second, auto &&third) -> ASTNode* { LogConsole::abortEvaluation("operands to ternary expression have different types", this); }
-            }, second->getValue(), third->getValue());
+                                  [condition]<typename T>(const T &second, const T &third) -> ASTNode * { return new ASTNodeLiteral(condition ? second : third); },
+                                  [this](auto &&second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("operands to ternary expression have different types", this); } },
+                              second->getValue(),
+                              third->getValue());
         }
 
         [[nodiscard]] ASTNode *getFirstOperand() const { return this->m_first; }
@@ -369,15 +386,15 @@ namespace hex::pl {
     class ASTNodeBuiltinType : public ASTNode {
     public:
         constexpr explicit ASTNodeBuiltinType(Token::ValueType type)
-                : ASTNode(), m_type(type) { }
+            : ASTNode(), m_type(type) { }
 
-        [[nodiscard]] constexpr const auto& getType() const { return this->m_type; }
+        [[nodiscard]] constexpr const auto &getType() const { return this->m_type; }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeBuiltinType(*this);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto offset = evaluator->dataOffset();
             auto size = Token::getTypeSize(this->m_type);
 
@@ -414,38 +431,39 @@ namespace hex::pl {
         const Token::ValueType m_type;
     };
 
-    class ASTNodeTypeDecl : public ASTNode, public Attributable {
+    class ASTNodeTypeDecl : public ASTNode,
+                            public Attributable {
     public:
         ASTNodeTypeDecl(std::string name, ASTNode *type, std::optional<std::endian> endian = std::nullopt)
-                : ASTNode(), m_name(std::move(name)), m_type(type), m_endian(endian) { }
+            : ASTNode(), m_name(std::move(name)), m_type(type), m_endian(endian) { }
 
-        ASTNodeTypeDecl(const ASTNodeTypeDecl& other) : ASTNode(other), Attributable(other) {
+        ASTNodeTypeDecl(const ASTNodeTypeDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
             this->m_type = other.m_type;
             this->m_endian = other.m_endian;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeTypeDecl(*this);
         }
 
         void setName(const std::string &name) { this->m_name = name; }
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
-        [[nodiscard]] ASTNode* getType() { return this->m_type; }
+        [[nodiscard]] const std::string &getName() const { return this->m_name; }
+        [[nodiscard]] ASTNode *getType() { return this->m_type; }
         [[nodiscard]] std::optional<std::endian> getEndian() const { return this->m_endian; }
 
         [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             auto type = this->m_type->evaluate(evaluator);
 
-            if (auto attributable = dynamic_cast<Attributable*>(type)) {
+            if (auto attributable = dynamic_cast<Attributable *>(type)) {
                 for (auto &attribute : this->getAttributes())
-                    attributable->addAttribute(static_cast<ASTNodeAttribute*>(attribute->clone()));
+                    attributable->addAttribute(static_cast<ASTNodeAttribute *>(attribute->clone()));
             }
 
             return type;
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto patterns = this->m_type->createPatterns(evaluator);
 
             for (auto &pattern : patterns) {
@@ -479,74 +497,75 @@ namespace hex::pl {
             delete this->m_type;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeCast(*this);
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
-            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_value->evaluate(evaluator));
-            auto type = dynamic_cast<ASTNodeBuiltinType*>(this->m_type->evaluate(evaluator))->getType();
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
+            auto literal = dynamic_cast<ASTNodeLiteral *>(this->m_value->evaluate(evaluator));
+            auto type = dynamic_cast<ASTNodeBuiltinType *>(this->m_type->evaluate(evaluator))->getType();
 
-            auto startOffset= evaluator->dataOffset();
+            auto startOffset = evaluator->dataOffset();
 
             auto typePattern = this->m_type->createPatterns(evaluator).front();
             ON_SCOPE_EXIT {
-                              evaluator->dataOffset() = startOffset;
-                              delete typePattern;
-                          };
+                evaluator->dataOffset() = startOffset;
+                delete typePattern;
+            };
 
             return std::visit(overloaded {
-                    [&, this](PatternData * value) -> ASTNode* { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(type)), this); },
-                    [&, this](const std::string&) -> ASTNode* { LogConsole::abortEvaluation(hex::format("cannot cast string to '{}'", Token::getTypeName(type)), this); },
-                    [&, this](auto &&value) -> ASTNode* {
-                        auto endianAdjustedValue = hex::changeEndianess(value, typePattern->getSize(), typePattern->getEndian());
-                        switch (type) {
-                            case Token::ValueType::Unsigned8Bit:
-                                return new ASTNodeLiteral(u128(u8(endianAdjustedValue)));
-                            case Token::ValueType::Unsigned16Bit:
-                                return new ASTNodeLiteral(u128(u16(endianAdjustedValue)));
-                            case Token::ValueType::Unsigned32Bit:
-                                return new ASTNodeLiteral(u128(u32(endianAdjustedValue)));
-                            case Token::ValueType::Unsigned64Bit:
-                                return new ASTNodeLiteral(u128(u64(endianAdjustedValue)));
-                            case Token::ValueType::Unsigned128Bit:
-                                return new ASTNodeLiteral(u128(endianAdjustedValue));
-                            case Token::ValueType::Signed8Bit:
-                                return new ASTNodeLiteral(i128(i8(endianAdjustedValue)));
-                            case Token::ValueType::Signed16Bit:
-                                return new ASTNodeLiteral(i128(i16(endianAdjustedValue)));
-                            case Token::ValueType::Signed32Bit:
-                                return new ASTNodeLiteral(i128(i32(endianAdjustedValue)));
-                            case Token::ValueType::Signed64Bit:
-                                return new ASTNodeLiteral(i128(i64(endianAdjustedValue)));
-                            case Token::ValueType::Signed128Bit:
-                                return new ASTNodeLiteral(i128(endianAdjustedValue));
-                            case Token::ValueType::Float:
-                                return new ASTNodeLiteral(double(float(endianAdjustedValue)));
-                            case Token::ValueType::Double:
-                                return new ASTNodeLiteral(double(endianAdjustedValue));
-                            case Token::ValueType::Character:
-                                return new ASTNodeLiteral(char(endianAdjustedValue));
-                            case Token::ValueType::Character16:
-                                return new ASTNodeLiteral(u128(char16_t(endianAdjustedValue)));
-                            case Token::ValueType::Boolean:
-                                return new ASTNodeLiteral(bool(endianAdjustedValue));
-                            case Token::ValueType::String:
-                            {
-                                std::string string(sizeof(value), '\x00');
-                                std::memcpy(string.data(), &value, string.size());
-                                hex::trim(string);
+                                  [&, this](PatternData *value) -> ASTNode * { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(type)), this); },
+                                  [&, this](const std::string &) -> ASTNode * { LogConsole::abortEvaluation(hex::format("cannot cast string to '{}'", Token::getTypeName(type)), this); },
+                                  [&, this](auto &&value) -> ASTNode * {
+                                      auto endianAdjustedValue = hex::changeEndianess(value, typePattern->getSize(), typePattern->getEndian());
+                                      switch (type) {
+                                      case Token::ValueType::Unsigned8Bit:
+                                          return new ASTNodeLiteral(u128(u8(endianAdjustedValue)));
+                                      case Token::ValueType::Unsigned16Bit:
+                                          return new ASTNodeLiteral(u128(u16(endianAdjustedValue)));
+                                      case Token::ValueType::Unsigned32Bit:
+                                          return new ASTNodeLiteral(u128(u32(endianAdjustedValue)));
+                                      case Token::ValueType::Unsigned64Bit:
+                                          return new ASTNodeLiteral(u128(u64(endianAdjustedValue)));
+                                      case Token::ValueType::Unsigned128Bit:
+                                          return new ASTNodeLiteral(u128(endianAdjustedValue));
+                                      case Token::ValueType::Signed8Bit:
+                                          return new ASTNodeLiteral(i128(i8(endianAdjustedValue)));
+                                      case Token::ValueType::Signed16Bit:
+                                          return new ASTNodeLiteral(i128(i16(endianAdjustedValue)));
+                                      case Token::ValueType::Signed32Bit:
+                                          return new ASTNodeLiteral(i128(i32(endianAdjustedValue)));
+                                      case Token::ValueType::Signed64Bit:
+                                          return new ASTNodeLiteral(i128(i64(endianAdjustedValue)));
+                                      case Token::ValueType::Signed128Bit:
+                                          return new ASTNodeLiteral(i128(endianAdjustedValue));
+                                      case Token::ValueType::Float:
+                                          return new ASTNodeLiteral(double(float(endianAdjustedValue)));
+                                      case Token::ValueType::Double:
+                                          return new ASTNodeLiteral(double(endianAdjustedValue));
+                                      case Token::ValueType::Character:
+                                          return new ASTNodeLiteral(char(endianAdjustedValue));
+                                      case Token::ValueType::Character16:
+                                          return new ASTNodeLiteral(u128(char16_t(endianAdjustedValue)));
+                                      case Token::ValueType::Boolean:
+                                          return new ASTNodeLiteral(bool(endianAdjustedValue));
+                                      case Token::ValueType::String:
+                                          {
+                                              std::string string(sizeof(value), '\x00');
+                                              std::memcpy(string.data(), &value, string.size());
+                                              hex::trim(string);
 
-                                if (typePattern->getEndian() != std::endian::native)
-                                    std::reverse(string.begin(), string.end());
+                                              if (typePattern->getEndian() != std::endian::native)
+                                                  std::reverse(string.begin(), string.end());
 
-                                return new ASTNodeLiteral(string);
-                            }
-                            default:
-                                LogConsole::abortEvaluation(hex::format("cannot cast value to '{}'", Token::getTypeName(type)), this);
-                        }
-                    },
-            }, literal->getValue());
+                                              return new ASTNodeLiteral(string);
+                                          }
+                                      default:
+                                          LogConsole::abortEvaluation(hex::format("cannot cast value to '{}'", Token::getTypeName(type)), this);
+                                      }
+                                  },
+                              },
+                              literal->getValue());
         }
 
     private:
@@ -556,8 +575,8 @@ namespace hex::pl {
 
     class ASTNodeWhileStatement : public ASTNode {
     public:
-        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode*> body, ASTNode *postExpression = nullptr)
-                : ASTNode(), m_condition(condition), m_body(std::move(body)), m_postExpression(postExpression) { }
+        explicit ASTNodeWhileStatement(ASTNode *condition, std::vector<ASTNode *> body, ASTNode *postExpression = nullptr)
+            : ASTNode(), m_condition(condition), m_body(std::move(body)), m_postExpression(postExpression) { }
 
         ~ASTNodeWhileStatement() override {
             delete this->m_condition;
@@ -580,15 +599,15 @@ namespace hex::pl {
                 this->m_postExpression = nullptr;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeWhileStatement(*this);
         }
 
-        [[nodiscard]] ASTNode* getCondition() {
+        [[nodiscard]] ASTNode *getCondition() {
             return this->m_condition;
         }
 
-        [[nodiscard]] const std::vector<ASTNode*>& getBody() {
+        [[nodiscard]] const std::vector<ASTNode *> &getBody() {
             return this->m_body;
         }
 
@@ -601,14 +620,14 @@ namespace hex::pl {
                 auto variables = *evaluator->getScope(0).scope;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
-                                  i64 stackSize = evaluator->getStack().size();
-                                  for (u32 i = startVariableCount; i < variables.size(); i++) {
-                                      stackSize--;
-                                      delete variables[i];
-                                  }
-                                  if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
-                                  evaluator->getStack().resize(stackSize);
-                              };
+                    i64 stackSize = evaluator->getStack().size();
+                    for (u32 i = startVariableCount; i < variables.size(); i++) {
+                        stackSize--;
+                        delete variables[i];
+                    }
+                    if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                    evaluator->getStack().resize(stackSize);
+                };
 
                 evaluator->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT { evaluator->popScope(); };
@@ -640,24 +659,23 @@ namespace hex::pl {
                     continue;
             }
 
-            return { };
+            return {};
         }
 
-        [[nodiscard]]
-        bool evaluateCondition(Evaluator *evaluator) const {
-            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator));
+        [[nodiscard]] bool evaluateCondition(Evaluator *evaluator) const {
+            auto literal = dynamic_cast<ASTNodeLiteral *>(this->m_condition->evaluate(evaluator));
             ON_SCOPE_EXIT { delete literal; };
 
             return std::visit(overloaded {
-                    [](std::string value) -> bool { return !value.empty(); },
-                    [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
-                    [](auto &&value) -> bool { return value != 0; }
-            }, literal->getValue());
+                                  [](std::string value) -> bool { return !value.empty(); },
+                                  [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                                  [](auto &&value) -> bool { return value != 0; } },
+                              literal->getValue());
         }
 
     private:
         ASTNode *m_condition;
-        std::vector<ASTNode*> m_body;
+        std::vector<ASTNode *> m_body;
         ASTNode *m_postExpression;
     };
 
@@ -670,7 +688,7 @@ namespace hex::pl {
             auto &name = attribute->getAttribute();
             auto value = attribute->getValue();
 
-            auto node = reinterpret_cast<const ASTNode*>(attributable);
+            auto node = reinterpret_cast<const ASTNode *>(attributable);
 
             auto requiresValue = [&]() {
                 if (!value.has_value())
@@ -696,7 +714,7 @@ namespace hex::pl {
             } else if (name == "no_unique_address" && noValue()) {
                 endOffset -= pattern->getSize();
             } else if (name == "inline" && noValue()) {
-                auto inlinable = dynamic_cast<Inlinable*>(pattern);
+                auto inlinable = dynamic_cast<Inlinable *>(pattern);
 
                 if (inlinable == nullptr)
                     LogConsole::abortEvaluation("inline attribute can only be applied to nested types", node);
@@ -732,7 +750,7 @@ namespace hex::pl {
                 if (function.parameterCount != 1)
                     LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
 
-                if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(pattern)) {
+                if (auto pointerPattern = dynamic_cast<PatternDataPointer *>(pattern)) {
                     u128 pointerValue = pointerPattern->getPointedAtAddress();
 
                     auto result = function.func(evaluator, { pointerValue });
@@ -748,10 +766,11 @@ namespace hex::pl {
         }
     }
 
-    class ASTNodeVariableDecl : public ASTNode, public Attributable {
+    class ASTNodeVariableDecl : public ASTNode,
+                                public Attributable {
     public:
         ASTNodeVariableDecl(std::string name, ASTNode *type, ASTNode *placementOffset = nullptr, bool inVariable = false, bool outVariable = false)
-                : ASTNode(), m_name(std::move(name)), m_type(type), m_placementOffset(placementOffset), m_inVariable(inVariable), m_outVariable(outVariable) { }
+            : ASTNode(), m_name(std::move(name)), m_type(type), m_placementOffset(placementOffset), m_inVariable(inVariable), m_outVariable(outVariable) { }
 
         ASTNodeVariableDecl(const ASTNodeVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -768,27 +787,27 @@ namespace hex::pl {
             delete this->m_placementOffset;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeVariableDecl(*this);
         }
 
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
-        [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
+        [[nodiscard]] const std::string &getName() const { return this->m_name; }
+        [[nodiscard]] constexpr ASTNode *getType() const { return this->m_type; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
 
         [[nodiscard]] constexpr bool isInVariable() const { return this->m_inVariable; }
         [[nodiscard]] constexpr bool isOutVariable() const { return this->m_outVariable; }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                        [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                        [this](PatternData * const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
-                        [](auto &&offset) -> u64 { return offset; }
-                }, offset->getValue());
+                                                         [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                                                         [this](PatternData *const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [](auto &&offset) -> u64 { return offset; } },
+                                                     offset->getValue());
             }
 
             auto pattern = this->m_type->createPatterns(evaluator).front();
@@ -802,7 +821,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             evaluator->createVariable(this->getName(), this->getType());
 
-            return { };
+            return {};
         }
 
     private:
@@ -813,10 +832,11 @@ namespace hex::pl {
         bool m_inVariable, m_outVariable;
     };
 
-    class ASTNodeArrayVariableDecl : public ASTNode, public Attributable {
+    class ASTNodeArrayVariableDecl : public ASTNode,
+                                     public Attributable {
     public:
         ASTNodeArrayVariableDecl(std::string name, ASTNode *type, ASTNode *size, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(std::move(name)), m_type(type), m_size(size), m_placementOffset(placementOffset) { }
+            : ASTNode(), m_name(std::move(name)), m_type(type), m_size(size), m_placementOffset(placementOffset) { }
 
         ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -838,29 +858,29 @@ namespace hex::pl {
             delete this->m_placementOffset;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeArrayVariableDecl(*this);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
-                auto offset = dynamic_cast<ASTNodeLiteral*>(this->m_placementOffset->evaluate(evaluator));
+                auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                        [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                        [this](PatternData * const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
-                        [](auto &&offset) -> u64 { return offset; }
-                }, offset->getValue());
+                                                         [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                                                         [this](PatternData *const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [](auto &&offset) -> u64 { return offset; } },
+                                                     offset->getValue());
             }
 
             auto type = this->m_type->evaluate(evaluator);
             ON_SCOPE_EXIT { delete type; };
 
             PatternData *pattern;
-            if (dynamic_cast<ASTNodeBuiltinType*>(type))
+            if (dynamic_cast<ASTNodeBuiltinType *>(type))
                 pattern = createStaticArray(evaluator);
-            else if (auto attributable = dynamic_cast<Attributable*>(type)) {
+            else if (auto attributable = dynamic_cast<Attributable *>(type)) {
                 auto &attributes = attributable->getAttributes();
 
                 bool isStaticType = std::any_of(attributes.begin(), attributes.end(), [](ASTNodeAttribute *attribute) {
@@ -879,9 +899,9 @@ namespace hex::pl {
             return { pattern };
         }
 
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
-        [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
-        [[nodiscard]] constexpr ASTNode* getSize() const { return this->m_size; }
+        [[nodiscard]] const std::string &getName() const { return this->m_name; }
+        [[nodiscard]] constexpr ASTNode *getType() const { return this->m_type; }
+        [[nodiscard]] constexpr ASTNode *getSize() const { return this->m_size; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
 
     private:
@@ -890,7 +910,7 @@ namespace hex::pl {
         ASTNode *m_size;
         ASTNode *m_placementOffset;
 
-        PatternData* createStaticArray(Evaluator *evaluator) const {
+        PatternData *createStaticArray(Evaluator *evaluator) const {
             u64 startOffset = evaluator->dataOffset();
 
             PatternData *templatePattern = this->m_type->createPatterns(evaluator).front();
@@ -904,13 +924,13 @@ namespace hex::pl {
                 auto sizeNode = this->m_size->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete sizeNode; };
 
-                if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
+                if (auto literal = dynamic_cast<ASTNodeLiteral *>(sizeNode)) {
                     entryCount = std::visit(overloaded {
-                            [this](std::string) -> u128  { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                            [this](PatternData*) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
-                            [](auto &&size) -> u128 { return size; }
-                    }, literal->getValue());
-                } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
+                                                [this](std::string) -> u128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
+                                                [this](PatternData *) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                                [](auto &&size) -> u128 { return size; } },
+                                            literal->getValue());
+                } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement *>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
                         entryCount++;
                         evaluator->dataOffset() += templatePattern->getSize();
@@ -942,11 +962,11 @@ namespace hex::pl {
             }
 
             PatternData *outputPattern;
-            if (dynamic_cast<PatternDataPadding*>(templatePattern)) {
+            if (dynamic_cast<PatternDataPadding *>(templatePattern)) {
                 outputPattern = new PatternDataPadding(startOffset, 0, evaluator);
-            } else if (dynamic_cast<PatternDataCharacter*>(templatePattern)) {
+            } else if (dynamic_cast<PatternDataCharacter *>(templatePattern)) {
                 outputPattern = new PatternDataString(startOffset, 0, evaluator);
-            } else if (dynamic_cast<PatternDataCharacter16*>(templatePattern)) {
+            } else if (dynamic_cast<PatternDataCharacter16 *>(templatePattern)) {
                 outputPattern = new PatternDataString16(startOffset, 0, evaluator);
             } else {
                 auto arrayPattern = new PatternDataStaticArray(startOffset, 0, evaluator);
@@ -965,7 +985,7 @@ namespace hex::pl {
             return outputPattern;
         }
 
-        PatternData* createDynamicArray(Evaluator *evaluator) const {
+        PatternData *createDynamicArray(Evaluator *evaluator) const {
             auto arrayPattern = new PatternDataDynamicArray(evaluator->dataOffset(), 0, evaluator);
             arrayPattern->setVariableName(this->m_name);
 
@@ -978,7 +998,7 @@ namespace hex::pl {
             size_t size = 0;
             u64 entryIndex = 0;
 
-            auto addEntries = [&](const std::vector<PatternData*> &patterns) {
+            auto addEntries = [&](const std::vector<PatternData *> &patterns) {
                 for (auto pattern : patterns) {
                     pattern->setVariableName(hex::format("[{}]", entryIndex));
                     pattern->setEndian(arrayPattern->getEndian());
@@ -1003,12 +1023,12 @@ namespace hex::pl {
                 auto sizeNode = this->m_size->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete sizeNode; };
 
-                if (auto literal = dynamic_cast<ASTNodeLiteral*>(sizeNode)) {
-                    auto entryCount = std::visit(overloaded{
-                            [this](std::string) -> u128  { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                            [this](PatternData*) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
-                            [](auto &&size) -> u128 { return size; }
-                    }, literal->getValue());
+                if (auto literal = dynamic_cast<ASTNodeLiteral *>(sizeNode)) {
+                    auto entryCount = std::visit(overloaded {
+                                                     [this](std::string) -> u128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
+                                                     [this](PatternData *) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                                     [](auto &&size) -> u128 { return size; } },
+                                                 literal->getValue());
 
                     auto limit = evaluator->getArrayLimit();
                     if (entryCount > limit)
@@ -1031,7 +1051,7 @@ namespace hex::pl {
                             continue;
                         }
                     }
-                } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement*>(sizeNode)) {
+                } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement *>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
                         auto limit = evaluator->getArrayLimit();
                         if (entryIndex > limit)
@@ -1114,10 +1134,11 @@ namespace hex::pl {
         }
     };
 
-    class ASTNodePointerVariableDecl : public ASTNode, public Attributable {
+    class ASTNodePointerVariableDecl : public ASTNode,
+                                       public Attributable {
     public:
         ASTNodePointerVariableDecl(std::string name, ASTNode *type, ASTNode *sizeType, ASTNode *placementOffset = nullptr)
-                : ASTNode(), m_name(std::move(name)), m_type(type), m_sizeType(sizeType), m_placementOffset(placementOffset) { }
+            : ASTNode(), m_name(std::move(name)), m_type(type), m_sizeType(sizeType), m_placementOffset(placementOffset) { }
 
         ASTNodePointerVariableDecl(const ASTNodePointerVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
@@ -1136,25 +1157,25 @@ namespace hex::pl {
             delete this->m_placementOffset;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodePointerVariableDecl(*this);
         }
 
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
-        [[nodiscard]] constexpr ASTNode* getType() const { return this->m_type; }
-        [[nodiscard]] constexpr ASTNode* getSizeType() const { return this->m_sizeType; }
+        [[nodiscard]] const std::string &getName() const { return this->m_name; }
+        [[nodiscard]] constexpr ASTNode *getType() const { return this->m_type; }
+        [[nodiscard]] constexpr ASTNode *getSizeType() const { return this->m_sizeType; }
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete offset; };
 
                 evaluator->dataOffset() = std::visit(overloaded {
-                        [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                        [this](PatternData*) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
-                        [](auto &&offset) -> u64   { return u64(offset); }
-                }, offset->getValue());
+                                                         [this](std::string) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
+                                                         [this](PatternData *) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [](auto &&offset) -> u64 { return u64(offset); } },
+                                                     offset->getValue());
             }
 
             auto startOffset = evaluator->dataOffset();
@@ -1199,7 +1220,7 @@ namespace hex::pl {
 
     class ASTNodeMultiVariableDecl : public ASTNode {
     public:
-        explicit ASTNodeMultiVariableDecl(std::vector<ASTNode*> variables) : m_variables(std::move(variables)) { }
+        explicit ASTNodeMultiVariableDecl(std::vector<ASTNode *> variables) : m_variables(std::move(variables)) { }
 
         ASTNodeMultiVariableDecl(const ASTNodeMultiVariableDecl &other) : ASTNode(other) {
             for (auto &variable : other.m_variables)
@@ -1211,16 +1232,16 @@ namespace hex::pl {
                 delete variable;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeMultiVariableDecl(*this);
         }
 
-        [[nodiscard]] std::vector<ASTNode*> getVariables() {
+        [[nodiscard]] std::vector<ASTNode *> getVariables() {
             return this->m_variables;
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            std::vector<PatternData*> patterns;
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            std::vector<PatternData *> patterns;
 
             for (auto &node : this->m_variables) {
                 auto newPatterns = node->createPatterns(evaluator);
@@ -1232,19 +1253,20 @@ namespace hex::pl {
 
         FunctionResult execute(Evaluator *evaluator) const override {
             for (auto &variable : this->m_variables) {
-                auto variableDecl = dynamic_cast<ASTNodeVariableDecl*>(variable);
+                auto variableDecl = dynamic_cast<ASTNodeVariableDecl *>(variable);
 
                 evaluator->createVariable(variableDecl->getName(), variableDecl->getType()->evaluate(evaluator));
             }
 
-            return { };
+            return {};
         }
 
     private:
-        std::vector<ASTNode*> m_variables;
+        std::vector<ASTNode *> m_variables;
     };
 
-    class ASTNodeStruct : public ASTNode, public Attributable {
+    class ASTNodeStruct : public ASTNode,
+                          public Attributable {
     public:
         ASTNodeStruct() : ASTNode() { }
 
@@ -1262,15 +1284,15 @@ namespace hex::pl {
                 delete inheritance;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeStruct(*this);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto pattern = new PatternDataStruct(evaluator->dataOffset(), 0, evaluator);
 
             u64 startOffset = evaluator->dataOffset();
-            std::vector<PatternData*> memberPatterns;
+            std::vector<PatternData *> memberPatterns;
             auto structCleanup = SCOPE_GUARD {
                 delete pattern;
                 for (auto member : memberPatterns)
@@ -1282,10 +1304,10 @@ namespace hex::pl {
             for (auto inheritance : this->m_inheritance) {
                 auto inheritancePatterns = inheritance->createPatterns(evaluator).front();
                 ON_SCOPE_EXIT {
-                                  delete inheritancePatterns;
-                              };
+                    delete inheritancePatterns;
+                };
 
-                if (auto structPattern = dynamic_cast<PatternDataStruct*>(inheritancePatterns)) {
+                if (auto structPattern = dynamic_cast<PatternDataStruct *>(inheritancePatterns)) {
                     for (auto member : structPattern->getMembers()) {
                         memberPatterns.push_back(member->clone());
                     }
@@ -1308,18 +1330,19 @@ namespace hex::pl {
             return { pattern };
         }
 
-        [[nodiscard]] const std::vector<ASTNode*>& getMembers() const { return this->m_members; }
+        [[nodiscard]] const std::vector<ASTNode *> &getMembers() const { return this->m_members; }
         void addMember(ASTNode *node) { this->m_members.push_back(node); }
 
-        [[nodiscard]] const std::vector<ASTNode*>& getInheritance() const { return this->m_inheritance; }
+        [[nodiscard]] const std::vector<ASTNode *> &getInheritance() const { return this->m_inheritance; }
         void addInheritance(ASTNode *node) { this->m_inheritance.push_back(node); }
 
     private:
-        std::vector<ASTNode*> m_members;
-        std::vector<ASTNode*> m_inheritance;
+        std::vector<ASTNode *> m_members;
+        std::vector<ASTNode *> m_inheritance;
     };
 
-    class ASTNodeUnion : public ASTNode, public Attributable {
+    class ASTNodeUnion : public ASTNode,
+                         public Attributable {
     public:
         ASTNodeUnion() : ASTNode() { }
 
@@ -1333,15 +1356,15 @@ namespace hex::pl {
                 delete member;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeUnion(*this);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto pattern = new PatternDataUnion(evaluator->dataOffset(), 0, evaluator);
 
             size_t size = 0;
-            std::vector<PatternData*> memberPatterns;
+            std::vector<PatternData *> memberPatterns;
             u64 startOffset = evaluator->dataOffset();
 
             auto unionCleanup = SCOPE_GUARD {
@@ -1369,14 +1392,15 @@ namespace hex::pl {
             return { pattern };
         }
 
-        [[nodiscard]] const  std::vector<ASTNode*>& getMembers() const { return this->m_members; }
+        [[nodiscard]] const std::vector<ASTNode *> &getMembers() const { return this->m_members; }
         void addMember(ASTNode *node) { this->m_members.push_back(node); }
 
     private:
-        std::vector<ASTNode*> m_members;
+        std::vector<ASTNode *> m_members;
     };
 
-    class ASTNodeEnum : public ASTNode, public Attributable {
+    class ASTNodeEnum : public ASTNode,
+                        public Attributable {
     public:
         explicit ASTNodeEnum(ASTNode *underlyingType) : ASTNode(), m_underlyingType(underlyingType) { }
 
@@ -1392,18 +1416,18 @@ namespace hex::pl {
             delete this->m_underlyingType;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeEnum(*this);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto pattern = new PatternDataEnum(evaluator->dataOffset(), 0, evaluator);
             auto enumCleanup = SCOPE_GUARD { delete pattern; };
 
 
             std::vector<std::pair<Token::Literal, std::string>> enumEntries;
             for (const auto &[name, value] : this->m_entries) {
-                auto literal = dynamic_cast<ASTNodeLiteral*>(value->evaluate(evaluator));
+                auto literal = dynamic_cast<ASTNodeLiteral *>(value->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete literal; };
 
                 enumEntries.emplace_back(literal->getValue(), name);
@@ -1421,17 +1445,18 @@ namespace hex::pl {
             return { pattern };
         }
 
-        [[nodiscard]] const std::map<std::string, ASTNode*>& getEntries() const { return this->m_entries; }
-        void addEntry(const std::string &name, ASTNode* expression) { this->m_entries.insert({ name, expression }); }
+        [[nodiscard]] const std::map<std::string, ASTNode *> &getEntries() const { return this->m_entries; }
+        void addEntry(const std::string &name, ASTNode *expression) { this->m_entries.insert({ name, expression }); }
 
         [[nodiscard]] ASTNode *getUnderlyingType() { return this->m_underlyingType; }
 
     private:
-        std::map<std::string, ASTNode*> m_entries;
+        std::map<std::string, ASTNode *> m_entries;
         ASTNode *m_underlyingType;
     };
 
-    class ASTNodeBitfield : public ASTNode, public Attributable {
+    class ASTNodeBitfield : public ASTNode,
+                            public Attributable {
     public:
         ASTNodeBitfield() : ASTNode() { }
 
@@ -1445,18 +1470,18 @@ namespace hex::pl {
                 delete expr;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeBitfield(*this);
         }
 
-        [[nodiscard]] const std::vector<std::pair<std::string, ASTNode*>>& getEntries() const { return this->m_entries; }
-        void addEntry(const std::string &name, ASTNode* size) { this->m_entries.emplace_back(name, size); }
+        [[nodiscard]] const std::vector<std::pair<std::string, ASTNode *>> &getEntries() const { return this->m_entries; }
+        void addEntry(const std::string &name, ASTNode *size) { this->m_entries.emplace_back(name, size); }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto pattern = new PatternDataBitfield(evaluator->dataOffset(), 0, evaluator);
 
             size_t bitOffset = 0;
-            std::vector<PatternData*> fields;
+            std::vector<PatternData *> fields;
 
             auto bitfieldCleanup = SCOPE_GUARD {
                 delete pattern;
@@ -1470,10 +1495,10 @@ namespace hex::pl {
                 ON_SCOPE_EXIT { delete literal; };
 
                 u8 bitSize = std::visit(overloaded {
-                        [this](std::string) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a string", this); },
-                        [this](PatternData*) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a custom type", this); },
-                        [](auto &&offset) -> u8 { return static_cast<u8>(offset); }
-                }, dynamic_cast<ASTNodeLiteral*>(literal)->getValue());
+                                            [this](std::string) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a string", this); },
+                                            [this](PatternData *) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a custom type", this); },
+                                            [](auto &&offset) -> u8 { return static_cast<u8>(offset); } },
+                                        dynamic_cast<ASTNodeLiteral *>(literal)->getValue());
 
                 // If a field is named padding, it was created through a padding expression and only advances the bit position
                 if (name != "padding") {
@@ -1497,34 +1522,33 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<std::pair<std::string, ASTNode*>> m_entries;
+        std::vector<std::pair<std::string, ASTNode *>> m_entries;
     };
 
     class ASTNodeRValue : public ASTNode {
     public:
-        using Path = std::vector<std::variant<std::string, ASTNode*>>;
+        using Path = std::vector<std::variant<std::string, ASTNode *>>;
 
         explicit ASTNodeRValue(Path path) : ASTNode(), m_path(std::move(path)) { }
 
-        ASTNodeRValue(const ASTNodeRValue&) = default;
+        ASTNodeRValue(const ASTNodeRValue &) = default;
 
         ~ASTNodeRValue() override {
             for (auto &part : this->m_path) {
-                if (auto node = std::get_if<ASTNode*>(&part); node != nullptr)
+                if (auto node = std::get_if<ASTNode *>(&part); node != nullptr)
                     delete *node;
             }
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeRValue(*this);
         }
 
-        [[nodiscard]]
-        const Path& getPath() const {
+        [[nodiscard]] const Path &getPath() const {
             return this->m_path;
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             if (this->getPath().size() == 1) {
                 if (auto name = std::get_if<std::string>(&this->getPath().front()); name != nullptr) {
                     if (*name == "$") return new ASTNodeLiteral(u128(evaluator->dataOffset()));
@@ -1535,16 +1559,16 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete pattern; };
 
             Token::Literal literal;
-            if (dynamic_cast<PatternDataUnsigned*>(pattern) || dynamic_cast<PatternDataEnum*>(pattern)) {
+            if (dynamic_cast<PatternDataUnsigned *>(pattern) || dynamic_cast<PatternDataEnum *>(pattern)) {
                 u128 value = 0;
                 readVariable(evaluator, value, pattern);
                 literal = value;
-            } else if (dynamic_cast<PatternDataSigned*>(pattern)) {
+            } else if (dynamic_cast<PatternDataSigned *>(pattern)) {
                 i128 value = 0;
                 readVariable(evaluator, value, pattern);
                 value = hex::signExtend(pattern->getSize() * 8, value);
                 literal = value;
-            } else if (dynamic_cast<PatternDataFloat*>(pattern)) {
+            } else if (dynamic_cast<PatternDataFloat *>(pattern)) {
                 if (pattern->getSize() == sizeof(u16)) {
                     u16 value = 0;
                     readVariable(evaluator, value, pattern);
@@ -1558,40 +1582,39 @@ namespace hex::pl {
                     readVariable(evaluator, value, pattern);
                     literal = value;
                 } else LogConsole::abortEvaluation("invalid floating point type access", this);
-            } else if (dynamic_cast<PatternDataCharacter*>(pattern)) {
+            } else if (dynamic_cast<PatternDataCharacter *>(pattern)) {
                 char value = 0;
                 readVariable(evaluator, value, pattern);
                 literal = value;
-            } else if (dynamic_cast<PatternDataBoolean*>(pattern)) {
+            } else if (dynamic_cast<PatternDataBoolean *>(pattern)) {
                 bool value = false;
                 readVariable(evaluator, value, pattern);
                 literal = value;
-            } else if (dynamic_cast<PatternDataString*>(pattern)) {
+            } else if (dynamic_cast<PatternDataString *>(pattern)) {
                 std::string value;
 
                 if (pattern->isLocal()) {
                     auto &literal = evaluator->getStack()[pattern->getOffset()];
 
                     std::visit(overloaded {
-                            [&](char assignmentValue) { if (assignmentValue != 0x00) value = std::string({ assignmentValue }); },
-                            [&](std::string assignmentValue) { value = assignmentValue; },
-                            [&, this](PatternData * const &assignmentValue) {
-                                if (!dynamic_cast<PatternDataString*>(assignmentValue) && !dynamic_cast<PatternDataCharacter*>(assignmentValue))
-                                    LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this);
+                                   [&](char assignmentValue) { if (assignmentValue != 0x00) value = std::string({ assignmentValue }); },
+                                   [&](std::string assignmentValue) { value = assignmentValue; },
+                                   [&, this](PatternData *const &assignmentValue) {
+                                       if (!dynamic_cast<PatternDataString *>(assignmentValue) && !dynamic_cast<PatternDataCharacter *>(assignmentValue))
+                                           LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this);
 
-                                readVariable(evaluator, value, assignmentValue);
-                            },
-                            [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); }
-                    }, literal);
-                }
-                else {
+                                       readVariable(evaluator, value, assignmentValue);
+                                   },
+                                   [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); } },
+                               literal);
+                } else {
                     value.resize(pattern->getSize());
                     evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
                     value.erase(std::find(value.begin(), value.end(), '\0'), value.end());
                 }
 
                 literal = value;
-            } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField*>(pattern)) {
+            } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField *>(pattern)) {
                 u64 value = 0;
                 readVariable(evaluator, value, pattern);
                 literal = u128(hex::extract(bitfieldFieldPattern->getBitOffset() + (bitfieldFieldPattern->getBitSize() - 1), bitfieldFieldPattern->getBitOffset(), value));
@@ -1610,12 +1633,12 @@ namespace hex::pl {
             return new ASTNodeLiteral(literal);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            std::vector<PatternData*> searchScope;
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            std::vector<PatternData *> searchScope;
             PatternData *currPattern = nullptr;
             i32 scopeIndex = 0;
 
-            if (!evaluator->isGlobalScope()){
+            if (!evaluator->isGlobalScope()) {
                 auto globalScope = evaluator->getGlobalScope().scope;
                 std::copy(globalScope->begin(), globalScope->end(), std::back_inserter(searchScope));
             }
@@ -1677,38 +1700,37 @@ namespace hex::pl {
                     }
                 } else {
                     // Array indexing
-                    auto index = dynamic_cast<ASTNodeLiteral*>(std::get<ASTNode*>(part)->evaluate(evaluator));
+                    auto index = dynamic_cast<ASTNodeLiteral *>(std::get<ASTNode *>(part)->evaluate(evaluator));
                     ON_SCOPE_EXIT { delete index; };
 
                     std::visit(overloaded {
-                            [](std::string) { throw std::string("cannot use string to index array"); },
-                            [](PatternData * const &) { throw std::string("cannot use custom type to index array"); },
-                            [&, this](auto &&index) {
-                                if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(currPattern)) {
-                                    if (index >= searchScope.size() || index < 0)
-                                        LogConsole::abortEvaluation("array index out of bounds", this);
+                                   [](std::string) { throw std::string("cannot use string to index array"); },
+                                   [](PatternData *const &) { throw std::string("cannot use custom type to index array"); },
+                                   [&, this](auto &&index) {
+                                       if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray *>(currPattern)) {
+                                           if (index >= searchScope.size() || index < 0)
+                                               LogConsole::abortEvaluation("array index out of bounds", this);
 
-                                    auto newPattern = searchScope[index]->clone();
-                                    delete currPattern;
-                                    currPattern = newPattern;
-                                }
-                                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(currPattern)) {
-                                    if (index >= staticArrayPattern->getEntryCount() || index < 0)
-                                        LogConsole::abortEvaluation("array index out of bounds", this);
+                                           auto newPattern = searchScope[index]->clone();
+                                           delete currPattern;
+                                           currPattern = newPattern;
+                                       } else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray *>(currPattern)) {
+                                           if (index >= staticArrayPattern->getEntryCount() || index < 0)
+                                               LogConsole::abortEvaluation("array index out of bounds", this);
 
-                                    auto newPattern = searchScope.front()->clone();
-                                    newPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getTemplate()->getSize());
-                                    delete currPattern;
-                                    currPattern = newPattern;
-                                }
-                            }
-                    }, index->getValue());
+                                           auto newPattern = searchScope.front()->clone();
+                                           newPattern->setOffset(staticArrayPattern->getOffset() + index * staticArrayPattern->getTemplate()->getSize());
+                                           delete currPattern;
+                                           currPattern = newPattern;
+                                       }
+                                   } },
+                               index->getValue());
                 }
 
                 if (currPattern == nullptr)
                     break;
 
-                if (auto pointerPattern = dynamic_cast<PatternDataPointer*>(currPattern)) {
+                if (auto pointerPattern = dynamic_cast<PatternDataPointer *>(currPattern)) {
                     auto newPattern = pointerPattern->getPointedAtPattern()->clone();
                     delete currPattern;
                     currPattern = newPattern;
@@ -1717,25 +1739,23 @@ namespace hex::pl {
                 PatternData *indexPattern;
                 if (currPattern->isLocal()) {
                     auto stackLiteral = evaluator->getStack()[currPattern->getOffset()];
-                    if (auto stackPattern = std::get_if<PatternData*>(&stackLiteral); stackPattern != nullptr)
+                    if (auto stackPattern = std::get_if<PatternData *>(&stackLiteral); stackPattern != nullptr)
                         indexPattern = *stackPattern;
                     else
                         return { currPattern };
-                }
-                else
+                } else
                     indexPattern = currPattern;
 
-                if (auto structPattern = dynamic_cast<PatternDataStruct*>(indexPattern))
+                if (auto structPattern = dynamic_cast<PatternDataStruct *>(indexPattern))
                     searchScope = structPattern->getMembers();
-                else if (auto unionPattern = dynamic_cast<PatternDataUnion*>(indexPattern))
+                else if (auto unionPattern = dynamic_cast<PatternDataUnion *>(indexPattern))
                     searchScope = unionPattern->getMembers();
-                else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield*>(indexPattern))
+                else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield *>(indexPattern))
                     searchScope = bitfieldPattern->getFields();
-                else if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray*>(indexPattern))
+                else if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray *>(indexPattern))
                     searchScope = dynamicArrayPattern->getEntries();
-                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray*>(indexPattern))
+                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray *>(indexPattern))
                     searchScope = { staticArrayPattern->getTemplate() };
-
             }
 
             if (currPattern == nullptr)
@@ -1754,14 +1774,13 @@ namespace hex::pl {
                 auto &literal = evaluator->getStack()[variablePattern->getOffset()];
 
                 std::visit(overloaded {
-                        [&](std::string &assignmentValue) {
-                            if constexpr (isString) value = assignmentValue;
-                        },
-                        [&](PatternData *assignmentValue) { readVariable(evaluator, value, assignmentValue); },
-                        [&](auto &&assignmentValue) { value = assignmentValue; }
-                }, literal);
-            }
-            else {
+                               [&](std::string &assignmentValue) {
+                                   if constexpr (isString) value = assignmentValue;
+                               },
+                               [&](PatternData *assignmentValue) { readVariable(evaluator, value, assignmentValue); },
+                               [&](auto &&assignmentValue) { value = assignmentValue; } },
+                           literal);
+            } else {
                 if constexpr (isString) {
                     value.resize(variablePattern->getSize());
                     evaluator->getProvider()->read(variablePattern->getOffset(), value.data(), value.size());
@@ -1789,15 +1808,15 @@ namespace hex::pl {
             delete this->m_type;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeScopeResolution(*this);
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             auto type = this->m_type->evaluate(evaluator);
             ON_SCOPE_EXIT { delete type; };
 
-            if (auto enumType = dynamic_cast<ASTNodeEnum*>(type)) {
+            if (auto enumType = dynamic_cast<ASTNodeEnum *>(type)) {
                 for (auto &[name, value] : enumType->getEntries()) {
                     if (name == this->m_name)
                         return value->evaluate(evaluator);
@@ -1816,8 +1835,8 @@ namespace hex::pl {
 
     class ASTNodeConditionalStatement : public ASTNode {
     public:
-        explicit ASTNodeConditionalStatement(ASTNode *condition, std::vector<ASTNode*> trueBody, std::vector<ASTNode*> falseBody)
-                : ASTNode(), m_condition(condition), m_trueBody(std::move(trueBody)), m_falseBody(std::move(falseBody)) { }
+        explicit ASTNodeConditionalStatement(ASTNode *condition, std::vector<ASTNode *> trueBody, std::vector<ASTNode *> falseBody)
+            : ASTNode(), m_condition(condition), m_trueBody(std::move(trueBody)), m_falseBody(std::move(falseBody)) { }
 
         ~ASTNodeConditionalStatement() override {
             delete this->m_condition;
@@ -1837,11 +1856,11 @@ namespace hex::pl {
                 this->m_falseBody.push_back(statement->clone());
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeConditionalStatement(*this);
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto &scope = *evaluator->getScope(0).scope;
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
@@ -1852,18 +1871,18 @@ namespace hex::pl {
                 }
             }
 
-            return { };
+            return {};
         }
 
-        [[nodiscard]] ASTNode* getCondition() {
+        [[nodiscard]] ASTNode *getCondition() {
             return this->m_condition;
         }
 
-        [[nodiscard]] const std::vector<ASTNode*>& getTrueBody() const {
+        [[nodiscard]] const std::vector<ASTNode *> &getTrueBody() const {
             return this->m_trueBody;
         }
 
-        [[nodiscard]] const std::vector<ASTNode*>& getFalseBody() const {
+        [[nodiscard]] const std::vector<ASTNode *> &getFalseBody() const {
             return this->m_falseBody;
         }
 
@@ -1873,14 +1892,14 @@ namespace hex::pl {
             auto variables = *evaluator->getScope(0).scope;
             u32 startVariableCount = variables.size();
             ON_SCOPE_EXIT {
-                              i64 stackSize = evaluator->getStack().size();
-                              for (u32 i = startVariableCount; i < variables.size(); i++) {
-                                  stackSize--;
-                                  delete variables[i];
-                              }
-                              if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
-                              evaluator->getStack().resize(stackSize);
-                          };
+                i64 stackSize = evaluator->getStack().size();
+                for (u32 i = startVariableCount; i < variables.size(); i++) {
+                    stackSize--;
+                    delete variables[i];
+                }
+                if (stackSize < 0) LogConsole::abortEvaluation("stack pointer underflow!", this);
+                evaluator->getStack().resize(stackSize);
+            };
 
             evaluator->pushScope(nullptr, variables);
             ON_SCOPE_EXIT { evaluator->popScope(); };
@@ -1891,30 +1910,29 @@ namespace hex::pl {
                 }
             }
 
-            return { };
+            return {};
         }
 
     private:
-        [[nodiscard]]
-        bool evaluateCondition(Evaluator *evaluator) const {
-            auto literal = dynamic_cast<ASTNodeLiteral*>(this->m_condition->evaluate(evaluator));
+        [[nodiscard]] bool evaluateCondition(Evaluator *evaluator) const {
+            auto literal = dynamic_cast<ASTNodeLiteral *>(this->m_condition->evaluate(evaluator));
             ON_SCOPE_EXIT { delete literal; };
 
             return std::visit(overloaded {
-                    [](std::string value) -> bool { return !value.empty(); },
-                    [this](PatternData * const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
-                    [](auto &&value) -> bool { return value != 0; }
-            }, literal->getValue());
+                                  [](std::string value) -> bool { return !value.empty(); },
+                                  [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                                  [](auto &&value) -> bool { return value != 0; } },
+                              literal->getValue());
         }
 
         ASTNode *m_condition;
-        std::vector<ASTNode*> m_trueBody, m_falseBody;
+        std::vector<ASTNode *> m_trueBody, m_falseBody;
     };
 
     class ASTNodeFunctionCall : public ASTNode {
     public:
-        explicit ASTNodeFunctionCall(std::string functionName, std::vector<ASTNode*> params)
-                : ASTNode(), m_functionName(std::move(functionName)), m_params(std::move(params)) { }
+        explicit ASTNodeFunctionCall(std::string functionName, std::vector<ASTNode *> params)
+            : ASTNode(), m_functionName(std::move(functionName)), m_params(std::move(params)) { }
 
         ~ASTNodeFunctionCall() override {
             for (auto &param : this->m_params)
@@ -1928,32 +1946,32 @@ namespace hex::pl {
                 this->m_params.push_back(param->clone());
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeFunctionCall(*this);
         }
 
-        [[nodiscard]] const std::string& getFunctionName() {
+        [[nodiscard]] const std::string &getFunctionName() {
             return this->m_functionName;
         }
 
-        [[nodiscard]] const std::vector<ASTNode*>& getParams() const {
+        [[nodiscard]] const std::vector<ASTNode *> &getParams() const {
             return this->m_params;
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
 
             this->execute(evaluator);
 
-            return { };
+            return {};
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             std::vector<Token::Literal> evaluatedParams;
             for (auto param : this->m_params) {
                 auto expression = param->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete expression; };
 
-                auto literal = dynamic_cast<ASTNodeLiteral*>(expression->evaluate(evaluator));
+                auto literal = dynamic_cast<ASTNodeLiteral *>(expression->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete literal; };
 
                 evaluatedParams.push_back(literal->getValue());
@@ -1970,9 +1988,8 @@ namespace hex::pl {
 
             auto function = functions[this->m_functionName];
             if (function.parameterCount == ContentRegistry::PatternLanguage::UnlimitedParameters) {
-                ; // Don't check parameter count
-            }
-            else if (function.parameterCount & ContentRegistry::PatternLanguage::LessParametersThan) {
+                ;    // Don't check parameter count
+            } else if (function.parameterCount & ContentRegistry::PatternLanguage::LessParametersThan) {
                 if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan))
                     LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan), this);
             } else if (function.parameterCount & ContentRegistry::PatternLanguage::MoreParametersThan) {
@@ -2015,18 +2032,17 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             delete this->evaluate(evaluator);
 
-            return { };
+            return {};
         }
 
     private:
         std::string m_functionName;
-        std::vector<ASTNode*> m_params;
+        std::vector<ASTNode *> m_params;
     };
 
     class ASTNodeTypeOperator : public ASTNode {
     public:
         ASTNodeTypeOperator(Token::Operator op, ASTNode *expression) : m_op(op), m_expression(expression) {
-
         }
 
         ASTNodeTypeOperator(const ASTNodeTypeOperator &other) : ASTNode(other) {
@@ -2034,7 +2050,7 @@ namespace hex::pl {
             this->m_expression = other.m_expression->clone();
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeTypeOperator(*this);
         }
 
@@ -2042,28 +2058,25 @@ namespace hex::pl {
             delete this->m_expression;
         }
 
-        [[nodiscard]]
-        Token::Operator getOperator() const {
+        [[nodiscard]] Token::Operator getOperator() const {
             return this->m_op;
         }
 
-        [[nodiscard]]
-        ASTNode* getExpression() const {
+        [[nodiscard]] ASTNode *getExpression() const {
             return this->m_expression;
         }
 
-        [[nodiscard]]
-        ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             auto pattern = this->m_expression->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete pattern; };
 
             switch (this->getOperator()) {
-                case Token::Operator::AddressOf:
-                    return new ASTNodeLiteral(u128(pattern->getOffset()));
-                case Token::Operator::SizeOf:
-                    return new ASTNodeLiteral(u128(pattern->getSize()));
-                default:
-                    LogConsole::abortEvaluation("invalid type operator", this);
+            case Token::Operator::AddressOf:
+                return new ASTNodeLiteral(u128(pattern->getOffset()));
+            case Token::Operator::SizeOf:
+                return new ASTNodeLiteral(u128(pattern->getSize()));
+            default:
+                LogConsole::abortEvaluation("invalid type operator", this);
             }
         }
 
@@ -2077,7 +2090,6 @@ namespace hex::pl {
     class ASTNodeAssignment : public ASTNode {
     public:
         ASTNodeAssignment(std::string lvalueName, ASTNode *rvalue) : m_lvalueName(std::move(lvalueName)), m_rvalue(rvalue) {
-
         }
 
         ASTNodeAssignment(const ASTNodeAssignment &other) : ASTNode(other) {
@@ -2085,7 +2097,7 @@ namespace hex::pl {
             this->m_rvalue = other.m_rvalue->clone();
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeAssignment(*this);
         }
 
@@ -2093,21 +2105,21 @@ namespace hex::pl {
             delete this->m_rvalue;
         }
 
-        [[nodiscard]] const std::string& getLValueName() const {
+        [[nodiscard]] const std::string &getLValueName() const {
             return this->m_lvalueName;
         }
 
-        [[nodiscard]] ASTNode* getRValue() const {
+        [[nodiscard]] ASTNode *getRValue() const {
             return this->m_rvalue;
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {
-            auto literal = dynamic_cast<ASTNodeLiteral*>(this->getRValue()->evaluate(evaluator));
+            auto literal = dynamic_cast<ASTNodeLiteral *>(this->getRValue()->evaluate(evaluator));
             ON_SCOPE_EXIT { delete literal; };
 
             evaluator->setVariable(this->getLValueName(), literal->getValue());
 
-            return { };
+            return {};
         }
 
     private:
@@ -2118,7 +2130,6 @@ namespace hex::pl {
     class ASTNodeControlFlowStatement : public ASTNode {
     public:
         explicit ASTNodeControlFlowStatement(ControlFlowStatement type, ASTNode *rvalue) : m_type(type), m_rvalue(rvalue) {
-
         }
 
         ASTNodeControlFlowStatement(const ASTNodeControlFlowStatement &other) : ASTNode(other) {
@@ -2130,7 +2141,7 @@ namespace hex::pl {
                 this->m_rvalue = nullptr;
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeControlFlowStatement(*this);
         }
 
@@ -2138,15 +2149,15 @@ namespace hex::pl {
             delete this->m_rvalue;
         }
 
-        [[nodiscard]] ASTNode* getReturnValue() const {
+        [[nodiscard]] ASTNode *getReturnValue() const {
             return this->m_rvalue;
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
 
             this->execute(evaluator);
 
-            return { };
+            return {};
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {
@@ -2157,7 +2168,7 @@ namespace hex::pl {
             if (returnValue == nullptr)
                 return std::nullopt;
             else {
-                auto literal = dynamic_cast<ASTNodeLiteral*>(returnValue->evaluate(evaluator));
+                auto literal = dynamic_cast<ASTNodeLiteral *>(returnValue->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete literal; };
 
                 return literal->getValue();
@@ -2171,9 +2182,8 @@ namespace hex::pl {
 
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
-        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode*>> params, std::vector<ASTNode*> body)
-                : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
-
+        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode *>> params, std::vector<ASTNode *> body)
+            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
         }
 
         ASTNodeFunctionDefinition(const ASTNodeFunctionDefinition &other) : ASTNode(other) {
@@ -2189,7 +2199,7 @@ namespace hex::pl {
             }
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeFunctionDefinition(*this);
         }
 
@@ -2200,30 +2210,30 @@ namespace hex::pl {
                 delete statement;
         }
 
-        [[nodiscard]] const std::string& getName() const {
+        [[nodiscard]] const std::string &getName() const {
             return this->m_name;
         }
 
-        [[nodiscard]] const auto& getParams() const {
+        [[nodiscard]] const auto &getParams() const {
             return this->m_params;
         }
 
-        [[nodiscard]] const auto& getBody() const {
+        [[nodiscard]] const auto &getBody() const {
             return this->m_body;
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
 
-            evaluator->addCustomFunction(this->m_name, this->m_params.size(), [this](Evaluator *ctx, const std::vector<Token::Literal>& params) -> std::optional<Token::Literal> {
-                std::vector<PatternData*> variables;
+            evaluator->addCustomFunction(this->m_name, this->m_params.size(), [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
+                std::vector<PatternData *> variables;
 
                 ctx->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT {
-                                  for (auto variable : variables)
-                                      delete variable;
+                    for (auto variable : variables)
+                        delete variable;
 
-                                  ctx->popScope();
-                              };
+                    ctx->popScope();
+                };
 
                 u32 paramIndex = 0;
                 for (const auto &[name, type] : this->m_params) {
@@ -2238,11 +2248,12 @@ namespace hex::pl {
 
                     if (ctx->getCurrentControlFlowStatement() != ControlFlowStatement::None) {
                         switch (ctx->getCurrentControlFlowStatement()) {
-                            case ControlFlowStatement::Break:
-                                ctx->getConsole().abortEvaluation("break statement not within a loop", statement);
-                            case ControlFlowStatement::Continue:
-                                ctx->getConsole().abortEvaluation("continue statement not within a loop", statement);
-                            default: break;
+                        case ControlFlowStatement::Break:
+                            ctx->getConsole().abortEvaluation("break statement not within a loop", statement);
+                        case ControlFlowStatement::Continue:
+                            ctx->getConsole().abortEvaluation("continue statement not within a loop", statement);
+                        default:
+                            break;
                         }
 
                         ctx->setCurrentControlFlowStatement(ControlFlowStatement::None);
@@ -2250,7 +2261,7 @@ namespace hex::pl {
                     }
                 }
 
-                return { };
+                return {};
             });
 
             return nullptr;
@@ -2259,15 +2270,13 @@ namespace hex::pl {
 
     private:
         std::string m_name;
-        std::vector<std::pair<std::string, ASTNode*>> m_params;
-        std::vector<ASTNode*> m_body;
+        std::vector<std::pair<std::string, ASTNode *>> m_params;
+        std::vector<ASTNode *> m_body;
     };
 
     class ASTNodeCompoundStatement : public ASTNode {
     public:
-
-        ASTNodeCompoundStatement(std::vector<ASTNode*> statements, bool newScope = false) : m_statements(std::move(statements)), m_newScope(newScope) {
-
+        ASTNodeCompoundStatement(std::vector<ASTNode *> statements, bool newScope = false) : m_statements(std::move(statements)), m_newScope(newScope) {
         }
 
         ASTNodeCompoundStatement(const ASTNodeCompoundStatement &other) : ASTNode(other) {
@@ -2276,7 +2285,7 @@ namespace hex::pl {
             }
         }
 
-        [[nodiscard]] ASTNode* clone() const override {
+        [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeCompoundStatement(*this);
         }
 
@@ -2286,7 +2295,7 @@ namespace hex::pl {
             }
         }
 
-        [[nodiscard]] ASTNode* evaluate(Evaluator *evaluator) const override {
+        [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             ASTNode *result = nullptr;
 
             for (const auto &statement : this->m_statements) {
@@ -2297,8 +2306,8 @@ namespace hex::pl {
             return result;
         }
 
-        [[nodiscard]] std::vector<PatternData*> createPatterns(Evaluator *evaluator) const override {
-            std::vector<PatternData*> result;
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            std::vector<PatternData *> result;
 
             for (const auto &statement : this->m_statements) {
                 auto patterns = statement->createPatterns(evaluator);
@@ -2340,7 +2349,7 @@ namespace hex::pl {
         }
 
     public:
-        std::vector<ASTNode*> m_statements;
+        std::vector<ASTNode *> m_statements;
         bool m_newScope;
     };
 

@@ -51,7 +51,7 @@ namespace hex::dp {
         if (outputData->size() < sizeof(u64))
             throw std::runtime_error("Not enough data provided for integer");
 
-        return *reinterpret_cast<u64*>(outputData->data());
+        return *reinterpret_cast<u64 *>(outputData->data());
     }
 
     float Node::getFloatOnInput(u32 index) {
@@ -74,7 +74,7 @@ namespace hex::dp {
         if (outputData->size() < sizeof(float))
             throw std::runtime_error("Not enough data provided for float");
 
-        return *reinterpret_cast<float*>(outputData->data());
+        return *reinterpret_cast<float *>(outputData->data());
     }
 
     void Node::setBufferOnOutput(u32 index, std::vector<u8> data) {

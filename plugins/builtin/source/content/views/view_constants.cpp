@@ -18,7 +18,6 @@ namespace hex::plugin::builtin {
     }
 
     ViewConstants::~ViewConstants() {
-
     }
 
     void ViewConstants::reloadConstants() {
@@ -67,26 +66,26 @@ namespace hex::plugin::builtin {
     void ViewConstants::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.constants.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            ImGui::InputText("##search", this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
-                auto &view = *static_cast<ViewConstants*>(data->UserData);
-                view.m_filter.resize(data->BufTextLen);
+            ImGui::InputText(
+                "##search", this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
+                    auto &view = *static_cast<ViewConstants *>(data->UserData);
+                    view.m_filter.resize(data->BufTextLen);
 
-                view.m_filterIndices.clear();
-                for (u64 i = 0; i < view.m_constants.size(); i++) {
-                    auto &constant = view.m_constants[i];
-                    if (hex::containsIgnoreCase(constant.name, data->Buf) ||
-                        hex::containsIgnoreCase(constant.category, data->Buf) ||
-                        hex::containsIgnoreCase(constant.description, data->Buf) ||
-                        hex::containsIgnoreCase(constant.value, data->Buf))
+                    view.m_filterIndices.clear();
+                    for (u64 i = 0; i < view.m_constants.size(); i++) {
+                        auto &constant = view.m_constants[i];
+                        if (hex::containsIgnoreCase(constant.name, data->Buf) ||
+                            hex::containsIgnoreCase(constant.category, data->Buf) ||
+                            hex::containsIgnoreCase(constant.description, data->Buf) ||
+                            hex::containsIgnoreCase(constant.value, data->Buf))
                             view.m_filterIndices.push_back(i);
-                }
+                    }
 
-                return 0;
-                }, this);
+                    return 0;
+                },
+                this);
 
-            if (ImGui::BeginTable("##strings", 4,
-                                  ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
-                                  ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            if (ImGui::BeginTable("##strings", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.constants.row.category"_lang, 0, -1, ImGui::GetID("category"));
                 ImGui::TableSetupColumn("hex.builtin.view.constants.row.name"_lang, 0, -1, ImGui::GetID("name"));
@@ -96,8 +95,7 @@ namespace hex::plugin::builtin {
                 auto sortSpecs = ImGui::TableGetSortSpecs();
 
                 if (sortSpecs->SpecsDirty) {
-                    std::sort(this->m_constants.begin(), this->m_constants.end(),
-                              [&sortSpecs](Constant &left, Constant &right) -> bool {
+                    std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](Constant &left, Constant &right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("category")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                 return left.category > right.category;

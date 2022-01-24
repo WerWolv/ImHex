@@ -17,11 +17,11 @@ using namespace std::literals::string_literals;
 
 namespace hex {
 
-    PyObject* LoaderScript::Py_getFilePath(PyObject *self, PyObject *args) {
+    PyObject *LoaderScript::Py_getFilePath(PyObject *self, PyObject *args) {
         return PyUnicode_FromString(LoaderScript::s_filePath.string().c_str());
     }
 
-    PyObject* LoaderScript::Py_addPatch(PyObject *self, PyObject *args) {
+    PyObject *LoaderScript::Py_addPatch(PyObject *self, PyObject *args) {
         u64 address;
         u8 *patches;
         Py_ssize_t count;
@@ -46,7 +46,7 @@ namespace hex {
         Py_RETURN_NONE;
     }
 
-    PyObject* LoaderScript::Py_addBookmark(PyObject *self, PyObject *args) {
+    PyObject *LoaderScript::Py_addBookmark(PyObject *self, PyObject *args) {
         u64 address;
         size_t size;
 
@@ -68,7 +68,7 @@ namespace hex {
         Py_RETURN_NONE;
     }
 
-    static PyObject* createStructureType(std::string keyword, PyObject *args) {
+    static PyObject *createStructureType(std::string keyword, PyObject *args) {
         auto type = PyTuple_GetItem(args, 0);
         if (type == nullptr) {
             PyErr_BadArgument();
@@ -170,11 +170,11 @@ namespace hex {
         Py_RETURN_NONE;
     }
 
-    PyObject* LoaderScript::Py_addStruct(PyObject *self, PyObject *args) {
+    PyObject *LoaderScript::Py_addStruct(PyObject *self, PyObject *args) {
         return createStructureType("struct", args);
     }
 
-    PyObject* LoaderScript::Py_addUnion(PyObject *self, PyObject *args) {
+    PyObject *LoaderScript::Py_addUnion(PyObject *self, PyObject *args) {
         return createStructureType("union", args);
     }
 
@@ -188,22 +188,21 @@ namespace hex {
             }
         }
 
-        PyImport_AppendInittab("_imhex", []() -> PyObject* {
-
+        PyImport_AppendInittab("_imhex", []() -> PyObject * {
             static PyMethodDef ImHexMethods[] = {
-                { "get_file_path",  &LoaderScript::Py_getFilePath,  METH_NOARGS,  "Returns the path of the file being loaded."  },
-                { "patch",          &LoaderScript::Py_addPatch,     METH_VARARGS, "Patches a region of memory"                  },
-                { "add_bookmark",   &LoaderScript::Py_addBookmark,  METH_VARARGS, "Adds a bookmark"                             },
-                { "add_struct",     &LoaderScript::Py_addStruct,    METH_VARARGS, "Adds a struct"                               },
-                { "add_union",      &LoaderScript::Py_addUnion,     METH_VARARGS, "Adds a union"                                },
-                { nullptr,          nullptr,               0,     nullptr                                       }
+                {"get_file_path", &LoaderScript::Py_getFilePath, METH_NOARGS,  "Returns the path of the file being loaded."},
+                { "patch",        &LoaderScript::Py_addPatch,    METH_VARARGS, "Patches a region of memory"                },
+                { "add_bookmark", &LoaderScript::Py_addBookmark, METH_VARARGS, "Adds a bookmark"                           },
+                { "add_struct",   &LoaderScript::Py_addStruct,   METH_VARARGS, "Adds a struct"                             },
+                { "add_union",    &LoaderScript::Py_addUnion,    METH_VARARGS, "Adds a union"                              },
+                { nullptr,        nullptr,                       0,            nullptr                                     }
             };
 
             static PyModuleDef ImHexModule = {
                 PyModuleDef_HEAD_INIT, "imhex", nullptr, -1, ImHexMethods, nullptr, nullptr, nullptr, nullptr
             };
 
-            auto module =  PyModule_Create(&ImHexModule);
+            auto module = PyModule_Create(&ImHexModule);
             if (module == nullptr)
                 return nullptr;
 

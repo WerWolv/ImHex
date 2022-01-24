@@ -113,21 +113,21 @@ namespace hex {
 }
 
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 12000
-#if __has_include(<concepts>)
-// Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
-#include <concepts>
-#endif
+    #if __has_include(<concepts>)
+        // Make sure we break when derived_from is implemented in libc++. Then we can fix a compatibility version above
+        #include <concepts>
+    #endif
 // libcxx 12 still doesn't have many default concepts implemented, as a result we need to define it ourself using clang built-ins.
 // [concept.derived] (patch from https://reviews.llvm.org/D74292)
 namespace hex {
-template<class _Dp, class _Bp>
-concept derived_from =
-  __is_base_of(_Bp, _Dp) && __is_convertible_to(const volatile _Dp*, const volatile _Bp*);
+    template<class _Dp, class _Bp>
+    concept derived_from =
+        __is_base_of(_Bp, _Dp) && __is_convertible_to(const volatile _Dp *, const volatile _Bp *);
 }
 
 #else
-// Assume supported
-#include <concepts>
+    // Assume supported
+    #include <concepts>
 namespace hex {
     using std::derived_from;
 }
@@ -153,10 +153,9 @@ namespace hex {
 namespace hex {
 
     template<typename T>
-    struct always_false : std::false_type {};
+    struct always_false : std::false_type { };
 
     template<typename T, size_t Size>
     concept has_size = sizeof(T) == Size;
 
 }
-

@@ -30,7 +30,7 @@ namespace hex::pl {
         template<hex::has_size<1> T>
         std::string makeDisplayable(T *data, size_t size) {
             std::string result;
-            for (T* c = data; c < (data + size); c++) {
+            for (T *c = data; c < (data + size); c++) {
                 if (iscntrl(*c) || *c > 0x7F)
                     result += " ";
                 else
@@ -49,6 +49,7 @@ namespace hex::pl {
     public:
         [[nodiscard]] bool isInlined() const { return this->m_inlined; }
         void setInlined(bool inlined) { this->m_inlined = inlined; }
+
     private:
         bool m_inlined = false;
     };
@@ -81,7 +82,7 @@ namespace hex::pl {
     class PatternData : public PatternCreationLimiter {
     public:
         PatternData(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
-        : PatternCreationLimiter(evaluator), m_offset(offset), m_size(size), m_color(color) {
+            : PatternCreationLimiter(evaluator), m_offset(offset), m_size(size), m_color(color) {
             constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
@@ -98,7 +99,7 @@ namespace hex::pl {
 
         virtual ~PatternData() = default;
 
-        virtual PatternData* clone() = 0;
+        virtual PatternData *clone() = 0;
 
         [[nodiscard]] u64 getOffset() const { return this->m_offset; }
         virtual void setOffset(u64 offset) { this->m_offset = offset; }
@@ -106,37 +107,39 @@ namespace hex::pl {
         [[nodiscard]] size_t getSize() const { return this->m_size; }
         void setSize(size_t size) { this->m_size = size; }
 
-        [[nodiscard]] const std::string& getVariableName() const { return this->m_variableName; }
+        [[nodiscard]] const std::string &getVariableName() const { return this->m_variableName; }
         void setVariableName(std::string name) { this->m_variableName = std::move(name); }
 
-        [[nodiscard]] const std::optional<std::string>& getComment() const { return this->m_comment; }
+        [[nodiscard]] const std::optional<std::string> &getComment() const { return this->m_comment; }
         void setComment(std::string comment) { this->m_comment = std::move(comment); }
 
-        [[nodiscard]] const std::string& getTypeName() const { return this->m_typeName; }
+        [[nodiscard]] const std::string &getTypeName() const { return this->m_typeName; }
         void setTypeName(std::string name) { this->m_typeName = std::move(name); }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }
-        virtual void setColor(u32 color) { this->m_color = color; this->m_manualColor = true; }
+        virtual void setColor(u32 color) {
+            this->m_color = color;
+            this->m_manualColor = true;
+        }
         [[nodiscard]] bool hasOverriddenColor() const { return this->m_manualColor; }
 
         [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
         void setEndian(std::endian endian) { this->m_endian = endian; }
 
-        [[nodiscard]] std::string getDisplayName() const {  return this->m_displayName.value_or(this->m_variableName); }
+        [[nodiscard]] std::string getDisplayName() const { return this->m_displayName.value_or(this->m_variableName); }
         void setDisplayName(const std::string &name) { this->m_displayName = name; }
 
-        [[nodiscard]] Evaluator* getEvaluator() const { return this->m_evaluator; }
+        [[nodiscard]] Evaluator *getEvaluator() const { return this->m_evaluator; }
 
-        [[nodiscard]] const auto& getTransformFunction() const { return this->m_transformFunction; }
+        [[nodiscard]] const auto &getTransformFunction() const { return this->m_transformFunction; }
         void setTransformFunction(const ContentRegistry::PatternLanguage::Function &function) { this->m_transformFunction = function; }
-        [[nodiscard]] const auto& getFormatterFunction() const { return this->m_formatterFunction; }
+        [[nodiscard]] const auto &getFormatterFunction() const { return this->m_formatterFunction; }
         void setFormatterFunction(const ContentRegistry::PatternLanguage::Function &function) { this->m_formatterFunction = function; }
 
-        virtual void createEntry(prv::Provider* &provider) = 0;
+        virtual void createEntry(prv::Provider *&provider) = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
-        [[nodiscard]]
-        virtual const PatternData* getPattern(u64 offset) const {
+        [[nodiscard]] virtual const PatternData *getPattern(u64 offset) const {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()) && !this->isHidden())
                 return this;
             else
@@ -154,31 +157,27 @@ namespace hex::pl {
 
         virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
 
-        [[nodiscard]]
-        virtual std::string toString(prv::Provider *provider) const {
+        [[nodiscard]] virtual std::string toString(prv::Provider *provider) const {
             return hex::format("{} {} @ 0x{:X}", this->getTypeName(), this->getVariableName(), this->getOffset());
         }
 
-        static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, pl::PatternData* left, pl::PatternData* right) {
+        static bool sortPatternDataTable(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider, pl::PatternData *left, pl::PatternData *right) {
             if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getDisplayName() > right->getDisplayName();
                 else
                     return left->getDisplayName() < right->getDisplayName();
-            }
-            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
+            } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getOffset() > right->getOffset();
                 else
                     return left->getOffset() < right->getOffset();
-            }
-            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
+            } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getSize() > right->getSize();
                 else
                     return left->getSize() < right->getSize();
-            }
-            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
+            } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
                 size_t biggerSize = std::max(left->getSize(), right->getSize());
                 std::vector<u8> leftBuffer(biggerSize, 0x00), rightBuffer(biggerSize, 0x00);
 
@@ -194,14 +193,12 @@ namespace hex::pl {
                     return leftBuffer > rightBuffer;
                 else
                     return leftBuffer < rightBuffer;
-            }
-            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
+            } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getTypeName() > right->getTypeName();
                 else
                     return left->getTypeName() < right->getTypeName();
-            }
-            else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
+            } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                     return left->getColor() > right->getColor();
                 else
@@ -240,20 +237,18 @@ namespace hex::pl {
 
         template<typename T>
         [[nodiscard]] bool areCommonPropertiesEqual(const PatternData &other) const {
-            return
-                typeid(other) == typeid(std::remove_cvref_t<T>) &&
-                this->m_offset == other.m_offset &&
-                this->m_size == other.m_size &&
-                this->m_hidden == other.m_hidden &&
-                this->m_endian == other.m_endian &&
-                this->m_variableName == other.m_variableName &&
-                this->m_typeName == other.m_typeName &&
-                this->m_comment == other.m_comment &&
-                this->m_local == other.m_local;
+            return typeid(other) == typeid(std::remove_cvref_t<T>) &&
+                   this->m_offset == other.m_offset &&
+                   this->m_size == other.m_size &&
+                   this->m_hidden == other.m_hidden &&
+                   this->m_endian == other.m_endian &&
+                   this->m_variableName == other.m_variableName &&
+                   this->m_typeName == other.m_typeName &&
+                   this->m_comment == other.m_comment &&
+                   this->m_local == other.m_local;
         }
 
-        [[nodiscard]]
-        std::string formatDisplayValue(const std::string &value, const Token::Literal &literal) const {
+        [[nodiscard]] std::string formatDisplayValue(const std::string &value, const Token::Literal &literal) const {
             if (!this->m_formatterFunction.has_value())
                 return value;
             else {
@@ -330,11 +325,11 @@ namespace hex::pl {
     public:
         PatternDataPadding(u64 offset, size_t size, Evaluator *evaluator) : PatternData(offset, size, evaluator, 0xFF000000) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataPadding(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -347,7 +342,7 @@ namespace hex::pl {
     class PatternDataPointer : public PatternData {
     public:
         PatternDataPointer(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
-        : PatternData(offset, size, evaluator, color), m_pointedAt(nullptr) {
+            : PatternData(offset, size, evaluator, color), m_pointedAt(nullptr) {
         }
 
         PatternDataPointer(const PatternDataPointer &other) : PatternData(other) {
@@ -358,11 +353,11 @@ namespace hex::pl {
             delete this->m_pointedAt;
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataPointer(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
@@ -397,11 +392,21 @@ namespace hex::pl {
         [[nodiscard]] std::string getFormattedName() const override {
             std::string result = this->m_pointedAt->getFormattedName() + "* : ";
             switch (this->getSize()) {
-                case 1:     result += "u8";  break;
-                case 2:     result += "u16";  break;
-                case 4:     result += "u32";  break;
-                case 8:     result += "u64";  break;
-                case 16:    result += "u128"; break;
+            case 1:
+                result += "u8";
+                break;
+            case 2:
+                result += "u16";
+                break;
+            case 4:
+                result += "u32";
+                break;
+            case 8:
+                result += "u64";
+                break;
+            case 16:
+                result += "u128";
+                break;
             }
 
             return result;
@@ -421,7 +426,7 @@ namespace hex::pl {
             return this->m_pointedAtAddress;
         }
 
-        [[nodiscard]] PatternData* getPointedAtPattern() {
+        [[nodiscard]] PatternData *getPointedAtPattern() {
             return this->m_pointedAt;
         }
 
@@ -432,7 +437,7 @@ namespace hex::pl {
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
             return areCommonPropertiesEqual<decltype(*this)>(other) &&
-            *static_cast<const PatternDataPointer*>(&other)->m_pointedAt == *this->m_pointedAt;
+                   *static_cast<const PatternDataPointer *>(&other)->m_pointedAt == *this->m_pointedAt;
         }
 
         void rebase(u64 base) {
@@ -444,8 +449,7 @@ namespace hex::pl {
             this->m_pointerBase = base;
         }
 
-        [[nodiscard]]
-        const PatternData* getPattern(u64 offset) const override {
+        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()) && !this->isHidden())
                 return this;
             else
@@ -464,11 +468,11 @@ namespace hex::pl {
         PatternDataUnsigned(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataUnsigned(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             u128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
@@ -478,12 +482,18 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
-                case 1:     return "u8";
-                case 2:     return "u16";
-                case 4:     return "u32";
-                case 8:     return "u64";
-                case 16:    return "u128";
-                default:    return "Unsigned data";
+            case 1:
+                return "u8";
+            case 2:
+                return "u16";
+            case 4:
+                return "u32";
+            case 8:
+                return "u64";
+            case 16:
+                return "u128";
+            default:
+                return "Unsigned data";
             }
         }
 
@@ -495,11 +505,11 @@ namespace hex::pl {
         PatternDataSigned(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataSigned(*this);
         }
 
-       void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             i128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
@@ -510,12 +520,18 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
-                case 1:     return "s8";
-                case 2:     return "s16";
-                case 4:     return "s32";
-                case 8:     return "s64";
-                case 16:    return "s128";
-                default:    return "Signed data";
+            case 1:
+                return "s8";
+            case 2:
+                return "s16";
+            case 4:
+                return "s32";
+            case 8:
+                return "s64";
+            case 16:
+                return "s128";
+            default:
+                return "Signed data";
             }
         }
 
@@ -527,31 +543,34 @@ namespace hex::pl {
         PatternDataFloat(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataFloat(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             if (this->getSize() == 4) {
                 u32 data = 0;
                 provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
 
-                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<float*>(&data), data, this->getSize() * 2), *reinterpret_cast<float*>(&data));
+                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<float *>(&data), data, this->getSize() * 2), *reinterpret_cast<float *>(&data));
             } else if (this->getSize() == 8) {
                 u64 data = 0;
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
 
-                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<double*>(&data), data, this->getSize() * 2), *reinterpret_cast<double*>(&data));
+                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", *reinterpret_cast<double *>(&data), data, this->getSize() * 2), *reinterpret_cast<double *>(&data));
             }
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
-                case 4:     return "float";
-                case 8:     return "double";
-                default:    return "Floating point data";
+            case 4:
+                return "float";
+            case 8:
+                return "double";
+            default:
+                return "Floating point data";
             }
         }
 
@@ -561,13 +580,13 @@ namespace hex::pl {
     class PatternDataBoolean : public PatternData {
     public:
         explicit PatternDataBoolean(u64 offset, Evaluator *evaluator, u32 color = 0)
-                : PatternData(offset, 1, evaluator, color) { }
+            : PatternData(offset, 1, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataBoolean(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             u8 boolean;
             provider->read(this->getOffset(), &boolean, 1);
 
@@ -591,11 +610,11 @@ namespace hex::pl {
         explicit PatternDataCharacter(u64 offset, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, 1, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataCharacter(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             char character;
             provider->read(this->getOffset(), &character, 1);
 
@@ -612,19 +631,19 @@ namespace hex::pl {
     class PatternDataCharacter16 : public PatternData {
     public:
         explicit PatternDataCharacter16(u64 offset, Evaluator *evaluator, u32 color = 0)
-                : PatternData(offset, 2, evaluator, color) { }
+            : PatternData(offset, 2, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataCharacter16(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             char16_t character;
             provider->read(this->getOffset(), &character, 2);
             character = hex::changeEndianess(character, this->getEndian());
 
             u128 literal = character;
-            this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character)), literal);
+            this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(character)), literal);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -636,7 +655,7 @@ namespace hex::pl {
             provider->read(this->getOffset(), &character, 2);
             character = hex::changeEndianess(character, this->getEndian());
 
-            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(character);
+            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(character);
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
@@ -647,11 +666,11 @@ namespace hex::pl {
         PatternDataString(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataString(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             auto size = std::min<size_t>(this->getSize(), 0x7F);
 
             if (size == 0)
@@ -661,7 +680,7 @@ namespace hex::pl {
 
             provider->read(this->getOffset(), buffer.data(), size);
 
-            std::erase_if(buffer, [](auto c){
+            std::erase_if(buffer, [](auto c) {
                 return c == 0x00;
             });
 
@@ -669,14 +688,14 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
-           return "String";
+            return "String";
         }
 
         [[nodiscard]] std::string toString(prv::Provider *provider) const override {
             std::string buffer(this->getSize(), 0x00);
             provider->read(this->getOffset(), buffer.data(), buffer.size());
 
-            std::erase_if(buffer, [](auto c){
+            std::erase_if(buffer, [](auto c) {
                 return c == 0x00;
             });
 
@@ -689,29 +708,29 @@ namespace hex::pl {
     class PatternDataString16 : public PatternData {
     public:
         PatternDataString16(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
-                : PatternData(offset, size, evaluator, color) { }
+            : PatternData(offset, size, evaluator, color) { }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataString16(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             auto size = std::min<size_t>(this->getSize(), 0x100);
 
             if (size == 0)
                 return;
 
-            std::u16string buffer(this->getSize()/sizeof(char16_t), 0x00);
+            std::u16string buffer(this->getSize() / sizeof(char16_t), 0x00);
             provider->read(this->getOffset(), buffer.data(), size);
 
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
 
-            std::erase_if(buffer, [](auto c){
+            std::erase_if(buffer, [](auto c) {
                 return c == 0x00;
             });
 
-            auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
+            auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(buffer);
 
             this->createDefaultEntry(hex::format("\"{0}\" {1}", utf8String, size > this->getSize() ? "(truncated)" : ""), utf8String);
         }
@@ -721,30 +740,31 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::string toString(prv::Provider *provider) const override {
-            std::u16string buffer(this->getSize()/sizeof(char16_t), 0x00);
+            std::u16string buffer(this->getSize() / sizeof(char16_t), 0x00);
             provider->read(this->getOffset(), buffer.data(), this->getSize());
 
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
 
-            std::erase_if(buffer, [](auto c){
+            std::erase_if(buffer, [](auto c) {
                 return c == 0x00;
             });
 
-            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(buffer);
+            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(buffer);
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
-    class PatternDataDynamicArray : public PatternData, public Inlinable {
+    class PatternDataDynamicArray : public PatternData,
+                                    public Inlinable {
     public:
         PatternDataDynamicArray(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) {
         }
 
         PatternDataDynamicArray(const PatternDataDynamicArray &other) : PatternData(other) {
-            std::vector<PatternData*> entries;
+            std::vector<PatternData *> entries;
             for (const auto &entry : other.m_entries)
                 entries.push_back(entry->clone());
 
@@ -756,7 +776,7 @@ namespace hex::pl {
                 delete entry;
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataDynamicArray(*this);
         }
 
@@ -766,7 +786,7 @@ namespace hex::pl {
                 entry->setColor(color);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             if (this->m_entries.empty())
                 return;
 
@@ -836,11 +856,11 @@ namespace hex::pl {
             PatternData::setOffset(offset);
         }
 
-        [[nodiscard]] const std::vector<PatternData*>& getEntries() {
+        [[nodiscard]] const std::vector<PatternData *> &getEntries() {
             return this->m_entries;
         }
 
-        void setEntries(const std::vector<PatternData*> &entries) {
+        void setEntries(const std::vector<PatternData *> &entries) {
             this->m_entries = entries;
 
             if (this->hasOverriddenColor()) {
@@ -854,7 +874,7 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherArray = *static_cast<const PatternDataDynamicArray*>(&other);
+            auto &otherArray = *static_cast<const PatternDataDynamicArray *>(&other);
             if (this->m_entries.size() != otherArray.m_entries.size())
                 return false;
 
@@ -866,12 +886,11 @@ namespace hex::pl {
             return true;
         }
 
-        [[nodiscard]]
-        const PatternData* getPattern(u64 offset) const override {
+        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            auto iter = std::find_if(this->m_entries.begin(), this->m_entries.end(), [this, offset](PatternData *pattern){
-               return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
+            auto iter = std::find_if(this->m_entries.begin(), this->m_entries.end(), [this, offset](PatternData *pattern) {
+                return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
             });
 
             if (iter == this->m_entries.end())
@@ -881,14 +900,15 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData*> m_entries;
+        std::vector<PatternData *> m_entries;
         u64 m_displayEnd = 50;
     };
 
-    class PatternDataStaticArray : public PatternData, public Inlinable {
+    class PatternDataStaticArray : public PatternData,
+                                   public Inlinable {
     public:
         PatternDataStaticArray(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
-                : PatternData(offset, size, evaluator, color) {
+            : PatternData(offset, size, evaluator, color) {
         }
 
         PatternDataStaticArray(const PatternDataStaticArray &other) : PatternData(other) {
@@ -900,11 +920,11 @@ namespace hex::pl {
             delete this->m_highlightTemplate;
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataStaticArray(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             if (this->getEntryCount() == 0)
                 return;
 
@@ -988,7 +1008,7 @@ namespace hex::pl {
             return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
         }
 
-        [[nodiscard]] PatternData* getTemplate() const {
+        [[nodiscard]] PatternData *getTemplate() const {
             return this->m_template;
         }
 
@@ -1000,7 +1020,7 @@ namespace hex::pl {
             this->m_entryCount = count;
         }
 
-        void setEntries(PatternData* templ, size_t count) {
+        void setEntries(PatternData *templ, size_t count) {
             this->m_template = templ;
             this->m_highlightTemplate = this->m_template->clone();
             this->m_entryCount = count;
@@ -1013,12 +1033,11 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherArray = *static_cast<const PatternDataStaticArray*>(&other);
+            auto &otherArray = *static_cast<const PatternDataStaticArray *>(&other);
             return *this->m_template == *otherArray.m_template && this->m_entryCount == otherArray.m_entryCount;
         }
 
-        [[nodiscard]]
-        const PatternData* getPattern(u64 offset) const override {
+        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize())) {
@@ -1036,10 +1055,11 @@ namespace hex::pl {
         u64 m_displayEnd = 50;
     };
 
-    class PatternDataStruct : public PatternData, public Inlinable {
+    class PatternDataStruct : public PatternData,
+                              public Inlinable {
     public:
         PatternDataStruct(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
-            : PatternData(offset, size, evaluator, color){
+            : PatternData(offset, size, evaluator, color) {
         }
 
         PatternDataStruct(const PatternDataStruct &other) : PatternData(other) {
@@ -1053,11 +1073,11 @@ namespace hex::pl {
                 delete member;
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataStruct(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             bool open = true;
 
             if (!this->isInlined()) {
@@ -1071,7 +1091,9 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "struct"); ImGui::SameLine(); ImGui::TextUnformatted(this->getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "struct");
+                ImGui::SameLine();
+                ImGui::TextUnformatted(this->getTypeName().c_str());
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
@@ -1083,7 +1105,6 @@ namespace hex::pl {
                 if (!this->isInlined())
                     ImGui::TreePop();
             }
-
         }
 
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
@@ -1120,11 +1141,11 @@ namespace hex::pl {
             return "struct " + PatternData::getTypeName();
         }
 
-        [[nodiscard]] const auto& getMembers() const {
+        [[nodiscard]] const auto &getMembers() const {
             return this->m_members;
         }
 
-        void setMembers(const std::vector<PatternData*> & members) {
+        void setMembers(const std::vector<PatternData *> &members) {
             this->m_members.clear();
 
             for (auto &member : members) {
@@ -1140,7 +1161,7 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherStruct = *static_cast<const PatternDataStruct*>(&other);
+            auto &otherStruct = *static_cast<const PatternDataStruct *>(&other);
             if (this->m_members.size() != otherStruct.m_members.size())
                 return false;
 
@@ -1152,11 +1173,10 @@ namespace hex::pl {
             return true;
         }
 
-        [[nodiscard]]
-        const PatternData* getPattern(u64 offset) const override {
+        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](PatternData *pattern){
+            auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](PatternData *pattern) {
                 return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
             });
 
@@ -1167,15 +1187,15 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData*> m_members;
-        std::vector<PatternData*> m_sortedMembers;
+        std::vector<PatternData *> m_members;
+        std::vector<PatternData *> m_sortedMembers;
     };
 
-    class PatternDataUnion : public PatternData, public Inlinable {
+    class PatternDataUnion : public PatternData,
+                             public Inlinable {
     public:
         PatternDataUnion(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) {
-
         }
 
         PatternDataUnion(const PatternDataUnion &other) : PatternData(other) {
@@ -1189,11 +1209,11 @@ namespace hex::pl {
                 delete member;
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataUnion(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             bool open = true;
 
             if (!this->isInlined()) {
@@ -1207,7 +1227,9 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "union"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "union");
+                ImGui::SameLine();
+                ImGui::TextUnformatted(PatternData::getTypeName().c_str());
 
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
@@ -1218,9 +1240,8 @@ namespace hex::pl {
                     member->draw(provider);
 
                 if (!this->isInlined())
-                ImGui::TreePop();
+                    ImGui::TreePop();
             }
-
         }
 
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
@@ -1254,14 +1275,15 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
-            return "union " + PatternData::getTypeName();;
+            return "union " + PatternData::getTypeName();
+            ;
         }
 
-        [[nodiscard]] const auto& getMembers() const {
+        [[nodiscard]] const auto &getMembers() const {
             return this->m_members;
         }
 
-        void setMembers(const std::vector<PatternData*> & members) {
+        void setMembers(const std::vector<PatternData *> &members) {
             this->m_members.clear();
             for (auto &member : members) {
                 if (member == nullptr) continue;
@@ -1276,7 +1298,7 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherUnion = *static_cast<const PatternDataUnion*>(&other);
+            auto &otherUnion = *static_cast<const PatternDataUnion *>(&other);
             if (this->m_members.size() != otherUnion.m_members.size())
                 return false;
 
@@ -1288,8 +1310,7 @@ namespace hex::pl {
             return true;
         }
 
-        [[nodiscard]]
-        const PatternData* getPattern(u64 offset) const override {
+        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
             auto largestMember = std::find_if(this->m_members.begin(), this->m_members.end(), [this](PatternData *pattern) {
@@ -1299,26 +1320,26 @@ namespace hex::pl {
             if (largestMember == this->m_members.end())
                 return nullptr;
             else
-                return (*largestMember)->getPattern(offset);;
+                return (*largestMember)->getPattern(offset);
+            ;
         }
 
     private:
-        std::vector<PatternData*> m_members;
-        std::vector<PatternData*> m_sortedMembers;
+        std::vector<PatternData *> m_members;
+        std::vector<PatternData *> m_sortedMembers;
     };
 
     class PatternDataEnum : public PatternData {
     public:
         PatternDataEnum(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) {
-
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataEnum(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
             value = hex::changeEndianess(value, this->getSize(), this->getEndian());
@@ -1328,18 +1349,18 @@ namespace hex::pl {
             bool foundValue = false;
             for (auto &[entryValueLiteral, entryName] : this->m_enumValues) {
                 bool matches = std::visit(overloaded {
-                    [&, name = entryName](auto &&entryValue) {
-                        if (value == entryValue) {
-                            valueString += name;
-                            foundValue = true;
-                            return true;
-                        }
+                                              [&, name = entryName](auto &&entryValue) {
+                                                  if (value == entryValue) {
+                                                      valueString += name;
+                                                      foundValue = true;
+                                                      return true;
+                                                  }
 
-                        return false;
-                    },
-                    [](std::string) { return false; },
-                    [](PatternData*) { return false; }
-                }, entryValueLiteral);
+                                                  return false;
+                                              },
+                                              [](std::string) { return false; },
+                                              [](PatternData *) { return false; } },
+                                          entryValueLiteral);
                 if (matches)
                     break;
             }
@@ -1363,7 +1384,9 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormatted("0x{0:04X}", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "enum"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
+            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "enum");
+            ImGui::SameLine();
+            ImGui::TextUnformatted(PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this));
         }
@@ -1372,7 +1395,7 @@ namespace hex::pl {
             return "enum " + PatternData::getTypeName();
         }
 
-        [[nodiscard]] const auto& getEnumValues() const {
+        [[nodiscard]] const auto &getEnumValues() const {
             return this->m_enumValues;
         }
 
@@ -1384,7 +1407,7 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherEnum = *static_cast<const PatternDataEnum*>(&other);
+            auto &otherEnum = *static_cast<const PatternDataEnum *>(&other);
             if (this->m_enumValues.size() != otherEnum.m_enumValues.size())
                 return false;
 
@@ -1404,15 +1427,14 @@ namespace hex::pl {
     class PatternDataBitfieldField : public PatternData {
     public:
         PatternDataBitfieldField(u64 offset, u8 bitOffset, u8 bitSize, PatternData *bitField, Evaluator *evaluator, u32 color = 0)
-        : m_bitOffset(bitOffset), m_bitSize(bitSize), m_bitField(bitField), PatternData(offset, 0, evaluator, color) {
-
+            : m_bitOffset(bitOffset), m_bitSize(bitSize), m_bitField(bitField), PatternData(offset, 0, evaluator, color) {
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataBitfieldField(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             std::vector<u8> value(this->m_bitField->getSize(), 0);
             provider->read(this->m_bitField->getOffset(), &value[0], value.size());
 
@@ -1443,7 +1465,6 @@ namespace hex::pl {
                 u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
                 ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), this));
             }
-
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -1462,7 +1483,7 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherBitfieldField = *static_cast<const PatternDataBitfieldField*>(&other);
+            auto &otherBitfieldField = *static_cast<const PatternDataBitfieldField *>(&other);
             return this->m_bitOffset == otherBitfieldField.m_bitOffset && this->m_bitSize == otherBitfieldField.m_bitSize;
         }
 
@@ -1471,11 +1492,11 @@ namespace hex::pl {
         PatternData *m_bitField;
     };
 
-    class PatternDataBitfield : public PatternData, public Inlinable {
+    class PatternDataBitfield : public PatternData,
+                                public Inlinable {
     public:
         PatternDataBitfield(u64 offset, size_t size, Evaluator *evaluator, u32 color = 0)
             : PatternData(offset, size, evaluator, color) {
-
         }
 
         PatternDataBitfield(const PatternDataBitfield &other) : PatternData(other) {
@@ -1488,11 +1509,11 @@ namespace hex::pl {
                 delete field;
         }
 
-        PatternData* clone() override {
+        PatternData *clone() override {
             return new PatternDataBitfield(*this);
         }
 
-        void createEntry(prv::Provider* &provider) override {
+        void createEntry(prv::Provider *&provider) override {
             std::vector<u8> value(this->getSize(), 0);
             provider->read(this->getOffset(), &value[0], value.size());
 
@@ -1511,7 +1532,9 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
                 ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "bitfield"); ImGui::SameLine(); ImGui::TextUnformatted(PatternData::getTypeName().c_str());
+                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "bitfield");
+                ImGui::SameLine();
+                ImGui::TextUnformatted(PatternData::getTypeName().c_str());
                 ImGui::TableNextColumn();
 
                 std::string valueString = "{ ";
@@ -1530,7 +1553,6 @@ namespace hex::pl {
                 if (!this->isInlined())
                     ImGui::TreePop();
             }
-
         }
 
         void setOffset(u64 offset) override {
@@ -1544,11 +1566,11 @@ namespace hex::pl {
             return "bitfield " + PatternData::getTypeName();
         }
 
-        [[nodiscard]] const auto& getFields() const {
+        [[nodiscard]] const auto &getFields() const {
             return this->m_fields;
         }
 
-        void setFields(const std::vector<PatternData*> &fields) {
+        void setFields(const std::vector<PatternData *> &fields) {
             this->m_fields = fields;
 
             for (auto &field : this->m_fields) {
@@ -1567,7 +1589,7 @@ namespace hex::pl {
             if (!areCommonPropertiesEqual<decltype(*this)>(other))
                 return false;
 
-            auto &otherBitfield = *static_cast<const PatternDataBitfield*>(&other);
+            auto &otherBitfield = *static_cast<const PatternDataBitfield *>(&other);
             if (this->m_fields.size() != otherBitfield.m_fields.size())
                 return false;
 
@@ -1580,7 +1602,7 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData*> m_fields;
+        std::vector<PatternData *> m_fields;
     };
 
 }

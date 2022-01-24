@@ -15,26 +15,26 @@ namespace hex::plugin::builtin {
     }
 
     ViewCommandPalette::~ViewCommandPalette() {
-
     }
 
     void ViewCommandPalette::drawContent() {
 
         if (!this->m_commandPaletteOpen) return;
 
-        ImGui::SetNextWindowPos(ImVec2(SharedData::windowPos.x + SharedData::windowSize.x * 0.5F, SharedData::windowPos.y), ImGuiCond_Always, ImVec2(0.5F,0.0F));
+        ImGui::SetNextWindowPos(ImVec2(SharedData::windowPos.x + SharedData::windowSize.x * 0.5F, SharedData::windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
         if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
             ImGui::PushItemWidth(-1);
-            if (ImGui::InputText("##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue,
-            [](ImGuiInputTextCallbackData *callbackData) -> int {
-                auto _this = static_cast<ViewCommandPalette*>(callbackData->UserData);
-                _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
+            if (ImGui::InputText(
+                    "##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue, [](ImGuiInputTextCallbackData *callbackData) -> int {
+                        auto _this = static_cast<ViewCommandPalette *>(callbackData->UserData);
+                        _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
 
-                return 0;
-            }, this)) {
+                        return 0;
+                    },
+                    this)) {
                 if (!this->m_lastResults.empty()) {
                     auto &[displayResult, matchedCommand, callback] = this->m_lastResults.front();
                     callback(matchedCommand);
@@ -71,25 +71,22 @@ namespace hex::plugin::builtin {
         } else {
             this->m_commandPaletteOpen = false;
         }
-
     }
 
     std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(const std::string &input) {
         constexpr auto MatchCommand = [](const std::string &currCommand, const std::string &commandToMatch) -> std::pair<MatchType, std::string_view> {
             if (currCommand.empty()) {
                 return { MatchType::InfoMatch, "" };
-            }
-            else if (currCommand.size() <= commandToMatch.size()) {
+            } else if (currCommand.size() <= commandToMatch.size()) {
                 if (commandToMatch.starts_with(currCommand))
                     return { MatchType::PartialMatch, currCommand };
                 else
-                    return { MatchType::NoMatch, { } };
-            }
-            else {
+                    return { MatchType::NoMatch, {} };
+            } else {
                 if (currCommand.starts_with(commandToMatch))
                     return { MatchType::PerfectMatch, currCommand.substr(commandToMatch.length()) };
                 else
-                    return { MatchType::NoMatch, { } };
+                    return { MatchType::NoMatch, {} };
             }
         };
 
@@ -122,7 +119,6 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
-
         }
 
         return results;

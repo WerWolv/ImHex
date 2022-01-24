@@ -7,7 +7,9 @@
 #include <string>
 #include <vector>
 
-namespace hex::prv { class Provider; }
+namespace hex::prv {
+    class Provider;
+}
 
 namespace hex::magic {
 

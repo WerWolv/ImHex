@@ -41,11 +41,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
             static int selection = static_cast<int>(setting);
 
-            const char* themes[] = {
-                    "hex.builtin.setting.interface.color.system"_lang,
-                    "hex.builtin.setting.interface.color.dark"_lang,
-                    "hex.builtin.setting.interface.color.light"_lang,
-                    "hex.builtin.setting.interface.color.classic"_lang
+            const char *themes[] = {
+                "hex.builtin.setting.interface.color.system"_lang,
+                "hex.builtin.setting.interface.color.dark"_lang,
+                "hex.builtin.setting.interface.color.light"_lang,
+                "hex.builtin.setting.interface.color.classic"_lang
             };
 
             if (ImGui::Combo(name.data(), &selection, themes, IM_ARRAYSIZE(themes))) {
@@ -59,12 +59,12 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0, [](auto name, nlohmann::json &setting) {
             static int selection = static_cast<int>(setting);
 
-            const char* scaling[] = {
-                    "hex.builtin.setting.interface.scaling.native"_lang,
-                    "hex.builtin.setting.interface.scaling.x0_5"_lang,
-                    "hex.builtin.setting.interface.scaling.x1_0"_lang,
-                    "hex.builtin.setting.interface.scaling.x1_5"_lang,
-                    "hex.builtin.setting.interface.scaling.x2_0"_lang,
+            const char *scaling[] = {
+                "hex.builtin.setting.interface.scaling.native"_lang,
+                "hex.builtin.setting.interface.scaling.x0_5"_lang,
+                "hex.builtin.setting.interface.scaling.x1_0"_lang,
+                "hex.builtin.setting.interface.scaling.x1_5"_lang,
+                "hex.builtin.setting.interface.scaling.x2_0"_lang,
             };
 
             if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
 
             static int selection = [&]() -> int {
                 u16 index = 0;
-                for (auto &[languageCode, languageName] : languages){
+                for (auto &[languageCode, languageName] : languages) {
                     if (languageCode == setting)
                         return index;
                     index++;
@@ -93,7 +93,7 @@ namespace hex::plugin::builtin {
             }();
 
             static auto languageNames = [&]() {
-                std::vector<const char*> result;
+                std::vector<const char *> result;
                 result.reserve(languages.size());
 
                 for (auto &[languageCode, languageName] : languages)
@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
             if (ImGui::Combo(name.data(), &selection, languageNames.data(), languageNames.size())) {
 
                 u16 index = 0;
-                for (auto &[languageCode, languageName] : languages){
+                for (auto &[languageCode, languageName] : languages) {
                     if (selection == index) {
                         setting = languageCode;
                         break;
@@ -220,7 +220,6 @@ namespace hex::plugin::builtin {
 
             return false;
         });
-
     }
 
 }

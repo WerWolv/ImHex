@@ -16,8 +16,8 @@ namespace hex::pl {
 
         Lexer() = default;
 
-        std::optional<std::vector<Token>> lex(const std::string& code);
-        const std::optional<LexerError>& getError() { return this->m_error; }
+        std::optional<std::vector<Token>> lex(const std::string &code);
+        const std::optional<LexerError> &getError() { return this->m_error; }
 
     private:
         std::optional<LexerError> m_error;

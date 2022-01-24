@@ -32,7 +32,7 @@ namespace hex::magic {
         }
 
         if (error)
-            return { };
+            return {};
         else
             return magicFiles;
     }
@@ -70,7 +70,7 @@ namespace hex::magic {
         return getDescription(buffer);
     }
 
-    std::string getMIMEType(const std::vector<u8> &data){
+    std::string getMIMEType(const std::vector<u8> &data) {
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {

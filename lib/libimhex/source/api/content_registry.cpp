@@ -43,7 +43,7 @@ namespace hex {
     void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const ContentRegistry::Settings::Callback &callback) {
         log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-        ContentRegistry::Settings::getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry{ unlocalizedName.c_str(), callback });
+        ContentRegistry::Settings::getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry { unlocalizedName.c_str(), callback });
 
         auto &json = getSettingsData();
 
@@ -56,7 +56,7 @@ namespace hex {
     void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const ContentRegistry::Settings::Callback &callback) {
         log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-        ContentRegistry::Settings::getEntries()[unlocalizedCategory].emplace_back(Entry{ unlocalizedName, callback });
+        ContentRegistry::Settings::getEntries()[unlocalizedCategory].emplace_back(Entry { unlocalizedName, callback });
 
         auto &json = getSettingsData();
 
@@ -84,7 +84,7 @@ namespace hex {
         json[unlocalizedCategory][unlocalizedName] = value;
     }
 
-    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& value) {
+    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value) {
         auto &json = getSettingsData();
 
         if (!json.contains(unlocalizedCategory))
@@ -122,7 +122,7 @@ namespace hex {
         return json[unlocalizedCategory][unlocalizedName].get<std::string>();
     }
 
-    std::vector<std::string> ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string>& defaultValue) {
+    std::vector<std::string> ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue) {
         auto &json = getSettingsData();
 
         if (!json.contains(unlocalizedCategory))
@@ -140,20 +140,20 @@ namespace hex {
     }
 
 
-    std::map<std::string, std::vector<ContentRegistry::Settings::Entry>>& ContentRegistry::Settings::getEntries() {
+    std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> &ContentRegistry::Settings::getEntries() {
         return SharedData::settingsEntries;
     }
 
     nlohmann::json ContentRegistry::Settings::getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
         auto &settings = getSettingsData();
 
-        if (!settings.contains(unlocalizedCategory)) return { };
-        if (!settings[unlocalizedCategory].contains(unlocalizedName)) return { };
+        if (!settings.contains(unlocalizedCategory)) return {};
+        if (!settings[unlocalizedCategory].contains(unlocalizedName)) return {};
 
         return settings[unlocalizedCategory][unlocalizedName];
     }
 
-    nlohmann::json& ContentRegistry::Settings::getSettingsData() {
+    nlohmann::json &ContentRegistry::Settings::getSettingsData() {
         return SharedData::settingsJson;
     }
 
@@ -163,10 +163,10 @@ namespace hex {
     void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, const std::string &command, const std::string &unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
         log::info("Registered new command palette command: {}", command);
 
-        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry{ type, command, unlocalizedDescription, displayCallback, executeCallback });
+        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
     }
 
-    std::vector<ContentRegistry::CommandPaletteCommands::Entry>& ContentRegistry::CommandPaletteCommands::getEntries() {
+    std::vector<ContentRegistry::CommandPaletteCommands::Entry> &ContentRegistry::CommandPaletteCommands::getEntries() {
         return SharedData::commandPaletteCommands;
     }
 
@@ -196,7 +196,7 @@ namespace hex {
         getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, true };
     }
 
-    std::map<std::string, ContentRegistry::PatternLanguage::Function>& ContentRegistry::PatternLanguage::getFunctions() {
+    std::map<std::string, ContentRegistry::PatternLanguage::Function> &ContentRegistry::PatternLanguage::getFunctions() {
         return SharedData::patternLanguageFunctions;
     }
 
@@ -209,7 +209,7 @@ namespace hex {
         getEntries().insert({ view->getUnlocalizedName(), view });
     }
 
-    std::map<std::string, View*>& ContentRegistry::Views::getEntries() {
+    std::map<std::string, View *> &ContentRegistry::Views::getEntries() {
         return SharedData::views;
     }
 
@@ -225,13 +225,13 @@ namespace hex {
 
     /* Tools */
 
-    void ContentRegistry::Tools:: add(const std::string &unlocalizedName, const std::function<void()> &function) {
+    void ContentRegistry::Tools::add(const std::string &unlocalizedName, const std::function<void()> &function) {
         log::info("Registered new tool: {}", unlocalizedName);
 
-        getEntries().emplace_back(impl::Entry{ unlocalizedName, function });
+        getEntries().emplace_back(impl::Entry { unlocalizedName, function });
     }
 
-    std::vector<ContentRegistry::Tools::impl::Entry>& ContentRegistry::Tools::getEntries() {
+    std::vector<ContentRegistry::Tools::impl::Entry> &ContentRegistry::Tools::getEntries() {
         return SharedData::toolsEntries;
     }
 
@@ -244,7 +244,7 @@ namespace hex {
         getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
     }
 
-    std::vector<ContentRegistry::DataInspector::impl::Entry>& ContentRegistry::DataInspector::getEntries() {
+    std::vector<ContentRegistry::DataInspector::impl::Entry> &ContentRegistry::DataInspector::getEntries() {
         return SharedData::dataInspectorEntries;
     }
 
@@ -257,10 +257,10 @@ namespace hex {
     }
 
     void ContentRegistry::DataProcessorNode::addSeparator() {
-        getEntries().push_back({ "", "", []{ return nullptr; } });
+        getEntries().push_back({ "", "", [] { return nullptr; } });
     }
 
-    std::vector<ContentRegistry::DataProcessorNode::impl::Entry>& ContentRegistry::DataProcessorNode::getEntries() {
+    std::vector<ContentRegistry::DataProcessorNode::impl::Entry> &ContentRegistry::DataProcessorNode::getEntries() {
         return SharedData::dataProcessorNodes;
     }
 
@@ -278,14 +278,13 @@ namespace hex {
         getLanguageDefinitions()[languageCode].push_back(definition);
     }
 
-    std::map<std::string, std::string>& ContentRegistry::Language::getLanguages() {
+    std::map<std::string, std::string> &ContentRegistry::Language::getLanguages() {
         return SharedData::languageNames;
     }
 
-    std::map<std::string, std::vector<LanguageDefinition>>& ContentRegistry::Language::getLanguageDefinitions() {
+    std::map<std::string, std::vector<LanguageDefinition>> &ContentRegistry::Language::getLanguageDefinitions() {
         return SharedData::languageDefinitions;
     }
-
 
 
     /* Interface */
@@ -303,18 +302,20 @@ namespace hex {
     void ContentRegistry::Interface::addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
         log::info("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
 
-        getMenuItems().insert({ priority, { unlocalizedMainMenuName, function }});
+        getMenuItems().insert({
+            priority, {unlocalizedMainMenuName, function}
+        });
     }
 
     void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::impl::DrawCallback &function) {
         getWelcomeScreenEntries().push_back(function);
     }
 
-    void ContentRegistry::Interface::addFooterItem(const ContentRegistry::Interface::impl::DrawCallback &function){
+    void ContentRegistry::Interface::addFooterItem(const ContentRegistry::Interface::impl::DrawCallback &function) {
         getFooterItems().push_back(function);
     }
 
-    void ContentRegistry::Interface::addToolbarItem(const ContentRegistry::Interface::impl::DrawCallback &function){
+    void ContentRegistry::Interface::addToolbarItem(const ContentRegistry::Interface::impl::DrawCallback &function) {
         getToolbarItems().push_back(function);
     }
 
@@ -329,27 +330,27 @@ namespace hex {
     }
 
 
-    std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem>& ContentRegistry::Interface::getMainMenuItems() {
+    std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem> &ContentRegistry::Interface::getMainMenuItems() {
         return SharedData::mainMenuItems;
     }
-    std::multimap<u32, ContentRegistry::Interface::impl::MenuItem>& ContentRegistry::Interface::getMenuItems() {
+    std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> &ContentRegistry::Interface::getMenuItems() {
         return SharedData::menuItems;
     }
 
-    std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getWelcomeScreenEntries() {
+    std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getWelcomeScreenEntries() {
         return SharedData::welcomeScreenEntries;
     }
-    std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getFooterItems() {
+    std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getFooterItems() {
         return SharedData::footerItems;
     }
-    std::vector<ContentRegistry::Interface::impl::DrawCallback>& ContentRegistry::Interface::getToolbarItems() {
+    std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getToolbarItems() {
         return SharedData::toolbarItems;
     }
-    std::vector<ContentRegistry::Interface::impl::SidebarItem>& ContentRegistry::Interface::getSidebarItems() {
+    std::vector<ContentRegistry::Interface::impl::SidebarItem> &ContentRegistry::Interface::getSidebarItems() {
         return SharedData::sidebarItems;
     }
 
-    std::vector<ContentRegistry::Interface::impl::Layout>& ContentRegistry::Interface::getLayouts() {
+    std::vector<ContentRegistry::Interface::impl::Layout> &ContentRegistry::Interface::getLayouts() {
         return SharedData::layouts;
     }
 
@@ -367,7 +368,6 @@ namespace hex {
     }
 
 
-
     /* Data Formatters */
 
     void ContentRegistry::DataFormatter::add(const std::string &unlocalizedName, const impl::Callback &callback) {
@@ -381,14 +381,13 @@ namespace hex {
     }
 
 
-
     /* File Handlers */
 
     void ContentRegistry::FileHandler::add(const std::vector<std::string> &extensions, const impl::Callback &callback) {
         for (const auto &extension : extensions)
             log::info("Registered new data handler for extensions: {}", extension);
 
-        ContentRegistry::FileHandler::getEntries().push_back({  extensions, callback });
+        ContentRegistry::FileHandler::getEntries().push_back({ extensions, callback });
     }
 
     std::vector<ContentRegistry::FileHandler::impl::Entry> &ContentRegistry::FileHandler::getEntries() {

@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-extern int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end);
+extern int ImTextCharFromUtf8(unsigned int *out_char, const char *in_text, const char *in_text_end);
 
 namespace hex::plugin::builtin {
 
@@ -51,9 +51,7 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if (ImHexApi::Provider::isValid() && provider->isReadable() && this->m_validBytes > 0) {
-                if (ImGui::BeginTable("##datainspector", 2,
-                    ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg,
-                    ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {
+                if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang);
                     ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.value"_lang);

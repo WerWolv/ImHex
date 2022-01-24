@@ -17,26 +17,18 @@ namespace hex::plugin::builtin {
 
     using namespace hex::literals;
 
-    static const TextEditor::LanguageDefinition& PatternLanguage() {
+    static const TextEditor::LanguageDefinition &PatternLanguage() {
         static bool initialized = false;
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            static const char* const keywords[] = {
-                "using", "struct", "union", "enum", "bitfield",
-                "be", "le", "if", "else", "false", "true",
-                "this", "parent", "addressof", "sizeof",
-                "$",
-                "while", "for", "fn", "return", "break", "continue",
-                "namespace", "in", "out"
+            static const char *const keywords[] = {
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out"
             };
-            for (auto& k : keywords)
+            for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
 
-            static const char* const builtInTypes[] = {
-                    "u8", "u16", "u32", "u64", "u128",
-                    "s8", "s16", "s32", "s64", "s128",
-                    "float", "double", "char", "char16",
-                    "bool", "padding", "str", "auto"
+            static const char *const builtInTypes[] = {
+                "u8", "u16", "u32", "u64", "u128", "s8", "s16", "s32", "s64", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
             };
 
             for (const auto name : builtInTypes) {
@@ -45,7 +37,7 @@ namespace hex::plugin::builtin {
                 langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
             }
 
-            langDef.mTokenize = [](const char * inBegin, const char * inEnd, const char *& outBegin, const char *& outEnd, TextEditor::PaletteIndex & paletteIndex) -> bool {
+            langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
                 paletteIndex = TextEditor::PaletteIndex::Max;
 
                 while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
@@ -55,11 +47,9 @@ namespace hex::plugin::builtin {
                     outBegin = inEnd;
                     outEnd = inEnd;
                     paletteIndex = TextEditor::PaletteIndex::Default;
-                }
-                else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
+                } else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
-                }
-                else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
                     paletteIndex = TextEditor::PaletteIndex::Number;
                 else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd))
                     paletteIndex = TextEditor::PaletteIndex::CharLiteral;
@@ -105,9 +95,9 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](std::string code) {
-             this->m_textEditor.SelectAll();
-             this->m_textEditor.Delete();
-             this->m_textEditor.InsertText(code);
+            this->m_textEditor.SelectAll();
+            this->m_textEditor.Delete();
+            this->m_textEditor.InsertText(code);
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path) {
@@ -159,7 +149,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this]{
+        EventManager::subscribe<EventFileUnloaded>(this, [this] {
             this->m_textEditor.SetText("");
             this->m_evaluatorRuntime->abort();
         });
@@ -169,22 +159,21 @@ namespace hex::plugin::builtin {
 
             EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
                 switch (theme) {
-                    default:
-                    case 1: /* Dark theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
-                        break;
-                    case 2: /* Light theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
-                        break;
-                    case 3: /* Classic theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
-                        break;
+                default:
+                case 1: /* Dark theme */
+                    this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
+                    break;
+                case 2: /* Light theme */
+                    this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
+                    break;
+                case 3: /* Classic theme */
+                    this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
+                    break;
                 }
             });
-
         }
 
-        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const fs::path &path) -> bool{
+        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const fs::path &path) -> bool {
             File file(path.string(), File::Mode::Read);
 
             if (file.isValid()) {
@@ -203,24 +192,30 @@ namespace hex::plugin::builtin {
                 for (auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
                     if (!fs::exists(imhexPath)) continue;
 
-                    for (auto &entry: fs::recursive_directory_iterator(imhexPath)) {
+                    for (auto &entry : fs::recursive_directory_iterator(imhexPath)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
                             paths.push_back(entry.path());
                         }
                     }
                 }
 
-                View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, [this](const fs::path &path){
-                    this->loadPatternFile(path);
-                });
+                View::showFileChooserPopup(paths, {
+                                                      {"Pattern File", "hexpat"}
+                },
+                                           [this](const fs::path &path) {
+                                               this->loadPatternFile(path);
+                                           });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, { { "Pattern", "hexpat" }}, [this](const auto &path) {
-                    File file(path, File::Mode::Create);
+                hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, {
+                                                                                                                          {"Pattern", "hexpat"}
+                },
+                                     [this](const auto &path) {
+                                         File file(path, File::Mode::Create);
 
-                    file.write(this->m_textEditor.GetText());
-                });
+                                         file.write(this->m_textEditor.GetText());
+                                     });
             }
         });
     }
@@ -243,7 +238,7 @@ namespace hex::plugin::builtin {
 
             if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
                 auto textEditorSize = ImGui::GetContentRegionAvail();
-                textEditorSize.y *= 3.75/5.0;
+                textEditorSize.y *= 3.75 / 5.0;
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
                 this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
@@ -294,10 +289,8 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     ImGui::TextFormatted("{} / {}",
-                        this->m_evaluatorRuntime->getCreatedPatternCount(),
-                        this->m_evaluatorRuntime->getMaximumPatternCount()
-                    );
-
+                                         this->m_evaluatorRuntime->getCreatedPatternCount(),
+                                         this->m_evaluatorRuntime->getMaximumPatternCount());
                 }
 
                 if (this->m_textEditor.IsTextChanged()) {
@@ -324,15 +317,12 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang);
                 ImGui::NewLine();
 
-                View::confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang,
-                [this]{
+                View::confirmButtons(
+                    "hex.common.yes"_lang, "hex.common.no"_lang, [this] {
                     this->m_evaluatorRuntime->allowDangerousFunctions(true);
-                    ImGui::CloseCurrentPopup();
-                },
-                [this]{
+                    ImGui::CloseCurrentPopup(); }, [this] {
                     this->m_evaluatorRuntime->allowDangerousFunctions(false);
-                    ImGui::CloseCurrentPopup();
-                });
+                    ImGui::CloseCurrentPopup(); });
 
                 ImGui::EndPopup();
             }
@@ -351,19 +341,20 @@ namespace hex::plugin::builtin {
                     const auto &[level, message] = this->m_console[i];
 
                     switch (level) {
-                        case pl::LogConsole::Level::Debug:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
-                            break;
-                        case pl::LogConsole::Level::Info:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
-                            break;
-                        case pl::LogConsole::Level::Warning:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
-                            break;
-                        case pl::LogConsole::Level::Error:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
-                            break;
-                        default: continue;
+                    case pl::LogConsole::Level::Debug:
+                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
+                        break;
+                    case pl::LogConsole::Level::Info:
+                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
+                        break;
+                    case pl::LogConsole::Level::Warning:
+                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
+                        break;
+                    case pl::LogConsole::Level::Error:
+                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
+                        break;
+                    default:
+                        continue;
                     }
 
                     if (ImGui::Selectable(message.c_str()))
@@ -371,7 +362,6 @@ namespace hex::plugin::builtin {
 
                     ImGui::PopStyleColor();
                 }
-
         }
         ImGui::EndChild();
         ImGui::PopStyleColor(1);
@@ -396,7 +386,7 @@ namespace hex::plugin::builtin {
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-                    constexpr const char* Types[] = { "I", "F", "S", "B" };
+                    constexpr const char *Types[] = { "I", "F", "S", "B" };
                     if (ImGui::BeginCombo("", Types[static_cast<int>(type)])) {
                         for (auto i = 0; i < IM_ARRAYSIZE(Types); i++) {
                             if (ImGui::Selectable(Types[i]))
@@ -410,34 +400,38 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-                    ImGui::InputText("###name",  name.data(), name.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
+                    ImGui::InputText("###name", name.data(), name.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
                     ImGui::PopItemWidth();
 
                     ImGui::TableNextColumn();
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
                     switch (type) {
-                        case EnvVarType::Integer: {
+                    case EnvVarType::Integer:
+                        {
                             i64 displayValue = hex::get_or<i128>(value, 0);
-                            ImGui::InputScalar("###value",  ImGuiDataType_S64, &displayValue);
+                            ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
                             value = i128(displayValue);
                             break;
                         }
-                        case EnvVarType::Float: {
+                    case EnvVarType::Float:
+                        {
                             auto displayValue = hex::get_or<double>(value, 0.0);
                             ImGui::InputDouble("###value", &displayValue);
                             value = displayValue;
                             break;
                         }
-                        case EnvVarType::Bool: {
+                    case EnvVarType::Bool:
+                        {
                             auto displayValue = hex::get_or<bool>(value, false);
                             ImGui::Checkbox("###value", &displayValue);
                             value = displayValue;
                             break;
                         }
-                        case EnvVarType::String: {
+                    case EnvVarType::String:
+                        {
                             auto displayValue = hex::get_or<std::string>(value, "");
-                            ImGui::InputText("###value",  displayValue.data(), displayValue.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
+                            ImGui::InputText("###value", displayValue.data(), displayValue.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
                             value = displayValue;
                             break;
                         }
@@ -552,12 +546,10 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
             ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
-            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [this]{
+            confirmButtons(
+                "hex.common.yes"_lang, "hex.common.no"_lang, [this] {
                 this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
-                ImGui::CloseCurrentPopup();
-            }, []{
-                ImGui::CloseCurrentPopup();
-            });
+                ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -596,17 +588,17 @@ namespace hex::plugin::builtin {
 
             if (ast) {
                 for (auto node : *ast) {
-                    if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl*>(node)) {
-                        auto type = dynamic_cast<pl::ASTNodeTypeDecl*>(variableDecl->getType());
+                    if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl *>(node)) {
+                        auto type = dynamic_cast<pl::ASTNodeTypeDecl *>(variableDecl->getType());
                         if (type == nullptr) continue;
 
-                        auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType*>(type->getType());
+                        auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType *>(type->getType());
                         if (builtinType == nullptr) continue;
 
                         PatternVariable variable = {
-                                .inVariable = variableDecl->isInVariable(),
-                                .outVariable = variableDecl->isOutVariable(),
-                                .type = builtinType->getType()
+                            .inVariable = variableDecl->isInVariable(),
+                            .outVariable = variableDecl->isOutVariable(),
+                            .type = builtinType->getType()
                         };
 
                         if (variable.inVariable || variable.outVariable) {
@@ -624,12 +616,12 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::evaluatePattern(const std::string &code) {
         this->m_evaluatorRunning = true;
 
-        this->m_textEditor.SetErrorMarkers({ });
+        this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
         this->clearPatternData();
 
         {
-            std::vector<pl::PatternData*> patterns;
+            std::vector<pl::PatternData *> patterns;
             EventManager::post<EventPatternChanged>(patterns);
         }
 
@@ -666,7 +658,6 @@ namespace hex::plugin::builtin {
 
             this->m_evaluatorRunning = false;
         }).detach();
-
     }
 
 }

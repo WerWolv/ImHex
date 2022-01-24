@@ -9,7 +9,7 @@ namespace hex::test {
 
     class TestProvider : public prv::Provider {
     public:
-        TestProvider(std::vector<u8>* data) : Provider(){
+        TestProvider(std::vector<u8> *data) : Provider() {
             this->setData(data);
         }
         ~TestProvider() override = default;
@@ -20,7 +20,7 @@ namespace hex::test {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
 
-        void setData(std::vector<u8>* data) {
+        void setData(std::vector<u8> *data) {
             this->m_data = data;
         }
 
@@ -29,7 +29,7 @@ namespace hex::test {
         }
 
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override {
-            return { };
+            return {};
         }
 
         void readRaw(u64 offset, void *buffer, size_t size) override {
@@ -52,7 +52,7 @@ namespace hex::test {
         void close() override { }
 
     private:
-        std::vector<u8>* m_data;
+        std::vector<u8> *m_data;
     };
 
 }

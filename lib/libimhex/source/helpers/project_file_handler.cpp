@@ -18,11 +18,18 @@ namespace hex {
     std::list<ImHexApi::Bookmarks::Entry> ProjectFile::s_bookmarks;
     std::string ProjectFile::s_dataProcessorContent;
 
-    void to_json(json& j, const ImHexApi::Bookmarks::Entry& b) {
-        j = json{ { "address", b.region.address }, { "size", b.region.size }, { "name", b.name.data() }, { "comment", b.comment.data() }, { "locked", b.locked }, { "color", b.color } };
+    void to_json(json &j, const ImHexApi::Bookmarks::Entry &b) {
+        j = json {
+            {"address",  b.region.address},
+            { "size",    b.region.size   },
+            { "name",    b.name.data()   },
+            { "comment", b.comment.data()},
+            { "locked",  b.locked        },
+            { "color",   b.color         }
+        };
     }
 
-    void from_json(const json& j, ImHexApi::Bookmarks::Entry& b) {
+    void from_json(const json &j, ImHexApi::Bookmarks::Entry &b) {
         std::string name, comment;
 
         if (j.contains("address")) j.at("address").get_to(b.region.address);
@@ -48,9 +55,9 @@ namespace hex {
             std::ifstream projectFile(filePath.c_str());
             projectFile >> projectFileData;
 
-            ProjectFile::s_filePath             = fs::path(projectFileData["filePath"].get<std::string>());
-            ProjectFile::s_pattern              = projectFileData["pattern"];
-            ProjectFile::s_patches              = projectFileData["patches"].get<Patches>();
+            ProjectFile::s_filePath = fs::path(projectFileData["filePath"].get<std::string>());
+            ProjectFile::s_pattern = projectFileData["pattern"];
+            ProjectFile::s_patches = projectFileData["patches"].get<Patches>();
             ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
 
             ProjectFile::s_bookmarks.clear();
@@ -82,10 +89,10 @@ namespace hex {
             filePath = ProjectFile::s_currProjectFilePath;
 
         try {
-            projectFileData["filePath"]         = ProjectFile::s_filePath;
-            projectFileData["pattern"]          = ProjectFile::s_pattern;
-            projectFileData["patches"]          = ProjectFile::s_patches;
-            projectFileData["dataProcessor"]    = ProjectFile::s_dataProcessorContent;
+            projectFileData["filePath"] = ProjectFile::s_filePath;
+            projectFileData["pattern"] = ProjectFile::s_pattern;
+            projectFileData["patches"] = ProjectFile::s_patches;
+            projectFileData["dataProcessor"] = ProjectFile::s_dataProcessorContent;
 
             for (auto &bookmark : ProjectFile::s_bookmarks) {
                 to_json(projectFileData["bookmarks"].emplace_back(), bookmark);

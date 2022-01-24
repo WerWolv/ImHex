@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
         };
 
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
-            ViewHexEditor *_this = (ViewHexEditor *) data;
+            ViewHexEditor *_this = (ViewHexEditor *)data;
 
             std::optional<u32> currColor, prevColor;
 
@@ -131,7 +131,7 @@ namespace hex::plugin::builtin {
         };
 
         this->m_memoryEditor.DecodeFn = [](const ImU8 *data, size_t addr) -> MemoryEditor::DecodeData {
-            ViewHexEditor *_this = (ViewHexEditor *) data;
+            ViewHexEditor *_this = (ViewHexEditor *)data;
 
             if (_this->m_currEncodingFile.getLongestSequence() == 0)
                 return { ".", 1, 0xFFFF8000 };
@@ -219,7 +219,6 @@ namespace hex::plugin::builtin {
 
                 this->drawSearchPopup();
                 this->drawGotoPopup();
-
             }
             ImGui::End();
         }
@@ -230,7 +229,7 @@ namespace hex::plugin::builtin {
     }
 
     static void saveAs() {
-        hex::openFileBrowser("hex.builtin.view.hexeditor.save_as"_lang, DialogMode::Save, { }, [](const auto &path) {
+        hex::openFileBrowser("hex.builtin.view.hexeditor.save_as"_lang, DialogMode::Save, {}, [](const auto &path) {
             ImHexApi::Provider::get()->saveAs(path);
         });
     }
@@ -243,12 +242,8 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.hexeditor.exit_application.desc"_lang);
             ImGui::NewLine();
 
-            confirmButtons("hex.common.yes"_lang, "hex.common.no"_lang, [] {
-                ImHexApi::Common::closeImHex(true);
-            },
-            [] {
-                ImGui::CloseCurrentPopup();
-            });
+            confirmButtons(
+                "hex.common.yes"_lang, "hex.common.no"_lang, [] { ImHexApi::Common::closeImHex(true); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -264,14 +259,17 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.builtin.view.hexeditor.script.script"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.script.script.title"_lang, DialogMode::Open, { { "Python Script", "py" } }, [this](const auto &path) {
-                    this->m_loaderScriptScriptPath = path.string();
-                });
+                hex::openFileBrowser("hex.builtin.view.hexeditor.script.script.title"_lang, DialogMode::Open, {
+                                                                                                                  {"Python Script", "py"}
+                },
+                                     [this](const auto &path) {
+                                         this->m_loaderScriptScriptPath = path.string();
+                                     });
             }
             ImGui::InputText("##nolabel", this->m_loaderScriptFilePath.data(), this->m_loaderScriptFilePath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.builtin.view.hexeditor.script.file"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.script.file.title"_lang, DialogMode::Open, { }, [this](const auto &path) {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.script.file.title"_lang, DialogMode::Open, {}, [this](const auto &path) {
                     this->m_loaderScriptFilePath = path.string();
                 });
             }
@@ -280,36 +278,27 @@ namespace hex::plugin::builtin {
 
             ImGui::NewLine();
 
-            confirmButtons("hex.common.load"_lang, "hex.common.cancel"_lang,
-               [this, &provider] {
+            confirmButtons(
+                "hex.common.load"_lang, "hex.common.cancel"_lang, [this, &provider] {
                    if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
                        EventManager::post<RequestOpenFile>(this->m_loaderScriptFilePath);
                        LoaderScript::setFilePath(this->m_loaderScriptFilePath);
                        LoaderScript::setDataProvider(provider);
                        LoaderScript::processFile(this->m_loaderScriptScriptPath);
                        ImGui::CloseCurrentPopup();
-                   }
-               },
-               [] {
-                   ImGui::CloseCurrentPopup();
-               }
-            );
+                   } }, [] { ImGui::CloseCurrentPopup(); });
 
             ImGui::EndPopup();
-
         }
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.menu.edit.set_base"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::InputText("hex.common.address"_lang, this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
-            confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
-                           [this, &provider]{
+            confirmButtons(
+                "hex.common.set"_lang, "hex.common.cancel"_lang, [this, &provider] {
                                provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
-                               ImGui::CloseCurrentPopup();
-                           }, []{
-                        ImGui::CloseCurrentPopup();
-                    });
+                               ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -323,14 +312,10 @@ namespace hex::plugin::builtin {
             ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
-            confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
-                [this, &provider]{
+            confirmButtons(
+                "hex.common.set"_lang, "hex.common.cancel"_lang, [this, &provider] {
                     provider->resize(this->m_resizeSize);
-                    ImGui::CloseCurrentPopup();
-                },
-                [] {
-                    ImGui::CloseCurrentPopup();
-                });
+                    ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -344,14 +329,10 @@ namespace hex::plugin::builtin {
             ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
-            confirmButtons("hex.common.set"_lang, "hex.common.cancel"_lang,
-                [this, &provider] {
+            confirmButtons(
+                "hex.common.set"_lang, "hex.common.cancel"_lang, [this, &provider] {
                     provider->insert(std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), this->m_resizeSize);
-                    ImGui::CloseCurrentPopup();
-                },
-                [] {
-                    ImGui::CloseCurrentPopup();
-                });
+                    ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -364,7 +345,7 @@ namespace hex::plugin::builtin {
         hex::prv::Provider *provider = nullptr;
         EventManager::post<RequestCreateProvider>("hex.builtin.provider.file", &provider);
 
-        if (auto fileProvider = dynamic_cast<prv::FileProvider*>(provider)) {
+        if (auto fileProvider = dynamic_cast<prv::FileProvider *>(provider)) {
             fileProvider->setPath(path);
             if (!fileProvider->open()) {
                 View::showErrorPopup("hex.builtin.view.hexeditor.error.open"_lang);
@@ -396,7 +377,7 @@ namespace hex::plugin::builtin {
         EventManager::post<EventDataChanged>();
 
         {
-            std::vector<pl::PatternData*> patterns;
+            std::vector<pl::PatternData *> patterns;
             EventManager::post<EventPatternChanged>(patterns);
         }
     }
@@ -430,8 +411,8 @@ namespace hex::plugin::builtin {
 
         // Check for non-hex characters
         bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {
-            return !std::isxdigit(c) && !std::isspace(c);
-        }) == clipboard.end();
+                                    return !std::isxdigit(c) && !std::isspace(c);
+                                }) == clipboard.end();
 
         if (!isValidHexString) return;
 
@@ -477,7 +458,7 @@ namespace hex::plugin::builtin {
         ImGui::SetClipboardText(buffer.c_str());
     }
 
-    static std::vector<std::pair<u64, u64>> findString(hex::prv::Provider* &provider, std::string string) {
+    static std::vector<std::pair<u64, u64>> findString(hex::prv::Provider *&provider, std::string string) {
         std::vector<std::pair<u64, u64>> results;
 
         u32 foundCharacters = 0;
@@ -504,7 +485,7 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    static std::vector<std::pair<u64, u64>> findHex(hex::prv::Provider* &provider, std::string string) {
+    static std::vector<std::pair<u64, u64>> findHex(hex::prv::Provider *&provider, std::string string) {
         std::vector<std::pair<u64, u64>> results;
 
         if ((string.size() % 2) == 1)
@@ -544,8 +525,8 @@ namespace hex::plugin::builtin {
 
 
     void ViewHexEditor::drawSearchPopup() {
-        static auto InputCallback = [](ImGuiInputTextCallbackData* data) -> int {
-            auto _this = static_cast<ViewHexEditor*>(data->UserData);
+        static auto InputCallback = [](ImGuiInputTextCallbackData *data) -> int {
+            auto _this = static_cast<ViewHexEditor *>(data->UserData);
             auto provider = ImHexApi::Provider::get();
 
             *_this->m_lastSearchBuffer = _this->m_searchFunction(provider, data->Buf);
@@ -571,7 +552,7 @@ namespace hex::plugin::builtin {
             if (!this->m_lastSearchBuffer->empty()) {
                 ++this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
                 this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
-                                                          (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
+                                                       (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
             }
         };
 
@@ -585,7 +566,7 @@ namespace hex::plugin::builtin {
                 this->m_lastSearchIndex %= this->m_lastSearchBuffer->size();
 
                 this->m_memoryEditor.GotoAddrAndSelect((*this->m_lastSearchBuffer)[this->m_lastSearchIndex].first,
-                                                          (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
+                                                       (*this->m_lastSearchBuffer)[this->m_lastSearchIndex].second);
             }
         };
 
@@ -599,8 +580,7 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastStringSearch;
                     currBuffer = &this->m_searchStringBuffer;
 
-                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CallbackCompletion,
-                                     InputCallback, this);
+                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CallbackCompletion, InputCallback, this);
                     ImGui::EndTabItem();
                 }
 
@@ -609,9 +589,7 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastHexSearch;
                     currBuffer = &this->m_searchHexBuffer;
 
-                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(),
-                                     ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion,
-                                     InputCallback, this);
+                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion, InputCallback, this);
                     ImGui::EndTabItem();
                 }
 
@@ -724,7 +702,7 @@ namespace hex::plugin::builtin {
 
             ImGui::Separator();
 
-            for (const auto&[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
+            for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
                 if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                     size_t start = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
                     size_t end = std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -752,23 +730,23 @@ namespace hex::plugin::builtin {
             size_t start = base + std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
             size_t end = base + std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
-            ImHexApi::Bookmarks::add(start, end - start + 1, { }, { });
+            ImHexApi::Bookmarks::add(start, end - start + 1, {}, {});
         }
 
         if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.set_base"_lang, nullptr, false, providerValid && provider->isReadable())) {
             std::memset(this->m_baseAddressBuffer, 0x00, sizeof(this->m_baseAddressBuffer));
-            View::doLater([]{ ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.set_base"_lang); });
+            View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.set_base"_lang); });
         }
 
         if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.resize"_lang, nullptr, false, providerValid && provider->isResizable())) {
-            View::doLater([this]{
+            View::doLater([this] {
                 this->m_resizeSize = ImHexApi::Provider::get()->getActualSize();
                 ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.resize"_lang);
             });
         }
 
         if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable())) {
-            View::doLater([this]{
+            View::doLater([this] {
                 this->m_resizeSize = 0;
                 ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.insert"_lang);
             });
@@ -794,7 +772,7 @@ namespace hex::plugin::builtin {
                 this->m_memoryEditor.GotoAddrAndSelect(start, start + region.size - 1);
             }
 
-            EventManager::post<EventRegionSelected>(Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1});
+            EventManager::post<EventRegionSelected>(Region { this->m_memoryEditor.DataPreviewAddr, (this->m_memoryEditor.DataPreviewAddrEnd - this->m_memoryEditor.DataPreviewAddr) + 1 });
         });
 
         EventManager::subscribe<EventProjectFileLoad>(this, []() {
@@ -810,7 +788,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<RequestOpenWindow>(this, [this](std::string name) {
             if (name == "Create File") {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.create_file"_lang, DialogMode::Save, { }, [this](const auto &path) {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.create_file"_lang, DialogMode::Save, {}, [this](const auto &path) {
                     File file(path, File::Mode::Create);
 
                     if (!file.isValid()) {
@@ -824,15 +802,18 @@ namespace hex::plugin::builtin {
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open File") {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](const auto &path) {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [this](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open Project") {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [this](const auto &path) {
-                    ProjectFile::load(path);
-                    this->getWindowOpenState() = true;
-                });
+                hex::openFileBrowser("hex.builtin.view.hexeditor.open_project"_lang, DialogMode::Open, {
+                                                                                                           {"Project File", "hexproj"}
+                },
+                                     [this](const auto &path) {
+                                         ProjectFile::load(path);
+                                         this->getWindowOpenState() = true;
+                                     });
             }
         });
 
@@ -932,7 +913,7 @@ namespace hex::plugin::builtin {
         });
 
         ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
-            hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [](const auto &path) {
+            hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
                 EventManager::post<RequestOpenFile>(path);
             });
         });
@@ -954,19 +935,18 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
         });
-
     }
 
     void ViewHexEditor::registerMenuItems() {
 
         /* Basic operations */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1000, [&]{
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1000, [&] {
             auto provider = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
 
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [](const auto &path) {
+                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                 });
             }
@@ -982,9 +962,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.clear_recent"_lang)) {
                     SharedData::recentFilePaths.clear();
                     ContentRegistry::Settings::write(
-                            "hex.builtin.setting.imhex",
-                            "hex.builtin.setting.imhex.recent_files",
-                            std::vector<std::string>{});
+                        "hex.builtin.setting.imhex",
+                        "hex.builtin.setting.imhex.recent_files",
+                        std::vector<std::string> {});
                 }
 
                 ImGui::EndMenu();
@@ -1027,23 +1007,27 @@ namespace hex::plugin::builtin {
             bool providerValid = ImHexApi::Provider::isValid();
 
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.open_project"_lang, "")) {
-                hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, { { "Project File", "hexproj" } }, [](const auto &path) {
-                    ProjectFile::load(path);
-                });
+                hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.open_project"_lang, DialogMode::Open, {
+                                                                                                                     {"Project File", "hexproj"}
+                },
+                                     [](const auto &path) {
+                                         ProjectFile::load(path);
+                                     });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
                 if (ProjectFile::getProjectFilePath() == "") {
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.save_project"_lang, DialogMode::Save, { { "Project File", "hexproj" } }, [](const auto &path) {
-                        if (path.extension() == ".hexproj") {
-                            ProjectFile::store(path);
-                        }
-                        else {
-                            ProjectFile::store(path.string() + ".hexproj");
-                        }
-                    });
-                }
-                else
+                    hex::openFileBrowser("hex.builtin.view.hexeditor.save_project"_lang, DialogMode::Save, {
+                                                                                                               {"Project File", "hexproj"}
+                    },
+                                         [](const auto &path) {
+                                             if (path.extension() == ".hexproj") {
+                                                 ProjectFile::store(path);
+                                             } else {
+                                                 ProjectFile::store(path.string() + ".hexproj");
+                                             }
+                                         });
+                } else
                     ProjectFile::store();
             }
 
@@ -1057,9 +1041,12 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, { { "Thingy Table File", "tbl" } }, [this](const auto &path) {
-                    this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
-                });
+                View::showFileChooserPopup(paths, {
+                                                      {"Thingy Table File", "tbl"}
+                },
+                                           [this](const auto &path) {
+                                               this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
+                                           });
             }
         });
 
@@ -1073,7 +1060,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.import"_lang)) {
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.base64"_lang)) {
 
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.import.base64"_lang, DialogMode::Open, { }, [this](const auto &path) {
+                    hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.import.base64"_lang, DialogMode::Open, {}, [this](const auto &path) {
                         File file(path, File::Mode::Read);
                         if (!file.isValid()) {
                             View::showErrorPopup("hex.builtin.view.hexeditor.error.open"_lang);
@@ -1098,7 +1085,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.ips"_lang, nullptr, false, !this->m_processingImportExport)) {
 
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](const auto &path) {
+                    hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [this](const auto &path) {
                         this->m_processingImportExport = true;
                         std::thread([this, path] {
                             auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
@@ -1123,12 +1110,10 @@ namespace hex::plugin::builtin {
 
                         this->getWindowOpenState() = true;
                     });
-
-
                 }
 
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.ips32"_lang, nullptr, false, !this->m_processingImportExport)) {
-                    hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, { }, [this](const auto &path) {
+                    hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [this](const auto &path) {
                         this->m_processingImportExport = true;
                         std::thread([this, path] {
                             auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
@@ -1158,7 +1143,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.script"_lang)) {
                     this->m_loaderScriptFilePath.clear();
                     this->m_loaderScriptScriptPath.clear();
-                    View::doLater([]{ ImGui::OpenPopup("hex.builtin.view.hexeditor.script.title"_lang); });
+                    View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.script.title"_lang); });
                 }
 
                 ImGui::EndMenu();
@@ -1176,14 +1161,14 @@ namespace hex::plugin::builtin {
                     }
 
                     this->m_processingImportExport = true;
-                    std::thread([this, patches]{
+                    std::thread([this, patches] {
                         auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
 
                         this->m_dataToSave = generateIPSPatch(patches);
                         this->m_processingImportExport = false;
 
-                        View::doLater([this]{
-                            hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](const auto &path) {
+                        View::doLater([this] {
+                            hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, {}, [this](const auto &path) {
                                 auto file = File(path, File::Mode::Create);
                                 if (!file.isValid()) {
                                     View::showErrorPopup("hex.builtin.view.hexeditor.error.create"_lang);
@@ -1205,14 +1190,14 @@ namespace hex::plugin::builtin {
                     }
 
                     this->m_processingImportExport = true;
-                    std::thread([this, patches]{
+                    std::thread([this, patches] {
                         auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hexeditor.processing", 0);
 
                         this->m_dataToSave = generateIPS32Patch(patches);
                         this->m_processingImportExport = false;
 
-                        View::doLater([this]{
-                            hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, { }, [this](const auto &path) {
+                        View::doLater([this] {
+                            hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, {}, [this](const auto &path) {
                                 auto file = File(path, File::Mode::Create);
                                 if (!file.isValid()) {
                                     View::showErrorPopup("hex.builtin.view.hexeditor.error.create"_lang);

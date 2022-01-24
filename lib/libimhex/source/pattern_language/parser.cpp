@@ -16,13 +16,13 @@ namespace hex::pl {
     /* Mathematical expressions */
 
     // Identifier([(parseMathematicalExpression)|<(parseMathematicalExpression),...>(parseMathematicalExpression)]
-    ASTNode* Parser::parseFunctionCall() {
+    ASTNode *Parser::parseFunctionCall() {
         std::string functionName = parseNamespaceResolution();
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN)))
             throwParseError("expected '(' after function name");
 
-        std::vector<ASTNode*> params;
+        std::vector<ASTNode *> params;
         auto paramCleanup = SCOPE_GUARD {
             for (auto &param : params)
                 delete param;
@@ -37,7 +37,6 @@ namespace hex::pl {
                 break;
             else if (!MATCHES(sequence(SEPARATOR_COMMA)))
                 throwParseError("missing ',' between parameters", -1);
-
         }
 
         paramCleanup.release();
@@ -45,7 +44,7 @@ namespace hex::pl {
         return create(new ASTNodeFunctionCall(functionName, params));
     }
 
-    ASTNode* Parser::parseStringLiteral() {
+    ASTNode *Parser::parseStringLiteral() {
         return create(new ASTNodeLiteral(getValue<Token::Literal>(-1)));
     }
 
@@ -58,15 +57,14 @@ namespace hex::pl {
             if (MATCHES(sequence(OPERATOR_SCOPERESOLUTION, IDENTIFIER))) {
                 name += "::";
                 continue;
-            }
-            else
+            } else
                 break;
         }
 
         return name;
     }
 
-    ASTNode* Parser::parseScopeResolution() {
+    ASTNode *Parser::parseScopeResolution() {
         std::string typeName;
 
         while (true) {
@@ -75,15 +73,14 @@ namespace hex::pl {
             if (MATCHES(sequence(OPERATOR_SCOPERESOLUTION, IDENTIFIER))) {
                 if (peek(OPERATOR_SCOPERESOLUTION, 0) && peek(IDENTIFIER, 1)) {
                     typeName += "::";
-                   continue;
+                    continue;
                 } else {
                     if (!this->m_types.contains(typeName))
                         throwParseError(hex::format("cannot access scope of invalid type '{}'", typeName), -1);
 
                     return create(new ASTNodeScopeResolution(this->m_types[typeName]->clone(), getValue<Token::Identifier>(-1).get()));
                 }
-            }
-            else
+            } else
                 break;
         }
 
@@ -91,7 +88,7 @@ namespace hex::pl {
     }
 
     // <Identifier[.]...>
-    ASTNode* Parser::parseRValue(ASTNodeRValue::Path &path) {
+    ASTNode *Parser::parseRValue(ASTNodeRValue::Path &path) {
         if (peek(IDENTIFIER, -1))
             path.push_back(getValue<Token::Identifier>(-1).get());
         else if (peek(KEYWORD_PARENT, -1))
@@ -115,7 +112,7 @@ namespace hex::pl {
     }
 
     // <Integer|((parseMathematicalExpression))>
-    ASTNode* Parser::parseFactor() {
+    ASTNode *Parser::parseFactor() {
         if (MATCHES(sequence(INTEGER)))
             return new ASTNodeLiteral(getValue<Token::Literal>(-1));
         else if (peek(OPERATOR_PLUS) || peek(OPERATOR_MINUS) || peek(OPERATOR_BITNOT) || peek(OPERATOR_BOOLNOT))
@@ -165,10 +162,10 @@ namespace hex::pl {
             throwParseError("expected value or parenthesis");
     }
 
-    ASTNode* Parser::parseCastExpression() {
+    ASTNode *Parser::parseCastExpression() {
         if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
             auto type = parseType(true);
-            auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(type->getType());
+            auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(type->getType());
 
             if (builtinType == nullptr)
                 throwParseError("invalid type used for pointer size", -1);
@@ -183,7 +180,7 @@ namespace hex::pl {
     }
 
     // <+|-|!|~> (parseFactor)
-    ASTNode* Parser::parseUnaryExpression() {
+    ASTNode *Parser::parseUnaryExpression() {
         if (MATCHES(oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_BOOLNOT, OPERATOR_BITNOT))) {
             auto op = getValue<Token::Operator>(-1);
 
@@ -196,7 +193,7 @@ namespace hex::pl {
     }
 
     // (parseUnaryExpression) <*|/|%> (parseUnaryExpression)
-    ASTNode* Parser::parseMultiplicativeExpression() {
+    ASTNode *Parser::parseMultiplicativeExpression() {
         auto node = this->parseUnaryExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -212,7 +209,7 @@ namespace hex::pl {
     }
 
     // (parseMultiplicativeExpression) <+|-> (parseMultiplicativeExpression)
-    ASTNode* Parser::parseAdditiveExpression() {
+    ASTNode *Parser::parseAdditiveExpression() {
         auto node = this->parseMultiplicativeExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -228,7 +225,7 @@ namespace hex::pl {
     }
 
     // (parseAdditiveExpression) < >>|<< > (parseAdditiveExpression)
-    ASTNode* Parser::parseShiftExpression() {
+    ASTNode *Parser::parseShiftExpression() {
         auto node = this->parseAdditiveExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -244,10 +241,10 @@ namespace hex::pl {
     }
 
     // (parseAdditiveExpression) < >=|<=|>|< > (parseAdditiveExpression)
-    ASTNode* Parser::parseRelationExpression() {
+    ASTNode *Parser::parseRelationExpression() {
         auto node = this->parseShiftExpression();
 
-        auto nodeCleanup = SCOPE_GUARD{ delete node; };
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
 
         while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
             auto op = getValue<Token::Operator>(-1);
@@ -260,7 +257,7 @@ namespace hex::pl {
     }
 
     // (parseRelationExpression) <==|!=> (parseRelationExpression)
-    ASTNode* Parser::parseEqualityExpression() {
+    ASTNode *Parser::parseEqualityExpression() {
         auto node = this->parseRelationExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -276,7 +273,7 @@ namespace hex::pl {
     }
 
     // (parseEqualityExpression) & (parseEqualityExpression)
-    ASTNode* Parser::parseBinaryAndExpression() {
+    ASTNode *Parser::parseBinaryAndExpression() {
         auto node = this->parseEqualityExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -291,7 +288,7 @@ namespace hex::pl {
     }
 
     // (parseBinaryAndExpression) ^ (parseBinaryAndExpression)
-    ASTNode* Parser::parseBinaryXorExpression() {
+    ASTNode *Parser::parseBinaryXorExpression() {
         auto node = this->parseBinaryAndExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -306,7 +303,7 @@ namespace hex::pl {
     }
 
     // (parseBinaryXorExpression) | (parseBinaryXorExpression)
-    ASTNode* Parser::parseBinaryOrExpression() {
+    ASTNode *Parser::parseBinaryOrExpression() {
         auto node = this->parseBinaryXorExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -321,7 +318,7 @@ namespace hex::pl {
     }
 
     // (parseBinaryOrExpression) && (parseBinaryOrExpression)
-    ASTNode* Parser::parseBooleanAnd() {
+    ASTNode *Parser::parseBooleanAnd() {
         auto node = this->parseBinaryOrExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -336,7 +333,7 @@ namespace hex::pl {
     }
 
     // (parseBooleanAnd) ^^ (parseBooleanAnd)
-    ASTNode* Parser::parseBooleanXor() {
+    ASTNode *Parser::parseBooleanXor() {
         auto node = this->parseBooleanAnd();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -351,7 +348,7 @@ namespace hex::pl {
     }
 
     // (parseBooleanXor) || (parseBooleanXor)
-    ASTNode* Parser::parseBooleanOr() {
+    ASTNode *Parser::parseBooleanOr() {
         auto node = this->parseBooleanXor();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -366,7 +363,7 @@ namespace hex::pl {
     }
 
     // (parseBooleanOr) ? (parseBooleanOr) : (parseBooleanOr)
-    ASTNode* Parser::parseTernaryConditional() {
+    ASTNode *Parser::parseTernaryConditional() {
         auto node = this->parseBooleanOr();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
@@ -387,7 +384,7 @@ namespace hex::pl {
     }
 
     // (parseTernaryConditional)
-    ASTNode* Parser::parseMathematicalExpression() {
+    ASTNode *Parser::parseMathematicalExpression() {
         return this->parseTernaryConditional();
     }
 
@@ -410,8 +407,7 @@ namespace hex::pl {
                     throwParseError("expected string attribute argument");
 
                 currNode->addAttribute(create(new ASTNodeAttribute(attribute, *string)));
-            }
-            else
+            } else
                 currNode->addAttribute(create(new ASTNodeAttribute(attribute)));
 
         } while (MATCHES(sequence(SEPARATOR_COMMA)));
@@ -422,9 +418,9 @@ namespace hex::pl {
 
     /* Functions */
 
-    ASTNode* Parser::parseFunctionDefinition() {
+    ASTNode *Parser::parseFunctionDefinition() {
         const auto &functionName = getValue<Token::Identifier>(-2).get();
-        std::vector<std::pair<std::string, ASTNode*>> params;
+        std::vector<std::pair<std::string, ASTNode *>> params;
 
         // Parse parameter list
         bool hasParams = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
@@ -456,7 +452,7 @@ namespace hex::pl {
 
 
         // Parse function body
-        std::vector<ASTNode*> body;
+        std::vector<ASTNode *> body;
         auto bodyCleanup = SCOPE_GUARD {
             for (auto &node : body)
                 delete node;
@@ -470,7 +466,7 @@ namespace hex::pl {
         return create(new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), params, body));
     }
 
-    ASTNode* Parser::parseFunctionVariableDecl() {
+    ASTNode *Parser::parseFunctionVariableDecl() {
         ASTNode *statement;
         auto type = parseType(true);
 
@@ -483,14 +479,13 @@ namespace hex::pl {
 
                 statement = create(new ASTNodeCompoundStatement({ statement, create(new ASTNodeAssignment(identifier, expression)) }));
             }
-        }
-        else
+        } else
             throwParseError("invalid variable declaration");
 
         return statement;
     }
 
-    ASTNode* Parser::parseFunctionStatement() {
+    ASTNode *Parser::parseFunctionStatement() {
         bool needsSemicolon = true;
         ASTNode *statement;
 
@@ -515,16 +510,13 @@ namespace hex::pl {
             if (isFunction) {
                 this->m_curr = originalPos;
                 statement = parseFunctionCall();
-            }
-            else {
+            } else {
                 this->m_curr = originalPos - 1;
                 statement = parseFunctionVariableDecl();
             }
-        }
-        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
+        } else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
             statement = parseFunctionVariableDecl();
-        }
-        else
+        } else
             throwParseError("invalid sequence", 0);
 
         if (needsSemicolon && !MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION))) {
@@ -533,12 +525,13 @@ namespace hex::pl {
         }
 
         // Consume superfluous semicolons
-        while (needsSemicolon && MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+        while (needsSemicolon && MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
+            ;
 
         return statement;
     }
 
-    ASTNode* Parser::parseFunctionVariableAssignment() {
+    ASTNode *Parser::parseFunctionVariableAssignment() {
         const auto &lvalue = getValue<Token::Identifier>(-2).get();
 
         auto rvalue = this->parseMathematicalExpression();
@@ -546,7 +539,7 @@ namespace hex::pl {
         return create(new ASTNodeAssignment(lvalue, rvalue));
     }
 
-    ASTNode* Parser::parseFunctionControlFlowStatement() {
+    ASTNode *Parser::parseFunctionControlFlowStatement() {
         ControlFlowStatement type;
         if (peek(KEYWORD_RETURN, -1))
             type = ControlFlowStatement::Return;
@@ -563,8 +556,8 @@ namespace hex::pl {
             return create(new ASTNodeControlFlowStatement(type, this->parseMathematicalExpression()));
     }
 
-    std::vector<ASTNode*> Parser::parseStatementBody() {
-        std::vector<ASTNode*> body;
+    std::vector<ASTNode *> Parser::parseStatementBody() {
+        std::vector<ASTNode *> body;
 
         auto bodyCleanup = SCOPE_GUARD {
             for (auto &node : body)
@@ -584,9 +577,9 @@ namespace hex::pl {
         return body;
     }
 
-    ASTNode* Parser::parseFunctionConditional() {
+    ASTNode *Parser::parseFunctionConditional() {
         auto condition = parseMathematicalExpression();
-        std::vector<ASTNode*> trueBody, falseBody;
+        std::vector<ASTNode *> trueBody, falseBody;
 
         auto cleanup = SCOPE_GUARD {
             delete condition;
@@ -609,9 +602,9 @@ namespace hex::pl {
         return create(new ASTNodeConditionalStatement(condition, trueBody, falseBody));
     }
 
-    ASTNode* Parser::parseFunctionWhileLoop() {
+    ASTNode *Parser::parseFunctionWhileLoop() {
         auto condition = parseMathematicalExpression();
-        std::vector<ASTNode*> body;
+        std::vector<ASTNode *> body;
 
         auto cleanup = SCOPE_GUARD {
             delete condition;
@@ -629,7 +622,7 @@ namespace hex::pl {
         return create(new ASTNodeWhileStatement(condition, body));
     }
 
-    ASTNode* Parser::parseFunctionForLoop() {
+    ASTNode *Parser::parseFunctionForLoop() {
         auto variable = parseFunctionVariableDecl();
         auto variableCleanup = SCOPE_GUARD { delete variable; };
 
@@ -648,7 +641,7 @@ namespace hex::pl {
         auto postExpression = parseFunctionVariableAssignment();
         auto postExpressionCleanup = SCOPE_GUARD { delete postExpression; };
 
-        std::vector<ASTNode*> body;
+        std::vector<ASTNode *> body;
 
         auto bodyCleanup = SCOPE_GUARD {
             for (auto &statement : body)
@@ -671,9 +664,9 @@ namespace hex::pl {
     /* Control flow */
 
     // if ((parseMathematicalExpression)) { (parseMember) }
-    ASTNode* Parser::parseConditional() {
+    ASTNode *Parser::parseConditional() {
         auto condition = parseMathematicalExpression();
-        std::vector<ASTNode*> trueBody, falseBody;
+        std::vector<ASTNode *> trueBody, falseBody;
 
         auto cleanup = SCOPE_GUARD {
             delete condition;
@@ -706,7 +699,7 @@ namespace hex::pl {
     }
 
     // while ((parseMathematicalExpression))
-    ASTNode* Parser::parseWhileStatement() {
+    ASTNode *Parser::parseWhileStatement() {
         auto condition = parseMathematicalExpression();
 
         auto cleanup = SCOPE_GUARD {
@@ -718,13 +711,13 @@ namespace hex::pl {
 
         cleanup.release();
 
-        return create(new ASTNodeWhileStatement(condition, { }));
+        return create(new ASTNodeWhileStatement(condition, {}));
     }
 
     /* Type declarations */
 
     // [be|le] <Identifier|u8|u16|u32|u64|u128|s8|s16|s32|s64|s128|float|double|str>
-    ASTNodeTypeDecl* Parser::parseType(bool allowFunctionTypes) {
+    ASTNodeTypeDecl *Parser::parseType(bool allowFunctionTypes) {
         std::optional<std::endian> endian;
 
         if (MATCHES(sequence(KEYWORD_LE)))
@@ -732,17 +725,16 @@ namespace hex::pl {
         else if (MATCHES(sequence(KEYWORD_BE)))
             endian = std::endian::big;
 
-        if (MATCHES(sequence(IDENTIFIER))) { // Custom type
+        if (MATCHES(sequence(IDENTIFIER))) {    // Custom type
             std::string typeName = parseNamespaceResolution();
 
             if (this->m_types.contains(typeName))
-                return create(new ASTNodeTypeDecl({ }, this->m_types[typeName]->clone(), endian));
+                return create(new ASTNodeTypeDecl({}, this->m_types[typeName]->clone(), endian));
             else if (this->m_types.contains(getNamespacePrefixedName(typeName)))
-                return create(new ASTNodeTypeDecl({ }, this->m_types[getNamespacePrefixedName(typeName)]->clone(), endian));
+                return create(new ASTNodeTypeDecl({}, this->m_types[getNamespacePrefixedName(typeName)]->clone(), endian));
             else
                 throwParseError(hex::format("unknown type '{}'", typeName));
-        }
-        else if (MATCHES(sequence(VALUETYPE_ANY))) { // Builtin type
+        } else if (MATCHES(sequence(VALUETYPE_ANY))) {    // Builtin type
             auto type = getValue<Token::ValueType>(-1);
             if (!allowFunctionTypes) {
                 if (type == Token::ValueType::String)
@@ -751,12 +743,12 @@ namespace hex::pl {
                     throwParseError("cannot use 'auto' in this context");
             }
 
-            return create(new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(type), endian));
+            return create(new ASTNodeTypeDecl({}, new ASTNodeBuiltinType(type), endian));
         } else throwParseError("failed to parse type. Expected identifier or builtin type");
     }
 
     // using Identifier = (parseType)
-    ASTNode* Parser::parseUsingDeclaration() {
+    ASTNode *Parser::parseUsingDeclaration() {
         auto name = parseNamespaceResolution();
 
         if (!MATCHES(sequence(OPERATOR_ASSIGNMENT)))
@@ -769,7 +761,7 @@ namespace hex::pl {
     }
 
     // padding[(parseMathematicalExpression)]
-    ASTNode* Parser::parsePadding() {
+    ASTNode *Parser::parsePadding() {
         auto size = parseMathematicalExpression();
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
@@ -777,15 +769,17 @@ namespace hex::pl {
             throwParseError("expected closing ']' at end of array declaration", -1);
         }
 
-        return create(new ASTNodeArrayVariableDecl({ }, new ASTNodeTypeDecl({ }, new ASTNodeBuiltinType(Token::ValueType::Padding)), size));
+        return create(new ASTNodeArrayVariableDecl({}, new ASTNodeTypeDecl({}, new ASTNodeBuiltinType(Token::ValueType::Padding)), size));
     }
 
     // (parseType) Identifier
-    ASTNode* Parser::parseMemberVariable(ASTNodeTypeDecl *type) {
+    ASTNode *Parser::parseMemberVariable(ASTNodeTypeDecl *type) {
         if (peek(SEPARATOR_COMMA)) {
 
-            std::vector<ASTNode*> variables;
-            auto variableCleanup = SCOPE_GUARD { for (auto var : variables) delete var; };
+            std::vector<ASTNode *> variables;
+            auto variableCleanup = SCOPE_GUARD {
+                for (auto var : variables) delete var;
+            };
 
             do {
                 variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type->clone())));
@@ -800,7 +794,7 @@ namespace hex::pl {
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]
-    ASTNode* Parser::parseMemberArrayVariable(ASTNodeTypeDecl *type) {
+    ASTNode *Parser::parseMemberArrayVariable(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         ASTNode *size = nullptr;
@@ -822,13 +816,13 @@ namespace hex::pl {
     }
 
     // (parseType) *Identifier : (parseType)
-    ASTNode* Parser::parseMemberPointerVariable(ASTNodeTypeDecl *type) {
+    ASTNode *Parser::parseMemberPointerVariable(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         auto sizeType = parseType();
 
         {
-            auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(sizeType->getType());
+            auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(sizeType->getType());
 
             if (builtinType == nullptr || !Token::isUnsigned(builtinType->getType()))
                 throwParseError("invalid type used for pointer size", -1);
@@ -838,7 +832,7 @@ namespace hex::pl {
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
-    ASTNode* Parser::parseMember() {
+    ASTNode *Parser::parseMember() {
         ASTNode *member;
 
 
@@ -873,8 +867,7 @@ namespace hex::pl {
                 else
                     throwParseError("invalid variable declaration");
             }
-        }
-        else if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
+        } else if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
             member = parsePadding();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN)))
             return parseConditional();
@@ -894,18 +887,22 @@ namespace hex::pl {
             throwParseError("missing ';' at end of expression", -1);
 
         // Consume superfluous semicolons
-        while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+        while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
+            ;
 
         return member;
     }
 
     // struct Identifier { <(parseMember)...> }
-    ASTNode* Parser::parseStruct() {
+    ASTNode *Parser::parseStruct() {
         const auto &typeName = getValue<Token::Identifier>(-1).get();
 
         const auto structNode = create(new ASTNodeStruct());
         const auto typeDecl = addType(typeName, structNode);
-        auto structGuard = SCOPE_GUARD { delete structNode; delete typeDecl; };
+        auto structGuard = SCOPE_GUARD {
+            delete structNode;
+            delete typeDecl;
+        };
 
         if (MATCHES(sequence(OPERATOR_INHERIT, IDENTIFIER))) {
             // Inheritance
@@ -935,12 +932,15 @@ namespace hex::pl {
     }
 
     // union Identifier { <(parseMember)...> }
-    ASTNode* Parser::parseUnion() {
+    ASTNode *Parser::parseUnion() {
         const auto &typeName = getValue<Token::Identifier>(-2).get();
 
         const auto unionNode = create(new ASTNodeUnion());
         const auto typeDecl = addType(typeName, unionNode);
-        auto unionGuard = SCOPE_GUARD { delete unionNode; delete typeDecl; };
+        auto unionGuard = SCOPE_GUARD {
+            delete unionNode;
+            delete typeDecl;
+        };
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             unionNode->addMember(parseMember());
@@ -952,7 +952,7 @@ namespace hex::pl {
     }
 
     // enum Identifier : (parseType) { <<Identifier|Identifier = (parseMathematicalExpression)[,]>...> }
-    ASTNode* Parser::parseEnum() {
+    ASTNode *Parser::parseEnum() {
         auto typeName = getValue<Token::Identifier>(-2).get();
 
         auto underlyingType = parseType();
@@ -960,7 +960,10 @@ namespace hex::pl {
 
         const auto enumNode = create(new ASTNodeEnum(underlyingType));
         const auto typeDecl = addType(typeName, enumNode);
-        auto enumGuard = SCOPE_GUARD { delete enumNode; delete typeDecl; };
+        auto enumGuard = SCOPE_GUARD {
+            delete enumNode;
+            delete typeDecl;
+        };
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
             throwParseError("expected '{' after enum definition", -1);
@@ -973,8 +976,7 @@ namespace hex::pl {
 
                 enumNode->addEntry(name, value);
                 lastEntry = value;
-            }
-            else if (MATCHES(sequence(IDENTIFIER))) {
+            } else if (MATCHES(sequence(IDENTIFIER))) {
                 ASTNode *valueExpr;
                 auto name = getValue<Token::Identifier>(-1).get();
                 if (enumNode->getEntries().empty())
@@ -983,8 +985,7 @@ namespace hex::pl {
                     valueExpr = lastEntry = create(new ASTNodeMathematicalExpression(lastEntry->clone(), new ASTNodeLiteral(u128(1)), Token::Operator::Plus));
 
                 enumNode->addEntry(name, valueExpr);
-            }
-            else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
+            } else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
                 throwParseError("unexpected end of program", -2);
             else
                 throwParseError("invalid enum entry", -1);
@@ -1003,20 +1004,23 @@ namespace hex::pl {
     }
 
     // bitfield Identifier { <Identifier : (parseMathematicalExpression)[;]...> }
-    ASTNode* Parser::parseBitfield() {
+    ASTNode *Parser::parseBitfield() {
         std::string typeName = getValue<Token::Identifier>(-2).get();
 
         const auto bitfieldNode = create(new ASTNodeBitfield());
         const auto typeDecl = addType(typeName, bitfieldNode);
 
-        auto enumGuard = SCOPE_GUARD { delete bitfieldNode; delete typeDecl; };
+        auto enumGuard = SCOPE_GUARD {
+            delete bitfieldNode;
+            delete typeDecl;
+        };
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_INHERIT))) {
                 auto name = getValue<Token::Identifier>(-2).get();
                 bitfieldNode->addEntry(name, parseMathematicalExpression());
             } else if (MATCHES(sequence(VALUETYPE_PADDING, OPERATOR_INHERIT))) {
-              bitfieldNode->addEntry("padding", parseMathematicalExpression());
+                bitfieldNode->addEntry("padding", parseMathematicalExpression());
             } else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
                 throwParseError("unexpected end of program", -2);
             else
@@ -1026,7 +1030,8 @@ namespace hex::pl {
                 throwParseError("missing ';' at end of expression", -1);
 
             // Consume superfluous semicolons
-            while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+            while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
+                ;
         }
 
         enumGuard.release();
@@ -1035,7 +1040,7 @@ namespace hex::pl {
     }
 
     // (parseType) Identifier @ Integer
-    ASTNode* Parser::parseVariablePlacement(ASTNodeTypeDecl *type) {
+    ASTNode *Parser::parseVariablePlacement(ASTNodeTypeDecl *type) {
         bool inVariable = false;
         bool outVariable = false;
 
@@ -1046,8 +1051,7 @@ namespace hex::pl {
             placementOffset = parseMathematicalExpression();
         } else if (MATCHES(sequence(KEYWORD_IN))) {
             inVariable = true;
-        }
-        else if (MATCHES(sequence(KEYWORD_OUT))) {
+        } else if (MATCHES(sequence(KEYWORD_OUT))) {
             outVariable = true;
         }
 
@@ -1055,7 +1059,7 @@ namespace hex::pl {
     }
 
     // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer
-    ASTNode* Parser::parseArrayVariablePlacement(ASTNodeTypeDecl *type) {
+    ASTNode *Parser::parseArrayVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         ASTNode *size = nullptr;
@@ -1082,14 +1086,14 @@ namespace hex::pl {
     }
 
     // (parseType) *Identifier : (parseType) @ Integer
-    ASTNode* Parser::parsePointerVariablePlacement(ASTNodeTypeDecl *type) {
+    ASTNode *Parser::parsePointerVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         auto sizeType = parseType();
         auto sizeCleanup = SCOPE_GUARD { delete sizeType; };
 
         {
-            auto builtinType = dynamic_cast<ASTNodeBuiltinType*>(sizeType->getType());
+            auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(sizeType->getType());
 
             if (builtinType == nullptr || !Token::isUnsigned(builtinType->getType()))
                 throwParseError("invalid type used for pointer size", -1);
@@ -1105,8 +1109,8 @@ namespace hex::pl {
         return create(new ASTNodePointerVariableDecl(name, type->clone(), sizeType, placementOffset));
     }
 
-    std::vector<ASTNode*> Parser::parseNamespace() {
-        std::vector<ASTNode*> statements;
+    std::vector<ASTNode *> Parser::parseNamespace() {
+        std::vector<ASTNode *> statements;
 
         if (!MATCHES(sequence(IDENTIFIER)))
             throwParseError("expected namespace identifier");
@@ -1135,7 +1139,7 @@ namespace hex::pl {
         return statements;
     }
 
-    ASTNode* Parser::parsePlacement() {
+    ASTNode *Parser::parsePlacement() {
         auto type = parseType();
         ON_SCOPE_EXIT { delete type; };
 
@@ -1151,7 +1155,7 @@ namespace hex::pl {
     /* Program */
 
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
-    std::vector<ASTNode*> Parser::parseStatements() {
+    std::vector<ASTNode *> Parser::parseStatements() {
         ASTNode *statement = nullptr;
         auto statementGuard = SCOPE_GUARD {
             delete statement;
@@ -1169,11 +1173,9 @@ namespace hex::pl {
             if (isFunction) {
                 this->m_curr++;
                 statement = parseFunctionCall();
-            }
-            else
+            } else
                 statement = parsePlacement();
-        }
-        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY))
+        } else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY))
             statement = parsePlacement();
         else if (MATCHES(sequence(KEYWORD_STRUCT, IDENTIFIER)))
             statement = parseStruct();
@@ -1196,27 +1198,28 @@ namespace hex::pl {
             throwParseError("missing ';' at end of expression", -1);
 
         // Consume superfluous semicolons
-        while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)));
+        while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
+            ;
 
         statementGuard.release();
 
         return { statement };
     }
 
-    ASTNodeTypeDecl* Parser::addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian) {
+    ASTNodeTypeDecl *Parser::addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian) {
         auto typeName = getNamespacePrefixedName(name);
 
         if (this->m_types.contains(typeName))
             throwParseError(hex::format("redefinition of type '{}'", typeName));
 
         auto typeDecl = create(new ASTNodeTypeDecl(typeName, node, endian));
-        this->m_types.insert({ typeName,  typeDecl });
+        this->m_types.insert({ typeName, typeDecl });
 
         return typeDecl;
     }
 
     // <(parseNamespace)...> EndOfProgram
-    std::optional<std::vector<ASTNode*>> Parser::parse(const std::vector<Token> &tokens) {
+    std::optional<std::vector<ASTNode *>> Parser::parse(const std::vector<Token> &tokens) {
         this->m_curr = tokens.begin();
 
         this->m_types.clear();
@@ -1235,7 +1238,7 @@ namespace hex::pl {
             this->m_error = e;
         }
 
-        return { };
+        return {};
     }
 
 }

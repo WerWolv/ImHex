@@ -9,7 +9,7 @@ namespace hex::log {
 
     static File g_loggerFile;
 
-    FILE* getDestination() {
+    FILE *getDestination() {
         if (g_loggerFile.isValid())
             return g_loggerFile.getHandle();
         else

@@ -94,29 +94,29 @@ namespace hex::pl {
         delete this->m_validator;
     }
 
-    std::optional<std::vector<ASTNode*>> PatternLanguage::parseString(const std::string &code) {
+    std::optional<std::vector<ASTNode *>> PatternLanguage::parseString(const std::string &code) {
         auto preprocessedCode = this->m_preprocessor->preprocess(code);
         if (!preprocessedCode.has_value()) {
             this->m_currError = this->m_preprocessor->getError();
-            return { };
+            return {};
         }
 
         auto tokens = this->m_lexer->lex(preprocessedCode.value());
         if (!tokens.has_value()) {
             this->m_currError = this->m_lexer->getError();
-            return { };
+            return {};
         }
 
         auto ast = this->m_parser->parse(tokens.value());
         if (!ast.has_value()) {
             this->m_currError = this->m_parser->getError();
-            return { };
+            return {};
         }
 
         return ast;
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+    std::optional<std::vector<PatternData *>> PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
@@ -136,20 +136,20 @@ namespace hex::pl {
 
         auto ast = this->parseString(code);
         if (!ast)
-            return { };
+            return {};
 
         this->m_currAST = ast.value();
 
         auto patterns = this->m_evaluator->evaluate(ast.value());
         if (!patterns.has_value()) {
             this->m_currError = this->m_evaluator->getConsole().getLastHardError();
-            return { };
+            return {};
         }
 
         return patterns;
     }
 
-    std::optional<std::vector<PatternData*>> PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+    std::optional<std::vector<PatternData *>> PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
         File file(path, File::Mode::Read);
 
         return this->executeString(provider, file.readString(), envVars, inVariables);
@@ -159,21 +159,20 @@ namespace hex::pl {
         this->m_evaluator->abort();
     }
 
-    const std::vector<ASTNode*> &PatternLanguage::getCurrentAST() const {
+    const std::vector<ASTNode *> &PatternLanguage::getCurrentAST() const {
         return this->m_currAST;
     }
 
-    [[nodiscard]]
-    std::map<std::string, Token::Literal> PatternLanguage::getOutVariables() const {
+    [[nodiscard]] std::map<std::string, Token::Literal> PatternLanguage::getOutVariables() const {
         return this->m_evaluator->getOutVariables();
     }
 
 
-    const std::vector<std::pair<LogConsole::Level, std::string>>& PatternLanguage::getConsoleLog() {
+    const std::vector<std::pair<LogConsole::Level, std::string>> &PatternLanguage::getConsoleLog() {
         return this->m_evaluator->getConsole().getLog();
     }
 
-    const std::optional<std::pair<u32, std::string>>& PatternLanguage::getError() {
+    const std::optional<std::pair<u32, std::string>> &PatternLanguage::getError() {
         return this->m_currError;
     }
 

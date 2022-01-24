@@ -44,12 +44,12 @@ namespace hex::plugin::builtin::prv {
         std::set<std::string> m_availableDrives;
         fs::path m_path;
 
-        #if defined(OS_WINDOWS)
-            HANDLE m_diskHandle = INVALID_HANDLE_VALUE;
-        #else
-            std::string m_pathBuffer;
-            int m_diskHandle = -1;
-        #endif
+#if defined(OS_WINDOWS)
+        HANDLE m_diskHandle = INVALID_HANDLE_VALUE;
+#else
+        std::string m_pathBuffer;
+        int m_diskHandle = -1;
+#endif
 
         size_t m_diskSize;
         size_t m_sectorSize;

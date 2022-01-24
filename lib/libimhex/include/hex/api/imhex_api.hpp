@@ -12,7 +12,9 @@
 
 namespace hex {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     namespace ImHexApi {
         namespace Common {
@@ -35,20 +37,20 @@ namespace hex {
             void add(Region region, const std::string &name, const std::string &comment, u32 color = 0x00000000);
             void add(u64 addr, size_t size, const std::string &name, const std::string &comment, u32 color = 0x00000000);
 
-            std::list<Entry>& getEntries();
+            std::list<Entry> &getEntries();
         };
 
         namespace Provider {
 
-            prv::Provider* get();
-            const std::vector<prv::Provider*>& getProviders();
+            prv::Provider *get();
+            const std::vector<prv::Provider *> &getProviders();
 
             bool isValid();
 
             void add(prv::Provider *provider);
 
             template<hex::derived_from<prv::Provider> T>
-            void add(auto&& ... args) {
+            void add(auto &&...args) {
                 add(new T(std::forward<decltype(args)>(args)...));
             }
 

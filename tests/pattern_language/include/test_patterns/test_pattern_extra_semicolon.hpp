@@ -6,13 +6,11 @@ namespace hex::test {
 
     class TestPatternExtraSemicolon : public TestPattern {
     public:
-        TestPatternExtraSemicolon() : TestPattern("ExtraSemicolon")  {
-
+        TestPatternExtraSemicolon() : TestPattern("ExtraSemicolon") {
         }
         ~TestPatternExtraSemicolon() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 struct Test {
                     u32 x;;;
@@ -29,7 +27,6 @@ namespace hex::test {
                 Test test2 @ 0x10;
             )";
         }
-
     };
 
 }

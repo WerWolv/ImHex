@@ -14,7 +14,6 @@ namespace hex::plugin::windows {
     }
 
     ViewTTYConsole::~ViewTTYConsole() {
-
     }
 
     void ViewTTYConsole::drawContent() {
@@ -28,36 +27,51 @@ namespace hex::plugin::windows {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, connected);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, connected ? 0.5F : 1.0F);
 
-            ImGui::Combo("hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void* data, int idx, const char** out_text) -> bool {
-                auto &ports = *static_cast<std::vector<std::pair<std::string, std::string>>*>(data);
+            ImGui::Combo(
+                "hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void *data, int idx, const char **out_text) -> bool {
+                    auto &ports = *static_cast<std::vector<std::pair<std::string, std::string>> *>(data);
 
-                *out_text = ports[idx].first.c_str();
-                return true;
-            }, &this->m_comPorts, this->m_comPorts.size());
+                    *out_text = ports[idx].first.c_str();
+                    return true;
+                },
+                &this->m_comPorts,
+                this->m_comPorts.size());
 
             ImGui::SameLine();
             if (ImGui::Button("hex.windows.view.tty_console.reload"_lang))
                 this->m_comPorts = getAvailablePorts();
 
-            ImGui::Combo("hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void* data, int idx, const char** out_text) -> bool {
-                *out_text = ViewTTYConsole::BaudRates[idx];
-                return true;
-            }, nullptr, ViewTTYConsole::BaudRates.size());
+            ImGui::Combo(
+                "hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void *data, int idx, const char **out_text) -> bool {
+                    *out_text = ViewTTYConsole::BaudRates[idx];
+                    return true;
+                },
+                nullptr,
+                ViewTTYConsole::BaudRates.size());
 
-            ImGui::Combo("hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void* data, int idx, const char** out_text) -> bool {
-                *out_text = ViewTTYConsole::NumBits[idx];
-                return true;
-            }, nullptr, ViewTTYConsole::NumBits.size());
+            ImGui::Combo(
+                "hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void *data, int idx, const char **out_text) -> bool {
+                    *out_text = ViewTTYConsole::NumBits[idx];
+                    return true;
+                },
+                nullptr,
+                ViewTTYConsole::NumBits.size());
 
-            ImGui::Combo("hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void* data, int idx, const char** out_text) -> bool {
-                *out_text = ViewTTYConsole::StopBits[idx];
-                return true;
-            }, nullptr, ViewTTYConsole::StopBits.size());
+            ImGui::Combo(
+                "hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void *data, int idx, const char **out_text) -> bool {
+                    *out_text = ViewTTYConsole::StopBits[idx];
+                    return true;
+                },
+                nullptr,
+                ViewTTYConsole::StopBits.size());
 
-            ImGui::Combo("hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void* data, int idx, const char** out_text) -> bool {
-                *out_text = ViewTTYConsole::ParityBits[idx];
-                return true;
-            }, nullptr, ViewTTYConsole::ParityBits.size());
+            ImGui::Combo(
+                "hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void *data, int idx, const char **out_text) -> bool {
+                    *out_text = ViewTTYConsole::ParityBits[idx];
+                    return true;
+                },
+                nullptr,
+                ViewTTYConsole::ParityBits.size());
 
             ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &this->m_hasCTSFlowControl);
 
@@ -115,7 +129,6 @@ namespace hex::plugin::windows {
                     }
                 }
                 ImGui::PopStyleVar();
-
             }
             ImGui::EndChild();
 
@@ -152,7 +165,6 @@ namespace hex::plugin::windows {
 
                 ImGui::EndPopup();
             }
-
         }
         ImGui::End();
     }
@@ -173,24 +185,24 @@ namespace hex::plugin::windows {
     }
 
     bool ViewTTYConsole::connect() {
-        if(this->m_comPorts.size() == 0 || this->m_selectedPort >= this->m_comPorts.size()) {
+        if (this->m_comPorts.size() == 0 || this->m_selectedPort >= this->m_comPorts.size()) {
             View::showErrorPopup("hex.windows.view.tty_console.no_available_port"_lang);
-            return true; // If false, connect_error error popup will override this error popup
+            return true;    // If false, connect_error error popup will override this error popup
         }
         this->m_portHandle = ::CreateFile(("\\\\.\\" + this->m_comPorts[this->m_selectedPort].first).c_str(),
-                                        GENERIC_READ | GENERIC_WRITE,
-                                        0,
-                                        nullptr,
-                                        OPEN_EXISTING,
-                                        FILE_FLAG_OVERLAPPED,
-                                        nullptr);
+                                          GENERIC_READ | GENERIC_WRITE,
+                                          0,
+                                          nullptr,
+                                          OPEN_EXISTING,
+                                          FILE_FLAG_OVERLAPPED,
+                                          nullptr);
 
         if (this->m_portHandle == INVALID_HANDLE_VALUE)
             return false;
 
         auto closeHandle = SCOPE_GUARD { CloseHandle(this->m_portHandle); };
 
-        if(!::SetupComm(this->m_portHandle, 10000, 10000))
+        if (!::SetupComm(this->m_portHandle, 10000, 10000))
             return false;
 
         DCB serialParams;
@@ -202,7 +214,7 @@ namespace hex::plugin::windows {
         serialParams.BaudRate = std::stoi(ViewTTYConsole::BaudRates[this->m_selectedBaudRate]);
         serialParams.ByteSize = std::stoi(ViewTTYConsole::NumBits[this->m_selectedNumBits]);
         serialParams.StopBits = this->m_selectedStopBits;
-        serialParams.Parity   = this->m_selectedParityBits;
+        serialParams.Parity = this->m_selectedParityBits;
         serialParams.fOutxCtsFlow = this->m_hasCTSFlowControl;
 
         if (!::SetCommState(this->m_portHandle, &serialParams))
@@ -245,27 +257,28 @@ namespace hex::plugin::windows {
             };
 
             while (!token.stop_requested()) {
-               DWORD bytesRead = 0;
+                DWORD bytesRead = 0;
 
-               char byte = 0;
-               if (!waitingOnRead) {
-                   if (::ReadFile(this->m_portHandle, &byte, sizeof(char), &bytesRead, &overlapped)) {
-                       addByte(byte);
-                   } else if (::GetLastError() == ERROR_IO_PENDING) {
-                       waitingOnRead = true;
-                   }
-               } else {
-                   byte = 0;
-                   auto res = ::WaitForSingleObject(overlapped.hEvent, 500);
-                   switch (res) {
-                       case WAIT_OBJECT_0:
-                           if (::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesRead, false)) {
-                               addByte(byte);
-                               waitingOnRead = false;
-                           }
-                       default: break;
-                   }
-               }
+                char byte = 0;
+                if (!waitingOnRead) {
+                    if (::ReadFile(this->m_portHandle, &byte, sizeof(char), &bytesRead, &overlapped)) {
+                        addByte(byte);
+                    } else if (::GetLastError() == ERROR_IO_PENDING) {
+                        waitingOnRead = true;
+                    }
+                } else {
+                    byte = 0;
+                    auto res = ::WaitForSingleObject(overlapped.hEvent, 500);
+                    switch (res) {
+                    case WAIT_OBJECT_0:
+                        if (::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesRead, false)) {
+                            addByte(byte);
+                            waitingOnRead = false;
+                        }
+                    default:
+                        break;
+                    }
+                }
             }
         });
 
@@ -287,7 +300,7 @@ namespace hex::plugin::windows {
         if (this->m_transmitting)
             return;
 
-        auto transmitThread = std::thread([&, this]{
+        auto transmitThread = std::thread([&, this] {
             OVERLAPPED overlapped = { 0 };
 
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);

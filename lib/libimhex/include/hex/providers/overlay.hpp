@@ -14,7 +14,7 @@ namespace hex::prv {
         [[nodiscard]] u64 getAddress() const { return this->m_address; }
 
         [[nodiscard]] u64 getSize() const { return this->m_data.size(); }
-        [[nodiscard]] std::vector<u8>& getData() { return this->m_data; }
+        [[nodiscard]] std::vector<u8> &getData() { return this->m_data; }
 
     private:
         u64 m_address = 0;

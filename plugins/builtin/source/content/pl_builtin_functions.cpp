@@ -25,13 +25,13 @@ namespace hex::plugin::builtin {
             auto &param = params[i];
 
             std::visit(overloaded {
-                [&](pl::PatternData* value) {
-                    formatArgs.push_back(value->toString(ctx->getProvider()));
-                },
-                [&](auto &&value) {
-                    formatArgs.push_back(value);
-                }
-            }, param);
+                           [&](pl::PatternData *value) {
+                               formatArgs.push_back(value->toString(ctx->getProvider()));
+                           },
+                           [&](auto &&value) {
+                               formatArgs.push_back(value);
+                           } },
+                       param);
         }
 
         try {
@@ -93,7 +93,6 @@ namespace hex::plugin::builtin {
                     return "";
                 }
             });
-
         }
 
         ContentRegistry::PatternLanguage::Namespace nsStdMem = { "std", "mem" };
@@ -188,7 +187,6 @@ namespace hex::plugin::builtin {
 
                 return result;
             });
-
         }
 
         ContentRegistry::PatternLanguage::Namespace nsStdString = { "std", "string" };
@@ -205,12 +203,12 @@ namespace hex::plugin::builtin {
                 auto string = Token::literalToString(params[0], false);
                 auto index = Token::literalToSigned(params[1]);
 
-                #if defined(OS_MACOS)
-                    const auto signIndex = index >> (sizeof(index) * 8 - 1);
-                    const auto absIndex = (index ^ signIndex) - signIndex;
-                #else
+#if defined(OS_MACOS)
+                const auto signIndex = index >> (sizeof(index) * 8 - 1);
+                const auto absIndex = (index ^ signIndex) - signIndex;
+#else
                     const auto absIndex = std::abs(index);
-                #endif
+#endif
 
                 if (absIndex > string.length())
                     LogConsole::abortEvaluation("character index out of range");
@@ -247,7 +245,6 @@ namespace hex::plugin::builtin {
 
                 return double(std::strtod(string.c_str(), nullptr));
             });
-
         }
 
         ContentRegistry::PatternLanguage::Namespace nsStdHttp = { "std", "http" };
@@ -275,11 +272,17 @@ namespace hex::plugin::builtin {
 
                 File::Mode mode;
                 switch (modeEnum) {
-                    case 1: mode = File::Mode::Read; break;
-                    case 2: mode = File::Mode::Write; break;
-                    case 3: mode = File::Mode::Create; break;
-                    default:
-                        LogConsole::abortEvaluation("invalid file open mode");
+                case 1:
+                    mode = File::Mode::Read;
+                    break;
+                case 2:
+                    mode = File::Mode::Write;
+                    break;
+                case 3:
+                    mode = File::Mode::Create;
+                    break;
+                default:
+                    LogConsole::abortEvaluation("invalid file open mode");
                 }
 
                 auto file = File(path, mode);
@@ -288,7 +291,7 @@ namespace hex::plugin::builtin {
                     LogConsole::abortEvaluation(hex::format("failed to open file {}", path));
 
                 fileCounter++;
-                openFiles.emplace(std::pair{ fileCounter, std::move(file) });
+                openFiles.emplace(std::pair { fileCounter, std::move(file) });
 
                 return u128(fileCounter);
             });
@@ -302,7 +305,7 @@ namespace hex::plugin::builtin {
 
                 openFiles.erase(file);
 
-                return { };
+                return {};
             });
 
             /* read(file, size) */
@@ -326,7 +329,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].write(data);
 
-                return { };
+                return {};
             });
 
             /* seek(file, offset) */
@@ -339,7 +342,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].seek(offset);
 
-                return { };
+                return {};
             });
 
             /* size(file) */
@@ -362,7 +365,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].setSize(size);
 
-                return { };
+                return {};
             });
 
             /* flush(file) */
@@ -374,7 +377,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].flush();
 
-                return { };
+                return {};
             });
 
             /* remove(file) */
@@ -386,7 +389,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].remove();
 
-                return { };
+                return {};
             });
         }
     }

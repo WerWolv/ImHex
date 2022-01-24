@@ -18,5 +18,5 @@ namespace hex::init {
     std::vector<Task> getInitTasks();
     std::vector<Task> getExitTasks();
 
-    std::vector<Argument>& getInitArguments();
+    std::vector<Argument> &getInitArguments();
 }

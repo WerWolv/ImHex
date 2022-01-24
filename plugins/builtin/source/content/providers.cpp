@@ -11,7 +11,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<prv::FileProvider>("hex.builtin.provider.file", false);
         ContentRegistry::Provider::add<prv::GDBProvider>("hex.builtin.provider.gdb");
         ContentRegistry::Provider::add<prv::DiskProvider>("hex.builtin.provider.disk");
-
     }
 
 }

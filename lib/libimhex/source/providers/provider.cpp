@@ -59,13 +59,13 @@ namespace hex::prv {
 
             i128 overlapMin = std::max(offset, overlayOffset);
             i128 overlapMax = std::min(offset + size, overlayOffset + overlaySize);
-             if (overlapMax > overlapMin)
-                 std::memcpy(static_cast<u8*>(buffer) + std::max<i128>(0, overlapMin - offset), overlay->getData().data() + std::max<i128>(0, overlapMin - overlayOffset), overlapMax - overlapMin);
+            if (overlapMax > overlapMin)
+                std::memcpy(static_cast<u8 *>(buffer) + std::max<i128>(0, overlapMin - offset), overlay->getData().data() + std::max<i128>(0, overlapMin - overlayOffset), overlapMax - overlapMin);
         }
     }
 
 
-    std::map<u64, u8>& Provider::getPatches() {
+    std::map<u64, u8> &Provider::getPatches() {
         auto iter = this->m_patches.end();
         for (auto i = 0; i < this->m_patchTreeOffset + 1; i++)
             iter--;
@@ -73,7 +73,7 @@ namespace hex::prv {
         return *(iter);
     }
 
-    const std::map<u64, u8>& Provider::getPatches() const {
+    const std::map<u64, u8> &Provider::getPatches() const {
         auto iter = this->m_patches.end();
         for (auto i = 0; i < this->m_patchTreeOffset + 1; i++)
             iter--;
@@ -88,7 +88,7 @@ namespace hex::prv {
     }
 
 
-    Overlay* Provider::newOverlay() {
+    Overlay *Provider::newOverlay() {
         return this->m_overlays.emplace_back(new Overlay());
     }
 
@@ -97,7 +97,7 @@ namespace hex::prv {
         delete overlay;
     }
 
-    const std::list<Overlay*>& Provider::getOverlays() {
+    const std::list<Overlay *> &Provider::getOverlays() {
         return this->m_overlays;
     }
 
@@ -136,7 +136,7 @@ namespace hex::prv {
         u32 page = std::floor((address - this->getBaseAddress()) / double(PageSize));
 
         if (page >= this->getPageCount())
-            return { };
+            return {};
 
         return page;
     }
@@ -155,7 +155,7 @@ namespace hex::prv {
             createUndoPoint();
 
         for (u64 i = 0; i < size; i++)
-            getPatches()[offset + i] = reinterpret_cast<const u8*>(buffer)[i];
+            getPatches()[offset + i] = reinterpret_cast<const u8 *>(buffer)[i];
     }
 
     void Provider::createUndoPoint() {
@@ -190,11 +190,9 @@ namespace hex::prv {
     }
 
     void Provider::drawLoadInterface() {
-
     }
 
     void Provider::drawInterface() {
-
     }
 
 }

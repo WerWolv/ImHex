@@ -33,31 +33,31 @@ namespace hex {
         curl_easy_cleanup(this->m_ctx);
     }
 
-    static size_t writeToString(void *contents, size_t size, size_t nmemb, void *userdata){
-        static_cast<std::string*>(userdata)->append((char*)contents, size * nmemb);
+    static size_t writeToString(void *contents, size_t size, size_t nmemb, void *userdata) {
+        static_cast<std::string *>(userdata)->append((char *)contents, size * nmemb);
         return size * nmemb;
     }
 
     static size_t readFromFile(void *contents, size_t size, size_t nmemb, void *userdata) {
-        FILE *file = static_cast<FILE*>(userdata);
+        FILE *file = static_cast<FILE *>(userdata);
 
         return fread(contents, size, nmemb, file);
     }
 
     static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata) {
-        FILE *file = static_cast<FILE*>(userdata);
+        FILE *file = static_cast<FILE *>(userdata);
 
         return fwrite(contents, size, nmemb, file);
     }
 
     static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userdata) {
-        auto* cfg = static_cast<mbedtls_ssl_config*>(sslctx);
+        auto *cfg = static_cast<mbedtls_ssl_config *>(sslctx);
 
         static mbedtls_x509_crt crt;
         mbedtls_x509_crt_init(&crt);
 
         auto cacert = romfs::get("cacert.pem").string();
-        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8*>(cacert.data()), cacert.size());
+        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8 *>(cacert.data()), cacert.size());
 
         mbedtls_ssl_conf_ca_chain(cfg, &crt, nullptr);
 
@@ -65,7 +65,7 @@ namespace hex {
     }
 
     int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
-        auto &net = *static_cast<Net*>(contents);
+        auto &net = *static_cast<Net *>(contents);
 
         if (dlTotal > 0)
             net.m_progress = float(dlNow) / dlTotal;
@@ -129,7 +129,7 @@ namespace hex {
         this->m_shouldCancel = false;
 
         if (result != CURLE_OK)
-            return { };
+            return {};
         else
             return responseCode;
     }
@@ -137,7 +137,7 @@ namespace hex {
     std::future<Response<std::string>> Net::getString(const std::string &url, u32 timeout) {
         this->m_transmissionActive.lock();
 
-        return std::async(std::launch::async, [=, this]{
+        return std::async(std::launch::async, [=, this] {
             std::string response;
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
@@ -154,7 +154,7 @@ namespace hex {
     std::future<Response<nlohmann::json>> Net::getJson(const std::string &url, u32 timeout) {
         this->m_transmissionActive.lock();
 
-        return std::async(std::launch::async, [=, this]{
+        return std::async(std::launch::async, [=, this] {
             std::string response;
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
@@ -178,26 +178,21 @@ namespace hex {
 
             File file(filePath.string(), File::Mode::Read);
             if (!file.isValid())
-                return Response<std::string> { 400, { } };
+                return Response<std::string> { 400, {} };
 
             curl_mime *mime = curl_mime_init(this->m_ctx);
             curl_mimepart *part = curl_mime_addpart(mime);
 
             auto fileName = filePath.filename().string();
-            curl_mime_data_cb(part, file.getSize(),
-                [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
+            curl_mime_data_cb(
+                part, file.getSize(), [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
                     auto file = static_cast<FILE*>(arg);
-                    return fread(buffer, size, nitems, file);
-                },
-                [](void *arg, curl_off_t offset, int origin) -> int {
+                    return fread(buffer, size, nitems, file); }, [](void *arg, curl_off_t offset, int origin) -> int {
                     auto file = static_cast<FILE*>(arg);
                     fseek(file, offset, origin);
-                    return CURL_SEEKFUNC_OK;
-                },
-                [](void *arg) {
+                    return CURL_SEEKFUNC_OK; }, [](void *arg) {
                     auto file = static_cast<FILE*>(arg);
-                    fclose(file);
-                }, file.getHandle());
+                    fclose(file); }, file.getHandle());
             curl_mime_filename(part, fileName.c_str());
             curl_mime_name(part, "file");
 
@@ -214,7 +209,7 @@ namespace hex {
     std::future<Response<void>> Net::downloadFile(const std::string &url, const fs::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
-        return std::async(std::launch::async, [=, this]{
+        return std::async(std::launch::async, [=, this] {
             std::string response;
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
@@ -243,7 +238,7 @@ namespace hex {
             return output;
         }
 
-        return { };
+        return {};
     }
 
 }

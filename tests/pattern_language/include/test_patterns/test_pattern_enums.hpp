@@ -6,13 +6,13 @@ namespace hex::test {
 
     class TestPatternEnums : public TestPattern {
     public:
-        TestPatternEnums() : TestPattern("Enums"){
+        TestPatternEnums() : TestPattern("Enums") {
             auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x08, sizeof(u32), nullptr);
             testEnum->setEnumValues({
-                { u128(0x0000), "A" },
-                { i128(0x0C), "B" },
-                { u128(0x0D), "C" },
-                { u128(0x0E), "D" },
+                {u128(0x0000), "A"},
+                { i128(0x0C),  "B"},
+                { u128(0x0D),  "C"},
+                { u128(0x0E),  "D"},
             });
             testEnum->setEndian(std::endian::big);
 
@@ -20,8 +20,7 @@ namespace hex::test {
         }
         ~TestPatternEnums() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 enum TestEnum : u32 {
                     A,
@@ -35,7 +34,6 @@ namespace hex::test {
                 std::assert(testEnum == TestEnum::C, "Invalid enum value");
             )";
         }
-
     };
 
 }

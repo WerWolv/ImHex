@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 
 #if defined(OS_WINDOWS)
-#include <windows.h>
+    #include <windows.h>
 #else
-#include <sys/mman.h>
-#include <unistd.h>
-#include <sys/fcntl.h>
+    #include <sys/mman.h>
+    #include <unistd.h>
+    #include <sys/fcntl.h>
 #endif
 
 namespace hex::plugin::builtin::prv {
@@ -49,12 +49,12 @@ namespace hex::plugin::builtin::prv {
         void close() override;
 
     protected:
-        #if defined(OS_WINDOWS)
+#if defined(OS_WINDOWS)
         HANDLE m_file = INVALID_HANDLE_VALUE;
         HANDLE m_mapping = INVALID_HANDLE_VALUE;
-        #else
+#else
         int m_file = -1;
-        #endif
+#endif
 
         fs::path m_path;
         void *m_mappedFile = nullptr;

@@ -16,19 +16,19 @@
 namespace ImGui {
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
-        auto &mathInput = *static_cast<std::string*>(data->UserData);
+        auto &mathInput = *static_cast<std::string *>(data->UserData);
 
         mathInput.resize(data->BufTextLen);
         return 0;
     }
 
-    bool IconHyperlink(const char *icon, const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool IconHyperlink(const char *icon, const char *label, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(label);
         ImVec2 label_size = CalcTextSize(icon, NULL, false);
         label_size.x += CalcTextSize(" ", NULL, false).x + CalcTextSize(label, NULL, false).x;
@@ -57,13 +57,13 @@ namespace ImGui {
         return pressed;
     }
 
-    bool Hyperlink(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool Hyperlink(const char *label, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
@@ -82,7 +82,7 @@ namespace ImGui {
         // Render
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
-        TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText); // Skip formatting
+        TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
         GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
         PopStyleColor();
 
@@ -90,13 +90,13 @@ namespace ImGui {
         return pressed;
     }
 
-    bool BulletHyperlink(const char* label, const ImVec2& size_arg, ImGuiButtonFlags flags) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool BulletHyperlink(const char *label, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
@@ -125,19 +125,19 @@ namespace ImGui {
         return pressed;
     }
 
-    bool DescriptionButton(const char* label, const char* description, const ImVec2& size_arg, ImGuiButtonFlags flags) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(label);
         const ImVec2 text_size = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), NULL, true);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
         ImVec2 pos = window->DC.CursorPos;
-        if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset) // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
+        if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
             pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
         ImVec2 size = CalcItemSize(size_arg, text_size.x + style.FramePadding.x * 4.0f, text_size.y + style.FramePadding.y * 4.0f);
 
@@ -154,7 +154,8 @@ namespace ImGui {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0, 0.5));
 
         // Render
-        const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered : ImGuiCustomCol_DescButton);
+        const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
+                                                                                                          : ImGuiCustomCol_DescButton);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
@@ -167,15 +168,15 @@ namespace ImGui {
         ImGui::PopStyleVar();
 
         // Automatically close popups
-        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
         return pressed;
     }
 
-    void UnderlinedText(const char* label, ImColor color, const ImVec2& size_arg) {
-        ImGuiWindow* window = GetCurrentWindow();
+    void UnderlinedText(const char *label, ImColor color, const ImVec2 &size_arg) {
+        ImGuiWindow *window = GetCurrentWindow();
 
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
@@ -183,7 +184,7 @@ namespace ImGui {
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         PushStyleColor(ImGuiCol_Text, ImU32(color));
-        TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText); // Skip formatting
+        TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
         GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(color));
         PopStyleColor();
     }
@@ -196,10 +197,9 @@ namespace ImGui {
         } else {
             widgets();
         }
-
     }
 
-    void TextSpinner(const char* label) {
+    void TextSpinner(const char *label) {
         ImGui::Text("[%c] %s", "|/-\\"[ImU32(ImGui::GetTime() * 20) % 4], label);
     }
 
@@ -237,78 +237,78 @@ namespace ImGui {
     }
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
-        auto& customData = *static_cast<ImHexCustomData*>(GImGui->IO.UserData);
+        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
         ImVec4 c = customData.Colors[idx];
         c.w *= GImGui->Style.Alpha * alpha_mul;
         return ColorConvertFloat4ToU32(c);
     }
 
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul) {
-        auto& customData = *static_cast<ImHexCustomData*>(GImGui->IO.UserData);
+        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
         ImVec4 c = customData.Colors[idx];
         c.w *= GImGui->Style.Alpha * alpha_mul;
         return c;
     }
 
     void StyleCustomColorsDark() {
-        auto &colors = static_cast<ImHexCustomData*>(GImGui->IO.UserData)->Colors;
+        auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 
-        colors[ImGuiCustomCol_DescButton]           = ImColor(20, 20, 20);
-        colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(40, 40, 40);
-        colors[ImGuiCustomCol_DescButtonActive]     = ImColor(60, 60, 60);
+        colors[ImGuiCustomCol_DescButton] = ImColor(20, 20, 20);
+        colors[ImGuiCustomCol_DescButtonHovered] = ImColor(40, 40, 40);
+        colors[ImGuiCustomCol_DescButtonActive] = ImColor(60, 60, 60);
 
-        colors[ImGuiCustomCol_ToolbarGray]          = ImColor(230, 230, 230);
-        colors[ImGuiCustomCol_ToolbarRed]           = ImColor(231, 76, 60);
-        colors[ImGuiCustomCol_ToolbarYellow]        = ImColor(241, 196, 15);
-        colors[ImGuiCustomCol_ToolbarGreen]         = ImColor(56, 139, 66);
-        colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
-        colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
-        colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
+        colors[ImGuiCustomCol_ToolbarGray] = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_ToolbarRed] = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarYellow] = ImColor(241, 196, 15);
+        colors[ImGuiCustomCol_ToolbarGreen] = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue] = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarPurple] = ImColor(103, 42, 120);
+        colors[ImGuiCustomCol_ToolbarBrown] = ImColor(219, 179, 119);
 
-        colors[ImGuiCustomCol_Highlight]            = ImColor(77, 198, 155);
+        colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
     }
 
     void StyleCustomColorsLight() {
-        auto &colors = static_cast<ImHexCustomData*>(GImGui->IO.UserData)->Colors;
+        auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 
-        colors[ImGuiCustomCol_DescButton]           = ImColor(230, 230, 230);
-        colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(210, 210, 210);
-        colors[ImGuiCustomCol_DescButtonActive]     = ImColor(190, 190, 190);
+        colors[ImGuiCustomCol_DescButton] = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_DescButtonHovered] = ImColor(210, 210, 210);
+        colors[ImGuiCustomCol_DescButtonActive] = ImColor(190, 190, 190);
 
-        colors[ImGuiCustomCol_ToolbarGray]          = ImColor(25, 25, 25);
-        colors[ImGuiCustomCol_ToolbarRed]           = ImColor(231, 76, 60);
-        colors[ImGuiCustomCol_ToolbarYellow]        = ImColor(241, 196, 15);
-        colors[ImGuiCustomCol_ToolbarGreen]         = ImColor(56, 139, 66);
-        colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
-        colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
-        colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
+        colors[ImGuiCustomCol_ToolbarGray] = ImColor(25, 25, 25);
+        colors[ImGuiCustomCol_ToolbarRed] = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarYellow] = ImColor(241, 196, 15);
+        colors[ImGuiCustomCol_ToolbarGreen] = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue] = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarPurple] = ImColor(103, 42, 120);
+        colors[ImGuiCustomCol_ToolbarBrown] = ImColor(219, 179, 119);
 
-        colors[ImGuiCustomCol_Highlight]            = ImColor(41, 151, 112);
+        colors[ImGuiCustomCol_Highlight] = ImColor(41, 151, 112);
     }
 
     void StyleCustomColorsClassic() {
-        auto &colors = static_cast<ImHexCustomData*>(GImGui->IO.UserData)->Colors;
+        auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 
-        colors[ImGuiCustomCol_DescButton]           = ImColor(40, 40, 80);
-        colors[ImGuiCustomCol_DescButtonHovered]    = ImColor(60, 60, 100);
-        colors[ImGuiCustomCol_DescButtonActive]     = ImColor(80, 80, 120);
+        colors[ImGuiCustomCol_DescButton] = ImColor(40, 40, 80);
+        colors[ImGuiCustomCol_DescButtonHovered] = ImColor(60, 60, 100);
+        colors[ImGuiCustomCol_DescButtonActive] = ImColor(80, 80, 120);
 
-        colors[ImGuiCustomCol_ToolbarGray]          = ImColor(230, 230, 230);
-        colors[ImGuiCustomCol_ToolbarRed]           = ImColor(231, 76, 60);
-        colors[ImGuiCustomCol_ToolbarYellow]        = ImColor(241, 196, 15);
-        colors[ImGuiCustomCol_ToolbarGreen]         = ImColor(56, 139, 66);
-        colors[ImGuiCustomCol_ToolbarBlue]          = ImColor(6, 83, 155);
-        colors[ImGuiCustomCol_ToolbarPurple]        = ImColor(103, 42, 120);
-        colors[ImGuiCustomCol_ToolbarBrown]         = ImColor(219, 179, 119);
+        colors[ImGuiCustomCol_ToolbarGray] = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_ToolbarRed] = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarYellow] = ImColor(241, 196, 15);
+        colors[ImGuiCustomCol_ToolbarGreen] = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue] = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarPurple] = ImColor(103, 42, 120);
+        colors[ImGuiCustomCol_ToolbarBrown] = ImColor(219, 179, 119);
 
-        colors[ImGuiCustomCol_Highlight]            = ImColor(77, 198, 155);
+        colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
     }
 
     Texture LoadImageFromPath(const char *path) {
         int imageWidth = 0;
         int imageHeight = 0;
 
-        unsigned char* imageData = stbi_load(path, &imageWidth, &imageHeight, nullptr, 4);
+        unsigned char *imageData = stbi_load(path, &imageWidth, &imageHeight, nullptr, 4);
         if (imageData == nullptr)
             return { nullptr, -1, -1 };
 
@@ -320,9 +320,9 @@ namespace ImGui {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        #if defined(GL_UNPACK_ROW_LENGTH)
-            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        #endif
+#if defined(GL_UNPACK_ROW_LENGTH)
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         stbi_image_free(imageData);
 
@@ -334,7 +334,7 @@ namespace ImGui {
         int imageHeight = 0;
 
 
-        unsigned char* imageData = stbi_load_from_memory(buffer, size, &imageWidth, &imageHeight, nullptr, 4);
+        unsigned char *imageData = stbi_load_from_memory(buffer, size, &imageWidth, &imageHeight, nullptr, 4);
         if (imageData == nullptr)
             return { nullptr, -1, -1 };
 
@@ -345,9 +345,9 @@ namespace ImGui {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        #if defined(GL_UNPACK_ROW_LENGTH)
+#if defined(GL_UNPACK_ROW_LENGTH)
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-        #endif
+#endif
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         stbi_image_free(imageData);
 
@@ -372,13 +372,13 @@ namespace ImGui {
     }
 
 
-    bool TitleBarButton(const char* label, ImVec2 size_arg) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool TitleBarButton(const char *label, ImVec2 size_arg) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
@@ -395,28 +395,29 @@ namespace ImGui {
         bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
+                                                                                          : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
 
         // Automatically close popups
-        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
         return pressed;
     }
 
-    bool ToolBarButton(const char* symbol, ImVec4 color) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool ToolBarButton(const char *symbol, ImVec4 color) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
         color.w = 1.0F;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(symbol);
         const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
 
@@ -435,7 +436,8 @@ namespace ImGui {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_MenuBarBg);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered
+                                                                                                 : ImGuiCol_MenuBarBg);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);
@@ -443,22 +445,22 @@ namespace ImGui {
         PopStyleColor();
 
         // Automatically close popups
-        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
         return pressed;
     }
 
-    bool IconButton(const char* symbol, ImVec4 color, ImVec2 size_arg) {
-        ImGuiWindow* window = GetCurrentWindow();
+    bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg) {
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
 
         color.w = 1.0F;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(symbol);
         const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
 
@@ -477,7 +479,8 @@ namespace ImGui {
         PushStyleColor(ImGuiCol_Text, color);
 
         // Render
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
+                                                                                          : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);
@@ -485,7 +488,7 @@ namespace ImGui {
         PopStyleColor();
 
         // Automatically close popups
-        //if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
@@ -493,12 +496,12 @@ namespace ImGui {
     }
 
     void SmallProgressBar(float fraction, float yOffset) {
-        ImGuiWindow* window = GetCurrentWindow();
+        ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
             return;
 
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
 
         ImVec2 pos = window->DC.CursorPos + ImVec2(0, yOffset);
         ImVec2 size = CalcItemSize(ImVec2(100, 5), 100, g.FontSize + style.FramePadding.y * 2.0f);

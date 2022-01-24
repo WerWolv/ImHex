@@ -21,15 +21,15 @@ namespace hex::pl {
         Parser() = default;
         ~Parser() = default;
 
-        std::optional<std::vector<ASTNode*>> parse(const std::vector<Token> &tokens);
-        const std::optional<ParseError>& getError() { return this->m_error; }
+        std::optional<std::vector<ASTNode *>> parse(const std::vector<Token> &tokens);
+        const std::optional<ParseError> &getError() { return this->m_error; }
 
     private:
         std::optional<ParseError> m_error;
         TokenIter m_curr;
         TokenIter m_originalPosition;
 
-        std::unordered_map<std::string, ASTNode*> m_types;
+        std::unordered_map<std::string, ASTNode *> m_types;
         std::vector<TokenIter> m_matchedOptionals;
         std::vector<std::vector<std::string>> m_currNamespace;
 
@@ -37,13 +37,13 @@ namespace hex::pl {
             return this->m_curr[index].lineNumber;
         }
 
-        auto* create(auto *node) {
+        auto *create(auto *node) {
             node->setLineNumber(this->getLineNumber(-1));
             return node;
         }
 
         template<typename T>
-        const T& getValue(i32 index) const {
+        const T &getValue(i32 index) const {
             auto value = std::get_if<T>(&this->m_curr[index].value);
 
             if (value == nullptr)
@@ -67,63 +67,63 @@ namespace hex::pl {
             return result;
         }
 
-        ASTNode* parseFunctionCall();
-        ASTNode* parseStringLiteral();
+        ASTNode *parseFunctionCall();
+        ASTNode *parseStringLiteral();
         std::string parseNamespaceResolution();
-        ASTNode* parseScopeResolution();
-        ASTNode* parseRValue(ASTNodeRValue::Path &path);
-        ASTNode* parseFactor();
-        ASTNode* parseCastExpression();
-        ASTNode* parseUnaryExpression();
-        ASTNode* parseMultiplicativeExpression();
-        ASTNode* parseAdditiveExpression();
-        ASTNode* parseShiftExpression();
-        ASTNode* parseRelationExpression();
-        ASTNode* parseEqualityExpression();
-        ASTNode* parseBinaryAndExpression();
-        ASTNode* parseBinaryXorExpression();
-        ASTNode* parseBinaryOrExpression();
-        ASTNode* parseBooleanAnd();
-        ASTNode* parseBooleanXor();
-        ASTNode* parseBooleanOr();
-        ASTNode* parseTernaryConditional();
-        ASTNode* parseMathematicalExpression();
+        ASTNode *parseScopeResolution();
+        ASTNode *parseRValue(ASTNodeRValue::Path &path);
+        ASTNode *parseFactor();
+        ASTNode *parseCastExpression();
+        ASTNode *parseUnaryExpression();
+        ASTNode *parseMultiplicativeExpression();
+        ASTNode *parseAdditiveExpression();
+        ASTNode *parseShiftExpression();
+        ASTNode *parseRelationExpression();
+        ASTNode *parseEqualityExpression();
+        ASTNode *parseBinaryAndExpression();
+        ASTNode *parseBinaryXorExpression();
+        ASTNode *parseBinaryOrExpression();
+        ASTNode *parseBooleanAnd();
+        ASTNode *parseBooleanXor();
+        ASTNode *parseBooleanOr();
+        ASTNode *parseTernaryConditional();
+        ASTNode *parseMathematicalExpression();
 
-        ASTNode* parseFunctionDefinition();
-        ASTNode* parseFunctionVariableDecl();
-        ASTNode* parseFunctionStatement();
-        ASTNode* parseFunctionVariableAssignment();
-        ASTNode* parseFunctionControlFlowStatement();
-        std::vector<ASTNode*> parseStatementBody();
-        ASTNode* parseFunctionConditional();
-        ASTNode* parseFunctionWhileLoop();
-        ASTNode* parseFunctionForLoop();
+        ASTNode *parseFunctionDefinition();
+        ASTNode *parseFunctionVariableDecl();
+        ASTNode *parseFunctionStatement();
+        ASTNode *parseFunctionVariableAssignment();
+        ASTNode *parseFunctionControlFlowStatement();
+        std::vector<ASTNode *> parseStatementBody();
+        ASTNode *parseFunctionConditional();
+        ASTNode *parseFunctionWhileLoop();
+        ASTNode *parseFunctionForLoop();
 
         void parseAttribute(Attributable *currNode);
-        ASTNode* parseConditional();
-        ASTNode* parseWhileStatement();
-        ASTNodeTypeDecl* parseType(bool allowFunctionTypes = false);
-        ASTNode* parseUsingDeclaration();
-        ASTNode* parsePadding();
-        ASTNode* parseMemberVariable(ASTNodeTypeDecl *type);
-        ASTNode* parseMemberArrayVariable(ASTNodeTypeDecl *type);
-        ASTNode* parseMemberPointerVariable(ASTNodeTypeDecl *type);
-        ASTNode* parseMember();
-        ASTNode* parseStruct();
-        ASTNode* parseUnion();
-        ASTNode* parseEnum();
-        ASTNode* parseBitfield();
-        ASTNode* parseVariablePlacement(ASTNodeTypeDecl *type);
-        ASTNode* parseArrayVariablePlacement(ASTNodeTypeDecl *type);
-        ASTNode* parsePointerVariablePlacement(ASTNodeTypeDecl *type);
-        ASTNode* parsePlacement();
-        std::vector<ASTNode*> parseNamespace();
-        std::vector<ASTNode*> parseStatements();
+        ASTNode *parseConditional();
+        ASTNode *parseWhileStatement();
+        ASTNodeTypeDecl *parseType(bool allowFunctionTypes = false);
+        ASTNode *parseUsingDeclaration();
+        ASTNode *parsePadding();
+        ASTNode *parseMemberVariable(ASTNodeTypeDecl *type);
+        ASTNode *parseMemberArrayVariable(ASTNodeTypeDecl *type);
+        ASTNode *parseMemberPointerVariable(ASTNodeTypeDecl *type);
+        ASTNode *parseMember();
+        ASTNode *parseStruct();
+        ASTNode *parseUnion();
+        ASTNode *parseEnum();
+        ASTNode *parseBitfield();
+        ASTNode *parseVariablePlacement(ASTNodeTypeDecl *type);
+        ASTNode *parseArrayVariablePlacement(ASTNodeTypeDecl *type);
+        ASTNode *parsePointerVariablePlacement(ASTNodeTypeDecl *type);
+        ASTNode *parsePlacement();
+        std::vector<ASTNode *> parseNamespace();
+        std::vector<ASTNode *> parseStatements();
 
-        ASTNodeTypeDecl* addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian = std::nullopt);
+        ASTNodeTypeDecl *addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian = std::nullopt);
 
-        std::vector<ASTNode*> parseTillToken(Token::Type endTokenType, const auto value) {
-            std::vector<ASTNode*> program;
+        std::vector<ASTNode *> parseTillToken(Token::Type endTokenType, const auto value) {
+            std::vector<ASTNode *> program;
             auto guard = SCOPE_GUARD {
                 for (auto &node : program)
                     delete node;
@@ -147,7 +147,7 @@ namespace hex::pl {
 
         /* Token consuming */
 
-        enum class Setting{ };
+        enum class Setting { };
         constexpr static auto Normal = static_cast<Setting>(0);
         constexpr static auto Not = static_cast<Setting>(1);
 
@@ -173,7 +173,7 @@ namespace hex::pl {
         }
 
         template<Setting S = Normal>
-        bool sequence(Token::Type type, auto value, auto ... args) {
+        bool sequence(Token::Type type, auto value, auto... args) {
             if constexpr (S == Normal) {
                 if (!peek(type, value)) {
                     reset();
@@ -214,7 +214,7 @@ namespace hex::pl {
         }
 
         template<Setting S = Normal>
-        bool oneOf(Token::Type type, auto value, auto ... args) {
+        bool oneOf(Token::Type type, auto value, auto... args) {
             if constexpr (S == Normal)
                 return sequence<Normal>(type, value) || oneOf(args...);
             else if constexpr (S == Not)
@@ -248,7 +248,6 @@ namespace hex::pl {
         bool peek(Token::Type type, auto value, i32 index = 0) {
             return this->m_curr[index].type == type && this->m_curr[index] == value;
         }
-
     };
 
 }

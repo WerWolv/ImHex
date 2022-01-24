@@ -21,25 +21,21 @@ namespace hex::pl {
             Error
         };
 
-        [[nodiscard]]
-        const auto& getLog() const { return this->m_consoleLog; }
+        [[nodiscard]] const auto &getLog() const { return this->m_consoleLog; }
 
         using EvaluateError = std::pair<u32, std::string>;
 
         void log(Level level, const std::string &message);
 
-        [[noreturn]]
-        static void abortEvaluation(const std::string &message);
+        [[noreturn]] static void abortEvaluation(const std::string &message);
 
-        [[noreturn]]
-        static void abortEvaluation(const std::string &message, const ASTNode *node);
+        [[noreturn]] static void abortEvaluation(const std::string &message, const ASTNode *node);
 
         void clear();
 
         void setHardError(const EvaluateError &error) { this->m_lastHardError = error; }
 
-        [[nodiscard]]
-        const std::optional<EvaluateError>& getLastHardError() { return this->m_lastHardError; };
+        [[nodiscard]] const std::optional<EvaluateError> &getLastHardError() { return this->m_lastHardError; };
 
     private:
         std::vector<std::pair<Level, std::string>> m_consoleLog;

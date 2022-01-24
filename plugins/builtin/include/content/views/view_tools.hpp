@@ -10,7 +10,9 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     class ViewTools : public View {
     public:
@@ -18,7 +20,6 @@ namespace hex::plugin::builtin {
         ~ViewTools() override;
 
         void drawContent() override;
-
     };
 
 }

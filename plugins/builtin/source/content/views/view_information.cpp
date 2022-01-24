@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
                 this->m_entropyHandlePosition = region.address / this->m_blockSize;
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this]{
+        EventManager::subscribe<EventFileUnloaded>(this, [this] {
             this->m_dataValid = false;
         });
 
@@ -73,13 +73,13 @@ namespace hex::plugin::builtin {
             entropy += probability * std::log2(probability);
         }
 
-        return (-entropy) / 8; // log2(256) = 8
+        return (-entropy) / 8;    // log2(256) = 8
     }
 
     void ViewInformation::analyze() {
         this->m_analyzing = true;
 
-        std::thread([this]{
+        std::thread([this] {
             auto provider = ImHexApi::Provider::get();
 
             auto task = ImHexApi::Tasks::createTask("hex.builtin.view.information.analyzing", provider->getSize());
@@ -136,7 +136,8 @@ namespace hex::plugin::builtin {
                     ImGui::Disabled([this] {
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang))
                             this->analyze();
-                    }, this->m_analyzing);
+                    },
+                                    this->m_analyzing);
 
                     if (this->m_analyzing) {
                         ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
@@ -182,9 +183,9 @@ namespace hex::plugin::builtin {
 
                         ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
                         ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
-                        if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1,0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale))  {
-                            static auto x = []{
-                                std::array<ImU64, 256> result{ 0 };
+                        if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1, 0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale)) {
+                            static auto x = [] {
+                                std::array<ImU64, 256> result { 0 };
                                 std::iota(result.begin(), result.end(), 0);
                                 return result;
                             }();
@@ -200,13 +201,13 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
 
                         ImPlot::SetNextPlotLimits(0, this->m_blockEntropy.size(), -0.1, 1.1, ImGuiCond_Always);
-                        if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1,0), ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
+                        if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1, 0), ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
                             ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
                             if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
                                 u64 address = u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress();
                                 address = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
-                                EventManager::post<RequestSelectionChange>( Region{ address, 1 });
+                                EventManager::post<RequestSelectionChange>(Region { address, 1 });
                             }
 
                             ImPlot::EndPlot();
@@ -224,7 +225,6 @@ namespace hex::plugin::builtin {
                             ImGui::NewLine();
                             ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
                         }
-
                     }
                 }
             }

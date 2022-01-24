@@ -8,7 +8,9 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     class ViewHashes : public View {
     public:
@@ -18,7 +20,17 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        enum class HashFunctions { Crc8, Crc16, Crc32, Md5, Sha1, Sha224, Sha256, Sha384, Sha512 };
+        enum class HashFunctions {
+            Crc8,
+            Crc16,
+            Crc32,
+            Md5,
+            Sha1,
+            Sha224,
+            Sha256,
+            Sha384,
+            Sha512
+        };
 
         bool m_shouldInvalidate = true;
         int m_currHashFunction = 0;
@@ -26,15 +38,15 @@ namespace hex::plugin::builtin {
         bool m_shouldMatchSelection = false;
 
         static constexpr std::array hashFunctionNames {
-            std::pair{HashFunctions::Crc8,   "CRC8"},
-            std::pair{HashFunctions::Crc16,  "CRC16"},
-            std::pair{HashFunctions::Crc32,  "CRC32"},
-            std::pair{HashFunctions::Md5,    "MD5"},
-            std::pair{HashFunctions::Sha1,   "SHA-1"},
-            std::pair{HashFunctions::Sha224, "SHA-224"},
-            std::pair{HashFunctions::Sha256, "SHA-256"},
-            std::pair{HashFunctions::Sha384, "SHA-384"},
-            std::pair{HashFunctions::Sha512, "SHA-512"},
+            std::pair {HashFunctions::Crc8,    "CRC8"   },
+            std::pair { HashFunctions::Crc16,  "CRC16"  },
+            std::pair { HashFunctions::Crc32,  "CRC32"  },
+            std::pair { HashFunctions::Md5,    "MD5"    },
+            std::pair { HashFunctions::Sha1,   "SHA-1"  },
+            std::pair { HashFunctions::Sha224, "SHA-224"},
+            std::pair { HashFunctions::Sha256, "SHA-256"},
+            std::pair { HashFunctions::Sha384, "SHA-384"},
+            std::pair { HashFunctions::Sha512, "SHA-512"},
         };
     };
 

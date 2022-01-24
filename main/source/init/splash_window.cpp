@@ -69,7 +69,7 @@ namespace hex::init {
 
     bool WindowSplash::loop() {
         auto splash = romfs::get("splash.png");
-        ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8*>(splash.data()), splash.size());
+        ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
 
         if (splashTexture == nullptr) {
             log::fatal("Could not load splash screen image!");
@@ -98,15 +98,14 @@ namespace hex::init {
 
                 drawList->AddText(ImVec2(15, 120) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
 
-                #if defined(DEBUG)
-                    drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0} : {1} {2}@{3}", IMHEX_VERSION, ICON_FA_CODE_BRANCH, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
-                #else
-                    drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
-                #endif
+#if defined(DEBUG)
+                drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0} : {1} {2}@{3}", IMHEX_VERSION, ICON_FA_CODE_BRANCH, GIT_BRANCH, GIT_COMMIT_HASH).c_str());
+#else
+                drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
+#endif
 
                 drawList->AddRectFilled(ImVec2(0, splashTexture.size().y - 5) * scale, ImVec2(splashTexture.size().x * this->m_progress, splashTexture.size().y) * scale, 0xFFFFFFFF);
-                drawList->AddText(ImVec2(15, splashTexture.size().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF),
-                                  hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
+                drawList->AddText(ImVec2(15, splashTexture.size().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
             }
 
             ImGui::Render();
@@ -171,12 +170,12 @@ namespace hex::init {
 
             SharedData::globalScale = SharedData::fontScale = std::midpoint(xScale, yScale);
 
-            // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
-            // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
-            // extremely huge with native scaling on MacOS.
-            #if defined(OS_MACOS)
-                SharedData::globalScale /= 2;
-            #endif
+// On Macs with a retina display (basically all modern ones we care about), the OS reports twice
+// the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
+// extremely huge with native scaling on MacOS.
+#if defined(OS_MACOS)
+            SharedData::globalScale /= 2;
+#endif
 
             if (SharedData::globalScale <= 0) {
                 SharedData::globalScale = 1.0;
@@ -217,8 +216,7 @@ namespace hex::init {
         cfg.MergeMode = true;
 
         ImWchar fontAwesomeRange[] = {
-                ICON_MIN_FA, ICON_MAX_FA,
-                0
+            ICON_MIN_FA, ICON_MAX_FA, 0
         };
         std::uint8_t *px;
         int w, h;

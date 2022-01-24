@@ -11,13 +11,13 @@ using namespace std::literals::string_literals;
 namespace hex::plugin::builtin {
 
     ViewPatches::ViewPatches() : View("hex.builtin.view.patches.name") {
-        EventManager::subscribe<EventProjectFileStore>(this, []{
+        EventManager::subscribe<EventProjectFileStore>(this, [] {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid())
                 ProjectFile::setPatches(provider->getPatches());
         });
 
-        EventManager::subscribe<EventProjectFileLoad>(this, []{
+        EventManager::subscribe<EventProjectFileLoad>(this, [] {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid())
                 provider->getPatches() = ProjectFile::getPatches();
@@ -35,8 +35,7 @@ namespace hex::plugin::builtin {
 
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
-                if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable |
-                                                        ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.view.patches.offset"_lang);
                     ImGui::TableSetupColumn("hex.builtin.view.patches.orig"_lang);
@@ -44,7 +43,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableHeadersRow();
 
-                    auto& patches = provider->getPatches();
+                    auto &patches = provider->getPatches();
                     u32 index = 0;
 
                     ImGuiListClipper clipper(patches.size());

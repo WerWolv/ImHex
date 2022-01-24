@@ -6,13 +6,11 @@ namespace hex::test {
 
     class TestPatternSucceedingAssert : public TestPattern {
     public:
-        TestPatternSucceedingAssert() : TestPattern("SucceedingAssert")  {
-
+        TestPatternSucceedingAssert() : TestPattern("SucceedingAssert") {
         }
         ~TestPatternSucceedingAssert() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 #define MSG "Error"
 
@@ -23,7 +21,6 @@ namespace hex::test {
 
             )";
         }
-
     };
 
 }

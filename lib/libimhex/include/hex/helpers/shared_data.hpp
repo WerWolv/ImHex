@@ -17,7 +17,9 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-namespace hex { class SharedData; }
+namespace hex {
+    class SharedData;
+}
 
 namespace hex::plugin::internal {
     void initializePlugin(SharedData &sharedData);
@@ -25,23 +27,30 @@ namespace hex::plugin::internal {
 
 namespace hex {
 
-    namespace prv { class Provider; }
-    namespace dp { class Node; }
-    namespace pl { class PatternData; }
+    namespace prv {
+        class Provider;
+    }
+    namespace dp {
+        class Node;
+    }
+    namespace pl {
+        class PatternData;
+    }
 
     class View;
 
     class SharedData {
         SharedData() = default;
+
     public:
-        SharedData(const SharedData&) = delete;
-        SharedData(SharedData&&) = delete;
+        SharedData(const SharedData &) = delete;
+        SharedData(SharedData &&) = delete;
 
         friend class Window;
 
         template<typename T>
-        static T& getVariable(std::string variableName) {
-            return std::any_cast<T&>(SharedData::sharedVariables[variableName]);
+        static T &getVariable(std::string variableName) {
+            return std::any_cast<T &>(SharedData::sharedVariables[variableName]);
         }
 
         template<typename T>
@@ -56,20 +65,20 @@ namespace hex {
     public:
         static std::vector<std::function<void()>> deferredCalls;
 
-        static std::vector<prv::Provider*> providers;
+        static std::vector<prv::Provider *> providers;
         static u32 currentProvider;
 
         static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> settingsEntries;
         static nlohmann::json settingsJson;
         static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
         static std::map<std::string, ContentRegistry::PatternLanguage::Function> patternLanguageFunctions;
-        static std::map<std::string, View*> views;
+        static std::map<std::string, View *> views;
         static std::vector<ContentRegistry::Tools::impl::Entry> toolsEntries;
         static std::vector<ContentRegistry::DataInspector::impl::Entry> dataInspectorEntries;
         static u32 patternPaletteOffset;
         static std::string popupMessage;
         static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
-        static std::vector<pl::PatternData*> patternData;
+        static std::vector<pl::PatternData *> patternData;
 
         static u32 selectableFileIndex;
         static std::vector<fs::path> selectableFiles;
@@ -93,7 +102,7 @@ namespace hex {
         static std::map<Shortcut, std::function<void()>> globalShortcuts;
 
         static std::mutex tasksMutex;
-        static std::list<Task*> runningTasks;
+        static std::list<Task *> runningTasks;
 
         static std::vector<std::string> providerNames;
 

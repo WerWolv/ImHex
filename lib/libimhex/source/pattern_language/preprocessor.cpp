@@ -9,10 +9,9 @@
 namespace hex::pl {
 
     Preprocessor::Preprocessor() {
-
     }
 
-    std::optional<std::string> Preprocessor::preprocess(const std::string& code, bool initialRun) {
+    std::optional<std::string> Preprocessor::preprocess(const std::string &code, bool initialRun) {
         u32 offset = 0;
         u32 lineNumber = 1;
         bool isInString = false;
@@ -67,7 +66,7 @@ namespace hex::pl {
 
                         if (includeFile[0] != '/') {
                             for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                               std::string tempPath = hex::format("{0}/{1}", dir.string().c_str(), includeFile.c_str());
+                                std::string tempPath = hex::format("{0}/{1}", dir.string().c_str(), includeFile.c_str());
                                 if (fs::exists(tempPath)) {
                                     includePath = tempPath;
                                     break;
@@ -191,12 +190,12 @@ namespace hex::pl {
                 std::vector<std::tuple<std::string, std::string, u32>> sortedDefines;
                 std::copy(this->m_defines.begin(), this->m_defines.end(), std::back_inserter(sortedDefines));
                 std::sort(sortedDefines.begin(), sortedDefines.end(), [](const auto &left, const auto &right) {
-                   return std::get<0>(left).size() > std::get<0>(right).size();
+                    return std::get<0>(left).size() > std::get<0>(right).size();
                 });
 
                 for (const auto &[define, value, defineLine] : sortedDefines) {
                     i32 index = 0;
-                    while((index = output.find(define, index)) != std::string::npos) {
+                    while ((index = output.find(define, index)) != std::string::npos) {
                         output.replace(index, define.length(), value);
                         index += value.length();
                     }
@@ -213,13 +212,13 @@ namespace hex::pl {
             }
         } catch (PreprocessorError &e) {
             this->m_error = e;
-            return { };
+            return {};
         }
 
         return output;
     }
 
-    void Preprocessor::addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string&)> &function) {
+    void Preprocessor::addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string &)> &function) {
         if (!this->m_pragmaHandlers.contains(pragmaType))
             this->m_pragmaHandlers.emplace(pragmaType, function);
     }

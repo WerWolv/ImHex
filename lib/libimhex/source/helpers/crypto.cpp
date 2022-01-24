@@ -23,30 +23,29 @@
 
 #if MBEDTLS_VERSION_MAJOR <= 2
 
-#define mbedtls_md5_starts mbedtls_md5_starts_ret
-#define mbedtls_md5_update mbedtls_md5_update_ret
-#define mbedtls_md5_finish mbedtls_md5_finish_ret
+    #define mbedtls_md5_starts mbedtls_md5_starts_ret
+    #define mbedtls_md5_update mbedtls_md5_update_ret
+    #define mbedtls_md5_finish mbedtls_md5_finish_ret
 
-#define mbedtls_sha1_starts mbedtls_sha1_starts_ret
-#define mbedtls_sha1_update mbedtls_sha1_update_ret
-#define mbedtls_sha1_finish mbedtls_sha1_finish_ret
+    #define mbedtls_sha1_starts mbedtls_sha1_starts_ret
+    #define mbedtls_sha1_update mbedtls_sha1_update_ret
+    #define mbedtls_sha1_finish mbedtls_sha1_finish_ret
 
-#define mbedtls_sha256_starts mbedtls_sha256_starts_ret
-#define mbedtls_sha256_update mbedtls_sha256_update_ret
-#define mbedtls_sha256_finish mbedtls_sha256_finish_ret
+    #define mbedtls_sha256_starts mbedtls_sha256_starts_ret
+    #define mbedtls_sha256_update mbedtls_sha256_update_ret
+    #define mbedtls_sha256_finish mbedtls_sha256_finish_ret
 
-#define mbedtls_sha512_starts mbedtls_sha512_starts_ret
-#define mbedtls_sha512_update mbedtls_sha512_update_ret
-#define mbedtls_sha512_finish mbedtls_sha512_finish_ret
+    #define mbedtls_sha512_starts mbedtls_sha512_starts_ret
+    #define mbedtls_sha512_update mbedtls_sha512_update_ret
+    #define mbedtls_sha512_finish mbedtls_sha512_finish_ret
 
 #endif
 
 namespace hex::crypt {
     using namespace std::placeholders;
 
-    template<std::invocable<unsigned char*, size_t> Func>
-    void processDataByChunks(prv::Provider* data, u64 offset, size_t size, Func func)
-    {
+    template<std::invocable<unsigned char *, size_t> Func>
+    void processDataByChunks(prv::Provider *data, u64 offset, size_t size, Func func) {
         std::array<u8, 512> buffer = { 0 };
         for (size_t bufferOffset = 0; bufferOffset < size; bufferOffset += buffer.size()) {
             const auto readSize = std::min(buffer.size(), size - bufferOffset);
@@ -56,12 +55,10 @@ namespace hex::crypt {
     }
 
     template<typename T>
-    T reflect(T in, std::size_t bits)
-    {
-        T out{};
+    T reflect(T in, std::size_t bits) {
+        T out {};
 
-        for(std::size_t i = 0; i < bits; i++)
-        {
+        for (std::size_t i = 0; i < bits; i++) {
             out <<= 1;
             if (in & 0b1)
                 out |= 1;
@@ -71,21 +68,17 @@ namespace hex::crypt {
     }
 
     template<typename T>
-    T reflect(T in)
-    {
-        if constexpr (sizeof(T) == 1)
-        {
-            T out{in};
+    T reflect(T in) {
+        if constexpr (sizeof(T) == 1) {
+            T out { in };
 
             out = ((out & 0xf0u) >> 4) | ((out & 0x0fu) << 4);
             out = ((out & 0xccu) >> 2) | ((out & 0x33u) << 2);
             out = ((out & 0xaau) >> 1) | ((out & 0x55u) << 1);
 
             return out;
-        }
-        else
-        {
-            return reflect(in, sizeof(T) *8 );
+        } else {
+            return reflect(in, sizeof(T) * 8);
         }
     }
 
@@ -96,29 +89,28 @@ namespace hex::crypt {
     public:
         using calc_type = uint64_t;
 
-        Crc(int bits, calc_type polynomial, calc_type init, calc_type xorout, bool refin, bool refout) :
-            m_bits(bits),
-            m_init(init & ((0b10ull << (bits-1)) - 1)),
-            m_xorout(xorout & ((0b10ull << (bits-1)) - 1)),
-            m_refin(refin),
-            m_refout(refout),
-            table([polynomial, bits](){
-                auto reflectedpoly= reflect(polynomial & ((0b10ull << (bits-1)) - 1), bits);
-                std::array<uint64_t, 256> table = {0};
+        Crc(int bits, calc_type polynomial, calc_type init, calc_type xorout, bool refin, bool refout) : m_bits(bits),
+                                                                                                         m_init(init & ((0b10ull << (bits - 1)) - 1)),
+                                                                                                         m_xorout(xorout & ((0b10ull << (bits - 1)) - 1)),
+                                                                                                         m_refin(refin),
+                                                                                                         m_refout(refout),
+                                                                                                         table([polynomial, bits]() {
+                                                                                                             auto reflectedpoly = reflect(polynomial & ((0b10ull << (bits - 1)) - 1), bits);
+                                                                                                             std::array<uint64_t, 256> table = { 0 };
 
-                for (uint32_t i = 0; i < 256; i++) {
-                    uint64_t c = i;
-                    for (std::size_t j = 0; j < 8; j++) {
-                        if (c & 0b1)
-                            c = reflectedpoly ^ (c >> 1);
-                        else
-                            c >>= 1;
-                    }
-                    table[i] = c;
-                }
+                                                                                                             for (uint32_t i = 0; i < 256; i++) {
+                                                                                                                 uint64_t c = i;
+                                                                                                                 for (std::size_t j = 0; j < 8; j++) {
+                                                                                                                     if (c & 0b1)
+                                                                                                                         c = reflectedpoly ^ (c >> 1);
+                                                                                                                     else
+                                                                                                                         c >>= 1;
+                                                                                                                 }
+                                                                                                                 table[i] = c;
+                                                                                                             }
 
-                return table;
-            }()) {
+                                                                                                             return table;
+                                                                                                         }()) {
             reset();
         };
 
@@ -157,7 +149,7 @@ namespace hex::crypt {
     };
 
     template<int bits>
-    auto calcCrc(prv::Provider* data, u64 offset, std::size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+    auto calcCrc(prv::Provider *data, u64 offset, std::size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
         Crc crc(bits, polynomial, init, xorout, reflectIn, reflectOut);
 
         processDataByChunks(data, offset, size, std::bind(&Crc::processBytes, &crc, _1, _2));
@@ -165,20 +157,20 @@ namespace hex::crypt {
         return crc.checksum();
     }
 
-    u16 crc8(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+    u16 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
         return calcCrc<8>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
     }
 
-    u16 crc16(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+    u16 crc16(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
         return calcCrc<16>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
     }
 
-    u32 crc32(prv::Provider* &data, u64 offset, size_t size, u32 polynomial, u32 init,  u32 xorout, bool reflectIn, bool reflectOut) {
+    u32 crc32(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
         return calcCrc<32>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
     }
 
 
-    std::array<u8, 16> md5(prv::Provider* &data, u64 offset, size_t size) {
+    std::array<u8, 16> md5(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 16> result = { 0 };
 
         mbedtls_md5_context ctx;
@@ -210,7 +202,7 @@ namespace hex::crypt {
         return result;
     }
 
-    std::array<u8, 20> sha1(prv::Provider* &data, u64 offset, size_t size) {
+    std::array<u8, 20> sha1(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 20> result = { 0 };
 
         mbedtls_sha1_context ctx;
@@ -242,7 +234,7 @@ namespace hex::crypt {
         return result;
     }
 
-    std::array<u8, 28> sha224(prv::Provider* &data, u64 offset, size_t size) {
+    std::array<u8, 28> sha224(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 28> result = { 0 };
 
         mbedtls_sha256_context ctx;
@@ -274,7 +266,7 @@ namespace hex::crypt {
         return result;
     }
 
-    std::array<u8, 32> sha256(prv::Provider* &data, u64 offset, size_t size) {
+    std::array<u8, 32> sha256(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 32> result = { 0 };
 
         mbedtls_sha256_context ctx;
@@ -306,7 +298,7 @@ namespace hex::crypt {
         return result;
     }
 
-    std::array<u8, 48> sha384(prv::Provider* &data, u64 offset, size_t size) {
+    std::array<u8, 48> sha384(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 48> result = { 0 };
 
         mbedtls_sha512_context ctx;
@@ -338,7 +330,7 @@ namespace hex::crypt {
         return result;
     }
 
-    std::array<u8, 64> sha512(prv::Provider* &data, u64 offset, size_t size) {
+    std::array<u8, 64> sha512(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 64> result = { 0 };
 
         mbedtls_sha512_context ctx;
@@ -377,7 +369,7 @@ namespace hex::crypt {
         mbedtls_base64_decode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
         std::vector<u8> output(written, 0x00);
         if (mbedtls_base64_decode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
-            return { };
+            return {};
 
         output.resize(written);
 
@@ -391,7 +383,7 @@ namespace hex::crypt {
 
         std::vector<u8> output(written, 0x00);
         if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
-            return { };
+            return {};
 
         output.resize(written);
 
@@ -407,10 +399,10 @@ namespace hex::crypt {
         ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
 
         if (mbedtls_mpi_read_string(&ctx, 16, input.c_str()))
-            return { };
+            return {};
 
         if (mbedtls_mpi_write_binary(&ctx, output.data(), output.size()))
-            return { };
+            return {};
 
         return output;
     }
@@ -418,13 +410,13 @@ namespace hex::crypt {
     std::string encode16(const std::vector<u8> &input) {
 
         if (input.empty())
-            return { };
+            return {};
 
         std::string output(input.size() * 2, '\0');
 
-        for(int i = 0; i < input.size(); i++) {
-            output[2*i+0] = "0123456789ABCDEF"[input[i] / 16];
-            output[2*i+1] = "0123456789ABCDEF"[input[i] % 16];
+        for (int i = 0; i < input.size(); i++) {
+            output[2 * i + 0] = "0123456789ABCDEF"[input[i] / 16];
+            output[2 * i + 1] = "0123456789ABCDEF"[input[i] % 16];
         }
 
         return output;
@@ -434,7 +426,7 @@ namespace hex::crypt {
         std::vector<u8> output;
 
         if (input.empty())
-            return { };
+            return {};
 
         mbedtls_cipher_context_t ctx;
         auto cipherInfo = mbedtls_cipher_info_from_type(type);
@@ -460,23 +452,47 @@ namespace hex::crypt {
 
     std::vector<u8> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
         switch (keyLength) {
-            case KeyLength::Key128Bits: if (key.size() != 128 / 8) return { }; break;
-            case KeyLength::Key192Bits: if (key.size() != 192 / 8) return { }; break;
-            case KeyLength::Key256Bits: if (key.size() != 256 / 8) return { }; break;
-            default: return { };
+        case KeyLength::Key128Bits:
+            if (key.size() != 128 / 8) return {};
+            break;
+        case KeyLength::Key192Bits:
+            if (key.size() != 192 / 8) return {};
+            break;
+        case KeyLength::Key256Bits:
+            if (key.size() != 256 / 8) return {};
+            break;
+        default:
+            return {};
         }
 
         mbedtls_cipher_type_t type;
         switch (mode) {
-            case AESMode::ECB:      type = MBEDTLS_CIPHER_AES_128_ECB;      break;
-            case AESMode::CBC:      type = MBEDTLS_CIPHER_AES_128_CBC;      break;
-            case AESMode::CFB128:   type = MBEDTLS_CIPHER_AES_128_CFB128;   break;
-            case AESMode::CTR:      type = MBEDTLS_CIPHER_AES_128_CTR;      break;
-            case AESMode::GCM:      type = MBEDTLS_CIPHER_AES_128_GCM;      break;
-            case AESMode::CCM:      type = MBEDTLS_CIPHER_AES_128_CCM;      break;
-            case AESMode::OFB:      type = MBEDTLS_CIPHER_AES_128_OFB;      break;
-            case AESMode::XTS:      type = MBEDTLS_CIPHER_AES_128_XTS;      break;
-            default: return { };
+        case AESMode::ECB:
+            type = MBEDTLS_CIPHER_AES_128_ECB;
+            break;
+        case AESMode::CBC:
+            type = MBEDTLS_CIPHER_AES_128_CBC;
+            break;
+        case AESMode::CFB128:
+            type = MBEDTLS_CIPHER_AES_128_CFB128;
+            break;
+        case AESMode::CTR:
+            type = MBEDTLS_CIPHER_AES_128_CTR;
+            break;
+        case AESMode::GCM:
+            type = MBEDTLS_CIPHER_AES_128_GCM;
+            break;
+        case AESMode::CCM:
+            type = MBEDTLS_CIPHER_AES_128_CCM;
+            break;
+        case AESMode::OFB:
+            type = MBEDTLS_CIPHER_AES_128_OFB;
+            break;
+        case AESMode::XTS:
+            type = MBEDTLS_CIPHER_AES_128_XTS;
+            break;
+        default:
+            return {};
         }
 
         type = mbedtls_cipher_type_t(type + u8(keyLength));

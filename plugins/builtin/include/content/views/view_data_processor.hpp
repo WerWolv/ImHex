@@ -12,7 +12,9 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv { class Provider; }
+    namespace prv {
+        class Provider;
+    }
 
     class ViewDataProcessor : public View {
     public:
@@ -22,11 +24,11 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::list<dp::Node*> m_endNodes;
-        std::list<dp::Node*> m_nodes;
-        std::list<dp::Link>  m_links;
+        std::list<dp::Node *> m_endNodes;
+        std::list<dp::Node *> m_nodes;
+        std::list<dp::Link> m_links;
 
-        std::vector<hex::prv::Overlay*> m_dataOverlays;
+        std::vector<hex::prv::Overlay *> m_dataOverlays;
 
         int m_rightClickedId = -1;
         ImVec2 m_rightClickedCoords;

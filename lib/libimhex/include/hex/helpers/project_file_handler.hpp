@@ -17,7 +17,7 @@ namespace hex {
         ProjectFile() = delete;
 
         static bool load(const fs::path &filePath);
-        static bool store(fs::path filePath = { });
+        static bool store(fs::path filePath = {});
 
         [[nodiscard]] static bool hasUnsavedChanges() {
             return ProjectFile::s_hasUnsavedChanged;
@@ -32,7 +32,7 @@ namespace hex {
                 EventManager::post<RequestChangeWindowTitle>(fs::path(getFilePath()).filename().string());
         }
 
-        [[nodiscard]] static const fs::path& getProjectFilePath() {
+        [[nodiscard]] static const fs::path &getProjectFilePath() {
             return ProjectFile::s_currProjectFilePath;
         }
 
@@ -41,7 +41,7 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const fs::path& getFilePath() {
+        [[nodiscard]] static const fs::path &getFilePath() {
             return ProjectFile::s_filePath;
         }
 
@@ -52,7 +52,7 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const std::string& getPattern() {
+        [[nodiscard]] static const std::string &getPattern() {
             return ProjectFile::s_pattern;
         }
 
@@ -62,7 +62,7 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const Patches& getPatches() {
+        [[nodiscard]] static const Patches &getPatches() {
             return ProjectFile::s_patches;
         }
 
@@ -72,7 +72,7 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const std::list<ImHexApi::Bookmarks::Entry>& getBookmarks() {
+        [[nodiscard]] static const std::list<ImHexApi::Bookmarks::Entry> &getBookmarks() {
             return ProjectFile::s_bookmarks;
         }
 
@@ -82,7 +82,7 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const std::string& getDataProcessorContent() {
+        [[nodiscard]] static const std::string &getDataProcessorContent() {
             return ProjectFile::s_dataProcessorContent;
         }
 

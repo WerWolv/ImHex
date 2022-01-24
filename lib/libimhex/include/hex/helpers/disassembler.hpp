@@ -1,9 +1,9 @@
 #pragma once
 
 #if __has_include(<capstone/capstone.h>)
-#include <capstone/capstone.h>
+    #include <capstone/capstone.h>
 #else
-#include <capstone.h>
+    #include <capstone.h>
 #endif
 #include <hex.hpp>
 
@@ -41,7 +41,7 @@ namespace hex {
             return cs_support(toCapstoneArchictecture(architecture));
         }
 
-        constexpr static const char * const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "MOS65XX", "WebAssembly", "Berkeley Packet Filter", "RISC-V" };
+        constexpr static const char *const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "MOS65XX", "WebAssembly", "Berkeley Packet Filter", "RISC-V" };
 
         static inline i32 getArchitectureSupportedCount() {
             static i32 supportedCount = -1;

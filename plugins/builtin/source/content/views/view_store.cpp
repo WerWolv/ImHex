@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
-                View::doLater([]{ ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
+                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });
@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
             this->refresh();
         }
 
-        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, const std::function<void(const StoreEntry&)> &downloadDoneCallback) {
+        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, const std::function<void(const StoreEntry &)> &downloadDoneCallback) {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -72,46 +72,46 @@ namespace hex::plugin::builtin {
 
                                     auto response = this->m_download.get();
                                     if (response.code == 200) {
-                                       entry.installed = true;
-                                       entry.hasUpdate = false;
+                                        entry.installed = true;
+                                        entry.hasUpdate = false;
 
-                                       if (entry.isFolder) {
-                                           mtar_t ctx;
-                                           mtar_open(&ctx, this->m_downloadPath.string().c_str(), "r");
+                                        if (entry.isFolder) {
+                                            mtar_t ctx;
+                                            mtar_open(&ctx, this->m_downloadPath.string().c_str(), "r");
 
-                                           mtar_header_t header;
-                                           auto extractBasePath = this->m_downloadPath.parent_path() / this->m_downloadPath.stem();
-                                           while (mtar_read_header(&ctx, &header) != MTAR_ENULLRECORD) {
-                                               auto filePath = extractBasePath / fs::path(header.name);
-                                               if (filePath.filename() == "@PaxHeader") {
-                                                   mtar_next(&ctx);
-                                                   continue;
-                                               }
+                                            mtar_header_t header;
+                                            auto extractBasePath = this->m_downloadPath.parent_path() / this->m_downloadPath.stem();
+                                            while (mtar_read_header(&ctx, &header) != MTAR_ENULLRECORD) {
+                                                auto filePath = extractBasePath / fs::path(header.name);
+                                                if (filePath.filename() == "@PaxHeader") {
+                                                    mtar_next(&ctx);
+                                                    continue;
+                                                }
 
-                                               fs::create_directories(filePath.parent_path());
-                                               File outputFile(filePath.string(), File::Mode::Create);
+                                                fs::create_directories(filePath.parent_path());
+                                                File outputFile(filePath.string(), File::Mode::Create);
 
-                                               std::vector<u8> buffer(0x10000);
-                                               for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
-                                                   auto readSize = std::min<u64>(buffer.size(), header.size - offset);
-                                                   mtar_read_data(&ctx, buffer.data(), readSize);
+                                                std::vector<u8> buffer(0x10000);
+                                                for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
+                                                    auto readSize = std::min<u64>(buffer.size(), header.size - offset);
+                                                    mtar_read_data(&ctx, buffer.data(), readSize);
 
-                                                   buffer.resize(readSize);
-                                                   outputFile.write(buffer);
-                                               }
-                                               mtar_next(&ctx);
-                                           }
+                                                    buffer.resize(readSize);
+                                                    outputFile.write(buffer);
+                                                }
+                                                mtar_next(&ctx);
+                                            }
 
-                                           mtar_finalize(&ctx);
-                                           mtar_close(&ctx);
-                                       }
+                                            mtar_finalize(&ctx);
+                                            mtar_close(&ctx);
+                                        }
 
-                                       downloadDoneCallback(entry);
+                                        downloadDoneCallback(entry);
                                     } else
                                         log::error("Download failed!");
 
 
-                                    this->m_download = { };
+                                    this->m_download = {};
                                 }
 
                             } else if (entry.hasUpdate) {
@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
                         if (entry.contains("name") && entry.contains("desc") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
 
                             // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], entry["folder"],false, false, false };
+                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false };
 
                             // Check if file is installed already or has an update available
                             for (const auto &folder : hex::getPath(pathType)) {
@@ -189,7 +189,7 @@ namespace hex::plugin::builtin {
 
                                     std::ifstream file(path, std::ios::in | std::ios::binary);
                                     std::vector<u8> data(fs::file_size(path), 0x00);
-                                    file.read(reinterpret_cast<char*>(data.data()), data.size());
+                                    file.read(reinterpret_cast<char *>(data.data()), data.size());
 
                                     auto fileHash = crypt::sha256(data);
 
@@ -211,10 +211,8 @@ namespace hex::plugin::builtin {
             parseStoreEntries(json, "constants", ImHexPath::Constants, this->m_constants);
             parseStoreEntries(json, "yara", ImHexPath::Yara, this->m_yara);
             parseStoreEntries(json, "encodings", ImHexPath::Encodings, this->m_encodings);
-
         }
-        this->m_apiRequest = { };
-
+        this->m_apiRequest = {};
     }
 
     void ViewStore::drawContent() {
@@ -254,7 +252,7 @@ namespace hex::plugin::builtin {
 
         return true;
     }
-    
+
     bool ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
         bool removed = false;
         for (const auto &path : hex::getPath(pathType)) {

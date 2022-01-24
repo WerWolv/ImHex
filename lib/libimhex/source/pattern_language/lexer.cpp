@@ -7,10 +7,10 @@
 
 namespace hex::pl {
 
-#define TOKEN(type, value) Token::Type::type, Token::type::value, lineNumber
+#define TOKEN(type, value)       Token::Type::type, Token::type::value, lineNumber
 #define VALUE_TOKEN(type, value) Token::Type::type, value, lineNumber
 
-    std::string matchTillInvalid(const char* characters, std::function<bool(char)> predicate) {
+    std::string matchTillInvalid(const char *characters, std::function<bool(char)> predicate) {
         std::string ret;
 
         while (*characters != 0x00) {
@@ -55,46 +55,46 @@ namespace hex::pl {
             base = 16;
 
             if (Token::isFloatingPoint(type))
-                return { };
+                return {};
 
             if (numberData.find_first_not_of("0123456789ABCDEFabcdef") != std::string_view::npos)
-                return { };
+                return {};
         } else if (numberData.starts_with("0b")) {
             numberData = numberData.substr(2);
             base = 2;
 
             if (Token::isFloatingPoint(type))
-                return { };
+                return {};
 
             if (numberData.find_first_not_of("01") != std::string_view::npos)
-                return { };
+                return {};
         } else if (numberData.find('.') != std::string_view::npos || Token::isFloatingPoint(type)) {
             base = 10;
             if (type == Token::ValueType::Any)
                 type = Token::ValueType::Double;
 
             if (std::count(numberData.begin(), numberData.end(), '.') > 1 || numberData.find_first_not_of("0123456789.") != std::string_view::npos)
-                return { };
+                return {};
 
             if (numberData.ends_with('.'))
-                return { };
+                return {};
         } else if (isdigit(numberData[0])) {
             base = 10;
 
             if (numberData.find_first_not_of("0123456789") != std::string_view::npos)
-                return { };
-        } else return { };
+                return {};
+        } else return {};
 
         if (type == Token::ValueType::Any)
             type = Token::ValueType::Signed128Bit;
 
 
         if (numberData.length() == 0)
-            return { };
+            return {};
 
         if (Token::isUnsigned(type) || Token::isSigned(type)) {
             u128 integer = 0;
-            for (const char& c : numberData) {
+            for (const char &c : numberData) {
                 integer *= base;
 
                 if (isdigit(c))
@@ -103,82 +103,124 @@ namespace hex::pl {
                     integer += 10 + (c - 'A');
                 else if (c >= 'a' && c <= 'f')
                     integer += 10 + (c - 'a');
-                else return { };
+                else return {};
             }
 
             switch (type) {
-                case Token::ValueType::Unsigned128Bit: return { u128(integer) };
-                case Token::ValueType::Signed128Bit:   return { i128(integer) };
-                default: return { };
+            case Token::ValueType::Unsigned128Bit:
+                return { u128(integer) };
+            case Token::ValueType::Signed128Bit:
+                return { i128(integer) };
+            default:
+                return {};
             }
         } else if (Token::isFloatingPoint(type)) {
             double floatingPoint = strtod(numberData.data(), nullptr);
 
             switch (type) {
-                case Token::ValueType::Float:  return { float(floatingPoint) };
-                case Token::ValueType::Double: return { double(floatingPoint) };
-                default: return { };
+            case Token::ValueType::Float:
+                return { float(floatingPoint) };
+            case Token::ValueType::Double:
+                return { double(floatingPoint) };
+            default:
+                return {};
             }
         }
 
 
-        return { };
+        return {};
     }
 
     std::optional<std::pair<char, size_t>> getCharacter(const std::string &string) {
 
         if (string.length() < 1)
-            return { };
+            return {};
 
         // Escape sequences
         if (string[0] == '\\') {
 
             if (string.length() < 2)
-                return { };
+                return {};
 
             // Handle simple escape sequences
             switch (string[1]) {
-                case 'a':  return {{ '\a', 2 }};
-                case 'b':  return {{ '\b', 2 }};
-                case 'f':  return {{ '\f', 2 }};
-                case 'n':  return {{ '\n', 2 }};
-                case 'r':  return {{ '\r', 2 }};
-                case 't':  return {{ '\t', 2 }};
-                case 'v':  return {{ '\v', 2 }};
-                case '\\': return {{ '\\', 2 }};
-                case '\'': return {{ '\'', 2 }};
-                case '\"': return {{ '\"', 2 }};
+            case 'a':
+                return {
+                    {'\a', 2}
+                };
+            case 'b':
+                return {
+                    {'\b', 2}
+                };
+            case 'f':
+                return {
+                    {'\f', 2}
+                };
+            case 'n':
+                return {
+                    {'\n', 2}
+                };
+            case 'r':
+                return {
+                    {'\r', 2}
+                };
+            case 't':
+                return {
+                    {'\t', 2}
+                };
+            case 'v':
+                return {
+                    {'\v', 2}
+                };
+            case '\\':
+                return {
+                    {'\\', 2}
+                };
+            case '\'':
+                return {
+                    {'\'', 2}
+                };
+            case '\"':
+                return {
+                    {'\"', 2}
+                };
             }
 
             // Hexadecimal number
             if (string[1] == 'x') {
                 if (string.length() != 4)
-                    return { };
+                    return {};
 
                 if (!isxdigit(string[2]) || !isxdigit(string[3]))
-                    return { };
+                    return {};
 
-                return {{ std::strtoul(&string[2], nullptr, 16), 4 }};
+                return {
+                    {std::strtoul(&string[2], nullptr, 16), 4}
+                };
             }
 
             // Octal number
             if (string[1] == 'o') {
                 if (string.length() != 5)
-                    return { };
+                    return {};
 
                 if (string[2] < '0' || string[2] > '7' || string[3] < '0' || string[3] > '7' || string[4] < '0' || string[4] > '7')
-                    return { };
+                    return {};
 
-                return {{ std::strtoul(&string[2], nullptr, 8), 5 }};
+                return {
+                    {std::strtoul(&string[2], nullptr, 8), 5}
+                };
             }
 
-            return { };
-        } else return {{ string[0], 1 }};
+            return {};
+        } else return {
+            {string[0], 1}
+ };
     }
 
     std::optional<std::pair<std::string, size_t>> getStringLiteral(const std::string &string) {
         if (!string.starts_with('\"'))
-            return { };
+            return {};
 
         size_t size = 1;
 
@@ -187,7 +229,7 @@ namespace hex::pl {
             auto character = getCharacter(string.substr(size));
 
             if (!character.has_value())
-                return { };
+                return {};
 
             auto &[c, charSize] = character.value();
 
@@ -195,34 +237,38 @@ namespace hex::pl {
             size += charSize;
 
             if (size >= string.length())
-                return { };
+                return {};
         }
 
-        return {{ result, size + 1 }};
+        return {
+            {result, size + 1}
+        };
     }
 
     std::optional<std::pair<char, size_t>> getCharacterLiteral(const std::string &string) {
         if (string.empty())
-            return { };
+            return {};
 
         if (string[0] != '\'')
-            return { };
+            return {};
 
 
         auto character = getCharacter(string.substr(1));
 
         if (!character.has_value())
-            return { };
+            return {};
 
         auto &[c, charSize] = character.value();
 
         if (string.length() >= charSize + 2 && string[charSize + 1] != '\'')
-            return { };
+            return {};
 
-        return {{ c, charSize + 2 }};
+        return {
+            {c, charSize + 2}
+        };
     }
 
-    std::optional<std::vector<Token>> Lexer::lex(const std::string& code) {
+    std::optional<std::vector<Token>> Lexer::lex(const std::string &code) {
         std::vector<Token> tokens;
         u32 offset = 0;
 
@@ -231,7 +277,7 @@ namespace hex::pl {
         try {
 
             while (offset < code.length()) {
-                const char& c = code[offset];
+                const char &c = code[offset];
 
                 if (c == 0x00)
                     break;
@@ -350,12 +396,10 @@ namespace hex::pl {
                 } else if (code.substr(offset, 9) == "addressof") {
                     tokens.emplace_back(TOKEN(Operator, AddressOf));
                     offset += 9;
-                }
-                else if (code.substr(offset, 6) == "sizeof") {
+                } else if (code.substr(offset, 6) == "sizeof") {
                     tokens.emplace_back(TOKEN(Operator, SizeOf));
                     offset += 6;
-                }
-                else if (c == '\'') {
+                } else if (c == '\'') {
                     auto character = getCharacterLiteral(code.substr(offset));
 
                     if (!character.has_value())
@@ -425,7 +469,7 @@ namespace hex::pl {
                     else if (identifier == "continue")
                         tokens.emplace_back(TOKEN(Keyword, Continue));
 
-                        // Check for built-in types
+                    // Check for built-in types
                     else if (identifier == "u8")
                         tokens.emplace_back(TOKEN(ValueType, Unsigned8Bit));
                     else if (identifier == "s8")
@@ -480,13 +524,12 @@ namespace hex::pl {
                     offset += getIntegerLiteralLength(&code[offset]);
                 } else
                     throwLexerError("unknown token", lineNumber);
-
             }
 
             tokens.emplace_back(TOKEN(Separator, EndOfProgram));
         } catch (LexerError &e) {
             this->m_error = e;
-            return { };
+            return {};
         }
 
 

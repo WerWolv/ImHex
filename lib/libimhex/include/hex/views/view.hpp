@@ -36,7 +36,7 @@ namespace hex {
         virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
 
         static void doLater(std::function<void()> &&function);
-        static std::vector<std::function<void()>>& getDeferedCalls();
+        static std::vector<std::function<void()>> &getDeferedCalls();
 
         static void drawCommonInterfaces();
 
@@ -50,10 +50,10 @@ namespace hex {
         virtual ImVec2 getMinSize() const;
         virtual ImVec2 getMaxSize() const;
 
-        bool& getWindowOpenState();
-        const bool& getWindowOpenState() const;
+        bool &getWindowOpenState();
+        const bool &getWindowOpenState() const;
 
-        [[nodiscard]] const std::string& getUnlocalizedName() const;
+        [[nodiscard]] const std::string &getUnlocalizedName() const;
         [[nodiscard]] std::string getName() const;
 
         static void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);

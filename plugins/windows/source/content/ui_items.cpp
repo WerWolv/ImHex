@@ -81,7 +81,7 @@ namespace hex::plugin::windows {
             if (ImGui::HasSecondPassed()) {
                 memInfo.dwLength = sizeof(MEMORYSTATUSEX);
                 GlobalMemoryStatusEx(&memInfo);
-                GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc));
+                GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&pmc), sizeof(pmc));
             }
 
             auto totalMem = memInfo.ullTotalPhys;
@@ -89,7 +89,6 @@ namespace hex::plugin::windows {
 
             ImGui::TextFormatted(ICON_FA_MICROCHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem));
         });
-
     }
 
 }

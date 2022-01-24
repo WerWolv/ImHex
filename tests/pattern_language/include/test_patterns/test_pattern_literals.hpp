@@ -6,13 +6,11 @@ namespace hex::test {
 
     class TestPatternLiterals : public TestPattern {
     public:
-        TestPatternLiterals() : TestPattern("Literals")  {
-
+        TestPatternLiterals() : TestPattern("Literals") {
         }
         ~TestPatternLiterals() override = default;
 
-        [[nodiscard]]
-        std::string getSourceCode() const override {
+        [[nodiscard]] std::string getSourceCode() const override {
             return R"(
                 #define MSG "Invalid literal"
 
@@ -26,7 +24,6 @@ namespace hex::test {
 
             )";
         }
-
     };
 
 }

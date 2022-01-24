@@ -9,7 +9,7 @@
 
 namespace hex::plugin::builtin::prv {
 
-class GDBProvider : public hex::prv::Provider {
+    class GDBProvider : public hex::prv::Provider {
     public:
         explicit GDBProvider();
         ~GDBProvider() override;
