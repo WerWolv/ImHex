@@ -124,6 +124,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.disassembler.region", "代码范围" },
                     { "hex.builtin.view.disassembler.settings.header", "设置" },
                     { "hex.builtin.view.disassembler.arch", "架构" },
+                        { "hex.builtin.view.disassembler.16bit", "16位" },
+                        { "hex.builtin.view.disassembler.32bit", "32位" },
+                        { "hex.builtin.view.disassembler.64bit", "64位" },
+
                         { "hex.builtin.view.disassembler.arm.arm", "ARM" },
                         { "hex.builtin.view.disassembler.arm.thumb", "Thumb" },
                         { "hex.builtin.view.disassembler.arm.default", "默认" },
@@ -133,16 +137,46 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.disassembler.mips.mips32", "MIPS32" },
                         { "hex.builtin.view.disassembler.mips.mips64", "MIPS64" },
                         { "hex.builtin.view.disassembler.mips.mips32R6", "MIPS32R6" },
+                        { "hex.builtin.view.disassembler.mips.mips2", "MIPS II" },
+                        { "hex.builtin.view.disassembler.mips.mips3", "MIPS III" },
                         { "hex.builtin.view.disassembler.mips.micro", "Micro MIPS" },
 
-                        { "hex.builtin.view.disassembler.x86.16bit", "16位" },
-                        { "hex.builtin.view.disassembler.x86.32bit", "32位" },
-                        { "hex.builtin.view.disassembler.x86.64bit", "64位" },
-
-                        { "hex.builtin.view.disassembler.ppc.32bit", "32位" },
-                        { "hex.builtin.view.disassembler.ppc.64bit", "64位" },
+                        { "hex.builtin.view.disassembler.ppc.qpx", "Quad Processing Extensions" },
+                        { "hex.builtin.view.disassembler.ppc.spe", "Signal Processing Engine" },
+                        //{ "hex.builtin.view.disassembler.ppc.booke", "Book-E" },
 
                         { "hex.builtin.view.disassembler.sparc.v9", "Sparc V9" },
+
+                        //{ "hex.builtin.view.disassembler.riscv.compressed", "Compressed" },
+
+                        { "hex.builtin.view.disassembler.m68k.000", "000" },
+                        { "hex.builtin.view.disassembler.m68k.010", "010" },
+                        { "hex.builtin.view.disassembler.m68k.020", "020" },
+                        { "hex.builtin.view.disassembler.m68k.030", "030" },
+                        { "hex.builtin.view.disassembler.m68k.040", "040" },
+                        { "hex.builtin.view.disassembler.m68k.060", "060" },
+
+                        { "hex.builtin.view.disassembler.m680x.6301", "6301" },
+                        { "hex.builtin.view.disassembler.m680x.6309", "6309" },
+                        { "hex.builtin.view.disassembler.m680x.6800", "6800" },
+                        { "hex.builtin.view.disassembler.m680x.6801", "6801" },
+                        { "hex.builtin.view.disassembler.m680x.6805", "6805" },
+                        { "hex.builtin.view.disassembler.m680x.6808", "6808" },
+                        { "hex.builtin.view.disassembler.m680x.6809", "6809" },
+                        { "hex.builtin.view.disassembler.m680x.6811", "6811" },
+                        { "hex.builtin.view.disassembler.m680x.cpu12", "CPU12" },
+                        { "hex.builtin.view.disassembler.m680x.hcs08", "HCS08" },
+
+                        { "hex.builtin.view.disassembler.mos65xx.6502", "6502" },
+                        { "hex.builtin.view.disassembler.mos65xx.65c02", "65C02" },
+                        { "hex.builtin.view.disassembler.mos65xx.w65c02", "W65C02" },
+                        { "hex.builtin.view.disassembler.mos65xx.65816", "65816" },
+                        { "hex.builtin.view.disassembler.mos65xx.65816_long_m", "65816 Long M" },
+                        { "hex.builtin.view.disassembler.mos65xx.65816_long_x", "65816 Long X" },
+                        { "hex.builtin.view.disassembler.mos65xx.65816_long_mx", "65816 Long MX" },
+
+                        //{ "hex.builtin.view.disassembler.bpf.classic", "Classic" },
+                        //{ "hex.builtin.view.disassembler.bpf.extended", "Extended" },
 
                     { "hex.builtin.view.disassembler.disassemble", "反汇编" },
                     { "hex.builtin.view.disassembler.disassembling", "反汇编中..." },
