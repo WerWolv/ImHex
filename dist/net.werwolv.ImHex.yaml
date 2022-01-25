@@ -3,7 +3,7 @@ runtime: org.freedesktop.Platform
 runtime-version: '20.08'
 default-branch: stable
 sdk: org.freedesktop.Sdk
-command: /bin/imhex
+command: imhex
 
 finish-args:
   - --share=ipc
