@@ -147,7 +147,7 @@ namespace hex::plugin::builtin {
 
                         { "hex.builtin.view.disassembler.sparc.v9", "Sparc V9" },
 
-                       /{ "hex.builtin.view.disassembler.riscv.compressed", "压缩的RISC-V" },
+                        { "hex.builtin.view.disassembler.riscv.compressed", "压缩的RISC-V" },
 
                         { "hex.builtin.view.disassembler.m68k.000", "000" },
                         { "hex.builtin.view.disassembler.m68k.010", "010" },
