@@ -25,7 +25,7 @@ namespace hex::plugin::windows {
                     { "hex.windows.view.tty_console.send_eot", "发送EOT" },
                     { "hex.windows.view.tty_console.send_sub", "发送SUB" },
 
-                    //{ "hex.builtin.setting.general.context_menu_entry", "Windows context menu entry" },
+                    { "hex.builtin.setting.general.context_menu_entry", "窗口上下文菜单项" },
         });
     }
 
