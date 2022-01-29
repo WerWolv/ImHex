@@ -7,12 +7,12 @@ namespace hex::test {
     class TestPatternBitfields : public TestPattern {
     public:
         TestPatternBitfields() : TestPattern("Bitfields") {
-            auto testBitfield = create<PatternDataBitfield>("TestBitfield", "testBitfield", 0x12, (4 * 4) / 8, nullptr);
+            auto testBitfield = create<PatternDataBitfield>("TestBitfield", "testBitfield", 0x12, (4 * 4) / 8);
             testBitfield->setEndian(std::endian::big);
-            testBitfield->setFields({ create<PatternDataBitfieldField>("", "a", 0x12, 0, 4, testBitfield, nullptr),
-                                      create<PatternDataBitfieldField>("", "b", 0x12, 4, 4, testBitfield, nullptr),
-                                      create<PatternDataBitfieldField>("", "c", 0x12, 8, 4, testBitfield, nullptr),
-                                      create<PatternDataBitfieldField>("", "d", 0x12, 12, 4, testBitfield, nullptr) });
+            testBitfield->setFields({ create<PatternDataBitfieldField>("", "a", 0x12, 0, 4, testBitfield),
+                                      create<PatternDataBitfieldField>("", "b", 0x12, 4, 4, testBitfield),
+                                      create<PatternDataBitfieldField>("", "c", 0x12, 8, 4, testBitfield),
+                                      create<PatternDataBitfieldField>("", "d", 0x12, 12, 4, testBitfield) });
 
             addPattern(testBitfield);
         }

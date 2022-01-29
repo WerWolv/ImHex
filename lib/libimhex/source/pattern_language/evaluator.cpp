@@ -1,7 +1,10 @@
 #include <hex/pattern_language/evaluator.hpp>
 #include <hex/pattern_language/ast_node.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 
 namespace hex::pl {
+
+    Evaluator *PatternCreationLimiter::s_evaluator = nullptr;
 
     void Evaluator::createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value, bool outVariable) {
         auto &variables = *this->getScope(0).scope;
@@ -21,19 +24,19 @@ namespace hex::pl {
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
 
             if (std::get_if<u128>(&value.value()) != nullptr)
-                pattern = new PatternDataUnsigned(0, sizeof(u128), this);
+                pattern = new PatternDataUnsigned(0, sizeof(u128));
             else if (std::get_if<i128>(&value.value()) != nullptr)
-                pattern = new PatternDataSigned(0, sizeof(i128), this);
+                pattern = new PatternDataSigned(0, sizeof(i128));
             else if (std::get_if<double>(&value.value()) != nullptr)
-                pattern = new PatternDataFloat(0, sizeof(double), this);
+                pattern = new PatternDataFloat(0, sizeof(double));
             else if (std::get_if<bool>(&value.value()) != nullptr)
-                pattern = new PatternDataBoolean(0, this);
+                pattern = new PatternDataBoolean(0);
             else if (std::get_if<char>(&value.value()) != nullptr)
-                pattern = new PatternDataCharacter(0, this);
+                pattern = new PatternDataCharacter(0);
             else if (std::get_if<PatternData *>(&value.value()) != nullptr)
                 pattern = std::get<PatternData *>(value.value())->clone();
             else if (std::get_if<std::string>(&value.value()) != nullptr)
-                pattern = new PatternDataString(0, 1, this);
+                pattern = new PatternDataString(0, 1);
             else
                 __builtin_unreachable();
         }
@@ -143,6 +146,8 @@ namespace hex::pl {
         this->m_customFunctionDefinitions.clear();
 
         std::vector<PatternData *> patterns;
+
+        PatternCreationLimiter::s_evaluator = this;
 
         try {
             this->setCurrentControlFlowStatement(ControlFlowStatement::None);
