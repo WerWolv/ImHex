@@ -102,10 +102,6 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_WRITEFUNCTION, writeToString);
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_VERIFYPEER, 1L);
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_VERIFYHOST, 2L);
-        curl_easy_setopt(this->m_ctx, CURLOPT_CAINFO, nullptr);
-        curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
-        curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
-        curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
         curl_easy_setopt(this->m_ctx, CURLOPT_WRITEDATA, &response);
         curl_easy_setopt(this->m_ctx, CURLOPT_TIMEOUT_MS, 0L);
         curl_easy_setopt(this->m_ctx, CURLOPT_CONNECTTIMEOUT_MS, timeout);
@@ -113,6 +109,13 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_XFERINFOFUNCTION, progressCallback);
         curl_easy_setopt(this->m_ctx, CURLOPT_NOSIGNAL, 1L);
         curl_easy_setopt(this->m_ctx, CURLOPT_NOPROGRESS, 0L);
+
+        #if defined(OS_WINDOWS)
+            curl_easy_setopt(this->m_ctx, CURLOPT_CAINFO, nullptr);
+            curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
+            curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
+            curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
+        #endif
     }
 
     std::optional<i32> Net::execute() {
