@@ -585,7 +585,7 @@ namespace hex {
                 if (hasWindow && !(window->Flags & ImGuiWindowFlags_Popup)) {
                     ImGui::Begin(View::toWindowName(name).c_str());
 
-                    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+                    focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
                     ImGui::End();
                 }
 

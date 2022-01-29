@@ -580,7 +580,13 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastStringSearch;
                     currBuffer = &this->m_searchStringBuffer;
 
-                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CallbackCompletion, InputCallback, this);
+                    ImGui::SetKeyboardFocusHere();
+                    if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_EnterReturnsTrue, InputCallback, this)) {
+                        if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
+                            Find(currBuffer->data());
+                        else
+                            FindNext();
+                    }
                     ImGui::EndTabItem();
                 }
 
@@ -589,7 +595,13 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastHexSearch;
                     currBuffer = &this->m_searchHexBuffer;
 
-                    ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion, InputCallback, this);
+                    ImGui::SetKeyboardFocusHere();
+                    if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_EnterReturnsTrue, InputCallback, this)) {
+                        if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
+                            Find(currBuffer->data());
+                        else
+                            FindNext();
+                    }
                     ImGui::EndTabItem();
                 }
 
@@ -622,10 +634,13 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding);
         if (ImGui::BeginPopup("hex.builtin.view.hexeditor.menu.file.goto"_lang)) {
+            bool runGoto = false;
+
             if (ImGui::BeginTabBar("gotoTabs")) {
                 u64 newOffset = 0;
                 if (ImGui::BeginTabItem("hex.builtin.view.hexeditor.goto.offset.absolute"_lang)) {
-                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SetKeyboardFocusHere();
+                    runGoto = ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
                     if (this->m_gotoAddress < baseAddress || this->m_gotoAddress > baseAddress + dataSize)
                         this->m_gotoAddress = baseAddress;
@@ -635,7 +650,8 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hexeditor.goto.offset.begin"_lang)) {
-                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SetKeyboardFocusHere();
+                    runGoto = ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
                     if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
                         this->m_gotoAddress = 0;
@@ -645,7 +661,8 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hexeditor.goto.offset.current"_lang)) {
-                    ImGui::InputScalar("dec", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal);
+                    ImGui::SetKeyboardFocusHere();
+                    runGoto = ImGui::InputScalar("dec", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
                     i64 currSelectionOffset = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
@@ -659,7 +676,8 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hexeditor.goto.offset.end"_lang)) {
-                    ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SetKeyboardFocusHere();
+                    runGoto = ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
                     if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
                         this->m_gotoAddress = 0;
@@ -669,7 +687,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                if (ImGui::Button("hex.builtin.view.hexeditor.menu.file.goto"_lang)) {
+                if (ImGui::Button("hex.builtin.view.hexeditor.menu.file.goto"_lang) || runGoto) {
                     provider->setCurrentPage(std::floor(double(newOffset - baseAddress) / hex::prv::Provider::PageSize));
                     EventManager::post<RequestSelectionChange>(Region { newOffset, 1 });
                 }
