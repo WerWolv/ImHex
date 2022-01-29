@@ -880,7 +880,7 @@ namespace hex::pl {
             if (!isFunction) {
                 auto type = parseType();
 
-                if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN)) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN))
+                if (MATCHES(sequence(IDENTIFIER, SEPARATOR_SQUAREBRACKETOPEN) && sequence<Not>(SEPARATOR_SQUAREBRACKETOPEN)))
                     member = parseMemberArrayVariable(type);
                 else if (MATCHES(sequence(IDENTIFIER)))
                     member = parseMemberVariable(type);

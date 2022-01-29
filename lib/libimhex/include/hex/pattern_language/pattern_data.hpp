@@ -1145,8 +1145,10 @@ namespace hex::pl {
 
         void setColor(u32 color) override {
             PatternData::setColor(color);
-            for (auto &member : this->m_members)
-                member->setColor(color);
+            for (auto &member : this->m_members) {
+                if (!member->hasOverriddenColor())
+                    member->setColor(color);
+            }
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
@@ -1291,8 +1293,10 @@ namespace hex::pl {
 
         void setColor(u32 color) override {
             PatternData::setColor(color);
-            for (auto &member : this->m_members)
-                member->setColor(color);
+            for (auto &member : this->m_members) {
+                if (!member->hasOverriddenColor())
+                    member->setColor(color);
+            }
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
