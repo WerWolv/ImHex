@@ -306,6 +306,7 @@ namespace hex::pl {
 #define IDENTIFIER hex::pl::Token::Type::Identifier, ""
 #define STRING     hex::pl::Token::Type::String, hex::pl::Token::Literal("")
 
+#define OPERATOR_ANY                     COMPONENT(Operator, Any)
 #define OPERATOR_AT                      COMPONENT(Operator, AtDeclaration)
 #define OPERATOR_ASSIGNMENT              COMPONENT(Operator, Assignment)
 #define OPERATOR_INHERIT                 COMPONENT(Operator, Inherit)
@@ -341,7 +342,6 @@ namespace hex::pl {
 #define VALUETYPE_UNSIGNED      COMPONENT(ValueType, Unsigned)
 #define VALUETYPE_SIGNED        COMPONENT(ValueType, Signed)
 #define VALUETYPE_FLOATINGPOINT COMPONENT(ValueType, FloatingPoint)
-#define VALUETYPE_INTEGER       COMPONENT(ValueType, Integer)
 #define VALUETYPE_ANY           COMPONENT(ValueType, Any)
 
 #define SEPARATOR_ROUNDBRACKETOPEN   COMPONENT(Separator, RoundBracketOpen)

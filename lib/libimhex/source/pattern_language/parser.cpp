@@ -2,7 +2,7 @@
 
 #include <optional>
 
-#define MATCHES(x) (begin() && x)
+#define MATCHES(x) (begin() && resetIfFailed(x))
 
 // Definition syntax:
 // [A]          : Either A or no token
@@ -87,6 +87,11 @@ namespace hex::pl {
         throwParseError("failed to parse scope resolution. Expected 'TypeName::Identifier'");
     }
 
+    ASTNode *Parser::parseRValue() {
+        ASTNodeRValue::Path path;
+        return this->parseRValue(path);
+    }
+
     // <Identifier[.]...>
     ASTNode *Parser::parseRValue(ASTNodeRValue::Path &path) {
         if (peek(IDENTIFIER, -1))
@@ -136,28 +141,33 @@ namespace hex::pl {
             } else if (peek(OPERATOR_SCOPERESOLUTION, 0)) {
                 return this->parseScopeResolution();
             } else {
-                ASTNodeRValue::Path path;
-                return this->parseRValue(path);
+                return this->parseRValue();
             }
         } else if (MATCHES(oneOf(KEYWORD_PARENT, KEYWORD_THIS))) {
-            ASTNodeRValue::Path path;
-            return this->parseRValue(path);
+            return this->parseRValue();
         } else if (MATCHES(sequence(OPERATOR_DOLLAR))) {
             return new ASTNodeRValue({ "$" });
         } else if (MATCHES(oneOf(OPERATOR_ADDRESSOF, OPERATOR_SIZEOF) && sequence(SEPARATOR_ROUNDBRACKETOPEN))) {
             auto op = getValue<Token::Operator>(-2);
 
-            if (!MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT, KEYWORD_THIS))) {
-                throwParseError("expected rvalue identifier");
+            ASTNode *result = nullptr;
+
+            if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT, KEYWORD_THIS))) {
+                result = create(new ASTNodeTypeOperator(op, this->parseRValue()));
+            } else if (MATCHES(sequence(VALUETYPE_ANY))) {
+                auto type = getValue<Token::ValueType>(-1);
+
+                result = new ASTNodeLiteral(u128(Token::getTypeSize(type)));
+            } else {
+                throwParseError("expected rvalue identifier or built-in type");
             }
 
-            ASTNodeRValue::Path path;
-            auto node = create(new ASTNodeTypeOperator(op, this->parseRValue(path)));
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
-                delete node;
+                delete result;
                 throwParseError("expected closing parenthesis");
             }
-            return node;
+
+            return result;
         } else
             throwParseError("expected value or parenthesis");
     }
@@ -490,9 +500,13 @@ namespace hex::pl {
         ASTNode *statement;
 
         if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
-            statement = parseFunctionVariableAssignment();
+            statement = parseFunctionVariableAssignment(getValue<Token::Identifier>(-2).get());
         else if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
-            statement = create(new ASTNodeAssignment("$", parseMathematicalExpression()));
+            statement = parseFunctionVariableAssignment("$");
+        else if (MATCHES(oneOf(IDENTIFIER) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            statement = parseFunctionVariableCompoundAssignment(getValue<Token::Identifier>(-3).get());
+        else if (MATCHES(oneOf(OPERATOR_DOLLAR) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            statement = parseFunctionVariableCompoundAssignment("$");
         else if (MATCHES(oneOf(KEYWORD_RETURN, KEYWORD_BREAK, KEYWORD_CONTINUE)))
             statement = parseFunctionControlFlowStatement();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN))) {
@@ -533,12 +547,18 @@ namespace hex::pl {
         return statement;
     }
 
-    ASTNode *Parser::parseFunctionVariableAssignment() {
-        const auto &lvalue = getValue<Token::Identifier>(-2).get();
-
+    ASTNode *Parser::parseFunctionVariableAssignment(const std::string &lvalue) {
         auto rvalue = this->parseMathematicalExpression();
 
         return create(new ASTNodeAssignment(lvalue, rvalue));
+    }
+
+    ASTNode *Parser::parseFunctionVariableCompoundAssignment(const std::string &lvalue) {
+        const auto &op = getValue<Token::Operator>(-2);
+
+        auto rvalue = this->parseMathematicalExpression();
+
+        return create(new ASTNodeAssignment(lvalue, create(new ASTNodeMathematicalExpression(create(new ASTNodeRValue({ lvalue })), rvalue, op))));
     }
 
     ASTNode *Parser::parseFunctionControlFlowStatement() {
@@ -640,7 +660,7 @@ namespace hex::pl {
         if (!MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
             throwParseError("expected for loop variable assignment");
 
-        auto postExpression = parseFunctionVariableAssignment();
+        auto postExpression = parseFunctionVariableAssignment(getValue<Token::Identifier>(-2).get());
         auto postExpressionCleanup = SCOPE_GUARD { delete postExpression; };
 
         std::vector<ASTNode *> body;
@@ -880,7 +900,9 @@ namespace hex::pl {
         else if (MATCHES(sequence(KEYWORD_CONTINUE)))
             member = new ASTNodeControlFlowStatement(ControlFlowStatement::Continue, nullptr);
         else if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
-            member = create(new ASTNodeAssignment("$", parseMathematicalExpression()));
+            member = parseFunctionVariableAssignment("$");
+        else if (MATCHES(oneOf(OPERATOR_DOLLAR) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            member = parseFunctionVariableCompoundAssignment("$");
         else
             throwParseError("invalid struct member", 0);
 

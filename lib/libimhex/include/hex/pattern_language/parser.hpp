@@ -27,7 +27,7 @@ namespace hex::pl {
     private:
         std::optional<ParseError> m_error;
         TokenIter m_curr;
-        TokenIter m_originalPosition;
+        TokenIter m_originalPosition, m_partOriginalPosition;
 
         std::unordered_map<std::string, ASTNode *> m_types;
         std::vector<TokenIter> m_matchedOptionals;
@@ -71,6 +71,7 @@ namespace hex::pl {
         ASTNode *parseStringLiteral();
         std::string parseNamespaceResolution();
         ASTNode *parseScopeResolution();
+        ASTNode *parseRValue();
         ASTNode *parseRValue(ASTNodeRValue::Path &path);
         ASTNode *parseFactor();
         ASTNode *parseCastExpression();
@@ -92,7 +93,8 @@ namespace hex::pl {
         ASTNode *parseFunctionDefinition();
         ASTNode *parseFunctionVariableDecl();
         ASTNode *parseFunctionStatement();
-        ASTNode *parseFunctionVariableAssignment();
+        ASTNode *parseFunctionVariableAssignment(const std::string &lvalue);
+        ASTNode *parseFunctionVariableCompoundAssignment(const std::string &lvalue);
         ASTNode *parseFunctionControlFlowStatement();
         std::vector<ASTNode *> parseStatementBody();
         ASTNode *parseFunctionConditional();
@@ -158,12 +160,29 @@ namespace hex::pl {
             return true;
         }
 
+        bool partBegin() {
+            this->m_partOriginalPosition = this->m_curr;
+            this->m_matchedOptionals.clear();
+
+            return true;
+        }
+
         void reset() {
             this->m_curr = this->m_originalPosition;
         }
 
+        void partReset() {
+            this->m_curr = this->m_partOriginalPosition;
+        }
+
+        bool resetIfFailed(bool value) {
+            if (!value) reset();
+
+            return value;
+        }
+
         template<Setting S = Normal>
-        bool sequence() {
+        bool sequenceImpl() {
             if constexpr (S == Normal)
                 return true;
             else if constexpr (S == Not)
@@ -173,17 +192,17 @@ namespace hex::pl {
         }
 
         template<Setting S = Normal>
-        bool sequence(Token::Type type, auto value, auto... args) {
+        bool sequenceImpl(Token::Type type, auto value, auto... args) {
             if constexpr (S == Normal) {
                 if (!peek(type, value)) {
-                    reset();
+                    partReset();
                     return false;
                 }
 
                 this->m_curr++;
 
-                if (!sequence<Normal>(args...)) {
-                    reset();
+                if (!sequenceImpl<Normal>(args...)) {
+                    partReset();
                     return false;
                 }
 
@@ -194,17 +213,22 @@ namespace hex::pl {
 
                 this->m_curr++;
 
-                if (!sequence<Normal>(args...))
+                if (!sequenceImpl<Normal>(args...))
                     return true;
 
-                reset();
+                partReset();
                 return false;
             } else
                 __builtin_unreachable();
         }
 
         template<Setting S = Normal>
-        bool oneOf() {
+        bool sequence(Token::Type type, auto value, auto... args) {
+            return partBegin() && sequenceImpl<S>(type, value, args...);
+        }
+
+        template<Setting S = Normal>
+        bool oneOfImpl() {
             if constexpr (S == Normal)
                 return false;
             else if constexpr (S == Not)
@@ -214,19 +238,24 @@ namespace hex::pl {
         }
 
         template<Setting S = Normal>
-        bool oneOf(Token::Type type, auto value, auto... args) {
+        bool oneOfImpl(Token::Type type, auto value, auto... args) {
             if constexpr (S == Normal)
-                return sequence<Normal>(type, value) || oneOf(args...);
+                return sequenceImpl<Normal>(type, value) || oneOfImpl(args...);
             else if constexpr (S == Not)
-                return sequence<Not>(type, value) && oneOf(args...);
+                return sequenceImpl<Not>(type, value) && oneOfImpl(args...);
             else
                 __builtin_unreachable();
         }
 
-        bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {
+        template<Setting S = Normal>
+        bool oneOf(Token::Type type, auto value, auto... args) {
+            return partBegin() && oneOfImpl<S>(type, value, args...);
+        }
+
+        bool variantImpl(Token::Type type1, auto value1, Token::Type type2, auto value2) {
             if (!peek(type1, value1)) {
                 if (!peek(type2, value2)) {
-                    reset();
+                    partReset();
                     return false;
                 }
             }
@@ -236,13 +265,21 @@ namespace hex::pl {
             return true;
         }
 
-        bool optional(Token::Type type, auto value) {
+        bool variant(Token::Type type1, auto value1, Token::Type type2, auto value2) {
+            return partBegin() && variantImpl(type1, value1, type2, value2);
+        }
+
+        bool optionalImpl(Token::Type type, auto value) {
             if (peek(type, value)) {
                 this->m_matchedOptionals.push_back(this->m_curr);
                 this->m_curr++;
             }
 
             return true;
+        }
+
+        bool optional(Token::Type type, auto value) {
+            return partBegin() && optionalImpl(type, value);
         }
 
         bool peek(Token::Type type, auto value, i32 index = 0) {
