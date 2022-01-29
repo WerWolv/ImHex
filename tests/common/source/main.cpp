@@ -38,13 +38,7 @@ int test(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-    int result = EXIT_SUCCESS;
-
-    for (u32 i = 0; i < 16; i++) {
-        result = test(argc, argv);
-        if (result != EXIT_SUCCESS)
-            break;
-    }
+    int result = test(argc, argv);
 
     if (result == EXIT_SUCCESS)
         hex::log::info("Success!");
