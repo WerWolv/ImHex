@@ -687,9 +687,9 @@ namespace hex::pl {
 
             provider->read(this->getOffset(), buffer.data(), size);
 
-            std::erase_if(buffer, [](auto c) {
+            buffer.erase(std::remove_if(buffer.begin(), buffer.end(), [](auto c){
                 return c == 0x00;
-            });
+            }), buffer.end());
 
             this->createDefaultEntry(hex::format("\"{0}\" {1}", makeDisplayable(buffer.data(), this->getSize()), size > this->getSize() ? "(truncated)" : ""), buffer);
         }
@@ -733,9 +733,9 @@ namespace hex::pl {
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
 
-            std::erase_if(buffer, [](auto c) {
+            buffer.erase(std::remove_if(buffer.begin(), buffer.end(), [](auto c){
                 return c == 0x00;
-            });
+            }), buffer.end());
 
             auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(buffer);
 
