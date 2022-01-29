@@ -491,6 +491,8 @@ namespace hex::pl {
 
         if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
             statement = parseFunctionVariableAssignment();
+        else if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
+            statement = create(new ASTNodeAssignment("$", parseMathematicalExpression()));
         else if (MATCHES(oneOf(KEYWORD_RETURN, KEYWORD_BREAK, KEYWORD_CONTINUE)))
             statement = parseFunctionControlFlowStatement();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN))) {
@@ -877,6 +879,8 @@ namespace hex::pl {
             member = new ASTNodeControlFlowStatement(ControlFlowStatement::Break, nullptr);
         else if (MATCHES(sequence(KEYWORD_CONTINUE)))
             member = new ASTNodeControlFlowStatement(ControlFlowStatement::Continue, nullptr);
+        else if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
+            member = create(new ASTNodeAssignment("$", parseMathematicalExpression()));
         else
             throwParseError("invalid struct member", 0);
 

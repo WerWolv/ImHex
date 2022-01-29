@@ -2115,11 +2115,20 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
+        [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            this->execute(evaluator);
+
+            return { };
+        }
+
         FunctionResult execute(Evaluator *evaluator) const override {
             auto literal = dynamic_cast<ASTNodeLiteral *>(this->getRValue()->evaluate(evaluator));
             ON_SCOPE_EXIT { delete literal; };
 
-            evaluator->setVariable(this->getLValueName(), literal->getValue());
+            if (this->getLValueName() == "$")
+                evaluator->dataOffset() = Token::literalToUnsigned(literal->getValue());
+            else
+                evaluator->setVariable(this->getLValueName(), literal->getValue());
 
             return {};
         }
