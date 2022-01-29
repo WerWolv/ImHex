@@ -12,9 +12,9 @@ set(AVAILABLE_TESTS
         TestProvider_write
 
     # Net
-        #StoreAPI
-        #TipsAPI
-        #ContentAPI
+        StoreAPI
+        TipsAPI
+        ContentAPI
 
     # File
         FileAccess
