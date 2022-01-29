@@ -1,35 +1,36 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(algorithms_test)
-set(TEST_CATEGORY Algorithms)
+project(helpers_test)
+set(TEST_CATEGORY Helpers)
 
 # Add new tests here #
 set(AVAILABLE_TESTS
-    # Endian
-        32BitIntegerEndianSwap
-        64BitFloatEndianSwap
+    # Common
+        TestSucceeding
+        TestFailing
+        TestProvider_read
+        TestProvider_write
 
-    # Crypto
-        EncodeDecode16
-        EncodeDecode64
-        CRC32
-        CRC32Random
-        CRC16
-        CRC16Random
-        CRC8
-        CRC8Random
-        md5
-        sha1
-        sha224
-        sha256
-        sha384
-        sha512
+    # Net
+        #StoreAPI
+        #TipsAPI
+        #ContentAPI
+
+    # File
+        FileAccess
+
+    # Utils
+        SplitStringAtChar
+        SplitStringAtString
+        ExtractBits
 )
 
 
 add_executable(${PROJECT_NAME}
-        source/endian.cpp
-        source/crypto.cpp
+        source/common.cpp
+        source/file.cpp
+        source/net.cpp
+        source/utils.cpp
 )
 
 

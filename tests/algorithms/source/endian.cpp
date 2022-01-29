@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
-#include "test_provider.hpp"
-#include "tests.hpp"
+#include <hex/test/test_provider.hpp>
+#include <hex/test/tests.hpp>
 
 TEST_SEQUENCE("32BitIntegerEndianSwap") {
     TEST_ASSERT(hex::changeEndianess<u32>(0xAABBCCDD, std::endian::big) == 0xDDCCBBAA);

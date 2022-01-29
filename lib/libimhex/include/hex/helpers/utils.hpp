@@ -42,6 +42,8 @@ namespace hex {
     void openWebpage(std::string url);
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
+        if (from < to) std::swap(from, to);
+
         using ValueType = std::remove_cvref_t<decltype(value)>;
         ValueType mask = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
 

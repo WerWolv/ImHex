@@ -1,7 +1,7 @@
 #include <hex/helpers/crypto.hpp>
 #include "hex/helpers/logger.hpp"
-#include "test_provider.hpp"
-#include "tests.hpp"
+#include <hex/test/test_provider.hpp>
+#include <hex/test/tests.hpp>
 
 #include <random>
 #include <vector>

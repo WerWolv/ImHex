@@ -1,7 +1,7 @@
 #include <hex.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
-#include "tests.hpp"
+#include <hex/test/tests.hpp>
 
 #include <cstdlib>
 

@@ -4,6 +4,7 @@
 #include <utility>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <string>
 #include <map>

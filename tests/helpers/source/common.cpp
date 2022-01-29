@@ -1,9 +1,10 @@
-#include <hex/helpers/crypto.hpp>
-#include "test_provider.hpp"
-#include "tests.hpp"
+#include <hex/test/tests.hpp>
+#include <hex/test/test_provider.hpp>
 
-#include <vector>
+#include <hex/helpers/crypto.hpp>
+
 #include <algorithm>
+#include <vector>
 
 TEST_SEQUENCE("TestSucceeding") {
     TEST_SUCCESS();

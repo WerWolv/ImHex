@@ -22,7 +22,14 @@ set(AVAILABLE_TESTS
 )
 
 
-add_executable(pattern_language_tests source/main.cpp source/tests.cpp)
+add_executable(pattern_language_tests
+    source/main.cpp
+    source/tests.cpp
+)
+
+
+# ---- No need to change anything from here downwards unless you know what you're doing ---- #
+
 target_include_directories(pattern_language_tests PRIVATE include)
 target_link_libraries(pattern_language_tests libimhex)
 
@@ -35,3 +42,4 @@ add_custom_command(TARGET pattern_language_tests
 foreach (test IN LISTS AVAILABLE_TESTS)
     add_test(NAME "PatternLanguage/${test}" COMMAND pattern_language_tests "${test}" WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endforeach ()
+add_dependencies(unit_tests ${PROJECT_NAME})
