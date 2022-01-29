@@ -123,8 +123,9 @@ namespace hex::pl {
         }
         [[nodiscard]] bool hasOverriddenColor() const { return this->m_manualColor; }
 
-        [[nodiscard]] std::endian getEndian() const { return this->m_endian; }
-        void setEndian(std::endian endian) { this->m_endian = endian; }
+        [[nodiscard]] std::endian getEndian() const { return this->m_endian.value_or(this->getEvaluator()->getDefaultEndian()); }
+        virtual void setEndian(std::endian endian) { this->m_endian = endian; }
+        [[nodiscard]] bool hasOverriddenEndian() const { return this->m_endian.has_value(); }
 
         [[nodiscard]] std::string getDisplayName() const { return this->m_displayName.value_or(this->m_variableName); }
         void setDisplayName(const std::string &name) { this->m_displayName = name; }
@@ -301,7 +302,7 @@ namespace hex::pl {
         }
 
     protected:
-        std::endian m_endian = std::endian::native;
+        std::optional<std::endian> m_endian;
         bool m_hidden = false;
 
     private:
@@ -454,6 +455,12 @@ namespace hex::pl {
                 return this;
             else
                 return this->m_pointedAt->getPattern(offset);
+        }
+
+        void setEndian(std::endian endian) override {
+            this->m_pointedAt->setEndian(endian);
+
+            PatternData::setEndian(endian);
         }
 
     private:
@@ -899,6 +906,14 @@ namespace hex::pl {
                 return (*iter)->getPattern(offset);
         }
 
+        void setEndian(std::endian endian) override {
+            for (auto &entry : this->m_entries) {
+                entry->setEndian(endian);
+            }
+
+            PatternData::setEndian(endian);
+        }
+
     private:
         std::vector<PatternData *> m_entries;
         u64 m_displayEnd = 50;
@@ -1048,6 +1063,12 @@ namespace hex::pl {
             }
         }
 
+        void setEndian(std::endian endian) override {
+            this->m_template->setEndian(endian);
+
+            PatternData::setEndian(endian);
+        }
+
     private:
         PatternData *m_template;
         mutable PatternData *m_highlightTemplate;
@@ -1186,6 +1207,15 @@ namespace hex::pl {
                 return (*iter)->getPattern(offset);
         }
 
+        void setEndian(std::endian endian) override {
+            for (auto &member : this->m_members) {
+                if (!member->hasOverriddenEndian())
+                    member->setEndian(endian);
+            }
+
+            PatternData::setEndian(endian);
+        }
+
     private:
         std::vector<PatternData *> m_members;
         std::vector<PatternData *> m_sortedMembers;
@@ -1322,6 +1352,15 @@ namespace hex::pl {
             else
                 return (*largestMember)->getPattern(offset);
             ;
+        }
+
+        void setEndian(std::endian endian) override {
+            for (auto &member : this->m_members) {
+                if (!member->hasOverriddenEndian())
+                    member->setEndian(endian);
+            }
+
+            PatternData::setEndian(endian);
         }
 
     private:

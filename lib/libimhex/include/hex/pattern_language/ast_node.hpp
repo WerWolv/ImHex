@@ -472,7 +472,9 @@ namespace hex::pl {
 
                 if (!this->m_name.empty())
                     pattern->setTypeName(this->m_name);
-                pattern->setEndian(this->m_endian.value_or(evaluator->getDefaultEndian()));
+
+                if (this->m_endian.has_value())
+                    pattern->setEndian(this->m_endian.value());
             }
 
             return patterns;
