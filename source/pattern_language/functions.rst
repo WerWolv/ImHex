@@ -17,7 +17,7 @@ Parameter types need to be specified explicitly, return type is automatically de
     std::print(min(100, 200)); // 100
 
 Parameter packs :version:`1.14.0`
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To allow passing an unlimited number of parameters to functions, parameter packs can be used. 
 

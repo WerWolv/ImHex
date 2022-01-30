@@ -323,7 +323,7 @@ Functions
     =========== ====================================================
     ``base``    Base
     ``exp``     Exponent
-    ``return``  ``base`` raised to the ``exp``th power 
+    ``return``  ``base`` raised to the ``exp`` th power 
     =========== ====================================================
 
 ------------------------
