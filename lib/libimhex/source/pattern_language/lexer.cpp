@@ -28,6 +28,10 @@ namespace hex::pl {
         return string.find_first_not_of("0123456789ABCDEFabcdef.xUL");
     }
 
+    bool isIdentifierCharacter(char c) {
+        return std::isalnum(c) || c == '_';
+    }
+
     std::optional<Token::Literal> parseIntegerLiteral(const std::string &string) {
         Token::ValueType type = Token::ValueType::Any;
         Token::Literal result;
@@ -392,10 +396,10 @@ namespace hex::pl {
                 } else if (c == '$') {
                     tokens.emplace_back(TOKEN(Operator, Dollar));
                     offset += 1;
-                } else if (code.substr(offset, 9) == "addressof") {
+                } else if (code.substr(offset, 9) == "addressof" && !isIdentifierCharacter(code[offset + 9])) {
                     tokens.emplace_back(TOKEN(Operator, AddressOf));
                     offset += 9;
-                } else if (code.substr(offset, 6) == "sizeof") {
+                } else if (code.substr(offset, 6) == "sizeof" && !isIdentifierCharacter(code[offset + 6])) {
                     tokens.emplace_back(TOKEN(Operator, SizeOf));
                     offset += 6;
                 } else if (c == '\'') {
@@ -418,8 +422,8 @@ namespace hex::pl {
 
                     tokens.emplace_back(VALUE_TOKEN(String, Token::Literal(s)));
                     offset += stringSize;
-                } else if (std::isalpha(c) || c == '_') {
-                    std::string identifier = matchTillInvalid(&code[offset], [](char c) -> bool { return std::isalnum(c) || c == '_'; });
+                } else if (isIdentifierCharacter(c) && !std::isdigit(c)) {
+                    std::string identifier = matchTillInvalid(&code[offset], isIdentifierCharacter);
 
                     // Check for reserved keywords
 
