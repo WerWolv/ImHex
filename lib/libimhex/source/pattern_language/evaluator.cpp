@@ -6,6 +6,13 @@ namespace hex::pl {
 
     Evaluator *PatternCreationLimiter::s_evaluator = nullptr;
 
+    void Evaluator::createParameterPack(const std::string &name, const std::vector<Token::Literal> &values) {
+        this->getScope(0).parameterPack = ParameterPack {
+            name,
+            values
+        };
+    }
+
     void Evaluator::createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value, bool outVariable) {
         auto &variables = *this->getScope(0).scope;
         for (auto &variable : variables) {
@@ -15,7 +22,7 @@ namespace hex::pl {
         }
 
         auto startOffset = this->dataOffset();
-        auto pattern = type->createPatterns(this).front();
+        auto pattern = type == nullptr ? nullptr : type->createPatterns(this).front();
         this->dataOffset() = startOffset;
 
         if (pattern == nullptr) {
@@ -38,7 +45,7 @@ namespace hex::pl {
             else if (std::get_if<std::string>(&value.value()) != nullptr)
                 pattern = new PatternDataString(0, 1);
             else
-                __builtin_unreachable();
+                LogConsole::abortEvaluation("cannot determine type of auto variable", type);
         }
 
         pattern->setVariableName(name);

@@ -13,7 +13,10 @@ namespace hex::pl {
     }
 
     [[noreturn]] void LogConsole::abortEvaluation(const std::string &message, const ASTNode *node) {
-        throw EvaluateError(static_cast<const ASTNode *>(node)->getLineNumber(), message);
+        if (node == nullptr)
+            abortEvaluation(message);
+        else
+            throw EvaluateError(node->getLineNumber(), message);
     }
 
     void LogConsole::clear() {

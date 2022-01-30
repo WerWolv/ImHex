@@ -46,9 +46,15 @@ namespace hex::pl {
             return this->m_console;
         }
 
+        struct ParameterPack {
+            std::string name;
+            std::vector<Token::Literal> values;
+        };
+
         struct Scope {
             PatternData *parent;
             std::vector<PatternData *> *scope;
+            std::optional<ParameterPack> parameterPack;
         };
         void pushScope(PatternData *parent, std::vector<PatternData *> &scope) {
             if (this->m_scopes.size() > this->getEvaluationDepth())
@@ -63,11 +69,19 @@ namespace hex::pl {
             this->m_scopes.pop_back();
         }
 
-        const Scope &getScope(i32 index) {
+        Scope &getScope(i32 index) {
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
-        const Scope &getGlobalScope() {
+        const Scope &getScope(i32 index) const {
+            return this->m_scopes[this->m_scopes.size() - 1 + index];
+        }
+
+        Scope &getGlobalScope() {
+            return this->m_scopes.front();
+        }
+
+        const Scope &getGlobalScope() const {
             return this->m_scopes.front();
         }
 
@@ -167,6 +181,7 @@ namespace hex::pl {
             return this->m_stack;
         }
 
+        void createParameterPack(const std::string &name, const std::vector<Token::Literal> &values);
         void createVariable(const std::string &name, ASTNode *type, const std::optional<Token::Literal> &value = std::nullopt, bool outVariable = false);
         void setVariable(const std::string &name, const Token::Literal &value);
 

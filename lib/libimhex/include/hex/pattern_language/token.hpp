@@ -342,6 +342,7 @@ namespace hex::pl {
 #define VALUETYPE_UNSIGNED      COMPONENT(ValueType, Unsigned)
 #define VALUETYPE_SIGNED        COMPONENT(ValueType, Signed)
 #define VALUETYPE_FLOATINGPOINT COMPONENT(ValueType, FloatingPoint)
+#define VALUETYPE_AUTO          COMPONENT(ValueType, Auto)
 #define VALUETYPE_ANY           COMPONENT(ValueType, Any)
 
 #define SEPARATOR_ROUNDBRACKETOPEN   COMPONENT(Separator, RoundBracketOpen)

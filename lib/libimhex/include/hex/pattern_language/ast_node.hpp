@@ -1527,6 +1527,22 @@ namespace hex::pl {
         std::vector<std::pair<std::string, ASTNode *>> m_entries;
     };
 
+    class ASTNodeParameterPack : public ASTNode {
+    public:
+        ASTNodeParameterPack(const std::vector<Token::Literal> &values) : m_values(values) {}
+
+        [[nodiscard]] ASTNode *clone() const override {
+            return new ASTNodeParameterPack(*this);
+        }
+
+        const std::vector<Token::Literal> &getValues() const {
+            return this->m_values;
+        }
+
+    private:
+        std::vector<Token::Literal> m_values;
+    };
+
     class ASTNodeRValue : public ASTNode {
     public:
         using Path = std::vector<std::variant<std::string, ASTNode *>>;
@@ -1554,6 +1570,10 @@ namespace hex::pl {
             if (this->getPath().size() == 1) {
                 if (auto name = std::get_if<std::string>(&this->getPath().front()); name != nullptr) {
                     if (*name == "$") return new ASTNodeLiteral(u128(evaluator->dataOffset()));
+
+                    auto &parameterPack = evaluator->getScope(0).parameterPack;
+                    if (parameterPack && *name == parameterPack->name)
+                        return new ASTNodeParameterPack(parameterPack->values);
                 }
             }
 
@@ -1640,6 +1660,7 @@ namespace hex::pl {
             PatternData *currPattern = nullptr;
             i32 scopeIndex = 0;
 
+
             if (!evaluator->isGlobalScope()) {
                 auto globalScope = evaluator->getGlobalScope().scope;
                 std::copy(globalScope->begin(), globalScope->end(), std::back_inserter(searchScope));
@@ -1697,8 +1718,9 @@ namespace hex::pl {
                         if (name == "$")
                             LogConsole::abortEvaluation("invalid use of placeholder operator in rvalue");
 
-                        if (!found)
+                        if (!found) {
                             LogConsole::abortEvaluation(hex::format("no variable named '{}' found", name), this);
+                        }
                     }
                 } else {
                     // Array indexing
@@ -1973,10 +1995,16 @@ namespace hex::pl {
                 auto expression = param->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete expression; };
 
-                auto literal = dynamic_cast<ASTNodeLiteral *>(expression->evaluate(evaluator));
-                ON_SCOPE_EXIT { delete literal; };
+                if (auto literal = dynamic_cast<ASTNodeLiteral *>(expression->evaluate(evaluator))) {
+                    evaluatedParams.push_back(literal->getValue());
+                    delete literal;
+                } else if (auto parameterPack = dynamic_cast<ASTNodeParameterPack *>(expression->evaluate(evaluator))) {
+                    for (auto &value : parameterPack->getValues()) {
+                        evaluatedParams.push_back(value);
+                    }
 
-                evaluatedParams.push_back(literal->getValue());
+                    delete parameterPack;
+                }
             }
 
             auto &customFunctions = evaluator->getCustomFunctions();
@@ -1993,10 +2021,13 @@ namespace hex::pl {
                 ;    // Don't check parameter count
             } else if (function.parameterCount & ContentRegistry::PatternLanguage::LessParametersThan) {
                 if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan), this);
+                    LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected less than {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan), this);
             } else if (function.parameterCount & ContentRegistry::PatternLanguage::MoreParametersThan) {
                 if (evaluatedParams.size() <= (function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan), this);
+                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected more than {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan), this);
+            } else if (function.parameterCount & ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan) {
+                if (evaluatedParams.size() < (function.parameterCount & ~ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan))
+                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected more than {1}", this->m_functionName, (function.parameterCount - 1) & ~ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan), this);
             } else if (function.parameterCount != evaluatedParams.size()) {
                 LogConsole::abortEvaluation(hex::format("invalid number of parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount), this);
             }
@@ -2193,8 +2224,8 @@ namespace hex::pl {
 
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
-        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode *>> params, std::vector<ASTNode *> body)
-            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)) {
+        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, ASTNode *>> params, std::vector<ASTNode *> body, std::optional<std::string> parameterPack)
+            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)), m_parameterPack(std::move(parameterPack)) {
         }
 
         ASTNodeFunctionDefinition(const ASTNodeFunctionDefinition &other) : ASTNode(other) {
@@ -2235,7 +2266,12 @@ namespace hex::pl {
 
         [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
 
-            evaluator->addCustomFunction(this->m_name, this->m_params.size(), [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
+            size_t paramCount = this->m_params.size();
+
+            if (this->m_parameterPack.has_value())
+                paramCount |= ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan;
+
+            evaluator->addCustomFunction(this->m_name, paramCount, [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
                 std::vector<PatternData *> variables;
 
                 ctx->pushScope(nullptr, variables);
@@ -2246,12 +2282,19 @@ namespace hex::pl {
                     ctx->popScope();
                 };
 
-                u32 paramIndex = 0;
-                for (const auto &[name, type] : this->m_params) {
+                if (this->m_parameterPack.has_value()) {
+                    std::vector<Token::Literal> parameterPackContent;
+                    for (u32 paramIndex = this->m_params.size(); paramIndex < params.size(); paramIndex++)
+                        parameterPackContent.push_back(params[paramIndex]);
+
+                    ctx->createParameterPack(this->m_parameterPack.value(), parameterPackContent);
+                }
+
+                for (u32 paramIndex = 0; paramIndex < this->m_params.size(); paramIndex++) {
+                    const auto &[name, type] = this->m_params[paramIndex];
+
                     ctx->createVariable(name, type, params[paramIndex]);
                     ctx->setVariable(name, params[paramIndex]);
-
-                    paramIndex++;
                 }
 
                 for (auto statement : this->m_body) {
@@ -2283,6 +2326,7 @@ namespace hex::pl {
         std::string m_name;
         std::vector<std::pair<std::string, ASTNode *>> m_params;
         std::vector<ASTNode *> m_body;
+        std::optional<std::string> m_parameterPack;
     };
 
     class ASTNodeCompoundStatement : public ASTNode {

@@ -431,31 +431,37 @@ namespace hex::pl {
     ASTNode *Parser::parseFunctionDefinition() {
         const auto &functionName = getValue<Token::Identifier>(-2).get();
         std::vector<std::pair<std::string, ASTNode *>> params;
+        std::optional<std::string> parameterPack;
 
         // Parse parameter list
         bool hasParams = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
         u32 unnamedParamCount = 0;
         while (hasParams) {
-            auto type = parseType(true);
+            if (MATCHES(sequence(VALUETYPE_AUTO, SEPARATOR_DOT, SEPARATOR_DOT, SEPARATOR_DOT, IDENTIFIER))) {
+                parameterPack = getValue<Token::Identifier>(-1).get();
 
-            if (MATCHES(sequence(IDENTIFIER)))
-                params.emplace_back(getValue<Token::Identifier>(-1).get(), type);
-            else {
-                params.emplace_back(std::to_string(unnamedParamCount), type);
-                unnamedParamCount++;
-            }
+                if (MATCHES(sequence(SEPARATOR_COMMA)))
+                    throwParseError("parameter pack can only appear at end of parameter list");
 
-            if (!MATCHES(sequence(SEPARATOR_COMMA))) {
-                if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+                break;
+            } else {
+                auto type = parseType(true);
+
+                if (MATCHES(sequence(IDENTIFIER)))
+                    params.emplace_back(getValue<Token::Identifier>(-1).get(), type);
+                else {
+                    params.emplace_back(std::to_string(unnamedParamCount), type);
+                    unnamedParamCount++;
+                }
+
+                if (!MATCHES(sequence(SEPARATOR_COMMA))) {
                     break;
-                else
-                    throwParseError("expected closing ')' after parameter list");
+                }
             }
         }
-        if (!hasParams) {
-            if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-                throwParseError("expected closing ')' after parameter list");
-        }
+
+        if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
+            throwParseError("expected closing ')' after parameter list");
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
             throwParseError("expected opening '{' after function definition");
@@ -473,7 +479,7 @@ namespace hex::pl {
         }
 
         bodyCleanup.release();
-        return create(new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), params, body));
+        return create(new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), params, body, parameterPack));
     }
 
     ASTNode *Parser::parseFunctionVariableDecl() {
