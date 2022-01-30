@@ -69,6 +69,11 @@ The function requires a single argument representing the original pointer addres
 
 There's a number of :ref:`predefined pointer helper functions <Pointer Helpers>` available in the standard library to rebase pointers off of different places.
 
+``[[no_unique_address]]`` :version:`1.14.0`
+-------------------------------------------
+
+A variable marked by this attribute will be placed in memory but not increment the current cursor position. 
+
 
 Type Attributes
 ^^^^^^^^^^^^^^^

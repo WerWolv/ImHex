@@ -1,6 +1,10 @@
 ``C Types`` :version:`1.10.1`
 ==============================
 
+.. code-block:: hexpat
+
+    #include <std/cint.pat>
+
 | This namespace contains type definitions for the standard built-in types of the C programming language
 |
 

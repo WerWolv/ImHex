@@ -90,3 +90,11 @@ To prevent ImHex using up a lot of memory when creating huge arrays, ImHex will 
 This pragma sets the maximum number of patterns allowed to be created.
 To prevent ImHex using up a lot of memory when creating a lot of patterns, ImHex will abort evaluation prematurely if too many patterns are existing simultaneously.
 This is similar to the ``array_limit`` pragma but catches smaller, nested arrays as well.
+
+``once`` :version:`1.14.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This pragma takes no value and simply marks the current file to only be includable once. This means if the file is being included multiple times,
+for example when it's being included explicitly first and later on again inside of another included file, it will only be included the first time.
+
+This is mainly useful to prevent functions, types and variables that are defined in that file, from being defined multiple times.

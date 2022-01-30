@@ -1,6 +1,10 @@
 ``std::ctype`` :version:`1.10.1`
 =================================
 
+.. code-block:: hexpat
+
+    #include <std/ctype.pat>
+
 | This namespace contains trait functions to inspect ASCII characters
 |
 

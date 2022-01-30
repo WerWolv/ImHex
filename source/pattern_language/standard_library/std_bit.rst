@@ -1,6 +1,10 @@
 ``std::bit`` :version:`1.10.1`
 ===============================
 
+.. code-block:: hexpat
+
+    #include <std/bit.pat>
+
 | This namespace contains various bit-level operations
 |
 

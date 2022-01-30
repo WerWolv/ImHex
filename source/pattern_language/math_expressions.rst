@@ -113,6 +113,13 @@ The Dollar Operator is a special operator which expands to the current offset wi
     std::print($); // 4
 
 
+It's also possible to assign a value to the dollar operator to change the current cursor position.
+
+.. code-block:: hexpat
+
+    $ += 0x100;
+
+
 Casting Operator
 ^^^^^^^^^^^^^^^^
 

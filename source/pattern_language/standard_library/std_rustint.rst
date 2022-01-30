@@ -1,6 +1,10 @@
 ``Rust Types`` :version:`1.10.1`
 =================================
 
+.. code-block:: hexpat
+
+    #include <std/rustint.pat>
+
 | This namespace contains type definitions for the standard built-in types of the Rust programming language
 |
 

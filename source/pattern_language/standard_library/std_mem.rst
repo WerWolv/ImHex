@@ -1,6 +1,10 @@
 ``std::mem``
 ============
 
+.. code-block:: hexpat
+
+    #include <std/mem.pat>
+
 | This namespace contains functions for interacting with the currently loaded data
 |
 

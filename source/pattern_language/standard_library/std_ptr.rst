@@ -3,6 +3,10 @@
 ``std::ptr`` :version:`1.10.1`
 ===============================
 
+.. code-block:: hexpat
+
+    #include <std/ptr.pat>
+
 | This namespace contains various pointer helper functions
 |
 

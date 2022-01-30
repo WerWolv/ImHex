@@ -1,6 +1,10 @@
 ``std::file`` :version:`1.12.0`
 ================================
 
+.. code-block:: hexpat
+
+    #include <std/file.pat>
+
 | This namespace contains various pointer helper functions
 |
 

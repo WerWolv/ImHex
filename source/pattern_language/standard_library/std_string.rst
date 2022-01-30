@@ -1,6 +1,10 @@
 ``std::string`` :version:`1.10.1`
 =================================
 
+.. code-block:: hexpat
+
+    #include <std/string.pat>
+
 | This namespace contains functions to deal with strings
 |
 

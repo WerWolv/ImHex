@@ -1,6 +1,10 @@
 ``std::limits`` :version:`1.10.1`
 ==================================
 
+.. code-block:: hexpat
+
+    #include <std/limits.pat>
+
 | This namespace contains the biggest and smallest representable number of various types
 |
 

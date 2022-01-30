@@ -16,6 +16,28 @@ Parameter types need to be specified explicitly, return type is automatically de
 
     std::print(min(100, 200)); // 100
 
+Parameter packs :version:`1.14.0`
+^^^^^^^^^^^^^^^
+
+To allow passing an unlimited number of parameters to functions, parameter packs can be used. 
+
+.. code-block:: hexpat
+
+    fn print_sequence(auto first, auto ... rest) {
+        std::print("{}", first);
+
+        if (std::sizeof_pack(rest) > 0)
+            print_sequence(rest);
+    };
+
+    print_sequence(1, 2, 3, 4, 5, 6);
+
+Parameter packs can exclusively be used as arguments to other functions. Using them automatically expands them acting as if the contained values 
+get passed to the other function individually.
+
+The above function will print out all passed values in sequence by printing the first parameter and then removing it by not passing it on to the function during
+the next run.
+
 Variables
 ^^^^^^^^^
 

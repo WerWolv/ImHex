@@ -1,6 +1,10 @@
 ``std::fxpt`` :version:`1.10.1`
 ================================
 
+.. code-block:: hexpat
+
+    #include <std/fxpt.pat>
+
 | This namespace contains various fixed-point calculation functions
 |
 
