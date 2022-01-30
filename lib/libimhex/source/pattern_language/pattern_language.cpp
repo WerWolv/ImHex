@@ -23,6 +23,8 @@ namespace hex::pl {
         this->m_validator = new Validator();
         this->m_evaluator = new Evaluator();
 
+        this->m_preprocessor->addDefaultPragmaHandlers();
+
         this->m_preprocessor->addPragmaHandler("endian", [this](std::string value) {
             if (value == "big") {
                 this->m_evaluator->setDefaultEndian(std::endian::big);
@@ -83,8 +85,6 @@ namespace hex::pl {
             ImHexApi::Provider::get()->setBaseAddress(baseAddress);
             return true;
         });
-
-        this->m_preprocessor->addDefaultPragmaHandlers();
     }
 
     PatternLanguage::~PatternLanguage() {

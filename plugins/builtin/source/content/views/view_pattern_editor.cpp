@@ -105,6 +105,7 @@ namespace hex::plugin::builtin {
                 return;
 
             pl::Preprocessor preprocessor;
+            preprocessor.addDefaultPragmaHandlers();
 
             if (!ImHexApi::Provider::isValid())
                 return;
@@ -119,7 +120,6 @@ namespace hex::plugin::builtin {
                 }
                 return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
             });
-            preprocessor.addDefaultPragmaHandlers();
 
             this->m_possiblePatternFiles.clear();
 

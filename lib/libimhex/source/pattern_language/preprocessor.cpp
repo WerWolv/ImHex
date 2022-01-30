@@ -62,11 +62,11 @@ namespace hex::pl {
                         }
                         offset += 1;
 
-                        std::string includePath = includeFile;
+                        fs::path includePath = includeFile;
 
                         if (includeFile[0] != '/') {
                             for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                                std::string tempPath = hex::format("{0}/{1}", dir.string().c_str(), includeFile.c_str());
+                                fs::path tempPath = dir / includePath;
                                 if (fs::exists(tempPath)) {
                                     includePath = tempPath;
                                     break;
@@ -78,16 +78,25 @@ namespace hex::pl {
                         if (!file.isValid())
                             throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
 
+                        bool shouldInclude = true;
+                        this->addPragmaHandler("once", [&, includePath, this](const std::string &value) {
+                            auto [iter, added] = this->m_onceIncludedFiles.insert(includePath);
+                            if (!added) shouldInclude = false;
+                            return value.empty();
+                        });
+
                         auto preprocessedInclude = this->preprocess(file.readString(), false);
                         if (!preprocessedInclude.has_value())
                             throw this->m_error;
 
-                        auto content = preprocessedInclude.value();
+                        if (shouldInclude) {
+                            auto content = preprocessedInclude.value();
 
-                        std::replace(content.begin(), content.end(), '\n', ' ');
-                        std::replace(content.begin(), content.end(), '\r', ' ');
+                            std::replace(content.begin(), content.end(), '\n', ' ');
+                            std::replace(content.begin(), content.end(), '\r', ' ');
 
-                        output += content;
+                            output += content;
+                        }
                     } else if (code.substr(offset, 6) == "define") {
                         offset += 6;
 
@@ -126,14 +135,18 @@ namespace hex::pl {
                     } else if (code.substr(offset, 6) == "pragma") {
                         offset += 6;
 
-                        while (std::isblank(code[offset]))
+                        while (std::isblank(code[offset])) {
                             offset += 1;
 
+                            if (code[offset] == '\n' || code[offset] == '\r')
+                                throwPreprocessorError("no instruction given in #pragma directive", lineNumber);
+                        }
+
                         std::string pragmaKey;
-                        while (!std::isblank(code[offset])) {
+                        while (!std::isblank(code[offset]) && code[offset] != '\n' && code[offset] != '\r') {
                             pragmaKey += code[offset];
 
-                            if (offset >= code.length() || code[offset] == '\n' || code[offset] == '\r')
+                            if (offset >= code.length())
                                 throwPreprocessorError("no instruction given in #pragma directive", lineNumber);
 
                             offset += 1;
@@ -150,9 +163,6 @@ namespace hex::pl {
                             pragmaValue += code[offset];
                             offset += 1;
                         }
-
-                        if (pragmaValue.empty())
-                            throwPreprocessorError("missing value in #pragma directive", lineNumber);
 
                         this->m_pragmas.emplace(pragmaKey, pragmaValue, lineNumber);
                     } else
@@ -219,8 +229,7 @@ namespace hex::pl {
     }
 
     void Preprocessor::addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string &)> &function) {
-        if (!this->m_pragmaHandlers.contains(pragmaType))
-            this->m_pragmaHandlers.emplace(pragmaType, function);
+        this->m_pragmaHandlers[pragmaType] = function;
     }
 
     void Preprocessor::addDefaultPragmaHandlers() {
@@ -229,6 +238,9 @@ namespace hex::pl {
         });
         this->addPragmaHandler("endian", [](const std::string &value) {
             return value == "big" || value == "little" || value == "native";
+        });
+        this->addPragmaHandler("once", [](const std::string &value) {
+            return value.empty();
         });
     }
 

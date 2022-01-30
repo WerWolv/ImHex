@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <utility>
 
+#include <hex/helpers/paths.hpp>
+
 namespace hex::pl {
 
     class Preprocessor {
@@ -33,6 +35,8 @@ namespace hex::pl {
 
         std::set<std::tuple<std::string, std::string, u32>> m_defines;
         std::set<std::tuple<std::string, std::string, u32>> m_pragmas;
+
+        std::set<fs::path> m_onceIncludedFiles;
 
         std::pair<u32, std::string> m_error;
     };
