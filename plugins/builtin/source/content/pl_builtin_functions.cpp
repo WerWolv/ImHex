@@ -378,6 +378,135 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             });
         }
+
+
+        ContentRegistry::PatternLanguage::Namespace nsStdMath = { "builtin", "std", "math" };
+        {
+            /* floor(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "floor", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::floor(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* ceil(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "ceil", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::ceil(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* round(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "round", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::round(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* trunc(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "trunc", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::trunc(Token::literalToFloatingPoint(params[0]));
+            });
+
+
+            /* log10(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "log10", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::log10(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* log2(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "log2", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::log2(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* ln(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "ln", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::log(Token::literalToFloatingPoint(params[0]));
+            });
+
+
+            /* fmod(x, y) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "fmod", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::fmod(Token::literalToFloatingPoint(params[0]), Token::literalToFloatingPoint(params[1]));
+            });
+
+            /* pow(base, exp) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "pow", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::pow(Token::literalToFloatingPoint(params[0]), Token::literalToFloatingPoint(params[1]));
+            });
+
+            /* sqrt(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "sqrt", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::sqrt(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* cbrt(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "cbrt", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::cbrt(Token::literalToFloatingPoint(params[0]));
+            });
+
+
+            /* sin(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "sin", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::sin(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* cos(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "cos", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::cos(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* tan(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "tan", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::tan(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* asin(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "asin", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::asin(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* acos(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "acos", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::acos(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* atan(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "atan", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::atan(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* atan2(y, x) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "atan", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::atan2(Token::literalToFloatingPoint(params[0]), Token::literalToFloatingPoint(params[1]));
+            });
+
+
+            /* sinh(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "sinh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::sinh(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* cosh(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "cosh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::cosh(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* tanh(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "tanh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::tanh(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* asinh(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "asinh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::asinh(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* acosh(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "acosh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::acosh(Token::literalToFloatingPoint(params[0]));
+            });
+
+            /* atanh(value) */
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdMath, "atanh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                return std::atanh(Token::literalToFloatingPoint(params[0]));
+            });
+
+        }
     }
 
 }
