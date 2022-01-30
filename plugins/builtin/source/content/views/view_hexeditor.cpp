@@ -440,7 +440,7 @@ namespace hex::plugin::builtin {
         }
 
         // Write bytes
-        provider->read(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(end - start + 1, buffer.size()));
+        provider->write(start + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(end - start + 1, buffer.size()));
     }
 
     void ViewHexEditor::copyString() const {
