@@ -154,8 +154,16 @@ namespace hex::prv {
         if (createUndo)
             createUndoPoint();
 
-        for (u64 i = 0; i < size; i++)
-            getPatches()[offset + i] = reinterpret_cast<const u8 *>(buffer)[i];
+        for (u64 i = 0; i < size; i++) {
+            u8 patch = reinterpret_cast<const u8 *>(buffer)[i];
+            u8 originalValue = 0x00;
+            this->readRaw(offset + i, &originalValue, sizeof(u8));
+
+            if (patch == originalValue)
+                getPatches().erase(offset + i);
+            else
+                getPatches()[offset + i] = patch;
+        }
     }
 
     void Provider::createUndoPoint() {
