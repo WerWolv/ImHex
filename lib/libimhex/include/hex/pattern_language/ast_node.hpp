@@ -620,6 +620,7 @@ namespace hex::pl {
                 evaluator->handleAbort();
 
                 auto variables = *evaluator->getScope(0).scope;
+                auto parameterPack = evaluator->getScope(0).parameterPack;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
                     i64 stackSize = evaluator->getStack().size();
@@ -632,6 +633,7 @@ namespace hex::pl {
                 };
 
                 evaluator->pushScope(nullptr, variables);
+                evaluator->getScope(0).parameterPack = parameterPack;
                 ON_SCOPE_EXIT { evaluator->popScope(); };
 
                 auto ctrlFlow = ControlFlowStatement::None;
@@ -1914,6 +1916,8 @@ namespace hex::pl {
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
             auto variables = *evaluator->getScope(0).scope;
+            auto parameterPack = evaluator->getScope(0).parameterPack;
+
             u32 startVariableCount = variables.size();
             ON_SCOPE_EXIT {
                 i64 stackSize = evaluator->getStack().size();
@@ -1926,6 +1930,7 @@ namespace hex::pl {
             };
 
             evaluator->pushScope(nullptr, variables);
+            evaluator->getScope(0).parameterPack = parameterPack;
             ON_SCOPE_EXIT { evaluator->popScope(); };
             for (auto &statement : body) {
                 auto result = statement->execute(evaluator);
