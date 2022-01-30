@@ -55,42 +55,42 @@ namespace hex::pl {
             base = 16;
 
             if (Token::isFloatingPoint(type))
-                return {};
+                return std::nullopt;
 
             if (numberData.find_first_not_of("0123456789ABCDEFabcdef") != std::string_view::npos)
-                return {};
+                return std::nullopt;
         } else if (numberData.starts_with("0b")) {
             numberData = numberData.substr(2);
             base = 2;
 
             if (Token::isFloatingPoint(type))
-                return {};
+                return std::nullopt;
 
             if (numberData.find_first_not_of("01") != std::string_view::npos)
-                return {};
+                return std::nullopt;
         } else if (numberData.find('.') != std::string_view::npos || Token::isFloatingPoint(type)) {
             base = 10;
             if (type == Token::ValueType::Any)
                 type = Token::ValueType::Double;
 
             if (std::count(numberData.begin(), numberData.end(), '.') > 1 || numberData.find_first_not_of("0123456789.") != std::string_view::npos)
-                return {};
+                return std::nullopt;
 
             if (numberData.ends_with('.'))
-                return {};
+                return std::nullopt;
         } else if (isdigit(numberData[0])) {
             base = 10;
 
             if (numberData.find_first_not_of("0123456789") != std::string_view::npos)
-                return {};
-        } else return {};
+                return std::nullopt;
+        } else return std::nullopt;
 
         if (type == Token::ValueType::Any)
             type = Token::ValueType::Signed128Bit;
 
 
         if (numberData.length() == 0)
-            return {};
+            return std::nullopt;
 
         if (Token::isUnsigned(type) || Token::isSigned(type)) {
             u128 integer = 0;
@@ -103,7 +103,7 @@ namespace hex::pl {
                     integer += 10 + (c - 'A');
                 else if (c >= 'a' && c <= 'f')
                     integer += 10 + (c - 'a');
-                else return {};
+                else return std::nullopt;
             }
 
             switch (type) {
@@ -112,7 +112,7 @@ namespace hex::pl {
             case Token::ValueType::Signed128Bit:
                 return { i128(integer) };
             default:
-                return {};
+                return std::nullopt;
             }
         } else if (Token::isFloatingPoint(type)) {
             double floatingPoint = strtod(numberData.data(), nullptr);
@@ -123,24 +123,23 @@ namespace hex::pl {
             case Token::ValueType::Double:
                 return { double(floatingPoint) };
             default:
-                return {};
+                return std::nullopt;
             }
         }
 
-
-        return {};
+        return std::nullopt;
     }
 
     std::optional<std::pair<char, size_t>> getCharacter(const std::string &string) {
 
         if (string.length() < 1)
-            return {};
+            return std::nullopt;
 
         // Escape sequences
         if (string[0] == '\\') {
 
             if (string.length() < 2)
-                return {};
+                return std::nullopt;
 
             // Handle simple escape sequences
             switch (string[1]) {
@@ -189,10 +188,10 @@ namespace hex::pl {
             // Hexadecimal number
             if (string[1] == 'x') {
                 if (string.length() != 4)
-                    return {};
+                    return std::nullopt;
 
                 if (!isxdigit(string[2]) || !isxdigit(string[3]))
-                    return {};
+                    return std::nullopt;
 
                 return {
                     {std::strtoul(&string[2], nullptr, 16), 4}
@@ -212,7 +211,7 @@ namespace hex::pl {
                 };
             }
 
-            return {};
+            return std::nullopt;
         } else return {
             {string[0], 1}
  };

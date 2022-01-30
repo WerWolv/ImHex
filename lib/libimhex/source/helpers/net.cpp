@@ -132,7 +132,7 @@ namespace hex {
         this->m_shouldCancel = false;
 
         if (result != CURLE_OK)
-            return {};
+            return std::nullopt;
         else
             return responseCode;
     }

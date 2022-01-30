@@ -661,7 +661,7 @@ namespace hex::pl {
                     continue;
             }
 
-            return {};
+            return std::nullopt;
         }
 
         [[nodiscard]] bool evaluateCondition(Evaluator *evaluator) const {
@@ -823,7 +823,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             evaluator->createVariable(this->getName(), this->getType());
 
-            return {};
+            return std::nullopt;
         }
 
     private:
@@ -1260,7 +1260,7 @@ namespace hex::pl {
                 evaluator->createVariable(variableDecl->getName(), variableDecl->getType()->evaluate(evaluator));
             }
 
-            return {};
+            return std::nullopt;
         }
 
     private:
@@ -1912,7 +1912,7 @@ namespace hex::pl {
                 }
             }
 
-            return {};
+            return std::nullopt;
         }
 
     private:
@@ -2118,7 +2118,7 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             this->execute(evaluator);
 
-            return { };
+            return {};
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {

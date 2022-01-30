@@ -136,7 +136,7 @@ namespace hex::prv {
         u32 page = std::floor((address - this->getBaseAddress()) / double(PageSize));
 
         if (page >= this->getPageCount())
-            return {};
+            return std::nullopt;
 
         return page;
     }

@@ -212,7 +212,7 @@ namespace hex::pl {
             }
         } catch (PreprocessorError &e) {
             this->m_error = e;
-            return {};
+            return std::nullopt;
         }
 
         return output;

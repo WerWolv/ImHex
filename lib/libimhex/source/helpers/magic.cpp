@@ -32,7 +32,7 @@ namespace hex::magic {
         }
 
         if (error)
-            return {};
+            return std::nullopt;
         else
             return magicFiles;
     }

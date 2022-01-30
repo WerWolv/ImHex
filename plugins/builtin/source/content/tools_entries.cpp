@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                         mathEvaluator.registerStandardVariables();
                         mathInput.clear();
 
-                        return {};
+                        return std::nullopt;
                     },
                     0,
                     0);
@@ -161,7 +161,7 @@ namespace hex::plugin::builtin {
 
                         auto provider = ImHexApi::Provider::get();
                         if (!ImHexApi::Provider::isValid() || !provider->isReadable() || args[0] >= provider->getActualSize())
-                            return {};
+                            return std::nullopt;
 
                         provider->read(args[0], &value, sizeof(u8));
 
@@ -174,15 +174,15 @@ namespace hex::plugin::builtin {
                     "write", [](auto args) -> std::optional<long double> {
                         auto provider = ImHexApi::Provider::get();
                         if (!ImHexApi::Provider::isValid() || !provider->isWritable() || args[0] >= provider->getActualSize())
-                            return {};
+                            return std::nullopt;
 
                         if (args[1] > 0xFF)
-                            return {};
+                            return std::nullopt;
 
                         u8 value = args[1];
                         provider->write(args[0], &value, sizeof(u8));
 
-                        return {};
+                        return std::nullopt;
                     },
                     2,
                     2);

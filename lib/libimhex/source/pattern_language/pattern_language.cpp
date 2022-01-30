@@ -98,19 +98,19 @@ namespace hex::pl {
         auto preprocessedCode = this->m_preprocessor->preprocess(code);
         if (!preprocessedCode.has_value()) {
             this->m_currError = this->m_preprocessor->getError();
-            return {};
+            return std::nullopt;
         }
 
         auto tokens = this->m_lexer->lex(preprocessedCode.value());
         if (!tokens.has_value()) {
             this->m_currError = this->m_lexer->getError();
-            return {};
+            return std::nullopt;
         }
 
         auto ast = this->m_parser->parse(tokens.value());
         if (!ast.has_value()) {
             this->m_currError = this->m_parser->getError();
-            return {};
+            return std::nullopt;
         }
 
         return ast;
@@ -136,14 +136,14 @@ namespace hex::pl {
 
         auto ast = this->parseString(code);
         if (!ast)
-            return {};
+            return std::nullopt;
 
         this->m_currAST = ast.value();
 
         auto patterns = this->m_evaluator->evaluate(ast.value());
         if (!patterns.has_value()) {
             this->m_currError = this->m_evaluator->getConsole().getLastHardError();
-            return {};
+            return std::nullopt;
         }
 
         return patterns;

@@ -96,7 +96,7 @@ namespace hex::plugin::builtin::prv {
             auto ack = socket.readString(1);
 
             if (ack.empty() || ack[0] != '+')
-                return {};
+                return false;
 
             auto receivedPacket = socket.readString(6);
 

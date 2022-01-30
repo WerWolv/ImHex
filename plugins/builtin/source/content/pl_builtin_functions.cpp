@@ -305,7 +305,7 @@ namespace hex::plugin::builtin {
 
                 openFiles.erase(file);
 
-                return {};
+                return std::nullopt;
             });
 
             /* read(file, size) */
@@ -329,7 +329,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].write(data);
 
-                return {};
+                return std::nullopt;
             });
 
             /* seek(file, offset) */
@@ -342,7 +342,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].seek(offset);
 
-                return {};
+                return std::nullopt;
             });
 
             /* size(file) */
@@ -365,7 +365,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].setSize(size);
 
-                return {};
+                return std::nullopt;
             });
 
             /* flush(file) */
@@ -377,7 +377,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].flush();
 
-                return {};
+                return std::nullopt;
             });
 
             /* remove(file) */
@@ -389,7 +389,7 @@ namespace hex::plugin::builtin {
 
                 openFiles[file].remove();
 
-                return {};
+                return std::nullopt;
             });
         }
     }

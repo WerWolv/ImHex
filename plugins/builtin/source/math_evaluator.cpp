@@ -313,7 +313,7 @@ namespace hex {
         }
 
         if (evaluationStack.empty())
-            return {};
+            return std::nullopt;
         else if (evaluationStack.size() > 1)
             throw std::invalid_argument("Undigested input left!");
         else
