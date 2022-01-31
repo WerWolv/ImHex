@@ -9,6 +9,7 @@
 
 #include <hex/helpers/shared_data.hpp>
 #include <hex/providers/overlay.hpp>
+#include <hex/pattern_language/pattern_language.hpp>
 
 namespace hex::prv {
 
@@ -78,6 +79,9 @@ namespace hex::prv {
         virtual void drawLoadInterface();
         virtual void drawInterface();
 
+        pl::PatternLanguage& getPatternLanguageRuntime() { return this->m_patternLanguageRuntime; }
+        std::string& getPatternLanguageSourceCode() { return this->m_patternLanguageSourceCode; }
+
     protected:
         u32 m_currPage = 0;
         u64 m_baseAddress = 0;
@@ -85,6 +89,9 @@ namespace hex::prv {
         u32 m_patchTreeOffset = 0;
         std::list<std::map<u64, u8>> m_patches;
         std::list<Overlay *> m_overlays;
+
+        pl::PatternLanguage m_patternLanguageRuntime;
+        std::string m_patternLanguageSourceCode;
     };
 
 }

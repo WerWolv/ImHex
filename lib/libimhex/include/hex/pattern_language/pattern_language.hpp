@@ -33,8 +33,8 @@ namespace hex::pl {
         ~PatternLanguage();
 
         [[nodiscard]] std::optional<std::vector<ASTNode *>> parseString(const std::string &code);
-        [[nodiscard]] std::optional<std::vector<PatternData *>> executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
-        [[nodiscard]] std::optional<std::vector<PatternData *>> executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
+        [[nodiscard]] bool executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
+        [[nodiscard]] bool executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
         [[nodiscard]] const std::vector<ASTNode *> &getCurrentAST() const;
 
         void abort();
@@ -49,6 +49,13 @@ namespace hex::pl {
         [[nodiscard]] bool hasDangerousFunctionBeenCalled() const;
         void allowDangerousFunctions(bool allow);
 
+        [[nodiscard]] std::vector<PatternData*> &getPatterns() {
+            return this->m_patterns;
+        }
+
+        void reset();
+        bool isRunning() const { return this->m_running; }
+
     private:
         Preprocessor *m_preprocessor;
         Lexer *m_lexer;
@@ -59,6 +66,10 @@ namespace hex::pl {
         std::vector<ASTNode *> m_currAST;
 
         std::optional<PatternLanguageError> m_currError;
+
+        std::vector<PatternData*> m_patterns;
+
+        bool m_running = false;
     };
 
 }

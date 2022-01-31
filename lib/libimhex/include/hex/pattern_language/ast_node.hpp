@@ -400,21 +400,21 @@ namespace hex::pl {
 
             PatternData *pattern;
             if (Token::isUnsigned(this->m_type))
-                pattern = new PatternDataUnsigned(offset, size);
+                pattern = new PatternDataUnsigned(evaluator, offset, size);
             else if (Token::isSigned(this->m_type))
-                pattern = new PatternDataSigned(offset, size);
+                pattern = new PatternDataSigned(evaluator, offset, size);
             else if (Token::isFloatingPoint(this->m_type))
-                pattern = new PatternDataFloat(offset, size);
+                pattern = new PatternDataFloat(evaluator, offset, size);
             else if (this->m_type == Token::ValueType::Boolean)
-                pattern = new PatternDataBoolean(offset);
+                pattern = new PatternDataBoolean(evaluator, offset);
             else if (this->m_type == Token::ValueType::Character)
-                pattern = new PatternDataCharacter(offset);
+                pattern = new PatternDataCharacter(evaluator, offset);
             else if (this->m_type == Token::ValueType::Character16)
-                pattern = new PatternDataCharacter16(offset);
+                pattern = new PatternDataCharacter16(evaluator, offset);
             else if (this->m_type == Token::ValueType::Padding)
-                pattern = new PatternDataPadding(offset, 1);
+                pattern = new PatternDataPadding(evaluator, offset, 1);
             else if (this->m_type == Token::ValueType::String)
-                pattern = new PatternDataString(offset, 1);
+                pattern = new PatternDataString(evaluator, offset, 1);
             else if (this->m_type == Token::ValueType::Auto)
                 return { nullptr };
             else
@@ -972,13 +972,13 @@ namespace hex::pl {
 
             PatternData *outputPattern;
             if (dynamic_cast<PatternDataPadding *>(templatePattern)) {
-                outputPattern = new PatternDataPadding(startOffset, 0);
+                outputPattern = new PatternDataPadding(evaluator, startOffset, 0);
             } else if (dynamic_cast<PatternDataCharacter *>(templatePattern)) {
-                outputPattern = new PatternDataString(startOffset, 0);
+                outputPattern = new PatternDataString(evaluator, startOffset, 0);
             } else if (dynamic_cast<PatternDataCharacter16 *>(templatePattern)) {
-                outputPattern = new PatternDataString16(startOffset, 0);
+                outputPattern = new PatternDataString16(evaluator, startOffset, 0);
             } else {
-                auto arrayPattern = new PatternDataStaticArray(startOffset, 0);
+                auto arrayPattern = new PatternDataStaticArray(evaluator, startOffset, 0);
                 arrayPattern->setEntries(templatePattern->clone(), entryCount);
                 outputPattern = arrayPattern;
             }
@@ -995,7 +995,7 @@ namespace hex::pl {
         }
 
         PatternData *createDynamicArray(Evaluator *evaluator) const {
-            auto arrayPattern = new PatternDataDynamicArray(evaluator->dataOffset(), 0);
+            auto arrayPattern = new PatternDataDynamicArray(evaluator, evaluator->dataOffset(), 0);
             arrayPattern->setVariableName(this->m_name);
 
             std::vector<PatternData *> entries;
@@ -1192,7 +1192,7 @@ namespace hex::pl {
             auto sizePattern = this->m_sizeType->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete sizePattern; };
 
-            auto pattern = new PatternDataPointer(startOffset, sizePattern->getSize());
+            auto pattern = new PatternDataPointer(evaluator, startOffset, sizePattern->getSize());
             pattern->setVariableName(this->m_name);
 
             auto endOffset = evaluator->dataOffset();
@@ -1298,7 +1298,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataStruct(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataStruct(evaluator, evaluator->dataOffset(), 0);
 
             u64 startOffset = evaluator->dataOffset();
             std::vector<PatternData *> memberPatterns;
@@ -1370,7 +1370,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataUnion(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataUnion(evaluator, evaluator->dataOffset(), 0);
 
             size_t size = 0;
             std::vector<PatternData *> memberPatterns;
@@ -1430,7 +1430,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataEnum(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataEnum(evaluator, evaluator->dataOffset(), 0);
             auto enumCleanup = SCOPE_GUARD { delete pattern; };
 
 
@@ -1487,7 +1487,7 @@ namespace hex::pl {
         void addEntry(const std::string &name, ASTNode *size) { this->m_entries.emplace_back(name, size); }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataBitfield(evaluator->dataOffset(), 0);
+            auto pattern = new PatternDataBitfield(evaluator, evaluator->dataOffset(), 0);
 
             size_t bitOffset = 0;
             std::vector<PatternData *> fields;
@@ -1511,7 +1511,7 @@ namespace hex::pl {
 
                 // If a field is named padding, it was created through a padding expression and only advances the bit position
                 if (name != "padding") {
-                    auto field = new PatternDataBitfieldField(evaluator->dataOffset(), bitOffset, bitSize, pattern);
+                    auto field = new PatternDataBitfieldField(evaluator, evaluator->dataOffset(), bitOffset, bitSize, pattern);
                     field->setVariableName(name);
                     fields.push_back(field);
                 }

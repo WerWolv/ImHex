@@ -7,16 +7,15 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewBookmarks : public View {
     public:
         ViewBookmarks();
         ~ViewBookmarks() override;
 
         void drawContent() override;
+
+    private:
+        std::list<ImHexApi::Bookmarks::Entry> m_bookmarks;
     };
 
 }
