@@ -27,17 +27,16 @@ namespace hex::pl {
 
     namespace {
 
-        template<hex::has_size<1> T>
-        std::string makeDisplayable(T *data, size_t size) {
+        std::string makeDisplayable(const std::string &string) {
             std::string result;
-            for (T *c = data; c < (data + size); c++) {
-                if (iscntrl(*c) || *c > 0x7F)
+            for (auto &c : string) {
+                if (iscntrl(c) || c > 0x7F)
                     result += " ";
                 else
-                    result += static_cast<char>(*c);
+                    result += c;
             }
 
-            if (size != 0 && *(data + size - 1) == '\x00')
+            if (string.length() != 0 && string.back() == '\x00')
                 result.pop_back();
 
             return result;
@@ -689,11 +688,7 @@ namespace hex::pl {
 
             provider->read(this->getOffset(), buffer.data(), size);
 
-            buffer.erase(std::remove_if(buffer.begin(), buffer.end(), [](auto c){
-                return c == 0x00;
-            }), buffer.end());
-
-            this->createDefaultEntry(hex::format("\"{0}\" {1}", makeDisplayable(buffer.data(), this->getSize()), size > this->getSize() ? "(truncated)" : ""), buffer);
+            this->createDefaultEntry(hex::format("\"{0}\" {1}", makeDisplayable(buffer), size > this->getSize() ? "(truncated)" : ""), buffer);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
