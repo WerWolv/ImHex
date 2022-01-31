@@ -74,13 +74,13 @@ namespace hex {
                 if (argument == "update-available") {
                     this->m_availableUpdate = value;
                 } else if (argument == "no-plugins") {
-                    View::doLater([] { ImGui::OpenPopup("No Plugins"); });
+                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("No Plugins"); });
                 } else if (argument == "tip-of-the-day") {
                     this->m_tipOfTheDay = value;
 
                     this->m_showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
                     if (this->m_showTipOfTheDay)
-                        View::doLater([] { ImGui::OpenPopup("hex.welcome.tip_of_the_day"_lang); });
+                        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.welcome.tip_of_the_day"_lang); });
                 }
             }
         }
@@ -251,7 +251,7 @@ namespace hex {
         for (const auto &path : hex::getPath(ImHexPath::Config)) {
             if (auto filePath = fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
                 this->m_safetyBackupPath = filePath;
-                View::doLater([] { ImGui::OpenPopup("hex.safety_backup.title"_lang); });
+                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.safety_backup.title"_lang); });
             }
         }
 
@@ -557,9 +557,12 @@ namespace hex {
     }
 
     void Window::frame() {
-        for (const auto &call : View::getDeferedCalls())
-            call();
-        View::getDeferedCalls().clear();
+        {
+            auto &calls = ImHexApi::Tasks::getDeferredCalls();
+            for (const auto &callback : calls)
+                callback();
+            calls.clear();
+        }
 
         View::drawCommonInterfaces();
 

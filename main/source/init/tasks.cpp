@@ -163,30 +163,24 @@ namespace hex::init {
     }
 
     bool deleteSharedData() {
-        SharedData::deferredCalls.clear();
+        ImHexApi::Tasks::getDeferredCalls().clear();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
 
-        SharedData::settingsEntries.clear();
-        SharedData::settingsJson.clear();
+        ContentRegistry::Settings::getEntries().clear();
+        ContentRegistry::Settings::getSettingsData().clear();
 
-        SharedData::commandPaletteCommands.clear();
-        SharedData::patternLanguageFunctions.clear();
+        ContentRegistry::CommandPaletteCommands::getEntries().clear();
+        ContentRegistry::PatternLanguage::getFunctions().clear();
+        ContentRegistry::PatternLanguage::getPalettes().clear();
 
         for (auto &[name, view] : ContentRegistry::Views::getEntries())
             delete view;
-        SharedData::views.clear();
+        ContentRegistry::Views::getEntries().clear();
 
-        SharedData::toolsEntries.clear();
-
-        SharedData::dataInspectorEntries.clear();
-
-        SharedData::bookmarkEntries.clear();
-
-        for (auto &pattern : SharedData::patternData)
-            delete pattern;
-        SharedData::patternData.clear();
+        ContentRegistry::Tools::getEntries().clear();
+        ContentRegistry::DataInspector::getEntries().clear();
 
         SharedData::languageNames.clear();
         SharedData::languageDefinitions.clear();

@@ -63,21 +63,6 @@ namespace hex {
         }
 
     public:
-        static std::vector<std::function<void()>> deferredCalls;
-
-        static std::vector<prv::Provider *> providers;
-        static u32 currentProvider;
-
-        static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> settingsEntries;
-        static nlohmann::json settingsJson;
-        static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commandPaletteCommands;
-        static std::map<std::string, ContentRegistry::PatternLanguage::Function> patternLanguageFunctions;
-        static std::map<std::string, View *> views;
-        static std::vector<ContentRegistry::Tools::impl::Entry> toolsEntries;
-        static std::vector<ContentRegistry::DataInspector::impl::Entry> dataInspectorEntries;
-        static u32 patternPaletteOffset;
-        static std::string popupMessage;
-        static std::list<ImHexApi::Bookmarks::Entry> bookmarkEntries;
         static std::vector<pl::PatternData *> patternData;
 
         static u32 selectableFileIndex;
@@ -115,10 +100,6 @@ namespace hex {
         static std::vector<ContentRegistry::FileHandler::impl::Entry> fileHandlers;
 
         static std::list<fs::path> recentFilePaths;
-
-        static int mainArgc;
-        static char **mainArgv;
-        static char **mainEnvp;
 
         static ImFontAtlas *fontAtlas;
         static ImFontConfig fontConfig;

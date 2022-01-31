@@ -132,14 +132,14 @@ namespace hex::plugin::builtin {
 
                 std::string preview;
                 if (ImHexApi::Provider::isValid())
-                    preview = providers[SharedData::currentProvider]->getName();
+                    preview = ImHexApi::Provider::get()->getName();
 
                 ImGui::SetNextItemWidth(200_scaled);
                 if (ImGui::BeginCombo("", preview.c_str())) {
 
                     for (int i = 0; i < providers.size(); i++) {
                         if (ImGui::Selectable(providers[i]->getName().c_str())) {
-                            SharedData::currentProvider = i;
+                            ImHexApi::Provider::setCurrentProvider(i);
                         }
                     }
 

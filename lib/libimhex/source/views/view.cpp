@@ -10,20 +10,18 @@
 
 namespace hex {
 
+    std::string View::s_popupMessage;
+
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
     bool View::isAvailable() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
-    std::vector<std::function<void()>> &View::getDeferedCalls() {
-        return SharedData::deferredCalls;
-    }
-
     void View::drawCommonInterfaces() {
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
@@ -35,7 +33,7 @@ namespace hex {
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
@@ -47,7 +45,7 @@ namespace hex {
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
@@ -94,21 +92,21 @@ namespace hex {
     }
 
     void View::showMessagePopup(const std::string &message) {
-        SharedData::popupMessage = message;
+        s_popupMessage = message;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.info"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.info"_lang); });
     }
 
     void View::showErrorPopup(const std::string &errorMessage) {
-        SharedData::popupMessage = errorMessage;
+        s_popupMessage = errorMessage;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
     }
 
     void View::showFatalPopup(const std::string &errorMessage) {
-        SharedData::popupMessage = errorMessage;
+        s_popupMessage = errorMessage;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
     }
 
     void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {
@@ -117,7 +115,7 @@ namespace hex {
         SharedData::selectableFilesValidExtensions = validExtensions;
         SharedData::selectableFileOpenCallback = callback;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.choose_file"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.choose_file"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() const {
@@ -152,10 +150,6 @@ namespace hex {
     void View::discardNavigationRequests() {
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
-    }
-
-    void View::doLater(std::function<void()> &&function) {
-        SharedData::deferredCalls.push_back(function);
     }
 
     void View::confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn) {

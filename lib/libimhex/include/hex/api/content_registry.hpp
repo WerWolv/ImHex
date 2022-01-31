@@ -92,6 +92,15 @@ namespace hex {
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         namespace PatternLanguage {
 
+            namespace impl {
+
+                struct ColorPalette {
+                    std::string name;
+                    std::vector<u32> colors;
+                };
+
+            }
+
             constexpr static u32 UnlimitedParameters            = 0xFFFF'FFFF;
             constexpr static u32 MoreParametersThan             = 0x8000'0000;
             constexpr static u32 LessParametersThan             = 0x4000'0000;
@@ -110,6 +119,12 @@ namespace hex {
             void addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
             void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
             std::map<std::string, ContentRegistry::PatternLanguage::Function> &getFunctions();
+
+            std::vector<impl::ColorPalette>& getPalettes();
+            void addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors);
+            void setSelectedPalette(u32 index);
+            u32 getNextColor();
+            void resetPalette();
         }
 
         /* View Registry. Allows adding of new windows */

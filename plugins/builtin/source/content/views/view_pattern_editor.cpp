@@ -73,7 +73,6 @@ namespace hex::plugin::builtin {
 
 
     ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern_editor.name") {
-        this->m_evaluatorRuntime = new pl::PatternLanguage();
         this->m_parserRuntime = new pl::PatternLanguage();
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
@@ -148,7 +147,16 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventFileUnloaded>(this, [this] {
             this->m_textEditor.SetText("");
-            this->m_evaluatorRuntime->abort();
+            ImHexApi::Provider::get()->getPatternLanguageRuntime().abort();
+        });
+
+        EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
+            if (oldProvider != nullptr) oldProvider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
+            if (newProvider != nullptr) this->m_textEditor.SetText(newProvider->getPatternLanguageSourceCode());
+
+            auto lines = this->m_textEditor.GetTextLines();
+            lines.pop_back();
+            this->m_textEditor.SetTextLines(lines);
         });
 
         /* Settings */
@@ -186,7 +194,7 @@ namespace hex::plugin::builtin {
 
                 std::vector<fs::path> paths;
 
-                for (auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
+                for (const auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
                     if (!fs::exists(imhexPath)) continue;
 
                     for (auto &entry : fs::recursive_directory_iterator(imhexPath)) {
@@ -218,7 +226,6 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternEditor::~ViewPatternEditor() {
-        delete this->m_evaluatorRuntime;
         delete this->m_parserRuntime;
 
         EventManager::unsubscribe<EventProjectFileStore>(this);
@@ -261,9 +268,10 @@ namespace hex::plugin::builtin {
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-                if (this->m_evaluatorRunning) {
+                auto &runtime = provider->getPatternLanguageRuntime();
+                if (runtime.isRunning()) {
                     if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
-                        this->m_evaluatorRuntime->abort();
+                        runtime.abort();
                 } else {
                     if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)))
                         this->evaluatePattern(this->m_textEditor.GetText());
@@ -273,7 +281,7 @@ namespace hex::plugin::builtin {
                 ImGui::PopStyleVar();
 
                 ImGui::SameLine();
-                if (this->m_evaluatorRunning)
+                if (this->m_runningEvaluators > 0)
                     ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
                 else {
                     if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
@@ -286,8 +294,8 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     ImGui::TextFormatted("{} / {}",
-                                         this->m_evaluatorRuntime->getCreatedPatternCount(),
-                                         this->m_evaluatorRuntime->getMaximumPatternCount());
+                                         provider->getPatternLanguageRuntime().getCreatedPatternCount(),
+                                         provider->getPatternLanguageRuntime().getMaximumPatternCount());
                 }
 
                 if (this->m_textEditor.IsTextChanged()) {
@@ -295,7 +303,7 @@ namespace hex::plugin::builtin {
                     this->m_hasUnevaluatedChanges = true;
                 }
 
-                if (this->m_hasUnevaluatedChanges && !this->m_evaluatorRunning && !this->m_parserRunning) {
+                if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
                     this->m_hasUnevaluatedChanges = false;
 
                     if (this->m_runAutomatically)
@@ -305,7 +313,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (this->m_evaluatorRuntime->hasDangerousFunctionBeenCalled() && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
+            if (provider->getPatternLanguageRuntime().hasDangerousFunctionBeenCalled() && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
                 ImGui::OpenPopup(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str());
             }
 
@@ -315,11 +323,15 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 View::confirmButtons(
-                    "hex.common.yes"_lang, "hex.common.no"_lang, [this] {
-                    this->m_evaluatorRuntime->allowDangerousFunctions(true);
-                    ImGui::CloseCurrentPopup(); }, [this] {
-                    this->m_evaluatorRuntime->allowDangerousFunctions(false);
-                    ImGui::CloseCurrentPopup(); });
+                    "hex.common.yes"_lang, "hex.common.no"_lang,
+                    [] {
+                        ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(true);
+                        ImGui::CloseCurrentPopup();
+                    },
+                    [] {
+                        ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(false);
+                        ImGui::CloseCurrentPopup();
+                    });
 
                 ImGui::EndPopup();
             }
@@ -567,16 +579,15 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::clearPatternData() {
-        for (auto &data : SharedData::patternData)
-            delete data;
+        if (!ImHexApi::Provider::isValid()) return;
 
-        SharedData::patternData.clear();
-        pl::PatternData::resetPalette();
+        ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
+        ContentRegistry::PatternLanguage::resetPalette();
     }
 
 
     void ViewPatternEditor::parsePattern(const std::string &code) {
-        this->m_parserRunning = true;
+        this->m_runningParsers++;
         std::thread([this, code] {
             auto ast = this->m_parserRuntime->parseString(code);
 
@@ -606,12 +617,12 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            this->m_parserRunning = false;
+            this->m_runningParsers--;
         }).detach();
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code) {
-        this->m_evaluatorRunning = true;
+        this->m_runningEvaluators++;
 
         this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
@@ -633,28 +644,31 @@ namespace hex::plugin::builtin {
                     inVariables[name] = variable.value;
             }
 
-            auto result = this->m_evaluatorRuntime->executeString(ImHexApi::Provider::get(), code, envVars, inVariables);
+            auto provider = ImHexApi::Provider::get();
+            auto &runtime = provider->getPatternLanguageRuntime();
 
-            auto error = this->m_evaluatorRuntime->getError();
-            if (error.has_value()) {
-                TextEditor::ErrorMarkers errorMarkers = { { error->getLineNumber(), error->what() } };
-                this->m_textEditor.SetErrorMarkers(errorMarkers);
+            auto result = runtime.executeString(provider, code, envVars, inVariables);
+            if (!result) {
+                auto error = runtime.getError();
+                if (error) {
+                    TextEditor::ErrorMarkers errorMarkers = { { error->getLineNumber(), error->what() } };
+                    this->m_textEditor.SetErrorMarkers(errorMarkers);
+                }
             }
 
-            this->m_console = this->m_evaluatorRuntime->getConsoleLog();
+            this->m_console = runtime.getConsoleLog();
 
-            auto outVariables = this->m_evaluatorRuntime->getOutVariables();
+            auto outVariables = runtime.getOutVariables();
             for (auto &[name, variable] : this->m_patternVariables) {
                 if (variable.outVariable && outVariables.contains(name))
                     variable.value = outVariables.at(name);
             }
 
-            if (result.has_value()) {
-                SharedData::patternData = std::move(result.value());
-                EventManager::post<EventPatternChanged>(SharedData::patternData);
+            if (result) {
+                EventManager::post<EventPatternChanged>(runtime.getPatterns());
             }
 
-            this->m_evaluatorRunning = false;
+            this->m_runningEvaluators--;
         }).detach();
     }
 

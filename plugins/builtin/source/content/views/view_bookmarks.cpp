@@ -10,34 +10,38 @@
 namespace hex::plugin::builtin {
 
     ViewBookmarks::ViewBookmarks() : View("hex.builtin.view.bookmarks.name") {
-        EventManager::subscribe<RequestAddBookmark>(this, [](ImHexApi::Bookmarks::Entry bookmark) {
-            bookmark.comment.resize(0xF'FFFF);
-
-            if (bookmark.name.empty()) {
-                bookmark.name.resize(64);
-                std::memset(bookmark.name.data(), 0x00, 64);
-                std::strcpy(bookmark.name.data(), hex::format("hex.builtin.view.bookmarks.default_title"_lang, bookmark.region.address, bookmark.region.address + bookmark.region.size - 1).c_str());
+        EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color) {
+            if (name.empty()) {
+                name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
 
-            if (bookmark.comment.empty())
-                std::memset(bookmark.comment.data(), 0x00, 0xF'FFFF);
+            if (color == 0x00)
+                color = ImGui::GetColorU32(ImGuiCol_Header);
 
-            bookmark.color = ImGui::GetColorU32(ImGuiCol_Header);
 
-            SharedData::bookmarkEntries.push_back(bookmark);
+            this->m_bookmarks.push_back({
+                region,
+                name,
+                std::move(comment),
+                color,
+                false,
+
+                ImHexApi::HexEditor::addHighlight(region, color, name)
+            });
+
             ProjectFile::markDirty();
         });
 
-        EventManager::subscribe<EventProjectFileLoad>(this, [] {
-            SharedData::bookmarkEntries = ProjectFile::getBookmarks();
+        EventManager::subscribe<EventProjectFileLoad>(this, [this] {
+            this->m_bookmarks = ProjectFile::getBookmarks();
         });
 
-        EventManager::subscribe<EventProjectFileStore>(this, [] {
-            ProjectFile::setBookmarks(SharedData::bookmarkEntries);
+        EventManager::subscribe<EventProjectFileStore>(this, [this] {
+            ProjectFile::setBookmarks(this->m_bookmarks);
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [] {
-            ImHexApi::Bookmarks::getEntries().clear();
+        EventManager::subscribe<EventFileUnloaded>(this, [this] {
+            this->m_bookmarks.clear();
         });
     }
 
@@ -46,22 +50,22 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventFileUnloaded>(this);
+
+        this->m_bookmarks.clear();
     }
 
     void ViewBookmarks::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
             if (ImGui::BeginChild("##scrolling")) {
 
-                auto &bookmarks = ImHexApi::Bookmarks::getEntries();
-
-                if (bookmarks.empty()) {
+                if (this->m_bookmarks.empty()) {
                     ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
                 u32 id = 1;
-                auto bookmarkToRemove = bookmarks.end();
-                for (auto iter = bookmarks.begin(); iter != bookmarks.end(); iter++) {
-                    auto &[region, name, comment, color, locked] = *iter;
+                auto bookmarkToRemove = this->m_bookmarks.end();
+                for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
+                    auto &[region, name, comment, color, locked, highlight] = *iter;
 
                     auto headerColor = ImColor(color);
                     auto hoverColor = ImColor(color);
@@ -71,7 +75,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleColor(ImGuiCol_Header, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
-                    if (ImGui::CollapsingHeader((std::string(name.data()) + "###bookmark").c_str())) {
+                    if (ImGui::CollapsingHeader((name + "###bookmark").c_str())) {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
                         ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
@@ -146,7 +150,7 @@ namespace hex::plugin::builtin {
                         if (locked)
                             ImGui::TextUnformatted(name.data());
                         else
-                            ImGui::InputText("##nameInput", name.data(), 64);
+                            ImGui::InputText("##nameInput", name.data(), name.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
 
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.comment"_lang);
@@ -155,7 +159,7 @@ namespace hex::plugin::builtin {
                         if (locked)
                             ImGui::TextFormattedWrapped("{}", comment.data());
                         else
-                            ImGui::InputTextMultiline("##commentInput", comment.data(), 0xF'FFFF);
+                            ImGui::InputTextMultiline("##commentInput", comment.data(), comment.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &comment);
 
                         ImGui::NewLine();
                     }
@@ -164,8 +168,9 @@ namespace hex::plugin::builtin {
                     id++;
                 }
 
-                if (bookmarkToRemove != bookmarks.end()) {
-                    bookmarks.erase(bookmarkToRemove);
+                if (bookmarkToRemove != this->m_bookmarks.end()) {
+                    ImHexApi::HexEditor::removeHighlight(bookmarkToRemove->highlightId);
+                    this->m_bookmarks.erase(bookmarkToRemove);
                     ProjectFile::markDirty();
                 }
             }

@@ -4,23 +4,6 @@
 
 namespace hex {
 
-    std::vector<std::function<void()>> SharedData::deferredCalls;
-
-    std::vector<prv::Provider *> SharedData::providers;
-    u32 SharedData::currentProvider;
-
-    std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> SharedData::settingsEntries;
-    nlohmann::json SharedData::settingsJson;
-    std::vector<ContentRegistry::CommandPaletteCommands::Entry> SharedData::commandPaletteCommands;
-    std::map<std::string, ContentRegistry::PatternLanguage::Function> SharedData::patternLanguageFunctions;
-    std::map<std::string, View *> SharedData::views;
-    std::vector<ContentRegistry::Tools::impl::Entry> SharedData::toolsEntries;
-    std::vector<ContentRegistry::DataInspector::impl::Entry> SharedData::dataInspectorEntries;
-    u32 SharedData::patternPaletteOffset;
-    std::string SharedData::popupMessage;
-    std::list<ImHexApi::Bookmarks::Entry> SharedData::bookmarkEntries;
-    std::vector<pl::PatternData *> SharedData::patternData;
-
     u32 SharedData::selectableFileIndex;
     std::vector<fs::path> SharedData::selectableFiles;
     std::function<void(fs::path)> SharedData::selectableFileOpenCallback;
@@ -57,10 +40,6 @@ namespace hex {
     std::vector<ContentRegistry::FileHandler::impl::Entry> SharedData::fileHandlers;
 
     std::list<fs::path> SharedData::recentFilePaths;
-
-    int SharedData::mainArgc;
-    char **SharedData::mainArgv;
-    char **SharedData::mainEnvp;
 
     ImFontAtlas *SharedData::fontAtlas;
     ImFontConfig SharedData::fontConfig;

@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
-            for (auto &destPath : hex::getPath(ImHexPath::Magic)) {
+            for (const auto &destPath : hex::getPath(ImHexPath::Magic)) {
                 std::error_code error;
                 if (fs::copy_file(path, destPath / path.filename(), fs::copy_options::overwrite_existing, error)) {
                     View::showMessagePopup("hex.builtin.view.information.magic_db_added"_lang);

@@ -18,6 +18,8 @@ using i32 = std::int32_t;
 using i64 = std::int64_t;
 using i128 = __int128_t;
 
+using color_t = u32;
+
 namespace hex {
 
     struct Region {

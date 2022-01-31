@@ -12,11 +12,8 @@
 #include <hex/helpers/file.hpp>
 
 int main(int argc, char **argv, char **envp) {
-    hex::SharedData::mainArgc = argc;
-    hex::SharedData::mainArgv = argv;
-    hex::SharedData::mainEnvp = envp;
-
     using namespace hex;
+    ImHexApi::System::setProgramArguments(argc, argv, envp);
 
     // Initialization
     {

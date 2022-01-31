@@ -35,9 +35,6 @@ namespace hex {
         virtual bool isAvailable() const;
         virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
 
-        static void doLater(std::function<void()> &&function);
-        static std::vector<std::function<void()>> &getDeferedCalls();
-
         static void drawCommonInterfaces();
 
         static void showMessagePopup(const std::string &message);
@@ -67,6 +64,8 @@ namespace hex {
         std::string m_unlocalizedViewName;
         bool m_windowOpen = false;
         std::map<Shortcut, std::function<void()>> m_shortcuts;
+
+        static std::string s_popupMessage;
 
         friend class ShortcutManager;
     };

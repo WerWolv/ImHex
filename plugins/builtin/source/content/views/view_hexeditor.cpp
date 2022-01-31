@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
         };
 
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
-            ViewHexEditor *_this = (ViewHexEditor *)data;
+            auto _this = (ViewHexEditor*)(data);
 
             std::optional<u32> currColor, prevColor;
 
@@ -69,7 +69,10 @@ namespace hex::plugin::builtin {
 
             u32 alpha = static_cast<u32>(_this->m_highlightAlpha) << 24;
 
-            for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
+            for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
+                auto &region = highlight.getRegion();
+                auto &color = highlight.getColor();
+
                 if (off >= region.address && off < (region.address + region.size))
                     currColor = (color & 0x00FFFFFF) | alpha;
                 if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
@@ -77,7 +80,8 @@ namespace hex::plugin::builtin {
             }
 
             {
-                for (const auto &pattern : SharedData::patternData) {
+                auto patterns = provider->getPatternLanguageRuntime().getPatterns();
+                for (const auto &pattern : patterns) {
                     auto child = pattern->getPattern(off);
                     if (child != nullptr) {
                         auto color = (child->getColor() & 0x00FFFFFF) | alpha;
@@ -86,7 +90,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                for (const auto &pattern : SharedData::patternData) {
+                for (const auto &pattern : patterns) {
                     auto child = pattern->getPattern(off - 1);
                     if (child != nullptr) {
                         auto color = (child->getColor() & 0x00FFFFFF) | alpha;
@@ -114,15 +118,19 @@ namespace hex::plugin::builtin {
 
             off += ImHexApi::Provider::get()->getBaseAddress();
 
-            for (const auto &[region, name, comment, color, locked] : ImHexApi::Bookmarks::getEntries()) {
+            for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
+                auto &region = highlight.getRegion();
+                auto &color = highlight.getColor();
+                auto &tooltip = highlight.getTooltip();
+
                 if (off >= region.address && off < (region.address + region.size)) {
-                    if (!tooltipShown) {
+                    if (!tooltipShown && !tooltip.empty()) {
                         ImGui::BeginTooltip();
                         tooltipShown = true;
                     }
-                    ImGui::ColorButton(name.data(), ImColor(color).Value);
+                    ImGui::ColorButton(tooltip.c_str(), ImColor(color).Value);
                     ImGui::SameLine(0, 10);
-                    ImGui::TextUnformatted(name.data());
+                    ImGui::TextUnformatted(tooltip.c_str());
                 }
             }
 
@@ -753,18 +761,18 @@ namespace hex::plugin::builtin {
 
         if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.set_base"_lang, nullptr, false, providerValid && provider->isReadable())) {
             std::memset(this->m_baseAddressBuffer, 0x00, sizeof(this->m_baseAddressBuffer));
-            View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.set_base"_lang); });
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.set_base"_lang); });
         }
 
         if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.resize"_lang, nullptr, false, providerValid && provider->isResizable())) {
-            View::doLater([this] {
+            ImHexApi::Tasks::doLater([this] {
                 this->m_resizeSize = ImHexApi::Provider::get()->getActualSize();
                 ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.resize"_lang);
             });
         }
 
         if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable())) {
-            View::doLater([this] {
+            ImHexApi::Tasks::doLater([this] {
                 this->m_resizeSize = 0;
                 ImGui::OpenPopup("hex.builtin.view.hexeditor.menu.edit.insert"_lang);
             });
@@ -800,7 +808,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventWindowClosing>(this, [](GLFWwindow *window) {
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.exit_application.title"_lang); });
+                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.exit_application.title"_lang); });
             }
         });
 
@@ -1161,7 +1169,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.import.script"_lang)) {
                     this->m_loaderScriptFilePath.clear();
                     this->m_loaderScriptScriptPath.clear();
-                    View::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.script.title"_lang); });
+                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.view.hexeditor.script.title"_lang); });
                 }
 
                 ImGui::EndMenu();
@@ -1185,7 +1193,7 @@ namespace hex::plugin::builtin {
                         this->m_dataToSave = generateIPSPatch(patches);
                         this->m_processingImportExport = false;
 
-                        View::doLater([this] {
+                        ImHexApi::Tasks::doLater([this] {
                             hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, {}, [this](const auto &path) {
                                 auto file = File(path, File::Mode::Create);
                                 if (!file.isValid()) {
@@ -1214,7 +1222,7 @@ namespace hex::plugin::builtin {
                         this->m_dataToSave = generateIPS32Patch(patches);
                         this->m_processingImportExport = false;
 
-                        View::doLater([this] {
+                        ImHexApi::Tasks::doLater([this] {
                             hex::openFileBrowser("hex.builtin.view.hexeditor.menu.file.export.title"_lang, DialogMode::Save, {}, [this](const auto &path) {
                                 auto file = File(path, File::Mode::Create);
                                 if (!file.isValid()) {

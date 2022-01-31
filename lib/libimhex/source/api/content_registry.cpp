@@ -141,7 +141,9 @@ namespace hex {
 
 
     std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> &ContentRegistry::Settings::getEntries() {
-        return SharedData::settingsEntries;
+        static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> entries;
+
+        return entries;
     }
 
     nlohmann::json ContentRegistry::Settings::getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
@@ -154,7 +156,9 @@ namespace hex {
     }
 
     nlohmann::json &ContentRegistry::Settings::getSettingsData() {
-        return SharedData::settingsJson;
+        static nlohmann::json settings;
+
+        return settings;
     }
 
 
@@ -167,7 +171,9 @@ namespace hex {
     }
 
     std::vector<ContentRegistry::CommandPaletteCommands::Entry> &ContentRegistry::CommandPaletteCommands::getEntries() {
-        return SharedData::commandPaletteCommands;
+        static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commands;
+
+        return commands;
     }
 
 
@@ -197,7 +203,50 @@ namespace hex {
     }
 
     std::map<std::string, ContentRegistry::PatternLanguage::Function> &ContentRegistry::PatternLanguage::getFunctions() {
-        return SharedData::patternLanguageFunctions;
+        static std::map<std::string, ContentRegistry::PatternLanguage::Function> functions;
+
+        return functions;
+    }
+
+
+    static std::vector<ContentRegistry::PatternLanguage::impl::ColorPalette> s_colorPalettes;
+    static u32 s_colorIndex;
+    static u32 s_selectedColorPalette;
+
+    std::vector<ContentRegistry::PatternLanguage::impl::ColorPalette> &ContentRegistry::PatternLanguage::getPalettes() {
+        return s_colorPalettes;
+    }
+
+    void ContentRegistry::PatternLanguage::addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors) {
+        s_colorPalettes.push_back({
+            unlocalizedName,
+            colors
+        });
+    }
+
+    void ContentRegistry::PatternLanguage::setSelectedPalette(u32 index) {
+        if (index < s_colorPalettes.size())
+            s_selectedColorPalette = index;
+
+        resetPalette();
+    }
+
+    u32 ContentRegistry::PatternLanguage::getNextColor() {
+        if (s_colorPalettes.empty())
+            return 0x00;
+
+        auto &currColors = s_colorPalettes[s_selectedColorPalette].colors;
+
+        u32 color = currColors[s_colorIndex];
+
+        s_colorIndex++;
+        s_colorIndex %= currColors.size();
+
+        return color;
+    }
+
+    void ContentRegistry::PatternLanguage::resetPalette() {
+        s_colorIndex = 0;
     }
 
 
@@ -210,7 +259,9 @@ namespace hex {
     }
 
     std::map<std::string, View *> &ContentRegistry::Views::getEntries() {
-        return SharedData::views;
+        static std::map<std::string, View *> views;
+
+        return views;
     }
 
     View *ContentRegistry::Views::getViewByName(const std::string &unlocalizedName) {
@@ -232,7 +283,9 @@ namespace hex {
     }
 
     std::vector<ContentRegistry::Tools::impl::Entry> &ContentRegistry::Tools::getEntries() {
-        return SharedData::toolsEntries;
+        static std::vector<ContentRegistry::Tools::impl::Entry> entries;
+
+        return entries;
     }
 
 
@@ -245,7 +298,9 @@ namespace hex {
     }
 
     std::vector<ContentRegistry::DataInspector::impl::Entry> &ContentRegistry::DataInspector::getEntries() {
-        return SharedData::dataInspectorEntries;
+        static std::vector<ContentRegistry::DataInspector::impl::Entry> entries;
+
+        return entries;
     }
 
     /* Data Processor Nodes */

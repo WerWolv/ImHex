@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.view.strings.demangle"_lang)) {
                 this->m_demangledName = llvm::demangle(this->m_selectedString);
                 if (!this->m_demangledName.empty())
-                    View::doLater([] { ImGui::OpenPopup("hex.builtin.view.strings.demangle.name"_lang); });
+                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.view.strings.demangle.name"_lang); });
             }
             ImGui::EndPopup();
         }

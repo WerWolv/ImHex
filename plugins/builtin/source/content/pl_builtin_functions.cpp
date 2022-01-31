@@ -44,6 +44,8 @@ namespace hex::plugin::builtin {
     void registerPatternLanguageFunctions() {
         using namespace hex::pl;
 
+        ContentRegistry::PatternLanguage::addColorPalette("hex.builtin.palette.pastel", { 0x70B4771F, 0x700E7FFF, 0x702CA02C, 0x702827D6, 0x70BD6794, 0x704B568C, 0x70C277E3, 0x707F7F7F, 0x7022BDBC, 0x70CFBE17 });
+
         ContentRegistry::PatternLanguage::Namespace nsStd = { "builtin", "std" };
         {
             /* print(format, args...) */

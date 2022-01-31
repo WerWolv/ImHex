@@ -24,7 +24,7 @@ namespace hex::plugin::builtin {
         this->m_constants.clear();
         this->m_filterIndices.clear();
 
-        for (auto &path : hex::getPath(ImHexPath::Constants)) {
+        for (const auto &path : hex::getPath(ImHexPath::Constants)) {
             if (!fs::exists(path)) continue;
 
             for (auto &file : fs::directory_iterator(path)) {
