@@ -10,7 +10,7 @@ namespace hex::pl {
 #define TOKEN(type, value)       Token::Type::type, Token::type::value, lineNumber
 #define VALUE_TOKEN(type, value) Token::Type::type, value, lineNumber
 
-    std::string matchTillInvalid(const char *characters, std::function<bool(char)> predicate) {
+    std::string matchTillInvalid(const char *characters, const std::function<bool(char)> &predicate) {
         std::string ret;
 
         while (*characters != 0x00) {
@@ -403,14 +403,14 @@ namespace hex::pl {
                     tokens.emplace_back(TOKEN(Operator, SizeOf));
                     offset += 6;
                 } else if (c == '\'') {
-                    auto character = getCharacterLiteral(code.substr(offset));
+                    auto lexedCharacter = getCharacterLiteral(code.substr(offset));
 
-                    if (!character.has_value())
+                    if (!lexedCharacter.has_value())
                         throwLexerError("invalid character literal", lineNumber);
 
-                    auto [c, charSize] = character.value();
+                    auto [character, charSize] = lexedCharacter.value();
 
-                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(c)));
+                    tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(character)));
                     offset += charSize;
                 } else if (c == '\"') {
                     auto string = getStringLiteral(code.substr(offset));
@@ -530,9 +530,10 @@ namespace hex::pl {
             }
 
             tokens.emplace_back(TOKEN(Separator, EndOfProgram));
-        } catch (LexerError &e) {
+        } catch (PatternLanguageError &e) {
             this->m_error = e;
-            return {};
+
+            return std::nullopt;
         }
 
 

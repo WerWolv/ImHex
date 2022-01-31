@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <hex/pattern_language/error.hpp>
 #include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/ast_node.hpp>
 
@@ -16,16 +17,15 @@ namespace hex::pl {
     class Parser {
     public:
         using TokenIter = std::vector<Token>::const_iterator;
-        using ParseError = std::pair<u32, std::string>;
 
         Parser() = default;
         ~Parser() = default;
 
         std::optional<std::vector<ASTNode *>> parse(const std::vector<Token> &tokens);
-        const std::optional<ParseError> &getError() { return this->m_error; }
+        const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 
     private:
-        std::optional<ParseError> m_error;
+        std::optional<PatternLanguageError> m_error;
         TokenIter m_curr;
         TokenIter m_originalPosition, m_partOriginalPosition;
 
@@ -47,7 +47,7 @@ namespace hex::pl {
             auto value = std::get_if<T>(&this->m_curr[index].value);
 
             if (value == nullptr)
-                throwParseError("failed to decode token. Invalid type.", getLineNumber(index));
+                throwParserError("failed to decode token. Invalid type.", getLineNumber(index));
 
             return *value;
         }
@@ -143,8 +143,8 @@ namespace hex::pl {
             return program;
         }
 
-        [[noreturn]] void throwParseError(const std::string &error, i32 token = -1) const {
-            throw ParseError(this->m_curr[token].lineNumber, "Parser: " + error);
+        [[noreturn]] void throwParserError(const std::string &error, i32 token = -1) const {
+            throw PatternLanguageError(this->m_curr[token].lineNumber, "Parser: " + error);
         }
 
         /* Token consuming */

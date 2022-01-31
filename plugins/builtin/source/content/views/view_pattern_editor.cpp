@@ -9,9 +9,6 @@
 #include <hex/helpers/file.hpp>
 
 #include <hex/helpers/magic.hpp>
-#include <hex/helpers/literals.hpp>
-
-#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -640,7 +637,8 @@ namespace hex::plugin::builtin {
 
             auto error = this->m_evaluatorRuntime->getError();
             if (error.has_value()) {
-                this->m_textEditor.SetErrorMarkers({ error.value() });
+                TextEditor::ErrorMarkers errorMarkers = { { error->getLineNumber(), error->what() } };
+                this->m_textEditor.SetErrorMarkers(errorMarkers);
             }
 
             this->m_console = this->m_evaluatorRuntime->getConsoleLog();

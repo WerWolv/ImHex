@@ -8,9 +8,6 @@
 
 namespace hex::pl {
 
-    Preprocessor::Preprocessor() {
-    }
-
     std::optional<std::string> Preprocessor::preprocess(const std::string &code, bool initialRun) {
         u32 offset = 0;
         u32 lineNumber = 1;
@@ -220,8 +217,9 @@ namespace hex::pl {
                         throwPreprocessorError(hex::format("no #pragma handler registered for type {0}", type.c_str()), pragmaLine);
                 }
             }
-        } catch (PreprocessorError &e) {
+        } catch (PatternLanguageError &e) {
             this->m_error = e;
+
             return std::nullopt;
         }
 

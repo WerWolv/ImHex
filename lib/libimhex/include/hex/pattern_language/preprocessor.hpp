@@ -11,24 +11,24 @@
 
 #include <hex/helpers/paths.hpp>
 
+#include <hex/pattern_language/error.hpp>
+
 namespace hex::pl {
 
     class Preprocessor {
     public:
-        Preprocessor();
+        Preprocessor() = default;
 
         std::optional<std::string> preprocess(const std::string &code, bool initialRun = true);
 
         void addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string &)> &function);
         void addDefaultPragmaHandlers();
 
-        const std::pair<u32, std::string> &getError() { return this->m_error; }
+        const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 
     private:
-        using PreprocessorError = std::pair<u32, std::string>;
-
-        [[noreturn]] void throwPreprocessorError(const std::string &error, u32 lineNumber) const {
-            throw PreprocessorError(lineNumber, "Preprocessor: " + error);
+        [[noreturn]] static void throwPreprocessorError(const std::string &error, u32 lineNumber) {
+            throw PatternLanguageError(lineNumber, "Preprocessor: " + error);
         }
 
         std::unordered_map<std::string, std::function<bool(std::string)>> m_pragmaHandlers;
@@ -38,7 +38,7 @@ namespace hex::pl {
 
         std::set<fs::path> m_onceIncludedFiles;
 
-        std::pair<u32, std::string> m_error;
+        std::optional<PatternLanguageError> m_error;
     };
 
 }

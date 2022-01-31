@@ -9,14 +9,14 @@ namespace hex::pl {
     }
 
     [[noreturn]] void LogConsole::abortEvaluation(const std::string &message) {
-        throw EvaluateError(0, message);
+        throw PatternLanguageError(0, message);
     }
 
     [[noreturn]] void LogConsole::abortEvaluation(const std::string &message, const ASTNode *node) {
         if (node == nullptr)
             abortEvaluation(message);
         else
-            throw EvaluateError(node->getLineNumber(), message);
+            throw PatternLanguageError(node->getLineNumber(), message);
     }
 
     void LogConsole::clear() {

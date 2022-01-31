@@ -7,6 +7,7 @@
 #include <variant>
 
 #include <hex/helpers/utils.hpp>
+#include <hex/pattern_language/log_console.hpp>
 
 namespace hex::pl {
 
@@ -156,48 +157,48 @@ namespace hex::pl {
 
         static u128 literalToUnsigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
-                                  [](std::string) -> u128 { throw std::string("expected integral type, got string"); },
-                                  [](PatternData *) -> u128 { throw std::string("expected integral type, got custom type"); },
-                                  [](auto &&value) -> u128 { return value; } },
+                                  [](const std::string &) -> u128 { LogConsole::abortEvaluation("expected integral type, got string"); },
+                                  [](PatternData *) -> u128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](auto &&result) -> u128 { return result; } },
                               literal);
         }
 
         static i128 literalToSigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
-                                  [](std::string) -> i128 { throw std::string("expected integral type, got string"); },
-                                  [](PatternData *) -> i128 { throw std::string("expected integral type, got custom type"); },
-                                  [](auto &&value) -> i128 { return value; } },
+                                  [](const std::string &) -> i128 { LogConsole::abortEvaluation("expected integral type, got string"); },
+                                  [](PatternData *) -> i128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](auto &&result) -> i128 { return result; } },
                               literal);
         }
 
         static double literalToFloatingPoint(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
-                                  [](std::string) -> double { throw std::string("expected integral type, got string"); },
-                                  [](PatternData *) -> double { throw std::string("expected integral type, got custom type"); },
-                                  [](auto &&value) -> double { return value; } },
+                                  [](const std::string &) -> double { LogConsole::abortEvaluation("expected integral type, got string"); },
+                                  [](PatternData *) -> double { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](auto &&result) -> double { return result; } },
                               literal);
         }
 
         static bool literalToBoolean(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
-                                  [](std::string) -> bool { throw std::string("expected integral type, got string"); },
-                                  [](PatternData *) -> bool { throw std::string("expected integral type, got custom type"); },
-                                  [](auto &&value) -> bool { return value != 0; } },
+                                  [](const std::string &) -> bool { LogConsole::abortEvaluation("expected integral type, got string"); },
+                                  [](PatternData *) -> bool { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](auto &&result) -> bool { return result != 0; } },
                               literal);
         }
 
         static std::string literalToString(const pl::Token::Literal &literal, bool cast) {
             if (!cast && std::get_if<std::string>(&literal) == nullptr)
-                throw std::string("expected string type, got integral");
+                LogConsole::abortEvaluation("expected string type, got integral");
 
             return std::visit(overloaded {
-                                  [](std::string value) -> std::string { return value; },
-                                  [](u128 value) -> std::string { return std::to_string(u64(value)); },
-                                  [](i128 value) -> std::string { return std::to_string(i64(value)); },
-                                  [](bool value) -> std::string { return value ? "true" : "false"; },
-                                  [](char value) -> std::string { return std::string() + value; },
-                                  [](PatternData *) -> std::string { throw std::string("expected integral type, got custom type"); },
-                                  [](auto &&value) -> std::string { return std::to_string(value); } },
+                                  [](std::string result) -> std::string { return result; },
+                                  [](u128 result) -> std::string { return hex::to_string(result); },
+                                  [](i128 result) -> std::string { return hex::to_string(result); },
+                                  [](bool result) -> std::string { return result ? "true" : "false"; },
+                                  [](char result) -> std::string { return { 1, result }; },
+                                  [](PatternData *) -> std::string { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](auto &&result) -> std::string { return std::to_string(result); } },
                               literal);
         }
 

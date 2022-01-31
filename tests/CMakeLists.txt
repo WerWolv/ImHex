@@ -1,5 +1,7 @@
 project(unit_tests)
 
+enable_testing()
+
 add_custom_target(unit_tests)
 add_subdirectory(common)
 

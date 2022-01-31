@@ -206,10 +206,10 @@ namespace hex::pl {
             }
 
             popScope();
-        } catch (const LogConsole::EvaluateError &error) {
-            this->m_console.log(LogConsole::Level::Error, error.second);
+        } catch (PatternLanguageError &error) {
+            this->m_console.log(LogConsole::Level::Error, error.what());
 
-            if (error.first != 0)
+            if (error.getLineNumber() != 0)
                 this->m_console.setHardError(error);
 
             for (auto &pattern : patterns)

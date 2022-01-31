@@ -159,3 +159,14 @@ namespace hex {
     concept has_size = sizeof(T) == Size;
 
 }
+
+
+namespace hex {
+
+    template<typename T>
+    class Cloneable {
+    public:
+        [[nodiscard]] virtual T* clone() const = 0;
+    };
+
+}

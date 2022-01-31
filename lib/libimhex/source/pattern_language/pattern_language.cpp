@@ -10,8 +10,6 @@
 #include <hex/pattern_language/validator.hpp>
 #include <hex/pattern_language/evaluator.hpp>
 
-#include <unistd.h>
-
 namespace hex::pl {
 
     class PatternData;
@@ -113,6 +111,15 @@ namespace hex::pl {
             return std::nullopt;
         }
 
+        if (!this->m_validator->validate(*ast)) {
+            this->m_currError = this->m_validator->getError();
+
+            for (auto &node : *ast)
+                delete node;
+
+            return std::nullopt;
+        }
+
         return ast;
     }
 
@@ -172,7 +179,7 @@ namespace hex::pl {
         return this->m_evaluator->getConsole().getLog();
     }
 
-    const std::optional<std::pair<u32, std::string>> &PatternLanguage::getError() {
+    const std::optional<PatternLanguageError> &PatternLanguage::getError() {
         return this->m_currError;
     }
 

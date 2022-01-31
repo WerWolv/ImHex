@@ -12,18 +12,16 @@ namespace hex::pl {
 
     class Lexer {
     public:
-        using LexerError = std::pair<u32, std::string>;
-
         Lexer() = default;
 
         std::optional<std::vector<Token>> lex(const std::string &code);
-        const std::optional<LexerError> &getError() { return this->m_error; }
+        const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 
     private:
-        std::optional<LexerError> m_error;
+        std::optional<PatternLanguageError> m_error;
 
-        [[noreturn]] void throwLexerError(const std::string &error, u32 lineNumber) const {
-            throw LexerError(lineNumber, "Lexer: " + error);
+        [[noreturn]] static void throwLexerError(const std::string &error, u32 lineNumber) {
+            throw PatternLanguageError(lineNumber, "Lexer: " + error);
         }
     };
 

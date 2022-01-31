@@ -9,9 +9,6 @@
 
 namespace hex::pl {
 
-    Validator::Validator() {
-    }
-
     bool Validator::validate(const std::vector<ASTNode *> &ast) {
         std::unordered_set<std::string> identifiers;
 
@@ -19,16 +16,16 @@ namespace hex::pl {
 
             for (const auto &node : ast) {
                 if (node == nullptr)
-                    throwValidateError("nullptr in AST. This is a bug!", 1);
+                    throwValidatorError("nullptr in AST. This is a bug!", 1);
 
                 if (auto variableDeclNode = dynamic_cast<ASTNodeVariableDecl *>(node); variableDeclNode != nullptr) {
                     if (!identifiers.insert(variableDeclNode->getName().data()).second)
-                        throwValidateError(hex::format("redefinition of identifier '{0}'", variableDeclNode->getName().data()), variableDeclNode->getLineNumber());
+                        throwValidatorError(hex::format("redefinition of identifier '{0}'", variableDeclNode->getName().data()), variableDeclNode->getLineNumber());
 
                     this->validate({ variableDeclNode->getType() });
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl *>(node); typeDeclNode != nullptr) {
                     if (!identifiers.insert(typeDeclNode->getName().data()).second)
-                        throwValidateError(hex::format("redefinition of identifier '{0}'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
+                        throwValidatorError(hex::format("redefinition of identifier '{0}'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
 
                     this->validate({ typeDeclNode->getType() });
                 } else if (auto structNode = dynamic_cast<ASTNodeStruct *>(node); structNode != nullptr) {
@@ -39,12 +36,12 @@ namespace hex::pl {
                     std::unordered_set<std::string> enumIdentifiers;
                     for (auto &[name, value] : enumNode->getEntries()) {
                         if (!enumIdentifiers.insert(name).second)
-                            throwValidateError(hex::format("redefinition of enum constant '{0}'", name.c_str()), value->getLineNumber());
+                            throwValidatorError(hex::format("redefinition of enum constant '{0}'", name.c_str()), value->getLineNumber());
                     }
                 }
             }
 
-        } catch (ValidatorError &e) {
+        } catch (PatternLanguageError &e) {
             this->m_error = e;
             return false;
         }

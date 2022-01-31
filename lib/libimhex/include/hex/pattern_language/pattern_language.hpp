@@ -40,7 +40,7 @@ namespace hex::pl {
         void abort();
 
         [[nodiscard]] const std::vector<std::pair<LogConsole::Level, std::string>> &getConsoleLog();
-        [[nodiscard]] const std::optional<std::pair<u32, std::string>> &getError();
+        [[nodiscard]] const std::optional<PatternLanguageError> &getError();
         [[nodiscard]] std::map<std::string, Token::Literal> getOutVariables() const;
 
         [[nodiscard]] u32 getCreatedPatternCount();
@@ -58,7 +58,7 @@ namespace hex::pl {
 
         std::vector<ASTNode *> m_currAST;
 
-        std::optional<std::pair<u32, std::string>> m_currError;
+        std::optional<PatternLanguageError> m_currError;
     };
 
 }

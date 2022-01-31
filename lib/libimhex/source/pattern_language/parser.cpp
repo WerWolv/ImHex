@@ -20,7 +20,7 @@ namespace hex::pl {
         std::string functionName = parseNamespaceResolution();
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN)))
-            throwParseError("expected '(' after function name");
+            throwParserError("expected '(' after function name");
 
         std::vector<ASTNode *> params;
         auto paramCleanup = SCOPE_GUARD {
@@ -32,11 +32,11 @@ namespace hex::pl {
             params.push_back(parseMathematicalExpression());
 
             if (MATCHES(sequence(SEPARATOR_COMMA, SEPARATOR_ROUNDBRACKETCLOSE)))
-                throwParseError("unexpected ',' at end of function parameter list", -1);
+                throwParserError("unexpected ',' at end of function parameter list", -1);
             else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
                 break;
             else if (!MATCHES(sequence(SEPARATOR_COMMA)))
-                throwParseError("missing ',' between parameters", -1);
+                throwParserError("missing ',' between parameters", -1);
         }
 
         paramCleanup.release();
@@ -76,7 +76,7 @@ namespace hex::pl {
                     continue;
                 } else {
                     if (!this->m_types.contains(typeName))
-                        throwParseError(hex::format("cannot access scope of invalid type '{}'", typeName), -1);
+                        throwParserError(hex::format("cannot access scope of invalid type '{}'", typeName), -1);
 
                     return create(new ASTNodeScopeResolution(this->m_types[typeName]->clone(), getValue<Token::Identifier>(-1).get()));
                 }
@@ -84,7 +84,7 @@ namespace hex::pl {
                 break;
         }
 
-        throwParseError("failed to parse scope resolution. Expected 'TypeName::Identifier'");
+        throwParserError("failed to parse scope resolution. Expected 'TypeName::Identifier'");
     }
 
     ASTNode *Parser::parseRValue() {
@@ -104,14 +104,14 @@ namespace hex::pl {
         if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN))) {
             path.push_back(parseMathematicalExpression());
             if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
-                throwParseError("expected closing ']' at end of array indexing");
+                throwParserError("expected closing ']' at end of array indexing");
         }
 
         if (MATCHES(sequence(SEPARATOR_DOT))) {
             if (MATCHES(oneOf(IDENTIFIER, KEYWORD_PARENT)))
                 return this->parseRValue(path);
             else
-                throwParseError("expected member name or 'parent' keyword", -1);
+                throwParserError("expected member name or 'parent' keyword", -1);
         } else
             return create(new ASTNodeRValue(path));
     }
@@ -126,7 +126,7 @@ namespace hex::pl {
             auto node = this->parseMathematicalExpression();
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
                 delete node;
-                throwParseError("expected closing parenthesis");
+                throwParserError("expected closing parenthesis");
             }
             return node;
         } else if (MATCHES(sequence(IDENTIFIER))) {
@@ -159,17 +159,17 @@ namespace hex::pl {
 
                 result = new ASTNodeLiteral(u128(Token::getTypeSize(type)));
             } else {
-                throwParseError("expected rvalue identifier or built-in type");
+                throwParserError("expected rvalue identifier or built-in type");
             }
 
             if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
                 delete result;
-                throwParseError("expected closing parenthesis");
+                throwParserError("expected closing parenthesis");
             }
 
             return result;
         } else
-            throwParseError("expected value or parenthesis");
+            throwParserError("expected value or parenthesis");
     }
 
     ASTNode *Parser::parseCastExpression() {
@@ -178,10 +178,10 @@ namespace hex::pl {
             auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(type->getType());
 
             if (builtinType == nullptr)
-                throwParseError("invalid type used for pointer size", -1);
+                throwParserError("invalid type used for pointer size", -1);
 
             if (!peek(SEPARATOR_ROUNDBRACKETOPEN))
-                throwParseError("expected '(' before cast expression", -1);
+                throwParserError("expected '(' before cast expression", -1);
 
             auto node = parseFactor();
 
@@ -382,7 +382,7 @@ namespace hex::pl {
             auto second = this->parseBooleanOr();
 
             if (!MATCHES(sequence(OPERATOR_INHERIT)))
-                throwParseError("expected ':' in ternary expression");
+                throwParserError("expected ':' in ternary expression");
 
             auto third = this->parseBooleanOr();
             node = create(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional));
@@ -401,11 +401,11 @@ namespace hex::pl {
     // [[ <Identifier[( (parseStringLiteral) )], ...> ]]
     void Parser::parseAttribute(Attributable *currNode) {
         if (currNode == nullptr)
-            throwParseError("tried to apply attribute to invalid statement");
+            throwParserError("tried to apply attribute to invalid statement");
 
         do {
             if (!MATCHES(sequence(IDENTIFIER)))
-                throwParseError("expected attribute expression");
+                throwParserError("expected attribute expression");
 
             auto attribute = getValue<Token::Identifier>(-1).get();
 
@@ -414,7 +414,7 @@ namespace hex::pl {
                 auto string = std::get_if<std::string>(&value);
 
                 if (string == nullptr)
-                    throwParseError("expected string attribute argument");
+                    throwParserError("expected string attribute argument");
 
                 currNode->addAttribute(create(new ASTNodeAttribute(attribute, *string)));
             } else
@@ -423,7 +423,7 @@ namespace hex::pl {
         } while (MATCHES(sequence(SEPARATOR_COMMA)));
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE, SEPARATOR_SQUAREBRACKETCLOSE)))
-            throwParseError("unfinished attribute. Expected ']]'");
+            throwParserError("unfinished attribute. Expected ']]'");
     }
 
     /* Functions */
@@ -441,7 +441,7 @@ namespace hex::pl {
                 parameterPack = getValue<Token::Identifier>(-1).get();
 
                 if (MATCHES(sequence(SEPARATOR_COMMA)))
-                    throwParseError("parameter pack can only appear at end of parameter list");
+                    throwParserError("parameter pack can only appear at end of parameter list");
 
                 break;
             } else {
@@ -461,10 +461,10 @@ namespace hex::pl {
         }
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-            throwParseError("expected closing ')' after parameter list");
+            throwParserError("expected closing ')' after parameter list");
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
-            throwParseError("expected opening '{' after function definition");
+            throwParserError("expected opening '{' after function definition");
 
 
         // Parse function body
@@ -496,7 +496,7 @@ namespace hex::pl {
                 statement = create(new ASTNodeCompoundStatement({ statement, create(new ASTNodeAssignment(identifier, expression)) }));
             }
         } else
-            throwParseError("invalid variable declaration");
+            throwParserError("invalid variable declaration");
 
         return statement;
     }
@@ -539,11 +539,11 @@ namespace hex::pl {
         } else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
             statement = parseFunctionVariableDecl();
         } else
-            throwParseError("invalid sequence", 0);
+            throwParserError("invalid sequence", 0);
 
         if (needsSemicolon && !MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION))) {
             delete statement;
-            throwParseError("missing ';' at end of expression", -1);
+            throwParserError("missing ';' at end of expression", -1);
         }
 
         // Consume superfluous semicolons
@@ -576,7 +576,7 @@ namespace hex::pl {
         else if (peek(KEYWORD_CONTINUE, -1))
             type = ControlFlowStatement::Continue;
         else
-            throwParseError("invalid control flow statement. Expected 'return', 'break' or 'continue'");
+            throwParserError("invalid control flow statement. Expected 'return', 'break' or 'continue'");
 
         if (peek(SEPARATOR_ENDOFEXPRESSION))
             return create(new ASTNodeControlFlowStatement(type, nullptr));
@@ -618,7 +618,7 @@ namespace hex::pl {
         };
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-            throwParseError("expected closing ')' after statement head");
+            throwParserError("expected closing ')' after statement head");
 
         trueBody = parseStatementBody();
 
@@ -641,7 +641,7 @@ namespace hex::pl {
         };
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-            throwParseError("expected closing ')' after statement head");
+            throwParserError("expected closing ')' after statement head");
 
         body = parseStatementBody();
 
@@ -655,16 +655,16 @@ namespace hex::pl {
         auto variableCleanup = SCOPE_GUARD { delete variable; };
 
         if (!MATCHES(sequence(SEPARATOR_COMMA)))
-            throwParseError("expected ',' after for loop variable declaration");
+            throwParserError("expected ',' after for loop variable declaration");
 
         auto condition = parseMathematicalExpression();
         auto conditionCleanup = SCOPE_GUARD { delete condition; };
 
         if (!MATCHES(sequence(SEPARATOR_COMMA)))
-            throwParseError("expected ',' after for loop condition");
+            throwParserError("expected ',' after for loop condition");
 
         if (!MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
-            throwParseError("expected for loop variable assignment");
+            throwParserError("expected for loop variable assignment");
 
         auto postExpression = parseFunctionVariableAssignment(getValue<Token::Identifier>(-2).get());
         auto postExpressionCleanup = SCOPE_GUARD { delete postExpression; };
@@ -677,7 +677,7 @@ namespace hex::pl {
         };
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-            throwParseError("expected closing ')' after statement head");
+            throwParserError("expected closing ')' after statement head");
 
         body = parseStatementBody();
 
@@ -711,7 +711,7 @@ namespace hex::pl {
         } else if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE))) {
             trueBody.push_back(parseMember());
         } else
-            throwParseError("expected body of conditional statement");
+            throwParserError("expected body of conditional statement");
 
         if (MATCHES(sequence(KEYWORD_ELSE, SEPARATOR_CURLYBRACKETOPEN))) {
             while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -735,7 +735,7 @@ namespace hex::pl {
         };
 
         if (!MATCHES(sequence(SEPARATOR_ROUNDBRACKETCLOSE)))
-            throwParseError("expected closing ')' after while head");
+            throwParserError("expected closing ')' after while head");
 
         cleanup.release();
 
@@ -761,18 +761,18 @@ namespace hex::pl {
             else if (this->m_types.contains(getNamespacePrefixedName(typeName)))
                 return create(new ASTNodeTypeDecl({}, this->m_types[getNamespacePrefixedName(typeName)]->clone(), endian));
             else
-                throwParseError(hex::format("unknown type '{}'", typeName));
+                throwParserError(hex::format("unknown type '{}'", typeName));
         } else if (MATCHES(sequence(VALUETYPE_ANY))) {    // Builtin type
             auto type = getValue<Token::ValueType>(-1);
             if (!allowFunctionTypes) {
                 if (type == Token::ValueType::String)
-                    throwParseError("cannot use 'str' in this context. Use a character array instead");
+                    throwParserError("cannot use 'str' in this context. Use a character array instead");
                 else if (type == Token::ValueType::Auto)
-                    throwParseError("cannot use 'auto' in this context");
+                    throwParserError("cannot use 'auto' in this context");
             }
 
             return create(new ASTNodeTypeDecl({}, new ASTNodeBuiltinType(type), endian));
-        } else throwParseError("failed to parse type. Expected identifier or builtin type");
+        } else throwParserError("failed to parse type. Expected identifier or builtin type");
     }
 
     // using Identifier = (parseType)
@@ -780,10 +780,10 @@ namespace hex::pl {
         auto name = parseNamespaceResolution();
 
         if (!MATCHES(sequence(OPERATOR_ASSIGNMENT)))
-            throwParseError("expected '=' after type name of using declaration");
+            throwParserError("expected '=' after type name of using declaration");
 
         auto *type = dynamic_cast<ASTNodeTypeDecl *>(parseType());
-        if (type == nullptr) throwParseError("invalid type used in variable declaration", -1);
+        if (type == nullptr) throwParserError("invalid type used in variable declaration", -1);
 
         return addType(name, type, type->getEndian());
     }
@@ -794,7 +794,7 @@ namespace hex::pl {
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
             delete size;
-            throwParseError("expected closing ']' at end of array declaration", -1);
+            throwParserError("expected closing ']' at end of array declaration", -1);
         }
 
         return create(new ASTNodeArrayVariableDecl({}, new ASTNodeTypeDecl({}, new ASTNodeBuiltinType(Token::ValueType::Padding)), size));
@@ -835,7 +835,7 @@ namespace hex::pl {
                 size = parseMathematicalExpression();
 
             if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
-                throwParseError("expected closing ']' at end of array declaration", -1);
+                throwParserError("expected closing ']' at end of array declaration", -1);
         }
 
         sizeCleanup.release();
@@ -853,7 +853,7 @@ namespace hex::pl {
             auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(sizeType->getType());
 
             if (builtinType == nullptr || !Token::isUnsigned(builtinType->getType()))
-                throwParseError("invalid type used for pointer size", -1);
+                throwParserError("invalid type used for pointer size", -1);
         }
 
         return create(new ASTNodePointerVariableDecl(name, type, sizeType));
@@ -893,14 +893,14 @@ namespace hex::pl {
                 else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
                     member = parseMemberPointerVariable(type);
                 else
-                    throwParseError("invalid variable declaration");
+                    throwParserError("invalid variable declaration");
             }
         } else if (MATCHES(sequence(VALUETYPE_PADDING, SEPARATOR_SQUAREBRACKETOPEN)))
             member = parsePadding();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN)))
             return parseConditional();
         else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
-            throwParseError("unexpected end of program", -2);
+            throwParserError("unexpected end of program", -2);
         else if (MATCHES(sequence(KEYWORD_BREAK)))
             member = new ASTNodeControlFlowStatement(ControlFlowStatement::Break, nullptr);
         else if (MATCHES(sequence(KEYWORD_CONTINUE)))
@@ -910,13 +910,13 @@ namespace hex::pl {
         else if (MATCHES(oneOf(OPERATOR_DOLLAR) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
             member = parseFunctionVariableCompoundAssignment("$");
         else
-            throwParseError("invalid struct member", 0);
+            throwParserError("invalid struct member", 0);
 
         if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
             parseAttribute(dynamic_cast<Attributable *>(member));
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
-            throwParseError("missing ';' at end of expression", -1);
+            throwParserError("missing ';' at end of expression", -1);
 
         // Consume superfluous semicolons
         while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
@@ -942,17 +942,17 @@ namespace hex::pl {
             do {
                 auto inheritedTypeName = getValue<Token::Identifier>(-1).get();
                 if (!this->m_types.contains(inheritedTypeName))
-                    throwParseError(hex::format("cannot inherit from unknown type '{}'", inheritedTypeName), -1);
+                    throwParserError(hex::format("cannot inherit from unknown type '{}'", inheritedTypeName), -1);
 
                 structNode->addInheritance(this->m_types[inheritedTypeName]->clone());
             } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
 
         } else if (MATCHES(sequence(OPERATOR_INHERIT, VALUETYPE_ANY))) {
-            throwParseError("cannot inherit from builtin type");
+            throwParserError("cannot inherit from builtin type");
         }
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
-            throwParseError("expected '{' after struct definition", -1);
+            throwParserError("expected '{' after struct definition", -1);
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             structNode->addMember(parseMember());
@@ -988,7 +988,7 @@ namespace hex::pl {
         auto typeName = getValue<Token::Identifier>(-2).get();
 
         auto underlyingType = parseType();
-        if (underlyingType->getEndian().has_value()) throwParseError("underlying type may not have an endian specification", -2);
+        if (underlyingType->getEndian().has_value()) throwParserError("underlying type may not have an endian specification", -2);
 
         const auto enumNode = create(new ASTNodeEnum(underlyingType));
         const auto typeDecl = addType(typeName, enumNode);
@@ -998,7 +998,7 @@ namespace hex::pl {
         };
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
-            throwParseError("expected '{' after enum definition", -1);
+            throwParserError("expected '{' after enum definition", -1);
 
         ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
@@ -1018,15 +1018,15 @@ namespace hex::pl {
 
                 enumNode->addEntry(name, valueExpr);
             } else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
-                throwParseError("unexpected end of program", -2);
+                throwParserError("unexpected end of program", -2);
             else
-                throwParseError("invalid enum entry", -1);
+                throwParserError("invalid enum entry", -1);
 
             if (!MATCHES(sequence(SEPARATOR_COMMA))) {
                 if (MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE)))
                     break;
                 else
-                    throwParseError("missing ',' between enum entries", -1);
+                    throwParserError("missing ',' between enum entries", -1);
             }
         }
 
@@ -1054,12 +1054,12 @@ namespace hex::pl {
             } else if (MATCHES(sequence(VALUETYPE_PADDING, OPERATOR_INHERIT))) {
                 bitfieldNode->addEntry("padding", parseMathematicalExpression());
             } else if (MATCHES(sequence(SEPARATOR_ENDOFPROGRAM)))
-                throwParseError("unexpected end of program", -2);
+                throwParserError("unexpected end of program", -2);
             else
-                throwParseError("invalid bitfield member", 0);
+                throwParserError("invalid bitfield member", 0);
 
             if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
-                throwParseError("missing ';' at end of expression", -1);
+                throwParserError("missing ';' at end of expression", -1);
 
             // Consume superfluous semicolons
             while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
@@ -1104,11 +1104,11 @@ namespace hex::pl {
                 size = parseMathematicalExpression();
 
             if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE)))
-                throwParseError("expected closing ']' at end of array declaration", -1);
+                throwParserError("expected closing ']' at end of array declaration", -1);
         }
 
         if (!MATCHES(sequence(OPERATOR_AT)))
-            throwParseError("expected placement instruction", -1);
+            throwParserError("expected placement instruction", -1);
 
         auto placementOffset = parseMathematicalExpression();
 
@@ -1128,11 +1128,11 @@ namespace hex::pl {
             auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(sizeType->getType());
 
             if (builtinType == nullptr || !Token::isUnsigned(builtinType->getType()))
-                throwParseError("invalid type used for pointer size", -1);
+                throwParserError("invalid type used for pointer size", -1);
         }
 
         if (!MATCHES(sequence(OPERATOR_AT)))
-            throwParseError("expected placement instruction", -1);
+            throwParserError("expected placement instruction", -1);
 
         auto placementOffset = parseMathematicalExpression();
 
@@ -1145,7 +1145,7 @@ namespace hex::pl {
         std::vector<ASTNode *> statements;
 
         if (!MATCHES(sequence(IDENTIFIER)))
-            throwParseError("expected namespace identifier");
+            throwParserError("expected namespace identifier");
 
         this->m_currNamespace.push_back(this->m_currNamespace.back());
 
@@ -1159,7 +1159,7 @@ namespace hex::pl {
         }
 
         if (!MATCHES(sequence(SEPARATOR_CURLYBRACKETOPEN)))
-            throwParseError("expected '{' at start of namespace");
+            throwParserError("expected '{' at start of namespace");
 
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             auto newStatements = parseStatements();
@@ -1181,7 +1181,7 @@ namespace hex::pl {
             return parseVariablePlacement(type);
         else if (MATCHES(sequence(OPERATOR_STAR, IDENTIFIER, OPERATOR_INHERIT)))
             return parsePointerVariablePlacement(type);
-        else throwParseError("invalid sequence", 0);
+        else throwParserError("invalid sequence", 0);
     }
 
     /* Program */
@@ -1221,13 +1221,13 @@ namespace hex::pl {
             statement = parseFunctionDefinition();
         else if (MATCHES(sequence(KEYWORD_NAMESPACE)))
             return parseNamespace();
-        else throwParseError("invalid sequence", 0);
+        else throwParserError("invalid sequence", 0);
 
         if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
             parseAttribute(dynamic_cast<Attributable *>(statement));
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
-            throwParseError("missing ';' at end of expression", -1);
+            throwParserError("missing ';' at end of expression", -1);
 
         // Consume superfluous semicolons
         while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
@@ -1242,7 +1242,7 @@ namespace hex::pl {
         auto typeName = getNamespacePrefixedName(name);
 
         if (this->m_types.contains(typeName))
-            throwParseError(hex::format("redefinition of type '{}'", typeName));
+            throwParserError(hex::format("redefinition of type '{}'", typeName));
 
         auto typeDecl = create(new ASTNodeTypeDecl(typeName, node, endian));
         this->m_types.insert({ typeName, typeDecl });
@@ -1263,14 +1263,14 @@ namespace hex::pl {
             auto program = parseTillToken(SEPARATOR_ENDOFPROGRAM);
 
             if (program.empty() || this->m_curr != tokens.end())
-                throwParseError("program is empty!", -1);
+                throwParserError("program is empty!", -1);
 
             return program;
-        } catch (ParseError &e) {
+        } catch (PatternLanguageError &e) {
             this->m_error = e;
-        }
 
-        return {};
+            return std::nullopt;
+        }
     }
 
 }

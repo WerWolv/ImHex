@@ -63,7 +63,7 @@ int test(int argc, char **argv) {
         hex::log::fatal("Error during compilation!");
 
         if (auto error = language.getError(); error.has_value())
-            hex::log::info("Compile error: {} : {}", error->first, error->second);
+            hex::log::info("Compile error: {} : {}", error->getLineNumber(), error->what());
         for (auto &[level, message] : language.getConsoleLog())
             hex::log::info("Evaluate error: {}", message);
 

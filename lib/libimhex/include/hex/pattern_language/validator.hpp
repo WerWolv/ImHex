@@ -2,8 +2,11 @@
 
 #include <hex.hpp>
 
+#include <optional>
 #include <string>
 #include <vector>
+
+#include <hex/pattern_language/error.hpp>
 
 namespace hex::pl {
 
@@ -11,19 +14,17 @@ namespace hex::pl {
 
     class Validator {
     public:
-        Validator();
+        Validator() = default;
 
         bool validate(const std::vector<ASTNode *> &ast);
 
-        const std::pair<u32, std::string> &getError() { return this->m_error; }
+        const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 
     private:
-        std::pair<u32, std::string> m_error;
+        std::optional<PatternLanguageError> m_error;
 
-        using ValidatorError = std::pair<u32, std::string>;
-
-        [[noreturn]] void throwValidateError(std::string_view error, u32 lineNumber) const {
-            throw ValidatorError(lineNumber, error);
+        [[noreturn]] static void throwValidatorError(const std::string &error, u32 lineNumber) {
+            throw PatternLanguageError(lineNumber, "Validator: " + error);
         }
     };
 
