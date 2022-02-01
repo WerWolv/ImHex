@@ -185,6 +185,10 @@ namespace hex {
         static void addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback);
         static void addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback);
         static void process(View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode);
+
+        static void clearShortcuts();
+    private:
+        static std::map<Shortcut, std::function<void()>> s_globalShortcuts;
     };
 
 }

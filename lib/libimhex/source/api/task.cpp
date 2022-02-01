@@ -1,11 +1,16 @@
 #include <hex/api/task.hpp>
 
-#include <hex/helpers/shared_data.hpp>
+#include <hex/helpers/lang.hpp>
 
 namespace hex {
 
+    std::list<Task *> Task::s_runningTasks;
+    std::mutex Task::s_taskMutex;
+
     Task::Task(const std::string &unlocalizedName, u64 maxValue) : m_name(LangEntry(unlocalizedName)), m_maxValue(maxValue), m_currValue(0) {
-        SharedData::runningTasks.push_back(this);
+        std::scoped_lock lock(Task::s_taskMutex);
+
+        Task::s_runningTasks.push_back(this);
     }
 
     Task::~Task() {
@@ -13,7 +18,9 @@ namespace hex {
     }
 
     void Task::finish() {
-        SharedData::runningTasks.remove(this);
+        std::scoped_lock lock(Task::s_taskMutex);
+
+        Task::s_runningTasks.remove(this);
     }
 
     void Task::setMaxValue(u64 maxValue) {
@@ -38,6 +45,12 @@ namespace hex {
 
     const std::string &Task::getName() const {
         return this->m_name;
+    }
+
+    size_t Task::getRunningTaskCount() {
+        std::scoped_lock lock(Task::s_taskMutex);
+
+        return Task::s_runningTasks.size();
     }
 
 }

@@ -1,11 +1,9 @@
 #include <hex/api/imhex_api.hpp>
 
 #include <hex/api/event.hpp>
-#include <hex/helpers/shared_data.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <unistd.h>
-
-#include <hex/helpers/logger.hpp>
 
 namespace hex {
 
@@ -137,20 +135,47 @@ namespace hex {
 
     namespace ImHexApi::System {
 
-        static ProgramArguments s_programArguments;
+        namespace impl {
 
-        void setProgramArguments(int argc, char **argv, char **envp) {
-            s_programArguments.argc = argc;
-            s_programArguments.argv = argv;
-            s_programArguments.envp = envp;
+            static ImVec2 s_mainWindowPos;
+            static ImVec2 s_mainWindowSize;
+            void setMainWindowPosition(u32 x, u32 y) {
+                s_mainWindowPos = ImVec2(x, y);
+            }
+
+            void setMainWindowSize(u32 width, u32 height) {
+                s_mainWindowSize = ImVec2(width, height);
+            }
+
+            static ImGuiID s_mainDockSpaceId;
+            void setMainDockSpaceId(ImGuiID id) {
+                s_mainDockSpaceId = id;
+            }
+
+
+            static float s_globalScale;
+            void setGlobalScale(float scale) {
+                s_globalScale = scale;
+            }
+
+
+            static ProgramArguments s_programArguments;
+            void setProgramArguments(int argc, char **argv, char **envp) {
+                s_programArguments.argc = argc;
+                s_programArguments.argv = argv;
+                s_programArguments.envp = envp;
+            }
+
         }
+
+
 
         const ProgramArguments& getProgramArguments() {
-            return s_programArguments;
+            return impl::s_programArguments;
         }
 
 
-        static float s_targetFPS;
+        static float s_targetFPS = 60.0F;
 
         float getTargetFPS() {
             return s_targetFPS;
@@ -160,6 +185,29 @@ namespace hex {
             s_targetFPS = fps;
         }
 
+        float getGlobalScale() {
+            return impl::s_globalScale;
+        }
+
+
+        ImVec2 getMainWindowPosition() {
+            return impl::s_mainWindowPos;
+        }
+
+        ImVec2 getMainWindowSize() {
+            return impl::s_mainWindowSize;
+        }
+
+
+        ImGuiID getMainDockSpaceId() {
+            return impl::s_mainDockSpaceId;
+        }
+
+        std::map<std::string, std::string>& getInitArguments() {
+            static std::map<std::string, std::string> initArgs;
+
+            return initArgs;
+        }
     }
 
 }

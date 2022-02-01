@@ -4,8 +4,12 @@
 #include <thread>
 #include <chrono>
 
+#include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
+
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/lang.hpp>
 
 namespace hex::plugin::builtin::prv {
 

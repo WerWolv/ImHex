@@ -264,8 +264,6 @@ namespace hex {
 
             }
 
-            u32 getDockSpaceId();
-
             void registerMainMenuItem(const std::string &unlocalizedName, u32 priority);
             void addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function);
 
@@ -313,7 +311,7 @@ namespace hex {
                     impl::addProviderName(unlocalizedName);
             }
 
-            const std::vector<std::string> &getEntries();
+            std::vector<std::string> &getEntries();
 
         }
 

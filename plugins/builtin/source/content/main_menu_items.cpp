@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.layout", 1000, [] {
             for (auto &[layoutName, func] : ContentRegistry::Interface::getLayouts()) {
                 if (ImGui::MenuItem(LangEntry(layoutName), "", false, ImHexApi::Provider::isValid())) {
-                    auto dock = ContentRegistry::Interface::getDockSpaceId();
+                    auto dock = ImHexApi::System::getMainDockSpaceId();
 
                     for (auto &[viewName, view] : ContentRegistry::Views::getEntries()) {
                         view->getWindowOpenState() = false;

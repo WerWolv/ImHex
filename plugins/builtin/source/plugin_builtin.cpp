@@ -15,6 +15,7 @@ namespace hex::plugin::builtin {
     void registerDataFormatters();
     void registerLayouts();
     void registerMainMenuEntries();
+    void createWelcomeScreen();
 
     void addFooterItems();
     void addToolbarItems();
@@ -39,6 +40,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerDataProcessorNodes();
     registerProviders();
     registerDataFormatters();
+    createWelcomeScreen();
 
     addFooterItems();
     addToolbarItems();
@@ -50,3 +52,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerLanguageItIT();
     registerLanguageZhCN();
 }
+
+// This is the default plugin
+// DO NOT USE THIS IN ANY OTHER PLUGIN
+extern "C" bool isBuiltinPlugin() { return true; }

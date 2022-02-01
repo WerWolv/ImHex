@@ -1,5 +1,6 @@
 #include "window.hpp"
 
+#include <hex/api/content_registry.hpp>
 
 #if defined(OS_WINDOWS)
 
@@ -89,8 +90,8 @@ namespace hex {
                 POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                 const POINT border {
-                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 1.5F),
-                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 1.5F)
+                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F),
+                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F)
                 };
 
                 RECT window;

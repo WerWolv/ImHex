@@ -35,10 +35,13 @@ namespace hex {
         static void setFallbackLanguage(const std::string &language);
         static const std::string &getFallbackLanguage();
 
+        static void resetLanguageStrings();
+
     private:
         std::string m_unlocalizedString;
 
         static std::string s_fallbackLanguage;
+        static std::map<std::string, std::string> s_currStrings;
     };
 
     std::string operator+(const std::string &&left, const LangEntry &&right);
@@ -49,13 +52,8 @@ namespace hex {
     std::string operator+(const LangEntry &&left, const char *right);
     std::string operator+(const LangEntry &&left, const LangEntry &&right);
 
-    namespace lang_literals {
-
-        inline LangEntry operator""_lang(const char *string, size_t) {
-            return LangEntry(string);
-        }
-
+    inline LangEntry operator""_lang(const char *string, size_t) {
+        return LangEntry(string);
     }
-
 
 }

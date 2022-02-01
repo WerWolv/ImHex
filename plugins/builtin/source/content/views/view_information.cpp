@@ -1,5 +1,7 @@
 #include "content/views/view_information.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/fmt.hpp>

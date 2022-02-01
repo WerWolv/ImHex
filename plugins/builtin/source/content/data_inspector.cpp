@@ -2,8 +2,9 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/shared_data.hpp>
 #include <hex/api/event.hpp>
+
+#include <hex/providers/provider.hpp>
 
 #include <cstring>
 #include <codecvt>

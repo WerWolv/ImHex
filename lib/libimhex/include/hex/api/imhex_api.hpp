@@ -10,6 +10,8 @@
 #include <hex/api/task.hpp>
 #include <hex/api/keybinding.hpp>
 
+#include <imgui.h>
+
 namespace hex {
 
     namespace prv {
@@ -97,18 +99,35 @@ namespace hex {
 
         namespace System {
 
+            namespace impl {
+
+                void setMainWindowPosition(u32 x, u32 y);
+                void setMainWindowSize(u32 width, u32 height);
+                void setMainDockSpaceId(ImGuiID id);
+
+                void setGlobalScale(float scale);
+
+                void setProgramArguments(int argc, char **argv, char **envp);
+            }
+
             struct ProgramArguments {
                 int argc;
                 char **argv;
                 char **envp;
             };
 
-            void setProgramArguments(int argc, char **argv, char **envp);
             const ProgramArguments& getProgramArguments();
 
             float getTargetFPS();
             void setTargetFPS(float fps);
 
+            float getGlobalScale();
+
+            ImVec2 getMainWindowPosition();
+            ImVec2 getMainWindowSize();
+            ImGuiID getMainDockSpaceId();
+
+            std::map<std::string, std::string>& getInitArguments();
 
         }
 

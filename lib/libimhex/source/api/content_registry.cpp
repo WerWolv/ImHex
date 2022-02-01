@@ -1,8 +1,9 @@
 #include <hex/api/content_registry.hpp>
 
-#include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
+
+#include <hex/views/view.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -316,7 +317,9 @@ namespace hex {
     }
 
     std::vector<ContentRegistry::DataProcessorNode::impl::Entry> &ContentRegistry::DataProcessorNode::getEntries() {
-        return SharedData::dataProcessorNodes;
+        static std::vector<ContentRegistry::DataProcessorNode::impl::Entry> nodes;
+
+        return nodes;
     }
 
     /* Languages */
@@ -334,19 +337,19 @@ namespace hex {
     }
 
     std::map<std::string, std::string> &ContentRegistry::Language::getLanguages() {
-        return SharedData::languageNames;
+        static std::map<std::string, std::string> languages;
+
+        return languages;
     }
 
     std::map<std::string, std::vector<LanguageDefinition>> &ContentRegistry::Language::getLanguageDefinitions() {
-        return SharedData::languageDefinitions;
+        static std::map<std::string, std::vector<LanguageDefinition>> definitions;
+
+        return definitions;
     }
 
 
     /* Interface */
-
-    u32 ContentRegistry::Interface::getDockSpaceId() {
-        return SharedData::dockSpaceId;
-    }
 
     void ContentRegistry::Interface::registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
         log::info("Registered new main menu item: {}", unlocalizedName);
@@ -386,27 +389,41 @@ namespace hex {
 
 
     std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem> &ContentRegistry::Interface::getMainMenuItems() {
-        return SharedData::mainMenuItems;
+        static std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem> items;
+
+        return items;
     }
     std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> &ContentRegistry::Interface::getMenuItems() {
-        return SharedData::menuItems;
+        static std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> items;
+
+        return items;
     }
 
     std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getWelcomeScreenEntries() {
-        return SharedData::welcomeScreenEntries;
+        static std::vector<ContentRegistry::Interface::impl::DrawCallback> entries;
+
+        return entries;
     }
     std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getFooterItems() {
-        return SharedData::footerItems;
+        static std::vector<ContentRegistry::Interface::impl::DrawCallback> items;
+
+        return items;
     }
     std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getToolbarItems() {
-        return SharedData::toolbarItems;
+        static std::vector<ContentRegistry::Interface::impl::DrawCallback> items;
+
+        return items;
     }
     std::vector<ContentRegistry::Interface::impl::SidebarItem> &ContentRegistry::Interface::getSidebarItems() {
-        return SharedData::sidebarItems;
+        static std::vector<ContentRegistry::Interface::impl::SidebarItem> items;
+
+        return items;
     }
 
     std::vector<ContentRegistry::Interface::impl::Layout> &ContentRegistry::Interface::getLayouts() {
-        return SharedData::layouts;
+        static std::vector<ContentRegistry::Interface::impl::Layout> layouts;
+
+        return layouts;
     }
 
 
@@ -415,11 +432,13 @@ namespace hex {
     void ContentRegistry::Provider::impl::addProviderName(const std::string &unlocalizedName) {
         log::info("Registered new provider: {}", unlocalizedName);
 
-        SharedData::providerNames.push_back(unlocalizedName);
+        getEntries().push_back(unlocalizedName);
     }
 
-    const std::vector<std::string> &ContentRegistry::Provider::getEntries() {
-        return SharedData::providerNames;
+    std::vector<std::string> &ContentRegistry::Provider::getEntries() {
+        static std::vector<std::string> providerNames;
+
+        return providerNames;
     }
 
 
@@ -428,11 +447,13 @@ namespace hex {
     void ContentRegistry::DataFormatter::add(const std::string &unlocalizedName, const impl::Callback &callback) {
         log::info("Registered new data formatter: {}", unlocalizedName);
 
-        ContentRegistry::DataFormatter::getEntries().push_back({ unlocalizedName, callback });
+        getEntries().push_back({ unlocalizedName, callback });
     }
 
     std::vector<ContentRegistry::DataFormatter::impl::Entry> &ContentRegistry::DataFormatter::getEntries() {
-        return SharedData::dataFormatters;
+        static std::vector<ContentRegistry::DataFormatter::impl::Entry> entries;
+
+        return entries;
     }
 
 
@@ -442,10 +463,12 @@ namespace hex {
         for (const auto &extension : extensions)
             log::info("Registered new data handler for extensions: {}", extension);
 
-        ContentRegistry::FileHandler::getEntries().push_back({ extensions, callback });
+        getEntries().push_back({ extensions, callback });
     }
 
     std::vector<ContentRegistry::FileHandler::impl::Entry> &ContentRegistry::FileHandler::getEntries() {
-        return SharedData::fileHandlers;
+        static std::vector<ContentRegistry::FileHandler::impl::Entry> entries;
+
+        return entries;
     }
 }

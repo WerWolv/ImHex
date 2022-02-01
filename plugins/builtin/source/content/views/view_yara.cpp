@@ -1,5 +1,7 @@
 #include "content/views/view_yara.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>

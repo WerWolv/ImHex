@@ -2,12 +2,12 @@
 
 #include <hex.hpp>
 
+#include <list>
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include <hex/helpers/shared_data.hpp>
 #include <hex/providers/overlay.hpp>
 #include <hex/pattern_language/pattern_language.hpp>
 

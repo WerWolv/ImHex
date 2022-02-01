@@ -1,9 +1,11 @@
 #include "content/views/view_help.hpp"
-#include <hex/helpers/paths.hpp>
+
+#include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/paths.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <romfs/romfs.hpp>
 

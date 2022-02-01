@@ -23,8 +23,6 @@
 
 namespace hex {
 
-    using namespace hex::lang_literals;
-
     class View {
     public:
         explicit View(std::string unlocalizedViewName);
@@ -60,12 +58,26 @@ namespace hex {
             return LangEntry(unlocalizedName) + "###" + unlocalizedName;
         }
 
+        static ImFontAtlas *getFontAtlas() { return View::s_fontAtlas; }
+        static void setFontAtlas(ImFontAtlas *atlas) { View::s_fontAtlas = atlas; }
+
+        static ImFontConfig getFontConfig() { return View::s_fontConfig; }
+        static void setFontConfig(ImFontConfig config) { View::s_fontConfig = config; }
+
     private:
         std::string m_unlocalizedViewName;
         bool m_windowOpen = false;
         std::map<Shortcut, std::function<void()>> m_shortcuts;
 
         static std::string s_popupMessage;
+
+        static u32 s_selectableFileIndex;
+        static std::vector<fs::path> s_selectableFiles;
+        static std::function<void(fs::path)> s_selectableFileOpenCallback;
+        static std::vector<nfdfilteritem_t> s_selectableFilesValidExtensions;
+
+        static ImFontAtlas *s_fontAtlas;
+        static ImFontConfig s_fontConfig;
 
         friend class ShortcutManager;
     };

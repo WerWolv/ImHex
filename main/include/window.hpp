@@ -47,7 +47,6 @@ namespace hex {
 
         GLFWwindow *m_window = nullptr;
 
-        double m_targetFps = 60.0;
         bool m_layoutConfigured = false;
 
         std::string m_windowTitle;

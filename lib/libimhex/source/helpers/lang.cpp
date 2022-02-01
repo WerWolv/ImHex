@@ -1,10 +1,11 @@
-#include "hex/helpers/lang.hpp"
+#include <hex/helpers/lang.hpp>
 
-#include "hex/helpers/shared_data.hpp"
+#include <hex/api/content_registry.hpp>
 
 namespace hex {
 
     std::string LangEntry::s_fallbackLanguage;
+    std::map<std::string, std::string> LangEntry::s_currStrings;
 
     LanguageDefinition::LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries) {
         for (auto pair : entries)
@@ -60,7 +61,7 @@ namespace hex {
     }
 
     const std::string &LangEntry::get() const {
-        auto &lang = SharedData::loadedLanguageStrings;
+        auto &lang = LangEntry::s_currStrings;
         if (lang.contains(this->m_unlocalizedString))
             return lang[this->m_unlocalizedString];
         else
@@ -68,7 +69,7 @@ namespace hex {
     }
 
     void LangEntry::loadLanguage(const std::string &language) {
-        SharedData::loadedLanguageStrings.clear();
+        LangEntry::s_currStrings.clear();
 
         auto &definitions = ContentRegistry::Language::getLanguageDefinitions();
 
@@ -76,12 +77,12 @@ namespace hex {
             return;
 
         for (auto &definition : definitions[language])
-            SharedData::loadedLanguageStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
+            LangEntry::s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
 
         const auto fallbackLanguage = LangEntry::getFallbackLanguage();
         if (language != fallbackLanguage) {
             for (auto &definition : definitions[fallbackLanguage])
-                SharedData::loadedLanguageStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
+                LangEntry::s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
         }
     }
 
@@ -95,6 +96,10 @@ namespace hex {
 
     const std::string &LangEntry::getFallbackLanguage() {
         return LangEntry::s_fallbackLanguage;
+    }
+
+    void LangEntry::resetLanguageStrings() {
+        LangEntry::s_currStrings.clear();
     }
 
 }

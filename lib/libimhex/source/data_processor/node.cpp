@@ -1,12 +1,15 @@
 #include <hex/data_processor/node.hpp>
 
-#include <hex/helpers/shared_data.hpp>
-
 #include <hex/helpers/fmt.hpp>
+
+#include <hex/helpers/lang.hpp>
+#include <hex/providers/provider.hpp>
 
 namespace hex::dp {
 
-    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(SharedData::dataProcessorNodeIdCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
+    u32 Node::s_idCounter = 1;
+
+    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(Node::s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
         for (auto &attr : this->m_attributes)
             attr.setParentNode(this);
     }

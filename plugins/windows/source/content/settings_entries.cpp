@@ -3,7 +3,6 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/lang.hpp>
-using namespace hex::lang_literals;
 
 #include <imgui.h>
 

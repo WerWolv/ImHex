@@ -2,6 +2,10 @@
 
 #include <hex.hpp>
 
+#include <hex/api/plugin_manager.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
+
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
@@ -33,7 +37,6 @@
 #include <codicons_font.h>
 #include <unifont_font.h>
 
-#include "helpers/plugin_manager.hpp"
 #include <hex/helpers/project_file_handler.hpp>
 #include "init/tasks.hpp"
 
@@ -70,17 +73,9 @@ namespace hex {
 
     Window::Window() {
         {
-            for (const auto &[argument, value] : init::getInitArguments()) {
-                if (argument == "update-available") {
-                    this->m_availableUpdate = value;
-                } else if (argument == "no-plugins") {
+            for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
+                if (argument == "no-plugins") {
                     ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("No Plugins"); });
-                } else if (argument == "tip-of-the-day") {
-                    this->m_tipOfTheDay = value;
-
-                    this->m_showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
-                    if (this->m_showTipOfTheDay)
-                        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.welcome.tip_of_the_day"_lang); });
                 }
             }
         }
@@ -89,132 +84,15 @@ namespace hex {
         this->initImGui();
         this->setupNativeWindow();
 
-        EventManager::subscribe<EventSettingsChanged>(this, [this]() {
-            {
-                auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
-
-                if (theme.is_number())
-                    EventManager::post<RequestChangeTheme>(theme.get<int>());
-            }
-
-            {
-                auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
-
-                if (language.is_string()) {
-                    LangEntry::loadLanguage(static_cast<std::string>(language));
-                } else {
-                    // If no language is specified, fall back to English.
-                    LangEntry::loadLanguage("en-US");
-                }
-            }
-
-            {
-                auto targetFps = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps");
-
-                if (targetFps.is_number())
-                    this->m_targetFps = targetFps;
-            }
-
-            {
-                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 1)
-                    this->m_layoutConfigured = true;
-                else
-                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
-            }
-        });
-
-        EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
-            if (this->m_bannerTexture.valid())
-                ImGui::UnloadImage(this->m_bannerTexture);
-
-            switch (theme) {
-            default:
-            case 1: /* Dark theme */
-                {
-                    ImGui::StyleColorsDark();
-                    ImGui::StyleCustomColorsDark();
-                    ImPlot::StyleColorsDark();
-
-                    auto banner = romfs::get("banner_dark.png");
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
-
-                    break;
-                }
-            case 2: /* Light theme */
-                {
-                    ImGui::StyleColorsLight();
-                    ImGui::StyleCustomColorsLight();
-                    ImPlot::StyleColorsLight();
-
-                    auto banner = romfs::get("banner_light.png");
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
-
-                    break;
-                }
-            case 3: /* Classic theme */
-                {
-                    ImGui::StyleColorsClassic();
-                    ImGui::StyleCustomColorsClassic();
-                    ImPlot::StyleColorsClassic();
-
-                    auto banner = romfs::get("banner_dark.png");
-                    this->m_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
-
-                    break;
-                }
-            }
-
-            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBg] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-
-            if (!this->m_bannerTexture.valid()) {
-                log::fatal("Failed to load banner texture!");
-                std::abort();
-            }
-        });
-
-        EventManager::subscribe<EventFileLoaded>(this, [](const auto &path) {
-            SharedData::recentFilePaths.push_front(path);
-
-            {
-                std::list<fs::path> uniques;
-                for (auto &file : SharedData::recentFilePaths) {
-
-                    bool exists = false;
-                    for (auto &unique : uniques) {
-                        if (file == unique)
-                            exists = true;
-                    }
-
-                    if (!exists && !file.empty())
-                        uniques.push_back(file);
-
-                    if (uniques.size() > 5)
-                        break;
-                }
-                SharedData::recentFilePaths = uniques;
-            }
-
-            {
-                std::vector<std::string> recentFilesVector;
-                for (const auto &recentPath : SharedData::recentFilePaths)
-                    recentFilesVector.push_back(recentPath.string());
-
-                ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
-            }
-        });
-
-        EventManager::subscribe<EventFileUnloaded>(this, [] {
-            EventManager::post<RequestChangeWindowTitle>("");
-        });
-
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, true);
 
             if (!noQuestions)
                 EventManager::post<EventWindowClosing>(this->m_window);
+        });
+
+        EventManager::subscribe<EventFileUnloaded>(this, [] {
+            EventManager::post<RequestChangeWindowTitle>("");
         });
 
         EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
@@ -248,17 +126,6 @@ namespace hex {
             this->m_popupsToOpen.push_back(name);
         });
 
-        for (const auto &path : hex::getPath(ImHexPath::Config)) {
-            if (auto filePath = fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
-                this->m_safetyBackupPath = filePath;
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.safety_backup.title"_lang); });
-            }
-        }
-
-        for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
-            SharedData::recentFilePaths.push_back(path);
-
-
         auto signalHandler = [](int signalNumber) {
             EventManager::post<EventAbnormalTermination>(signalNumber);
 
@@ -269,11 +136,11 @@ namespace hex {
             // Let's not loop on this...
             std::signal(signalNumber, nullptr);
 
-#if defined(DEBUG)
-            assert(false);
-#else
-            std::raise(signalNumber);
-#endif
+            #if defined(DEBUG)
+                assert(false);
+            #else
+                std::raise(signalNumber);
+            #endif
         };
 
         std::signal(SIGTERM, signalHandler);
@@ -294,17 +161,11 @@ namespace hex {
         this->exitImGui();
         this->exitGLFW();
 
-        EventManager::unsubscribe<EventSettingsChanged>(this);
-        EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventFileUnloaded>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
         EventManager::unsubscribe<EventAbnormalTermination>(this);
-        EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<RequestOpenPopup>(this);
-
-        ImGui::UnloadImage(this->m_bannerTexture);
-        ImGui::UnloadImage(this->m_logoTexture);
     }
 
     void Window::loop() {
@@ -316,7 +177,7 @@ namespace hex {
             } else {
                 double timeout = (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime);
                 timeout = timeout > 0 ? timeout : 0;
-                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || !SharedData::runningTasks.empty() ? 0 : timeout);
+                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 ? 0 : timeout);
             }
 
 
@@ -353,9 +214,10 @@ namespace hex {
             ImGui::SetCursorPosX(sidebarWidth);
 
             auto footerHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
-            auto dockSpaceSize = ImVec2(SharedData::windowSize.x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
+            auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
-            SharedData::dockSpaceId = ImGui::DockSpace(ImGui::GetID("MainDock"), dockSpaceSize);
+            auto dockId = ImGui::DockSpace(ImGui::GetID("MainDock"), dockSpaceSize);
+            ImHexApi::System::impl::setMainDockSpaceId(dockId);
 
             drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));
 
@@ -461,23 +323,6 @@ namespace hex {
                 ImGui::EndMenuBar();
             }
 
-            if (!ImHexApi::Provider::isValid()) {
-                static char title[256];
-                ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
-                if (ImGui::Begin(title)) {
-                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
-                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
-                        this->drawWelcomeScreen();
-                    }
-                    ImGui::EndChild();
-                    ImGui::PopStyleVar();
-                }
-                ImGui::End();
-            } else if (!this->m_layoutConfigured) {
-                this->m_layoutConfigured = true;
-                this->resetLayout();
-            }
-
             this->beginNativeWindowFrame();
 
             drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth - 2, 0), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 2, footerHeight - ImGui::GetStyle().FramePadding.y - 2), ImGui::GetColorU32(ImGuiCol_Separator));
@@ -487,60 +332,10 @@ namespace hex {
         ImGui::PopStyleVar(2);
 
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size / 3, ImGuiCond_Appearing);
-        if (ImGui::BeginPopup("hex.welcome.tip_of_the_day"_lang)) {
-            ImGui::Header("hex.welcome.tip_of_the_day"_lang, true);
-
-            ImGui::TextFormattedWrapped("{}", this->m_tipOfTheDay.c_str());
-            ImGui::NewLine();
-
-            bool dontShowAgain = !this->m_showTipOfTheDay;
-            if (ImGui::Checkbox("hex.common.dont_show_again"_lang, &dontShowAgain)) {
-                this->m_showTipOfTheDay = !dontShowAgain;
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", this->m_showTipOfTheDay);
-            }
-
-            ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
-
-            if (ImGui::Button("hex.common.close"_lang))
-                ImGui::CloseCurrentPopup();
-
-            ImGui::EndPopup();
-        }
-
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
             ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
             ImGui::TextUnformatted("Make sure you at least got the builtin plugin in your plugins folder.");
             ImGui::TextUnformatted("To find out where your plugin folder is, check ImHex' Readme.");
-            ImGui::EndPopup();
-        }
-
-        // Popup for if there is a safety backup present because ImHex crashed
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        if (ImGui::BeginPopupModal("hex.safety_backup.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-            ImGui::TextUnformatted("hex.safety_backup.desc"_lang);
-            ImGui::NewLine();
-
-            auto width = ImGui::GetWindowWidth();
-            ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                ProjectFile::load(this->m_safetyBackupPath.string());
-                ProjectFile::markDirty();
-
-                ProjectFile::clearProjectFilePath();
-                fs::remove(this->m_safetyBackupPath);
-
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
-                fs::remove(this->m_safetyBackupPath);
-
-                ImGui::CloseCurrentPopup();
-            }
-
             ImGui::EndPopup();
         }
 
@@ -622,169 +417,15 @@ namespace hex {
 
         glfwSwapBuffers(this->m_window);
 
-        if (this->m_targetFps <= 200)
-            std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / this->m_targetFps - glfwGetTime()) * 1000)));
+        const auto targetFps = ImHexApi::System::getTargetFPS();
+        if (targetFps <= 200)
+            std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000)));
 
         this->m_lastFrameTime = glfwGetTime();
     }
 
     void Window::drawWelcomeScreen() {
-        const auto availableSpace = ImGui::GetContentRegionAvail();
 
-        ImGui::Image(this->m_bannerTexture, this->m_bannerTexture.size() / (2 * (1.0F / SharedData::globalScale)));
-
-        ImGui::Indent();
-        if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
-
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 3);
-            ImGui::TableNextColumn();
-
-            ImGui::TextFormattedWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
-
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
-            ImGui::TableNextColumn();
-
-
-            ImGui::UnderlinedText("hex.welcome.header.start"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-            {
-                if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.welcome.start.create_file"_lang))
-                    EventManager::post<RequestOpenWindow>("Create File");
-                if (ImGui::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.welcome.start.open_file"_lang))
-                    EventManager::post<RequestOpenWindow>("Open File");
-                if (ImGui::IconHyperlink(ICON_VS_NOTEBOOK, "hex.welcome.start.open_project"_lang))
-                    EventManager::post<RequestOpenWindow>("Open Project");
-                if (ImGui::IconHyperlink(ICON_VS_TELESCOPE, "hex.welcome.start.open_other"_lang))
-                    ImGui::OpenPopup("hex.welcome.start.popup.open_other"_lang);
-            }
-
-            ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetCursorPos());
-            if (ImGui::BeginPopup("hex.welcome.start.popup.open_other"_lang)) {
-
-                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
-                    if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
-                        EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);
-                        ImGui::CloseCurrentPopup();
-                    }
-                }
-
-                ImGui::EndPopup();
-            }
-
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
-            ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.welcome.start.recent"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-            {
-                if (!SharedData::recentFilePaths.empty()) {
-                    for (auto &path : SharedData::recentFilePaths) {
-                        if (ImGui::BulletHyperlink(fs::path(path).filename().string().c_str())) {
-                            EventManager::post<RequestOpenFile>(path);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!this->m_availableUpdate.empty()) {
-                ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-                ImGui::TableNextColumn();
-                ImGui::UnderlinedText("hex.welcome.header.update"_lang);
-                {
-                    if (ImGui::DescriptionButton("hex.welcome.update.title"_lang, hex::format("hex.welcome.update.desc"_lang, this->m_availableUpdate).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                        hex::openWebpage("hex.welcome.update.link"_lang);
-                }
-            }
-
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
-            ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.welcome.header.help"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-            {
-                if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.welcome.help.repo"_lang)) hex::openWebpage("hex.welcome.help.repo.link"_lang);
-                if (ImGui::IconHyperlink(ICON_VS_ORGANIZATION, "hex.welcome.help.gethelp"_lang)) hex::openWebpage("hex.welcome.help.gethelp.link"_lang);
-                if (ImGui::IconHyperlink(ICON_VS_COMMENT_DISCUSSION, "hex.welcome.help.discord"_lang)) hex::openWebpage("hex.welcome.help.discord.link"_lang);
-            }
-
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-            ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.welcome.header.plugins"_lang);
-            {
-                const auto &plugins = PluginManager::getPlugins();
-
-                if (!plugins.empty()) {
-                    if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2((ImGui::GetContentRegionAvail().x * 5) / 6, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-                        ImGui::TableSetupScrollFreeze(0, 1);
-                        ImGui::TableSetupColumn("hex.welcome.plugins.plugin"_lang, ImGuiTableColumnFlags_WidthStretch, 0.2);
-                        ImGui::TableSetupColumn("hex.welcome.plugins.author"_lang, ImGuiTableColumnFlags_WidthStretch, 0.2);
-                        ImGui::TableSetupColumn("hex.welcome.plugins.desc"_lang, ImGuiTableColumnFlags_WidthStretch, 0.6);
-                        ImGui::TableSetupColumn("##loaded", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
-
-                        ImGui::TableHeadersRow();
-
-                        ImGuiListClipper clipper;
-                        clipper.Begin(plugins.size());
-
-                        while (clipper.Step()) {
-                            for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                                const auto &plugin = plugins[i];
-
-                                ImGui::TableNextRow();
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted(plugin.getPluginName().c_str());
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
-                            }
-                        }
-
-                        clipper.End();
-
-                        ImGui::EndTable();
-                    }
-                }
-            }
-
-            ImGui::EndTable();
-        }
-        ImGui::SameLine();
-        if (ImGui::BeginTable("Welcome Right", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-            ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.welcome.header.customize"_lang);
-            {
-                if (ImGui::DescriptionButton("hex.welcome.customize.settings.title"_lang, "hex.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    EventManager::post<RequestOpenWindow>("Settings");
-            }
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-            ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.welcome.header.learn"_lang);
-            {
-                if (ImGui::DescriptionButton("hex.welcome.learn.latest.title"_lang, "hex.welcome.learn.latest.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    hex::openWebpage("hex.welcome.learn.latest.link"_lang);
-                if (ImGui::DescriptionButton("hex.welcome.learn.pattern.title"_lang, "hex.welcome.learn.pattern.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    hex::openWebpage("hex.welcome.learn.pattern.link"_lang);
-                if (ImGui::DescriptionButton("hex.welcome.learn.plugins.title"_lang, "hex.welcome.learn.plugins.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                    hex::openWebpage("hex.welcome.learn.plugins.link"_lang);
-            }
-
-            auto extraWelcomeScreenEntries = ContentRegistry::Interface::getWelcomeScreenEntries();
-            if (!extraWelcomeScreenEntries.empty()) {
-                ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-                ImGui::TableNextColumn();
-                ImGui::UnderlinedText("hex.welcome.header.various"_lang);
-                {
-                    for (const auto &callback : extraWelcomeScreenEntries)
-                        callback();
-                }
-            }
-
-
-            ImGui::EndTable();
-        }
     }
 
     void Window::resetLayout() const {
@@ -792,7 +433,7 @@ namespace hex {
         if (auto &layouts = ContentRegistry::Interface::getLayouts(); !layouts.empty()) {
             auto &[name, function] = layouts[0];
 
-            function(ContentRegistry::Interface::getDockSpaceId());
+            function(ImHexApi::System::getMainDockSpaceId());
         }
     }
 
@@ -848,18 +489,19 @@ namespace hex {
         {
             int x = 0, y = 0;
             glfwGetWindowPos(this->m_window, &x, &y);
-            SharedData::windowPos = ImVec2(x, y);
+
+            ImHexApi::System::impl::setMainWindowPosition(x, y);
         }
 
         {
             int width = 0, height = 0;
             glfwGetWindowSize(this->m_window, &width, &height);
             glfwSetWindowSize(this->m_window, width, height);
-            SharedData::windowSize = ImVec2(width, height);
+            ImHexApi::System::impl::setMainWindowSize(width, height);
         }
 
         glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
-            SharedData::windowPos = ImVec2(x, y);
+            ImHexApi::System::impl::setMainWindowPosition(x, y);
 
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
@@ -870,7 +512,7 @@ namespace hex {
         });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
-            SharedData::windowSize = ImVec2(width, height);
+            ImHexApi::System::impl::setMainWindowSize(width, height);
 
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
@@ -916,7 +558,7 @@ namespace hex {
                     for (const auto &extension : extensions) {
                         if (path.extension() == extension) {
                             if (!handler(path))
-                                View::showMessagePopup("hex.message.file_handler_failed"_lang);
+                                log::error("Handler for extensions '{}' failed to process file!", extension);
 
                             handled = true;
                             break;
@@ -941,7 +583,9 @@ namespace hex {
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
-        GImGui = ImGui::CreateContext(SharedData::fontAtlas);
+        auto fonts = View::getFontAtlas();
+
+        GImGui = ImGui::CreateContext(fonts);
         GImPlot = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
 
@@ -956,7 +600,7 @@ namespace hex {
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 #endif
 
-        for (auto &entry : SharedData::fontAtlas->ConfigData)
+        for (auto &entry : fonts->ConfigData)
             io.Fonts->ConfigData.push_back(entry);
 
         io.ConfigViewportsNoTaskBarIcon = false;
@@ -993,7 +637,7 @@ namespace hex {
 
         io.UserData = new ImGui::ImHexCustomData();
 
-        style.ScaleAllSizes(SharedData::globalScale);
+        style.ScaleAllSizes(ImHexApi::System::getGlobalScale());
 
         {
             GLsizei width, height;

@@ -11,8 +11,6 @@ add_executable(main ${application_type}
     source/init/splash_window.cpp
     source/init/tasks.cpp
 
-    source/helpers/plugin_manager.cpp
-
     ${IMHEX_ICON}
 )
 
@@ -25,7 +23,7 @@ set_target_properties(main PROPERTIES
         POSITION_INDEPENDENT_CODE ON)
 
 if (WIN32)
-    target_link_libraries(main PUBLIC dl libimhex wsock32 ws2_32 Dwmapi.lib)
+    target_link_libraries(main PUBLIC libimhex wsock32 ws2_32 Dwmapi.lib)
 else ()
-    target_link_libraries(main PUBLIC dl libimhex pthread)
+    target_link_libraries(main PUBLIC libimhex pthread)
 endif ()

@@ -3,8 +3,10 @@
 #include <ctime>
 #include <cstring>
 
+#include <hex/helpers/lang.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/fmt.hpp>
 #include <hex/helpers/project_file_handler.hpp>
 
 namespace hex::plugin::builtin::prv {

@@ -1,13 +1,14 @@
 #include <hex/api/keybinding.hpp>
-#include <hex/helpers/shared_data.hpp>
 #include <imgui.h>
 
 #include <hex/views/view.hpp>
 
 namespace hex {
 
+    std::map<Shortcut, std::function<void()>> ShortcutManager::s_globalShortcuts;
+
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback) {
-        SharedData::globalShortcuts.insert({ shortcut, callback });
+        ShortcutManager::s_globalShortcuts.insert({ shortcut, callback });
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback) {
@@ -30,8 +31,12 @@ namespace hex {
 
         if (focused && currentView->m_shortcuts.contains(pressedShortcut))
             currentView->m_shortcuts[pressedShortcut]();
-        else if (SharedData::globalShortcuts.contains(pressedShortcut))
-            SharedData::globalShortcuts[pressedShortcut]();
+        else if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut))
+            ShortcutManager::s_globalShortcuts[pressedShortcut]();
+    }
+
+    void ShortcutManager::clearShortcuts() {
+        ShortcutManager::s_globalShortcuts.clear();
     }
 
 }

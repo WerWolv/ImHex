@@ -5,8 +5,13 @@
 #include <locale>
 #include <filesystem>
 
+#include <hex/api/imhex_api.hpp>
+
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/shared_data.hpp>
+
+#include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include <imgui_internal.h>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -20,15 +25,15 @@
 namespace hex {
 
     long double operator""_scaled(long double value) {
-        return value * SharedData::globalScale;
+        return value * ImHexApi::System::getGlobalScale();
     }
 
     long double operator""_scaled(unsigned long long value) {
-        return value * SharedData::globalScale;
+        return value * ImHexApi::System::getGlobalScale();
     }
 
     ImVec2 scaled(const ImVec2 &vector) {
-        return vector * SharedData::globalScale;
+        return vector * ImHexApi::System::getGlobalScale();
     }
 
     std::string to_string(u128 value) {

@@ -966,46 +966,12 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::registerMenuItems() {
 
         /* Basic operations */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1000, [&] {
+
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1100, [&] {
             auto provider = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
 
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
-                    EventManager::post<RequestOpenFile>(path);
-                });
-            }
-
-            if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_recent"_lang, !SharedData::recentFilePaths.empty())) {
-                for (auto &path : SharedData::recentFilePaths) {
-                    if (ImGui::MenuItem(fs::path(path).filename().string().c_str())) {
-                        EventManager::post<RequestOpenFile>(path);
-                    }
-                }
-
-                ImGui::Separator();
-                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.clear_recent"_lang)) {
-                    SharedData::recentFilePaths.clear();
-                    ContentRegistry::Settings::write(
-                        "hex.builtin.setting.imhex",
-                        "hex.builtin.setting.imhex.recent_files",
-                        std::vector<std::string> {});
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_other"_lang)) {
-
-                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
-                    if (ImGui::MenuItem(LangEntry(unlocalizedProviderName))) {
-                        EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);
-                    }
-                }
-
-                ImGui::EndMenu();
-            }
 
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.save"_lang, "CTRL + S", false, providerValid && provider->isWritable())) {
                 save();
@@ -1028,7 +994,7 @@ namespace hex::plugin::builtin {
 
 
         /* Metadata save/load */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1100, [&, this] {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1200, [&, this] {
             auto provider = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
 
@@ -1078,7 +1044,7 @@ namespace hex::plugin::builtin {
 
 
         /* Import / Export */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1200, [&, this] {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1300, [&, this] {
             auto provider = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
 
@@ -1242,7 +1208,7 @@ namespace hex::plugin::builtin {
 
 
         /* Search / Goto */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1300, [&, this] {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1400, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.search"_lang, "CTRL + F")) {
                 this->getWindowOpenState() = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hexeditor.name").c_str(), "hex.builtin.view.hexeditor.menu.file.search"_lang);
