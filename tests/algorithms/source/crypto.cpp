@@ -6,6 +6,8 @@
 #include <random>
 #include <vector>
 #include <array>
+#include <algorithm>
+#include <fmt/ranges.h>
 
 struct EncodeChek {
     std::vector<u8> vec;
