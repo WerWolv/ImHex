@@ -424,18 +424,6 @@ namespace hex {
         this->m_lastFrameTime = glfwGetTime();
     }
 
-    void Window::drawWelcomeScreen() {
-    }
-
-    void Window::resetLayout() const {
-
-        if (auto &layouts = ContentRegistry::Interface::getLayouts(); !layouts.empty()) {
-            auto &[name, function] = layouts[0];
-
-            function(ImHexApi::System::getMainDockSpaceId());
-        }
-    }
-
     void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char *desc) {
             log::error("GLFW Error [{}] : {}", error, desc);

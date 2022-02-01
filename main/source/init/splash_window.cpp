@@ -48,7 +48,8 @@ namespace hex::init {
                 }
 
                 try {
-                    status = task() && status;
+                    if (!task())
+                        status = false;
                 } catch (std::exception &e) {
                     log::error("Init task '{}' threw an exception: {}", name, e.what());
                     status = false;

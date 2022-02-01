@@ -1,11 +1,12 @@
 #include <hex.hpp>
 #include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
-#include <nlohmann/json.hpp>
 #include <hex/api/localization.hpp>
+#include <hex/api/plugin_manager.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/api/plugin_manager.hpp>
+
 
 #include <hex/helpers/project_file_handler.hpp>
 
@@ -14,6 +15,7 @@
 #include <imnodes.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
 
 #include <fontawesome_font.h>
@@ -31,6 +33,23 @@ namespace hex::plugin::builtin {
 
     static std::string s_tipOfTheDay;
 
+    static void initDefaultLayout() {
+        auto layouts = ContentRegistry::Interface::getLayouts();
+        if (!layouts.empty()) {
+            s_layoutConfigured = true;
+
+            for (auto &[viewName, view] : ContentRegistry::Views::getEntries()) {
+                view->getWindowOpenState() = false;
+            }
+
+            auto dockId = ImHexApi::System::getMainDockSpaceId();
+
+            ImGui::DockBuilderRemoveNode(dockId);
+            ImGui::DockBuilderAddNode(dockId);
+            layouts.front().callback(dockId);
+            ImGui::DockBuilderFinish(dockId);
+        }
+    }
 
     static void drawPopups() {
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
@@ -43,7 +62,7 @@ namespace hex::plugin::builtin {
 
             static bool dontShowAgain = false;
             if (ImGui::Checkbox("hex.common.dont_show_again"_lang, &dontShowAgain)) {
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", dontShowAgain);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
             }
 
             ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
@@ -255,9 +274,6 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleVar();
                 }
                 ImGui::End();
-            } else if (!s_layoutConfigured) {
-                s_layoutConfigured = true;
-                // TODO: FIX RESET LAYOUT
             }
         }
         ImGui::End();
@@ -381,6 +397,12 @@ namespace hex::plugin::builtin {
                     recentFilesVector.push_back(recentPath.string());
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
+            }
+
+            {
+                if (!s_layoutConfigured) {
+                    initDefaultLayout();
+                }
             }
         });
 
