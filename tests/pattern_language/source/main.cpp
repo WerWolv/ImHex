@@ -19,7 +19,7 @@ void addFunctions() {
     hex::ContentRegistry::PatternLanguage::Namespace nsStd = { "std" };
     hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
         auto condition = Token::literalToBoolean(params[0]);
-        auto message = Token::literalToString(params[1], false);
+        auto message   = Token::literalToString(params[1], false);
 
         if (!condition)
             LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
@@ -45,7 +45,7 @@ int test(int argc, char **argv) {
     }
 
     const auto &currTest = testPatterns[testName];
-    bool failing = currTest->getMode() == Mode::Failing;
+    bool failing         = currTest->getMode() == Mode::Failing;
 
     auto provider = new TestProvider();
     ON_SCOPE_EXIT { delete provider; };
@@ -89,7 +89,7 @@ int test(int argc, char **argv) {
     // Check if the produced patterns are the ones expected
     for (u32 i = 0; i < currTest->getPatterns().size(); i++) {
         auto &evaluatedPattern = *language.getPatterns()[i];
-        auto &controlPattern = *currTest->getPatterns()[i];
+        auto &controlPattern   = *currTest->getPatterns()[i];
 
         if (evaluatedPattern != controlPattern) {
             hex::log::fatal("Pattern with name {}:{} didn't match template", evaluatedPattern.getTypeName(), evaluatedPattern.getVariableName());

@@ -12,7 +12,7 @@ namespace hex::pl {
         PatternLanguageError(u32 lineNumber, std::string message) : m_lineNumber(lineNumber), m_message(std::move(message)) { }
 
         [[nodiscard]] const char *what() const noexcept override {
-                return this->m_message.c_str();
+            return this->m_message.c_str();
         }
 
         [[nodiscard]] u32 getLineNumber() const {

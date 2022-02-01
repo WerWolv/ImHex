@@ -51,7 +51,7 @@ namespace hex::pl {
 
         ASTNodeAttribute(const ASTNodeAttribute &other) : ASTNode(other) {
             this->m_attribute = other.m_attribute;
-            this->m_value = other.m_value;
+            this->m_value     = other.m_value;
         }
 
         [[nodiscard]] ASTNode *clone() const override {
@@ -81,7 +81,7 @@ namespace hex::pl {
 
         Attributable(const Attributable &other) {
             for (auto &attribute : other.m_attributes) {
-                if (auto node = dynamic_cast<ASTNodeAttribute*>(attribute->clone()))
+                if (auto node = dynamic_cast<ASTNodeAttribute *>(attribute->clone()))
                     this->m_attributes.push_back(node);
                 else
                     delete node;
@@ -175,8 +175,8 @@ namespace hex::pl {
 
         ASTNodeMathematicalExpression(const ASTNodeMathematicalExpression &other) : ASTNode(other) {
             this->m_operator = other.m_operator;
-            this->m_left = other.m_left->clone();
-            this->m_right = other.m_right->clone();
+            this->m_left     = other.m_left->clone();
+            this->m_right    = other.m_right->clone();
         }
 
         [[nodiscard]] ASTNode *clone() const override {
@@ -187,7 +187,7 @@ namespace hex::pl {
             if (this->getLeftOperand() == nullptr || this->getRightOperand() == nullptr)
                 LogConsole::abortEvaluation("attempted to use void expression in mathematical expression", this);
 
-            auto *left = dynamic_cast<ASTNodeLiteral *>(this->getLeftOperand()->evaluate(evaluator));
+            auto *left  = dynamic_cast<ASTNodeLiteral *>(this->getLeftOperand()->evaluate(evaluator));
             auto *right = dynamic_cast<ASTNodeLiteral *>(this->getRightOperand()->evaluate(evaluator));
             ON_SCOPE_EXIT {
                 delete left;
@@ -213,105 +213,105 @@ namespace hex::pl {
                                   [this](auto &&left, const std::string &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                                   [this](const std::string &left, auto &&right) -> ASTNode * {
                                       switch (this->getOperator()) {
-                                      case Token::Operator::Star:
-                                          {
-                                              std::string result;
-                                              for (auto i = 0; i < right; i++)
-                                                  result += left;
-                                              return new ASTNodeLiteral(result);
-                                          }
-                                      default:
-                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                          case Token::Operator::Star:
+                                              {
+                                                  std::string result;
+                                                  for (auto i = 0; i < right; i++)
+                                                      result += left;
+                                                  return new ASTNodeLiteral(result);
+                                              }
+                                          default:
+                                              LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                                       }
                                   },
                                   [this](const std::string &left, const std::string &right) -> ASTNode * {
                                       switch (this->getOperator()) {
-                                      case Token::Operator::Plus:
-                                          return new ASTNodeLiteral(left + right);
-                                      case Token::Operator::BoolEquals:
-                                          return new ASTNodeLiteral(left == right);
-                                      case Token::Operator::BoolNotEquals:
-                                          return new ASTNodeLiteral(left != right);
-                                      case Token::Operator::BoolGreaterThan:
-                                          return new ASTNodeLiteral(left > right);
-                                      case Token::Operator::BoolLessThan:
-                                          return new ASTNodeLiteral(left < right);
-                                      case Token::Operator::BoolGreaterThanOrEquals:
-                                          return new ASTNodeLiteral(left >= right);
-                                      case Token::Operator::BoolLessThanOrEquals:
-                                          return new ASTNodeLiteral(left <= right);
-                                      default:
-                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                          case Token::Operator::Plus:
+                                              return new ASTNodeLiteral(left + right);
+                                          case Token::Operator::BoolEquals:
+                                              return new ASTNodeLiteral(left == right);
+                                          case Token::Operator::BoolNotEquals:
+                                              return new ASTNodeLiteral(left != right);
+                                          case Token::Operator::BoolGreaterThan:
+                                              return new ASTNodeLiteral(left > right);
+                                          case Token::Operator::BoolLessThan:
+                                              return new ASTNodeLiteral(left < right);
+                                          case Token::Operator::BoolGreaterThanOrEquals:
+                                              return new ASTNodeLiteral(left >= right);
+                                          case Token::Operator::BoolLessThanOrEquals:
+                                              return new ASTNodeLiteral(left <= right);
+                                          default:
+                                              LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                                       }
                                   },
                                   [this](const std::string &left, char right) -> ASTNode * {
                                       switch (this->getOperator()) {
-                                      case Token::Operator::Plus:
-                                          return new ASTNodeLiteral(left + right);
-                                      default:
-                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                          case Token::Operator::Plus:
+                                              return new ASTNodeLiteral(left + right);
+                                          default:
+                                              LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                                       }
                                   },
                                   [this](char left, const std::string &right) -> ASTNode * {
                                       switch (this->getOperator()) {
-                                      case Token::Operator::Plus:
-                                          return new ASTNodeLiteral(left + right);
-                                      default:
-                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                          case Token::Operator::Plus:
+                                              return new ASTNodeLiteral(left + right);
+                                          default:
+                                              LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                                       }
                                   },
                                   [this](auto &&left, auto &&right) -> ASTNode * {
                                       switch (this->getOperator()) {
-                                      case Token::Operator::Plus:
-                                          return new ASTNodeLiteral(left + right);
-                                      case Token::Operator::Minus:
-                                          return new ASTNodeLiteral(left - right);
-                                      case Token::Operator::Star:
-                                          return new ASTNodeLiteral(left * right);
-                                      case Token::Operator::Slash:
-                                          if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
-                                          return new ASTNodeLiteral(left / right);
-                                      case Token::Operator::Percent:
-                                          if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
-                                          return new ASTNodeLiteral(modulus(left, right));
-                                      case Token::Operator::ShiftLeft:
-                                          return new ASTNodeLiteral(shiftLeft(left, right));
-                                      case Token::Operator::ShiftRight:
-                                          return new ASTNodeLiteral(shiftRight(left, right));
-                                      case Token::Operator::BitAnd:
-                                          return new ASTNodeLiteral(bitAnd(left, right));
-                                      case Token::Operator::BitXor:
-                                          return new ASTNodeLiteral(bitXor(left, right));
-                                      case Token::Operator::BitOr:
-                                          return new ASTNodeLiteral(bitOr(left, right));
-                                      case Token::Operator::BitNot:
-                                          return new ASTNodeLiteral(bitNot(left, right));
-                                      case Token::Operator::BoolEquals:
-                                          return new ASTNodeLiteral(bool(left == right));
-                                      case Token::Operator::BoolNotEquals:
-                                          return new ASTNodeLiteral(bool(left != right));
-                                      case Token::Operator::BoolGreaterThan:
-                                          return new ASTNodeLiteral(bool(left > right));
-                                      case Token::Operator::BoolLessThan:
-                                          return new ASTNodeLiteral(bool(left < right));
-                                      case Token::Operator::BoolGreaterThanOrEquals:
-                                          return new ASTNodeLiteral(bool(left >= right));
-                                      case Token::Operator::BoolLessThanOrEquals:
-                                          return new ASTNodeLiteral(bool(left <= right));
-                                      case Token::Operator::BoolAnd:
-                                          return new ASTNodeLiteral(bool(left && right));
-                                      case Token::Operator::BoolXor:
-                                          return new ASTNodeLiteral(bool(left && !right || !left && right));
-                                      case Token::Operator::BoolOr:
-                                          return new ASTNodeLiteral(bool(left || right));
-                                      case Token::Operator::BoolNot:
-                                          return new ASTNodeLiteral(bool(!right));
-                                      default:
-                                          LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
+                                          case Token::Operator::Plus:
+                                              return new ASTNodeLiteral(left + right);
+                                          case Token::Operator::Minus:
+                                              return new ASTNodeLiteral(left - right);
+                                          case Token::Operator::Star:
+                                              return new ASTNodeLiteral(left * right);
+                                          case Token::Operator::Slash:
+                                              if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
+                                              return new ASTNodeLiteral(left / right);
+                                          case Token::Operator::Percent:
+                                              if (right == 0) LogConsole::abortEvaluation("division by zero!", this);
+                                              return new ASTNodeLiteral(modulus(left, right));
+                                          case Token::Operator::ShiftLeft:
+                                              return new ASTNodeLiteral(shiftLeft(left, right));
+                                          case Token::Operator::ShiftRight:
+                                              return new ASTNodeLiteral(shiftRight(left, right));
+                                          case Token::Operator::BitAnd:
+                                              return new ASTNodeLiteral(bitAnd(left, right));
+                                          case Token::Operator::BitXor:
+                                              return new ASTNodeLiteral(bitXor(left, right));
+                                          case Token::Operator::BitOr:
+                                              return new ASTNodeLiteral(bitOr(left, right));
+                                          case Token::Operator::BitNot:
+                                              return new ASTNodeLiteral(bitNot(left, right));
+                                          case Token::Operator::BoolEquals:
+                                              return new ASTNodeLiteral(bool(left == right));
+                                          case Token::Operator::BoolNotEquals:
+                                              return new ASTNodeLiteral(bool(left != right));
+                                          case Token::Operator::BoolGreaterThan:
+                                              return new ASTNodeLiteral(bool(left > right));
+                                          case Token::Operator::BoolLessThan:
+                                              return new ASTNodeLiteral(bool(left < right));
+                                          case Token::Operator::BoolGreaterThanOrEquals:
+                                              return new ASTNodeLiteral(bool(left >= right));
+                                          case Token::Operator::BoolLessThanOrEquals:
+                                              return new ASTNodeLiteral(bool(left <= right));
+                                          case Token::Operator::BoolAnd:
+                                              return new ASTNodeLiteral(bool(left && right));
+                                          case Token::Operator::BoolXor:
+                                              return new ASTNodeLiteral(bool(left && !right || !left && right));
+                                          case Token::Operator::BoolOr:
+                                              return new ASTNodeLiteral(bool(left || right));
+                                          case Token::Operator::BoolNot:
+                                              return new ASTNodeLiteral(bool(!right));
+                                          default:
+                                              LogConsole::abortEvaluation("invalid operand used in mathematical expression", this);
                                       }
                                   } },
-                              left->getValue(),
-                              right->getValue());
+                left->getValue(),
+                right->getValue());
         }
 
         [[nodiscard]] ASTNode *getLeftOperand() const { return this->m_left; }
@@ -336,9 +336,9 @@ namespace hex::pl {
 
         ASTNodeTernaryExpression(const ASTNodeTernaryExpression &other) : ASTNode(other) {
             this->m_operator = other.m_operator;
-            this->m_first = other.m_first->clone();
-            this->m_second = other.m_second->clone();
-            this->m_third = other.m_third->clone();
+            this->m_first    = other.m_first->clone();
+            this->m_second   = other.m_second->clone();
+            this->m_third    = other.m_third->clone();
         }
 
         [[nodiscard]] ASTNode *clone() const override {
@@ -349,9 +349,9 @@ namespace hex::pl {
             if (this->getFirstOperand() == nullptr || this->getSecondOperand() == nullptr || this->getThirdOperand() == nullptr)
                 LogConsole::abortEvaluation("attempted to use void expression in mathematical expression", this);
 
-            auto *first = dynamic_cast<ASTNodeLiteral *>(this->getFirstOperand()->evaluate(evaluator));
+            auto *first  = dynamic_cast<ASTNodeLiteral *>(this->getFirstOperand()->evaluate(evaluator));
             auto *second = dynamic_cast<ASTNodeLiteral *>(this->getSecondOperand()->evaluate(evaluator));
-            auto *third = dynamic_cast<ASTNodeLiteral *>(this->getThirdOperand()->evaluate(evaluator));
+            auto *third  = dynamic_cast<ASTNodeLiteral *>(this->getThirdOperand()->evaluate(evaluator));
             ON_SCOPE_EXIT {
                 delete first;
                 delete second;
@@ -362,13 +362,13 @@ namespace hex::pl {
                                             [](const std::string &value) -> bool { return !value.empty(); },
                                             [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
                                             [](auto &&value) -> bool { return bool(value); } },
-                                        first->getValue());
+                first->getValue());
 
             return std::visit(overloaded {
                                   [condition]<typename T>(const T &second, const T &third) -> ASTNode * { return new ASTNodeLiteral(condition ? second : third); },
                                   [this](auto &&second, auto &&third) -> ASTNode * { LogConsole::abortEvaluation("operands to ternary expression have different types", this); } },
-                              second->getValue(),
-                              third->getValue());
+                second->getValue(),
+                third->getValue());
         }
 
         [[nodiscard]] ASTNode *getFirstOperand() const { return this->m_first; }
@@ -394,7 +394,7 @@ namespace hex::pl {
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto offset = evaluator->dataOffset();
-            auto size = Token::getTypeSize(this->m_type);
+            auto size   = Token::getTypeSize(this->m_type);
 
             evaluator->dataOffset() += size;
 
@@ -436,8 +436,8 @@ namespace hex::pl {
             : ASTNode(), m_name(std::move(name)), m_type(type), m_endian(endian) { }
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl &other) : ASTNode(other), Attributable(other) {
-            this->m_name = other.m_name;
-            this->m_type = other.m_type;
+            this->m_name   = other.m_name;
+            this->m_type   = other.m_type;
             this->m_endian = other.m_endian;
         }
 
@@ -455,7 +455,7 @@ namespace hex::pl {
 
             if (auto attributable = dynamic_cast<Attributable *>(type)) {
                 for (auto &attribute : this->getAttributes()) {
-                    if (auto node = dynamic_cast<ASTNodeAttribute*>(attribute->clone()))
+                    if (auto node = dynamic_cast<ASTNodeAttribute *>(attribute->clone()))
                         attributable->addAttribute(node);
                     else
                         delete node;
@@ -493,7 +493,7 @@ namespace hex::pl {
         ASTNodeCast(ASTNode *value, ASTNode *type) : m_value(value), m_type(type) { }
         ASTNodeCast(const ASTNodeCast &other) : ASTNode(other) {
             this->m_value = other.m_value->clone();
-            this->m_type = other.m_type->clone();
+            this->m_type  = other.m_type->clone();
         }
 
         ~ASTNodeCast() override {
@@ -507,7 +507,7 @@ namespace hex::pl {
 
         [[nodiscard]] ASTNode *evaluate(Evaluator *evaluator) const override {
             auto literal = dynamic_cast<ASTNodeLiteral *>(this->m_value->evaluate(evaluator));
-            auto type = dynamic_cast<ASTNodeBuiltinType *>(this->m_type->evaluate(evaluator))->getType();
+            auto type    = dynamic_cast<ASTNodeBuiltinType *>(this->m_type->evaluate(evaluator))->getType();
 
             auto startOffset = evaluator->dataOffset();
 
@@ -523,53 +523,53 @@ namespace hex::pl {
                                   [&, this](auto &&value) -> ASTNode * {
                                       auto endianAdjustedValue = hex::changeEndianess(value, typePattern->getSize(), typePattern->getEndian());
                                       switch (type) {
-                                      case Token::ValueType::Unsigned8Bit:
-                                          return new ASTNodeLiteral(u128(u8(endianAdjustedValue)));
-                                      case Token::ValueType::Unsigned16Bit:
-                                          return new ASTNodeLiteral(u128(u16(endianAdjustedValue)));
-                                      case Token::ValueType::Unsigned32Bit:
-                                          return new ASTNodeLiteral(u128(u32(endianAdjustedValue)));
-                                      case Token::ValueType::Unsigned64Bit:
-                                          return new ASTNodeLiteral(u128(u64(endianAdjustedValue)));
-                                      case Token::ValueType::Unsigned128Bit:
-                                          return new ASTNodeLiteral(u128(endianAdjustedValue));
-                                      case Token::ValueType::Signed8Bit:
-                                          return new ASTNodeLiteral(i128(i8(endianAdjustedValue)));
-                                      case Token::ValueType::Signed16Bit:
-                                          return new ASTNodeLiteral(i128(i16(endianAdjustedValue)));
-                                      case Token::ValueType::Signed32Bit:
-                                          return new ASTNodeLiteral(i128(i32(endianAdjustedValue)));
-                                      case Token::ValueType::Signed64Bit:
-                                          return new ASTNodeLiteral(i128(i64(endianAdjustedValue)));
-                                      case Token::ValueType::Signed128Bit:
-                                          return new ASTNodeLiteral(i128(endianAdjustedValue));
-                                      case Token::ValueType::Float:
-                                          return new ASTNodeLiteral(double(float(endianAdjustedValue)));
-                                      case Token::ValueType::Double:
-                                          return new ASTNodeLiteral(double(endianAdjustedValue));
-                                      case Token::ValueType::Character:
-                                          return new ASTNodeLiteral(char(endianAdjustedValue));
-                                      case Token::ValueType::Character16:
-                                          return new ASTNodeLiteral(u128(char16_t(endianAdjustedValue)));
-                                      case Token::ValueType::Boolean:
-                                          return new ASTNodeLiteral(bool(endianAdjustedValue));
-                                      case Token::ValueType::String:
-                                          {
-                                              std::string string(sizeof(value), '\x00');
-                                              std::memcpy(string.data(), &value, string.size());
-                                              hex::trim(string);
+                                          case Token::ValueType::Unsigned8Bit:
+                                              return new ASTNodeLiteral(u128(u8(endianAdjustedValue)));
+                                          case Token::ValueType::Unsigned16Bit:
+                                              return new ASTNodeLiteral(u128(u16(endianAdjustedValue)));
+                                          case Token::ValueType::Unsigned32Bit:
+                                              return new ASTNodeLiteral(u128(u32(endianAdjustedValue)));
+                                          case Token::ValueType::Unsigned64Bit:
+                                              return new ASTNodeLiteral(u128(u64(endianAdjustedValue)));
+                                          case Token::ValueType::Unsigned128Bit:
+                                              return new ASTNodeLiteral(u128(endianAdjustedValue));
+                                          case Token::ValueType::Signed8Bit:
+                                              return new ASTNodeLiteral(i128(i8(endianAdjustedValue)));
+                                          case Token::ValueType::Signed16Bit:
+                                              return new ASTNodeLiteral(i128(i16(endianAdjustedValue)));
+                                          case Token::ValueType::Signed32Bit:
+                                              return new ASTNodeLiteral(i128(i32(endianAdjustedValue)));
+                                          case Token::ValueType::Signed64Bit:
+                                              return new ASTNodeLiteral(i128(i64(endianAdjustedValue)));
+                                          case Token::ValueType::Signed128Bit:
+                                              return new ASTNodeLiteral(i128(endianAdjustedValue));
+                                          case Token::ValueType::Float:
+                                              return new ASTNodeLiteral(double(float(endianAdjustedValue)));
+                                          case Token::ValueType::Double:
+                                              return new ASTNodeLiteral(double(endianAdjustedValue));
+                                          case Token::ValueType::Character:
+                                              return new ASTNodeLiteral(char(endianAdjustedValue));
+                                          case Token::ValueType::Character16:
+                                              return new ASTNodeLiteral(u128(char16_t(endianAdjustedValue)));
+                                          case Token::ValueType::Boolean:
+                                              return new ASTNodeLiteral(bool(endianAdjustedValue));
+                                          case Token::ValueType::String:
+                                              {
+                                                  std::string string(sizeof(value), '\x00');
+                                                  std::memcpy(string.data(), &value, string.size());
+                                                  hex::trim(string);
 
-                                              if (typePattern->getEndian() != std::endian::native)
-                                                  std::reverse(string.begin(), string.end());
+                                                  if (typePattern->getEndian() != std::endian::native)
+                                                      std::reverse(string.begin(), string.end());
 
-                                              return new ASTNodeLiteral(string);
-                                          }
-                                      default:
-                                          LogConsole::abortEvaluation(hex::format("cannot cast value to '{}'", Token::getTypeName(type)), this);
+                                                  return new ASTNodeLiteral(string);
+                                              }
+                                          default:
+                                              LogConsole::abortEvaluation(hex::format("cannot cast value to '{}'", Token::getTypeName(type)), this);
                                       }
                                   },
                               },
-                              literal->getValue());
+                literal->getValue());
         }
 
     private:
@@ -621,8 +621,8 @@ namespace hex::pl {
             while (evaluateCondition(evaluator)) {
                 evaluator->handleAbort();
 
-                auto variables = *evaluator->getScope(0).scope;
-                auto parameterPack = evaluator->getScope(0).parameterPack;
+                auto variables         = *evaluator->getScope(0).scope;
+                auto parameterPack     = evaluator->getScope(0).parameterPack;
                 u32 startVariableCount = variables.size();
                 ON_SCOPE_EXIT {
                     ssize_t stackSize = evaluator->getStack().size();
@@ -676,7 +676,7 @@ namespace hex::pl {
                                   [](const std::string &value) -> bool { return !value.empty(); },
                                   [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
                                   [](auto &&value) -> bool { return value != 0; } },
-                              literal->getValue());
+                literal->getValue());
         }
 
     private:
@@ -686,7 +686,7 @@ namespace hex::pl {
     };
 
     inline void applyVariableAttributes(Evaluator *evaluator, const Attributable *attributable, PatternData *pattern) {
-        auto endOffset = evaluator->dataOffset();
+        auto endOffset          = evaluator->dataOffset();
         evaluator->dataOffset() = pattern->getOffset();
         ON_SCOPE_EXIT { evaluator->dataOffset() = endOffset; };
 
@@ -787,7 +787,7 @@ namespace hex::pl {
             else
                 this->m_placementOffset = nullptr;
 
-            this->m_inVariable = other.m_inVariable;
+            this->m_inVariable  = other.m_inVariable;
             this->m_outVariable = other.m_outVariable;
         }
 
@@ -816,7 +816,7 @@ namespace hex::pl {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
                                                          [this](PatternData *const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return offset; } },
-                                                     offset->getValue());
+                    offset->getValue());
             }
 
             auto pattern = this->m_type->createPatterns(evaluator).front();
@@ -880,7 +880,7 @@ namespace hex::pl {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
                                                          [this](PatternData *const &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return offset; } },
-                                                     offset->getValue());
+                    offset->getValue());
             }
 
             auto type = this->m_type->evaluate(evaluator);
@@ -938,7 +938,7 @@ namespace hex::pl {
                                                 [this](const std::string &) -> u128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
                                                 [this](PatternData *) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                                 [](auto &&size) -> u128 { return size; } },
-                                            literal->getValue());
+                        literal->getValue());
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement *>(sizeNode)) {
                     while (whileStatement->evaluateCondition(evaluator)) {
                         entryCount++;
@@ -1004,7 +1004,7 @@ namespace hex::pl {
                     delete entry;
             };
 
-            size_t size = 0;
+            size_t size    = 0;
             u64 entryIndex = 0;
 
             auto addEntries = [&](const std::vector<PatternData *> &patterns) {
@@ -1037,7 +1037,7 @@ namespace hex::pl {
                                                      [this](const std::string &) -> u128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
                                                      [this](PatternData *) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                                      [](auto &&size) -> u128 { return size; } },
-                                                 literal->getValue());
+                        literal->getValue());
 
                     auto limit = evaluator->getArrayLimit();
                     if (entryCount > limit)
@@ -1085,7 +1085,7 @@ namespace hex::pl {
             } else {
                 while (true) {
                     bool reachedEnd = true;
-                    auto limit = evaluator->getArrayLimit();
+                    auto limit      = evaluator->getArrayLimit();
                     if (entryIndex > limit)
                         LogConsole::abortEvaluation(hex::format("array grew past set limit of {}", limit), this);
 
@@ -1150,8 +1150,8 @@ namespace hex::pl {
             : ASTNode(), m_name(std::move(name)), m_type(type), m_sizeType(sizeType), m_placementOffset(placementOffset) { }
 
         ASTNodePointerVariableDecl(const ASTNodePointerVariableDecl &other) : ASTNode(other), Attributable(other) {
-            this->m_name = other.m_name;
-            this->m_type = other.m_type->clone();
+            this->m_name     = other.m_name;
+            this->m_type     = other.m_type->clone();
             this->m_sizeType = other.m_sizeType->clone();
 
             if (other.m_placementOffset != nullptr)
@@ -1184,7 +1184,7 @@ namespace hex::pl {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
                                                          [this](PatternData *) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return u64(offset); } },
-                                                     offset->getValue());
+                    offset->getValue());
             }
 
             auto startOffset = evaluator->dataOffset();
@@ -1430,7 +1430,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = new PatternDataEnum(evaluator, evaluator->dataOffset(), 0);
+            auto pattern     = new PatternDataEnum(evaluator, evaluator->dataOffset(), 0);
             auto enumCleanup = SCOPE_GUARD { delete pattern; };
 
 
@@ -1507,7 +1507,7 @@ namespace hex::pl {
                                             [this](const std::string &) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a string", this); },
                                             [this](PatternData *) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a custom type", this); },
                                             [](auto &&offset) -> u8 { return static_cast<u8>(offset); } },
-                                        dynamic_cast<ASTNodeLiteral *>(literal)->getValue());
+                    dynamic_cast<ASTNodeLiteral *>(literal)->getValue());
 
                 // If a field is named padding, it was created through a padding expression and only advances the bit position
                 if (name != "padding") {
@@ -1536,7 +1536,7 @@ namespace hex::pl {
 
     class ASTNodeParameterPack : public ASTNode {
     public:
-        explicit ASTNodeParameterPack(std::vector<Token::Literal> values) : m_values(std::move(values)) {}
+        explicit ASTNodeParameterPack(std::vector<Token::Literal> values) : m_values(std::move(values)) { }
 
         [[nodiscard]] ASTNode *clone() const override {
             return new ASTNodeParameterPack(*this);
@@ -1595,7 +1595,7 @@ namespace hex::pl {
             } else if (dynamic_cast<PatternDataSigned *>(pattern)) {
                 i128 value = 0;
                 readVariable(evaluator, value, pattern);
-                value = hex::signExtend(pattern->getSize() * 8, value);
+                value   = hex::signExtend(pattern->getSize() * 8, value);
                 literal = value;
             } else if (dynamic_cast<PatternDataFloat *>(pattern)) {
                 if (pattern->getSize() == sizeof(u16)) {
@@ -1635,7 +1635,7 @@ namespace hex::pl {
                                        readVariable(evaluator, value, assignmentValue);
                                    },
                                    [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); } },
-                               literal);
+                        literal);
                 } else {
                     value.resize(pattern->getSize());
                     evaluator->getProvider()->read(pattern->getOffset(), value.data(), value.size());
@@ -1665,7 +1665,7 @@ namespace hex::pl {
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             std::vector<PatternData *> searchScope;
             PatternData *currPattern = nullptr;
-            i32 scopeIndex = 0;
+            i32 scopeIndex           = 0;
 
 
             if (!evaluator->isGlobalScope()) {
@@ -1690,7 +1690,7 @@ namespace hex::pl {
                         if (-scopeIndex >= evaluator->getScopeCount())
                             LogConsole::abortEvaluation("cannot access parent of global scope", this);
 
-                        searchScope = *evaluator->getScope(scopeIndex).scope;
+                        searchScope     = *evaluator->getScope(scopeIndex).scope;
                         auto currParent = evaluator->getScope(scopeIndex).parent;
 
                         if (currParent == nullptr) {
@@ -1717,7 +1717,7 @@ namespace hex::pl {
                                 auto newPattern = (*iter)->clone();
                                 delete currPattern;
                                 currPattern = newPattern;
-                                found = true;
+                                found       = true;
                                 break;
                             }
                         }
@@ -1755,7 +1755,7 @@ namespace hex::pl {
                                            currPattern = newPattern;
                                        }
                                    } },
-                               index->getValue());
+                        index->getValue());
                 }
 
                 if (currPattern == nullptr)
@@ -1810,7 +1810,7 @@ namespace hex::pl {
                                },
                                [&](PatternData *assignmentValue) { readVariable(evaluator, value, assignmentValue); },
                                [&](auto &&assignmentValue) { value = assignmentValue; } },
-                           literal);
+                    literal);
             } else {
                 if constexpr (isString) {
                     value.resize(variablePattern->getSize());
@@ -1893,7 +1893,7 @@ namespace hex::pl {
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
             auto &scope = *evaluator->getScope(0).scope;
-            auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
+            auto &body  = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
             for (auto &node : body) {
                 auto newPatterns = node->createPatterns(evaluator);
@@ -1912,7 +1912,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             auto &body = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
-            auto variables = *evaluator->getScope(0).scope;
+            auto variables     = *evaluator->getScope(0).scope;
             auto parameterPack = evaluator->getScope(0).parameterPack;
 
             u32 startVariableCount = variables.size();
@@ -1948,7 +1948,7 @@ namespace hex::pl {
                                   [](const std::string &value) -> bool { return !value.empty(); },
                                   [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
                                   [](auto &&value) -> bool { return value != 0; } },
-                              literal->getValue());
+                literal->getValue());
         }
 
         ASTNode *m_condition;
@@ -2010,7 +2010,7 @@ namespace hex::pl {
             }
 
             auto &customFunctions = evaluator->getCustomFunctions();
-            auto functions = ContentRegistry::PatternLanguage::getFunctions();
+            auto functions        = ContentRegistry::PatternLanguage::getFunctions();
 
             for (auto &func : customFunctions)
                 functions.insert(func);
@@ -2081,7 +2081,7 @@ namespace hex::pl {
         }
 
         ASTNodeTypeOperator(const ASTNodeTypeOperator &other) : ASTNode(other) {
-            this->m_op = other.m_op;
+            this->m_op         = other.m_op;
             this->m_expression = other.m_expression->clone();
         }
 
@@ -2106,12 +2106,12 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete pattern; };
 
             switch (this->getOperator()) {
-            case Token::Operator::AddressOf:
-                return new ASTNodeLiteral(u128(pattern->getOffset()));
-            case Token::Operator::SizeOf:
-                return new ASTNodeLiteral(u128(pattern->getSize()));
-            default:
-                LogConsole::abortEvaluation("invalid type operator", this);
+                case Token::Operator::AddressOf:
+                    return new ASTNodeLiteral(u128(pattern->getOffset()));
+                case Token::Operator::SizeOf:
+                    return new ASTNodeLiteral(u128(pattern->getSize()));
+                default:
+                    LogConsole::abortEvaluation("invalid type operator", this);
             }
         }
 
@@ -2129,7 +2129,7 @@ namespace hex::pl {
 
         ASTNodeAssignment(const ASTNodeAssignment &other) : ASTNode(other) {
             this->m_lvalueName = other.m_lvalueName;
-            this->m_rvalue = other.m_rvalue->clone();
+            this->m_rvalue     = other.m_rvalue->clone();
         }
 
         [[nodiscard]] ASTNode *clone() const override {
@@ -2231,7 +2231,7 @@ namespace hex::pl {
         }
 
         ASTNodeFunctionDefinition(const ASTNodeFunctionDefinition &other) : ASTNode(other) {
-            this->m_name = other.m_name;
+            this->m_name   = other.m_name;
             this->m_params = other.m_params;
 
             for (const auto &[name, type] : other.m_params) {
@@ -2304,12 +2304,12 @@ namespace hex::pl {
 
                     if (ctx->getCurrentControlFlowStatement() != ControlFlowStatement::None) {
                         switch (ctx->getCurrentControlFlowStatement()) {
-                        case ControlFlowStatement::Break:
-                            LogConsole::abortEvaluation("break statement not within a loop", statement);
-                        case ControlFlowStatement::Continue:
-                            LogConsole::abortEvaluation("continue statement not within a loop", statement);
-                        default:
-                            break;
+                            case ControlFlowStatement::Break:
+                                LogConsole::abortEvaluation("break statement not within a loop", statement);
+                            case ControlFlowStatement::Continue:
+                                LogConsole::abortEvaluation("continue statement not within a loop", statement);
+                            default:
+                                break;
                         }
 
                         ctx->setCurrentControlFlowStatement(ControlFlowStatement::None);
@@ -2379,7 +2379,7 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             FunctionResult result;
 
-            auto variables = *evaluator->getScope(0).scope;
+            auto variables         = *evaluator->getScope(0).scope;
             u32 startVariableCount = variables.size();
 
             if (this->m_newScope) {

@@ -73,7 +73,7 @@ namespace hex::plugin::builtin::prv {
         this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
         if (this->m_diskHandle == INVALID_HANDLE_VALUE) {
             this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-            this->m_writable = false;
+            this->m_writable   = false;
 
             if (this->m_diskHandle == INVALID_HANDLE_VALUE)
                 return false;
@@ -81,7 +81,7 @@ namespace hex::plugin::builtin::prv {
 
         {
             DISK_GEOMETRY_EX diskGeometry = { 0 };
-            DWORD bytesRead = 0;
+            DWORD bytesRead               = 0;
             if (DeviceIoControl(
                     this->m_diskHandle,
                     IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
@@ -91,14 +91,14 @@ namespace hex::plugin::builtin::prv {
                     sizeof(DISK_GEOMETRY_EX),
                     &bytesRead,
                     nullptr)) {
-                this->m_diskSize = diskGeometry.DiskSize.QuadPart;
+                this->m_diskSize   = diskGeometry.DiskSize.QuadPart;
                 this->m_sectorSize = diskGeometry.Geometry.BytesPerSector;
                 this->m_sectorBuffer.resize(this->m_sectorSize);
             }
         }
 
         if (this->m_diskHandle == nullptr || this->m_diskHandle == INVALID_HANDLE_VALUE) {
-            this->m_readable = false;
+            this->m_readable   = false;
             this->m_diskHandle = nullptr;
             CloseHandle(this->m_diskHandle);
 
@@ -112,13 +112,13 @@ namespace hex::plugin::builtin::prv {
         struct stat driveStat;
 
         ::stat(path.c_str(), &driveStat) == 0;
-        this->m_diskSize = driveStat.st_size;
+        this->m_diskSize   = driveStat.st_size;
         this->m_sectorSize = 0;
 
         this->m_diskHandle = ::open(path.c_str(), O_RDWR);
         if (this->m_diskHandle == -1) {
             this->m_diskHandle = ::open(path.c_str(), O_RDONLY);
-            this->m_writable = false;
+            this->m_writable   = false;
         }
 
         if (this->m_diskHandle == -1) {
@@ -153,7 +153,7 @@ namespace hex::plugin::builtin::prv {
 
         while (size > 0) {
             LARGE_INTEGER seekPosition;
-            seekPosition.LowPart = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
+            seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
             seekPosition.HighPart = offset >> 32;
 
             if (this->m_sectorBufferAddress != seekPosition.QuadPart) {
@@ -168,7 +168,7 @@ namespace hex::plugin::builtin::prv {
             offset += this->m_sectorSize;
         }
 #else
-        u64 startOffset = offset;
+        u64 startOffset    = offset;
 
         while (size > 0) {
             u64 seekPosition = offset - (offset % this->m_sectorSize);
@@ -197,14 +197,14 @@ namespace hex::plugin::builtin::prv {
         modifiedSectorBuffer.resize(this->m_sectorSize);
 
         while (size > 0) {
-            u64 sectorBase = offset - (offset % this->m_sectorSize);
+            u64 sectorBase  = offset - (offset % this->m_sectorSize);
             size_t currSize = std::min(size, this->m_sectorSize);
 
             this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
             std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
             LARGE_INTEGER seekPosition;
-            seekPosition.LowPart = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
+            seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
             seekPosition.HighPart = offset >> 32;
 
             ::SetFilePointer(this->m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
@@ -222,7 +222,7 @@ namespace hex::plugin::builtin::prv {
         modifiedSectorBuffer.resize(this->m_sectorSize);
 
         while (size > 0) {
-            u64 sectorBase = offset - (offset % this->m_sectorSize);
+            u64 sectorBase  = offset - (offset % this->m_sectorSize);
             size_t currSize = std::min(size, this->m_sectorSize);
 
             this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
@@ -271,8 +271,8 @@ namespace hex::plugin::builtin::prv {
             if (handle == INVALID_HANDLE_VALUE) continue;
 
             VOLUME_DISK_EXTENTS diskExtents = { 0 };
-            DWORD bytesRead = 0;
-            auto result = ::DeviceIoControl(
+            DWORD bytesRead                 = 0;
+            auto result                     = ::DeviceIoControl(
                 handle,
                 IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
                 nullptr,

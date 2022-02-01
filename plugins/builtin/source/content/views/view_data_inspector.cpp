@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
             if (!ImHexApi::Provider::isValid() || region.address == (size_t)-1) {
                 this->m_validBytes = 0;
             } else {
-                this->m_validBytes = u64(provider->getSize() - region.address);
+                this->m_validBytes   = u64(provider->getSize() - region.address);
                 this->m_startAddress = region.address;
             }
 
@@ -83,32 +83,32 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 if (ImGui::RadioButton("hex.common.little_endian"_lang, this->m_endian == std::endian::little)) {
-                    this->m_endian = std::endian::little;
+                    this->m_endian           = std::endian::little;
                     this->m_shouldInvalidate = true;
                 }
                 ImGui::SameLine();
                 if (ImGui::RadioButton("hex.common.big_endian"_lang, this->m_endian == std::endian::big)) {
-                    this->m_endian = std::endian::big;
+                    this->m_endian           = std::endian::big;
                     this->m_shouldInvalidate = true;
                 }
 
                 if (ImGui::RadioButton("hex.common.decimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Decimal)) {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Decimal;
-                    this->m_shouldInvalidate = true;
+                    this->m_shouldInvalidate   = true;
                 }
                 ImGui::SameLine();
                 if (ImGui::RadioButton("hex.common.hexadecimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Hexadecimal)) {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Hexadecimal;
-                    this->m_shouldInvalidate = true;
+                    this->m_shouldInvalidate   = true;
                 }
                 ImGui::SameLine();
                 if (ImGui::RadioButton("hex.common.octal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Octal)) {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Octal;
-                    this->m_shouldInvalidate = true;
+                    this->m_shouldInvalidate   = true;
                 }
             } else {
-                std::string text = "hex.builtin.view.data_inspector.no_data"_lang;
-                auto textSize = ImGui::CalcTextSize(text.c_str());
+                std::string text    = "hex.builtin.view.data_inspector.no_data"_lang;
+                auto textSize       = ImGui::CalcTextSize(text.c_str());
                 auto availableSpace = ImGui::GetContentRegionAvail();
 
                 ImGui::SetCursorPos((availableSpace - textSize) / 2.0F);

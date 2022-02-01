@@ -85,7 +85,11 @@ namespace hex {
             };
 
             void add(
-                Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback = [](auto) {});
+                Type type,
+                const std::string &command,
+                const std::string &unlocalizedDescription,
+                const DisplayCallback &displayCallback,
+                const ExecuteCallback &executeCallback = [](auto) {});
             std::vector<Entry> &getEntries();
         }
 
@@ -101,14 +105,14 @@ namespace hex {
 
             }
 
-            constexpr static u32 UnlimitedParameters            = 0xFFFF'FFFF;
-            constexpr static u32 MoreParametersThan             = 0x8000'0000;
-            constexpr static u32 LessParametersThan             = 0x4000'0000;
-            constexpr static u32 ExactlyOrMoreParametersThan    = 0x2000'0000;
-            constexpr static u32 NoParameters                   = 0x0000'0000;
+            constexpr static u32 UnlimitedParameters         = 0xFFFF'FFFF;
+            constexpr static u32 MoreParametersThan          = 0x8000'0000;
+            constexpr static u32 LessParametersThan          = 0x4000'0000;
+            constexpr static u32 ExactlyOrMoreParametersThan = 0x2000'0000;
+            constexpr static u32 NoParameters                = 0x0000'0000;
 
             using Namespace = std::vector<std::string>;
-            using Callback = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator *, const std::vector<hex::pl::Token::Literal> &)>;
+            using Callback  = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator *, const std::vector<hex::pl::Token::Literal> &)>;
 
             struct Function {
                 u32 parameterCount;
@@ -120,7 +124,7 @@ namespace hex {
             void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
             std::map<std::string, ContentRegistry::PatternLanguage::Function> &getFunctions();
 
-            std::vector<impl::ColorPalette>& getPalettes();
+            std::vector<impl::ColorPalette> &getPalettes();
             void addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors);
             void setSelectedPalette(u32 index);
             u32 getNextColor();
@@ -177,7 +181,7 @@ namespace hex {
 
             namespace impl {
 
-                using DisplayFunction = std::function<std::string()>;
+                using DisplayFunction   = std::function<std::string()>;
                 using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8> &, std::endian, NumberDisplayStyle)>;
 
                 struct Entry {
@@ -240,7 +244,7 @@ namespace hex {
 
             namespace impl {
 
-                using DrawCallback = std::function<void()>;
+                using DrawCallback   = std::function<void()>;
                 using LayoutFunction = std::function<void(u32)>;
 
                 struct Layout {

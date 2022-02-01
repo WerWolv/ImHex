@@ -19,8 +19,8 @@ namespace hex::pl {
             }
         }
 
-        auto startOffset = this->dataOffset();
-        auto pattern = type == nullptr ? nullptr : type->createPatterns(this).front();
+        auto startOffset   = this->dataOffset();
+        auto pattern       = type == nullptr ? nullptr : type->createPatterns(this).front();
         this->dataOffset() = startOffset;
 
         if (pattern == nullptr) {
@@ -123,7 +123,7 @@ namespace hex::pl {
                                                           else
                                                               LogConsole::abortEvaluation(hex::format("cannot cast integer literal to type '{}'", pattern->getTypeName()));
                                                       } },
-                                                  value);
+            value);
 
         this->getStack()[pattern->getOffset()] = castedLiteral;
     }
@@ -143,7 +143,7 @@ namespace hex::pl {
             this->m_envVariables.clear();
         };
 
-        this->dataOffset() = 0x00;
+        this->dataOffset()       = 0x00;
         this->m_currPatternCount = 0;
 
         for (auto &func : this->m_customFunctionDefinitions)

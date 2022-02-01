@@ -50,7 +50,7 @@ namespace hex {
         u64 address;
         size_t size;
 
-        char *name = nullptr;
+        char *name    = nullptr;
         char *comment = nullptr;
 
         if (!PyArg_ParseTuple(args, "K|n|s|s", &address, &size, &name, &comment)) {
@@ -213,7 +213,7 @@ namespace hex {
 
         {
             auto sysPath = PySys_GetObject("path");
-            auto path = PyUnicode_FromString("lib");
+            auto path    = PyUnicode_FromString("lib");
 
             PyList_Insert(sysPath, 0, path);
         }

@@ -24,7 +24,7 @@ namespace hex {
 
     class Socket {
     public:
-        Socket() = default;
+        Socket()               = default;
         Socket(const Socket &) = delete;
         Socket(Socket &&other);
 

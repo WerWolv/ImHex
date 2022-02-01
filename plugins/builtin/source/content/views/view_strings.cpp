@@ -65,7 +65,7 @@ namespace hex::plugin::builtin {
 
         std::thread([this] {
             auto provider = ImHexApi::Provider::get();
-            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.strings.searching", provider->getActualSize());
+            auto task     = ImHexApi::Tasks::createTask("hex.builtin.view.strings.searching", provider->getActualSize());
 
             std::vector<u8> buffer(1024, 0x00);
             u32 foundCharacters = 0;
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
                             std::regex pattern;
                             if (view.m_regex) {
                                 try {
-                                    pattern = std::regex(data->Buf);
+                                    pattern               = std::regex(data->Buf);
                                     view.m_pattern_parsed = true;
                                 } catch (std::regex_error &e) {
                                     view.m_pattern_parsed = false;
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::Button("hex.builtin.view.strings.extract"_lang))
                         this->searchStrings();
                 },
-                                this->m_searching);
+                    this->m_searching);
 
                 if (this->m_searching) {
                     ImGui::SameLine();
@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
                     while (clipper.Step()) {
                         for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             auto &foundString = this->m_foundStrings[this->m_filterIndices[i]];
-                            auto string = readString(foundString);
+                            auto string       = readString(foundString);
 
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();

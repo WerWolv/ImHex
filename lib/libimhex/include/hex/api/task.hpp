@@ -24,8 +24,8 @@ namespace hex {
         [[nodiscard]] bool isPending() const;
 
         static size_t getRunningTaskCount();
-        static std::list<Task *>& getRunningTasks() { return Task::s_runningTasks; }
-        static std::mutex& getTaskMutex() { return Task::s_taskMutex; }
+        static std::list<Task *> &getRunningTasks() { return Task::s_runningTasks; }
+        static std::mutex &getTaskMutex() { return Task::s_taskMutex; }
 
     private:
         std::string m_name;

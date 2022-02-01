@@ -25,15 +25,15 @@ namespace hex::plugin::builtin {
 
     ViewInformation::ViewInformation() : View("hex.builtin.view.information.name") {
         EventManager::subscribe<EventDataChanged>(this, [this]() {
-            this->m_dataValid = false;
+            this->m_dataValid           = false;
             this->m_highestBlockEntropy = 0;
             this->m_blockEntropy.clear();
             this->m_averageEntropy = 0;
-            this->m_blockSize = 0;
+            this->m_blockSize      = 0;
             this->m_valueCounts.fill(0x00);
-            this->m_mimeType = "";
+            this->m_mimeType        = "";
             this->m_fileDescription = "";
-            this->m_analyzedRegion = { 0, 0 };
+            this->m_analyzedRegion  = { 0, 0 };
         });
 
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
@@ -92,7 +92,7 @@ namespace hex::plugin::builtin {
                 magic::compile();
 
                 this->m_fileDescription = magic::getDescription(provider);
-                this->m_mimeType = magic::getMIMEType(provider);
+                this->m_mimeType        = magic::getMIMEType(provider);
             }
 
             this->m_dataValid = true;
@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
                     task.update(i);
                 }
 
-                this->m_averageEntropy = calculateEntropy(this->m_valueCounts, provider->getSize());
+                this->m_averageEntropy      = calculateEntropy(this->m_valueCounts, provider->getSize());
                 this->m_highestBlockEntropy = *std::max_element(this->m_blockEntropy.begin(), this->m_blockEntropy.end());
             }
 
@@ -139,7 +139,7 @@ namespace hex::plugin::builtin {
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang))
                             this->analyze();
                     },
-                                    this->m_analyzing);
+                        this->m_analyzing);
 
                     if (this->m_analyzing) {
                         ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
@@ -208,7 +208,7 @@ namespace hex::plugin::builtin {
 
                             if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
                                 u64 address = u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress();
-                                address = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
+                                address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
                                 EventManager::post<RequestSelectionChange>(Region { address, 1 });
                             }
 

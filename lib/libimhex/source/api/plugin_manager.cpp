@@ -17,35 +17,35 @@ namespace hex {
 
         auto pluginName = fs::path(path).stem().string();
 
-        this->m_initializePluginFunction        = getPluginFunction<InitializePluginFunc>("initializePlugin");
-        this->m_getPluginNameFunction           = getPluginFunction<GetPluginNameFunc>("getPluginName");
-        this->m_getPluginAuthorFunction         = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
-        this->m_getPluginDescriptionFunction    = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
-        this->m_getCompatibleVersionFunction    = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
-        this->m_setImGuiContextFunction         = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
-        this->m_isBuiltinPluginFunction         = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
+        this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
+        this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
+        this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
+        this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
+        this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
+        this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
         this->m_handle = other.m_handle;
-        this->m_path = std::move(other.m_path);
+        this->m_path   = std::move(other.m_path);
 
-        this->m_initializePluginFunction        = other.m_initializePluginFunction;
-        this->m_getPluginNameFunction           = other.m_getPluginNameFunction;
-        this->m_getPluginAuthorFunction         = other.m_getPluginAuthorFunction;
-        this->m_getPluginDescriptionFunction    = other.m_getPluginDescriptionFunction;
-        this->m_getCompatibleVersionFunction    = other.m_getCompatibleVersionFunction;
-        this->m_setImGuiContextFunction         = other.m_setImGuiContextFunction;
-        this->m_isBuiltinPluginFunction         = other.m_isBuiltinPluginFunction;
+        this->m_initializePluginFunction     = other.m_initializePluginFunction;
+        this->m_getPluginNameFunction        = other.m_getPluginNameFunction;
+        this->m_getPluginAuthorFunction      = other.m_getPluginAuthorFunction;
+        this->m_getPluginDescriptionFunction = other.m_getPluginDescriptionFunction;
+        this->m_getCompatibleVersionFunction = other.m_getCompatibleVersionFunction;
+        this->m_setImGuiContextFunction      = other.m_setImGuiContextFunction;
+        this->m_isBuiltinPluginFunction      = other.m_isBuiltinPluginFunction;
 
-        other.m_handle                          = nullptr;
-        other.m_initializePluginFunction        = nullptr;
-        other.m_getPluginNameFunction           = nullptr;
-        other.m_getPluginAuthorFunction         = nullptr;
-        other.m_getPluginDescriptionFunction    = nullptr;
-        other.m_getCompatibleVersionFunction    = nullptr;
-        other.m_setImGuiContextFunction         = nullptr;
-        other.m_isBuiltinPluginFunction         = nullptr;
+        other.m_handle                       = nullptr;
+        other.m_initializePluginFunction     = nullptr;
+        other.m_getPluginNameFunction        = nullptr;
+        other.m_getPluginAuthorFunction      = nullptr;
+        other.m_getPluginDescriptionFunction = nullptr;
+        other.m_getCompatibleVersionFunction = nullptr;
+        other.m_setImGuiContextFunction      = nullptr;
+        other.m_isBuiltinPluginFunction      = nullptr;
     }
 
     Plugin::~Plugin() {

@@ -81,208 +81,208 @@ namespace hex::plugin::builtin {
 
 
                     switch (hashFunctionNames[this->m_currHashFunction].first) {
-                    case HashFunctions::Crc8:
-                        {
-                            static int polynomial = 0x07, init = 0x0000, xorout = 0x0000;
-                            static bool reflectIn = false, reflectOut = false;
+                        case HashFunctions::Crc8:
+                            {
+                                static int polynomial = 0x07, init = 0x0000, xorout = 0x0000;
+                                static bool reflectIn = false, reflectOut = false;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::NewLine();
+                                ImGui::NewLine();
 
-                            static u8 result = 0;
+                                static u8 result = 0;
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::crc8(provider, this->m_hashRegion[0], this->m_hashRegion[1], polynomial, init, xorout, reflectIn, reflectOut);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::crc8(provider, this->m_hashRegion[0], this->m_hashRegion[1], polynomial, init, xorout, reflectIn, reflectOut);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            snprintf(buffer, sizeof(buffer), "%02X", result);
+                                char buffer[sizeof(result) * 2 + 1];
+                                snprintf(buffer, sizeof(buffer), "%02X", result);
 
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Crc16:
-                        {
-                            static int polynomial = 0x8005, init = 0x0000, xorout = 0x0000;
-                            static bool reflectIn = false, reflectOut = false;
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Crc16:
+                            {
+                                static int polynomial = 0x8005, init = 0x0000, xorout = 0x0000;
+                                static bool reflectIn = false, reflectOut = false;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::NewLine();
+                                ImGui::NewLine();
 
-                            static u16 result = 0;
+                                static u16 result = 0;
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1], polynomial, init, xorout, reflectIn, reflectOut);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::crc16(provider, this->m_hashRegion[0], this->m_hashRegion[1], polynomial, init, xorout, reflectIn, reflectOut);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            snprintf(buffer, sizeof(buffer), "%04X", result);
+                                char buffer[sizeof(result) * 2 + 1];
+                                snprintf(buffer, sizeof(buffer), "%04X", result);
 
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Crc32:
-                        {
-                            static int polynomial = 0x04C11DB7, init = 0xFFFFFFFF, xorout = 0xFFFFFFFF;
-                            static bool reflectIn = true, reflectOut = true;
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Crc32:
+                            {
+                                static int polynomial = 0x04C11DB7, init = 0xFFFFFFFF, xorout = 0xFFFFFFFF;
+                                static bool reflectIn = true, reflectOut = true;
 
 
-                            ImGui::InputInt("hex.builtin.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.iv"_lang, &init, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
-                            if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
+                                ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
+                                if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                            ImGui::NewLine();
+                                ImGui::NewLine();
 
-                            static u32 result = 0;
+                                static u32 result = 0;
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1], polynomial, init, xorout, reflectIn, reflectOut);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::crc32(provider, this->m_hashRegion[0], this->m_hashRegion[1], polynomial, init, xorout, reflectIn, reflectOut);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            snprintf(buffer, sizeof(buffer), "%08X", result);
+                                char buffer[sizeof(result) * 2 + 1];
+                                snprintf(buffer, sizeof(buffer), "%08X", result);
 
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Md5:
-                        {
-                            static std::array<u8, 16> result = { 0 };
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Md5:
+                            {
+                                static std::array<u8, 16> result = { 0 };
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::md5(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::md5(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
+                                char buffer[sizeof(result) * 2 + 1];
+                                formatBigHexInt(result, buffer, sizeof(buffer));
 
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Sha1:
-                        {
-                            static std::array<u8, 20> result = { 0 };
+                                ImGui::NewLine();
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Sha1:
+                            {
+                                static std::array<u8, 20> result = { 0 };
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::sha1(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::sha1(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
+                                char buffer[sizeof(result) * 2 + 1];
+                                formatBigHexInt(result, buffer, sizeof(buffer));
 
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Sha224:
-                        {
-                            static std::array<u8, 28> result = { 0 };
+                                ImGui::NewLine();
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Sha224:
+                            {
+                                static std::array<u8, 28> result = { 0 };
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::sha224(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::sha224(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
+                                char buffer[sizeof(result) * 2 + 1];
+                                formatBigHexInt(result, buffer, sizeof(buffer));
 
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Sha256:
-                        {
-                            static std::array<u8, 32> result;
+                                ImGui::NewLine();
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Sha256:
+                            {
+                                static std::array<u8, 32> result;
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::sha256(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::sha256(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
+                                char buffer[sizeof(result) * 2 + 1];
+                                formatBigHexInt(result, buffer, sizeof(buffer));
 
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Sha384:
-                        {
-                            static std::array<u8, 48> result;
+                                ImGui::NewLine();
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Sha384:
+                            {
+                                static std::array<u8, 48> result;
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::sha384(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::sha384(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
+                                char buffer[sizeof(result) * 2 + 1];
+                                formatBigHexInt(result, buffer, sizeof(buffer));
 
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
-                    case HashFunctions::Sha512:
-                        {
-                            static std::array<u8, 64> result;
+                                ImGui::NewLine();
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
+                        case HashFunctions::Sha512:
+                            {
+                                static std::array<u8, 64> result;
 
-                            if (this->m_shouldInvalidate)
-                                result = crypt::sha512(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
+                                if (this->m_shouldInvalidate)
+                                    result = crypt::sha512(provider, this->m_hashRegion[0], this->m_hashRegion[1]);
 
-                            char buffer[sizeof(result) * 2 + 1];
-                            formatBigHexInt(result, buffer, sizeof(buffer));
+                                char buffer[sizeof(result) * 2 + 1];
+                                formatBigHexInt(result, buffer, sizeof(buffer));
 
-                            ImGui::NewLine();
-                            ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
-                            ImGui::Separator();
-                            ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
-                        }
-                        break;
+                                ImGui::NewLine();
+                                ImGui::TextUnformatted("hex.builtin.view.hashes.result"_lang);
+                                ImGui::Separator();
+                                ImGui::InputText("##nolabel", buffer, ImGuiInputTextFlags_ReadOnly);
+                            }
+                            break;
                     }
                 }
 

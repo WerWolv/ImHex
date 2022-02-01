@@ -258,7 +258,7 @@ namespace hex::pl {
         std::map<std::string, Token::Literal> m_inVariables;
         std::map<std::string, size_t> m_outVariables;
 
-        std::atomic<bool> m_dangerousFunctionCalled = false;
+        std::atomic<bool> m_dangerousFunctionCalled                        = false;
         std::atomic<DangerousFunctionPermission> m_allowDangerousFunctions = DangerousFunctionPermission::Ask;
         ControlFlowStatement m_currControlFlowStatement;
 

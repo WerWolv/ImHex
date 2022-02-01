@@ -22,16 +22,16 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        bool m_dataValid = false;
-        u32 m_blockSize = 0;
-        float m_averageEntropy = 0;
+        bool m_dataValid            = false;
+        u32 m_blockSize             = 0;
+        float m_averageEntropy      = 0;
         float m_highestBlockEntropy = 0;
         std::vector<float> m_blockEntropy;
 
         double m_entropyHandlePosition;
 
         std::array<ImU64, 256> m_valueCounts = { 0 };
-        bool m_analyzing = false;
+        bool m_analyzing                     = false;
 
         std::pair<u64, u64> m_analyzedRegion = { 0, 0 };
 

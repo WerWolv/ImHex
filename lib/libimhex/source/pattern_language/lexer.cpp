@@ -38,7 +38,7 @@ namespace hex::pl {
 
         u8 base;
 
-        auto endPos = getIntegerLiteralLength(string);
+        auto endPos     = getIntegerLiteralLength(string);
         auto numberData = std::string_view(string).substr(0, endPos);
 
         if (numberData.ends_with('U')) {
@@ -56,7 +56,7 @@ namespace hex::pl {
 
         if (numberData.starts_with("0x")) {
             numberData = numberData.substr(2);
-            base = 16;
+            base       = 16;
 
             if (Token::isFloatingPoint(type))
                 return std::nullopt;
@@ -65,7 +65,7 @@ namespace hex::pl {
                 return std::nullopt;
         } else if (numberData.starts_with("0b")) {
             numberData = numberData.substr(2);
-            base = 2;
+            base       = 2;
 
             if (Token::isFloatingPoint(type))
                 return std::nullopt;
@@ -111,23 +111,23 @@ namespace hex::pl {
             }
 
             switch (type) {
-            case Token::ValueType::Unsigned128Bit:
-                return { u128(integer) };
-            case Token::ValueType::Signed128Bit:
-                return { i128(integer) };
-            default:
-                return std::nullopt;
+                case Token::ValueType::Unsigned128Bit:
+                    return { u128(integer) };
+                case Token::ValueType::Signed128Bit:
+                    return { i128(integer) };
+                default:
+                    return std::nullopt;
             }
         } else if (Token::isFloatingPoint(type)) {
             double floatingPoint = strtod(numberData.data(), nullptr);
 
             switch (type) {
-            case Token::ValueType::Float:
-                return { float(floatingPoint) };
-            case Token::ValueType::Double:
-                return { double(floatingPoint) };
-            default:
-                return std::nullopt;
+                case Token::ValueType::Float:
+                    return { float(floatingPoint) };
+                case Token::ValueType::Double:
+                    return { double(floatingPoint) };
+                default:
+                    return std::nullopt;
             }
         }
 
@@ -147,46 +147,46 @@ namespace hex::pl {
 
             // Handle simple escape sequences
             switch (string[1]) {
-            case 'a':
-                return {
-                    {'\a', 2}
-                };
-            case 'b':
-                return {
-                    {'\b', 2}
-                };
-            case 'f':
-                return {
-                    {'\f', 2}
-                };
-            case 'n':
-                return {
-                    {'\n', 2}
-                };
-            case 'r':
-                return {
-                    {'\r', 2}
-                };
-            case 't':
-                return {
-                    {'\t', 2}
-                };
-            case 'v':
-                return {
-                    {'\v', 2}
-                };
-            case '\\':
-                return {
-                    {'\\', 2}
-                };
-            case '\'':
-                return {
-                    {'\'', 2}
-                };
-            case '\"':
-                return {
-                    {'\"', 2}
-                };
+                case 'a':
+                    return {
+                        {'\a', 2}
+                    };
+                case 'b':
+                    return {
+                        {'\b', 2}
+                    };
+                case 'f':
+                    return {
+                        {'\f', 2}
+                    };
+                case 'n':
+                    return {
+                        {'\n', 2}
+                    };
+                case 'r':
+                    return {
+                        {'\r', 2}
+                    };
+                case 't':
+                    return {
+                        {'\t', 2}
+                    };
+                case 'v':
+                    return {
+                        {'\v', 2}
+                    };
+                case '\\':
+                    return {
+                        {'\\', 2}
+                    };
+                case '\'':
+                    return {
+                        {'\'', 2}
+                    };
+                case '\"':
+                    return {
+                        {'\"', 2}
+                    };
             }
 
             // Hexadecimal number

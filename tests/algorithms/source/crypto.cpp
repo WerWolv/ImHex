@@ -119,7 +119,7 @@ int checkCrcAgainstGondenSamples(Func func, Range golden_samples) {
     for (auto &i : golden_samples) {
         hex::test::TestProvider provider(&i.data);
         hex::prv::Provider *provider2 = &provider;
-        auto crc = func(provider2, 0, i.data.size(), i.poly, i.init, i.xorOut, i.refIn, i.refOut);
+        auto crc                      = func(provider2, 0, i.data.size(), i.poly, i.init, i.xorOut, i.refIn, i.refOut);
         TEST_ASSERT(crc == i.result, "name: {} got: {:#x} expected: {:#x}", i.name, crc, i.result);
     }
     TEST_SUCCESS();
@@ -142,7 +142,7 @@ int checkCrcAgainstRandomData(Func func, int width) {
 
         hex::test::TestProvider testprovider(&c.data);
         hex::prv::Provider *provider = &testprovider;
-        u32 crc1 = func(provider, 0, c.data.size(), c.poly, c.init, c.xorOut, c.refIn, c.refOut);
+        u32 crc1                     = func(provider, 0, c.data.size(), c.poly, c.init, c.xorOut, c.refIn, c.refOut);
 
         std::vector<u8> data2 = c.data;
         if (width >= 32) {
@@ -155,19 +155,19 @@ int checkCrcAgainstRandomData(Func func, int width) {
 
         hex::test::TestProvider testprovider2(&data2);
         hex::prv::Provider *provider2 = &testprovider2;
-        u32 crc2 = func(provider2, 0, data2.size(), c.poly, c.init, c.xorOut, c.refIn, c.refOut);
+        u32 crc2                      = func(provider2, 0, data2.size(), c.poly, c.init, c.xorOut, c.refIn, c.refOut);
 
         TEST_ASSERT(crc2 == 0, "got wrong crc2: {:#x}, crc1: {:#x}, "
                                "width: {:2d}, poly: {:#018x}, init: {:#018x}, xorout: {:#018x}, refin: {:5}, refout: {:5}, data: {}",
-                    crc2,
-                    crc1,
-                    c.width,
-                    c.poly,
-                    c.init,
-                    c.xorOut,
-                    c.refIn,
-                    c.refOut,
-                    data2);
+            crc2,
+            crc1,
+            c.width,
+            c.poly,
+            c.init,
+            c.xorOut,
+            c.refIn,
+            c.refOut,
+            data2);
     }
 
     TEST_SUCCESS();
@@ -288,12 +288,12 @@ int checkHashProviderAgainstGondenSamples(Ret (*func)(hex::prv::Provider *&, u64
         std::vector<u8> data(i.data.data(), i.data.data() + i.data.size());
         hex::test::TestProvider provider(&data);
         hex::prv::Provider *provider2 = &provider;
-        auto res = func(provider2, 0, i.data.size());
+        auto res                      = func(provider2, 0, i.data.size());
         TEST_ASSERT(std::equal(std::begin(res), std::end(res), hex::crypt::decode16(i.result).begin()),
-                    "data: '{}' got: {} expected: {}",
-                    i.data,
-                    hex::crypt::encode16(std::vector(res.begin(), res.end())),
-                    i.result);
+            "data: '{}' got: {} expected: {}",
+            i.data,
+            hex::crypt::encode16(std::vector(res.begin(), res.end())),
+            i.result);
     }
     TEST_SUCCESS();
 }
@@ -304,10 +304,10 @@ int checkHashVectorAgainstGondenSamples(Ret (*func)(const std::vector<u8> &), Ra
         std::vector<u8> data(i.data.data(), i.data.data() + i.data.size());
         auto res = func(data);
         TEST_ASSERT(std::equal(std::begin(res), std::end(res), hex::crypt::decode16(i.result).begin()),
-                    "data: '{}' got: {} expected: {}",
-                    i.data,
-                    hex::crypt::encode16(std::vector(res.begin(), res.end())),
-                    i.result);
+            "data: '{}' got: {} expected: {}",
+            i.data,
+            hex::crypt::encode16(std::vector(res.begin(), res.end())),
+            i.result);
     }
     TEST_SUCCESS();
 }

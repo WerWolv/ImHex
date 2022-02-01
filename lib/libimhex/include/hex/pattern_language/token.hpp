@@ -81,31 +81,31 @@ namespace hex::pl {
         };
 
         enum class ValueType {
-            Unsigned8Bit = 0x10,
-            Signed8Bit = 0x11,
-            Unsigned16Bit = 0x20,
-            Signed16Bit = 0x21,
-            Unsigned32Bit = 0x40,
-            Signed32Bit = 0x41,
-            Unsigned64Bit = 0x80,
-            Signed64Bit = 0x81,
+            Unsigned8Bit   = 0x10,
+            Signed8Bit     = 0x11,
+            Unsigned16Bit  = 0x20,
+            Signed16Bit    = 0x21,
+            Unsigned32Bit  = 0x40,
+            Signed32Bit    = 0x41,
+            Unsigned64Bit  = 0x80,
+            Signed64Bit    = 0x81,
             Unsigned128Bit = 0x100,
-            Signed128Bit = 0x101,
-            Character = 0x13,
-            Character16 = 0x23,
-            Boolean = 0x14,
-            Float = 0x42,
-            Double = 0x82,
-            String = 0x15,
-            Auto = 0x16,
-            CustomType = 0x00,
-            Padding = 0x1F,
+            Signed128Bit   = 0x101,
+            Character      = 0x13,
+            Character16    = 0x23,
+            Boolean        = 0x14,
+            Float          = 0x42,
+            Double         = 0x82,
+            String         = 0x15,
+            Auto           = 0x16,
+            CustomType     = 0x00,
+            Padding        = 0x1F,
 
-            Unsigned = 0xFF00,
-            Signed = 0xFF01,
+            Unsigned      = 0xFF00,
+            Signed        = 0xFF01,
             FloatingPoint = 0xFF02,
-            Integer = 0xFF03,
-            Any = 0xFFFF
+            Integer       = 0xFF03,
+            Any           = 0xFFFF
         };
 
         enum class Separator {
@@ -127,13 +127,13 @@ namespace hex::pl {
             [[nodiscard]] const std::string &get() const { return this->m_identifier; }
 
             auto operator<=>(const Identifier &) const = default;
-            bool operator==(const Identifier &) const = default;
+            bool operator==(const Identifier &) const  = default;
 
         private:
             std::string m_identifier;
         };
 
-        using Literal = std::variant<char, bool, u128, i128, double, std::string, PatternData *>;
+        using Literal    = std::variant<char, bool, u128, i128, double, std::string, PatternData *>;
         using ValueTypes = std::variant<Keyword, Identifier, Operator, Literal, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -160,7 +160,7 @@ namespace hex::pl {
                                   [](const std::string &) -> u128 { LogConsole::abortEvaluation("expected integral type, got string"); },
                                   [](PatternData *) -> u128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> u128 { return result; } },
-                              literal);
+                literal);
         }
 
         static i128 literalToSigned(const pl::Token::Literal &literal) {
@@ -168,7 +168,7 @@ namespace hex::pl {
                                   [](const std::string &) -> i128 { LogConsole::abortEvaluation("expected integral type, got string"); },
                                   [](PatternData *) -> i128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> i128 { return result; } },
-                              literal);
+                literal);
         }
 
         static double literalToFloatingPoint(const pl::Token::Literal &literal) {
@@ -176,7 +176,7 @@ namespace hex::pl {
                                   [](const std::string &) -> double { LogConsole::abortEvaluation("expected integral type, got string"); },
                                   [](PatternData *) -> double { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> double { return result; } },
-                              literal);
+                literal);
         }
 
         static bool literalToBoolean(const pl::Token::Literal &literal) {
@@ -184,7 +184,7 @@ namespace hex::pl {
                                   [](const std::string &) -> bool { LogConsole::abortEvaluation("expected integral type, got string"); },
                                   [](PatternData *) -> bool { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> bool { return result != 0; } },
-                              literal);
+                literal);
         }
 
         static std::string literalToString(const pl::Token::Literal &literal, bool cast) {
@@ -199,45 +199,45 @@ namespace hex::pl {
                                   [](char result) -> std::string { return { 1, result }; },
                                   [](PatternData *) -> std::string { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> std::string { return std::to_string(result); } },
-                              literal);
+                literal);
         }
 
         [[nodiscard]] constexpr static auto getTypeName(const pl::Token::ValueType type) {
             switch (type) {
-            case ValueType::Signed8Bit:
-                return "s8";
-            case ValueType::Signed16Bit:
-                return "s16";
-            case ValueType::Signed32Bit:
-                return "s32";
-            case ValueType::Signed64Bit:
-                return "s64";
-            case ValueType::Signed128Bit:
-                return "s128";
-            case ValueType::Unsigned8Bit:
-                return "u8";
-            case ValueType::Unsigned16Bit:
-                return "u16";
-            case ValueType::Unsigned32Bit:
-                return "u32";
-            case ValueType::Unsigned64Bit:
-                return "u64";
-            case ValueType::Unsigned128Bit:
-                return "u128";
-            case ValueType::Float:
-                return "float";
-            case ValueType::Double:
-                return "double";
-            case ValueType::Character:
-                return "char";
-            case ValueType::Character16:
-                return "char16";
-            case ValueType::Padding:
-                return "padding";
-            case ValueType::String:
-                return "str";
-            default:
-                return "< ??? >";
+                case ValueType::Signed8Bit:
+                    return "s8";
+                case ValueType::Signed16Bit:
+                    return "s16";
+                case ValueType::Signed32Bit:
+                    return "s32";
+                case ValueType::Signed64Bit:
+                    return "s64";
+                case ValueType::Signed128Bit:
+                    return "s128";
+                case ValueType::Unsigned8Bit:
+                    return "u8";
+                case ValueType::Unsigned16Bit:
+                    return "u16";
+                case ValueType::Unsigned32Bit:
+                    return "u32";
+                case ValueType::Unsigned64Bit:
+                    return "u64";
+                case ValueType::Unsigned128Bit:
+                    return "u128";
+                case ValueType::Float:
+                    return "float";
+                case ValueType::Double:
+                    return "double";
+                case ValueType::Character:
+                    return "char";
+                case ValueType::Character16:
+                    return "char16";
+                case ValueType::Padding:
+                    return "padding";
+                case ValueType::String:
+                    return "str";
+                default:
+                    return "< ??? >";
             }
         }
 
@@ -246,7 +246,7 @@ namespace hex::pl {
                 return true;
             else if (this->type == Type::ValueType) {
                 auto otherValueType = std::get_if<ValueType>(&other);
-                auto valueType = std::get_if<ValueType>(&this->value);
+                auto valueType      = std::get_if<ValueType>(&this->value);
 
                 if (otherValueType == nullptr) return false;
                 if (valueType == nullptr) return false;

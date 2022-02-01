@@ -31,139 +31,139 @@ namespace hex {
 
     static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
-        case WM_NCACTIVATE:
-        case WM_NCPAINT:
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-        case WM_NCCALCSIZE:
-            {
-                RECT &rect = *reinterpret_cast<RECT *>(lParam);
-                RECT client = rect;
+            case WM_NCACTIVATE:
+            case WM_NCPAINT:
+                return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            case WM_NCCALCSIZE:
+                {
+                    RECT &rect  = *reinterpret_cast<RECT *>(lParam);
+                    RECT client = rect;
 
-                CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+                    CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
 
-                if (IsMaximized(hwnd)) {
-                    WINDOWINFO windowInfo = { .cbSize = sizeof(WINDOWINFO) };
-                    GetWindowInfo(hwnd, &windowInfo);
-                    rect = RECT {
-                        .left = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
-                        .top = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
-                        .right = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
-                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders) + 1
+                    if (IsMaximized(hwnd)) {
+                        WINDOWINFO windowInfo = { .cbSize = sizeof(WINDOWINFO) };
+                        GetWindowInfo(hwnd, &windowInfo);
+                        rect = RECT {
+                            .left   = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
+                            .top    = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
+                            .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
+                            .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders) + 1
+                        };
+                    } else {
+                        rect = client;
+                    }
+
+                    return 0;
+                }
+            case WM_SETCURSOR:
+                {
+                    auto cursorPos = LOWORD(lParam);
+
+                    switch (cursorPos) {
+                        case HTRIGHT:
+                        case HTLEFT:
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeEW;
+                            break;
+                        case HTTOP:
+                        case HTBOTTOM:
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeNS;
+                            break;
+                        case HTTOPLEFT:
+                        case HTBOTTOMRIGHT:
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeNWSE;
+                            break;
+                        case HTTOPRIGHT:
+                        case HTBOTTOMLEFT:
+                            g_mouseCursorIcon = ImGuiMouseCursor_ResizeNESW;
+                            break;
+                        case HTCAPTION:
+                        case HTCLIENT:
+                            g_mouseCursorIcon = ImGuiMouseCursor_None;
+                            break;
+                    }
+
+                    return TRUE;
+                }
+            case WM_NCHITTEST:
+                {
+                    POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+                    const POINT border {
+                        static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F),
+                        static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F)
                     };
-                } else {
-                    rect = client;
+
+                    RECT window;
+                    if (!::GetWindowRect(hwnd, &window)) {
+                        return HTNOWHERE;
+                    }
+
+                    constexpr auto RegionClient = 0b0000;
+                    constexpr auto RegionLeft   = 0b0001;
+                    constexpr auto RegionRight  = 0b0010;
+                    constexpr auto RegionTop    = 0b0100;
+                    constexpr auto RegionBottom = 0b1000;
+
+                    const auto result =
+                        RegionLeft * (cursor.x < (window.left + border.x)) |
+                        RegionRight * (cursor.x >= (window.right - border.x)) |
+                        RegionTop * (cursor.y < (window.top + border.y)) |
+                        RegionBottom * (cursor.y >= (window.bottom - border.y));
+
+                    if (result != 0 && (ImGui::IsItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
+                        break;
+
+                    switch (result) {
+                        case RegionLeft:
+                            return HTLEFT;
+                        case RegionRight:
+                            return HTRIGHT;
+                        case RegionTop:
+                            return HTTOP;
+                        case RegionBottom:
+                            return HTBOTTOM;
+                        case RegionTop | RegionLeft:
+                            return HTTOPLEFT;
+                        case RegionTop | RegionRight:
+                            return HTTOPRIGHT;
+                        case RegionBottom | RegionLeft:
+                            return HTBOTTOMLEFT;
+                        case RegionBottom | RegionRight:
+                            return HTBOTTOMRIGHT;
+                        case RegionClient:
+                        default:
+                            if ((cursor.y < (window.top + g_titleBarHeight * 2)) && !(ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
+                                return HTCAPTION;
+                            else break;
+                    }
+                    break;
+                }
+            case WM_SETTINGCHANGE:
+                {
+                    if (lParam == 0) break;
+
+                    if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
+                        EventManager::post<EventOSThemeChanged>();
+                    }
+
+                    break;
+                }
+            case WM_COPYDATA:
+                {
+                    auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
+                    if (message == nullptr) break;
+
+                    auto path = reinterpret_cast<const char *>(message->lpData);
+                    if (path == nullptr) break;
+
+                    log::info("Opening file in existing instance: {}", path);
+                    EventManager::post<RequestOpenFile>(path);
+                    break;
                 }
 
-                return 0;
-            }
-        case WM_SETCURSOR:
-            {
-                auto cursorPos = LOWORD(lParam);
-
-                switch (cursorPos) {
-                case HTRIGHT:
-                case HTLEFT:
-                    g_mouseCursorIcon = ImGuiMouseCursor_ResizeEW;
-                    break;
-                case HTTOP:
-                case HTBOTTOM:
-                    g_mouseCursorIcon = ImGuiMouseCursor_ResizeNS;
-                    break;
-                case HTTOPLEFT:
-                case HTBOTTOMRIGHT:
-                    g_mouseCursorIcon = ImGuiMouseCursor_ResizeNWSE;
-                    break;
-                case HTTOPRIGHT:
-                case HTBOTTOMLEFT:
-                    g_mouseCursorIcon = ImGuiMouseCursor_ResizeNESW;
-                    break;
-                case HTCAPTION:
-                case HTCLIENT:
-                    g_mouseCursorIcon = ImGuiMouseCursor_None;
-                    break;
-                }
-
-                return TRUE;
-            }
-        case WM_NCHITTEST:
-            {
-                POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-
-                const POINT border {
-                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F),
-                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F)
-                };
-
-                RECT window;
-                if (!::GetWindowRect(hwnd, &window)) {
-                    return HTNOWHERE;
-                }
-
-                constexpr auto RegionClient = 0b0000;
-                constexpr auto RegionLeft = 0b0001;
-                constexpr auto RegionRight = 0b0010;
-                constexpr auto RegionTop = 0b0100;
-                constexpr auto RegionBottom = 0b1000;
-
-                const auto result =
-                    RegionLeft * (cursor.x < (window.left + border.x)) |
-                    RegionRight * (cursor.x >= (window.right - border.x)) |
-                    RegionTop * (cursor.y < (window.top + border.y)) |
-                    RegionBottom * (cursor.y >= (window.bottom - border.y));
-
-                if (result != 0 && (ImGui::IsItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
-                    break;
-
-                switch (result) {
-                case RegionLeft:
-                    return HTLEFT;
-                case RegionRight:
-                    return HTRIGHT;
-                case RegionTop:
-                    return HTTOP;
-                case RegionBottom:
-                    return HTBOTTOM;
-                case RegionTop | RegionLeft:
-                    return HTTOPLEFT;
-                case RegionTop | RegionRight:
-                    return HTTOPRIGHT;
-                case RegionBottom | RegionLeft:
-                    return HTBOTTOMLEFT;
-                case RegionBottom | RegionRight:
-                    return HTBOTTOMRIGHT;
-                case RegionClient:
-                default:
-                    if ((cursor.y < (window.top + g_titleBarHeight * 2)) && !(ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
-                        return HTCAPTION;
-                    else break;
-                }
+            default:
                 break;
-            }
-        case WM_SETTINGCHANGE:
-            {
-                if (lParam == 0) break;
-
-                if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
-                    EventManager::post<EventOSThemeChanged>();
-                }
-
-                break;
-            }
-        case WM_COPYDATA:
-            {
-                auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
-                if (message == nullptr) break;
-
-                auto path = reinterpret_cast<const char *>(message->lpData);
-                if (path == nullptr) break;
-
-                log::info("Opening file in existing instance: {}", path);
-                EventManager::post<RequestOpenFile>(path);
-                break;
-            }
-
-        default:
-            break;
         }
 
         return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
@@ -230,7 +230,7 @@ namespace hex {
 
                     return TRUE;
                 },
-                              0);
+                    0);
 
                 std::exit(0);
             }
@@ -260,7 +260,7 @@ namespace hex {
             HKEY hkey;
             if (RegOpenKey(HKEY_CURRENT_USER, R"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", &hkey) == ERROR_SUCCESS) {
                 DWORD value = 0;
-                DWORD size = sizeof(DWORD);
+                DWORD size  = sizeof(DWORD);
 
                 auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
                 if (error == ERROR_SUCCESS) {
@@ -283,37 +283,37 @@ namespace hex {
         }
 
         switch (ImGui::GetMouseCursor()) {
-        case ImGuiMouseCursor_Arrow:
-            SetCursor(LoadCursor(nullptr, IDC_ARROW));
-            break;
-        case ImGuiMouseCursor_Hand:
-            SetCursor(LoadCursor(nullptr, IDC_HAND));
-            break;
-        case ImGuiMouseCursor_ResizeEW:
-            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
-            break;
-        case ImGuiMouseCursor_ResizeNS:
-            SetCursor(LoadCursor(nullptr, IDC_SIZENS));
-            break;
-        case ImGuiMouseCursor_ResizeNWSE:
-            SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
-            break;
-        case ImGuiMouseCursor_ResizeNESW:
-            SetCursor(LoadCursor(nullptr, IDC_SIZENESW));
-            break;
-        case ImGuiMouseCursor_ResizeAll:
-            SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
-            break;
-        case ImGuiMouseCursor_NotAllowed:
-            SetCursor(LoadCursor(nullptr, IDC_NO));
-            break;
-        case ImGuiMouseCursor_TextInput:
-            SetCursor(LoadCursor(nullptr, IDC_IBEAM));
-            break;
-        default:
-        case ImGuiMouseCursor_None:
-            SetCursor(LoadCursor(nullptr, IDC_ARROW));
-            break;
+            case ImGuiMouseCursor_Arrow:
+                SetCursor(LoadCursor(nullptr, IDC_ARROW));
+                break;
+            case ImGuiMouseCursor_Hand:
+                SetCursor(LoadCursor(nullptr, IDC_HAND));
+                break;
+            case ImGuiMouseCursor_ResizeEW:
+                SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+                break;
+            case ImGuiMouseCursor_ResizeNS:
+                SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+                break;
+            case ImGuiMouseCursor_ResizeNWSE:
+                SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
+                break;
+            case ImGuiMouseCursor_ResizeNESW:
+                SetCursor(LoadCursor(nullptr, IDC_SIZENESW));
+                break;
+            case ImGuiMouseCursor_ResizeAll:
+                SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+                break;
+            case ImGuiMouseCursor_NotAllowed:
+                SetCursor(LoadCursor(nullptr, IDC_NO));
+                break;
+            case ImGuiMouseCursor_TextInput:
+                SetCursor(LoadCursor(nullptr, IDC_IBEAM));
+                break;
+            default:
+            case ImGuiMouseCursor_None:
+                SetCursor(LoadCursor(nullptr, IDC_ARROW));
+                break;
         }
     }
 

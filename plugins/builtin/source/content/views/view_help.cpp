@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
                 ImHexApi::Tasks::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
-                this->m_aboutWindowOpen = true;
+                this->m_aboutWindowOpen    = true;
                 this->getWindowOpenState() = true;
             }
 
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             if (!this->m_logoTexture.valid()) {
-                auto logo = romfs::get("logo.png");
+                auto logo           = romfs::get("logo.png");
                 this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(logo.data()), logo.size());
             }
 

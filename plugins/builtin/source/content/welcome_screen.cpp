@@ -309,43 +309,43 @@ namespace hex::plugin::builtin {
             switch (theme) {
                 default:
                 case 1: /* Dark theme */
-                {
-                    ImGui::StyleColorsDark();
-                    ImGui::StyleCustomColorsDark();
-                    ImPlot::StyleColorsDark();
+                    {
+                        ImGui::StyleColorsDark();
+                        ImGui::StyleCustomColorsDark();
+                        ImPlot::StyleColorsDark();
 
-                    auto banner = romfs::get("banner_dark.png");
-                    s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                        auto banner     = romfs::get("banner_dark.png");
+                        s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
 
-                    break;
-                }
+                        break;
+                    }
                 case 2: /* Light theme */
-                {
-                    ImGui::StyleColorsLight();
-                    ImGui::StyleCustomColorsLight();
-                    ImPlot::StyleColorsLight();
+                    {
+                        ImGui::StyleColorsLight();
+                        ImGui::StyleCustomColorsLight();
+                        ImPlot::StyleColorsLight();
 
-                    auto banner = romfs::get("banner_light.png");
-                    s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                        auto banner     = romfs::get("banner_light.png");
+                        s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
 
-                    break;
-                }
+                        break;
+                    }
                 case 3: /* Classic theme */
-                {
-                    ImGui::StyleColorsClassic();
-                    ImGui::StyleCustomColorsClassic();
-                    ImPlot::StyleColorsClassic();
+                    {
+                        ImGui::StyleColorsClassic();
+                        ImGui::StyleCustomColorsClassic();
+                        ImPlot::StyleColorsClassic();
 
-                    auto banner = romfs::get("banner_dark.png");
-                    s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                        auto banner     = romfs::get("banner_dark.png");
+                        s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
 
-                    break;
-                }
+                        break;
+                    }
             }
 
-            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg] = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBg] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg]   = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
+            ImGui::GetStyle().Colors[ImGuiCol_TitleBg]          = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+            ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive]    = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
             ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
 
             if (!s_bannerTexture.valid()) {
@@ -387,10 +387,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
             if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {},
-                                     [](const auto &path) {
-                                         EventManager::post<RequestOpenFile>(path);
-                                     });
+                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
+                    EventManager::post<RequestOpenFile>(path);
+                });
             }
 
             if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
@@ -404,9 +403,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.clear_recent"_lang)) {
                     s_recentFilePaths.clear();
                     ContentRegistry::Settings::write(
-                            "hex.builtin.setting.imhex",
-                            "hex.builtin.setting.imhex.recent_files",
-                            std::vector<std::string>{});
+                        "hex.builtin.setting.imhex",
+                        "hex.builtin.setting.imhex.recent_files",
+                        std::vector<std::string> {});
                 }
 
                 ImGui::EndMenu();
@@ -422,7 +421,6 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndMenu();
             }
-
         });
 
 

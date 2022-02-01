@@ -219,10 +219,8 @@ namespace hex {
     }
 
     void ContentRegistry::PatternLanguage::addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors) {
-        s_colorPalettes.push_back({
-            unlocalizedName,
-            colors
-        });
+        s_colorPalettes.push_back({ unlocalizedName,
+            colors });
     }
 
     void ContentRegistry::PatternLanguage::setSelectedPalette(u32 index) {

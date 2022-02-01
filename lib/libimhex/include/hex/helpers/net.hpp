@@ -58,7 +58,7 @@ namespace hex {
         curl_slist *m_headers = nullptr;
 
         std::mutex m_transmissionActive;
-        float m_progress = 0.0F;
+        float m_progress    = 0.0F;
         bool m_shouldCancel = false;
     };
 

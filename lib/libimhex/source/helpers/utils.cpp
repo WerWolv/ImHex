@@ -83,29 +83,29 @@ namespace hex {
         std::string result = hex::format("{0:.2f}", value);
 
         switch (unitIndex) {
-        case 0:
-            result += " Bytes";
-            break;
-        case 1:
-            result += " kB";
-            break;
-        case 2:
-            result += " MB";
-            break;
-        case 3:
-            result += " GB";
-            break;
-        case 4:
-            result += " TB";
-            break;
-        case 5:
-            result += " PB";
-            break;
-        case 6:
-            result += " EB";
-            break;
-        default:
-            result = "A lot!";
+            case 0:
+                result += " Bytes";
+                break;
+            case 1:
+                result += " kB";
+                break;
+            case 2:
+                result += " MB";
+                break;
+            case 3:
+                result += " GB";
+                break;
+            case 4:
+                result += " TB";
+                break;
+            case 5:
+                result += " PB";
+                break;
+            case 6:
+                result += " EB";
+                break;
+            default:
+                result = "A lot!";
         }
 
         return result;
@@ -113,78 +113,78 @@ namespace hex {
 
     std::string makePrintable(u8 c) {
         switch (c) {
-        case 0:
-            return "NUL";
-        case 1:
-            return "SOH";
-        case 2:
-            return "STX";
-        case 3:
-            return "ETX";
-        case 4:
-            return "EOT";
-        case 5:
-            return "ENQ";
-        case 6:
-            return "ACK";
-        case 7:
-            return "BEL";
-        case 8:
-            return "BS";
-        case 9:
-            return "TAB";
-        case 10:
-            return "LF";
-        case 11:
-            return "VT";
-        case 12:
-            return "FF";
-        case 13:
-            return "CR";
-        case 14:
-            return "SO";
-        case 15:
-            return "SI";
-        case 16:
-            return "DLE";
-        case 17:
-            return "DC1";
-        case 18:
-            return "DC2";
-        case 19:
-            return "DC3";
-        case 20:
-            return "DC4";
-        case 21:
-            return "NAK";
-        case 22:
-            return "SYN";
-        case 23:
-            return "ETB";
-        case 24:
-            return "CAN";
-        case 25:
-            return "EM";
-        case 26:
-            return "SUB";
-        case 27:
-            return "ESC";
-        case 28:
-            return "FS";
-        case 29:
-            return "GS";
-        case 30:
-            return "RS";
-        case 31:
-            return "US";
-        case 32:
-            return "Space";
-        case 127:
-            return "DEL";
-        case 128 ... 255:
-            return " ";
-        default:
-            return std::string() + static_cast<char>(c);
+            case 0:
+                return "NUL";
+            case 1:
+                return "SOH";
+            case 2:
+                return "STX";
+            case 3:
+                return "ETX";
+            case 4:
+                return "EOT";
+            case 5:
+                return "ENQ";
+            case 6:
+                return "ACK";
+            case 7:
+                return "BEL";
+            case 8:
+                return "BS";
+            case 9:
+                return "TAB";
+            case 10:
+                return "LF";
+            case 11:
+                return "VT";
+            case 12:
+                return "FF";
+            case 13:
+                return "CR";
+            case 14:
+                return "SO";
+            case 15:
+                return "SI";
+            case 16:
+                return "DLE";
+            case 17:
+                return "DC1";
+            case 18:
+                return "DC2";
+            case 19:
+                return "DC3";
+            case 20:
+                return "DC4";
+            case 21:
+                return "NAK";
+            case 22:
+                return "SYN";
+            case 23:
+                return "ETB";
+            case 24:
+                return "CAN";
+            case 25:
+                return "EM";
+            case 26:
+                return "SUB";
+            case 27:
+                return "ESC";
+            case 28:
+                return "FS";
+            case 29:
+                return "GS";
+            case 30:
+                return "RS";
+            case 31:
+                return "US";
+            case 32:
+                return "Space";
+            case 127:
+                return "DEL";
+            case 128 ... 255:
+                return " ";
+            default:
+                return std::string() + static_cast<char>(c);
         }
     }
 
@@ -268,17 +268,17 @@ namespace hex {
         nfdchar_t *outPath;
         nfdresult_t result;
         switch (mode) {
-        case DialogMode::Open:
-            result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
-            break;
-        case DialogMode::Save:
-            result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
-            break;
-        case DialogMode::Folder:
-            result = NFD::PickFolder(outPath, defaultPath.c_str());
-            break;
-        default:
-            __builtin_unreachable();
+            case DialogMode::Open:
+                result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
+                break;
+            case DialogMode::Save:
+                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
+                break;
+            case DialogMode::Folder:
+                result = NFD::PickFolder(outPath, defaultPath.c_str());
+                break;
+            default:
+                __builtin_unreachable();
         }
 
         if (result == NFD_OKAY) {
@@ -290,7 +290,7 @@ namespace hex {
     }
 
     float float16ToFloat32(u16 float16) {
-        u32 sign = float16 >> 15;
+        u32 sign     = float16 >> 15;
         u32 exponent = (float16 >> 10) & 0x1F;
         u32 mantissa = float16 & 0x3FF;
 
@@ -326,7 +326,7 @@ namespace hex {
     bool isProcessElevated() {
 #if defined(OS_WINDOWS)
         bool elevated = false;
-        HANDLE token = INVALID_HANDLE_VALUE;
+        HANDLE token  = INVALID_HANDLE_VALUE;
 
         if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
             TOKEN_ELEVATION elevation;

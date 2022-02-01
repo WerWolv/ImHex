@@ -21,7 +21,7 @@ namespace hex {
     }
 
     Socket::Socket(Socket &&other) {
-        this->m_socket = other.m_socket;
+        this->m_socket    = other.m_socket;
         this->m_connected = other.m_connected;
 
         other.m_socket = SOCKET_NONE;
@@ -78,7 +78,7 @@ namespace hex {
         sockaddr_in client = { 0 };
 
         client.sin_family = AF_INET;
-        client.sin_port = htons(port);
+        client.sin_port   = htons(port);
 
 #if defined(OS_WINDOWS)
         client.sin_addr.S_un.S_addr = ::inet_addr(address.c_str());

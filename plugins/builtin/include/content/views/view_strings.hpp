@@ -24,8 +24,8 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        bool m_searching = false;
-        bool m_regex = false;
+        bool m_searching      = false;
+        bool m_regex          = false;
         bool m_pattern_parsed = false;
 
         std::vector<FoundString> m_foundStrings;

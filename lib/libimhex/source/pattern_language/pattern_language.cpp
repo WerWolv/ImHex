@@ -16,10 +16,10 @@ namespace hex::pl {
 
     PatternLanguage::PatternLanguage() {
         this->m_preprocessor = new Preprocessor();
-        this->m_lexer = new Lexer();
-        this->m_parser = new Parser();
-        this->m_validator = new Validator();
-        this->m_evaluator = new Evaluator();
+        this->m_lexer        = new Lexer();
+        this->m_parser       = new Parser();
+        this->m_validator    = new Validator();
+        this->m_evaluator    = new Evaluator();
 
         this->m_preprocessor->addDefaultPragmaHandlers();
 

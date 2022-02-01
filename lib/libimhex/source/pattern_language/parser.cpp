@@ -133,7 +133,7 @@ namespace hex::pl {
             auto originalPos = this->m_curr;
             parseNamespaceResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
-            this->m_curr = originalPos;
+            this->m_curr    = originalPos;
 
 
             if (isFunction) {
@@ -174,7 +174,7 @@ namespace hex::pl {
 
     ASTNode *Parser::parseCastExpression() {
         if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
-            auto type = parseType(true);
+            auto type        = parseType(true);
             auto builtinType = dynamic_cast<ASTNodeBuiltinType *>(type->getType());
 
             if (builtinType == nullptr)
@@ -210,7 +210,7 @@ namespace hex::pl {
 
         while (MATCHES(oneOf(OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT))) {
             auto op = getValue<Token::Operator>(-1);
-            node = create(new ASTNodeMathematicalExpression(node, this->parseUnaryExpression(), op));
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseUnaryExpression(), op));
         }
 
         nodeCleanup.release();
@@ -226,7 +226,7 @@ namespace hex::pl {
 
         while (MATCHES(variant(OPERATOR_PLUS, OPERATOR_MINUS))) {
             auto op = getValue<Token::Operator>(-1);
-            node = create(new ASTNodeMathematicalExpression(node, this->parseMultiplicativeExpression(), op));
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseMultiplicativeExpression(), op));
         }
 
         nodeCleanup.release();
@@ -242,7 +242,7 @@ namespace hex::pl {
 
         while (MATCHES(variant(OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT))) {
             auto op = getValue<Token::Operator>(-1);
-            node = create(new ASTNodeMathematicalExpression(node, this->parseAdditiveExpression(), op));
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseAdditiveExpression(), op));
         }
 
         nodeCleanup.release();
@@ -258,7 +258,7 @@ namespace hex::pl {
 
         while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
             auto op = getValue<Token::Operator>(-1);
-            node = create(new ASTNodeMathematicalExpression(node, this->parseShiftExpression(), op));
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseShiftExpression(), op));
         }
 
         nodeCleanup.release();
@@ -274,7 +274,7 @@ namespace hex::pl {
 
         while (MATCHES(sequence(OPERATOR_BOOLEQUALS) || sequence(OPERATOR_BOOLNOTEQUALS))) {
             auto op = getValue<Token::Operator>(-1);
-            node = create(new ASTNodeMathematicalExpression(node, this->parseRelationExpression(), op));
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseRelationExpression(), op));
         }
 
         nodeCleanup.release();
@@ -385,7 +385,7 @@ namespace hex::pl {
                 throwParserError("expected ':' in ternary expression");
 
             auto third = this->parseBooleanOr();
-            node = create(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional));
+            node       = create(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional));
         }
 
         nodeCleanup.release();
@@ -410,7 +410,7 @@ namespace hex::pl {
             auto attribute = getValue<Token::Identifier>(-1).get();
 
             if (MATCHES(sequence(SEPARATOR_ROUNDBRACKETOPEN, STRING, SEPARATOR_ROUNDBRACKETCLOSE))) {
-                auto value = getValue<Token::Literal>(-2);
+                auto value  = getValue<Token::Literal>(-2);
                 auto string = std::get_if<std::string>(&value);
 
                 if (string == nullptr)
@@ -434,7 +434,7 @@ namespace hex::pl {
         std::optional<std::string> parameterPack;
 
         // Parse parameter list
-        bool hasParams = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
+        bool hasParams        = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
         u32 unnamedParamCount = 0;
         while (hasParams) {
             if (MATCHES(sequence(VALUETYPE_AUTO, SEPARATOR_DOT, SEPARATOR_DOT, SEPARATOR_DOT, IDENTIFIER))) {
@@ -488,7 +488,7 @@ namespace hex::pl {
 
         if (MATCHES(sequence(IDENTIFIER))) {
             auto identifier = getValue<Token::Identifier>(-1).get();
-            statement = parseMemberVariable(type);
+            statement       = parseMemberVariable(type);
 
             if (MATCHES(sequence(OPERATOR_ASSIGNMENT))) {
                 auto expression = parseMathematicalExpression();
@@ -516,13 +516,13 @@ namespace hex::pl {
         else if (MATCHES(oneOf(KEYWORD_RETURN, KEYWORD_BREAK, KEYWORD_CONTINUE)))
             statement = parseFunctionControlFlowStatement();
         else if (MATCHES(sequence(KEYWORD_IF, SEPARATOR_ROUNDBRACKETOPEN))) {
-            statement = parseFunctionConditional();
+            statement      = parseFunctionConditional();
             needsSemicolon = false;
         } else if (MATCHES(sequence(KEYWORD_WHILE, SEPARATOR_ROUNDBRACKETOPEN))) {
-            statement = parseFunctionWhileLoop();
+            statement      = parseFunctionWhileLoop();
             needsSemicolon = false;
         } else if (MATCHES(sequence(KEYWORD_FOR, SEPARATOR_ROUNDBRACKETOPEN))) {
-            statement = parseFunctionForLoop();
+            statement      = parseFunctionForLoop();
             needsSemicolon = false;
         } else if (MATCHES(sequence(IDENTIFIER))) {
             auto originalPos = this->m_curr;
@@ -531,10 +531,10 @@ namespace hex::pl {
 
             if (isFunction) {
                 this->m_curr = originalPos;
-                statement = parseFunctionCall();
+                statement    = parseFunctionCall();
             } else {
                 this->m_curr = originalPos - 1;
-                statement = parseFunctionVariableDecl();
+                statement    = parseFunctionVariableDecl();
             }
         } else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY)) {
             statement = parseFunctionVariableDecl();
@@ -651,13 +651,13 @@ namespace hex::pl {
     }
 
     ASTNode *Parser::parseFunctionForLoop() {
-        auto variable = parseFunctionVariableDecl();
+        auto variable        = parseFunctionVariableDecl();
         auto variableCleanup = SCOPE_GUARD { delete variable; };
 
         if (!MATCHES(sequence(SEPARATOR_COMMA)))
             throwParserError("expected ',' after for loop variable declaration");
 
-        auto condition = parseMathematicalExpression();
+        auto condition        = parseMathematicalExpression();
         auto conditionCleanup = SCOPE_GUARD { delete condition; };
 
         if (!MATCHES(sequence(SEPARATOR_COMMA)))
@@ -833,7 +833,7 @@ namespace hex::pl {
     ASTNode *Parser::parseMemberArrayVariable(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
-        ASTNode *size = nullptr;
+        ASTNode *size    = nullptr;
         auto sizeCleanup = SCOPE_GUARD { delete size; };
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
@@ -881,7 +881,7 @@ namespace hex::pl {
                 auto originalPos = this->m_curr;
                 this->m_curr++;
                 parseNamespaceResolution();
-                isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
+                isFunction   = peek(SEPARATOR_ROUNDBRACKETOPEN);
                 this->m_curr = originalPos;
 
                 if (isFunction) {
@@ -938,8 +938,8 @@ namespace hex::pl {
         const auto &typeName = getValue<Token::Identifier>(-1).get();
 
         const auto structNode = create(new ASTNodeStruct());
-        const auto typeDecl = addType(typeName, structNode);
-        auto structGuard = SCOPE_GUARD {
+        const auto typeDecl   = addType(typeName, structNode);
+        auto structGuard      = SCOPE_GUARD {
             delete structNode;
             delete typeDecl;
         };
@@ -976,8 +976,8 @@ namespace hex::pl {
         const auto &typeName = getValue<Token::Identifier>(-2).get();
 
         const auto unionNode = create(new ASTNodeUnion());
-        const auto typeDecl = addType(typeName, unionNode);
-        auto unionGuard = SCOPE_GUARD {
+        const auto typeDecl  = addType(typeName, unionNode);
+        auto unionGuard      = SCOPE_GUARD {
             delete unionNode;
             delete typeDecl;
         };
@@ -1000,7 +1000,7 @@ namespace hex::pl {
 
         const auto enumNode = create(new ASTNodeEnum(underlyingType));
         const auto typeDecl = addType(typeName, enumNode);
-        auto enumGuard = SCOPE_GUARD {
+        auto enumGuard      = SCOPE_GUARD {
             delete enumNode;
             delete typeDecl;
         };
@@ -1011,7 +1011,7 @@ namespace hex::pl {
         ASTNode *lastEntry = nullptr;
         while (!MATCHES(sequence(SEPARATOR_CURLYBRACKETCLOSE))) {
             if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT))) {
-                auto name = getValue<Token::Identifier>(-2).get();
+                auto name  = getValue<Token::Identifier>(-2).get();
                 auto value = parseMathematicalExpression();
 
                 enumNode->addEntry(name, value);
@@ -1048,7 +1048,7 @@ namespace hex::pl {
         std::string typeName = getValue<Token::Identifier>(-2).get();
 
         const auto bitfieldNode = create(new ASTNodeBitfield());
-        const auto typeDecl = addType(typeName, bitfieldNode);
+        const auto typeDecl     = addType(typeName, bitfieldNode);
 
         auto enumGuard = SCOPE_GUARD {
             delete bitfieldNode;
@@ -1081,7 +1081,7 @@ namespace hex::pl {
 
     // (parseType) Identifier @ Integer
     ASTNode *Parser::parseVariablePlacement(ASTNodeTypeDecl *type) {
-        bool inVariable = false;
+        bool inVariable  = false;
         bool outVariable = false;
 
         auto name = getValue<Token::Identifier>(-1).get();
@@ -1102,7 +1102,7 @@ namespace hex::pl {
     ASTNode *Parser::parseArrayVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
-        ASTNode *size = nullptr;
+        ASTNode *size    = nullptr;
         auto sizeCleanup = SCOPE_GUARD { delete size; };
 
         if (!MATCHES(sequence(SEPARATOR_SQUAREBRACKETCLOSE))) {
@@ -1129,7 +1129,7 @@ namespace hex::pl {
     ASTNode *Parser::parsePointerVariablePlacement(ASTNodeTypeDecl *type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
-        auto sizeType = parseType();
+        auto sizeType    = parseType();
         auto sizeCleanup = SCOPE_GUARD { delete sizeType; };
 
         {
@@ -1196,7 +1196,7 @@ namespace hex::pl {
 
     // <(parseUsingDeclaration)|(parseVariablePlacement)|(parseStruct)>
     std::vector<ASTNode *> Parser::parseStatements() {
-        ASTNode *statement = nullptr;
+        ASTNode *statement  = nullptr;
         auto statementGuard = SCOPE_GUARD {
             delete statement;
         };
@@ -1208,7 +1208,7 @@ namespace hex::pl {
             this->m_curr++;
             parseNamespaceResolution();
             bool isFunction = peek(SEPARATOR_ROUNDBRACKETOPEN);
-            this->m_curr = originalPos;
+            this->m_curr    = originalPos;
 
             if (isFunction) {
                 this->m_curr++;

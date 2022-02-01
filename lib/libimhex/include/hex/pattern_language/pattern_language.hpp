@@ -49,7 +49,7 @@ namespace hex::pl {
         [[nodiscard]] bool hasDangerousFunctionBeenCalled() const;
         void allowDangerousFunctions(bool allow);
 
-        [[nodiscard]] std::vector<PatternData*> &getPatterns() {
+        [[nodiscard]] std::vector<PatternData *> &getPatterns() {
             return this->m_patterns;
         }
 
@@ -67,7 +67,7 @@ namespace hex::pl {
 
         std::optional<PatternLanguageError> m_currError;
 
-        std::vector<PatternData*> m_patterns;
+        std::vector<PatternData *> m_patterns;
 
         bool m_running = false;
     };

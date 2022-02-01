@@ -29,10 +29,10 @@ namespace hex::plugin::builtin {
 
         bool m_shouldInvalidate = true;
 
-        std::endian m_endian = std::endian::native;
+        std::endian m_endian                                                    = std::endian::native;
         ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
 
-        u64 m_startAddress = 0;
+        u64 m_startAddress  = 0;
         size_t m_validBytes = 0;
         std::vector<InspectorCacheEntry> m_cachedData;
     };

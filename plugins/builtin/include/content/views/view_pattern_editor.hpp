@@ -28,10 +28,10 @@ namespace hex::plugin::builtin {
 
         std::vector<fs::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
-        bool m_runAutomatically = false;
+        bool m_runAutomatically   = false;
 
         std::atomic<u32> m_runningEvaluators = 0;
-        std::atomic<u32> m_runningParsers = 0;
+        std::atomic<u32> m_runningParsers    = 0;
 
         bool m_hasUnevaluatedChanges = false;
 

@@ -95,7 +95,7 @@ namespace hex::crypt {
                                                                                                          m_refin(refin),
                                                                                                          m_refout(refout),
                                                                                                          table([polynomial, bits]() {
-                                                                                                             auto reflectedpoly = reflect(polynomial & ((0b10ull << (bits - 1)) - 1), bits);
+                                                                                                             auto reflectedpoly              = reflect(polynomial & ((0b10ull << (bits - 1)) - 1), bits);
                                                                                                              std::array<uint64_t, 256> table = { 0 };
 
                                                                                                              for (uint32_t i = 0; i < 256; i++) {
@@ -452,47 +452,47 @@ namespace hex::crypt {
 
     std::vector<u8> aesDecrypt(AESMode mode, KeyLength keyLength, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
         switch (keyLength) {
-        case KeyLength::Key128Bits:
-            if (key.size() != 128 / 8) return {};
-            break;
-        case KeyLength::Key192Bits:
-            if (key.size() != 192 / 8) return {};
-            break;
-        case KeyLength::Key256Bits:
-            if (key.size() != 256 / 8) return {};
-            break;
-        default:
-            return {};
+            case KeyLength::Key128Bits:
+                if (key.size() != 128 / 8) return {};
+                break;
+            case KeyLength::Key192Bits:
+                if (key.size() != 192 / 8) return {};
+                break;
+            case KeyLength::Key256Bits:
+                if (key.size() != 256 / 8) return {};
+                break;
+            default:
+                return {};
         }
 
         mbedtls_cipher_type_t type;
         switch (mode) {
-        case AESMode::ECB:
-            type = MBEDTLS_CIPHER_AES_128_ECB;
-            break;
-        case AESMode::CBC:
-            type = MBEDTLS_CIPHER_AES_128_CBC;
-            break;
-        case AESMode::CFB128:
-            type = MBEDTLS_CIPHER_AES_128_CFB128;
-            break;
-        case AESMode::CTR:
-            type = MBEDTLS_CIPHER_AES_128_CTR;
-            break;
-        case AESMode::GCM:
-            type = MBEDTLS_CIPHER_AES_128_GCM;
-            break;
-        case AESMode::CCM:
-            type = MBEDTLS_CIPHER_AES_128_CCM;
-            break;
-        case AESMode::OFB:
-            type = MBEDTLS_CIPHER_AES_128_OFB;
-            break;
-        case AESMode::XTS:
-            type = MBEDTLS_CIPHER_AES_128_XTS;
-            break;
-        default:
-            return {};
+            case AESMode::ECB:
+                type = MBEDTLS_CIPHER_AES_128_ECB;
+                break;
+            case AESMode::CBC:
+                type = MBEDTLS_CIPHER_AES_128_CBC;
+                break;
+            case AESMode::CFB128:
+                type = MBEDTLS_CIPHER_AES_128_CFB128;
+                break;
+            case AESMode::CTR:
+                type = MBEDTLS_CIPHER_AES_128_CTR;
+                break;
+            case AESMode::GCM:
+                type = MBEDTLS_CIPHER_AES_128_GCM;
+                break;
+            case AESMode::CCM:
+                type = MBEDTLS_CIPHER_AES_128_CCM;
+                break;
+            case AESMode::OFB:
+                type = MBEDTLS_CIPHER_AES_128_OFB;
+                break;
+            case AESMode::XTS:
+                type = MBEDTLS_CIPHER_AES_128_XTS;
+                break;
+            default:
+                return {};
         }
 
         type = mbedtls_cipher_type_t(type + u8(keyLength));

@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableHeadersRow();
 
                     auto &patches = provider->getPatches();
-                    u32 index = 0;
+                    u32 index     = 0;
 
                     ImGuiListClipper clipper(patches.size());
 

@@ -15,10 +15,10 @@ namespace hex::plugin::windows {
     static ULONGLONG subtractTimes(const FILETIME &left, const FILETIME &right) {
         LARGE_INTEGER a, b;
 
-        a.LowPart = left.dwLowDateTime;
+        a.LowPart  = left.dwLowDateTime;
         a.HighPart = left.dwHighDateTime;
 
-        b.LowPart = right.dwLowDateTime;
+        b.LowPart  = right.dwLowDateTime;
         b.HighPart = right.dwHighDateTime;
 
         return a.QuadPart - b.QuadPart;
@@ -63,9 +63,9 @@ namespace hex::plugin::windows {
                                (user.QuadPart - lastUserCPU.QuadPart);
                     cpuUsage /= (now.QuadPart - lastCPU.QuadPart);
                     cpuUsage /= numProcessors;
-                    lastCPU = now;
+                    lastCPU     = now;
                     lastUserCPU = user;
-                    lastSysCPU = sys;
+                    lastSysCPU  = sys;
                 }
 
                 cpuUsage *= 100;
@@ -85,7 +85,7 @@ namespace hex::plugin::windows {
             }
 
             auto totalMem = memInfo.ullTotalPhys;
-            auto usedMem = pmc.PrivateUsage;
+            auto usedMem  = pmc.PrivateUsage;
 
             ImGui::TextFormatted(ICON_FA_MICROCHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem));
         });

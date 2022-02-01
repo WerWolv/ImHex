@@ -6,7 +6,7 @@
 using namespace std::literals::string_literals;
 
 TEST_SEQUENCE("FileAccess") {
-    const auto FilePath = hex::fs::current_path() / "file.txt";
+    const auto FilePath    = hex::fs::current_path() / "file.txt";
     const auto FileContent = "Hello World";
 
     {

@@ -19,15 +19,13 @@ namespace hex::plugin::builtin {
                 color = ImGui::GetColorU32(ImGuiCol_Header);
 
 
-            this->m_bookmarks.push_back({
-                region,
+            this->m_bookmarks.push_back({ region,
                 name,
                 std::move(comment),
                 color,
                 false,
 
-                ImHexApi::HexEditor::addHighlight(region, color, name)
-            });
+                ImHexApi::HexEditor::addHighlight(region, color, name) });
 
             ProjectFile::markDirty();
         });
@@ -62,13 +60,13 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
-                u32 id = 1;
+                u32 id                = 1;
                 auto bookmarkToRemove = this->m_bookmarks.end();
                 for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
                     auto &[region, name, comment, color, locked, highlight] = *iter;
 
                     auto headerColor = ImColor(color);
-                    auto hoverColor = ImColor(color);
+                    auto hoverColor  = ImColor(color);
                     hoverColor.Value.w *= 1.3F;
 
                     ImGui::PushID(id);
@@ -95,7 +93,7 @@ namespace hex::plugin::builtin {
                             // First line
                             {
                                 std::array<u8, 0x10> bytes = { 0 };
-                                size_t byteCount = std::min<size_t>(0x10 - offset, region.size);
+                                size_t byteCount           = std::min<size_t>(0x10 - offset, region.size);
                                 ImHexApi::Provider::get()->read(region.address, bytes.data() + offset, byteCount);
 
                                 for (size_t byte = 0; byte < 0x10; byte++) {

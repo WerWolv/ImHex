@@ -116,9 +116,9 @@ namespace hex {
                             else if (expression == "")
                                 break;
 
-                            auto inputQueue = parseInput(expression.c_str());
+                            auto inputQueue    = parseInput(expression.c_str());
                             auto postfixTokens = toPostfix(inputQueue);
-                            auto result = evaluate(postfixTokens);
+                            auto result        = evaluate(postfixTokens);
 
                             if (!result.has_value())
                                 throw std::invalid_argument("Invalid argument for function!");
@@ -220,78 +220,78 @@ namespace hex {
 
                 long double result = std::numeric_limits<long double>::quiet_NaN();
                 switch (front.op) {
-                default:
-                case Operator::Invalid:
-                    throw std::invalid_argument("Invalid operator!");
-                case Operator::And:
-                    result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
-                    break;
-                case Operator::Or:
-                    result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
-                    break;
-                case Operator::Xor:
-                    result = (static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand)) > 0;
-                    break;
-                case Operator::GreaterThan:
-                    result = leftOperand > rightOperand;
-                    break;
-                case Operator::LessThan:
-                    result = leftOperand < rightOperand;
-                    break;
-                case Operator::GreaterThanOrEquals:
-                    result = leftOperand >= rightOperand;
-                    break;
-                case Operator::LessThanOrEquals:
-                    result = leftOperand <= rightOperand;
-                    break;
-                case Operator::Equals:
-                    result = leftOperand == rightOperand;
-                    break;
-                case Operator::NotEquals:
-                    result = leftOperand != rightOperand;
-                    break;
-                case Operator::Not:
-                    result = !static_cast<i64>(rightOperand);
-                    break;
-                case Operator::BitwiseOr:
-                    result = static_cast<i64>(leftOperand) | static_cast<i64>(rightOperand);
-                    break;
-                case Operator::BitwiseXor:
-                    result = static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand);
-                    break;
-                case Operator::BitwiseAnd:
-                    result = static_cast<i64>(leftOperand) & static_cast<i64>(rightOperand);
-                    break;
-                case Operator::BitwiseNot:
-                    result = ~static_cast<i64>(rightOperand);
-                    break;
-                case Operator::ShiftLeft:
-                    result = static_cast<i64>(leftOperand) << static_cast<i64>(rightOperand);
-                    break;
-                case Operator::ShiftRight:
-                    result = static_cast<i64>(leftOperand) >> static_cast<i64>(rightOperand);
-                    break;
-                case Operator::Addition:
-                    result = leftOperand + rightOperand;
-                    break;
-                case Operator::Subtraction:
-                    result = leftOperand - rightOperand;
-                    break;
-                case Operator::Multiplication:
-                    result = leftOperand * rightOperand;
-                    break;
-                case Operator::Division:
-                    result = leftOperand / rightOperand;
-                    break;
-                case Operator::Modulus:
-                    result = std::fmod(leftOperand, rightOperand);
-                    break;
-                case Operator::Exponentiation:
-                    result = std::pow(leftOperand, rightOperand);
-                    break;
-                case Operator::Combine:
-                    result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
-                    break;
+                    default:
+                    case Operator::Invalid:
+                        throw std::invalid_argument("Invalid operator!");
+                    case Operator::And:
+                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::Or:
+                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::Xor:
+                        result = (static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand)) > 0;
+                        break;
+                    case Operator::GreaterThan:
+                        result = leftOperand > rightOperand;
+                        break;
+                    case Operator::LessThan:
+                        result = leftOperand < rightOperand;
+                        break;
+                    case Operator::GreaterThanOrEquals:
+                        result = leftOperand >= rightOperand;
+                        break;
+                    case Operator::LessThanOrEquals:
+                        result = leftOperand <= rightOperand;
+                        break;
+                    case Operator::Equals:
+                        result = leftOperand == rightOperand;
+                        break;
+                    case Operator::NotEquals:
+                        result = leftOperand != rightOperand;
+                        break;
+                    case Operator::Not:
+                        result = !static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::BitwiseOr:
+                        result = static_cast<i64>(leftOperand) | static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::BitwiseXor:
+                        result = static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::BitwiseAnd:
+                        result = static_cast<i64>(leftOperand) & static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::BitwiseNot:
+                        result = ~static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::ShiftLeft:
+                        result = static_cast<i64>(leftOperand) << static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::ShiftRight:
+                        result = static_cast<i64>(leftOperand) >> static_cast<i64>(rightOperand);
+                        break;
+                    case Operator::Addition:
+                        result = leftOperand + rightOperand;
+                        break;
+                    case Operator::Subtraction:
+                        result = leftOperand - rightOperand;
+                        break;
+                    case Operator::Multiplication:
+                        result = leftOperand * rightOperand;
+                        break;
+                    case Operator::Division:
+                        result = leftOperand / rightOperand;
+                        break;
+                    case Operator::Modulus:
+                        result = std::fmod(leftOperand, rightOperand);
+                        break;
+                    case Operator::Exponentiation:
+                        result = std::pow(leftOperand, rightOperand);
+                        break;
+                    case Operator::Combine:
+                        result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
+                        break;
                 }
 
                 evaluationStack.push(result);

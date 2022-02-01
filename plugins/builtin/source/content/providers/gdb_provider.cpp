@@ -42,7 +42,7 @@ namespace hex::plugin::builtin::prv {
                 if (packet[packet.length() - 3] != '#')
                     return std::nullopt;
 
-                std::string data = packet.substr(1, packet.length() - 4);
+                std::string data     = packet.substr(1, packet.length() - 4);
                 std::string checksum = packet.substr(packet.length() - 2, 2);
 
                 if (checksum.length() != 2 || crypt::decode16(checksum)[0] != calculateChecksum(data))
@@ -229,10 +229,10 @@ namespace hex::plugin::builtin::prv {
 
         if (!this->isConnected()) {
             address = "-";
-            port = "-";
+            port    = "-";
         } else {
             address = this->m_ipAddress;
-            port = std::to_string(this->m_port);
+            port    = std::to_string(this->m_port);
         }
 
         return hex::format("hex.builtin.provider.gdb.name"_lang, address, port);

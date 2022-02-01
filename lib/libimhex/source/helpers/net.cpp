@@ -110,12 +110,12 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_NOSIGNAL, 1L);
         curl_easy_setopt(this->m_ctx, CURLOPT_NOPROGRESS, 0L);
 
-        #if defined(OS_WINDOWS)
-            curl_easy_setopt(this->m_ctx, CURLOPT_CAINFO, nullptr);
-            curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
-            curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
-            curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
-        #endif
+#if defined(OS_WINDOWS)
+        curl_easy_setopt(this->m_ctx, CURLOPT_CAINFO, nullptr);
+        curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
+        curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
+        curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
+#endif
     }
 
     std::optional<i32> Net::execute() {
@@ -127,8 +127,8 @@ namespace hex {
         curl_easy_getinfo(this->m_ctx, CURLINFO_RESPONSE_CODE, &responseCode);
 
         curl_slist_free_all(this->m_headers);
-        this->m_headers = nullptr;
-        this->m_progress = 0.0F;
+        this->m_headers      = nullptr;
+        this->m_progress     = 0.0F;
         this->m_shouldCancel = false;
 
         if (result != CURLE_OK)
@@ -183,7 +183,7 @@ namespace hex {
             if (!file.isValid())
                 return Response<std::string> { 400, {} };
 
-            curl_mime *mime = curl_mime_init(this->m_ctx);
+            curl_mime *mime     = curl_mime_init(this->m_ctx);
             curl_mimepart *part = curl_mime_addpart(mime);
 
             auto fileName = filePath.filename().string();

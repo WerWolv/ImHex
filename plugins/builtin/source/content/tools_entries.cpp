@@ -101,10 +101,10 @@ namespace hex::plugin::builtin {
         }
 
         void drawRegexReplacer() {
-            static auto regexInput = [] { std::string s; s.reserve(0xFFF); return s; }();
-            static auto regexPattern = [] { std::string s; s.reserve(0xFFF); return s; }();
+            static auto regexInput     = [] { std::string s; s.reserve(0xFFF); return s; }();
+            static auto regexPattern   = [] { std::string s; s.reserve(0xFFF); return s; }();
             static auto replacePattern = [] { std::string s; s.reserve(0xFFF); return s; }();
-            static auto regexOutput = [] { std::string s; s.reserve(0xFFF); return s; }();
+            static auto regexOutput    = [] { std::string s; s.reserve(0xFFF); return s; }();
 
             bool changed1 = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern.data(), regexPattern.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &regexPattern);
             bool changed2 = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern.data(), replacePattern.capacity(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &replacePattern);
@@ -243,32 +243,32 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
                 ImGui::NewLine();
                 switch (mathDisplayType) {
-                case MathDisplayType::Standard:
-                case MathDisplayType::Scientific:
-                case MathDisplayType::Engineering:
-                    if (ImGui::Button("x²", buttonSize)) mathInput += "** 2";
-                    ImGui::SameLine();
-                    if (ImGui::Button("1/x", buttonSize)) mathInput += "1/";
-                    ImGui::SameLine();
-                    if (ImGui::Button("|x|", buttonSize)) mathInput += "abs";
-                    ImGui::SameLine();
-                    if (ImGui::Button("exp", buttonSize)) mathInput += "e ** ";
-                    ImGui::SameLine();
-                    if (ImGui::Button("%", buttonSize)) mathInput += "%";
-                    ImGui::SameLine();
-                    break;
-                case MathDisplayType::Programmer:
-                    if (ImGui::Button("<<", buttonSize)) mathInput += "<<";
-                    ImGui::SameLine();
-                    if (ImGui::Button(">>", buttonSize)) mathInput += ">>";
-                    ImGui::SameLine();
-                    if (ImGui::Button("&", buttonSize)) mathInput += "&";
-                    ImGui::SameLine();
-                    if (ImGui::Button("|", buttonSize)) mathInput += "|";
-                    ImGui::SameLine();
-                    if (ImGui::Button("^", buttonSize)) mathInput += "^";
-                    ImGui::SameLine();
-                    break;
+                    case MathDisplayType::Standard:
+                    case MathDisplayType::Scientific:
+                    case MathDisplayType::Engineering:
+                        if (ImGui::Button("x²", buttonSize)) mathInput += "** 2";
+                        ImGui::SameLine();
+                        if (ImGui::Button("1/x", buttonSize)) mathInput += "1/";
+                        ImGui::SameLine();
+                        if (ImGui::Button("|x|", buttonSize)) mathInput += "abs";
+                        ImGui::SameLine();
+                        if (ImGui::Button("exp", buttonSize)) mathInput += "e ** ";
+                        ImGui::SameLine();
+                        if (ImGui::Button("%", buttonSize)) mathInput += "%";
+                        ImGui::SameLine();
+                        break;
+                    case MathDisplayType::Programmer:
+                        if (ImGui::Button("<<", buttonSize)) mathInput += "<<";
+                        ImGui::SameLine();
+                        if (ImGui::Button(">>", buttonSize)) mathInput += ">>";
+                        ImGui::SameLine();
+                        if (ImGui::Button("&", buttonSize)) mathInput += "&";
+                        ImGui::SameLine();
+                        if (ImGui::Button("|", buttonSize)) mathInput += "|";
+                        ImGui::SameLine();
+                        if (ImGui::Button("^", buttonSize)) mathInput += "^";
+                        ImGui::SameLine();
+                        break;
                 }
                 ImGui::NewLine();
                 if (ImGui::Button("sqrt", buttonSize)) mathInput += "sqrt";
@@ -352,20 +352,20 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
 
                             switch (mathDisplayType) {
-                            case MathDisplayType::Standard:
-                                ImGui::TextFormatted("{0:.3Lf}", mathHistory[(mathHistory.size() - 1) - i]);
-                                break;
-                            case MathDisplayType::Scientific:
-                                ImGui::TextFormatted("{0:.6Le}", mathHistory[(mathHistory.size() - 1) - i]);
-                                break;
-                            case MathDisplayType::Engineering:
-                                ImGui::TextFormatted("{0}", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
-                                break;
-                            case MathDisplayType::Programmer:
-                                ImGui::TextFormatted("0x{0:X} ({1})",
-                                                     u64(mathHistory[(mathHistory.size() - 1) - i]),
-                                                     u64(mathHistory[(mathHistory.size() - 1) - i]));
-                                break;
+                                case MathDisplayType::Standard:
+                                    ImGui::TextFormatted("{0:.3Lf}", mathHistory[(mathHistory.size() - 1) - i]);
+                                    break;
+                                case MathDisplayType::Scientific:
+                                    ImGui::TextFormatted("{0:.6Le}", mathHistory[(mathHistory.size() - 1) - i]);
+                                    break;
+                                case MathDisplayType::Engineering:
+                                    ImGui::TextFormatted("{0}", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
+                                    break;
+                                case MathDisplayType::Programmer:
+                                    ImGui::TextFormatted("0x{0:X} ({1})",
+                                        u64(mathHistory[(mathHistory.size() - 1) - i]),
+                                        u64(mathHistory[(mathHistory.size() - 1) - i]));
+                                    break;
                             }
 
                             if (i == 0)
@@ -392,18 +392,18 @@ namespace hex::plugin::builtin {
 
                         ImGui::TableNextColumn();
                         switch (mathDisplayType) {
-                        case MathDisplayType::Standard:
-                            ImGui::TextFormatted("{0:.3Lf}", value);
-                            break;
-                        case MathDisplayType::Scientific:
-                            ImGui::TextFormatted("{0:.6Le}", value);
-                            break;
-                        case MathDisplayType::Engineering:
-                            ImGui::TextFormatted("{}", hex::toEngineeringString(value));
-                            break;
-                        case MathDisplayType::Programmer:
-                            ImGui::TextFormatted("0x{0:X} ({1})", u64(value), u64(value));
-                            break;
+                            case MathDisplayType::Standard:
+                                ImGui::TextFormatted("{0:.3Lf}", value);
+                                break;
+                            case MathDisplayType::Scientific:
+                                ImGui::TextFormatted("{0:.6Le}", value);
+                                break;
+                            case MathDisplayType::Engineering:
+                                ImGui::TextFormatted("{}", hex::toEngineeringString(value));
+                                break;
+                            case MathDisplayType::Programmer:
+                                ImGui::TextFormatted("0x{0:X} ({1})", u64(value), u64(value));
+                                break;
                         }
                     }
 
@@ -447,16 +447,16 @@ namespace hex::plugin::builtin {
 
             static auto CharFilter = [](ImGuiInputTextCallbackData *data) -> int {
                 switch (*static_cast<u32 *>(data->UserData)) {
-                case 16:
-                    return std::isxdigit(data->EventChar);
-                case 10:
-                    return std::isdigit(data->EventChar);
-                case 8:
-                    return std::isdigit(data->EventChar) && data->EventChar < '8';
-                case 2:
-                    return data->EventChar == '0' || data->EventChar == '1';
-                default:
-                    return false;
+                    case 16:
+                        return std::isxdigit(data->EventChar);
+                    case 10:
+                        return std::isdigit(data->EventChar);
+                    case 8:
+                        return std::isdigit(data->EventChar) && data->EventChar < '8';
+                    case 2:
+                        return data->EventChar == '0' || data->EventChar == '1';
+                    default:
+                        return false;
                 }
             };
 
@@ -465,26 +465,26 @@ namespace hex::plugin::builtin {
 
                 errno = 0;
                 switch (base) {
-                case 16:
-                    number = std::strtoull(buffer[1], nullptr, base);
-                    break;
-                case 10:
-                    number = std::strtoull(buffer[0], nullptr, base);
-                    break;
-                case 8:
-                    number = std::strtoull(buffer[2], nullptr, base);
-                    break;
-                case 2:
-                    number = std::strtoull(buffer[3], nullptr, base);
-                    break;
-                default:
-                    return;
+                    case 16:
+                        number = std::strtoull(buffer[1], nullptr, base);
+                        break;
+                    case 10:
+                        number = std::strtoull(buffer[0], nullptr, base);
+                        break;
+                    case 8:
+                        number = std::strtoull(buffer[2], nullptr, base);
+                        break;
+                    case 2:
+                        number = std::strtoull(buffer[3], nullptr, base);
+                        break;
+                    default:
+                        return;
                 }
 
                 auto base10String = std::to_string(number);
                 auto base16String = hex::format("0x{0:X}", number);
-                auto base8String = hex::format("{0:#o}", number);
-                auto base2String = hex::toBinaryString(number);
+                auto base8String  = hex::format("{0:#o}", number);
+                auto base2String  = hex::toBinaryString(number);
 
                 std::strncpy(buffer[0], base10String.c_str(), sizeof(buffer[0]));
                 std::strncpy(buffer[1], base16String.c_str(), sizeof(buffer[1]));
@@ -552,10 +552,10 @@ namespace hex::plugin::builtin {
         ImGui::Separator();
 
         auto result = hex::format("{}{}{}{}",
-                                  (setuid << 2) | (setgid << 1) | (sticky << 0),
-                                  (r[0] << 2) | (w[0] << 1) | (x[0] << 0),
-                                  (r[1] << 2) | (w[1] << 1) | (x[1] << 0),
-                                  (r[2] << 2) | (w[2] << 1) | (x[2] << 0));
+            (setuid << 2) | (setgid << 1) | (sticky << 0),
+            (r[0] << 2) | (w[0] << 1) | (x[0] << 0),
+            (r[1] << 2) | (w[1] << 1) | (x[1] << 0),
+            (r[2] << 2) | (w[2] << 1) | (x[2] << 0));
         ImGui::InputText("##permissions_absolute", result.data(), result.size(), ImGuiInputTextFlags_ReadOnly);
 
         ImGui::NewLine();
@@ -586,7 +586,7 @@ namespace hex::plugin::builtin {
             if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
                 hex::openFileBrowser("hex.builtin.tools.file_uploader.done"_lang, DialogMode::Open, {}, [&](auto path) {
                     uploadProcess = net.uploadFile("https://api.anonfiles.com/upload", path);
-                    currFile = path;
+                    currFile      = path;
                 });
             }
         } else {
@@ -645,8 +645,8 @@ namespace hex::plugin::builtin {
                 try {
                     auto json = nlohmann::json::parse(response.body);
                     links.push_back({ currFile.filename().string(),
-                                      json["data"]["file"]["url"]["short"],
-                                      json["data"]["file"]["metadata"]["size"]["readable"] });
+                        json["data"]["file"]["url"]["short"],
+                        json["data"]["file"]["metadata"]["size"]["readable"] });
                 } catch (...) {
                     View::showErrorPopup("hex.builtin.tools.file_uploader.invalid_response"_lang);
                 }
@@ -708,12 +708,12 @@ namespace hex::plugin::builtin {
 
                 auto json = nlohmann::json::parse(response.body);
 
-                resultTitle = json["query"]["pages"][0]["title"];
+                resultTitle   = json["query"]["pages"][0]["title"];
                 resultExtract = json["query"]["pages"][0]["extract"];
 
                 if (!extendedSearch && resultExtract.ends_with(':')) {
                     extendedSearch = true;
-                    searchProcess = net.getString(WikipediaApiUrl + "&titles="s + net.encode(searchString));
+                    searchProcess  = net.getString(WikipediaApiUrl + "&titles="s + net.encode(searchString));
                     resultTitle.clear();
                     resultExtract.clear();
                 } else {
@@ -724,9 +724,9 @@ namespace hex::plugin::builtin {
                 resultTitle.clear();
                 resultExtract.clear();
                 extendedSearch = false;
-                searchProcess = {};
+                searchProcess  = {};
 
-                resultTitle = "???";
+                resultTitle   = "???";
                 resultExtract = "hex.builtin.tools.wiki_explain.invalid_response"_lang.get();
             }
         }
@@ -734,9 +734,9 @@ namespace hex::plugin::builtin {
 
 
     void drawFileToolShredder() {
-        static bool shredding = false;
+        static bool shredding    = false;
         static auto selectedFile = [] { std::string s; s.reserve(0x1000); return s; }();
-        static bool fastMode = false;
+        static bool fastMode     = false;
 
         ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.warning"_lang);
         ImGui::NewLine();
@@ -879,11 +879,11 @@ namespace hex::plugin::builtin {
             1
         };
 
-        static bool splitting = false;
-        static auto selectedFile = [] { std::string s; s.reserve(0x1000); return s; }();
+        static bool splitting      = false;
+        static auto selectedFile   = [] { std::string s; s.reserve(0x1000); return s; }();
         static auto baseOutputPath = [] { std::string s; s.reserve(0x1000); return s; }();
-        static u64 splitSize = sizes[0];
-        static int selectedItem = 0;
+        static u64 splitSize       = sizes[0];
+        static int selectedItem    = 0;
 
         if (ImGui::BeginChild("split_settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 7 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             ImGui::BeginDisabled(splitting);
@@ -1095,7 +1095,7 @@ namespace hex::plugin::builtin {
                             }
 
                             constexpr auto BufferSize = 0xFF'FFFF;
-                            auto inputSize = input.getSize();
+                            auto inputSize            = input.getSize();
                             for (u64 inputOffset = 0; inputOffset < inputSize; inputOffset += BufferSize) {
                                 output.write(input.readBytes(std::min<u64>(BufferSize, inputSize - inputOffset)));
                                 output.flush();

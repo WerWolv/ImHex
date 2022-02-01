@@ -49,9 +49,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i8", sizeof(i8), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:02X}" : "{0}0o{1:03o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<i8 *>(buffer.data()), endian);
+            auto number   = hex::changeEndianess(*reinterpret_cast<i8 *>(buffer.data()), endian);
             bool negative = number < 0;
-            auto value = hex::format(format, negative ? "-" : "", std::abs(number));
+            auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -67,9 +67,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i16", sizeof(i16), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:04X}" : "{0}0o{1:06o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<i16 *>(buffer.data()), endian);
+            auto number   = hex::changeEndianess(*reinterpret_cast<i16 *>(buffer.data()), endian);
             bool negative = number < 0;
-            auto value = hex::format(format, negative ? "-" : "", std::abs(number));
+            auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -85,9 +85,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i32", sizeof(i32), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:08X}" : "{0}0o{1:011o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<i32 *>(buffer.data()), endian);
+            auto number   = hex::changeEndianess(*reinterpret_cast<i32 *>(buffer.data()), endian);
             bool negative = number < 0;
-            auto value = hex::format(format, negative ? "-" : "", std::abs(number));
+            auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -103,9 +103,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.i64", sizeof(i64), [](auto buffer, auto endian, auto style) {
             auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:016X}" : "{0}0o{1:022o}");
 
-            auto number = hex::changeEndianess(*reinterpret_cast<i64 *>(buffer.data()), endian);
+            auto number   = hex::changeEndianess(*reinterpret_cast<i64 *>(buffer.data()), endian);
             bool negative = number < 0;
-            auto value = hex::format(format, negative ? "-" : "", std::abs(number));
+            auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -143,17 +143,17 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.utf8", sizeof(char8_t) * 4, [](auto buffer, auto endian, auto style) {
-            char utf8Buffer[5] = { 0 };
+            char utf8Buffer[5]      = { 0 };
             char codepointString[5] = { 0 };
-            u32 codepoint = 0;
+            u32 codepoint           = 0;
 
             std::memcpy(utf8Buffer, reinterpret_cast<char8_t *>(buffer.data()), 4);
             u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, utf8Buffer + 4);
 
             std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
             auto value = hex::format("'{0}' (U+0x{1:04X})",
-                                     codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
-                                     codepoint);
+                codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
+                codepoint);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });
@@ -228,18 +228,18 @@ namespace hex::plugin::builtin {
             GUID guid;
             std::memcpy(&guid, buffer.data(), sizeof(GUID));
             auto value = hex::format("{}{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
-                                     (hex::changeEndianess(guid.data3, endian) >> 12) <= 5 && ((guid.data4[0] >> 4) >= 8 || (guid.data4[0] >> 4) == 0) ? "" : "Invalid ",
-                                     hex::changeEndianess(guid.data1, endian),
-                                     hex::changeEndianess(guid.data2, endian),
-                                     hex::changeEndianess(guid.data3, endian),
-                                     guid.data4[0],
-                                     guid.data4[1],
-                                     guid.data4[2],
-                                     guid.data4[3],
-                                     guid.data4[4],
-                                     guid.data4[5],
-                                     guid.data4[6],
-                                     guid.data4[7]);
+                (hex::changeEndianess(guid.data3, endian) >> 12) <= 5 && ((guid.data4[0] >> 4) >= 8 || (guid.data4[0] >> 4) == 0) ? "" : "Invalid ",
+                hex::changeEndianess(guid.data1, endian),
+                hex::changeEndianess(guid.data2, endian),
+                hex::changeEndianess(guid.data3, endian),
+                guid.data4[0],
+                guid.data4[1],
+                guid.data4[2],
+                guid.data4[3],
+                guid.data4[4],
+                guid.data4[5],
+                guid.data4[6],
+                guid.data4[7]);
 
             return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
         });

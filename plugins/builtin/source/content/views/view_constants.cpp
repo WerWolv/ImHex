@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
                     for (auto value : content["values"]) {
                         Constant constant;
                         constant.category = content["name"];
-                        constant.name = value["name"];
+                        constant.name     = value["name"];
                         if (value.contains("desc"))
                             constant.description = value["desc"];
                         constant.value = value["value"];

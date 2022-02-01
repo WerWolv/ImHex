@@ -190,12 +190,12 @@ namespace hex::plugin::windows {
             return true;    // If false, connect_error error popup will override this error popup
         }
         this->m_portHandle = ::CreateFile(("\\\\.\\" + this->m_comPorts[this->m_selectedPort].first).c_str(),
-                                          GENERIC_READ | GENERIC_WRITE,
-                                          0,
-                                          nullptr,
-                                          OPEN_EXISTING,
-                                          FILE_FLAG_OVERLAPPED,
-                                          nullptr);
+            GENERIC_READ | GENERIC_WRITE,
+            0,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_FLAG_OVERLAPPED,
+            nullptr);
 
         if (this->m_portHandle == INVALID_HANDLE_VALUE)
             return false;
@@ -211,20 +211,20 @@ namespace hex::plugin::windows {
         if (!::GetCommState(this->m_portHandle, &serialParams))
             return false;
 
-        serialParams.BaudRate = std::stoi(ViewTTYConsole::BaudRates[this->m_selectedBaudRate]);
-        serialParams.ByteSize = std::stoi(ViewTTYConsole::NumBits[this->m_selectedNumBits]);
-        serialParams.StopBits = this->m_selectedStopBits;
-        serialParams.Parity = this->m_selectedParityBits;
+        serialParams.BaudRate     = std::stoi(ViewTTYConsole::BaudRates[this->m_selectedBaudRate]);
+        serialParams.ByteSize     = std::stoi(ViewTTYConsole::NumBits[this->m_selectedNumBits]);
+        serialParams.StopBits     = this->m_selectedStopBits;
+        serialParams.Parity       = this->m_selectedParityBits;
         serialParams.fOutxCtsFlow = this->m_hasCTSFlowControl;
 
         if (!::SetCommState(this->m_portHandle, &serialParams))
             return false;
 
         COMMTIMEOUTS timeouts;
-        timeouts.ReadIntervalTimeout = 500;
-        timeouts.ReadTotalTimeoutConstant = 500;
-        timeouts.ReadTotalTimeoutMultiplier = 100;
-        timeouts.WriteTotalTimeoutConstant = 500;
+        timeouts.ReadIntervalTimeout         = 500;
+        timeouts.ReadTotalTimeoutConstant    = 500;
+        timeouts.ReadTotalTimeoutMultiplier  = 100;
+        timeouts.WriteTotalTimeoutConstant   = 500;
         timeouts.WriteTotalTimeoutMultiplier = 100;
 
         if (!::SetCommTimeouts(this->m_portHandle, &timeouts))
@@ -233,7 +233,7 @@ namespace hex::plugin::windows {
         closeHandle.release();
 
         this->m_receiveThread = std::jthread([this](const std::stop_token &token) {
-            bool waitingOnRead = false;
+            bool waitingOnRead    = false;
             OVERLAPPED overlapped = { 0 };
 
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);
@@ -267,16 +267,16 @@ namespace hex::plugin::windows {
                         waitingOnRead = true;
                     }
                 } else {
-                    byte = 0;
+                    byte     = 0;
                     auto res = ::WaitForSingleObject(overlapped.hEvent, 500);
                     switch (res) {
-                    case WAIT_OBJECT_0:
-                        if (::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesRead, false)) {
-                            addByte(byte);
-                            waitingOnRead = false;
-                        }
-                    default:
-                        break;
+                        case WAIT_OBJECT_0:
+                            if (::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesRead, false)) {
+                                addByte(byte);
+                                waitingOnRead = false;
+                            }
+                        default:
+                            break;
                     }
                 }
             }

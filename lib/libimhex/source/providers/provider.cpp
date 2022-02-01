@@ -56,7 +56,7 @@ namespace hex::prv {
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
         for (auto &overlay : this->m_overlays) {
             auto overlayOffset = overlay->getAddress();
-            auto overlaySize = overlay->getSize();
+            auto overlaySize   = overlay->getSize();
 
             i128 overlapMin = std::max(offset, overlayOffset);
             i128 overlapMax = std::min(offset + size, overlayOffset + overlaySize);
@@ -156,7 +156,7 @@ namespace hex::prv {
             createUndoPoint();
 
         for (u64 i = 0; i < size; i++) {
-            u8 patch = reinterpret_cast<const u8 *>(buffer)[i];
+            u8 patch         = reinterpret_cast<const u8 *>(buffer)[i];
             u8 originalValue = 0x00;
             this->readRaw(offset + i, &originalValue, sizeof(u8));
 

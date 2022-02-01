@@ -40,7 +40,7 @@ namespace hex {
         std::vector<fs::path> result;
 
 #if defined(OS_WINDOWS)
-        const auto exePath = getExecutablePath();
+        const auto exePath   = getExecutablePath();
         const auto parentDir = fs::path(exePath).parent_path();
 
         fs::path appDataDir;
@@ -56,60 +56,60 @@ namespace hex {
         std::vector<fs::path> paths = { parentDir, appDataDir / "imhex" };
 
         switch (path) {
-        case ImHexPath::Patterns:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "patterns").string();
-            });
-            break;
-        case ImHexPath::PatternsInclude:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "includes").string();
-            });
-            break;
-        case ImHexPath::Magic:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "magic").string();
-            });
-            break;
-        case ImHexPath::Python:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "python").string();
-            });
-            break;
-        case ImHexPath::Plugins:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "plugins").string();
-            });
-            break;
-        case ImHexPath::Yara:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "yara").string();
-            });
-            break;
-        case ImHexPath::Config:
-            return { (appDataDir / "imhex" / "config").string() };
-        case ImHexPath::Resources:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "resources").string();
-            });
-            break;
-        case ImHexPath::Constants:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "constants").string();
-            });
-            break;
-        case ImHexPath::Encodings:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "encodings").string();
-            });
-            break;
-        case ImHexPath::Logs:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "logs").string();
-            });
-            break;
-        default:
-            __builtin_unreachable();
+            case ImHexPath::Patterns:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "patterns").string();
+                });
+                break;
+            case ImHexPath::PatternsInclude:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "includes").string();
+                });
+                break;
+            case ImHexPath::Magic:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "magic").string();
+                });
+                break;
+            case ImHexPath::Python:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "python").string();
+                });
+                break;
+            case ImHexPath::Plugins:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "plugins").string();
+                });
+                break;
+            case ImHexPath::Yara:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "yara").string();
+                });
+                break;
+            case ImHexPath::Config:
+                return { (appDataDir / "imhex" / "config").string() };
+            case ImHexPath::Resources:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "resources").string();
+                });
+                break;
+            case ImHexPath::Constants:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "constants").string();
+                });
+                break;
+            case ImHexPath::Encodings:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "encodings").string();
+                });
+                break;
+            case ImHexPath::Logs:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "logs").string();
+                });
+                break;
+            default:
+                __builtin_unreachable();
         }
 #elif defined(OS_MACOS)
         // Get path to special directories
@@ -119,47 +119,47 @@ namespace hex {
         std::vector<fs::path> paths = { exePath, applicationSupportDir };
 
         switch (path) {
-        case ImHexPath::Patterns:
-            result.push_back((applicationSupportDir / "patterns").string());
-            break;
-        case ImHexPath::PatternsInclude:
-            result.push_back((applicationSupportDir / "includes").string());
-            break;
-        case ImHexPath::Magic:
-            result.push_back((applicationSupportDir / "magic").string());
-            break;
-        case ImHexPath::Python:
-            result.push_back((applicationSupportDir / "python").string());
-            break;
-        case ImHexPath::Plugins:
-            std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                return (path / "plugins").string();
-            });
-            break;
-        case ImHexPath::Yara:
-            result.push_back((applicationSupportDir / "yara").string());
-            break;
-        case ImHexPath::Config:
-            result.push_back((applicationSupportDir / "config").string());
-            break;
-        case ImHexPath::Resources:
-            result.push_back((applicationSupportDir / "resources").string());
-            break;
-        case ImHexPath::Constants:
-            result.push_back((applicationSupportDir / "constants").string());
-            break;
-        case ImHexPath::Encodings:
-            result.push_back((applicationSupportDir / "encodings").string());
-            break;
-        case ImHexPath::Logs:
-            result.push_back((applicationSupportDir / "logs").string());
-            break;
-        default:
-            __builtin_unreachable();
+            case ImHexPath::Patterns:
+                result.push_back((applicationSupportDir / "patterns").string());
+                break;
+            case ImHexPath::PatternsInclude:
+                result.push_back((applicationSupportDir / "includes").string());
+                break;
+            case ImHexPath::Magic:
+                result.push_back((applicationSupportDir / "magic").string());
+                break;
+            case ImHexPath::Python:
+                result.push_back((applicationSupportDir / "python").string());
+                break;
+            case ImHexPath::Plugins:
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return (path / "plugins").string();
+                });
+                break;
+            case ImHexPath::Yara:
+                result.push_back((applicationSupportDir / "yara").string());
+                break;
+            case ImHexPath::Config:
+                result.push_back((applicationSupportDir / "config").string());
+                break;
+            case ImHexPath::Resources:
+                result.push_back((applicationSupportDir / "resources").string());
+                break;
+            case ImHexPath::Constants:
+                result.push_back((applicationSupportDir / "constants").string());
+                break;
+            case ImHexPath::Encodings:
+                result.push_back((applicationSupportDir / "encodings").string());
+                break;
+            case ImHexPath::Logs:
+                result.push_back((applicationSupportDir / "logs").string());
+                break;
+            default:
+                __builtin_unreachable();
         }
 #else
         std::vector<fs::path> configDirs = xdg::ConfigDirs();
-        std::vector<fs::path> dataDirs = xdg::DataDirs();
+        std::vector<fs::path> dataDirs   = xdg::DataDirs();
 
         configDirs.insert(configDirs.begin(), xdg::ConfigHomeDir());
         dataDirs.insert(dataDirs.begin(), xdg::DataHomeDir());
@@ -173,49 +173,49 @@ namespace hex {
             dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
 
         switch (path) {
-        case ImHexPath::Patterns:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "patterns").string(); });
-            break;
-        case ImHexPath::PatternsInclude:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "includes").string(); });
-            break;
-        case ImHexPath::Magic:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "magic").string(); });
-            break;
-        case ImHexPath::Python:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p).string(); });
-            break;
-        case ImHexPath::Plugins:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "plugins").string(); });
-            break;
-        case ImHexPath::Yara:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "yara").string(); });
-            break;
-        case ImHexPath::Config:
-            std::transform(configDirs.begin(), configDirs.end(), std::back_inserter(result), [](auto p) { return (p / "imhex").string(); });
-            break;
-        case ImHexPath::Resources:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "resources").string(); });
-            break;
-        case ImHexPath::Constants:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "constants").string(); });
-            break;
-        case ImHexPath::Encodings:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "encodings").string(); });
-            break;
-        case ImHexPath::Logs:
-            std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "logs").string(); });
-            break;
-        default:
-            __builtin_unreachable();
+            case ImHexPath::Patterns:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "patterns").string(); });
+                break;
+            case ImHexPath::PatternsInclude:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "includes").string(); });
+                break;
+            case ImHexPath::Magic:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "magic").string(); });
+                break;
+            case ImHexPath::Python:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p).string(); });
+                break;
+            case ImHexPath::Plugins:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "plugins").string(); });
+                break;
+            case ImHexPath::Yara:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "yara").string(); });
+                break;
+            case ImHexPath::Config:
+                std::transform(configDirs.begin(), configDirs.end(), std::back_inserter(result), [](auto p) { return (p / "imhex").string(); });
+                break;
+            case ImHexPath::Resources:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "resources").string(); });
+                break;
+            case ImHexPath::Constants:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "constants").string(); });
+                break;
+            case ImHexPath::Encodings:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "encodings").string(); });
+                break;
+            case ImHexPath::Logs:
+                std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "logs").string(); });
+                break;
+            default:
+                __builtin_unreachable();
         }
 #endif
 
         if (!listNonExisting) {
             result.erase(std::remove_if(result.begin(), result.end(), [](const auto &path) {
-                             return !fs::is_directory(path);
-                         }),
-                         result.end());
+                return !fs::is_directory(path);
+            }),
+                result.end());
         }
 
         return result;

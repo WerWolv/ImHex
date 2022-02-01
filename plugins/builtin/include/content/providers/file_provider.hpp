@@ -50,7 +50,7 @@ namespace hex::plugin::builtin::prv {
 
     protected:
 #if defined(OS_WINDOWS)
-        HANDLE m_file = INVALID_HANDLE_VALUE;
+        HANDLE m_file    = INVALID_HANDLE_VALUE;
         HANDLE m_mapping = INVALID_HANDLE_VALUE;
 #else
         int m_file = -1;
@@ -58,10 +58,10 @@ namespace hex::plugin::builtin::prv {
 
         fs::path m_path;
         void *m_mappedFile = nullptr;
-        size_t m_fileSize = 0;
+        size_t m_fileSize  = 0;
 
-        bool m_fileStatsValid = false;
-        bool m_emptyFile = false;
+        bool m_fileStatsValid   = false;
+        bool m_emptyFile        = false;
         struct stat m_fileStats = { 0 };
 
         bool m_readable = false, m_writable = false;

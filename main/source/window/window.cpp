@@ -136,11 +136,11 @@ namespace hex {
             // Let's not loop on this...
             std::signal(signalNumber, nullptr);
 
-            #if defined(DEBUG)
-                assert(false);
-            #else
-                std::raise(signalNumber);
-            #endif
+#if defined(DEBUG)
+            assert(false);
+#else
+            std::raise(signalNumber);
+#endif
         };
 
         std::signal(SIGTERM, signalHandler);
@@ -150,7 +150,7 @@ namespace hex {
         std::signal(SIGABRT, signalHandler);
         std::signal(SIGFPE, signalHandler);
 
-        auto imhexLogo = romfs::get("logo.png");
+        auto imhexLogo      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(imhexLogo.data()), imhexLogo.size());
 
         ContentRegistry::Settings::store();
@@ -176,7 +176,7 @@ namespace hex {
 
             } else {
                 double timeout = (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime);
-                timeout = timeout > 0 ? timeout : 0;
+                timeout        = timeout > 0 ? timeout : 0;
                 glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 ? 0 : timeout);
             }
 
@@ -208,12 +208,12 @@ namespace hex {
         if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
-            auto sidebarPos = ImGui::GetCursorPos();
+            auto sidebarPos   = ImGui::GetCursorPos();
             auto sidebarWidth = ContentRegistry::Interface::getSidebarItems().empty() ? 0 : 30_scaled;
 
             ImGui::SetCursorPosX(sidebarWidth);
 
-            auto footerHeight = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
+            auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
             auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
             auto dockId = ImGui::DockSpace(ImGui::GetID("MainDock"), dockSpaceSize);
@@ -240,7 +240,7 @@ namespace hex {
                 ImGui::SetCursorPos(sidebarPos);
 
                 static i32 openWindow = -1;
-                u32 index = 0;
+                u32 index             = 0;
                 ImGui::PushID("SideBarWindows");
                 for (const auto &[icon, callback] : ContentRegistry::Interface::getSidebarItems()) {
                     ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
@@ -375,9 +375,9 @@ namespace hex {
             }
 
             if (view->getWindowOpenState()) {
-                auto window = ImGui::FindWindowByName(view->getName().c_str());
+                auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
-                bool focused = false;
+                bool focused   = false;
 
 
                 if (hasWindow && !(window->Flags & ImGuiWindowFlags_Popup)) {
@@ -425,7 +425,6 @@ namespace hex {
     }
 
     void Window::drawWelcomeScreen() {
-
     }
 
     void Window::resetLayout() const {
@@ -460,7 +459,7 @@ namespace hex {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
         this->m_windowTitle = "ImHex";
-        this->m_window = glfwCreateWindow(1280_scaled, 720_scaled, this->m_windowTitle.c_str(), nullptr, nullptr);
+        this->m_window      = glfwCreateWindow(1280_scaled, 720_scaled, this->m_windowTitle.c_str(), nullptr, nullptr);
 
         glfwSetWindowUserPointer(this->m_window, this);
 
@@ -534,15 +533,15 @@ namespace hex {
 
                 win->m_pressedKeys.push_back(key);
                 io.KeysDown[key] = true;
-                io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
-                io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
-                io.KeyAlt = (mods & GLFW_MOD_ALT) != 0;
+                io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
+                io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;
+                io.KeyAlt        = (mods & GLFW_MOD_ALT) != 0;
             } else if (action == GLFW_RELEASE) {
-                auto &io = ImGui::GetIO();
+                auto &io         = ImGui::GetIO();
                 io.KeysDown[key] = false;
-                io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
-                io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
-                io.KeyAlt = (mods & GLFW_MOD_ALT) != 0;
+                io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
+                io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;
+                io.KeyAlt        = (mods & GLFW_MOD_ALT) != 0;
             }
         });
 
@@ -585,14 +584,14 @@ namespace hex {
 
         auto fonts = View::getFontAtlas();
 
-        GImGui = ImGui::CreateContext(fonts);
-        GImPlot = ImPlot::CreateContext();
+        GImGui   = ImGui::CreateContext(fonts);
+        GImPlot  = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
 
-        ImGuiIO &io = ImGui::GetIO();
+        ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();
 
-        style.Alpha = 1.0F;
+        style.Alpha          = 1.0F;
         style.WindowRounding = 0.0F;
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
@@ -604,34 +603,34 @@ namespace hex {
             io.Fonts->ConfigData.push_back(entry);
 
         io.ConfigViewportsNoTaskBarIcon = false;
-        io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
-        io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
-        io.KeyMap[ImGuiKey_RightArrow] = GLFW_KEY_RIGHT;
-        io.KeyMap[ImGuiKey_UpArrow] = GLFW_KEY_UP;
-        io.KeyMap[ImGuiKey_DownArrow] = GLFW_KEY_DOWN;
-        io.KeyMap[ImGuiKey_PageUp] = GLFW_KEY_PAGE_UP;
-        io.KeyMap[ImGuiKey_PageDown] = GLFW_KEY_PAGE_DOWN;
-        io.KeyMap[ImGuiKey_Home] = GLFW_KEY_HOME;
-        io.KeyMap[ImGuiKey_End] = GLFW_KEY_END;
-        io.KeyMap[ImGuiKey_Insert] = GLFW_KEY_INSERT;
-        io.KeyMap[ImGuiKey_Delete] = GLFW_KEY_DELETE;
-        io.KeyMap[ImGuiKey_Backspace] = GLFW_KEY_BACKSPACE;
-        io.KeyMap[ImGuiKey_Space] = GLFW_KEY_SPACE;
-        io.KeyMap[ImGuiKey_Enter] = GLFW_KEY_ENTER;
-        io.KeyMap[ImGuiKey_Escape] = GLFW_KEY_ESCAPE;
+        io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
+        io.KeyMap[ImGuiKey_LeftArrow]   = GLFW_KEY_LEFT;
+        io.KeyMap[ImGuiKey_RightArrow]  = GLFW_KEY_RIGHT;
+        io.KeyMap[ImGuiKey_UpArrow]     = GLFW_KEY_UP;
+        io.KeyMap[ImGuiKey_DownArrow]   = GLFW_KEY_DOWN;
+        io.KeyMap[ImGuiKey_PageUp]      = GLFW_KEY_PAGE_UP;
+        io.KeyMap[ImGuiKey_PageDown]    = GLFW_KEY_PAGE_DOWN;
+        io.KeyMap[ImGuiKey_Home]        = GLFW_KEY_HOME;
+        io.KeyMap[ImGuiKey_End]         = GLFW_KEY_END;
+        io.KeyMap[ImGuiKey_Insert]      = GLFW_KEY_INSERT;
+        io.KeyMap[ImGuiKey_Delete]      = GLFW_KEY_DELETE;
+        io.KeyMap[ImGuiKey_Backspace]   = GLFW_KEY_BACKSPACE;
+        io.KeyMap[ImGuiKey_Space]       = GLFW_KEY_SPACE;
+        io.KeyMap[ImGuiKey_Enter]       = GLFW_KEY_ENTER;
+        io.KeyMap[ImGuiKey_Escape]      = GLFW_KEY_ESCAPE;
         io.KeyMap[ImGuiKey_KeyPadEnter] = GLFW_KEY_KP_ENTER;
-        io.KeyMap[ImGuiKey_A] = GLFW_KEY_A;
-        io.KeyMap[ImGuiKey_C] = GLFW_KEY_C;
-        io.KeyMap[ImGuiKey_V] = GLFW_KEY_V;
-        io.KeyMap[ImGuiKey_X] = GLFW_KEY_X;
-        io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
-        io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
+        io.KeyMap[ImGuiKey_A]           = GLFW_KEY_A;
+        io.KeyMap[ImGuiKey_C]           = GLFW_KEY_C;
+        io.KeyMap[ImGuiKey_V]           = GLFW_KEY_V;
+        io.KeyMap[ImGuiKey_X]           = GLFW_KEY_X;
+        io.KeyMap[ImGuiKey_Y]           = GLFW_KEY_Y;
+        io.KeyMap[ImGuiKey_Z]           = GLFW_KEY_Z;
 
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkCreationOnSnap);
 
         {
-            static bool always = true;
+            static bool always                                    = true;
             ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &always;
         }
 
@@ -656,16 +655,16 @@ namespace hex {
         }
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
-        style.IndentSpacing = 10.0F;
+        style.IndentSpacing            = 10.0F;
 
         // Install custom settings handler
         ImGuiSettingsHandler handler;
-        handler.TypeName = "ImHex";
-        handler.TypeHash = ImHashStr("ImHex");
+        handler.TypeName   = "ImHex";
+        handler.TypeHash   = ImHashStr("ImHex");
         handler.ReadOpenFn = ImHexSettingsHandler_ReadOpenFn;
         handler.ReadLineFn = ImHexSettingsHandler_ReadLine;
         handler.WriteAllFn = ImHexSettingsHandler_WriteAll;
-        handler.UserData = this;
+        handler.UserData   = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
         static std::string iniFileName;

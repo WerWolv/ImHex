@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addFooterItem([] {
-            size_t taskCount = 0;
+            size_t taskCount    = 0;
             double taskProgress = 0.0;
             std::string taskName;
 
@@ -43,8 +43,8 @@ namespace hex::plugin::builtin {
                 taskCount = Task::getRunningTasks().size();
                 if (taskCount > 0) {
                     auto frontTask = Task::getRunningTasks().front();
-                    taskProgress = frontTask->getProgress();
-                    taskName = frontTask->getName();
+                    taskProgress   = frontTask->getProgress();
+                    taskName       = frontTask->getName();
                 }
             }
 
@@ -71,14 +71,14 @@ namespace hex::plugin::builtin {
                 if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->undo();
             },
-                            !ImHexApi::Provider::isValid() || !provider->canUndo());
+                !ImHexApi::Provider::isValid() || !provider->canUndo());
 
             // Redo
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->redo();
             },
-                            !ImHexApi::Provider::isValid() || !provider->canRedo());
+                !ImHexApi::Provider::isValid() || !provider->canRedo());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->save();
             },
-                            !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
+                !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
 
             // Save file as
             ImGui::Disabled([&provider] {
@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
                         provider->saveAs(path);
                     });
             },
-                            !ImHexApi::Provider::isValid() || !provider->isSavable());
+                !ImHexApi::Provider::isValid() || !provider->isSavable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::Bookmarks::add(region.address, region.size, {}, {});
                 }
             },
-                            !ImHexApi::Provider::isValid() || !provider->isReadable());
+                !ImHexApi::Provider::isValid() || !provider->isReadable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndCombo();
                 }
             },
-                            !ImHexApi::Provider::isValid());
+                !ImHexApi::Provider::isValid());
         });
     }
 

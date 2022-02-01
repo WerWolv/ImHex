@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
                     if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
                 },
-                                this->m_matching);
+                    this->m_matching);
 
                 if (this->m_matching) {
                     ImGui::SameLine();
@@ -155,7 +155,7 @@ namespace hex::plugin::builtin {
             if (!ImHexApi::Provider::isValid()) return;
 
             auto provider = ImHexApi::Provider::get();
-            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.yara.matching", provider->getActualSize());
+            auto task     = ImHexApi::Tasks::createTask("hex.builtin.view.yara.matching", provider->getActualSize());
 
             YR_COMPILER *compiler = nullptr;
             yr_compiler_create(&compiler);
@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
                     if (!file.isValid())
                         return nullptr;
 
-                    auto size = file.getSize();
+                    auto size    = file.getSize();
                     char *buffer = new char[size + 1];
                     file.readBuffer(reinterpret_cast<u8 *>(buffer), size);
                     buffer[size] = 0x00;
@@ -210,8 +210,8 @@ namespace hex::plugin::builtin {
             };
 
             ScanContext context;
-            context.task = &task;
-            context.currBlock.base = 0;
+            context.task                 = &task;
+            context.currBlock.base       = 0;
             context.currBlock.fetch_data = [](auto *block) -> const u8 * {
                 auto &context = *static_cast<ScanContext *>(block->context);
 
@@ -232,7 +232,7 @@ namespace hex::plugin::builtin {
             };
 
             iterator.context = &context;
-            iterator.first = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
+            iterator.first   = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK   *{
                 auto &context = *static_cast<ScanContext *>(iterator->context);
 
                 context.currBlock.base = 0;
@@ -247,9 +247,9 @@ namespace hex::plugin::builtin {
 
                 u64 address = context.currBlock.base + context.currBlock.size;
 
-                iterator->last_error = ERROR_SUCCESS;
-                context.currBlock.base = address;
-                context.currBlock.size = ImHexApi::Provider::get()->getActualSize() - address;
+                iterator->last_error      = ERROR_SUCCESS;
+                context.currBlock.base    = address;
+                context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
                 context.currBlock.context = &context;
                 context.task->update(address);
 
@@ -263,7 +263,7 @@ namespace hex::plugin::builtin {
                 rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
                     if (message == CALLBACK_MSG_RULE_MATCHING) {
                         auto &newMatches = *static_cast<std::vector<YaraMatch> *>(userData);
-                        auto rule = static_cast<YR_RULE *>(data);
+                        auto rule        = static_cast<YR_RULE *>(data);
 
                         YR_STRING *string;
                         YR_MATCH *match;

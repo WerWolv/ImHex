@@ -41,8 +41,8 @@ namespace hex::plugin::builtin {
                     inBegin++;
 
                 if (inBegin == inEnd) {
-                    outBegin = inEnd;
-                    outEnd = inEnd;
+                    outBegin     = inEnd;
+                    outEnd       = inEnd;
                     paletteIndex = TextEditor::PaletteIndex::Default;
                 } else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
@@ -56,13 +56,13 @@ namespace hex::plugin::builtin {
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
 
-            langDef.mCommentStart = "/*";
-            langDef.mCommentEnd = "*/";
+            langDef.mCommentStart      = "/*";
+            langDef.mCommentEnd        = "*/";
             langDef.mSingleLineComment = "//";
 
-            langDef.mCaseSensitive = true;
+            langDef.mCaseSensitive   = true;
             langDef.mAutoIndentation = true;
-            langDef.mPreprocChar = '#';
+            langDef.mPreprocChar     = '#';
 
             langDef.mName = "Pattern Language";
 
@@ -164,16 +164,16 @@ namespace hex::plugin::builtin {
 
             EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
                 switch (theme) {
-                default:
-                case 1: /* Dark theme */
-                    this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
-                    break;
-                case 2: /* Light theme */
-                    this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
-                    break;
-                case 3: /* Classic theme */
-                    this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
-                    break;
+                    default:
+                    case 1: /* Dark theme */
+                        this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
+                        break;
+                    case 2: /* Light theme */
+                        this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
+                        break;
+                    case 3: /* Classic theme */
+                        this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
+                        break;
                 }
             });
         }
@@ -207,20 +207,20 @@ namespace hex::plugin::builtin {
                 View::showFileChooserPopup(paths, {
                                                       {"Pattern File", "hexpat"}
                 },
-                                           [this](const fs::path &path) {
-                                               this->loadPatternFile(path);
-                                           });
+                    [this](const fs::path &path) {
+                        this->loadPatternFile(path);
+                    });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
                 hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, {
                                                                                                                           {"Pattern", "hexpat"}
                 },
-                                     [this](const auto &path) {
-                                         File file(path, File::Mode::Create);
+                    [this](const auto &path) {
+                        File file(path, File::Mode::Create);
 
-                                         file.write(this->m_textEditor.GetText());
-                                     });
+                        file.write(this->m_textEditor.GetText());
+                    });
             }
         });
     }
@@ -294,8 +294,8 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     ImGui::TextFormatted("{} / {}",
-                                         provider->getPatternLanguageRuntime().getCreatedPatternCount(),
-                                         provider->getPatternLanguageRuntime().getMaximumPatternCount());
+                        provider->getPatternLanguageRuntime().getCreatedPatternCount(),
+                        provider->getPatternLanguageRuntime().getMaximumPatternCount());
                 }
 
                 if (this->m_textEditor.IsTextChanged()) {
@@ -323,15 +323,11 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 View::confirmButtons(
-                    "hex.common.yes"_lang, "hex.common.no"_lang,
-                    [] {
+                    "hex.common.yes"_lang, "hex.common.no"_lang, [] {
                         ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(true);
-                        ImGui::CloseCurrentPopup();
-                    },
-                    [] {
+                        ImGui::CloseCurrentPopup(); }, [] {
                         ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(false);
-                        ImGui::CloseCurrentPopup();
-                    });
+                        ImGui::CloseCurrentPopup(); });
 
                 ImGui::EndPopup();
             }
@@ -350,20 +346,20 @@ namespace hex::plugin::builtin {
                     const auto &[level, message] = this->m_console[i];
 
                     switch (level) {
-                    case pl::LogConsole::Level::Debug:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
-                        break;
-                    case pl::LogConsole::Level::Info:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
-                        break;
-                    case pl::LogConsole::Level::Warning:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
-                        break;
-                    case pl::LogConsole::Level::Error:
-                        ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
-                        break;
-                    default:
-                        continue;
+                        case pl::LogConsole::Level::Debug:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
+                            break;
+                        case pl::LogConsole::Level::Info:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
+                            break;
+                        case pl::LogConsole::Level::Warning:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
+                            break;
+                        case pl::LogConsole::Level::Error:
+                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
+                            break;
+                        default:
+                            continue;
                     }
 
                     if (ImGui::Selectable(message.c_str()))
@@ -416,34 +412,34 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
                     switch (type) {
-                    case EnvVarType::Integer:
-                        {
-                            i64 displayValue = hex::get_or<i128>(value, 0);
-                            ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
-                            value = i128(displayValue);
-                            break;
-                        }
-                    case EnvVarType::Float:
-                        {
-                            auto displayValue = hex::get_or<double>(value, 0.0);
-                            ImGui::InputDouble("###value", &displayValue);
-                            value = displayValue;
-                            break;
-                        }
-                    case EnvVarType::Bool:
-                        {
-                            auto displayValue = hex::get_or<bool>(value, false);
-                            ImGui::Checkbox("###value", &displayValue);
-                            value = displayValue;
-                            break;
-                        }
-                    case EnvVarType::String:
-                        {
-                            auto displayValue = hex::get_or<std::string>(value, "");
-                            ImGui::InputText("###value", displayValue.data(), displayValue.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
-                            value = displayValue;
-                            break;
-                        }
+                        case EnvVarType::Integer:
+                            {
+                                i64 displayValue = hex::get_or<i128>(value, 0);
+                                ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
+                                value = i128(displayValue);
+                                break;
+                            }
+                        case EnvVarType::Float:
+                            {
+                                auto displayValue = hex::get_or<double>(value, 0.0);
+                                ImGui::InputDouble("###value", &displayValue);
+                                value = displayValue;
+                                break;
+                            }
+                        case EnvVarType::Bool:
+                            {
+                                auto displayValue = hex::get_or<bool>(value, false);
+                                ImGui::Checkbox("###value", &displayValue);
+                                value = displayValue;
+                                break;
+                            }
+                        case EnvVarType::String:
+                            {
+                                auto displayValue = hex::get_or<std::string>(value, "");
+                                ImGui::InputText("###value", displayValue.data(), displayValue.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
+                                value = displayValue;
+                                break;
+                            }
                     }
                     ImGui::PopItemWidth();
 
@@ -604,9 +600,9 @@ namespace hex::plugin::builtin {
                         if (builtinType == nullptr) continue;
 
                         PatternVariable variable = {
-                            .inVariable = variableDecl->isInVariable(),
+                            .inVariable  = variableDecl->isInVariable(),
                             .outVariable = variableDecl->isOutVariable(),
-                            .type = builtinType->getType()
+                            .type        = builtinType->getType()
                         };
 
                         if (variable.inVariable || variable.outVariable) {
@@ -651,7 +647,9 @@ namespace hex::plugin::builtin {
             if (!result) {
                 auto error = runtime.getError();
                 if (error) {
-                    TextEditor::ErrorMarkers errorMarkers = { { error->getLineNumber(), error->what() } };
+                    TextEditor::ErrorMarkers errorMarkers = {
+                        {error->getLineNumber(), error->what()}
+                    };
                     this->m_textEditor.SetErrorMarkers(errorMarkers);
                 }
             }

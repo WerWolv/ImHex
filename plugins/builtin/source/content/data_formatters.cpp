@@ -93,7 +93,7 @@ namespace hex::plugin::builtin {
                         if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
                             result += " ";
                         else {
-                            u8 c = buffer[((col << 4) - offset) + i];
+                            u8 c             = buffer[((col << 4) - offset) + i];
                             char displayChar = (c < 32 || c >= 128) ? '.' : c;
                             result += hex::format("{0}", displayChar);
                         }
@@ -145,7 +145,7 @@ namespace hex::plugin::builtin {
                         if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
                             result += "&nbsp";
                         else {
-                            u8 c = buffer[((col << 4) - offset) + i];
+                            u8 c             = buffer[((col << 4) - offset) + i];
                             char displayChar = (c < 32 || c >= 128) ? '.' : c;
                             result += hex::format("{0}", displayChar);
                         }

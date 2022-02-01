@@ -45,7 +45,7 @@ namespace hex {
         if (from < to) std::swap(from, to);
 
         using ValueType = std::remove_cvref_t<decltype(value)>;
-        ValueType mask = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
+        ValueType mask  = (std::numeric_limits<ValueType>::max() >> (((sizeof(value) * 8) - 1) - (from - to))) << to;
 
         return (value & mask) >> to;
     }
@@ -111,23 +111,23 @@ namespace hex {
             static_assert(always_false<T>::value, "Invalid type provided!");
 
         switch (Size) {
-        case 1:
-            swapped = unswapped;
-            break;
-        case 2:
-            swapped = __builtin_bswap16(unswapped);
-            break;
-        case 4:
-            swapped = __builtin_bswap32(unswapped);
-            break;
-        case 8:
-            swapped = __builtin_bswap64(unswapped);
-            break;
-        case 16:
-            swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
-            break;
-        default:
-            __builtin_unreachable();
+            case 1:
+                swapped = unswapped;
+                break;
+            case 2:
+                swapped = __builtin_bswap16(unswapped);
+                break;
+            case 4:
+                swapped = __builtin_bswap32(unswapped);
+                break;
+            case 8:
+                swapped = __builtin_bswap64(unswapped);
+                break;
+            case 16:
+                swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
+                break;
+            default:
+                __builtin_unreachable();
         }
 
         T result;
@@ -151,23 +151,23 @@ namespace hex {
         u128 swapped;
 
         switch (size) {
-        case 1:
-            swapped = unswapped;
-            break;
-        case 2:
-            swapped = __builtin_bswap16(unswapped);
-            break;
-        case 4:
-            swapped = __builtin_bswap32(unswapped);
-            break;
-        case 8:
-            swapped = __builtin_bswap64(unswapped);
-            break;
-        case 16:
-            swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
-            break;
-        default:
-            __builtin_unreachable();
+            case 1:
+                swapped = unswapped;
+                break;
+            case 2:
+                swapped = __builtin_bswap16(unswapped);
+                break;
+            case 4:
+                swapped = __builtin_bswap32(unswapped);
+                break;
+            case 8:
+                swapped = __builtin_bswap64(unswapped);
+                break;
+            case 16:
+                swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
+                break;
+            default:
+                __builtin_unreachable();
         }
 
         T result = 0;
@@ -231,15 +231,15 @@ namespace hex {
 
     inline void trimLeft(std::string &s) {
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-                    return !std::isspace(ch) && ch >= 0x20;
-                }));
+            return !std::isspace(ch) && ch >= 0x20;
+        }));
     }
 
     inline void trimRight(std::string &s) {
         s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-                    return !std::isspace(ch) && ch >= 0x20;
-                }).base(),
-                s.end());
+            return !std::isspace(ch) && ch >= 0x20;
+        }).base(),
+            s.end());
     }
 
     inline void trim(std::string &s) {

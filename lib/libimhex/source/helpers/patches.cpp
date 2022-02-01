@@ -45,7 +45,7 @@ namespace hex {
                 if (bytes.size() > 0xFFFF || startAddress > 0xFF'FFFF)
                     return {};
 
-                u32 address = startAddress.value();
+                u32 address       = startAddress.value();
                 auto addressBytes = reinterpret_cast<u8 *>(&address);
 
                 result.push_back(addressBytes[2]);
@@ -93,7 +93,7 @@ namespace hex {
                 if (bytes.size() > 0xFFFF || startAddress > 0xFFFF'FFFF)
                     return {};
 
-                u32 address = startAddress.value();
+                u32 address       = startAddress.value();
                 auto addressBytes = reinterpret_cast<u8 *>(&address);
 
                 result.push_back(addressBytes[3]);
@@ -128,7 +128,7 @@ namespace hex {
         u32 ipsOffset = 5;
         while (ipsOffset < ipsPatch.size() - (5 + 3)) {
             u32 offset = ipsPatch[ipsOffset + 2] | (ipsPatch[ipsOffset + 1] << 8) | (ipsPatch[ipsOffset + 0] << 16);
-            u16 size = ipsPatch[ipsOffset + 4] | (ipsPatch[ipsOffset + 3] << 8);
+            u16 size   = ipsPatch[ipsOffset + 4] | (ipsPatch[ipsOffset + 3] << 8);
 
             ipsOffset += 5;
 
@@ -179,7 +179,7 @@ namespace hex {
         u32 ipsOffset = 5;
         while (ipsOffset < ipsPatch.size() - (5 + 4)) {
             u32 offset = ipsPatch[ipsOffset + 3] | (ipsPatch[ipsOffset + 2] << 8) | (ipsPatch[ipsOffset + 1] << 16) | (ipsPatch[ipsOffset + 0] << 24);
-            u16 size = ipsPatch[ipsOffset + 5] | (ipsPatch[ipsOffset + 4] << 8);
+            u16 size   = ipsPatch[ipsOffset + 5] | (ipsPatch[ipsOffset + 4] << 8);
 
             ipsOffset += 6;
 

@@ -33,7 +33,7 @@ namespace hex::init {
             return false;
 
         auto versionString = std::string(IMHEX_VERSION);
-        auto currVersion = "v" + versionString.substr(0, versionString.find_first_of('-'));
+        auto currVersion   = "v" + versionString.substr(0, versionString.find_first_of('-'));
         auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
         if (latestVersion != currVersion)
@@ -89,7 +89,7 @@ namespace hex::init {
     }
 
     bool loadFonts() {
-        auto fonts = IM_NEW(ImFontAtlas)();
+        auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
 
         fs::path fontFile;
@@ -220,7 +220,7 @@ namespace hex::init {
         }
 
         u32 builtinPlugins = 0;
-        u32 loadErrors = 0;
+        u32 loadErrors     = 0;
         for (const auto &plugin : plugins) {
             if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
@@ -266,22 +266,22 @@ namespace hex::init {
 
         float interfaceScaling = 1.0F;
         switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-        default:
-        case 0:
-            // Native scaling
-            break;
-        case 1:
-            interfaceScaling = 0.5F;
-            break;
-        case 2:
-            interfaceScaling = 1.0F;
-            break;
-        case 3:
-            interfaceScaling = 1.5F;
-            break;
-        case 4:
-            interfaceScaling = 2.0F;
-            break;
+            default:
+            case 0:
+                // Native scaling
+                break;
+            case 1:
+                interfaceScaling = 0.5F;
+                break;
+            case 2:
+                interfaceScaling = 1.0F;
+                break;
+            case 3:
+                interfaceScaling = 1.5F;
+                break;
+            case 4:
+                interfaceScaling = 2.0F;
+                break;
         }
 
         ImHexApi::System::impl::setGlobalScale(interfaceScaling);
@@ -301,7 +301,7 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
-            { "Checking for updates...",    checkForUpdates    },
+            {"Checking for updates...",     checkForUpdates    },
             { "Downloading information...", downloadInformation},
             { "Creating directories...",    createDirectories  },
             { "Loading settings...",        loadSettings       },
@@ -312,9 +312,9 @@ namespace hex::init {
 
     std::vector<Task> getExitTasks() {
         return {
-            { "Saving settings...",         storeSettings    },
-            { "Cleaning up shared data...", deleteSharedData },
-            { "Unloading plugins...",       unloadPlugins    },
+            {"Saving settings...",          storeSettings   },
+            { "Cleaning up shared data...", deleteSharedData},
+            { "Unloading plugins...",       unloadPlugins   },
         };
     }
 

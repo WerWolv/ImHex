@@ -31,26 +31,26 @@ namespace hex {
         [[nodiscard]] bool isLoaded() const;
 
     private:
-        using InitializePluginFunc = void (*)();
-        using GetPluginNameFunc = const char *(*)();
-        using GetPluginAuthorFunc = const char *(*)();
+        using InitializePluginFunc     = void (*)();
+        using GetPluginNameFunc        = const char *(*)();
+        using GetPluginAuthorFunc      = const char *(*)();
         using GetPluginDescriptionFunc = const char *(*)();
         using GetCompatibleVersionFunc = const char *(*)();
-        using SetImGuiContextFunc = void (*)(ImGuiContext *);
-        using IsBuiltinPluginFunc = bool(*)();
+        using SetImGuiContextFunc      = void (*)(ImGuiContext *);
+        using IsBuiltinPluginFunc      = bool (*)();
 
         void *m_handle = nullptr;
         fs::path m_path;
 
         mutable bool m_initialized = false;
 
-        InitializePluginFunc m_initializePluginFunction = nullptr;
-        GetPluginNameFunc m_getPluginNameFunction = nullptr;
-        GetPluginAuthorFunc m_getPluginAuthorFunction = nullptr;
+        InitializePluginFunc m_initializePluginFunction         = nullptr;
+        GetPluginNameFunc m_getPluginNameFunction               = nullptr;
+        GetPluginAuthorFunc m_getPluginAuthorFunction           = nullptr;
         GetPluginDescriptionFunc m_getPluginDescriptionFunction = nullptr;
         GetCompatibleVersionFunc m_getCompatibleVersionFunction = nullptr;
-        SetImGuiContextFunc m_setImGuiContextFunction = nullptr;
-        IsBuiltinPluginFunc m_isBuiltinPluginFunction = nullptr;
+        SetImGuiContextFunc m_setImGuiContextFunction           = nullptr;
+        IsBuiltinPluginFunc m_isBuiltinPluginFunction           = nullptr;
 
         template<typename T>
         [[nodiscard]] auto getPluginFunction(const std::string &symbol) {

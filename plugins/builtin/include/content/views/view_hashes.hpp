@@ -32,9 +32,9 @@ namespace hex::plugin::builtin {
             Sha512
         };
 
-        bool m_shouldInvalidate = true;
-        int m_currHashFunction = 0;
-        u64 m_hashRegion[2] = { 0 };
+        bool m_shouldInvalidate     = true;
+        int m_currHashFunction      = 0;
+        u64 m_hashRegion[2]         = { 0 };
         bool m_shouldMatchSelection = false;
 
         static constexpr std::array hashFunctionNames {

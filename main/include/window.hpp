@@ -59,7 +59,7 @@ namespace hex {
         std::string m_tipOfTheDay;
 
         ImGui::Texture m_bannerTexture = { 0 };
-        ImGui::Texture m_logoTexture = { 0 };
+        ImGui::Texture m_logoTexture   = { 0 };
 
         fs::path m_safetyBackupPath;
 

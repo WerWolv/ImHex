@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
         i64 m_gotoAddress = 0;
 
         char m_baseAddressBuffer[0x20] = { 0 };
-        u64 m_resizeSize = 0;
+        u64 m_resizeSize               = 0;
 
         std::vector<u8> m_dataToSave;
         std::set<pl::PatternData *> m_highlightedPatterns;
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
         hex::EncodingFile m_currEncodingFile;
         u8 m_highlightAlpha = 0x80;
 
-        bool m_processingImportExport = false;
+        bool m_processingImportExport  = false;
         bool m_advancedDecodingEnabled = false;
 
         void drawSearchPopup();

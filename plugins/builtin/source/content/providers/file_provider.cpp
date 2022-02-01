@@ -173,7 +173,7 @@ namespace hex::plugin::builtin::prv {
         const auto &path = this->m_path.native();
 
         LARGE_INTEGER fileSize = { 0 };
-        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+        this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
         GetFileSizeEx(this->m_file, &fileSize);
         this->m_fileSize = fileSize.QuadPart;
@@ -181,7 +181,7 @@ namespace hex::plugin::builtin::prv {
 
         this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            this->m_file     = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
             this->m_writable = false;
         }
 
@@ -189,7 +189,7 @@ namespace hex::plugin::builtin::prv {
             CloseHandle(this->m_file);
 
             this->m_readable = false;
-            this->m_file = nullptr;
+            this->m_file     = nullptr;
         };
 
         if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
@@ -209,7 +209,7 @@ namespace hex::plugin::builtin::prv {
             auto mappingCleanup = SCOPE_GUARD {
                 CloseHandle(this->m_mapping);
 
-                this->m_mapping = nullptr;
+                this->m_mapping  = nullptr;
                 this->m_readable = false;
             };
 
@@ -241,7 +241,7 @@ namespace hex::plugin::builtin::prv {
 
         this->m_file = ::open(path.c_str(), O_RDWR);
         if (this->m_file == -1) {
-            this->m_file = ::open(path.c_str(), O_RDONLY);
+            this->m_file     = ::open(path.c_str(), O_RDONLY);
             this->m_writable = false;
         }
 

@@ -18,7 +18,7 @@ namespace hex::pl {
     public:
         using TokenIter = std::vector<Token>::const_iterator;
 
-        Parser() = default;
+        Parser()  = default;
         ~Parser() = default;
 
         std::optional<std::vector<ASTNode *>> parse(const std::vector<Token> &tokens);
@@ -151,7 +151,7 @@ namespace hex::pl {
 
         enum class Setting { };
         constexpr static auto Normal = static_cast<Setting>(0);
-        constexpr static auto Not = static_cast<Setting>(1);
+        constexpr static auto Not    = static_cast<Setting>(1);
 
         bool begin() {
             this->m_originalPosition = this->m_curr;

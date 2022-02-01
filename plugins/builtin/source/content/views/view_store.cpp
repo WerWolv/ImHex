@@ -240,9 +240,9 @@ namespace hex::plugin::builtin {
         for (const auto &path : hex::getPath(pathType)) {
             auto fullPath = path / fs::path(fileName);
             if (!update || fs::exists(fullPath)) {
-                downloading = true;
+                downloading          = true;
                 this->m_downloadPath = fullPath;
-                this->m_download = this->m_net.downloadFile(url, fullPath);
+                this->m_download     = this->m_net.downloadFile(url, fullPath);
                 break;
             }
         }
@@ -258,7 +258,7 @@ namespace hex::plugin::builtin {
     bool ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
         bool removed = false;
         for (const auto &path : hex::getPath(pathType)) {
-            bool removedFile = fs::remove(path / fs::path(fileName));
+            bool removedFile   = fs::remove(path / fs::path(fileName));
             bool removedFolder = fs::remove(path / fs::path(fileName).stem());
 
             removed = removedFile || removedFolder;

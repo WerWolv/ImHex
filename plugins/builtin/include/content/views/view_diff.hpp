@@ -28,8 +28,8 @@ namespace hex::plugin::builtin {
         int m_providerA = -1, m_providerB = -1;
 
         bool m_greyedOutZeros = true;
-        bool m_upperCaseHex = true;
-        int m_columnCount = 16;
+        bool m_upperCaseHex   = true;
+        int m_columnCount     = 16;
     };
 
 }

@@ -27,13 +27,13 @@ namespace ImGui {
         if (window->SkipItems)
             return false;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
-        ImVec2 label_size = CalcTextSize(icon, NULL, false);
+        const ImGuiID id        = window->GetID(label);
+        ImVec2 label_size       = CalcTextSize(icon, NULL, false);
         label_size.x += CalcTextSize(" ", NULL, false).x + CalcTextSize(label, NULL, false).x;
 
-        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
@@ -62,12 +62,12 @@ namespace ImGui {
         if (window->SkipItems)
             return false;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
+        const ImGuiID id        = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
-        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
@@ -95,12 +95,12 @@ namespace ImGui {
         if (window->SkipItems)
             return false;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
+        const ImGuiID id        = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
-        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y) + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f);
 
         const ImRect bb(pos, pos + size);
@@ -130,10 +130,10 @@ namespace ImGui {
         if (window->SkipItems)
             return false;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
-        const ImVec2 text_size = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), NULL, true);
+        const ImGuiID id        = window->GetID(label);
+        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), NULL, true);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
         ImVec2 pos = window->DC.CursorPos;
@@ -180,7 +180,7 @@ namespace ImGui {
 
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
-        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         PushStyleColor(ImGuiCol_Text, ImU32(color));
@@ -221,7 +221,7 @@ namespace ImGui {
         static double lastMoveTime;
         static ImGuiID lastHoveredID;
 
-        double currTime = ImGui::GetTime();
+        double currTime   = ImGui::GetTime();
         ImGuiID hoveredID = ImGui::GetHoveredID();
 
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
@@ -238,14 +238,14 @@ namespace ImGui {
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {
         auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
-        ImVec4 c = customData.Colors[idx];
+        ImVec4 c         = customData.Colors[idx];
         c.w *= GImGui->Style.Alpha * alpha_mul;
         return ColorConvertFloat4ToU32(c);
     }
 
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul) {
         auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
-        ImVec4 c = customData.Colors[idx];
+        ImVec4 c         = customData.Colors[idx];
         c.w *= GImGui->Style.Alpha * alpha_mul;
         return c;
     }
@@ -253,17 +253,17 @@ namespace ImGui {
     void StyleCustomColorsDark() {
         auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 
-        colors[ImGuiCustomCol_DescButton] = ImColor(20, 20, 20);
+        colors[ImGuiCustomCol_DescButton]        = ImColor(20, 20, 20);
         colors[ImGuiCustomCol_DescButtonHovered] = ImColor(40, 40, 40);
-        colors[ImGuiCustomCol_DescButtonActive] = ImColor(60, 60, 60);
+        colors[ImGuiCustomCol_DescButtonActive]  = ImColor(60, 60, 60);
 
-        colors[ImGuiCustomCol_ToolbarGray] = ImColor(230, 230, 230);
-        colors[ImGuiCustomCol_ToolbarRed] = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarGray]   = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_ToolbarRed]    = ImColor(231, 76, 60);
         colors[ImGuiCustomCol_ToolbarYellow] = ImColor(241, 196, 15);
-        colors[ImGuiCustomCol_ToolbarGreen] = ImColor(56, 139, 66);
-        colors[ImGuiCustomCol_ToolbarBlue] = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarGreen]  = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue]   = ImColor(6, 83, 155);
         colors[ImGuiCustomCol_ToolbarPurple] = ImColor(103, 42, 120);
-        colors[ImGuiCustomCol_ToolbarBrown] = ImColor(219, 179, 119);
+        colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
     }
@@ -271,17 +271,17 @@ namespace ImGui {
     void StyleCustomColorsLight() {
         auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 
-        colors[ImGuiCustomCol_DescButton] = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_DescButton]        = ImColor(230, 230, 230);
         colors[ImGuiCustomCol_DescButtonHovered] = ImColor(210, 210, 210);
-        colors[ImGuiCustomCol_DescButtonActive] = ImColor(190, 190, 190);
+        colors[ImGuiCustomCol_DescButtonActive]  = ImColor(190, 190, 190);
 
-        colors[ImGuiCustomCol_ToolbarGray] = ImColor(25, 25, 25);
-        colors[ImGuiCustomCol_ToolbarRed] = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarGray]   = ImColor(25, 25, 25);
+        colors[ImGuiCustomCol_ToolbarRed]    = ImColor(231, 76, 60);
         colors[ImGuiCustomCol_ToolbarYellow] = ImColor(241, 196, 15);
-        colors[ImGuiCustomCol_ToolbarGreen] = ImColor(56, 139, 66);
-        colors[ImGuiCustomCol_ToolbarBlue] = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarGreen]  = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue]   = ImColor(6, 83, 155);
         colors[ImGuiCustomCol_ToolbarPurple] = ImColor(103, 42, 120);
-        colors[ImGuiCustomCol_ToolbarBrown] = ImColor(219, 179, 119);
+        colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(41, 151, 112);
     }
@@ -289,23 +289,23 @@ namespace ImGui {
     void StyleCustomColorsClassic() {
         auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 
-        colors[ImGuiCustomCol_DescButton] = ImColor(40, 40, 80);
+        colors[ImGuiCustomCol_DescButton]        = ImColor(40, 40, 80);
         colors[ImGuiCustomCol_DescButtonHovered] = ImColor(60, 60, 100);
-        colors[ImGuiCustomCol_DescButtonActive] = ImColor(80, 80, 120);
+        colors[ImGuiCustomCol_DescButtonActive]  = ImColor(80, 80, 120);
 
-        colors[ImGuiCustomCol_ToolbarGray] = ImColor(230, 230, 230);
-        colors[ImGuiCustomCol_ToolbarRed] = ImColor(231, 76, 60);
+        colors[ImGuiCustomCol_ToolbarGray]   = ImColor(230, 230, 230);
+        colors[ImGuiCustomCol_ToolbarRed]    = ImColor(231, 76, 60);
         colors[ImGuiCustomCol_ToolbarYellow] = ImColor(241, 196, 15);
-        colors[ImGuiCustomCol_ToolbarGreen] = ImColor(56, 139, 66);
-        colors[ImGuiCustomCol_ToolbarBlue] = ImColor(6, 83, 155);
+        colors[ImGuiCustomCol_ToolbarGreen]  = ImColor(56, 139, 66);
+        colors[ImGuiCustomCol_ToolbarBlue]   = ImColor(6, 83, 155);
         colors[ImGuiCustomCol_ToolbarPurple] = ImColor(103, 42, 120);
-        colors[ImGuiCustomCol_ToolbarBrown] = ImColor(219, 179, 119);
+        colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
     }
 
     Texture LoadImageFromPath(const char *path) {
-        int imageWidth = 0;
+        int imageWidth  = 0;
         int imageHeight = 0;
 
         unsigned char *imageData = stbi_load(path, &imageWidth, &imageHeight, nullptr, 4);
@@ -330,7 +330,7 @@ namespace ImGui {
     }
 
     Texture LoadImageFromMemory(const ImU8 *buffer, int size) {
-        int imageWidth = 0;
+        int imageWidth  = 0;
         int imageHeight = 0;
 
 
@@ -377,9 +377,9 @@ namespace ImGui {
         if (window->SkipItems)
             return false;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
+        const ImGuiID id        = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
         ImVec2 pos = window->DC.CursorPos;
@@ -416,9 +416,9 @@ namespace ImGui {
 
         color.w = 1.0F;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(symbol);
+        const ImGuiID id        = window->GetID(symbol);
         const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
 
         ImVec2 pos = window->DC.CursorPos;
@@ -459,9 +459,9 @@ namespace ImGui {
 
         color.w = 1.0F;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(symbol);
+        const ImGuiID id        = window->GetID(symbol);
         const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
 
         ImVec2 pos = window->DC.CursorPos;
@@ -500,10 +500,10 @@ namespace ImGui {
         if (window->SkipItems)
             return;
 
-        ImGuiContext &g = *GImGui;
+        ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
 
-        ImVec2 pos = window->DC.CursorPos + ImVec2(0, yOffset);
+        ImVec2 pos  = window->DC.CursorPos + ImVec2(0, yOffset);
         ImVec2 size = CalcItemSize(ImVec2(100, 5), 100, g.FontSize + style.FramePadding.y * 2.0f);
         ImRect bb(pos, pos + size);
         ItemSize(size, 0);

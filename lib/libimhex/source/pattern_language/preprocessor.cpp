@@ -9,8 +9,8 @@
 namespace hex::pl {
 
     std::optional<std::string> Preprocessor::preprocess(const std::string &code, bool initialRun) {
-        u32 offset = 0;
-        u32 lineNumber = 1;
+        u32 offset      = 0;
+        u32 lineNumber  = 1;
         bool isInString = false;
 
         if (initialRun) {

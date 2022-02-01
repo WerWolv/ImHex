@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
                            [&](auto &&value) {
                                formatArgs.push_back(value);
                            } },
-                       param);
+                param);
         }
 
         try {
@@ -80,14 +80,14 @@ namespace hex::plugin::builtin {
 
             /* error(message) */
             ContentRegistry::PatternLanguage::addFunction(nsStd, "error", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                    LogConsole::abortEvaluation(Token::literalToString(params[0], true));
+                LogConsole::abortEvaluation(Token::literalToString(params[0], true));
 
                 return std::nullopt;
             });
 
             /* warning(message) */
             ContentRegistry::PatternLanguage::addFunction(nsStd, "warning", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                    ctx->getConsole().log(LogConsole::Level::Warning, Token::literalToString(params[0], true));
+                ctx->getConsole().log(LogConsole::Level::Warning, Token::literalToString(params[0], true));
 
                 return std::nullopt;
             });
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
             /* read_unsigned(address, size) */
             ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_unsigned", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address = Token::literalToUnsigned(params[0]);
-                auto size = Token::literalToUnsigned(params[1]);
+                auto size    = Token::literalToUnsigned(params[1]);
 
                 if (size > 16)
                     LogConsole::abortEvaluation("read size out of range");
@@ -155,7 +155,7 @@ namespace hex::plugin::builtin {
             /* read_signed(address, size) */
             ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_signed", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address = Token::literalToUnsigned(params[0]);
-                auto size = Token::literalToUnsigned(params[1]);
+                auto size    = Token::literalToUnsigned(params[1]);
 
                 if (size > 16)
                     LogConsole::abortEvaluation("read size out of range");
@@ -168,7 +168,7 @@ namespace hex::plugin::builtin {
             /* read_string(address, size) */
             ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_string", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address = Token::literalToUnsigned(params[0]);
-                auto size = Token::literalToUnsigned(params[1]);
+                auto size    = Token::literalToUnsigned(params[1]);
 
                 std::string result(size, '\x00');
                 ctx->getProvider()->read(address, result.data(), size);
@@ -189,11 +189,11 @@ namespace hex::plugin::builtin {
             /* at(string, index) */
             ContentRegistry::PatternLanguage::addFunction(nsStdString, "at", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
-                auto index = Token::literalToSigned(params[1]);
+                auto index  = Token::literalToSigned(params[1]);
 
 #if defined(OS_MACOS)
                 const auto signIndex = index >> (sizeof(index) * 8 - 1);
-                const auto absIndex = (index ^ signIndex) - signIndex;
+                const auto absIndex  = (index ^ signIndex) - signIndex;
 #else
                     const auto absIndex = std::abs(index);
 #endif
@@ -210,8 +210,8 @@ namespace hex::plugin::builtin {
             /* substr(string, pos, count) */
             ContentRegistry::PatternLanguage::addFunction(nsStdString, "substr", 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
-                auto pos = Token::literalToUnsigned(params[1]);
-                auto size = Token::literalToUnsigned(params[2]);
+                auto pos    = Token::literalToUnsigned(params[1]);
+                auto size   = Token::literalToUnsigned(params[2]);
 
                 if (pos > string.length())
                     LogConsole::abortEvaluation("character index out of range");
@@ -222,7 +222,7 @@ namespace hex::plugin::builtin {
             /* parse_int(string, base) */
             ContentRegistry::PatternLanguage::addFunction(nsStdString, "parse_int", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
-                auto base = Token::literalToUnsigned(params[1]);
+                auto base   = Token::literalToUnsigned(params[1]);
 
                 return i128(std::strtoll(string.c_str(), nullptr, base));
             });
@@ -255,22 +255,22 @@ namespace hex::plugin::builtin {
 
             /* open(path, mode) */
             ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "open", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                const auto path = Token::literalToString(params[0], false);
+                const auto path     = Token::literalToString(params[0], false);
                 const auto modeEnum = Token::literalToUnsigned(params[1]);
 
                 File::Mode mode;
                 switch (modeEnum) {
-                case 1:
-                    mode = File::Mode::Read;
-                    break;
-                case 2:
-                    mode = File::Mode::Write;
-                    break;
-                case 3:
-                    mode = File::Mode::Create;
-                    break;
-                default:
-                    LogConsole::abortEvaluation("invalid file open mode");
+                    case 1:
+                        mode = File::Mode::Read;
+                        break;
+                    case 2:
+                        mode = File::Mode::Write;
+                        break;
+                    case 3:
+                        mode = File::Mode::Create;
+                        break;
+                    default:
+                        LogConsole::abortEvaluation("invalid file open mode");
                 }
 
                 auto file = File(path, mode);
@@ -322,7 +322,7 @@ namespace hex::plugin::builtin {
 
             /* seek(file, offset) */
             ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "seek", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                const auto file = Token::literalToUnsigned(params[0]);
+                const auto file   = Token::literalToUnsigned(params[0]);
                 const auto offset = Token::literalToUnsigned(params[1]);
 
                 if (!openFiles.contains(file))
@@ -507,7 +507,6 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atanh", 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 return std::atanh(Token::literalToFloatingPoint(params[0]));
             });
-
         }
     }
 

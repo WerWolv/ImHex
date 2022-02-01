@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
         ShortcutManager::addGlobalShortcut(CTRL + SHIFT + Keys::P, [this] {
             EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
-            this->m_justOpened = true;
+            this->m_justOpened         = true;
         });
     }
 
@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
         if (!this->m_commandPaletteOpen) return;
 
-        auto windowPos = ImHexApi::System::getMainWindowPosition();
+        auto windowPos  = ImHexApi::System::getMainWindowPosition();
         auto windowSize = ImHexApi::System::getMainWindowSize();
 
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(-1);
             if (ImGui::InputText(
                     "##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue, [](ImGuiInputTextCallbackData *callbackData) -> int {
-                        auto _this = static_cast<ViewCommandPalette *>(callbackData->UserData);
+                        auto _this           = static_cast<ViewCommandPalette *>(callbackData->UserData);
                         _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
 
                         return 0;

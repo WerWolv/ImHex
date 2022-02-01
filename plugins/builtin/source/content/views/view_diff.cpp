@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
 
         ImDrawList *drawList = ImGui::GetWindowDrawList();
 
-        auto glyphWidth = ImGui::CalcTextSize("0").x + 1;
+        auto glyphWidth           = ImGui::CalcTextSize("0").x + 1;
         static auto highlightSize = ImGui::CalcTextSize("00");
 
         auto startY = ImGui::GetCursorPosY();
@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
         ImGui::SetCursorPosY(startY);
         ImGui::TableNextColumn();
 
-        const ImColor colorText = ImGui::GetColorU32(ImGuiCol_Text);
+        const ImColor colorText     = ImGui::GetColorU32(ImGuiCol_Text);
         const ImColor colorDisabled = this->m_greyedOutZeros ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : static_cast<u32>(colorText);
 
 
@@ -137,19 +137,19 @@ namespace hex::plugin::builtin {
                 // Diff bytes
                 std::optional<u32> highlightColor;
                 switch (diffBytes(col, lineInfo[curr], lineInfo[other])) {
-                default:
-                case DiffResult::Same:
-                    /* No highlight */
-                    break;
-                case DiffResult::Changed:
-                    highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
-                    break;
-                case DiffResult::Added:
-                    highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
-                    break;
-                case DiffResult::Removed:
-                    highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                    break;
+                    default:
+                    case DiffResult::Same:
+                        /* No highlight */
+                        break;
+                    case DiffResult::Changed:
+                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
+                        break;
+                    case DiffResult::Added:
+                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+                        break;
+                    case DiffResult::Removed:
+                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                        break;
                 }
 
                 // Draw byte

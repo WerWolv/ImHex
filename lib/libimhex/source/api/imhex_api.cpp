@@ -29,13 +29,15 @@ namespace hex {
         static std::map<u32, ImHexApi::HexEditor::Highlighting> s_highlights;
 
         Highlighting::Highlighting(Region region, color_t color, const std::string &tooltip)
-                : m_region(region), m_color(color), m_tooltip(tooltip) {
+            : m_region(region), m_color(color), m_tooltip(tooltip) {
         }
 
         u32 addHighlight(const Region &region, color_t color, std::string tooltip) {
             auto id = s_highlights.size();
 
-            s_highlights.insert({ id, Highlighting{ region, color, tooltip } });
+            s_highlights.insert({
+                id, Highlighting {region, color, tooltip}
+            });
 
             return id;
         }
@@ -67,7 +69,7 @@ namespace hex {
     namespace ImHexApi::Provider {
 
         static u32 s_currentProvider;
-        static std::vector<prv::Provider*> s_providers;
+        static std::vector<prv::Provider *> s_providers;
 
         prv::Provider *get() {
             if (!ImHexApi::Provider::isValid())
@@ -82,7 +84,7 @@ namespace hex {
 
         void setCurrentProvider(u32 index) {
             if (index < s_providers.size()) {
-                auto oldProvider = get();
+                auto oldProvider  = get();
                 s_currentProvider = index;
                 EventManager::post<EventProviderChanged>(oldProvider, get());
             }
@@ -126,7 +128,7 @@ namespace hex {
             getDeferredCalls().push_back(function);
         }
 
-        std::vector<std::function<void()>>& getDeferredCalls() {
+        std::vector<std::function<void()>> &getDeferredCalls() {
             return s_deferredCalls;
         }
 
@@ -169,8 +171,7 @@ namespace hex {
         }
 
 
-
-        const ProgramArguments& getProgramArguments() {
+        const ProgramArguments &getProgramArguments() {
             return impl::s_programArguments;
         }
 
@@ -203,7 +204,7 @@ namespace hex {
             return impl::s_mainDockSpaceId;
         }
 
-        std::map<std::string, std::string>& getInitArguments() {
+        std::map<std::string, std::string> &getInitArguments() {
             static std::map<std::string, std::string> initArgs;
 
             return initArgs;

@@ -10,11 +10,11 @@ namespace hex {
         std::ifstream encodingFile(path.c_str());
 
         switch (type) {
-        case Type::Thingy:
-            parseThingyFile(encodingFile);
-            break;
-        default:
-            return;
+            case Type::Thingy:
+                parseThingyFile(encodingFile);
+                break;
+            default:
+                return;
         }
 
         this->m_valid = true;
@@ -45,7 +45,7 @@ namespace hex {
                     continue;
 
                 from = line.substr(0, delimiterPos);
-                to = line.substr(delimiterPos + 1);
+                to   = line.substr(delimiterPos + 1);
 
                 hex::trim(from);
                 hex::trim(to);

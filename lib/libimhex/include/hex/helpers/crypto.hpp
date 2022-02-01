@@ -40,14 +40,14 @@ namespace hex::crypt {
     std::string encode16(const std::vector<u8> &input);
 
     enum class AESMode : u8 {
-        ECB = 0,
-        CBC = 1,
+        ECB    = 0,
+        CBC    = 1,
         CFB128 = 2,
-        CTR = 3,
-        GCM = 4,
-        CCM = 5,
-        OFB = 6,
-        XTS = 7
+        CTR    = 3,
+        GCM    = 4,
+        CCM    = 5,
+        OFB    = 6,
+        XTS    = 7
     };
 
     enum class KeyLength : u8 {

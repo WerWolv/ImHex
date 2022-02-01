@@ -40,8 +40,8 @@ namespace hex::plugin::builtin {
         };
 
         bool m_commandPaletteOpen = false;
-        bool m_justOpened = false;
-        bool m_focusInputTextBox = false;
+        bool m_justOpened         = false;
+        bool m_focusInputTextBox  = false;
 
         std::vector<char> m_commandBuffer;
         std::vector<CommandResult> m_lastResults;

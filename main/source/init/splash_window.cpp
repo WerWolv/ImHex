@@ -68,7 +68,7 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
-        auto splash = romfs::get("splash.png");
+        auto splash                  = romfs::get("splash.png");
         ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
 
         if (splashTexture == nullptr) {
@@ -170,12 +170,12 @@ namespace hex::init {
 
             auto meanScale = std::midpoint(xScale, yScale);
 
-            // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
-            // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
-            // extremely huge with native scaling on MacOS.
-            #if defined(OS_MACOS)
-                meanScale /= 2;
-            #endif
+// On Macs with a retina display (basically all modern ones we care about), the OS reports twice
+// the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
+// extremely huge with native scaling on MacOS.
+#if defined(OS_MACOS)
+            meanScale /= 2;
+#endif
 
             if (meanScale <= 0) {
                 meanScale = 1.0;

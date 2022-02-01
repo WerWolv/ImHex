@@ -93,7 +93,7 @@ namespace hex {
             Task createTask(const std::string &unlocalizedName, u64 maxValue);
 
             void doLater(const std::function<void()> &function);
-            std::vector<std::function<void()>>& getDeferredCalls();
+            std::vector<std::function<void()>> &getDeferredCalls();
 
         }
 
@@ -116,7 +116,7 @@ namespace hex {
                 char **envp;
             };
 
-            const ProgramArguments& getProgramArguments();
+            const ProgramArguments &getProgramArguments();
 
             float getTargetFPS();
             void setTargetFPS(float fps);
@@ -127,7 +127,7 @@ namespace hex {
             ImVec2 getMainWindowSize();
             ImGuiID getMainDockSpaceId();
 
-            std::map<std::string, std::string>& getInitArguments();
+            std::map<std::string, std::string> &getInitArguments();
 
         }
 

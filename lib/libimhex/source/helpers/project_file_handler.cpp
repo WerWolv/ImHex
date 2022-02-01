@@ -55,9 +55,9 @@ namespace hex {
             std::ifstream projectFile(filePath.c_str());
             projectFile >> projectFileData;
 
-            ProjectFile::s_filePath = fs::path(projectFileData["filePath"].get<std::string>());
-            ProjectFile::s_pattern = projectFileData["pattern"];
-            ProjectFile::s_patches = projectFileData["patches"].get<Patches>();
+            ProjectFile::s_filePath             = fs::path(projectFileData["filePath"].get<std::string>());
+            ProjectFile::s_pattern              = projectFileData["pattern"];
+            ProjectFile::s_patches              = projectFileData["patches"].get<Patches>();
             ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
 
             ProjectFile::s_bookmarks.clear();
@@ -89,9 +89,9 @@ namespace hex {
             filePath = ProjectFile::s_currProjectFilePath;
 
         try {
-            projectFileData["filePath"] = ProjectFile::s_filePath;
-            projectFileData["pattern"] = ProjectFile::s_pattern;
-            projectFileData["patches"] = ProjectFile::s_patches;
+            projectFileData["filePath"]      = ProjectFile::s_filePath;
+            projectFileData["pattern"]       = ProjectFile::s_pattern;
+            projectFileData["patches"]       = ProjectFile::s_patches;
             projectFileData["dataProcessor"] = ProjectFile::s_dataProcessorContent;
 
             for (auto &bookmark : ProjectFile::s_bookmarks) {
@@ -106,7 +106,7 @@ namespace hex {
             return false;
         }
 
-        ProjectFile::s_hasUnsavedChanged = false;
+        ProjectFile::s_hasUnsavedChanged   = false;
         ProjectFile::s_currProjectFilePath = filePath;
 
         return true;

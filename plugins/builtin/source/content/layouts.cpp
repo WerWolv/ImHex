@@ -16,10 +16,10 @@ namespace hex::plugin::builtin {
     void registerLayouts() {
 
         ContentRegistry::Interface::addLayout("hex.builtin.layouts.default", [](ImGuiID dockMain) {
-            ImGuiID hexEditor = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.7F, nullptr, &dockMain);
-            ImGuiID utils = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Right, 0.8F, nullptr, &dockMain);
+            ImGuiID hexEditor   = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.7F, nullptr, &dockMain);
+            ImGuiID utils       = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Right, 0.8F, nullptr, &dockMain);
             ImGuiID patternData = ImGui::DockBuilderSplitNode(hexEditor, ImGuiDir_Down, 0.3F, nullptr, &hexEditor);
-            ImGuiID inspector = ImGui::DockBuilderSplitNode(hexEditor, ImGuiDir_Right, 0.3F, nullptr, &hexEditor);
+            ImGuiID inspector   = ImGui::DockBuilderSplitNode(hexEditor, ImGuiDir_Right, 0.3F, nullptr, &hexEditor);
 
             openViewAndDockTo("hex.builtin.view.hexeditor.name", hexEditor);
             openViewAndDockTo("hex.builtin.view.data_inspector.name", inspector);

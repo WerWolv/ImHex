@@ -33,10 +33,10 @@ namespace hex::plugin::windows {
         HANDLE m_portHandle = INVALID_HANDLE_VALUE;
         std::jthread m_receiveThread;
 
-        int m_selectedPort = 0;
-        int m_selectedBaudRate = 11;         // 115200
-        int m_selectedNumBits = 3;           // 8
-        int m_selectedStopBits = 0;          // 1
+        int m_selectedPort       = 0;
+        int m_selectedBaudRate   = 11;       // 115200
+        int m_selectedNumBits    = 3;        // 8
+        int m_selectedStopBits   = 0;        // 1
         int m_selectedParityBits = 0;        // None
         bool m_hasCTSFlowControl = false;    // No
 
