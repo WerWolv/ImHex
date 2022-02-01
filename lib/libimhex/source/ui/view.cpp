@@ -28,11 +28,11 @@ namespace hex {
         auto windowSize = ImHexApi::System::getMainWindowSize();
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
-        if (ImGui::BeginPopupModal("hex.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.builtin.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
-            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
+            if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
             ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
@@ -40,11 +40,11 @@ namespace hex {
         }
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
-        if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.builtin.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
-            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
+            if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
             ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
@@ -52,11 +52,11 @@ namespace hex {
         }
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
-        if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.builtin.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
-            if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
+            if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
                 ImHexApi::Common::closeImHex();
                 ImGui::CloseCurrentPopup();
             }
@@ -67,7 +67,7 @@ namespace hex {
 
         bool opened = true;
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        if (ImGui::BeginPopupModal("hex.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
 
             if (ImGui::BeginListBox("##files", ImVec2(300_scaled, 0))) {
 
@@ -81,15 +81,15 @@ namespace hex {
                 ImGui::EndListBox();
             }
 
-            if (ImGui::Button("hex.common.open"_lang)) {
+            if (ImGui::Button("hex.builtin.common.open"_lang)) {
                 View::s_selectableFileOpenCallback(View::s_selectableFiles[View::s_selectableFileIndex]);
                 ImGui::CloseCurrentPopup();
             }
 
             ImGui::SameLine();
 
-            if (ImGui::Button("hex.common.browse"_lang)) {
-                hex::openFileBrowser("hex.common.open"_lang, DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
+            if (ImGui::Button("hex.builtin.common.browse"_lang)) {
+                hex::openFileBrowser("hex.builtin.common.open"_lang, DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
                     View::s_selectableFileOpenCallback(path);
                     ImGui::CloseCurrentPopup();
                 });
@@ -102,19 +102,19 @@ namespace hex {
     void View::showMessagePopup(const std::string &message) {
         s_popupMessage = message;
 
-        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.info"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.info"_lang); });
     }
 
     void View::showErrorPopup(const std::string &errorMessage) {
         s_popupMessage = errorMessage;
 
-        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.error"_lang); });
     }
 
     void View::showFatalPopup(const std::string &errorMessage) {
         s_popupMessage = errorMessage;
 
-        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.fatal"_lang); });
     }
 
     void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {
@@ -123,7 +123,7 @@ namespace hex {
         View::s_selectableFilesValidExtensions = validExtensions;
         View::s_selectableFileOpenCallback     = callback;
 
-        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.choose_file"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() const {

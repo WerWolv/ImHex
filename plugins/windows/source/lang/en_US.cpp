@@ -5,6 +5,9 @@ namespace hex::plugin::windows {
 
     void registerLanguageEnUS() {
         ContentRegistry::Language::addLocalizations("en-US", {
+            { "hex.windows.title_bar_button.feedback", "Leave Feedback" },
+            { "hex.windows.title_bar_button.debug_build", "Debug build"},
+
             { "hex.windows.view.tty_console.name", "TTY Console" },
                 { "hex.windows.view.tty_console.config", "Configuration"},
                     { "hex.windows.view.tty_console.port", "Port" },

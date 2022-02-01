@@ -264,7 +264,7 @@ namespace hex::plugin::builtin {
                 int nodeId;
                 if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getId() == nodeId) {
                     ImGui::BeginTooltip();
-                    ImGui::TextUnformatted("hex.common.error"_lang);
+                    ImGui::TextUnformatted("hex.builtin.common.error"_lang);
                     ImGui::Separator();
                     ImGui::TextUnformatted(this->m_currNodeError->second.c_str());
                     ImGui::EndTooltip();

@@ -46,13 +46,13 @@ namespace hex::plugin::builtin {
                 auto provider = ImHexApi::Provider::get();
                 if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
 
-                    ImGui::TextUnformatted("hex.common.region"_lang);
+                    ImGui::TextUnformatted("hex.builtin.common.region"_lang);
                     ImGui::Separator();
 
                     ImGui::InputScalarN("##nolabel", ImGuiDataType_U64, this->m_hashRegion, 2, nullptr, nullptr, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                    ImGui::Checkbox("hex.common.match_selection"_lang, &this->m_shouldMatchSelection);
+                    ImGui::Checkbox("hex.builtin.common.match_selection"_lang, &this->m_shouldMatchSelection);
                     if (ImGui::IsItemEdited()) {
                         // Force execution of Region Selection Event
                         EventManager::post<RequestSelectionChange>(Region { 0, 0 });
@@ -92,10 +92,10 @@ namespace hex::plugin::builtin {
                                 ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                ImGui::Checkbox("hex.builtin.common.reflectIn"_lang, &reflectIn);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                ImGui::Checkbox("hex.builtin.common.reflectOut"_lang, &reflectOut);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                                 ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
@@ -127,10 +127,10 @@ namespace hex::plugin::builtin {
                                 ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                ImGui::Checkbox("hex.builtin.common.reflectIn"_lang, &reflectIn);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                ImGui::Checkbox("hex.builtin.common.reflectOut"_lang, &reflectOut);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                                 ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
@@ -163,10 +163,10 @@ namespace hex::plugin::builtin {
                                 ImGui::InputInt("hex.builtin.view.hashes.xorout"_lang, &xorout, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                                ImGui::Checkbox("hex.common.reflectIn"_lang, &reflectIn);
+                                ImGui::Checkbox("hex.builtin.common.reflectIn"_lang, &reflectIn);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
-                                ImGui::Checkbox("hex.common.reflectOut"_lang, &reflectOut);
+                                ImGui::Checkbox("hex.builtin.common.reflectOut"_lang, &reflectOut);
                                 if (ImGui::IsItemEdited()) this->m_shouldInvalidate = true;
 
                                 ImGui::InputInt("hex.builtin.view.hashes.poly"_lang, &polynomial, 0, 0, ImGuiInputTextFlags_CharsHexadecimal);

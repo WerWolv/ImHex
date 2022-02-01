@@ -5,6 +5,9 @@ namespace hex::plugin::windows {
 
     void registerLanguageZhCN() {
         ContentRegistry::Language::addLocalizations("zh-CN", {
+            { "hex.windows.title_bar_button.feedback", "反馈" },
+            { "hex.windows.title_bar_button.debug_build", "调试构建"},
+
             { "hex.windows.view.tty_console.name", "TTY控制台" },
                 { "hex.windows.view.tty_console.config", "配置"},
                     { "hex.windows.view.tty_console.port", "端口" },

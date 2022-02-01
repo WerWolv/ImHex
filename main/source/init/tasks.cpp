@@ -192,6 +192,7 @@ namespace hex::init {
         ContentRegistry::Interface::getToolbarItems().clear();
         ContentRegistry::Interface::getMainMenuItems().clear();
         ContentRegistry::Interface::getMenuItems().clear();
+        ContentRegistry::Interface::getTitleBarButtons().clear();
 
         ShortcutManager::clearShortcuts();
 

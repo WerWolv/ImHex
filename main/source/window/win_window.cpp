@@ -325,26 +325,15 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 6);
-    #if defined(DEBUG)
-        if (ImGui::TitleBarButton(ICON_VS_DEBUG, buttonSize)) {
-            if (ImGui::GetIO().KeyCtrl) {
-                // Explicitly trigger a segfault by writing to an invalid memory location
-                // Used for debugging crashes
-                *reinterpret_cast<u8 *>(0x10) = 0x10;
-            } else if (ImGui::GetIO().KeyShift) {
-                // Explicitly trigger an abort by throwing an uncaught exception
-                // Used for debugging exception errors
-                throw std::runtime_error("Debug Error");
-            } else {
-                hex::openWebpage("https://imhex.werwolv.net/debug");
+        auto &titleBarButtons = ContentRegistry::Interface::getTitleBarButtons();
+
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
+        for (const auto &[icon, tooltip, callback] : titleBarButtons) {
+            if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                callback();
             }
+            ImGui::InfoTooltip(LangEntry(tooltip));
         }
-        ImGui::InfoTooltip("hex.menu.debug_build"_lang);
-    #endif
-        if (ImGui::TitleBarButton(ICON_VS_SMILEY, buttonSize))
-            hex::openWebpage("mailto://hey@werwolv.net");
-        ImGui::InfoTooltip("hex.menu.feedback"_lang);
 
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
         if (ImGui::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))

@@ -12,461 +12,488 @@
 
 namespace hex {
 
-    /* Settings */
+    namespace ContentRegistry::Settings {
 
-    void ContentRegistry::Settings::load() {
-        bool loaded = false;
-        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
-            std::ifstream settingsFile(dir / "settings.json");
+        void load() {
+            bool loaded = false;
+            for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+                std::ifstream settingsFile(dir / "settings.json");
 
-            if (settingsFile.good()) {
-                settingsFile >> getSettingsData();
-                loaded = true;
-                break;
+                if (settingsFile.good()) {
+                    settingsFile >> getSettingsData();
+                    loaded = true;
+                    break;
+                }
+            }
+
+            if (!loaded)
+                store();
+        }
+
+        void store() {
+            for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+                std::ofstream settingsFile(dir / "settings.json", std::ios::trunc);
+
+                if (settingsFile.good()) {
+                    settingsFile << getSettingsData();
+                    break;
+                }
             }
         }
 
-        if (!loaded)
-            ContentRegistry::Settings::store();
-    }
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback) {
+            log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-    void ContentRegistry::Settings::store() {
-        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
-            std::ofstream settingsFile(dir / "settings.json", std::ios::trunc);
+            getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry { unlocalizedName.c_str(), callback });
 
-            if (settingsFile.good()) {
-                settingsFile << getSettingsData();
-                break;
-            }
+            auto &json = getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number())
+                json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
         }
-    }
 
-    void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const ContentRegistry::Settings::Callback &callback) {
-        log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback) {
+            log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-        ContentRegistry::Settings::getEntries()[unlocalizedCategory.c_str()].emplace_back(Entry { unlocalizedName.c_str(), callback });
+            getEntries()[unlocalizedCategory].emplace_back(Entry { unlocalizedName, callback });
 
-        auto &json = getSettingsData();
+            auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory))
-            json[unlocalizedCategory] = nlohmann::json::object();
-        if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number())
-            json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
-    }
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_string())
+                json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
+        }
 
-    void ContentRegistry::Settings::add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const ContentRegistry::Settings::Callback &callback) {
-        log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
+            auto &json = getSettingsData();
 
-        ContentRegistry::Settings::getEntries()[unlocalizedCategory].emplace_back(Entry { unlocalizedName, callback });
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
 
-        auto &json = getSettingsData();
+            json[unlocalizedCategory][unlocalizedName] = value;
+        }
 
-        if (!json.contains(unlocalizedCategory))
-            json[unlocalizedCategory] = nlohmann::json::object();
-        if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_string())
-            json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
-    }
+        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value) {
+            auto &json = getSettingsData();
 
-    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
-        auto &json = getSettingsData();
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
 
-        if (!json.contains(unlocalizedCategory))
-            json[unlocalizedCategory] = nlohmann::json::object();
+            json[unlocalizedCategory][unlocalizedName] = value;
+        }
 
-        json[unlocalizedCategory][unlocalizedName] = value;
-    }
+        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value) {
+            auto &json = getSettingsData();
 
-    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value) {
-        auto &json = getSettingsData();
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
 
-        if (!json.contains(unlocalizedCategory))
-            json[unlocalizedCategory] = nlohmann::json::object();
-
-        json[unlocalizedCategory][unlocalizedName] = value;
-    }
-
-    void ContentRegistry::Settings::write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value) {
-        auto &json = getSettingsData();
-
-        if (!json.contains(unlocalizedCategory))
-            json[unlocalizedCategory] = nlohmann::json::object();
-
-        json[unlocalizedCategory][unlocalizedName] = value;
-    }
+            json[unlocalizedCategory][unlocalizedName] = value;
+        }
 
 
-    i64 ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue) {
-        auto &json = getSettingsData();
+        i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue) {
+            auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory))
-            return defaultValue;
-        if (!json[unlocalizedCategory].contains(unlocalizedName))
-            return defaultValue;
+            if (!json.contains(unlocalizedCategory))
+                return defaultValue;
+            if (!json[unlocalizedCategory].contains(unlocalizedName))
+                return defaultValue;
 
-        if (!json[unlocalizedCategory][unlocalizedName].is_number())
-            json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            if (!json[unlocalizedCategory][unlocalizedName].is_number())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
-        return json[unlocalizedCategory][unlocalizedName].get<i64>();
-    }
+            return json[unlocalizedCategory][unlocalizedName].get<i64>();
+        }
 
-    std::string ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {
-        auto &json = getSettingsData();
+        std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {
+            auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory))
-            return defaultValue;
-        if (!json[unlocalizedCategory].contains(unlocalizedName))
-            return defaultValue;
+            if (!json.contains(unlocalizedCategory))
+                return defaultValue;
+            if (!json[unlocalizedCategory].contains(unlocalizedName))
+                return defaultValue;
 
-        if (!json[unlocalizedCategory][unlocalizedName].is_string())
-            json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            if (!json[unlocalizedCategory][unlocalizedName].is_string())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
-        return json[unlocalizedCategory][unlocalizedName].get<std::string>();
-    }
+            return json[unlocalizedCategory][unlocalizedName].get<std::string>();
+        }
 
-    std::vector<std::string> ContentRegistry::Settings::read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue) {
-        auto &json = getSettingsData();
+        std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue) {
+            auto &json = getSettingsData();
 
-        if (!json.contains(unlocalizedCategory))
-            return defaultValue;
-        if (!json[unlocalizedCategory].contains(unlocalizedName))
-            return defaultValue;
+            if (!json.contains(unlocalizedCategory))
+                return defaultValue;
+            if (!json[unlocalizedCategory].contains(unlocalizedName))
+                return defaultValue;
 
-        if (!json[unlocalizedCategory][unlocalizedName].is_array())
-            json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            if (!json[unlocalizedCategory][unlocalizedName].is_array())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
-        if (!json[unlocalizedCategory][unlocalizedName].array().empty() && !json[unlocalizedCategory][unlocalizedName][0].is_string())
-            json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            if (!json[unlocalizedCategory][unlocalizedName].array().empty() && !json[unlocalizedCategory][unlocalizedName][0].is_string())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
-        return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
-    }
+            return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
+        }
 
 
-    std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> &ContentRegistry::Settings::getEntries() {
-        static std::map<std::string, std::vector<ContentRegistry::Settings::Entry>> entries;
+        std::map<std::string, std::vector<Entry>> &getEntries() {
+            static std::map<std::string, std::vector<Entry>> entries;
 
-        return entries;
-    }
+            return entries;
+        }
 
-    nlohmann::json ContentRegistry::Settings::getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
-        auto &settings = getSettingsData();
+        nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
+            auto &settings = getSettingsData();
 
-        if (!settings.contains(unlocalizedCategory)) return {};
-        if (!settings[unlocalizedCategory].contains(unlocalizedName)) return {};
+            if (!settings.contains(unlocalizedCategory)) return {};
+            if (!settings[unlocalizedCategory].contains(unlocalizedName)) return {};
 
-        return settings[unlocalizedCategory][unlocalizedName];
-    }
+            return settings[unlocalizedCategory][unlocalizedName];
+        }
 
-    nlohmann::json &ContentRegistry::Settings::getSettingsData() {
-        static nlohmann::json settings;
+        nlohmann::json &getSettingsData() {
+            static nlohmann::json settings;
 
-        return settings;
+            return settings;
+        }
+
     }
 
 
-    /* Command Palette Commands */
+    namespace ContentRegistry::CommandPaletteCommands {
 
-    void ContentRegistry::CommandPaletteCommands::add(ContentRegistry::CommandPaletteCommands::Type type, const std::string &command, const std::string &unlocalizedDescription, const std::function<std::string(std::string)> &displayCallback, const std::function<void(std::string)> &executeCallback) {
-        log::info("Registered new command palette command: {}", command);
+        void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback) {
+            log::info("Registered new command palette command: {}", command);
 
-        getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
-    }
+            getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
+        }
 
-    std::vector<ContentRegistry::CommandPaletteCommands::Entry> &ContentRegistry::CommandPaletteCommands::getEntries() {
-        static std::vector<ContentRegistry::CommandPaletteCommands::Entry> commands;
+        std::vector<Entry> &getEntries() {
+            static std::vector<Entry> commands;
 
-        return commands;
-    }
+            return commands;
+        }
 
-
-    /* Pattern Language Functions */
-
-
-    static std::string getFunctionName(const ContentRegistry::PatternLanguage::Namespace &ns, const std::string &name) {
-        std::string functionName;
-        for (auto &scope : ns)
-            functionName += scope + "::";
-
-        functionName += name;
-
-        return functionName;
-    }
-
-    void ContentRegistry::PatternLanguage::addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguage::Callback &func) {
-        log::info("Registered new pattern language function: {}", getFunctionName(ns, name));
-
-        getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, false };
-    }
-
-    void ContentRegistry::PatternLanguage::addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const ContentRegistry::PatternLanguage::Callback &func) {
-        log::info("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
-
-        getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, true };
-    }
-
-    std::map<std::string, ContentRegistry::PatternLanguage::Function> &ContentRegistry::PatternLanguage::getFunctions() {
-        static std::map<std::string, ContentRegistry::PatternLanguage::Function> functions;
-
-        return functions;
     }
 
 
-    static std::vector<ContentRegistry::PatternLanguage::impl::ColorPalette> s_colorPalettes;
-    static u32 s_colorIndex;
-    static u32 s_selectedColorPalette;
+    namespace ContentRegistry::PatternLanguage {
 
-    std::vector<ContentRegistry::PatternLanguage::impl::ColorPalette> &ContentRegistry::PatternLanguage::getPalettes() {
-        return s_colorPalettes;
-    }
+        static std::string getFunctionName(const Namespace &ns, const std::string &name) {
+            std::string functionName;
+            for (auto &scope : ns)
+                functionName += scope + "::";
 
-    void ContentRegistry::PatternLanguage::addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors) {
-        s_colorPalettes.push_back({ unlocalizedName,
-            colors });
-    }
+            functionName += name;
 
-    void ContentRegistry::PatternLanguage::setSelectedPalette(u32 index) {
-        if (index < s_colorPalettes.size())
-            s_selectedColorPalette = index;
+            return functionName;
+        }
 
-        resetPalette();
-    }
+        void addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func) {
+            log::info("Registered new pattern language function: {}", getFunctionName(ns, name));
 
-    u32 ContentRegistry::PatternLanguage::getNextColor() {
-        if (s_colorPalettes.empty())
-            return 0x00;
+            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, false };
+        }
 
-        auto &currColors = s_colorPalettes[s_selectedColorPalette].colors;
+        void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func) {
+            log::info("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
 
-        u32 color = currColors[s_colorIndex];
+            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, true };
+        }
 
-        s_colorIndex++;
-        s_colorIndex %= currColors.size();
+        std::map<std::string, Function> &getFunctions() {
+            static std::map<std::string, Function> functions;
 
-        return color;
-    }
-
-    void ContentRegistry::PatternLanguage::resetPalette() {
-        s_colorIndex = 0;
-    }
+            return functions;
+        }
 
 
-    /* Views */
+        static std::vector<impl::ColorPalette> s_colorPalettes;
+        static u32 s_colorIndex;
+        static u32 s_selectedColorPalette;
 
-    void ContentRegistry::Views::impl::add(View *view) {
-        log::info("Registered new view: {}", view->getUnlocalizedName());
+        std::vector<impl::ColorPalette> &getPalettes() {
+            return s_colorPalettes;
+        }
 
-        getEntries().insert({ view->getUnlocalizedName(), view });
-    }
+        void addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors) {
+            s_colorPalettes.push_back({ unlocalizedName,
+                colors });
+        }
 
-    std::map<std::string, View *> &ContentRegistry::Views::getEntries() {
-        static std::map<std::string, View *> views;
+        void setSelectedPalette(u32 index) {
+            if (index < s_colorPalettes.size())
+                s_selectedColorPalette = index;
 
-        return views;
-    }
+            resetPalette();
+        }
 
-    View *ContentRegistry::Views::getViewByName(const std::string &unlocalizedName) {
-        auto &views = getEntries();
+        u32 getNextColor() {
+            if (s_colorPalettes.empty())
+                return 0x00;
 
-        if (views.contains(unlocalizedName))
-            return views[unlocalizedName];
-        else
-            return nullptr;
-    }
+            auto &currColors = s_colorPalettes[s_selectedColorPalette].colors;
 
+            u32 color = currColors[s_colorIndex];
 
-    /* Tools */
+            s_colorIndex++;
+            s_colorIndex %= currColors.size();
 
-    void ContentRegistry::Tools::add(const std::string &unlocalizedName, const std::function<void()> &function) {
-        log::info("Registered new tool: {}", unlocalizedName);
+            return color;
+        }
 
-        getEntries().emplace_back(impl::Entry { unlocalizedName, function });
-    }
+        void resetPalette() {
+            s_colorIndex = 0;
+        }
 
-    std::vector<ContentRegistry::Tools::impl::Entry> &ContentRegistry::Tools::getEntries() {
-        static std::vector<ContentRegistry::Tools::impl::Entry> entries;
-
-        return entries;
     }
 
 
-    /* Data Inspector */
+    namespace ContentRegistry::Views {
 
-    void ContentRegistry::DataInspector::add(const std::string &unlocalizedName, size_t requiredSize, ContentRegistry::DataInspector::impl::GeneratorFunction function) {
-        log::info("Registered new data inspector format: {}", unlocalizedName);
+        void impl::add(View *view) {
+            log::info("Registered new view: {}", view->getUnlocalizedName());
 
-        getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
+            getEntries().insert({ view->getUnlocalizedName(), view });
+        }
+
+        std::map<std::string, View *> &getEntries() {
+            static std::map<std::string, View *> views;
+
+            return views;
+        }
+
+        View *getViewByName(const std::string &unlocalizedName) {
+            auto &views = getEntries();
+
+            if (views.contains(unlocalizedName))
+                return views[unlocalizedName];
+            else
+                return nullptr;
+        }
+
     }
 
-    std::vector<ContentRegistry::DataInspector::impl::Entry> &ContentRegistry::DataInspector::getEntries() {
-        static std::vector<ContentRegistry::DataInspector::impl::Entry> entries;
+    namespace ContentRegistry::Tools {
 
-        return entries;
+        void add(const std::string &unlocalizedName, const impl::Callback &function) {
+            log::info("Registered new tool: {}", unlocalizedName);
+
+            getEntries().emplace_back(impl::Entry { unlocalizedName, function });
+        }
+
+        std::vector<impl::Entry> &getEntries() {
+            static std::vector<impl::Entry> entries;
+
+            return entries;
+        }
+
     }
 
-    /* Data Processor Nodes */
+    namespace ContentRegistry::DataInspector {
 
-    void ContentRegistry::DataProcessorNode::impl::add(const impl::Entry &entry) {
-        log::info("Registered new data processor node type: [{}]: ", entry.category, entry.name);
+        void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction function) {
+            log::info("Registered new data inspector format: {}", unlocalizedName);
 
-        getEntries().push_back(entry);
+            getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
+        }
+
+        std::vector<impl::Entry> &getEntries() {
+            static std::vector<impl::Entry> entries;
+
+            return entries;
+        }
+
     }
 
-    void ContentRegistry::DataProcessorNode::addSeparator() {
-        getEntries().push_back({ "", "", [] { return nullptr; } });
+    namespace ContentRegistry::DataProcessorNode {
+
+        void impl::add(const impl::Entry &entry) {
+            log::info("Registered new data processor node type: [{}]: ", entry.category, entry.name);
+
+            getEntries().push_back(entry);
+        }
+
+        void addSeparator() {
+            getEntries().push_back({ "", "", [] { return nullptr; } });
+        }
+
+        std::vector<impl::Entry> &getEntries() {
+            static std::vector<impl::Entry> nodes;
+
+            return nodes;
+        }
+
     }
 
-    std::vector<ContentRegistry::DataProcessorNode::impl::Entry> &ContentRegistry::DataProcessorNode::getEntries() {
-        static std::vector<ContentRegistry::DataProcessorNode::impl::Entry> nodes;
+    namespace ContentRegistry::Language {
 
-        return nodes;
+        void registerLanguage(const std::string &name, const std::string &languageCode) {
+            log::info("Registered new language: {} ({})", name, languageCode);
+
+            getLanguages().insert({ languageCode, name });
+        }
+
+        void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition) {
+            log::info("Registered new localization for language {} with {} entries", languageCode, definition.getEntries().size());
+
+            getLanguageDefinitions()[languageCode].push_back(definition);
+        }
+
+        std::map<std::string, std::string> &getLanguages() {
+            static std::map<std::string, std::string> languages;
+
+            return languages;
+        }
+
+        std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions() {
+            static std::map<std::string, std::vector<LanguageDefinition>> definitions;
+
+            return definitions;
+        }
+
     }
 
-    /* Languages */
+    namespace ContentRegistry::Interface {
 
-    void ContentRegistry::Language::registerLanguage(const std::string &name, const std::string &languageCode) {
-        log::info("Registered new language: {} ({})", name, languageCode);
+        void registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
+            log::info("Registered new main menu item: {}", unlocalizedName);
 
-        getLanguages().insert({ languageCode, name });
+            getMainMenuItems().insert({ priority, { unlocalizedName } });
+        }
+
+        void addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
+            log::info("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
+
+            getMenuItems().insert({
+                priority, {unlocalizedMainMenuName, function}
+            });
+        }
+
+        void addWelcomeScreenEntry(const impl::DrawCallback &function) {
+            getWelcomeScreenEntries().push_back(function);
+        }
+
+        void addFooterItem(const impl::DrawCallback &function) {
+            getFooterItems().push_back(function);
+        }
+
+        void addToolbarItem(const impl::DrawCallback &function) {
+            getToolbarItems().push_back(function);
+        }
+
+        void addSidebarItem(const std::string &icon, const impl::DrawCallback &function) {
+            getSidebarItems().push_back({ icon, function });
+        }
+
+        void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function) {
+            getTitleBarButtons().push_back({ icon, unlocalizedTooltip, function });
+        }
+
+        void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
+            log::info("Added new layout: {}", unlocalizedName);
+
+            getLayouts().push_back({ unlocalizedName, function });
+        }
+
+
+        std::multimap<u32, impl::MainMenuItem> &getMainMenuItems() {
+            static std::multimap<u32, impl::MainMenuItem> items;
+
+            return items;
+        }
+        std::multimap<u32, impl::MenuItem> &getMenuItems() {
+            static std::multimap<u32, impl::MenuItem> items;
+
+            return items;
+        }
+
+        std::vector<impl::DrawCallback> &getWelcomeScreenEntries() {
+            static std::vector<impl::DrawCallback> entries;
+
+            return entries;
+        }
+        std::vector<impl::DrawCallback> &getFooterItems() {
+            static std::vector<impl::DrawCallback> items;
+
+            return items;
+        }
+        std::vector<impl::DrawCallback> &getToolbarItems() {
+            static std::vector<impl::DrawCallback> items;
+
+            return items;
+        }
+        std::vector<impl::SidebarItem> &getSidebarItems() {
+            static std::vector<impl::SidebarItem> items;
+
+            return items;
+        }
+        std::vector<impl::TitleBarButton> &getTitleBarButtons() {
+            static std::vector<impl::TitleBarButton> buttons;
+
+            return buttons;
+        }
+
+        std::vector<impl::Layout> &getLayouts() {
+            static std::vector<impl::Layout> layouts;
+
+            return layouts;
+        }
+
     }
 
-    void ContentRegistry::Language::addLocalizations(const std::string &languageCode, const LanguageDefinition &definition) {
-        log::info("Registered new localization for language {} with {} entries", languageCode, definition.getEntries().size());
+    namespace ContentRegistry::Provider {
 
-        getLanguageDefinitions()[languageCode].push_back(definition);
+        void impl::addProviderName(const std::string &unlocalizedName) {
+            log::info("Registered new provider: {}", unlocalizedName);
+
+            getEntries().push_back(unlocalizedName);
+        }
+
+        std::vector<std::string> &getEntries() {
+            static std::vector<std::string> providerNames;
+
+            return providerNames;
+        }
+
     }
 
-    std::map<std::string, std::string> &ContentRegistry::Language::getLanguages() {
-        static std::map<std::string, std::string> languages;
+    namespace ContentRegistry::DataFormatter {
 
-        return languages;
+        void add(const std::string &unlocalizedName, const impl::Callback &callback) {
+            log::info("Registered new data formatter: {}", unlocalizedName);
+
+            getEntries().push_back({ unlocalizedName, callback });
+        }
+
+        std::vector<impl::Entry> &getEntries() {
+            static std::vector<impl::Entry> entries;
+
+            return entries;
+        }
+
     }
 
-    std::map<std::string, std::vector<LanguageDefinition>> &ContentRegistry::Language::getLanguageDefinitions() {
-        static std::map<std::string, std::vector<LanguageDefinition>> definitions;
+    namespace ContentRegistry::FileHandler {
 
-        return definitions;
+        void add(const std::vector<std::string> &extensions, const impl::Callback &callback) {
+            for (const auto &extension : extensions)
+                log::info("Registered new data handler for extensions: {}", extension);
+
+            getEntries().push_back({ extensions, callback });
+        }
+
+        std::vector<impl::Entry> &getEntries() {
+            static std::vector<impl::Entry> entries;
+
+            return entries;
+        }
+
     }
 
-
-    /* Interface */
-
-    void ContentRegistry::Interface::registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
-        log::info("Registered new main menu item: {}", unlocalizedName);
-
-        getMainMenuItems().insert({ priority, { unlocalizedName } });
-    }
-
-    void ContentRegistry::Interface::addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
-        log::info("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
-
-        getMenuItems().insert({
-            priority, {unlocalizedMainMenuName, function}
-        });
-    }
-
-    void ContentRegistry::Interface::addWelcomeScreenEntry(const ContentRegistry::Interface::impl::DrawCallback &function) {
-        getWelcomeScreenEntries().push_back(function);
-    }
-
-    void ContentRegistry::Interface::addFooterItem(const ContentRegistry::Interface::impl::DrawCallback &function) {
-        getFooterItems().push_back(function);
-    }
-
-    void ContentRegistry::Interface::addToolbarItem(const ContentRegistry::Interface::impl::DrawCallback &function) {
-        getToolbarItems().push_back(function);
-    }
-
-    void ContentRegistry::Interface::addSidebarItem(const std::string &icon, const impl::DrawCallback &function) {
-        getSidebarItems().push_back({ icon, function });
-    }
-
-    void ContentRegistry::Interface::addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
-        log::info("Added new layout: {}", unlocalizedName);
-
-        getLayouts().push_back({ unlocalizedName, function });
-    }
-
-
-    std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem> &ContentRegistry::Interface::getMainMenuItems() {
-        static std::multimap<u32, ContentRegistry::Interface::impl::MainMenuItem> items;
-
-        return items;
-    }
-    std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> &ContentRegistry::Interface::getMenuItems() {
-        static std::multimap<u32, ContentRegistry::Interface::impl::MenuItem> items;
-
-        return items;
-    }
-
-    std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getWelcomeScreenEntries() {
-        static std::vector<ContentRegistry::Interface::impl::DrawCallback> entries;
-
-        return entries;
-    }
-    std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getFooterItems() {
-        static std::vector<ContentRegistry::Interface::impl::DrawCallback> items;
-
-        return items;
-    }
-    std::vector<ContentRegistry::Interface::impl::DrawCallback> &ContentRegistry::Interface::getToolbarItems() {
-        static std::vector<ContentRegistry::Interface::impl::DrawCallback> items;
-
-        return items;
-    }
-    std::vector<ContentRegistry::Interface::impl::SidebarItem> &ContentRegistry::Interface::getSidebarItems() {
-        static std::vector<ContentRegistry::Interface::impl::SidebarItem> items;
-
-        return items;
-    }
-
-    std::vector<ContentRegistry::Interface::impl::Layout> &ContentRegistry::Interface::getLayouts() {
-        static std::vector<ContentRegistry::Interface::impl::Layout> layouts;
-
-        return layouts;
-    }
-
-
-    /* Providers */
-
-    void ContentRegistry::Provider::impl::addProviderName(const std::string &unlocalizedName) {
-        log::info("Registered new provider: {}", unlocalizedName);
-
-        getEntries().push_back(unlocalizedName);
-    }
-
-    std::vector<std::string> &ContentRegistry::Provider::getEntries() {
-        static std::vector<std::string> providerNames;
-
-        return providerNames;
-    }
-
-
-    /* Data Formatters */
-
-    void ContentRegistry::DataFormatter::add(const std::string &unlocalizedName, const impl::Callback &callback) {
-        log::info("Registered new data formatter: {}", unlocalizedName);
-
-        getEntries().push_back({ unlocalizedName, callback });
-    }
-
-    std::vector<ContentRegistry::DataFormatter::impl::Entry> &ContentRegistry::DataFormatter::getEntries() {
-        static std::vector<ContentRegistry::DataFormatter::impl::Entry> entries;
-
-        return entries;
-    }
-
-
-    /* File Handlers */
-
-    void ContentRegistry::FileHandler::add(const std::vector<std::string> &extensions, const impl::Callback &callback) {
-        for (const auto &extension : extensions)
-            log::info("Registered new data handler for extensions: {}", extension);
-
-        getEntries().push_back({ extensions, callback });
-    }
-
-    std::vector<ContentRegistry::FileHandler::impl::Entry> &ContentRegistry::FileHandler::getEntries() {
-        static std::vector<ContentRegistry::FileHandler::impl::Entry> entries;
-
-        return entries;
-    }
 }

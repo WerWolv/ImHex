@@ -590,7 +590,7 @@ namespace hex::plugin::builtin {
                 });
             }
         } else {
-            if (ImGui::Button("hex.common.cancel"_lang)) {
+            if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
                 net.cancel();
             }
         }
@@ -603,9 +603,9 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##links", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg, ImVec2(0, 200))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.common.file"_lang);
-            ImGui::TableSetupColumn("hex.common.link"_lang);
-            ImGui::TableSetupColumn("hex.common.size"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.file"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.link"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
             ImGui::TableHeadersRow();
 
             ImGuiListClipper clipper;

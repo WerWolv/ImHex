@@ -246,6 +246,7 @@ namespace hex {
 
                 using DrawCallback   = std::function<void()>;
                 using LayoutFunction = std::function<void(u32)>;
+                using ClickCallback  = std::function<void()>;
 
                 struct Layout {
                     std::string unlocalizedName;
@@ -266,6 +267,12 @@ namespace hex {
                     DrawCallback callback;
                 };
 
+                struct TitleBarButton {
+                    std::string icon;
+                    std::string unlocalizedTooltip;
+                    ClickCallback callback;
+                };
+
             }
 
             void registerMainMenuItem(const std::string &unlocalizedName, u32 priority);
@@ -275,6 +282,7 @@ namespace hex {
             void addFooterItem(const impl::DrawCallback &function);
             void addToolbarItem(const impl::DrawCallback &function);
             void addSidebarItem(const std::string &icon, const impl::DrawCallback &function);
+            void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function);
 
             void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function);
 
@@ -285,6 +293,7 @@ namespace hex {
             std::vector<impl::DrawCallback> &getFooterItems();
             std::vector<impl::DrawCallback> &getToolbarItems();
             std::vector<impl::SidebarItem> &getSidebarItems();
+            std::vector<impl::TitleBarButton> &getTitleBarButtons();
 
             std::vector<impl::Layout> &getLayouts();
         }

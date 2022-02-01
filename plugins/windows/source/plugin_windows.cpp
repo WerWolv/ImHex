@@ -10,6 +10,7 @@ namespace hex::plugin::windows {
     void registerLanguageZhCN();
 
     void addFooterItems();
+    void addTitleBarButtons();
     void registerSettings();
 }
 
@@ -23,5 +24,6 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     registerLanguageZhCN();
 
     addFooterItems();
+    addTitleBarButtons();
     registerSettings();
 }

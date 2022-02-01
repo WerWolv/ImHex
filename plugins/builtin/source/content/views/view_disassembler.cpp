@@ -112,7 +112,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputScalar("hex.builtin.view.disassembler.base"_lang, ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::InputScalarN("hex.builtin.view.disassembler.region"_lang, ImGuiDataType_U64, this->m_codeRegion, 2, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
 
-                ImGui::Checkbox("hex.common.match_selection"_lang, &this->m_shouldMatchSelection);
+                ImGui::Checkbox("hex.builtin.common.match_selection"_lang, &this->m_shouldMatchSelection);
                 if (ImGui::IsItemEdited()) {
                     // Force execution of Region Selection Event
                     EventManager::post<RequestSelectionChange>(Region { 0, 0 });
@@ -129,9 +129,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginChild("modes", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), true, ImGuiWindowFlags_AlwaysAutoResize)) {
 
                     static int littleEndian = true;
-                    ImGui::RadioButton("hex.common.little_endian"_lang, &littleEndian, true);
+                    ImGui::RadioButton("hex.builtin.common.little_endian"_lang, &littleEndian, true);
                     ImGui::SameLine();
-                    ImGui::RadioButton("hex.common.big_endian"_lang, &littleEndian, false);
+                    ImGui::RadioButton("hex.builtin.common.big_endian"_lang, &littleEndian, false);
 
                     ImGui::NewLine();
 

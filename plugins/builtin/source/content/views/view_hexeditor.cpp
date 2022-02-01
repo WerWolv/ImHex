@@ -251,7 +251,7 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             confirmButtons(
-                "hex.common.yes"_lang, "hex.common.no"_lang, [] { ImHexApi::Common::closeImHex(true); }, [] { ImGui::CloseCurrentPopup(); });
+                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] { ImHexApi::Common::closeImHex(true); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -287,7 +287,7 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             confirmButtons(
-                "hex.common.load"_lang, "hex.common.cancel"_lang, [this, &provider] {
+                "hex.builtin.common.load"_lang, "hex.builtin.common.cancel"_lang, [this, &provider] {
                    if (!this->m_loaderScriptScriptPath.empty() && !this->m_loaderScriptFilePath.empty()) {
                        EventManager::post<RequestOpenFile>(this->m_loaderScriptFilePath);
                        LoaderScript::setFilePath(this->m_loaderScriptFilePath);
@@ -300,11 +300,11 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.menu.edit.set_base"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::InputText("hex.common.address"_lang, this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputText("hex.builtin.common.address"_lang, this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons(
-                "hex.common.set"_lang, "hex.common.cancel"_lang, [this, &provider] {
+                "hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang, [this, &provider] {
                                provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
                                ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
@@ -317,11 +317,11 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.menu.edit.resize"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextUnformatted("0x");
             ImGui::SameLine();
-            ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputScalar("hex.builtin.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons(
-                "hex.common.set"_lang, "hex.common.cancel"_lang, [this, &provider] {
+                "hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang, [this, &provider] {
                     provider->resize(this->m_resizeSize);
                     ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
@@ -334,11 +334,11 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginPopupModal("hex.builtin.view.hexeditor.menu.edit.insert"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::TextUnformatted("0x");
             ImGui::SameLine();
-            ImGui::InputScalar("hex.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputScalar("hex.builtin.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons(
-                "hex.common.set"_lang, "hex.common.cancel"_lang, [this, &provider] {
+                "hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang, [this, &provider] {
                     provider->insert(std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd), this->m_resizeSize);
                     ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 

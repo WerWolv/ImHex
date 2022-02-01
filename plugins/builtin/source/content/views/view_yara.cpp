@@ -86,8 +86,8 @@ namespace hex::plugin::builtin {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang);
-                ImGui::TableSetupColumn("hex.common.address"_lang);
-                ImGui::TableSetupColumn("hex.common.size"_lang);
+                ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
+                ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
 
                 ImGui::TableHeadersRow();
 

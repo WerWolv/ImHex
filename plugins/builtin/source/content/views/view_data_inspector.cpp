@@ -82,27 +82,27 @@ namespace hex::plugin::builtin {
                 ImGui::Separator();
                 ImGui::NewLine();
 
-                if (ImGui::RadioButton("hex.common.little_endian"_lang, this->m_endian == std::endian::little)) {
+                if (ImGui::RadioButton("hex.builtin.common.little_endian"_lang, this->m_endian == std::endian::little)) {
                     this->m_endian           = std::endian::little;
                     this->m_shouldInvalidate = true;
                 }
                 ImGui::SameLine();
-                if (ImGui::RadioButton("hex.common.big_endian"_lang, this->m_endian == std::endian::big)) {
+                if (ImGui::RadioButton("hex.builtin.common.big_endian"_lang, this->m_endian == std::endian::big)) {
                     this->m_endian           = std::endian::big;
                     this->m_shouldInvalidate = true;
                 }
 
-                if (ImGui::RadioButton("hex.common.decimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Decimal)) {
+                if (ImGui::RadioButton("hex.builtin.common.decimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Decimal)) {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Decimal;
                     this->m_shouldInvalidate   = true;
                 }
                 ImGui::SameLine();
-                if (ImGui::RadioButton("hex.common.hexadecimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Hexadecimal)) {
+                if (ImGui::RadioButton("hex.builtin.common.hexadecimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Hexadecimal)) {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Hexadecimal;
                     this->m_shouldInvalidate   = true;
                 }
                 ImGui::SameLine();
-                if (ImGui::RadioButton("hex.common.octal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Octal)) {
+                if (ImGui::RadioButton("hex.builtin.common.octal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Octal)) {
                     this->m_numberDisplayStyle = NumberDisplayStyle::Octal;
                     this->m_shouldInvalidate   = true;
                 }

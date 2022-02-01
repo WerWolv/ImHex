@@ -323,7 +323,7 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 View::confirmButtons(
-                    "hex.common.yes"_lang, "hex.common.no"_lang, [] {
+                    "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] {
                         ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(true);
                         ImGui::CloseCurrentPopup(); }, [] {
                         ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(false);
@@ -552,7 +552,7 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
             confirmButtons(
-                "hex.common.yes"_lang, "hex.common.no"_lang, [this] {
+                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this] {
                 this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
                 ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 

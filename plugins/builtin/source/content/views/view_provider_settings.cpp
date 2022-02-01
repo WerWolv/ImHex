@@ -35,14 +35,14 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
                 ImGui::Separator();
 
-                if (ImGui::Button("hex.common.open"_lang)) {
+                if (ImGui::Button("hex.builtin.common.open"_lang)) {
                     if (provider->open())
                         ImGui::CloseCurrentPopup();
                 }
 
                 ImGui::SameLine();
 
-                if (ImGui::Button("hex.common.cancel"_lang)) {
+                if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
                     ImHexApi::Provider::remove(provider);
                     ImGui::CloseCurrentPopup();
                 }
