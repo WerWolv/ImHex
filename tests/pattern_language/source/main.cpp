@@ -58,8 +58,8 @@ int test(int argc, char **argv) {
     addFunctions();
 
     // Check if compilation succeeded
-    auto patterns = language.executeString(provider, testPatterns[testName]->getSourceCode());
-    if (!patterns.has_value()) {
+    auto result = language.executeString(provider, testPatterns[testName]->getSourceCode());
+    if (!result) {
         hex::log::fatal("Error during compilation!");
 
         if (auto error = language.getError(); error.has_value())
@@ -76,20 +76,20 @@ int test(int argc, char **argv) {
     }
 
     ON_SCOPE_EXIT {
-        for (auto &pattern : *patterns)
+        for (auto &pattern : language.getPatterns())
             delete pattern;
     };
 
     // Check if the right number of patterns have been produced
-    if (patterns->size() != currTest->getPatterns().size() && !currTest->getPatterns().empty()) {
+    if (language.getPatterns().size() != currTest->getPatterns().size() && !currTest->getPatterns().empty()) {
         hex::log::fatal("Source didn't produce expected number of patterns");
         return EXIT_FAILURE;
     }
 
     // Check if the produced patterns are the ones expected
     for (u32 i = 0; i < currTest->getPatterns().size(); i++) {
-        auto &evaluatedPattern = *patterns->at(i);
-        auto &controlPattern = *currTest->getPatterns().at(i);
+        auto &evaluatedPattern = *language.getPatterns()[i];
+        auto &controlPattern = *currTest->getPatterns()[i];
 
         if (evaluatedPattern != controlPattern) {
             hex::log::fatal("Pattern with name {}:{} didn't match template", evaluatedPattern.getTypeName(), evaluatedPattern.getVariableName());

@@ -61,11 +61,7 @@ namespace hex::pl {
             getEvaluator()->patternCreated();
         }
 
-        PatternCreationLimiter(const PatternCreationLimiter &other) {
-            if (getEvaluator() == nullptr) return;
-
-            getEvaluator()->patternCreated();
-        }
+        PatternCreationLimiter(const PatternCreationLimiter &other) : PatternCreationLimiter(other.m_evaluator) { }
 
         virtual ~PatternCreationLimiter() {
             if (getEvaluator() == nullptr) return;
@@ -78,7 +74,7 @@ namespace hex::pl {
             return this->m_evaluator;
         }
     private:
-        Evaluator *m_evaluator;
+        Evaluator *m_evaluator = nullptr;
     };
 
     class PatternData : public PatternCreationLimiter, public Cloneable<PatternData> {
