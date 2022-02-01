@@ -1,10 +1,11 @@
 #include <hex/data_processor/attribute.hpp>
 
-#include <hex/helpers/shared_data.hpp>
 
 namespace hex::dp {
 
-    Attribute::Attribute(IOType ioType, Type type, std::string unlocalizedName) : m_id(SharedData::dataProcessorAttrIdCounter++), m_ioType(ioType), m_type(type), m_unlocalizedName(std::move(unlocalizedName)) {
+    u32 Attribute::s_idCounter = 1;
+
+    Attribute::Attribute(IOType ioType, Type type, std::string unlocalizedName) : m_id(Attribute::s_idCounter++), m_ioType(ioType), m_type(type), m_unlocalizedName(std::move(unlocalizedName)) {
     }
 
     Attribute::~Attribute() {

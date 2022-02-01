@@ -1,15 +1,11 @@
 #pragma once
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 #include <vector>
 #include <list>
 
 namespace hex::plugin::builtin {
-
-    namespace prv {
-        class Provider;
-    }
 
     class ViewBookmarks : public View {
     public:
@@ -17,6 +13,9 @@ namespace hex::plugin::builtin {
         ~ViewBookmarks() override;
 
         void drawContent() override;
+
+    private:
+        std::list<ImHexApi::Bookmarks::Entry> m_bookmarks;
     };
 
 }

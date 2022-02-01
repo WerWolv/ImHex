@@ -1,5 +1,7 @@
 #include "content/views/view_store.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
@@ -27,7 +29,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
-                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
+                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });

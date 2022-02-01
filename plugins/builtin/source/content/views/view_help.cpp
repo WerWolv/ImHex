@@ -1,9 +1,11 @@
 #include "content/views/view_help.hpp"
-#include <hex/helpers/paths.hpp>
+
+#include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/paths.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <romfs/romfs.hpp>
 
@@ -13,7 +15,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
-                View::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
+                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
                 this->m_aboutWindowOpen = true;
                 this->getWindowOpenState() = true;
             }

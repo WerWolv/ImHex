@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/pattern_language/pattern_language.hpp>
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/providers/provider.hpp>
@@ -24,14 +24,14 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        pl::PatternLanguage *m_parserRuntime, *m_evaluatorRuntime;
+        pl::PatternLanguage *m_parserRuntime;
 
         std::vector<fs::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
         bool m_runAutomatically = false;
 
-        bool m_evaluatorRunning = false;
-        bool m_parserRunning = false;
+        std::atomic<u32> m_runningEvaluators = 0;
+        std::atomic<u32> m_runningParsers = 0;
 
         bool m_hasUnevaluatedChanges = false;
 

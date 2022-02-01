@@ -1,5 +1,7 @@
 #include "content/views/view_tools.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <hex/providers/provider.hpp>
 
 namespace hex::plugin::builtin {

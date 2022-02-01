@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/api/event.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 
 #include <cmath>
 #include <cstring>

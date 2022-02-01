@@ -1,9 +1,13 @@
 #include "content/providers/disk_provider.hpp"
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/api/localization.hpp>
 
 #include <bitset>
 #include <filesystem>
+
+#include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #if defined(OS_LINUX)
     #include <fcntl.h>

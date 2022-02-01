@@ -1,9 +1,9 @@
 #include "init/splash_window.hpp"
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/shared_data.hpp>
 
 #include <romfs/romfs.hpp>
 
@@ -80,7 +80,7 @@ namespace hex::init {
 
         auto tasksSucceeded = processTasksAsync();
 
-        auto scale = SharedData::globalScale;
+        auto scale = ImHexApi::System::getGlobalScale();
 
         while (!glfwWindowShouldClose(this->m_window)) {
             glfwPollEvents();
@@ -168,18 +168,20 @@ namespace hex::init {
             float xScale = 0, yScale = 0;
             glfwGetMonitorContentScale(monitor, &xScale, &yScale);
 
-            SharedData::globalScale = SharedData::fontScale = std::midpoint(xScale, yScale);
+            auto meanScale = std::midpoint(xScale, yScale);
 
-// On Macs with a retina display (basically all modern ones we care about), the OS reports twice
-// the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
-// extremely huge with native scaling on MacOS.
-#if defined(OS_MACOS)
-            SharedData::globalScale /= 2;
-#endif
+            // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
+            // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
+            // extremely huge with native scaling on MacOS.
+            #if defined(OS_MACOS)
+                meanScale /= 2;
+            #endif
 
-            if (SharedData::globalScale <= 0) {
-                SharedData::globalScale = 1.0;
+            if (meanScale <= 0) {
+                meanScale = 1.0;
             }
+
+            ImHexApi::System::impl::setGlobalScale(meanScale);
         }
 
         this->m_window = glfwCreateWindow(640_scaled, 400_scaled, "Starting ImHex...", nullptr, nullptr);
@@ -204,7 +206,7 @@ namespace hex::init {
 
         auto &io = ImGui::GetIO();
 
-        ImGui::GetStyle().ScaleAllSizes(SharedData::globalScale);
+        ImGui::GetStyle().ScaleAllSizes(ImHexApi::System::getGlobalScale());
 
         io.Fonts->Clear();
 

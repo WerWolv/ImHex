@@ -1,4 +1,4 @@
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 #include <imgui.h>
 
@@ -6,9 +6,17 @@
 #include <string>
 #include <vector>
 
-#include <hex/helpers/shared_data.hpp>
-
 namespace hex {
+
+    std::string View::s_popupMessage;
+
+    u32 View::s_selectableFileIndex;
+    std::vector<fs::path> View::s_selectableFiles;
+    std::function<void(fs::path)> View::s_selectableFileOpenCallback;
+    std::vector<nfdfilteritem_t> View::s_selectableFilesValidExtensions;
+
+    ImFontAtlas *View::s_fontAtlas;
+    ImFontConfig View::s_fontConfig;
 
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
 
@@ -16,38 +24,36 @@ namespace hex {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
-    std::vector<std::function<void()>> &View::getDeferedCalls() {
-        return SharedData::deferredCalls;
-    }
-
     void View::drawCommonInterfaces() {
+        auto windowSize = ImHexApi::System::getMainWindowSize();
+
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
-            ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
-            ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
 
         ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
         if (ImGui::BeginPopupModal("hex.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", SharedData::popupMessage.c_str());
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
@@ -55,7 +61,7 @@ namespace hex {
                 ImGui::CloseCurrentPopup();
             }
 
-            ImGui::SetWindowPos((SharedData::windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
             ImGui::EndPopup();
         }
 
@@ -66,9 +72,9 @@ namespace hex {
             if (ImGui::BeginListBox("##files", ImVec2(300_scaled, 0))) {
 
                 u32 index = 0;
-                for (auto &path : SharedData::selectableFiles) {
-                    if (ImGui::Selectable(path.filename().string().c_str(), index == SharedData::selectableFileIndex))
-                        SharedData::selectableFileIndex = index;
+                for (auto &path : View::s_selectableFiles) {
+                    if (ImGui::Selectable(path.filename().string().c_str(), index == View::s_selectableFileIndex))
+                        View::s_selectableFileIndex = index;
                     index++;
                 }
 
@@ -76,15 +82,15 @@ namespace hex {
             }
 
             if (ImGui::Button("hex.common.open"_lang)) {
-                SharedData::selectableFileOpenCallback(SharedData::selectableFiles[SharedData::selectableFileIndex]);
+                View::s_selectableFileOpenCallback(View::s_selectableFiles[View::s_selectableFileIndex]);
                 ImGui::CloseCurrentPopup();
             }
 
             ImGui::SameLine();
 
             if (ImGui::Button("hex.common.browse"_lang)) {
-                hex::openFileBrowser("hex.common.open"_lang, DialogMode::Open, SharedData::selectableFilesValidExtensions, [](const auto &path) {
-                    SharedData::selectableFileOpenCallback(path);
+                hex::openFileBrowser("hex.common.open"_lang, DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
+                    View::s_selectableFileOpenCallback(path);
                     ImGui::CloseCurrentPopup();
                 });
             }
@@ -94,30 +100,30 @@ namespace hex {
     }
 
     void View::showMessagePopup(const std::string &message) {
-        SharedData::popupMessage = message;
+        s_popupMessage = message;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.info"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.info"_lang); });
     }
 
     void View::showErrorPopup(const std::string &errorMessage) {
-        SharedData::popupMessage = errorMessage;
+        s_popupMessage = errorMessage;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.error"_lang); });
     }
 
     void View::showFatalPopup(const std::string &errorMessage) {
-        SharedData::popupMessage = errorMessage;
+        s_popupMessage = errorMessage;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.fatal"_lang); });
     }
 
     void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {
-        SharedData::selectableFileIndex = 0;
-        SharedData::selectableFiles = paths;
-        SharedData::selectableFilesValidExtensions = validExtensions;
-        SharedData::selectableFileOpenCallback = callback;
+        View::s_selectableFileIndex = 0;
+        View::s_selectableFiles = paths;
+        View::s_selectableFilesValidExtensions = validExtensions;
+        View::s_selectableFileOpenCallback = callback;
 
-        View::doLater([] { ImGui::OpenPopup("hex.common.choose_file"_lang); });
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.common.choose_file"_lang); });
     }
 
     bool View::hasViewMenuItemEntry() const {
@@ -152,10 +158,6 @@ namespace hex {
     void View::discardNavigationRequests() {
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
-    }
-
-    void View::doLater(std::function<void()> &&function) {
-        SharedData::deferredCalls.push_back(function);
     }
 
     void View::confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn) {

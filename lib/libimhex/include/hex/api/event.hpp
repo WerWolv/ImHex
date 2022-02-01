@@ -113,12 +113,13 @@ namespace hex {
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventProviderCreated, prv::Provider *);
+    EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
-    EVENT_DEF(RequestAddBookmark, ImHexApi::Bookmarks::Entry);
+    EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t);
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
     EVENT_DEF(RequestChangeWindowTitle, std::string);
     EVENT_DEF(RequestCloseImHex, bool);

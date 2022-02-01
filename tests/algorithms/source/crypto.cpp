@@ -1,5 +1,5 @@
 #include <hex/helpers/crypto.hpp>
-#include "hex/helpers/logger.hpp"
+#include <hex/helpers/logger.hpp>
 #include <hex/test/test_provider.hpp>
 #include <hex/test/tests.hpp>
 

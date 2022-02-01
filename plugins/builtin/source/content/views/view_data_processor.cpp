@@ -1,5 +1,7 @@
 #include "content/views/view_data_processor.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <hex/helpers/file.hpp>
 
 #include <hex/providers/provider.hpp>
@@ -83,7 +85,7 @@ namespace hex::plugin::builtin {
 
 
     void ViewDataProcessor::eraseLink(u32 id) {
-        auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link) { return link.getID() == id; });
+        auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link) { return link.getId() == id; });
 
         if (link == this->m_links.end())
             return;
@@ -101,7 +103,7 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
         for (const int id : ids) {
-            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getID() == id; });
+            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getId() == id; });
 
             for (auto &attr : (*node)->getAttributes()) {
                 std::vector<u32> linksToRemove;
@@ -114,9 +116,9 @@ namespace hex::plugin::builtin {
         }
 
         for (const int id : ids) {
-            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getID() == id; });
+            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getId() == id; });
 
-            std::erase_if(this->m_endNodes, [&id](auto node) { return node->getID() == id; });
+            std::erase_if(this->m_endNodes, [&id](auto node) { return node->getId() == id; });
 
             delete *node;
 
@@ -238,7 +240,7 @@ namespace hex::plugin::builtin {
                     if (hasInput && !hasOutput)
                         this->m_endNodes.push_back(node);
 
-                    ImNodes::SetNodeScreenSpacePos(node->getID(), this->m_rightClickedCoords);
+                    ImNodes::SetNodeScreenSpacePos(node->getId(), this->m_rightClickedCoords);
                 }
 
                 ImGui::EndPopup();
@@ -260,7 +262,7 @@ namespace hex::plugin::builtin {
 
             {
                 int nodeId;
-                if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getID() == nodeId) {
+                if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getId() == nodeId) {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted("hex.common.error"_lang);
                     ImGui::Separator();
@@ -277,7 +279,7 @@ namespace hex::plugin::builtin {
                 if (hasError)
                     ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
 
-                ImNodes::BeginNode(node->getID());
+                ImNodes::BeginNode(node->getId());
 
                 ImNodes::BeginNodeTitleBar();
                 ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
@@ -301,11 +303,11 @@ namespace hex::plugin::builtin {
                     }
 
                     if (attribute.getIOType() == dp::Attribute::IOType::In) {
-                        ImNodes::BeginInputAttribute(attribute.getID(), pinShape);
+                        ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
                         ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
                         ImNodes::EndInputAttribute();
                     } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
-                        ImNodes::BeginOutputAttribute(attribute.getID(), ImNodesPinShape(pinShape + 1));
+                        ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
                         ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
                         ImNodes::EndOutputAttribute();
                     }
@@ -318,7 +320,7 @@ namespace hex::plugin::builtin {
             }
 
             for (const auto &link : this->m_links)
-                ImNodes::Link(link.getID(), link.getFromID(), link.getToID());
+                ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
 
             ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
 
@@ -339,9 +341,9 @@ namespace hex::plugin::builtin {
                         dp::Attribute *fromAttr, *toAttr;
                         for (auto &node : this->m_nodes) {
                             for (auto &attribute : node->getAttributes()) {
-                                if (attribute.getID() == from)
+                                if (attribute.getId() == from)
                                     fromAttr = &attribute;
-                                else if (attribute.getID() == to)
+                                else if (attribute.getId() == to)
                                     toAttr = &attribute;
                             }
                         }
@@ -360,8 +362,8 @@ namespace hex::plugin::builtin {
 
                         auto newLink = this->m_links.emplace_back(from, to);
 
-                        fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
-                        toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
+                        fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
+                        toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
                     } while (false);
                 }
             }
@@ -401,7 +403,7 @@ namespace hex::plugin::builtin {
 
         output["nodes"] = json::object();
         for (auto &node : this->m_nodes) {
-            auto id = node->getID();
+            auto id = node->getId();
             auto &currNodeOutput = output["nodes"][std::to_string(id)];
             auto pos = ImNodes::GetNodeGridSpacePos(id);
 
@@ -419,19 +421,19 @@ namespace hex::plugin::builtin {
 
             u32 attrIndex = 0;
             for (auto &attr : node->getAttributes()) {
-                currNodeOutput["attrs"][attrIndex] = attr.getID();
+                currNodeOutput["attrs"][attrIndex] = attr.getId();
                 attrIndex++;
             }
         }
 
         output["links"] = json::object();
         for (auto &link : this->m_links) {
-            auto id = link.getID();
+            auto id = link.getId();
             auto &currOutput = output["links"][std::to_string(id)];
 
             currOutput["id"] = id;
-            currOutput["from"] = link.getFromID();
-            currOutput["to"] = link.getToID();
+            currOutput["from"] = link.getFromId();
+            currOutput["to"] = link.getToId();
         }
 
         return output.dump();
@@ -467,7 +469,7 @@ namespace hex::plugin::builtin {
             u32 nodeId = node["id"];
             maxNodeId = std::max(nodeId, maxNodeId);
 
-            newNode->setID(nodeId);
+            newNode->setId(nodeId);
 
             bool hasOutput = false;
             bool hasInput = false;
@@ -482,7 +484,7 @@ namespace hex::plugin::builtin {
                 u32 attrId = node["attrs"][attrIndex];
                 maxAttrId = std::max(attrId, maxAttrId);
 
-                attr.setID(attrId);
+                attr.setId(attrId);
                 attrIndex++;
             }
 
@@ -508,9 +510,9 @@ namespace hex::plugin::builtin {
             dp::Attribute *fromAttr, *toAttr;
             for (auto &node : this->m_nodes) {
                 for (auto &attribute : node->getAttributes()) {
-                    if (attribute.getID() == newLink.getFromID())
+                    if (attribute.getId() == newLink.getFromId())
                         fromAttr = &attribute;
-                    else if (attribute.getID() == newLink.getToID())
+                    else if (attribute.getId() == newLink.getToId())
                         toAttr = &attribute;
                 }
             }
@@ -527,13 +529,13 @@ namespace hex::plugin::builtin {
             if (!toAttr->getConnectedAttributes().empty())
                 break;
 
-            fromAttr->addConnectedAttribute(newLink.getID(), toAttr);
-            toAttr->addConnectedAttribute(newLink.getID(), fromAttr);
+            fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
+            toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
         }
 
-        SharedData::dataProcessorNodeIdCounter = maxNodeId + 1;
-        SharedData::dataProcessorAttrIdCounter = maxAttrId + 1;
-        SharedData::dataProcessorLinkIdCounter = maxLinkId + 1;
+        dp::Node::setIdCounter(maxNodeId + 1);
+        dp::Attribute::setIdCounter(maxAttrId + 1);
+        dp::Link::setIdCounter(maxLinkId + 1);
     }
 
 }

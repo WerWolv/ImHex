@@ -12,7 +12,7 @@
 #include <codicons_font.h>
 #include <unifont_font.h>
 
-#include "helpers/plugin_manager.hpp"
+#include <hex/api/plugin_manager.hpp>
 
 #include <filesystem>
 
@@ -37,7 +37,7 @@ namespace hex::init {
         auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
         if (latestVersion != currVersion)
-            getInitArguments().push_back({ "update-available", latestVersion.data() });
+            ImHexApi::System::getInitArguments().insert({ "update-available", latestVersion.data() });
 
         return true;
     }
@@ -49,7 +49,7 @@ namespace hex::init {
         if (tip.code != 200)
             return false;
 
-        getInitArguments().push_back({ "tip-of-the-day", tip.body });
+        ImHexApi::System::getInitArguments().insert({ "tip-of-the-day", tip.body });
 
         return true;
     }
@@ -83,17 +83,14 @@ namespace hex::init {
         }
 
         if (!result)
-            getInitArguments().push_back({ "folder-creation-error", {} });
+            ImHexApi::System::getInitArguments().insert({ "folder-creation-error", {} });
 
         return result;
     }
 
     bool loadFonts() {
-        auto &fonts = SharedData::fontAtlas;
-        auto &cfg = SharedData::fontConfig;
-
-        fonts = IM_NEW(ImFontAtlas)();
-        cfg = {};
+        auto fonts = IM_NEW(ImFontAtlas)();
+        ImFontConfig cfg = {};
 
         fs::path fontFile;
         for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
@@ -131,84 +128,79 @@ namespace hex::init {
             0x0020, 0xFFF0, 0
         };
 
-
+        float fontSize = 13.0F * ImHexApi::System::getGlobalScale();
         if (fontFile.empty()) {
             // Load default font
 
             fonts->Clear();
 
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = 13.0F * SharedData::fontScale;
+            cfg.SizePixels = fontSize;
             fonts->AddFontDefault(&cfg);
         } else {
             // Load custom font
 
-            auto fontSize = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.font_size", 14);
+            fontSize = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.font_size", 14) * ImHexApi::System::getGlobalScale();
 
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = fontSize * SharedData::fontScale;
+            cfg.SizePixels = fontSize;
 
-            fonts->AddFontFromFileTTF(fontFile.string().c_str(), std::floor(fontSize * SharedData::fontScale), &cfg, ranges.Data);    // Needs conversion to char for Windows
+            fonts->AddFontFromFileTTF(fontFile.string().c_str(), std::floor(fontSize), &cfg, ranges.Data);    // Needs conversion to char for Windows
         }
 
         cfg.MergeMode = true;
 
-        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 13.0F * SharedData::fontScale, &cfg, fontAwesomeRange);
-        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 13.0F * SharedData::fontScale, &cfg, codiconsRange);
-        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 13.0F * SharedData::fontScale, &cfg, unifontRange);
+        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, fontSize, &cfg, fontAwesomeRange);
+        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, fontSize, &cfg, codiconsRange);
+        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize, &cfg, unifontRange);
 
         ImGuiFreeType::BuildFontAtlas(fonts);
+
+        View::setFontAtlas(fonts);
+        View::setFontConfig(cfg);
 
         return true;
     }
 
     bool deleteSharedData() {
-        SharedData::deferredCalls.clear();
+        ImHexApi::Tasks::getDeferredCalls().clear();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
+        ContentRegistry::Provider::getEntries().clear();
 
-        SharedData::settingsEntries.clear();
-        SharedData::settingsJson.clear();
+        ContentRegistry::Settings::getEntries().clear();
+        ContentRegistry::Settings::getSettingsData().clear();
 
-        SharedData::commandPaletteCommands.clear();
-        SharedData::patternLanguageFunctions.clear();
+        ContentRegistry::CommandPaletteCommands::getEntries().clear();
+        ContentRegistry::PatternLanguage::getFunctions().clear();
+        ContentRegistry::PatternLanguage::getPalettes().clear();
 
         for (auto &[name, view] : ContentRegistry::Views::getEntries())
             delete view;
-        SharedData::views.clear();
+        ContentRegistry::Views::getEntries().clear();
 
-        SharedData::toolsEntries.clear();
+        ContentRegistry::Tools::getEntries().clear();
+        ContentRegistry::DataInspector::getEntries().clear();
 
-        SharedData::dataInspectorEntries.clear();
+        ContentRegistry::Language::getLanguages().clear();
+        ContentRegistry::Language::getLanguageDefinitions().clear();
+        LangEntry::resetLanguageStrings();
 
-        SharedData::bookmarkEntries.clear();
+        ContentRegistry::Interface::getWelcomeScreenEntries().clear();
+        ContentRegistry::Interface::getFooterItems().clear();
+        ContentRegistry::Interface::getToolbarItems().clear();
+        ContentRegistry::Interface::getMainMenuItems().clear();
+        ContentRegistry::Interface::getMenuItems().clear();
 
-        for (auto &pattern : SharedData::patternData)
-            delete pattern;
-        SharedData::patternData.clear();
+        ShortcutManager::clearShortcuts();
 
-        SharedData::languageNames.clear();
-        SharedData::languageDefinitions.clear();
-        SharedData::loadedLanguageStrings.clear();
+        hex::Task::getRunningTasks().clear();
 
-        SharedData::welcomeScreenEntries.clear();
-        SharedData::footerItems.clear();
-        SharedData::toolbarItems.clear();
-        SharedData::mainMenuItems.clear();
-        SharedData::menuItems.clear();
+        ContentRegistry::DataProcessorNode::getEntries().clear();
 
-        SharedData::globalShortcuts.clear();
-        SharedData::runningTasks.clear();
-
-        SharedData::dataProcessorNodes.clear();
-
-        SharedData::recentFilePaths.clear();
-
-        SharedData::dataFormatters.clear();
-        SharedData::fileHandlers.clear();
-
-        SharedData::clearVariables();
+        ContentRegistry::DataFormatter::getEntries().clear();
+        ContentRegistry::FileHandler::getEntries().clear();
 
         return true;
     }
@@ -218,16 +210,41 @@ namespace hex::init {
             PluginManager::load(dir);
         }
 
-        if (PluginManager::getPlugins().empty()) {
+        auto &plugins = PluginManager::getPlugins();
+
+        if (plugins.empty()) {
             log::error("No plugins found!");
 
-            getInitArguments().push_back({ "no-plugins", {} });
+            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
             return false;
         }
 
-        for (const auto &plugin : PluginManager::getPlugins()) {
-            if (!plugin.initializePlugin())
+        u32 builtinPlugins = 0;
+        u32 loadErrors = 0;
+        for (const auto &plugin : plugins) {
+            if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
+                loadErrors++;
+            } else {
+                if (plugin.isBuiltinPlugin())
+                    builtinPlugins++;
+            }
+        }
+
+        if (loadErrors == plugins.size()) {
+            log::error("No plugins loaded successfully!");
+            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            return false;
+        }
+
+        if (builtinPlugins == 0) {
+            log::error("Built-in plugin not found!");
+            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            return false;
+        } else if (builtinPlugins > 1) {
+            log::error("Found more than one built-in plugin!");
+            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            return false;
         }
 
         return true;
@@ -247,24 +264,27 @@ namespace hex::init {
             return false;
         }
 
+        float interfaceScaling = 1.0F;
         switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
         default:
         case 0:
             // Native scaling
             break;
         case 1:
-            SharedData::globalScale = SharedData::fontScale = 0.5F;
+            interfaceScaling = 0.5F;
             break;
         case 2:
-            SharedData::globalScale = SharedData::fontScale = 1.0F;
+            interfaceScaling = 1.0F;
             break;
         case 3:
-            SharedData::globalScale = SharedData::fontScale = 1.5F;
+            interfaceScaling = 1.5F;
             break;
         case 4:
-            SharedData::globalScale = SharedData::fontScale = 2.0F;
+            interfaceScaling = 2.0F;
             break;
         }
+
+        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
 
         return true;
     }
@@ -281,7 +301,7 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
-            {"Checking for updates...",     checkForUpdates    },
+            { "Checking for updates...",    checkForUpdates    },
             { "Downloading information...", downloadInformation},
             { "Creating directories...",    createDirectories  },
             { "Loading settings...",        loadSettings       },
@@ -292,16 +312,10 @@ namespace hex::init {
 
     std::vector<Task> getExitTasks() {
         return {
-            {"Saving settings...",          storeSettings   },
-            { "Cleaning up shared data...", deleteSharedData},
-            { "Unloading plugins...",       unloadPlugins   },
+            { "Saving settings...",         storeSettings    },
+            { "Cleaning up shared data...", deleteSharedData },
+            { "Unloading plugins...",       unloadPlugins    },
         };
-    }
-
-    std::vector<Argument> &getInitArguments() {
-        static std::vector<Argument> initArguments;
-
-        return initArguments;
     }
 
 }

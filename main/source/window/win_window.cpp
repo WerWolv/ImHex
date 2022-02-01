@@ -1,5 +1,6 @@
 #include "window.hpp"
 
+#include <hex/api/content_registry.hpp>
 
 #if defined(OS_WINDOWS)
 
@@ -89,8 +90,8 @@ namespace hex {
                 POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                 const POINT border {
-                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 1.5F),
-                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * SharedData::globalScale / 1.5F)
+                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F),
+                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F)
                 };
 
                 RECT window;
@@ -205,8 +206,10 @@ namespace hex {
         if (!globalMutex) {
             globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
         } else {
-            if (SharedData::mainArgc > 1) {
+            if (ImHexApi::System::getProgramArguments().argc > 1) {
                 ::EnumWindows([](HWND hWnd, LPARAM lparam) -> BOOL {
+                    auto &programArgs = ImHexApi::System::getProgramArguments();
+
                     auto length = ::GetWindowTextLength(hWnd);
                     std::string windowName(length + 1, '\x00');
                     ::GetWindowText(hWnd, windowName.data(), windowName.size());
@@ -215,8 +218,8 @@ namespace hex {
                         if (windowName.starts_with("ImHex")) {
                             COPYDATASTRUCT message = {
                                 .dwData = 0,
-                                .cbData = static_cast<DWORD>(std::strlen(SharedData::mainArgv[1])) + 1,
-                                .lpData = SharedData::mainArgv[1]
+                                .cbData = static_cast<DWORD>(std::strlen(programArgs.argv[1])) + 1,
+                                .lpData = programArgs.argv[1]
                             };
 
                             SendMessage(hWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWnd), reinterpret_cast<LPARAM>(&message));

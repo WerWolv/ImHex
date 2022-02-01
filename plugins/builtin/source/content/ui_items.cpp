@@ -1,8 +1,10 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/shared_data.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/api/localization.hpp>
+
+#include <hex/providers/provider.hpp>
 
 #include <codicons_font.h>
 #include <imgui.h>
@@ -36,12 +38,13 @@ namespace hex::plugin::builtin {
             std::string taskName;
 
             {
-                std::scoped_lock lock(SharedData::tasksMutex);
+                std::scoped_lock lock(Task::getTaskMutex());
 
-                taskCount = SharedData::runningTasks.size();
+                taskCount = Task::getRunningTasks().size();
                 if (taskCount > 0) {
-                    taskProgress = SharedData::runningTasks.front()->getProgress();
-                    taskName = SharedData::runningTasks.front()->getName();
+                    auto frontTask = Task::getRunningTasks().front();
+                    taskProgress = frontTask->getProgress();
+                    taskName = frontTask->getName();
                 }
             }
 
@@ -132,14 +135,14 @@ namespace hex::plugin::builtin {
 
                 std::string preview;
                 if (ImHexApi::Provider::isValid())
-                    preview = providers[SharedData::currentProvider]->getName();
+                    preview = ImHexApi::Provider::get()->getName();
 
                 ImGui::SetNextItemWidth(200_scaled);
                 if (ImGui::BeginCombo("", preview.c_str())) {
 
                     for (int i = 0; i < providers.size(); i++) {
                         if (ImGui::Selectable(providers[i]->getName().c_str())) {
-                            SharedData::currentProvider = i;
+                            ImHexApi::Provider::setCurrentProvider(i);
                         }
                     }
 

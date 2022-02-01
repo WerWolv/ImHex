@@ -105,6 +105,8 @@ set(LIBIMHEX_SOURCES
     source/api/content_registry.cpp
     source/api/task.cpp
     source/api/keybinding.cpp
+    source/api/plugin_manager.cpp
+    source/api/localization.cpp
 
     source/data_processor/attribute.cpp
     source/data_processor/link.cpp
@@ -113,9 +115,7 @@ set(LIBIMHEX_SOURCES
     source/helpers/utils.cpp
     source/helpers/paths.cpp
     source/helpers/magic.cpp
-    source/helpers/shared_data.cpp
     source/helpers/crypto.cpp
-    source/helpers/lang.cpp
     source/helpers/net.cpp
     source/helpers/file.cpp
     source/helpers/socket.cpp
@@ -136,8 +136,7 @@ set(LIBIMHEX_SOURCES
     source/providers/provider.cpp
 
     source/ui/imgui_imhex_extensions.cpp
-
-    source/views/view.cpp
+    source/ui/view.cpp
 )
 
 if (APPLE)
@@ -164,4 +163,4 @@ if (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs)
+target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs)

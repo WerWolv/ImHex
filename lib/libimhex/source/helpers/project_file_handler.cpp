@@ -64,7 +64,7 @@ namespace hex {
             for (auto &element : projectFileData["bookmarks"].items()) {
                 ImHexApi::Bookmarks::Entry entry;
                 from_json(element.value(), entry);
-                ProjectFile::s_bookmarks.push_back(entry);
+                ProjectFile::s_bookmarks.emplace_back(std::move(entry));
             }
 
         } catch (json::exception &e) {

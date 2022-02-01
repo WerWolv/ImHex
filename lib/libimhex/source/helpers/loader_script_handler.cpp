@@ -3,7 +3,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
 
 #define PY_SSIZE_T_CLEAN
@@ -179,7 +179,7 @@ namespace hex {
     }
 
     bool LoaderScript::processFile(const fs::path &scriptPath) {
-        Py_SetProgramName(Py_DecodeLocale((SharedData::mainArgv)[0], nullptr));
+        Py_SetProgramName(Py_DecodeLocale("ImHex", nullptr));
 
         for (const auto &dir : hex::getPath(ImHexPath::Python)) {
             if (fs::exists(fs::path(dir / "lib" / "python" PYTHON_VERSION_MAJOR_MINOR))) {

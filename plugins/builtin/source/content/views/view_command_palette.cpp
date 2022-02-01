@@ -1,5 +1,7 @@
 #include "content/views/view_command_palette.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <cstring>
 
 namespace hex::plugin::builtin {
@@ -21,7 +23,10 @@ namespace hex::plugin::builtin {
 
         if (!this->m_commandPaletteOpen) return;
 
-        ImGui::SetNextWindowPos(ImVec2(SharedData::windowPos.x + SharedData::windowSize.x * 0.5F, SharedData::windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
+        auto windowPos = ImHexApi::System::getMainWindowPosition();
+        auto windowSize = ImHexApi::System::getMainWindowSize();
+
+        ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
         if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();

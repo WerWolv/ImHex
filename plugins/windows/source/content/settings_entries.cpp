@@ -2,8 +2,7 @@
 #include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/lang.hpp>
-using namespace hex::lang_literals;
+#include <hex/api/localization.hpp>
 
 #include <imgui.h>
 

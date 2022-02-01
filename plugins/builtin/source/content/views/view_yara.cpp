@@ -1,5 +1,7 @@
 #include "content/views/view_yara.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
@@ -20,7 +22,7 @@ namespace hex::plugin::builtin {
         this->reloadRules();
 
         ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
-            for (auto &destPath : hex::getPath(ImHexPath::Yara)) {
+            for (const auto &destPath : hex::getPath(ImHexPath::Yara)) {
                 std::error_code error;
                 if (fs::copy_file(path, destPath / path.filename(), fs::copy_options::overwrite_existing, error)) {
                     View::showMessagePopup("hex.builtin.view.yara.rule_added"_lang);
@@ -132,7 +134,7 @@ namespace hex::plugin::builtin {
     void ViewYara::reloadRules() {
         this->m_rules.clear();
 
-        for (auto path : hex::getPath(ImHexPath::Yara)) {
+        for (const auto path : hex::getPath(ImHexPath::Yara)) {
             if (!fs::exists(path))
                 continue;
 

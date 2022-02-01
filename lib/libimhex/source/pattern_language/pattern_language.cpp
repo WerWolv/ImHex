@@ -123,7 +123,10 @@ namespace hex::pl {
         return ast;
     }
 
-    std::optional<std::vector<PatternData *>> PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+    bool PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+        this->m_running = true;
+        ON_SCOPE_EXIT { this->m_running = false; };
+
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
@@ -143,20 +146,22 @@ namespace hex::pl {
 
         auto ast = this->parseString(code);
         if (!ast)
-            return std::nullopt;
+            return false;
 
         this->m_currAST = ast.value();
 
         auto patterns = this->m_evaluator->evaluate(ast.value());
         if (!patterns.has_value()) {
             this->m_currError = this->m_evaluator->getConsole().getLastHardError();
-            return std::nullopt;
+            return false;
         }
 
-        return patterns;
+        this->m_patterns = std::move(patterns.value());
+
+        return true;
     }
 
-    std::optional<std::vector<PatternData *>> PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+    bool PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
         File file(path, File::Mode::Read);
 
         return this->executeString(provider, file.readString(), envVars, inVariables);
@@ -198,6 +203,14 @@ namespace hex::pl {
 
     bool PatternLanguage::hasDangerousFunctionBeenCalled() const {
         return this->m_evaluator->hasDangerousFunctionBeenCalled();
+    }
+
+    void PatternLanguage::reset() {
+        for (auto &pattern : this->m_patterns)
+            delete pattern;
+        this->m_patterns.clear();
+
+        this->m_currAST.clear();
     }
 
 }

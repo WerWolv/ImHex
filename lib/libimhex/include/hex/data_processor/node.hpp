@@ -22,8 +22,8 @@ namespace hex::dp {
 
         virtual ~Node() = default;
 
-        [[nodiscard]] u32 getID() const { return this->m_id; }
-        void setID(u32 id) { this->m_id = id; }
+        [[nodiscard]] u32 getId() const { return this->m_id; }
+        void setId(u32 id) { this->m_id = id; }
 
         [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
         void setUnlocalizedName(const std::string &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
@@ -52,12 +52,19 @@ namespace hex::dp {
             this->m_processedInputs.clear();
         }
 
+        static void setIdCounter(u32 id) {
+            if (id > Node::s_idCounter)
+                Node::s_idCounter = id;
+        }
+
     private:
         u32 m_id;
         std::string m_unlocalizedTitle, m_unlocalizedName;
         std::vector<Attribute> m_attributes;
         std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;
+
+        static u32 s_idCounter;
 
         Attribute *getConnectedInputAttribute(u32 index) {
             if (index >= this->getAttributes().size())

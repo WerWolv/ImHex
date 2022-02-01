@@ -2,14 +2,17 @@
 #include <hex/data_processor/node.hpp>
 
 #include <hex/helpers/crypto.hpp>
-#include <hex/helpers/shared_data.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/api/localization.hpp>
+
+#include <hex/providers/provider.hpp>
 
 #include <cctype>
 
 #include <nlohmann/json.hpp>
 
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin {
 

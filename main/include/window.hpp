@@ -6,7 +6,7 @@
 #include <list>
 #include <vector>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;
@@ -47,7 +47,6 @@ namespace hex {
 
         GLFWwindow *m_window = nullptr;
 
-        double m_targetFps = 60.0;
         bool m_layoutConfigured = false;
 
         std::string m_windowTitle;

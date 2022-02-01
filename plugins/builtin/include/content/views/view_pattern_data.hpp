@@ -3,23 +3,11 @@
 #include <hex.hpp>
 
 #include <imgui.h>
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 #include <vector>
 #include <tuple>
 #include <cstdio>
-
-namespace hex {
-
-    namespace prv {
-        class Provider;
-    }
-    namespace lang {
-        class PatternData;
-    }
-
-}
-
 
 namespace hex::plugin::builtin {
 
@@ -31,7 +19,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::vector<pl::PatternData *> m_sortedPatternData;
+        std::map<prv::Provider*, std::vector<pl::PatternData*>> m_sortedPatterns;
     };
 
 }

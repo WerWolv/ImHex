@@ -1,6 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 namespace hex::plugin::builtin {
 

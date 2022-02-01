@@ -27,8 +27,8 @@ namespace hex::dp {
         Attribute(IOType ioType, Type type, std::string unlocalizedName);
         ~Attribute();
 
-        [[nodiscard]] u32 getID() const { return this->m_id; }
-        void setID(u32 id) { this->m_id = id; }
+        [[nodiscard]] u32 getId() const { return this->m_id; }
+        void setId(u32 id) { this->m_id = id; }
 
         [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
@@ -42,6 +42,11 @@ namespace hex::dp {
 
         [[nodiscard]] std::optional<std::vector<u8>> &getOutputData() { return this->m_outputData; }
 
+        static void setIdCounter(u32 id) {
+            if (id > Attribute::s_idCounter)
+                Attribute::s_idCounter = id;
+        }
+
     private:
         u32 m_id;
         IOType m_ioType;
@@ -54,6 +59,8 @@ namespace hex::dp {
 
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }
+
+        static u32 s_idCounter;
     };
 
 }

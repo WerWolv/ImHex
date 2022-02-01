@@ -29,7 +29,7 @@ namespace hex::test {
 
         template<typename T>
         static T *create(const std::string &typeName, const std::string &varName, auto... args) {
-            auto pattern = new T(args...);
+            auto pattern = new T(nullptr, args...);
             pattern->setTypeName(typeName);
             pattern->setVariableName(varName);
 

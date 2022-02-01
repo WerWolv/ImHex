@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
 #include <imgui_memory_editor.h>

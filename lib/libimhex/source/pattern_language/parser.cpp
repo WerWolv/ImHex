@@ -663,10 +663,18 @@ namespace hex::pl {
         if (!MATCHES(sequence(SEPARATOR_COMMA)))
             throwParserError("expected ',' after for loop condition");
 
-        if (!MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
-            throwParserError("expected for loop variable assignment");
+        ASTNode *postExpression = nullptr;
+        if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
+            postExpression = parseFunctionVariableAssignment(getValue<Token::Identifier>(-2).get());
+        else if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
+            postExpression = parseFunctionVariableAssignment("$");
+        else if (MATCHES(oneOf(IDENTIFIER) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            postExpression = parseFunctionVariableCompoundAssignment(getValue<Token::Identifier>(-3).get());
+        else if (MATCHES(oneOf(OPERATOR_DOLLAR) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            postExpression = parseFunctionVariableCompoundAssignment("$");
+        else
+            throwParserError("expected variable assignment in for loop post expression");
 
-        auto postExpression = parseFunctionVariableAssignment(getValue<Token::Identifier>(-2).get());
         auto postExpressionCleanup = SCOPE_GUARD { delete postExpression; };
 
         std::vector<ASTNode *> body;

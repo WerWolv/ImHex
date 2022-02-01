@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 #include <array>
 #include <utility>

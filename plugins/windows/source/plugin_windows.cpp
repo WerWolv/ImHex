@@ -1,5 +1,7 @@
 #include <hex/plugin.hpp>
 
+#include <hex/api/content_registry.hpp>
+
 #include "views/view_tty_console.hpp"
 
 namespace hex::plugin::windows {

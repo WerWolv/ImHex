@@ -24,6 +24,7 @@ namespace hex {
         [[nodiscard]] std::string getPluginDescription() const;
         [[nodiscard]] std::string getCompatibleVersion() const;
         void setImGuiContext(ImGuiContext *ctx) const;
+        [[nodiscard]] bool isBuiltinPlugin() const;
 
         [[nodiscard]] const fs::path &getPath() const;
 
@@ -36,6 +37,7 @@ namespace hex {
         using GetPluginDescriptionFunc = const char *(*)();
         using GetCompatibleVersionFunc = const char *(*)();
         using SetImGuiContextFunc = void (*)(ImGuiContext *);
+        using IsBuiltinPluginFunc = bool(*)();
 
         void *m_handle = nullptr;
         fs::path m_path;
@@ -48,6 +50,7 @@ namespace hex {
         GetPluginDescriptionFunc m_getPluginDescriptionFunction = nullptr;
         GetCompatibleVersionFunc m_getCompatibleVersionFunction = nullptr;
         SetImGuiContextFunc m_setImGuiContextFunction = nullptr;
+        IsBuiltinPluginFunc m_isBuiltinPluginFunction = nullptr;
 
         template<typename T>
         [[nodiscard]] auto getPluginFunction(const std::string &symbol) {
@@ -71,8 +74,8 @@ namespace hex {
         }
 
     private:
-        static inline fs::path s_pluginFolder;
-        static inline std::vector<Plugin> s_plugins;
+        static fs::path s_pluginFolder;
+        static std::vector<Plugin> s_plugins;
     };
 
 }

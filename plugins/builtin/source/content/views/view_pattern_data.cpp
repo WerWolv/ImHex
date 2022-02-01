@@ -8,7 +8,9 @@ namespace hex::plugin::builtin {
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
 
         EventManager::subscribe<EventPatternChanged>(this, [this](auto &) {
-            this->m_sortedPatternData.clear();
+            if (!ImHexApi::Provider::isValid()) return;
+
+            this->m_sortedPatterns[ImHexApi::Provider::get()].clear();
         });
     }
 
@@ -52,11 +54,12 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
-                if (beginPatternDataTable(provider, SharedData::patternData, this->m_sortedPatternData)) {
+                auto &sortedPatterns = this->m_sortedPatterns[ImHexApi::Provider::get()];
+                if (beginPatternDataTable(provider, provider->getPatternLanguageRuntime().getPatterns(), sortedPatterns)) {
                     ImGui::TableHeadersRow();
-                    if (this->m_sortedPatternData.size() > 0) {
+                    if (!sortedPatterns.empty()) {
 
-                        for (auto &patternData : this->m_sortedPatternData)
+                        for (auto &patternData : sortedPatterns)
                             patternData->draw(provider);
                     }
 

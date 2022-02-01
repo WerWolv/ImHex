@@ -3,7 +3,7 @@
 #include <hex.hpp>
 
 #include <imgui.h>
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
 #include <hex/data_processor/link.hpp>
 

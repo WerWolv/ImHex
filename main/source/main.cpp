@@ -2,7 +2,6 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/shared_data.hpp>
 
 #include "window.hpp"
 
@@ -12,11 +11,8 @@
 #include <hex/helpers/file.hpp>
 
 int main(int argc, char **argv, char **envp) {
-    hex::SharedData::mainArgc = argc;
-    hex::SharedData::mainArgv = argv;
-    hex::SharedData::mainEnvp = envp;
-
     using namespace hex;
+    ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
 
     // Initialization
     {
@@ -30,7 +26,7 @@ int main(int argc, char **argv, char **envp) {
             splashWindow.addStartupTask(name, task);
 
         if (!splashWindow.loop())
-            init::getInitArguments().push_back({ "tasks-failed", {} });
+            ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
     }
 
     // Clean up
