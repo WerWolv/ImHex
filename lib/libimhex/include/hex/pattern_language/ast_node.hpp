@@ -1627,7 +1627,7 @@ namespace hex::pl {
 
                     std::visit(overloaded {
                                    [&](char assignmentValue) { if (assignmentValue != 0x00) value = std::string({ assignmentValue }); },
-                                   [&](const std::string &assignmentValue) { value = assignmentValue; },
+                                   [&](std::string assignmentValue) { value = assignmentValue; },
                                    [&, this](PatternData *const &assignmentValue) {
                                        if (!dynamic_cast<PatternDataString *>(assignmentValue) && !dynamic_cast<PatternDataCharacter *>(assignmentValue))
                                            LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this);
