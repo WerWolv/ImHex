@@ -222,12 +222,22 @@ namespace hex::init {
         u32 builtinPlugins = 0;
         u32 loadErrors     = 0;
         for (const auto &plugin : plugins) {
+            if (!plugin.isBuiltinPlugin()) continue;
+            builtinPlugins++;
+            if (builtinPlugins > 1) continue;
+
             if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
                 loadErrors++;
-            } else {
-                if (plugin.isBuiltinPlugin())
-                    builtinPlugins++;
+            }
+        }
+
+        for (const auto &plugin : plugins) {
+            if (plugin.isBuiltinPlugin()) continue;
+
+            if (!plugin.initializePlugin()) {
+                log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
+                loadErrors++;
             }
         }
 
@@ -239,11 +249,11 @@ namespace hex::init {
 
         if (builtinPlugins == 0) {
             log::error("Built-in plugin not found!");
-            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            ImHexApi::System::getInitArguments().insert({ "no-builtin-plugin", {} });
             return false;
         } else if (builtinPlugins > 1) {
             log::error("Found more than one built-in plugin!");
-            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            ImHexApi::System::getInitArguments().insert({ "multiple-builtin-plugins", {} });
             return false;
         }
 

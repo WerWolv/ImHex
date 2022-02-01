@@ -76,6 +76,10 @@ namespace hex {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
                     ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("No Plugins"); });
+                } else if (argument == "no-builtin-plugin") {
+                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("No Builtin Plugin"); });
+                } else if (argument == "multiple-builtin-plugins") {
+                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("Multiple Builtin Plugins"); });
                 }
             }
         }
@@ -331,13 +335,69 @@ namespace hex {
         ImGui::End();
         ImGui::PopStyleVar(2);
 
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-            ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
-            ImGui::TextUnformatted("Make sure you at least got the builtin plugin in your plugins folder.");
-            ImGui::TextUnformatted("To find out where your plugin folder is, check ImHex' Readme.");
-            ImGui::EndPopup();
+        // Plugin load error popups. These are not translated because they should always be readable, no matter if any localization could be loaded or not
+        {
+            auto drawPluginFolderTable = []() {
+                ImGui::UnderlinedText("Plugin folders");
+                if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit)) {
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2);
+                    ImGui::TableSetupColumn("Exists", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() * 3);
+
+                    ImGui::TableHeadersRow();
+
+                    for (const auto &path : hex::getPath(ImHexPath::Plugins, true)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(path.string().c_str());
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(fs::exists(path) ? ICON_VS_CHECK : ICON_VS_CLOSE);
+                    }
+                    ImGui::EndTable();
+                }
+            };
+
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
+                ImGui::TextUnformatted("Make sure you installed ImHex correctly.");
+                ImGui::TextUnformatted("There should be at least a 'builtin.hexplug' file in your plugins folder.");
+
+                ImGui::NewLine();
+
+                drawPluginFolderTable();
+
+                ImGui::EndPopup();
+            }
+
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("No Builtin Plugin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("The ImHex built-in plugins could not be loaded!");
+                ImGui::TextUnformatted("Make sure you installed ImHex correctly.");
+                ImGui::TextUnformatted("There should be at least a 'builtin.hexplug' file in your plugins folder.");
+
+                ImGui::NewLine();
+
+                drawPluginFolderTable();
+
+                ImGui::EndPopup();
+            }
+
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+            if (ImGui::BeginPopupModal("Multiple Builtin Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("ImHex found and attempted to load multiple built-in plugins!");
+                ImGui::TextUnformatted("Make sure you installed ImHex correctly and, if needed,");
+                ImGui::TextUnformatted("cleaned up older installations correctly,");
+                ImGui::TextUnformatted("There should be exactly one 'builtin.hexplug' file in any one your plugin folders.");
+
+                ImGui::NewLine();
+
+                drawPluginFolderTable();
+
+                ImGui::EndPopup();
+            }
         }
+
 
         this->m_popupsToOpen.remove_if([](const auto &name) {
             if (ImGui::IsPopupOpen(name.c_str()))
