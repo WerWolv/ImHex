@@ -3,7 +3,7 @@
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 #include <filesystem>
 #include <fstream>

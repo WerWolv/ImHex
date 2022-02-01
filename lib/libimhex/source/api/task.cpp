@@ -1,6 +1,6 @@
 #include <hex/api/task.hpp>
 
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
 namespace hex {
 

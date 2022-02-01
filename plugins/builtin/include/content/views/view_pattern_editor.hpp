@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/pattern_language/pattern_language.hpp>
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/providers/provider.hpp>

@@ -9,7 +9,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
 namespace hex::plugin::builtin::prv {
 

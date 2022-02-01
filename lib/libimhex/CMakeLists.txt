@@ -106,6 +106,7 @@ set(LIBIMHEX_SOURCES
     source/api/task.cpp
     source/api/keybinding.cpp
     source/api/plugin_manager.cpp
+    source/api/localization.cpp
 
     source/data_processor/attribute.cpp
     source/data_processor/link.cpp
@@ -115,7 +116,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/paths.cpp
     source/helpers/magic.cpp
     source/helpers/crypto.cpp
-    source/helpers/lang.cpp
     source/helpers/net.cpp
     source/helpers/file.cpp
     source/helpers/socket.cpp
@@ -136,8 +136,7 @@ set(LIBIMHEX_SOURCES
     source/providers/provider.cpp
 
     source/ui/imgui_imhex_extensions.cpp
-
-    source/views/view.cpp
+    source/ui/view.cpp
 )
 
 if (APPLE)

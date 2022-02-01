@@ -8,7 +8,7 @@
 #include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/evaluator.hpp>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>

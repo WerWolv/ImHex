@@ -3,7 +3,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
 
 #define PY_SSIZE_T_CLEAN

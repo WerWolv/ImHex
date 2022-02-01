@@ -6,7 +6,7 @@
 #include <list>
 #include <vector>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 struct GLFWwindow;
 struct ImGuiSettingsHandler;

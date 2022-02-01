@@ -1,4 +1,4 @@
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 #include <imgui.h>
 

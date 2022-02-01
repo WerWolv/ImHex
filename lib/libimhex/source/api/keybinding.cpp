@@ -1,7 +1,7 @@
 #include <hex/api/keybinding.hpp>
 #include <imgui.h>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 
 namespace hex {
 

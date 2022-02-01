@@ -14,7 +14,7 @@
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
 
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
 #include <functional>
 #include <string>
@@ -30,8 +30,8 @@ namespace hex {
 
         virtual void drawContent() = 0;
         virtual void drawAlwaysVisible() { }
-        virtual bool isAvailable() const;
-        virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
+        [[nodiscard]] virtual bool isAvailable() const;
+        [[nodiscard]] virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
 
         static void drawCommonInterfaces();
 
@@ -41,12 +41,12 @@ namespace hex {
 
         static void showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback);
 
-        virtual bool hasViewMenuItemEntry() const;
-        virtual ImVec2 getMinSize() const;
-        virtual ImVec2 getMaxSize() const;
+        [[nodiscard]] virtual bool hasViewMenuItemEntry() const;
+        [[nodiscard]] virtual ImVec2 getMinSize() const;
+        [[nodiscard]] virtual ImVec2 getMaxSize() const;
 
-        bool &getWindowOpenState();
-        const bool &getWindowOpenState() const;
+        [[nodiscard]] bool &getWindowOpenState();
+        [[nodiscard]] const bool &getWindowOpenState() const;
 
         [[nodiscard]] const std::string &getUnlocalizedName() const;
         [[nodiscard]] std::string getName() const;

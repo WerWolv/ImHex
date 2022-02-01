@@ -7,9 +7,9 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/paths.hpp>
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
-#include <hex/views/view.hpp>
+#include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <algorithm>

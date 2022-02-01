@@ -1,13 +1,11 @@
 #include <hex/helpers/crypto.hpp>
-#include "hex/helpers/logger.hpp"
+#include <hex/helpers/logger.hpp>
 #include <hex/test/test_provider.hpp>
 #include <hex/test/tests.hpp>
 
 #include <random>
 #include <vector>
 #include <array>
-#include <algorithm>
-#include <fmt/ranges.h>
 
 struct EncodeChek {
     std::vector<u8> vec;

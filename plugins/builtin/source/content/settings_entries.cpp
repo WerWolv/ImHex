@@ -1,7 +1,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
 #include <imgui.h>
 

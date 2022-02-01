@@ -2,7 +2,7 @@
 #include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
 #include <nlohmann/json.hpp>
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/api/plugin_manager.hpp>

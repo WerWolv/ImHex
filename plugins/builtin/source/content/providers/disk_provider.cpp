@@ -1,7 +1,7 @@
 #include "content/providers/disk_provider.hpp"
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
 #include <bitset>
 #include <filesystem>

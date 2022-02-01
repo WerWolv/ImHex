@@ -2,7 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/lang.hpp>
+#include <hex/api/localization.hpp>
 
 #include <hex/providers/provider.hpp>
 
