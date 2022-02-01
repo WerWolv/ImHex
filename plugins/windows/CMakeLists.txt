@@ -12,6 +12,7 @@ if (WIN32)
             source/views/view_tty_console.cpp
 
             source/lang/en_US.cpp
+            source/lang/de_DE.cpp
             source/lang/zh_CN.cpp
 
             source/content/ui_items.cpp
