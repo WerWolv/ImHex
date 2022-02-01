@@ -268,7 +268,7 @@ macro(setDefaultBuiltTypeIfUnset)
 endmacro()
 
 macro(detectBadClone)
-    file (GLOB EXTERNAL_DIRS "external/*")
+    file (GLOB EXTERNAL_DIRS "lib/external/*")
     foreach (EXTERNAL_DIR ${EXTERNAL_DIRS})
         file(GLOB RESULT "${EXTERNAL_DIR}/*")
         list(LENGTH RESULT ENTRY_COUNT)

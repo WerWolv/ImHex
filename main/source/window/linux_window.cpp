@@ -2,6 +2,9 @@
 
 #if defined(OS_LINUX)
 
+    #include <hex/api/content_registry.hpp>
+    #include <hex/api/event.hpp>
+
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
 

@@ -7,6 +7,7 @@
 #include <filesystem>
 
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #if defined(OS_LINUX)
     #include <fcntl.h>
