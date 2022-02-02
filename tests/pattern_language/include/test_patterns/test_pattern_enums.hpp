@@ -9,10 +9,10 @@ namespace hex::test {
         TestPatternEnums() : TestPattern("Enums") {
             auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x08, sizeof(u32));
             testEnum->setEnumValues({
-                {u128(0x0000), "A"},
-                { i128(0x0C),  "B"},
-                { u128(0x0D),  "C"},
-                { u128(0x0E),  "D"},
+                {u128(0x00),  "A"},
+                { i128(0x0C), "B"},
+                { u128(0x0D), "C"},
+                { u128(0x0E), "D"},
             });
             testEnum->setEndian(std::endian::big);
 

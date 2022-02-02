@@ -38,11 +38,14 @@ namespace hex::pl {
     }
 
     std::optional<Token::Literal> lexIntegerLiteral(std::string_view string) {
+        bool hasFloatSuffix = string.ends_with('D') || string.ends_with('F') || string.ends_with('d') || string.ends_with('f');
+        bool isFloat        = std::count(string.begin(), string.end(), '.') == 1 ||
+                       !string.starts_with("0x") && hasFloatSuffix;
 
-        if (std::count(string.begin(), string.end(), '.') == 1) {
+        if (isFloat) {
             // Parse double
             char suffix = 0x00;
-            if (string.ends_with('D') || string.ends_with('F') || string.ends_with('d') || string.ends_with('f')) {
+            if (hasFloatSuffix) {
                 suffix = string.back();
                 string = string.substr(0, string.length() - 1);
             }
@@ -63,45 +66,46 @@ namespace hex::pl {
                 }
             }
         } else {
-            bool unsignedNumber = false;
+            bool isUnsigned = false;
             if (string.ends_with('U') || string.ends_with('u')) {
-                unsignedNumber = true;
-                string         = string.substr(0, string.length() - 1);
+                isUnsigned = true;
+                string     = string.substr(0, string.length() - 1);
             }
 
-            i128 value;
+            u8 prefixOffset = 0;
+            u8 base         = 10;
+
             if (string.starts_with("0x") || string.starts_with("0X")) {
                 // Parse hexadecimal
-
-                auto [p, error] = std::from_chars(string.begin() + 2, string.end(), value, 16);
-
-                if (error == std::errc::invalid_argument || p != string.end())
-                    return std::nullopt;
+                prefixOffset = 2;
+                base         = 16;
             } else if (string.starts_with("0o") || string.starts_with("0O")) {
                 // Parse octal
-
-                auto [p, error] = std::from_chars(string.begin() + 2, string.end(), value, 8);
-
-                if (error == std::errc::invalid_argument || p != string.end())
-                    return std::nullopt;
+                prefixOffset = 2;
+                base         = 8;
             } else if (string.starts_with("0b") || string.starts_with("0B")) {
                 // Parse binary
-
-                auto [p, error] = std::from_chars(string.begin() + 2, string.end(), value, 2);
-
-                if (error == std::errc::invalid_argument || p != string.end())
-                    return std::nullopt;
+                prefixOffset = 2;
+                base         = 2;
             } else {
                 // Parse decimal
-
-                auto [p, error] = std::from_chars(string.begin(), string.end(), value, 10);
-
-                if (error == std::errc::invalid_argument || p != string.end())
-                    return std::nullopt;
+                prefixOffset = 0;
+                base         = 10;
             }
 
-            if (unsignedNumber)
-                return u128(value);
+            u128 value = 0x00;
+            for (char c : string.substr(prefixOffset)) {
+                value *= base;
+                value += [&] {
+                    if (c >= '0' && c <= '9') return c - '0';
+                    else if (c >= 'A' && c <= 'F') return 0xA + (c - 'A');
+                    else if (c >= 'a' && c <= 'f') return 0xA + (c - 'a');
+                    else return 0x00;
+                }();
+            }
+
+            if (isUnsigned)
+                return value;
             else
                 return i128(value);
         }

@@ -31,7 +31,7 @@ namespace hex::test {
                 std::assert(0xFF00FF | 0x00AA00 == 0xFFAAFF, "| operator error");
                 std::assert(0xFFFFFF & 0x00FF00 == 0x00FF00, "& operator error");
                 std::assert(0xFFFFFF ^ 0x00AA00 == 0xFF55FF, "^ operator error");
-                std::assert(~0x00 == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, "~ operator error");
+                std::assert(~0x00U == 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, "~ operator error");
                 std::assert(0xAA >> 4 == 0x0A, ">> operator error");
                 std::assert(0xAA << 4 == 0xAA0, "<< operator error");
 
