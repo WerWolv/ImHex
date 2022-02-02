@@ -96,7 +96,7 @@ namespace hex::plugin::builtin {
 
                 while (clipper.Step()) {
                     for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &[identifier, variableName, address, size, wholeDataMatch] = this->m_matches[i];
+                        auto &[identifier, variableName, address, size, wholeDataMatch, highlightId] = this->m_matches[i];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::PushID(i);
@@ -147,6 +147,9 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::applyRules() {
+        for (const auto &match : this->m_matches)
+            ImHexApi::HexEditor::removeHighlight(match.highlightId);
+
         this->m_matches.clear();
         this->m_errorMessage.clear();
         this->m_matching = true;
@@ -271,7 +274,7 @@ namespace hex::plugin::builtin {
                         if (rule->strings != nullptr) {
                             yr_rule_strings_foreach(rule, string) {
                                 yr_string_matches_foreach(context, string, match) {
-                                    newMatches.push_back({ rule->identifier, string->identifier, match->offset, match->match_length, false });
+                                    newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false });
                                 }
                             }
                         } else {
@@ -283,6 +286,10 @@ namespace hex::plugin::builtin {
                 },
                 &newMatches,
                 0);
+
+            for (auto &match : newMatches) {
+                match.highlightId = ImHexApi::HexEditor::addHighlight({ match.address, match.size }, 0x70B4771F, hex::format("{0} [{1}]", match.identifier, match.variable));
+            }
 
             std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
         }).detach();

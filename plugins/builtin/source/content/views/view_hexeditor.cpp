@@ -116,7 +116,8 @@ namespace hex::plugin::builtin {
         this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t off) {
             bool tooltipShown = false;
 
-            off += ImHexApi::Provider::get()->getBaseAddress();
+            auto provider = ImHexApi::Provider::get();
+            off += provider->getBaseAddress() + provider->getCurrentPageAddress();
 
             for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
                 auto &region  = highlight.getRegion();

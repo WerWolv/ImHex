@@ -18,9 +18,10 @@ namespace hex::plugin::builtin {
         struct YaraMatch {
             std::string identifier;
             std::string variable;
-            i64 address;
-            i32 size;
+            u64 address;
+            size_t size;
             bool wholeDataMatch;
+            u32 highlightId;
         };
 
         std::vector<std::pair<std::string, std::string>> m_rules;

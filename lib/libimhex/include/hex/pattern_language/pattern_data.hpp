@@ -82,7 +82,6 @@ namespace hex::pl {
     public:
         PatternData(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternCreationLimiter(evaluator), m_offset(offset), m_size(size), m_color(color) {
-            constexpr u32 Palette[] = { 0x70b4771f, 0x700e7fff, 0x702ca02c, 0x702827d6, 0x70bd6794, 0x704b568c, 0x70c277e3, 0x707f7f7f, 0x7022bdbc, 0x70cfbe17 };
 
             if (color != 0)
                 return;
