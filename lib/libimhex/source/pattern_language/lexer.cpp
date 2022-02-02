@@ -1,6 +1,7 @@
 #include <hex/pattern_language/lexer.hpp>
 
 #include <algorithm>
+#include <charconv>
 #include <functional>
 #include <optional>
 #include <vector>
@@ -24,114 +25,101 @@ namespace hex::pl {
         return ret;
     }
 
-    size_t getIntegerLiteralLength(const std::string &string) {
-        return string.find_first_not_of("0123456789ABCDEFabcdef.xUL");
-    }
-
     bool isIdentifierCharacter(char c) {
         return std::isalnum(c) || c == '_';
     }
 
-    std::optional<Token::Literal> parseIntegerLiteral(const std::string &string) {
-        Token::ValueType type = Token::ValueType::Any;
-        Token::Literal result;
+    size_t getIntegerLiteralLength(std::string_view string) {
+        auto count = string.find_first_not_of("0123456789ABCDEFabcdef'xXoOpP.uU");
+        if (count == std::string_view::npos)
+            return string.size();
+        else
+            return count;
+    }
 
-        u8 base;
+    std::optional<Token::Literal> lexIntegerLiteral(std::string_view string) {
 
-        auto endPos     = getIntegerLiteralLength(string);
-        auto numberData = std::string_view(string).substr(0, endPos);
-
-        if (numberData.ends_with('U')) {
-            type = Token::ValueType::Unsigned128Bit;
-            numberData.remove_suffix(1);
-        } else if (!numberData.starts_with("0x") && !numberData.starts_with("0b")) {
-            if (numberData.ends_with('F')) {
-                type = Token::ValueType::Float;
-                numberData.remove_suffix(1);
-            } else if (numberData.ends_with('D')) {
-                type = Token::ValueType::Double;
-                numberData.remove_suffix(1);
-            }
-        }
-
-        if (numberData.starts_with("0x")) {
-            numberData = numberData.substr(2);
-            base       = 16;
-
-            if (Token::isFloatingPoint(type))
-                return std::nullopt;
-
-            if (numberData.find_first_not_of("0123456789ABCDEFabcdef") != std::string_view::npos)
-                return std::nullopt;
-        } else if (numberData.starts_with("0b")) {
-            numberData = numberData.substr(2);
-            base       = 2;
-
-            if (Token::isFloatingPoint(type))
-                return std::nullopt;
-
-            if (numberData.find_first_not_of("01") != std::string_view::npos)
-                return std::nullopt;
-        } else if (numberData.find('.') != std::string_view::npos || Token::isFloatingPoint(type)) {
-            base = 10;
-            if (type == Token::ValueType::Any)
-                type = Token::ValueType::Double;
-
-            if (std::count(numberData.begin(), numberData.end(), '.') > 1 || numberData.find_first_not_of("0123456789.") != std::string_view::npos)
-                return std::nullopt;
-
-            if (numberData.ends_with('.'))
-                return std::nullopt;
-        } else if (isdigit(numberData[0])) {
-            base = 10;
-
-            if (numberData.find_first_not_of("0123456789") != std::string_view::npos)
-                return std::nullopt;
-        } else return std::nullopt;
-
-        if (type == Token::ValueType::Any)
-            type = Token::ValueType::Signed128Bit;
-
-
-        if (numberData.length() == 0)
-            return std::nullopt;
-
-        if (Token::isUnsigned(type) || Token::isSigned(type)) {
-            u128 integer = 0;
-            for (const char &c : numberData) {
-                integer *= base;
-
-                if (isdigit(c))
-                    integer += (c - '0');
-                else if (c >= 'A' && c <= 'F')
-                    integer += 10 + (c - 'A');
-                else if (c >= 'a' && c <= 'f')
-                    integer += 10 + (c - 'a');
-                else return std::nullopt;
+        if (std::count(string.begin(), string.end(), '.') == 1) {
+            // Parse double
+            char suffix = 0x00;
+            if (string.ends_with('D') || string.ends_with('F') || string.ends_with('d') || string.ends_with('f')) {
+                suffix = string.back();
+                string = string.substr(0, string.length() - 1);
             }
 
-            switch (type) {
-                case Token::ValueType::Unsigned128Bit:
-                    return { u128(integer) };
-                case Token::ValueType::Signed128Bit:
-                    return { i128(integer) };
-                default:
+            char *end    = nullptr;
+            double value = std::strtod(string.begin(), &end);
+
+            if (end == string.end()) {
+                switch (suffix) {
+                    case 'd':
+                    case 'D':
+                        return double(value);
+                    case 'f':
+                    case 'F':
+                        return float(value);
+                    default:
+                        return value;
+                }
+            }
+        } else {
+            bool unsignedNumber = false;
+            if (string.ends_with('U') || string.ends_with('u')) {
+                unsignedNumber = true;
+                string         = string.substr(0, string.length() - 1);
+            }
+
+            i128 value;
+            if (string.starts_with("0x") || string.starts_with("0X")) {
+                // Parse hexadecimal
+
+                auto [p, error] = std::from_chars(string.begin() + 2, string.end(), value, 16);
+
+                if (error == std::errc::invalid_argument || p != string.end())
+                    return std::nullopt;
+            } else if (string.starts_with("0o") || string.starts_with("0O")) {
+                // Parse octal
+
+                auto [p, error] = std::from_chars(string.begin() + 2, string.end(), value, 8);
+
+                if (error == std::errc::invalid_argument || p != string.end())
+                    return std::nullopt;
+            } else if (string.starts_with("0b") || string.starts_with("0B")) {
+                // Parse binary
+
+                auto [p, error] = std::from_chars(string.begin() + 2, string.end(), value, 2);
+
+                if (error == std::errc::invalid_argument || p != string.end())
+                    return std::nullopt;
+            } else {
+                // Parse decimal
+
+                auto [p, error] = std::from_chars(string.begin(), string.end(), value, 10);
+
+                if (error == std::errc::invalid_argument || p != string.end())
                     return std::nullopt;
             }
-        } else if (Token::isFloatingPoint(type)) {
-            double floatingPoint = strtod(numberData.data(), nullptr);
 
-            switch (type) {
-                case Token::ValueType::Float:
-                    return { float(floatingPoint) };
-                case Token::ValueType::Double:
-                    return { double(floatingPoint) };
-                default:
-                    return std::nullopt;
-            }
+            if (unsignedNumber)
+                return u128(value);
+            else
+                return i128(value);
         }
 
         return std::nullopt;
+    }
+
+    std::optional<Token::Literal> lexIntegerLiteralWithSeparator(std::string_view string) {
+
+        if (string.starts_with('\'') || string.ends_with('\''))
+            return std::nullopt;
+        else if (string.find('\'') == std::string_view::npos)
+            return lexIntegerLiteral(string);
+        else {
+            auto preprocessedString = std::string(string);
+            preprocessedString.erase(std::remove(preprocessedString.begin(), preprocessedString.end(), '\''), preprocessedString.end());
+            return lexIntegerLiteral(preprocessedString);
+        }
     }
 
     std::optional<std::pair<char, size_t>> getCharacter(const std::string &string) {
@@ -517,14 +505,15 @@ namespace hex::pl {
 
                     offset += identifier.length();
                 } else if (std::isdigit(c)) {
-                    auto integer = parseIntegerLiteral(&code[offset]);
+                    auto integerLength = getIntegerLiteralLength(&code[offset]);
+                    auto integer       = lexIntegerLiteralWithSeparator(std::string_view(&code[offset], integerLength));
 
                     if (!integer.has_value())
                         throwLexerError("invalid integer literal", lineNumber);
 
 
                     tokens.emplace_back(VALUE_TOKEN(Integer, Token::Literal(integer.value())));
-                    offset += getIntegerLiteralLength(&code[offset]);
+                    offset += integerLength;
                 } else
                     throwLexerError("unknown token", lineNumber);
             }

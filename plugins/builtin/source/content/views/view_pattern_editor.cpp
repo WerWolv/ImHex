@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
 
             for (const auto name : builtInTypes) {
                 TextEditor::Identifier id;
-                id.mDeclaration = "Built-in type";
+                id.mDeclaration = "";
                 langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
             }
 
