@@ -1,9 +1,21 @@
 #pragma once
 
+#include <chrono>
+
 #include <fmt/core.h>
 #include <fmt/color.h>
+#include <fmt/chrono.h>
 
 namespace hex::log {
+
+    namespace {
+
+        void printPrefix() {
+            const auto now = fmt::localtime(std::chrono::system_clock::now());
+            fmt::print("[{0:%H:%M:%S}] [{1}] ", now, IMHEX_PROJECT_NAME);
+        }
+
+    }
 
     FILE *getDestination();
     bool isRedirected();
@@ -15,6 +27,7 @@ namespace hex::log {
 
     template<typename S, typename... Args>
     void print(const fmt::text_style &ts, const S &fmt, const Args &...args) {
+        printPrefix();
         if (isRedirected())
             fmt::print(getDestination(), fmt::runtime(fmt), args...);
         else

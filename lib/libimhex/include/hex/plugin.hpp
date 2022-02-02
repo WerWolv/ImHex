@@ -6,9 +6,9 @@
 
 #include <hex.hpp>
 
-#define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(IMHEX_PLUGIN_NAME, name, author, description)
+#define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
 
-#define IMHEX_PLUGIN_SETUP_IMPL(namespaceName, name, author, description)                                  \
+#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                 \
     extern "C" [[gnu::visibility("default")]] const char *getPluginName() { return name; }                 \
     extern "C" [[gnu::visibility("default")]] const char *getPluginAuthor() { return author; }             \
     extern "C" [[gnu::visibility("default")]] const char *getPluginDescription() { return description; }   \

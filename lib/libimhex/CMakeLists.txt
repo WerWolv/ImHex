@@ -152,6 +152,8 @@ if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm)
 endif ()
 
+add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
+
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

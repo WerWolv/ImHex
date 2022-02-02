@@ -38,4 +38,4 @@ set_target_properties(${PROJECT_NAME} PROPERTIES RUST_PROJECT 1)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE Rust)
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-add_compile_definitions(IMHEX_PLUGIN_NAME=${PROJECT_NAME})
+add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")

@@ -1,6 +1,7 @@
 project(unit_tests)
 
 enable_testing()
+add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
 add_custom_target(unit_tests)
 add_subdirectory(common)

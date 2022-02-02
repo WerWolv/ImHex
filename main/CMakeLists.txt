@@ -22,6 +22,8 @@ set_target_properties(main PROPERTIES
         CXX_VISIBILITY_PRESET hidden
         POSITION_INDEPENDENT_CODE ON)
 
+add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
+
 if (WIN32)
     target_link_libraries(main PUBLIC libimhex wsock32 ws2_32 Dwmapi.lib)
 else ()
