@@ -39,11 +39,15 @@ namespace hex {
                 id, Highlighting {region, color, tooltip}
             });
 
+            EventManager::post<EventHighlightingChanged>();
+
             return id;
         }
 
         void removeHighlight(u32 id) {
             s_highlights.erase(id);
+
+            EventManager::post<EventHighlightingChanged>();
         }
 
         std::map<u32, Highlighting> &getHighlights() {

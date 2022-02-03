@@ -59,45 +59,72 @@ namespace hex::plugin::builtin {
         };
 
         this->m_memoryEditor.HighlightFn = [](const ImU8 *data, size_t off, bool next) -> bool {
-            auto _this = (ViewHexEditor *)(data);
+            bool firstByte = off == 0x00;
 
-            std::optional<u32> currColor, prevColor;
-
+            auto _this    = (ViewHexEditor *)(data);
             auto provider = ImHexApi::Provider::get();
-
             off += provider->getBaseAddress() + provider->getCurrentPageAddress();
 
             u32 alpha = static_cast<u32>(_this->m_highlightAlpha) << 24;
 
-            for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
-                auto &region = highlight.getRegion();
-                auto &color  = highlight.getColor();
+            std::optional<color_t> currColor, prevColor;
 
-                if (off >= region.address && off < (region.address + region.size))
-                    currColor = (color & 0x00FFFFFF) | alpha;
-                if ((off - 1) >= region.address && (off - 1) < (region.address + region.size))
-                    prevColor = (color & 0x00FFFFFF) | alpha;
+            for (auto &highlightBlock : _this->m_highlights) {
+                if (off >= highlightBlock.base && off < (highlightBlock.base + HighlightBlock::Size)) {
+                    currColor = highlightBlock.highlight[off - highlightBlock.base].color;
+                }
+                if ((off - 1) >= highlightBlock.base && (off - 1) < (highlightBlock.base + HighlightBlock::Size)) {
+                    prevColor = highlightBlock.highlight[(off - 1) - highlightBlock.base].color;
+                }
+
+                if (currColor && prevColor) break;
+
+                if (firstByte)
+                    prevColor = 0x00;
             }
 
-            {
-                auto patterns = provider->getPatternLanguageRuntime().getPatterns();
-                for (const auto &pattern : patterns) {
-                    auto child = pattern->getPattern(off);
-                    if (child != nullptr) {
-                        auto color = (child->getColor() & 0x00FFFFFF) | alpha;
-                        currColor  = currColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
-                        break;
+            if (!currColor || !prevColor) {
+                if (_this->m_highlights.size() > 0x10)
+                    _this->m_highlights.pop_front();
+
+                auto blockStartOffset   = off - (off % HighlightBlock::Size);
+                HighlightBlock newBlock = {
+                    blockStartOffset,
+                    {}
+                };
+
+                for (u32 i = 0; i < HighlightBlock::Size; i++) {
+                    std::optional<color_t> highlightColor;
+                    std::string highlightTooltip;
+
+                    for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
+                        auto &region  = highlight.getRegion();
+                        auto &color   = highlight.getColor();
+                        auto &tooltip = highlight.getTooltip();
+
+                        if (blockStartOffset + i >= region.address && blockStartOffset + i < (region.address + region.size)) {
+                            highlightColor   = (color & 0x00FFFFFF) | alpha;
+                            highlightTooltip = tooltip;
+                        }
                     }
+
+                    auto patterns = provider->getPatternLanguageRuntime().getPatterns();
+                    for (const auto &pattern : patterns) {
+                        auto child = pattern->getPattern(blockStartOffset + i);
+                        if (child != nullptr) {
+                            auto color     = (child->getColor() & 0x00FFFFFF) | alpha;
+                            highlightColor = highlightColor.has_value() ? ImAlphaBlendColors(color, highlightColor.value()) : color;
+                            break;
+                        }
+                    }
+
+                    auto &currHighlight = newBlock.highlight[i];
+                    currHighlight.color = highlightColor.value_or(0x00);
+                    if (!highlightTooltip.empty())
+                        currHighlight.tooltips.push_back(highlightTooltip);
                 }
 
-                for (const auto &pattern : patterns) {
-                    auto child = pattern->getPattern(off - 1);
-                    if (child != nullptr) {
-                        auto color = (child->getColor() & 0x00FFFFFF) | alpha;
-                        prevColor  = prevColor.has_value() ? ImAlphaBlendColors(color, currColor.value()) : color;
-                        break;
-                    }
-                }
+                _this->m_highlights.push_back(std::move(newBlock));
             }
 
             if (next && prevColor != currColor) {
@@ -114,24 +141,26 @@ namespace hex::plugin::builtin {
         };
 
         this->m_memoryEditor.HoverFn = [](const ImU8 *data, size_t off) {
+            auto _this = (ViewHexEditor *)(data);
+
             bool tooltipShown = false;
 
             auto provider = ImHexApi::Provider::get();
             off += provider->getBaseAddress() + provider->getCurrentPageAddress();
 
-            for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
-                auto &region  = highlight.getRegion();
-                auto &color   = highlight.getColor();
-                auto &tooltip = highlight.getTooltip();
-
-                if (off >= region.address && off < (region.address + region.size)) {
-                    if (!tooltipShown && !tooltip.empty()) {
+            for (auto &highlightBlock : _this->m_highlights) {
+                if (off >= highlightBlock.base && off < (highlightBlock.base + HighlightBlock::Size)) {
+                    auto &highlight = highlightBlock.highlight[off - highlightBlock.base];
+                    if (!tooltipShown && !highlight.tooltips.empty()) {
                         ImGui::BeginTooltip();
                         tooltipShown = true;
                     }
-                    ImGui::ColorButton(tooltip.c_str(), ImColor(color).Value);
-                    ImGui::SameLine(0, 10);
-                    ImGui::TextUnformatted(tooltip.c_str());
+
+                    for (const auto &tooltip : highlight.tooltips) {
+                        ImGui::ColorButton(tooltip.c_str(), ImColor(highlight.color).Value);
+                        ImGui::SameLine(0, 10);
+                        ImGui::TextUnformatted(tooltip.c_str());
+                    }
                 }
             }
 
@@ -175,6 +204,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventWindowClosing>(this);
         EventManager::unsubscribe<RequestOpenWindow>(this);
         EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventHighlightingChanged>(this);
     }
 
     void ViewHexEditor::drawContent() {
@@ -384,11 +414,7 @@ namespace hex::plugin::builtin {
 
         EventManager::post<EventFileLoaded>(path);
         EventManager::post<EventDataChanged>();
-
-        {
-            std::vector<pl::PatternData *> patterns;
-            EventManager::post<EventPatternChanged>(patterns);
-        }
+        EventManager::post<EventHighlightingChanged>();
     }
 
     void ViewHexEditor::copyBytes() const {
@@ -907,6 +933,10 @@ namespace hex::plugin::builtin {
             size_t size = std::abs(i64(this->m_memoryEditor.DataPreviewAddrEnd) - i64(this->m_memoryEditor.DataPreviewAddr)) + 1;
 
             region = Region { address, size };
+        });
+
+        EventManager::subscribe<EventHighlightingChanged>(this, [this] {
+            this->m_highlights.clear();
         });
     }
 

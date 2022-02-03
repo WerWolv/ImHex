@@ -624,10 +624,7 @@ namespace hex::plugin::builtin {
         this->m_console.clear();
         this->clearPatternData();
 
-        {
-            std::vector<pl::PatternData *> patterns;
-            EventManager::post<EventPatternChanged>(patterns);
-        }
+        EventManager::post<EventHighlightingChanged>();
 
         std::thread([this, code] {
             std::map<std::string, pl::Token::Literal> envVars;
@@ -663,7 +660,7 @@ namespace hex::plugin::builtin {
             }
 
             if (result) {
-                EventManager::post<EventPatternChanged>(runtime.getPatterns());
+                EventManager::post<EventHighlightingChanged>();
             }
 
             this->m_runningEvaluators--;

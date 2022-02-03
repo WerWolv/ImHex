@@ -7,7 +7,7 @@ namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
 
-        EventManager::subscribe<EventPatternChanged>(this, [this](auto &) {
+        EventManager::subscribe<EventHighlightingChanged>(this, [this]() {
             if (!ImHexApi::Provider::isValid()) return;
 
             this->m_sortedPatterns[ImHexApi::Provider::get()].clear();
@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternData::~ViewPatternData() {
-        EventManager::unsubscribe<EventPatternChanged>(this);
+        EventManager::unsubscribe<EventHighlightingChanged>(this);
     }
 
     static bool beginPatternDataTable(prv::Provider *&provider, const std::vector<pl::PatternData *> &patterns, std::vector<pl::PatternData *> &sortedPatterns) {

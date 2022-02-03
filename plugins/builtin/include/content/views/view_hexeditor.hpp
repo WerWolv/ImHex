@@ -14,11 +14,21 @@ namespace hex::prv {
     class Provider;
 }
 
-
 namespace hex::plugin::builtin {
 
-
     using SearchFunction = std::vector<std::pair<u64, u64>> (*)(prv::Provider *&provider, std::string string);
+
+    struct HighlightBlock {
+        struct Highlight {
+            color_t color;
+            std::vector<std::string> tooltips;
+        };
+
+        constexpr static size_t Size = 0x2000;
+
+        u64 base;
+        std::array<Highlight, Size> highlight;
+    };
 
     class ViewHexEditor : public View {
     public:
@@ -53,6 +63,8 @@ namespace hex::plugin::builtin {
 
         hex::EncodingFile m_currEncodingFile;
         u8 m_highlightAlpha = 0x80;
+
+        std::list<HighlightBlock> m_highlights;
 
         bool m_processingImportExport  = false;
         bool m_advancedDecodingEnabled = false;

@@ -104,7 +104,7 @@ namespace hex {
     EVENT_DEF(EventFileLoaded, fs::path);
     EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
-    EVENT_DEF(EventPatternChanged, std::vector<pl::PatternData *> &);
+    EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, Region);
     EVENT_DEF(EventProjectFileStore);
