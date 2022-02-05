@@ -871,8 +871,15 @@ namespace hex::pl {
     ASTNode *Parser::parseMember() {
         ASTNode *member;
 
-
-        if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY) || peek(IDENTIFIER)) {
+        if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
+            member = parseFunctionVariableAssignment("$");
+        else if (MATCHES(sequence(OPERATOR_DOLLAR) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            member = parseFunctionVariableCompoundAssignment("$");
+        else if (MATCHES(sequence(IDENTIFIER, OPERATOR_ASSIGNMENT)))
+            member = parseFunctionVariableAssignment(getValue<Token::Identifier>(-2).get());
+        else if (MATCHES(sequence(IDENTIFIER) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
+            member = parseFunctionVariableCompoundAssignment(getValue<Token::Identifier>(-3).get());
+        else if (peek(KEYWORD_BE) || peek(KEYWORD_LE) || peek(VALUETYPE_ANY) || peek(IDENTIFIER)) {
             // Some kind of variable definition
 
             bool isFunction = false;
@@ -913,10 +920,6 @@ namespace hex::pl {
             member = new ASTNodeControlFlowStatement(ControlFlowStatement::Break, nullptr);
         else if (MATCHES(sequence(KEYWORD_CONTINUE)))
             member = new ASTNodeControlFlowStatement(ControlFlowStatement::Continue, nullptr);
-        else if (MATCHES(sequence(OPERATOR_DOLLAR, OPERATOR_ASSIGNMENT)))
-            member = parseFunctionVariableAssignment("$");
-        else if (MATCHES(oneOf(OPERATOR_DOLLAR) && oneOf(OPERATOR_PLUS, OPERATOR_MINUS, OPERATOR_STAR, OPERATOR_SLASH, OPERATOR_PERCENT, OPERATOR_SHIFTLEFT, OPERATOR_SHIFTRIGHT, OPERATOR_BITOR, OPERATOR_BITAND, OPERATOR_BITXOR) && sequence(OPERATOR_ASSIGNMENT)))
-            member = parseFunctionVariableCompoundAssignment("$");
         else
             throwParserError("invalid struct member", 0);
 
