@@ -825,7 +825,9 @@ namespace hex::pl {
             variableCleanup.release();
 
             return create(new ASTNodeMultiVariableDecl(variables));
-        } else
+        } else if (MATCHES(sequence(OPERATOR_AT)))
+            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-2).get(), type, parseMathematicalExpression()));
+        else
             return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type));
     }
 
@@ -848,7 +850,10 @@ namespace hex::pl {
 
         sizeCleanup.release();
 
-        return create(new ASTNodeArrayVariableDecl(name, type, size));
+        if (MATCHES(sequence(OPERATOR_AT)))
+            return create(new ASTNodeArrayVariableDecl(name, type, size, parseMathematicalExpression()));
+        else
+            return create(new ASTNodeArrayVariableDecl(name, type, size));
     }
 
     // (parseType) *Identifier : (parseType)
@@ -864,7 +869,10 @@ namespace hex::pl {
                 throwParserError("invalid type used for pointer size", -1);
         }
 
-        return create(new ASTNodePointerVariableDecl(name, type, sizeType));
+        if (MATCHES(sequence(OPERATOR_AT)))
+            return create(new ASTNodePointerVariableDecl(name, type, sizeType, parseMathematicalExpression()));
+        else
+            return create(new ASTNodePointerVariableDecl(name, type, sizeType));
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
