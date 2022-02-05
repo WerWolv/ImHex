@@ -2015,8 +2015,13 @@ namespace hex::pl {
             for (auto &func : customFunctions)
                 functions.insert(func);
 
-            if (!functions.contains(this->m_functionName))
+            if (!functions.contains(this->m_functionName)) {
+                if (this->m_functionName.starts_with("std::")) {
+                    evaluator->getConsole().log(LogConsole::Level::Warning, "This function might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store.");
+                }
+
                 LogConsole::abortEvaluation(hex::format("call to unknown function '{}'", this->m_functionName), this);
+            }
 
             auto function = functions[this->m_functionName];
             if (function.parameterCount == ContentRegistry::PatternLanguage::UnlimitedParameters) {

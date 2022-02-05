@@ -72,8 +72,12 @@ namespace hex::pl {
                         }
 
                         File file(includePath, File::Mode::Read);
-                        if (!file.isValid())
-                            throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
+                        if (!file.isValid()) {
+                            if (includePath.parent_path().filename().string() == "std")
+                                throwPreprocessorError(hex::format("{0}: No such file or directory.\n\nThis file might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store.", includeFile.c_str()), lineNumber);
+                            else
+                                throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
+                        }
 
                         bool shouldInclude = true;
                         this->addPragmaHandler("once", [&, includePath, this](const std::string &value) {
