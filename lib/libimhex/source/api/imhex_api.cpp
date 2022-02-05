@@ -111,7 +111,7 @@ namespace hex {
             s_providers.erase(it);
 
             if (it - s_providers.begin() == s_currentProvider)
-                s_currentProvider = 0;
+                setCurrentProvider(0);
 
             delete provider;
         }

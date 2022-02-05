@@ -145,8 +145,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this] {
-            this->m_textEditor.SetText("");
+        EventManager::subscribe<EventFileUnloaded>(this, [] {
             ImHexApi::Provider::get()->getPatternLanguageRuntime().abort();
         });
 

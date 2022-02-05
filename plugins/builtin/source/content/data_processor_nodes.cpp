@@ -14,7 +14,6 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/ui/imgui_data_visualizers.hpp>
 
 namespace hex::plugin::builtin {
 
