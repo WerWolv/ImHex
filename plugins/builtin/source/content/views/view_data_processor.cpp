@@ -48,6 +48,10 @@ namespace hex::plugin::builtin {
             this->m_dataOverlays.clear();
         });
 
+        EventManager::subscribe<EventDataChanged>(this, [this] {
+            this->processNodes();
+        });
+
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang)) {
                 hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, DialogMode::Open, {
@@ -71,6 +75,15 @@ namespace hex::plugin::builtin {
                     });
             }
         });
+
+        ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
+            File file(path, File::Mode::Read);
+            if (!file.isValid()) return false;
+
+            this->loadNodes(file.readString());
+
+            return true;
+        });
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
@@ -81,6 +94,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
+        EventManager::unsubscribe<EventDataChanged>(this);
     }
 
 
@@ -129,6 +143,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::processNodes() {
+
         if (this->m_dataOverlays.size() != this->m_endNodes.size()) {
             for (auto overlay : this->m_dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
@@ -271,60 +286,69 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            ImNodes::BeginNodeEditor();
+            if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3))) {
+                ImNodes::BeginNodeEditor();
 
-            for (auto &node : this->m_nodes) {
-                const bool hasError = this->m_currNodeError.has_value() && this->m_currNodeError->first == node;
+                for (auto &node : this->m_nodes) {
+                    const bool hasError = this->m_currNodeError.has_value() && this->m_currNodeError->first == node;
 
-                if (hasError)
-                    ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
+                    if (hasError)
+                        ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
 
-                ImNodes::BeginNode(node->getId());
+                    ImNodes::BeginNode(node->getId());
 
-                ImNodes::BeginNodeTitleBar();
-                ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
-                ImNodes::EndNodeTitleBar();
+                    ImNodes::BeginNodeTitleBar();
+                    ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
+                    ImNodes::EndNodeTitleBar();
 
-                node->drawNode();
+                    node->drawNode();
 
-                for (auto &attribute : node->getAttributes()) {
-                    ImNodesPinShape pinShape;
+                    for (auto &attribute : node->getAttributes()) {
+                        ImNodesPinShape pinShape;
 
-                    switch (attribute.getType()) {
-                        case dp::Attribute::Type::Integer:
-                            pinShape = ImNodesPinShape_Circle;
-                            break;
-                        case dp::Attribute::Type::Float:
-                            pinShape = ImNodesPinShape_Triangle;
-                            break;
-                        case dp::Attribute::Type::Buffer:
-                            pinShape = ImNodesPinShape_Quad;
-                            break;
+                        switch (attribute.getType()) {
+                            case dp::Attribute::Type::Integer:
+                                pinShape = ImNodesPinShape_Circle;
+                                break;
+                            case dp::Attribute::Type::Float:
+                                pinShape = ImNodesPinShape_Triangle;
+                                break;
+                            case dp::Attribute::Type::Buffer:
+                                pinShape = ImNodesPinShape_Quad;
+                                break;
+                        }
+
+                        if (attribute.getIOType() == dp::Attribute::IOType::In) {
+                            ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
+                            ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+                            ImNodes::EndInputAttribute();
+                        } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
+                            ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
+                            ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+                            ImNodes::EndOutputAttribute();
+                        }
                     }
 
-                    if (attribute.getIOType() == dp::Attribute::IOType::In) {
-                        ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
-                        ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
-                        ImNodes::EndInputAttribute();
-                    } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
-                        ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
-                        ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
-                        ImNodes::EndOutputAttribute();
-                    }
+                    ImNodes::EndNode();
+
+                    if (hasError)
+                        ImNodes::PopColorStyle();
                 }
 
-                ImNodes::EndNode();
+                for (const auto &link : this->m_links)
+                    ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
 
-                if (hasError)
-                    ImNodes::PopColorStyle();
+                ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
+
+                ImNodes::EndNodeEditor();
             }
+            ImGui::EndChild();
 
-            for (const auto &link : this->m_links)
-                ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
+            if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
+                this->processNodes();
 
-            ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
-
-            ImNodes::EndNodeEditor();
+            ImGui::SameLine();
+            ImGui::Checkbox("Continuous evaluation", &this->m_continuousEvaluation);
 
             {
                 int linkId;
@@ -391,8 +415,6 @@ namespace hex::plugin::builtin {
                     this->eraseNodes(selectedNodes);
                 }
             }
-
-            this->processNodes();
         }
         ImGui::End();
     }
@@ -440,6 +462,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::loadNodes(const std::string &data) {
+        if (!ImHexApi::Provider::isValid()) return;
+
         using json = nlohmann::json;
 
         json input = json::parse(data);
@@ -536,6 +560,8 @@ namespace hex::plugin::builtin {
         dp::Node::setIdCounter(maxNodeId + 1);
         dp::Attribute::setIdCounter(maxAttrId + 1);
         dp::Link::setIdCounter(maxLinkId + 1);
+
+        this->processNodes();
     }
 
 }

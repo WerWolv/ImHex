@@ -173,7 +173,7 @@ namespace hex::init {
 
 // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
 // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
-// extremely huge with native scaling on MacOS.
+// extremely huge with native scaling on macOS.
 #if defined(OS_MACOS)
             meanScale /= 2;
 #endif

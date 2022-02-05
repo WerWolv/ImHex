@@ -603,6 +603,10 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.crypto.aes.mode", "Mode" },
                         { "hex.builtin.nodes.crypto.aes.key_length", "Key length" },
 
+                { "hex.builtin.nodes.visualizer", "Visualizers" },
+                    { "hex.builtin.nodes.visualizer.digram", "Digram" },
+                        { "hex.builtin.nodes.visualizer.digram.header", "Digram Visualizer" },
+                        { "hex.builtin.nodes.visualizer.digram.input", "Input" },
 
 
                 { "hex.builtin.tools.demangler", "Itanium/MSVC demangler" },

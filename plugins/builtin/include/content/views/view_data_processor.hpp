@@ -35,6 +35,8 @@ namespace hex::plugin::builtin {
 
         std::optional<dp::Node::NodeError> m_currNodeError;
 
+        bool m_continuousEvaluation = false;
+
         void eraseLink(u32 id);
         void eraseNodes(const std::vector<int> &ids);
         void processNodes();
