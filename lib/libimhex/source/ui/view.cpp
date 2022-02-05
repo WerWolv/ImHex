@@ -118,12 +118,18 @@ namespace hex {
     }
 
     void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {
-        View::s_selectableFileIndex            = 0;
-        View::s_selectableFiles                = paths;
-        View::s_selectableFilesValidExtensions = validExtensions;
-        View::s_selectableFileOpenCallback     = callback;
+        if (paths.empty()) {
+            hex::openFileBrowser("hex.builtin.common.open"_lang, DialogMode::Open, validExtensions, [callback](const auto &path) {
+                callback(path);
+            });
+        } else {
+            View::s_selectableFileIndex            = 0;
+            View::s_selectableFiles                = paths;
+            View::s_selectableFilesValidExtensions = validExtensions;
+            View::s_selectableFileOpenCallback     = callback;
 
-        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
+        }
     }
 
     bool View::hasViewMenuItemEntry() const {
