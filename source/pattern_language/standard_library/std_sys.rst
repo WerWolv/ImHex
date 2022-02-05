@@ -1,5 +1,5 @@
-``std::sys`` :version:`1.10.1`
-=================================
+``Language System Library`` :version:`1.10.1`
+=============================================
 
 .. code-block:: hexpat
 

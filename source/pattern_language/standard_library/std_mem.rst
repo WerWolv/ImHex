@@ -1,5 +1,5 @@
-``std::mem``
-============
+``Memory Library``
+==================
 
 .. code-block:: hexpat
 

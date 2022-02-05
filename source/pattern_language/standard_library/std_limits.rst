@@ -1,5 +1,5 @@
-``std::limits`` :version:`1.10.1`
-==================================
+``Numeric Limits Library`` :version:`1.10.1`
+============================================
 
 .. code-block:: hexpat
 

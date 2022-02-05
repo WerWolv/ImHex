@@ -1,5 +1,5 @@
-``std::io``
-===========
+``Console I/O Library``
+=======================
 
 .. code-block:: hexpat
 

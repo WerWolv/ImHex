@@ -1,7 +1,7 @@
 .. _Pointer Helpers:
 
-``std::ptr`` :version:`1.10.1`
-===============================
+``Pointer Support Library`` :version:`1.10.1`
+=============================================
 
 .. code-block:: hexpat
 

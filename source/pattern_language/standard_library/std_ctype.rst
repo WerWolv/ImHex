@@ -1,5 +1,5 @@
-``std::ctype`` :version:`1.10.1`
-=================================
+``Character Type Library`` :version:`1.10.1`
+============================================
 
 .. code-block:: hexpat
 

@@ -9,7 +9,6 @@ Libraries
 .. toctree::
    :maxdepth: 3
 
-   std
    std_bit
    std_cint
    std_ctype
