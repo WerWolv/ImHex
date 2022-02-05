@@ -132,6 +132,7 @@ namespace hex::pl {
         this->m_stack.clear();
         this->m_customFunctions.clear();
         this->m_scopes.clear();
+        this->m_mainResult.reset();
         this->m_aborted = false;
 
         if (this->m_allowDangerousFunctions == DangerousFunctionPermission::Deny)
@@ -192,13 +193,7 @@ namespace hex::pl {
                 if (mainFunction.parameterCount > 0)
                     LogConsole::abortEvaluation("main function may not accept any arguments");
 
-                auto result = mainFunction.func(this, {});
-                if (result) {
-                    auto returnCode = Token::literalToSigned(*result);
-
-                    if (returnCode != 0)
-                        LogConsole::abortEvaluation(hex::format("non-success value returned from main: {}", returnCode));
-                }
+                this->m_mainResult = mainFunction.func(this, {});
             }
 
             popScope();

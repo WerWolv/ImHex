@@ -19,13 +19,15 @@ namespace hex::prv {
 
 namespace hex::pl {
 
-    enum class DangerousFunctionPermission {
+    enum class DangerousFunctionPermission
+    {
         Ask,
         Deny,
         Allow
     };
 
-    enum class ControlFlowStatement {
+    enum class ControlFlowStatement
+    {
         None,
         Continue,
         Break,
@@ -230,6 +232,10 @@ namespace hex::pl {
             return this->m_currControlFlowStatement;
         }
 
+        [[nodiscard]] std::optional<Token::Literal> getMainResult() {
+            return this->m_mainResult;
+        }
+
     private:
         void patternCreated();
         void patternDestroyed();
@@ -253,6 +259,8 @@ namespace hex::pl {
         std::map<std::string, ContentRegistry::PatternLanguage::Function> m_customFunctions;
         std::vector<ASTNode *> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
+
+        std::optional<Token::Literal> m_mainResult;
 
         std::map<std::string, Token::Literal> m_envVariables;
         std::map<std::string, Token::Literal> m_inVariables;

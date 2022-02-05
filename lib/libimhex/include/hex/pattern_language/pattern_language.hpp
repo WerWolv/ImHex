@@ -33,8 +33,9 @@ namespace hex::pl {
         ~PatternLanguage();
 
         [[nodiscard]] std::optional<std::vector<ASTNode *>> parseString(const std::string &code);
-        [[nodiscard]] bool executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
+        [[nodiscard]] bool executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {}, bool checkResult = true);
         [[nodiscard]] bool executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
+        [[nodiscard]] std::pair<bool, std::optional<Token::Literal>> executeFunction(prv::Provider *provider, const std::string &code);
         [[nodiscard]] const std::vector<ASTNode *> &getCurrentAST() const;
 
         void abort();

@@ -123,7 +123,7 @@ namespace hex::pl {
         return ast;
     }
 
-    bool PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+    bool PatternLanguage::executeString(prv::Provider *provider, const std::string &code, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables, bool checkResult) {
         this->m_running = true;
         ON_SCOPE_EXIT { this->m_running = false; };
 
@@ -156,6 +156,19 @@ namespace hex::pl {
             return false;
         }
 
+        if (auto mainResult = this->m_evaluator->getMainResult(); checkResult && mainResult.has_value()) {
+            auto returnCode = Token::literalToSigned(*mainResult);
+
+            if (returnCode != 0) {
+                auto errorMessage = hex::format("non-success value returned from main: {}", returnCode);
+
+                this->m_evaluator->getConsole().log(LogConsole::Level::Error, errorMessage);
+                this->m_currError = PatternLanguageError(0, errorMessage);
+
+                return false;
+            }
+        }
+
         this->m_patterns = std::move(patterns.value());
 
         return true;
@@ -164,7 +177,17 @@ namespace hex::pl {
     bool PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
         File file(path, File::Mode::Read);
 
-        return this->executeString(provider, file.readString(), envVars, inVariables);
+        return this->executeString(provider, file.readString(), envVars, inVariables, true);
+    }
+
+    std::pair<bool, std::optional<Token::Literal>> PatternLanguage::executeFunction(prv::Provider *provider, const std::string &code) {
+
+        auto functionContent = hex::format("fn main() {{ {0} }};", code);
+
+        auto success = this->executeString(provider, functionContent, {}, {}, false);
+        auto result  = this->m_evaluator->getMainResult();
+
+        return { success, result };
     }
 
     void PatternLanguage::abort() {
