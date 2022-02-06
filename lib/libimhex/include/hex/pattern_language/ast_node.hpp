@@ -1556,7 +1556,14 @@ namespace hex::pl {
 
         explicit ASTNodeRValue(Path path) : ASTNode(), m_path(std::move(path)) { }
 
-        ASTNodeRValue(const ASTNodeRValue &) = default;
+        ASTNodeRValue(const ASTNodeRValue &other) {
+            for (auto &part : other.m_path) {
+                if (auto stringPart = std::get_if<std::string>(&part); stringPart != nullptr)
+                    this->m_path.push_back(*stringPart);
+                else if (auto nodePart = std::get_if<ASTNode *>(&part); nodePart != nullptr)
+                    this->m_path.push_back((*nodePart)->clone());
+            }
+        }
 
         ~ASTNodeRValue() override {
             for (auto &part : this->m_path) {
