@@ -29,8 +29,8 @@ enum ImGuiCustomCol {
 namespace ImGui {
 
     struct Texture {
-        ImTextureID textureId;
-        int width, height;
+        ImTextureID textureId = nullptr;
+        int width = 0, height = 0;
 
         [[nodiscard]] constexpr bool valid() const noexcept {
             return this->textureId != nullptr;
@@ -42,6 +42,12 @@ namespace ImGui {
 
         [[nodiscard]] auto size() const noexcept {
             return ImVec2(this->width, this->height);
+        }
+
+        [[nodiscard]] constexpr auto aspectRatio() const noexcept {
+            if (this->height == 0) return 1.0F;
+
+            return float(this->width) / float(this->height);
         }
     };
 

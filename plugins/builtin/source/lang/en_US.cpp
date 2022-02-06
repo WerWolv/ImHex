@@ -607,6 +607,9 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.nodes.visualizer.digram", "Digram" },
                         { "hex.builtin.nodes.visualizer.digram.header", "Digram Visualizer" },
                         { "hex.builtin.nodes.visualizer.digram.input", "Input" },
+                    { "hex.builtin.nodes.visualizer.image", "Image" },
+                        { "hex.builtin.nodes.visualizer.image.header", "Image Visualizer" },
+                        { "hex.builtin.nodes.visualizer.image.input", "Input" },
 
 
                 { "hex.builtin.tools.demangler", "Itanium/MSVC demangler" },

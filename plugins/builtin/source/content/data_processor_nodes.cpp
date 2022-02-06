@@ -835,6 +835,27 @@ namespace hex::plugin::builtin {
         size_t m_highestCount = 0;
     };
 
+    class NodeVisualizerImage : public dp::Node {
+    public:
+        NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.visualizer.image.input") }) { }
+
+        void drawNode() override {
+            ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.aspectRatio() * 200, 200)));
+        }
+
+        void process() override {
+            auto rawData = this->getBufferOnInput(0);
+
+            if (this->m_texture.valid())
+                ImGui::UnloadImage(this->m_texture);
+
+            this->m_texture = ImGui::LoadImageFromMemory(rawData.data(), rawData.size());
+        }
+
+    private:
+        ImGui::Texture m_texture;
+    };
+
     void registerDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeInteger>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.int");
         ContentRegistry::DataProcessorNode::add<NodeFloat>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.float");
@@ -883,6 +904,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto", "hex.builtin.nodes.crypto.aes");
 
         ContentRegistry::DataProcessorNode::add<NodeVisualizerDigram>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.digram");
+        ContentRegistry::DataProcessorNode::add<NodeVisualizerImage>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image");
     }
 
 }
