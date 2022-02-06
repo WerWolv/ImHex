@@ -79,25 +79,30 @@ namespace hex::pl {
                                 throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
                         }
 
-                        bool shouldInclude = true;
-                        this->addPragmaHandler("once", [&, includePath, this](const std::string &value) {
-                            auto [iter, added] = this->m_onceIncludedFiles.insert(includePath);
-                            if (!added) shouldInclude = false;
-                            return value.empty();
-                        });
+                        Preprocessor preprocessor;
+                        preprocessor.addDefaultPragmaHandlers();
+                        preprocessor.m_defines           = this->m_defines;
+                        preprocessor.m_onceIncludedFiles = this->m_onceIncludedFiles;
 
-                        auto preprocessedInclude = this->preprocess(file.readString(), false);
+                        auto preprocessedInclude = preprocessor.preprocess(file.readString(), true);
+
                         if (!preprocessedInclude.has_value())
-                            throw this->m_error;
+                            throw *preprocessor.m_error;
 
-                        if (shouldInclude) {
-                            auto content = preprocessedInclude.value();
+                        if (preprocessor.shouldOnlyIncludeOnce()) {
+                            auto [iter, added] = this->m_onceIncludedFiles.insert(includePath);
+                            if (added) {
+                                auto content = preprocessedInclude.value();
 
-                            std::replace(content.begin(), content.end(), '\n', ' ');
-                            std::replace(content.begin(), content.end(), '\r', ' ');
+                                std::replace(content.begin(), content.end(), '\n', ' ');
+                                std::replace(content.begin(), content.end(), '\r', ' ');
 
-                            output += content;
+                                output += content;
+                            }
                         }
+
+                        this->m_defines           = preprocessor.m_defines;
+                        this->m_onceIncludedFiles = preprocessor.m_onceIncludedFiles;
                     } else if (code.substr(offset, 6) == "define") {
                         offset += 6;
 
@@ -234,6 +239,10 @@ namespace hex::pl {
         this->m_pragmaHandlers[pragmaType] = function;
     }
 
+    void Preprocessor::removePragmaHandler(const std::string &pragmaType) {
+        this->m_pragmaHandlers.erase(pragmaType);
+    }
+
     void Preprocessor::addDefaultPragmaHandlers() {
         this->addPragmaHandler("MIME", [](const std::string &value) {
             return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
@@ -241,7 +250,9 @@ namespace hex::pl {
         this->addPragmaHandler("endian", [](const std::string &value) {
             return value == "big" || value == "little" || value == "native";
         });
-        this->addPragmaHandler("once", [](const std::string &value) {
+        this->addPragmaHandler("once", [this](const std::string &value) {
+            this->m_onlyIncludeOnce = true;
+
             return value.empty();
         });
     }

@@ -22,9 +22,14 @@ namespace hex::pl {
         std::optional<std::string> preprocess(const std::string &code, bool initialRun = true);
 
         void addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string &)> &function);
+        void removePragmaHandler(const std::string &pragmaType);
         void addDefaultPragmaHandlers();
 
         const std::optional<PatternLanguageError> &getError() { return this->m_error; }
+
+        bool shouldOnlyIncludeOnce() {
+            return this->m_onlyIncludeOnce;
+        }
 
     private:
         [[noreturn]] static void throwPreprocessorError(const std::string &error, u32 lineNumber) {
@@ -39,6 +44,8 @@ namespace hex::pl {
         std::set<fs::path> m_onceIncludedFiles;
 
         std::optional<PatternLanguageError> m_error;
+
+        bool m_onlyIncludeOnce = false;
     };
 
 }
