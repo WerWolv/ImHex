@@ -231,6 +231,9 @@ macro(createPackage)
 
         # FIXME: Remove this once we move/integrate the plugins directory.
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
+        add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/Resources")
+
+        install(FILES ${IMHEX_ICON} DESTINATION "${bundle_path}/Contents/Resources")
 
         # Update library references to make the bundle portable
         postprocess_bundle(imhex main)

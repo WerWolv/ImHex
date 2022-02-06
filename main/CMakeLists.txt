@@ -14,9 +14,6 @@ add_executable(main ${APPLICATION_TYPE}
     ${IMHEX_ICON}
 )
 
-message(STATUS ${APPLICATION_TYPE})
-message(STATUS ${IMHEX_ICON})
-
 target_include_directories(main PUBLIC include)
 
 set_target_properties(main PROPERTIES
