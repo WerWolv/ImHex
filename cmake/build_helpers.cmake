@@ -105,7 +105,7 @@ macro(configurePackingResources)
     endif()
 
     if (WIN32)
-        set(application_type)
+        set(APPLICATION_TYPE)
         set(IMHEX_ICON "${CMAKE_SOURCE_DIR}/resources/resource.rc")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--allow-multiple-definition")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-subsystem,windows")
@@ -126,8 +126,8 @@ macro(configurePackingResources)
         set (IMHEX_ICON "${CMAKE_SOURCE_DIR}/resources/AppIcon.icns")
 
         if (CREATE_BUNDLE)
-            set(application_type MACOSX_BUNDLE)
-            set_source_files_properties(${IMHEX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+            set(APPLICATION_TYPE MACOSX_BUNDLE)
+            set_source_files_properties(${IMHEX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
             set(MACOSX_BUNDLE_ICON_FILE "AppIcon.icns")
             set(MACOSX_BUNDLE_INFO_STRING "WerWolv")
             set(MACOSX_BUNDLE_BUNDLE_NAME "ImHex")
@@ -231,6 +231,9 @@ macro(createPackage)
 
         # FIXME: Remove this once we move/integrate the plugins directory.
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
+        add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/Resources")
+
+        install(FILES ${IMHEX_ICON} DESTINATION "${bundle_path}/Contents/Resources")
 
         # Update library references to make the bundle portable
         postprocess_bundle(imhex main)

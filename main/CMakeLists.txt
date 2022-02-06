@@ -1,6 +1,6 @@
 project(main)
 
-add_executable(main ${application_type}
+add_executable(main ${APPLICATION_TYPE}
     source/main.cpp
 
     source/window/window.cpp
