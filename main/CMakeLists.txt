@@ -1,5 +1,7 @@
 project(main)
 
+configurePackingResources()
+
 add_executable(main ${application_type}
     source/main.cpp
 
