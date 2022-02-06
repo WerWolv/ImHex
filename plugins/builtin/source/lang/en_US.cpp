@@ -544,7 +544,9 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.nodes.visualizer", "Visualizers" },
                     { "hex.builtin.nodes.visualizer.digram", "Digram" },
-                        { "hex.builtin.nodes.visualizer.digram.header", "Digram Visualizer" },
+                        { "hex.builtin.nodes.visualizer.digram.header", "Digram" },
+                    { "hex.builtin.nodes.visualizer.layered_dist", "Layered Distribution" },
+                        { "hex.builtin.nodes.visualizer.layered_dist.header", "Layered Distribution" },
                     { "hex.builtin.nodes.visualizer.image", "Image" },
                         { "hex.builtin.nodes.visualizer.image.header", "Image Visualizer" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "Byte Distribution" },

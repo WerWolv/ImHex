@@ -542,6 +542,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.visualizer", "Visualisierung" },
                     { "hex.builtin.nodes.visualizer.digram", "Digram" },
                         { "hex.builtin.nodes.visualizer.digram.header", "Digram" },
+                    { "hex.builtin.nodes.visualizer.layered_dist", "Geschichtete Verteilung" },
+                        { "hex.builtin.nodes.visualizer.layered_dist.header", "Geschichtete Verteilung" },
                     { "hex.builtin.nodes.visualizer.image", "Bild" },
                         { "hex.builtin.nodes.visualizer.image.header", "Bild" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "Byteverteilung" },

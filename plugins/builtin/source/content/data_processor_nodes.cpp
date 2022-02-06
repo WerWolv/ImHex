@@ -836,6 +836,89 @@ namespace hex::plugin::builtin {
         size_t m_highestCount = 0;
     };
 
+    class NodeVisualizerLayeredDistribution : public dp::Node {
+    public:
+        NodeVisualizerLayeredDistribution() : Node("hex.builtin.nodes.visualizer.layered_dist.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+
+        void drawNode() override {
+            const auto viewSize = scaled({ 200, 200 });
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
+            if (ImGui::BeginChild("##visualizer", viewSize, true)) {
+                auto drawList = ImGui::GetWindowDrawList();
+
+                float xStep = (viewSize.x * 0.95F) / 0xFF;
+                float yStep = (viewSize.y * 0.95F) / 0xFF;
+
+                for (size_t i = 0; i < ((this->m_buffer.size() == 0) ? 0 : this->m_buffer.size()); i++) {
+                    const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, yStep * ((float(i) / this->m_buffer.size()) * 0xFF) };
+
+                    auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());
+                    color.w    = this->m_opacityBuffer[i];
+
+                    auto pos = ImGui::GetWindowPos() + ImVec2(viewSize.x * 0.025F, viewSize.y * 0.025F) + ImVec2(x, y);
+                    drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
+                }
+            }
+            ImGui::EndChild();
+            ImGui::PopStyleColor();
+        }
+
+        void process() override {
+            constexpr static auto SampleSize  = 0x9000;
+            const static size_t SequenceCount = std::ceil(std::sqrt(SampleSize));
+
+            this->m_buffer.clear();
+
+            auto buffer = this->getBufferOnInput(0);
+            if (buffer.size() < SampleSize)
+                this->m_buffer = buffer;
+            else {
+                std::random_device randomDevice;
+                std::mt19937_64 random(randomDevice());
+
+                std::map<u64, std::vector<u8>> orderedData;
+                for (u32 i = 0; i < SequenceCount; i++) {
+                    ssize_t offset = random() % buffer.size();
+
+                    std::vector<u8> sequence;
+                    sequence.reserve(SampleSize);
+                    std::copy(buffer.begin() + offset, buffer.begin() + offset + std::min<size_t>(SequenceCount, buffer.size() - offset), std::back_inserter(sequence));
+
+                    orderedData.insert({ offset, sequence });
+                }
+
+                this->m_buffer.reserve(SampleSize);
+
+                u64 lastEnd = 0x00;
+                for (const auto &[offset, sequence] : orderedData) {
+                    if (offset < lastEnd)
+                        this->m_buffer.resize(this->m_buffer.size() - (lastEnd - offset));
+
+                    std::copy(sequence.begin(), sequence.end(), std::back_inserter(this->m_buffer));
+                    lastEnd = offset + sequence.size();
+                }
+            }
+
+            this->m_opacityBuffer.resize(this->m_buffer.size());
+
+            std::map<u64, size_t> heatMap;
+            for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
+                auto count = ++heatMap[this->m_buffer[i] << 8 | heatMap[i + 1]];
+
+                this->m_highestCount = std::max(this->m_highestCount, count);
+            }
+
+            for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
+                this->m_opacityBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
+            }
+        }
+
+    private:
+        std::vector<u8> m_buffer;
+        std::vector<float> m_opacityBuffer;
+        size_t m_highestCount = 0;
+    };
+
     class NodeVisualizerImage : public dp::Node {
     public:
         NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
@@ -863,14 +946,15 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_counts.begin(), this->m_counts.end())) * 1.1F, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##distribution", nullptr, nullptr, scaled(ImVec2(300, 200)), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels)) {
-                constexpr static auto x = [] {
+            if (ImPlot::BeginPlot("##distribution", "Address", "Count", scaled(ImVec2(400, 300)), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels)) {
+                static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
                     std::iota(result.begin(), result.end(), 0);
                     return result;
                 }();
 
-                ImPlot::PlotBars<ImU64>("##bytes", x.data(), this->m_counts.data(), x.size(), 0.67);
+
+                ImPlot::PlotBars<ImU64>("##bytes", x.data(), this->m_counts.data(), x.size(), 1);
 
                 ImPlot::EndPlot();
             }
@@ -881,7 +965,7 @@ namespace hex::plugin::builtin {
 
             this->m_counts.fill(0x00);
             for (const auto &byte : buffer) {
-                m_counts[byte]++;
+                this->m_counts[byte]++;
             }
         }
 
@@ -937,6 +1021,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto", "hex.builtin.nodes.crypto.aes");
 
         ContentRegistry::DataProcessorNode::add<NodeVisualizerDigram>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.digram");
+        ContentRegistry::DataProcessorNode::add<NodeVisualizerLayeredDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.layered_dist");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerImage>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerByteDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.byte_distribution");
     }
