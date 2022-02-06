@@ -23,6 +23,7 @@ set(PLUGINS
 detectOS()
 detectArch()
 addVersionDefines()
+configurePackingResources()
 
 # Add ImHex sources
 add_subdirectory(lib/libimhex)

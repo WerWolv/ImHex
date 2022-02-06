@@ -1,8 +1,6 @@
 project(main)
 
-configurePackingResources()
-
-add_executable(main ${application_type}
+add_executable(main ${APPLICATION_TYPE}
     source/main.cpp
 
     source/window/window.cpp
@@ -15,6 +13,9 @@ add_executable(main ${application_type}
 
     ${IMHEX_ICON}
 )
+
+message(STATUS ${APPLICATION_TYPE})
+message(STATUS ${IMHEX_ICON})
 
 target_include_directories(main PUBLIC include)
 
