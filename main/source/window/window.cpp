@@ -209,7 +209,7 @@ namespace hex {
 
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-        if (ImGui::Begin("DockSpace", nullptr, windowFlags)) {
+        if (ImGui::Begin("ImHexDockSpace", nullptr, windowFlags)) {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
             auto sidebarPos   = ImGui::GetCursorPos();
@@ -220,7 +220,7 @@ namespace hex {
             auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
             auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
-            auto dockId = ImGui::DockSpace(ImGui::GetID("MainDock"), dockSpaceSize);
+            auto dockId = ImGui::DockSpace(ImGui::GetID("ImHexMainDock"), dockSpaceSize);
             ImHexApi::System::impl::setMainDockSpaceId(dockId);
 
             drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));

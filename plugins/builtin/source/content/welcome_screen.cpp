@@ -261,10 +261,10 @@ namespace hex::plugin::builtin {
     }
 
     static void drawWelcomeScreen() {
-        if (ImGui::Begin("DockSpace")) {
+        if (ImGui::Begin("ImHexDockSpace")) {
             if (!ImHexApi::Provider::isValid()) {
                 static char title[256];
-                ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("MainDock"));
+                ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
                 if (ImGui::Begin(title)) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
                     if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
