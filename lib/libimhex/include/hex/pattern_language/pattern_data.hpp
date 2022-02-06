@@ -885,14 +885,13 @@ namespace hex::pl {
         [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            auto iter = std::find_if(this->m_entries.begin(), this->m_entries.end(), [offset](PatternData *pattern) {
-                return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
-            });
+            for (auto pattern : this->m_entries) {
+                auto result = pattern->getPattern(offset);
+                if (result != nullptr)
+                    return result;
+            }
 
-            if (iter == this->m_entries.end())
-                return nullptr;
-            else
-                return (*iter)->getPattern(offset);
+            return nullptr;
         }
 
         void setEndian(std::endian endian) override {

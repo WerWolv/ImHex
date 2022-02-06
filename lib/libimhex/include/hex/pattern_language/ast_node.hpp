@@ -808,6 +808,8 @@ namespace hex::pl {
         [[nodiscard]] constexpr bool isOutVariable() const { return this->m_outVariable; }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            u64 startOffset = evaluator->dataOffset();
+
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete offset; };
@@ -823,6 +825,10 @@ namespace hex::pl {
             pattern->setVariableName(this->m_name);
 
             applyVariableAttributes(evaluator, this, pattern);
+
+            if (this->m_placementOffset != nullptr) {
+                evaluator->dataOffset() = startOffset;
+            }
 
             return { pattern };
         }
@@ -872,6 +878,8 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            auto startOffset = evaluator->dataOffset();
+
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete offset; };
@@ -905,6 +913,11 @@ namespace hex::pl {
             }
 
             applyVariableAttributes(evaluator, this, pattern);
+
+            if (this->m_placementOffset != nullptr) {
+                evaluator->dataOffset() = startOffset;
+            }
+
             return { pattern };
         }
 
@@ -1176,6 +1189,8 @@ namespace hex::pl {
         [[nodiscard]] constexpr auto getPlacementOffset() const { return this->m_placementOffset; }
 
         [[nodiscard]] std::vector<PatternData *> createPatterns(Evaluator *evaluator) const override {
+            auto startOffset = evaluator->dataOffset();
+
             if (this->m_placementOffset != nullptr) {
                 auto offset = dynamic_cast<ASTNodeLiteral *>(this->m_placementOffset->evaluate(evaluator));
                 ON_SCOPE_EXIT { delete offset; };
@@ -1187,22 +1202,22 @@ namespace hex::pl {
                     offset->getValue());
             }
 
-            auto startOffset = evaluator->dataOffset();
+            auto pointerStartOffset = evaluator->dataOffset();
 
             auto sizePattern = this->m_sizeType->createPatterns(evaluator).front();
             ON_SCOPE_EXIT { delete sizePattern; };
 
-            auto pattern = new PatternDataPointer(evaluator, startOffset, sizePattern->getSize());
+            auto pattern = new PatternDataPointer(evaluator, pointerStartOffset, sizePattern->getSize());
             pattern->setVariableName(this->m_name);
 
-            auto endOffset = evaluator->dataOffset();
+            auto pointerEndOffset = evaluator->dataOffset();
 
             {
                 u128 pointerAddress = 0;
                 evaluator->getProvider()->read(pattern->getOffset(), &pointerAddress, pattern->getSize());
                 pointerAddress = hex::changeEndianess(pointerAddress, sizePattern->getSize(), sizePattern->getEndian());
 
-                evaluator->dataOffset() = startOffset;
+                evaluator->dataOffset() = pointerStartOffset;
 
                 pattern->setPointedAtAddress(pointerAddress);
                 applyVariableAttributes(evaluator, this, pattern);
@@ -1215,7 +1230,11 @@ namespace hex::pl {
                 pattern->setEndian(sizePattern->getEndian());
             }
 
-            evaluator->dataOffset() = endOffset;
+            if (this->m_placementOffset != nullptr) {
+                evaluator->dataOffset() = startOffset;
+            } else {
+                evaluator->dataOffset() = pointerEndOffset;
+            }
 
             return { pattern };
         }
@@ -2024,7 +2043,7 @@ namespace hex::pl {
 
             if (!functions.contains(this->m_functionName)) {
                 if (this->m_functionName.starts_with("std::")) {
-                    evaluator->getConsole().log(LogConsole::Level::Warning, "This function might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store.");
+                    evaluator->getConsole().log(LogConsole::Level::Warning, "This function might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store and then\ninclude the correct file.");
                 }
 
                 LogConsole::abortEvaluation(hex::format("call to unknown function '{}'", this->m_functionName), this);
