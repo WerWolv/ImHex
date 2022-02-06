@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
             ImGuiID patternData = ImGui::DockBuilderSplitNode(hexEditor, ImGuiDir_Down, 0.3F, nullptr, &hexEditor);
             ImGuiID inspector   = ImGui::DockBuilderSplitNode(hexEditor, ImGuiDir_Right, 0.3F, nullptr, &hexEditor);
 
-            openViewAndDockTo("hex.builtin.view.hexeditor.name", hexEditor);
+            openViewAndDockTo("hex.builtin.view.hex_editor.name", hexEditor);
             openViewAndDockTo("hex.builtin.view.data_inspector.name", inspector);
             openViewAndDockTo("hex.builtin.view.pattern_data.name", patternData);
 

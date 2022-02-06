@@ -407,14 +407,14 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
-            if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.open_file"_lang, "CTRL + O")) {
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                hex::openFileBrowser("hex.builtin.view.hexeditor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
+                hex::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                 });
             }
 
-            if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
+            if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
                 for (auto &path : s_recentFilePaths) {
                     if (ImGui::MenuItem(fs::path(path).filename().string().c_str())) {
                         EventManager::post<RequestOpenFile>(path);
@@ -422,7 +422,7 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::Separator();
-                if (ImGui::MenuItem("hex.builtin.view.hexeditor.menu.file.clear_recent"_lang)) {
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.clear_recent"_lang)) {
                     s_recentFilePaths.clear();
                     ContentRegistry::Settings::write(
                         "hex.builtin.setting.imhex",
@@ -433,7 +433,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu("hex.builtin.view.hexeditor.menu.file.open_other"_lang)) {
+            if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.open_other"_lang)) {
 
                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
                     if (ImGui::MenuItem(LangEntry(unlocalizedProviderName))) {

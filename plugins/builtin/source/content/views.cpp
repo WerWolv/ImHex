@@ -1,4 +1,4 @@
-#include "content/views/view_hexeditor.hpp"
+#include "content/views/view_hex_editor.hpp"
 #include "content/views/view_pattern_editor.hpp"
 #include "content/views/view_pattern_data.hpp"
 #include "content/views/view_hashes.hpp"

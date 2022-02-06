@@ -35,35 +35,35 @@ namespace hex::plugin::builtin {
 
     void registerDataFormatters() {
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.c", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.c", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, hex::format("const uint8_t data[{0}] = {{", size), "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, hex::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.java", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.java", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "final byte[] data = {", "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.csharp", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "const byte[] data = {", "0x{0:02X}, ", "};");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.rust", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, hex::format("let data: [u8; 0x{0:02X}] = [", size), "0x{0:02X}, ", "];");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.python", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.python", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "data = bytes([", "0x{0:02X}, ", "]);");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "const data = new Uint8Array([", "0x{0:02X}, ", "]);");
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.ascii", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.ascii", [](prv::Provider *provider, u64 offset, size_t size) {
             std::string result = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
 
             std::vector<u8> buffer(0x1'0000, 0x00);
@@ -105,7 +105,7 @@ namespace hex::plugin::builtin {
             return result;
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hexeditor.copy.html", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.html", [](prv::Provider *provider, u64 offset, size_t size) {
             std::string result =
                 "<div>\n"
                 "    <style type=\"text/css\">\n"
