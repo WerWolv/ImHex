@@ -332,7 +332,8 @@ namespace hex::pl {
         [[nodiscard]] bool operator==(const PatternData &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
     };
 
-    class PatternDataPointer : public PatternData {
+    class PatternDataPointer : public PatternData,
+                               public Inlinable {
     public:
         PatternDataPointer(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternData(evaluator, offset, size, color), m_pointedAt(nullptr) {
@@ -355,25 +356,34 @@ namespace hex::pl {
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            bool open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:04X}", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
+            bool open = true;
+
+            if (!this->isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
+                }
+                this->drawCommentTooltip();
+                ImGui::SameLine(0, 0);
+                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("0x{0:04X}", this->getSize());
+                ImGui::TableNextColumn();
+                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("{}", formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
+            }
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
 
-                ImGui::TreePop();
+                if (!this->isInlined())
+                    ImGui::TreePop();
             }
         }
 
@@ -791,6 +801,10 @@ namespace hex::pl {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
+                }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -937,6 +951,10 @@ namespace hex::pl {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
+                }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -1023,13 +1041,13 @@ namespace hex::pl {
             this->m_entryCount = count;
         }
 
-        void setEntries(PatternData *templ, size_t count) {
-            this->m_template          = templ;
+        void setEntries(PatternData *templatePattern, size_t count) {
+            this->m_template          = templatePattern;
             this->m_highlightTemplate = this->m_template->clone();
             this->m_entryCount        = count;
 
             if (this->hasOverriddenColor()) this->setColor(this->m_template->getColor());
-            this->m_template->setEndian(templ->getEndian());
+            this->m_template->setEndian(templatePattern->getEndian());
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
@@ -1093,8 +1111,11 @@ namespace hex::pl {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                this->drawCommentTooltip();
                 ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
+                }
+                this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
                 ImGui::TableNextColumn();
@@ -1240,8 +1261,11 @@ namespace hex::pl {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                this->drawCommentTooltip();
                 ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
+                }
+                this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), std::max(this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1), u64(0)));
                 ImGui::TableNextColumn();
@@ -1556,8 +1580,11 @@ namespace hex::pl {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                this->drawCommentTooltip();
                 ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
+                }
+                this->drawCommentTooltip();
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
                 ImGui::TableNextColumn();
