@@ -234,7 +234,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.file.quit", "ImHexを終了" },
                     { "hex.builtin.view.hex_editor.menu.file.open_project", "プロジェクトを開く..." },
                     { "hex.builtin.view.hex_editor.menu.file.save_project", "プロジェクトを保存..." },
-                    { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "カスタムエンコードを読み込み中..." },
+                    { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "カスタムエンコードを読み込み..." },
                     { "hex.builtin.view.hex_editor.menu.file.import", "インポート..." },
                         { "hex.builtin.view.hex_editor.menu.file.import.base64", "Base64ファイル" },
                         { "hex.builtin.view.hex_editor.base64.import_error", "ファイルが有効なBase64形式ではありません！" },
