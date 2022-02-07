@@ -79,14 +79,14 @@ namespace hex::pl {
         ASTNode *parseMultiplicativeExpression();
         ASTNode *parseAdditiveExpression();
         ASTNode *parseShiftExpression();
-        ASTNode *parseRelationExpression();
-        ASTNode *parseEqualityExpression();
         ASTNode *parseBinaryAndExpression();
         ASTNode *parseBinaryXorExpression();
         ASTNode *parseBinaryOrExpression();
         ASTNode *parseBooleanAnd();
         ASTNode *parseBooleanXor();
         ASTNode *parseBooleanOr();
+        ASTNode *parseRelationExpression();
+        ASTNode *parseEqualityExpression();
         ASTNode *parseTernaryConditional();
         ASTNode *parseMathematicalExpression();
 
@@ -149,7 +149,9 @@ namespace hex::pl {
 
         /* Token consuming */
 
-        enum class Setting { };
+        enum class Setting
+        {
+        };
         constexpr static auto Normal = static_cast<Setting>(0);
         constexpr static auto Not    = static_cast<Setting>(1);
 

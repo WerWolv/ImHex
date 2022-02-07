@@ -250,46 +250,14 @@ namespace hex::pl {
         return node;
     }
 
-    // (parseAdditiveExpression) < >=|<=|>|< > (parseAdditiveExpression)
-    ASTNode *Parser::parseRelationExpression() {
+    // (parseShiftExpression) & (parseShiftExpression)
+    ASTNode *Parser::parseBinaryAndExpression() {
         auto node = this->parseShiftExpression();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
 
-        while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
-            auto op = getValue<Token::Operator>(-1);
-            node    = create(new ASTNodeMathematicalExpression(node, this->parseShiftExpression(), op));
-        }
-
-        nodeCleanup.release();
-
-        return node;
-    }
-
-    // (parseRelationExpression) <==|!=> (parseRelationExpression)
-    ASTNode *Parser::parseEqualityExpression() {
-        auto node = this->parseRelationExpression();
-
-        auto nodeCleanup = SCOPE_GUARD { delete node; };
-
-        while (MATCHES(sequence(OPERATOR_BOOLEQUALS) || sequence(OPERATOR_BOOLNOTEQUALS))) {
-            auto op = getValue<Token::Operator>(-1);
-            node    = create(new ASTNodeMathematicalExpression(node, this->parseRelationExpression(), op));
-        }
-
-        nodeCleanup.release();
-
-        return node;
-    }
-
-    // (parseEqualityExpression) & (parseEqualityExpression)
-    ASTNode *Parser::parseBinaryAndExpression() {
-        auto node = this->parseEqualityExpression();
-
-        auto nodeCleanup = SCOPE_GUARD { delete node; };
-
         while (MATCHES(sequence(OPERATOR_BITAND))) {
-            node = create(new ASTNodeMathematicalExpression(node, this->parseEqualityExpression(), Token::Operator::BitAnd));
+            node = create(new ASTNodeMathematicalExpression(node, this->parseShiftExpression(), Token::Operator::BitAnd));
         }
 
         nodeCleanup.release();
@@ -372,19 +340,51 @@ namespace hex::pl {
         return node;
     }
 
-    // (parseBooleanOr) ? (parseBooleanOr) : (parseBooleanOr)
-    ASTNode *Parser::parseTernaryConditional() {
+    // (parseBooleanOr) < >=|<=|>|< > (parseBooleanOr)
+    ASTNode *Parser::parseRelationExpression() {
         auto node = this->parseBooleanOr();
 
         auto nodeCleanup = SCOPE_GUARD { delete node; };
 
+        while (MATCHES(sequence(OPERATOR_BOOLGREATERTHAN) || sequence(OPERATOR_BOOLLESSTHAN) || sequence(OPERATOR_BOOLGREATERTHANOREQUALS) || sequence(OPERATOR_BOOLLESSTHANOREQUALS))) {
+            auto op = getValue<Token::Operator>(-1);
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseBooleanOr(), op));
+        }
+
+        nodeCleanup.release();
+
+        return node;
+    }
+
+    // (parseRelationExpression) <==|!=> (parseRelationExpression)
+    ASTNode *Parser::parseEqualityExpression() {
+        auto node = this->parseRelationExpression();
+
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
+
+        while (MATCHES(sequence(OPERATOR_BOOLEQUALS) || sequence(OPERATOR_BOOLNOTEQUALS))) {
+            auto op = getValue<Token::Operator>(-1);
+            node    = create(new ASTNodeMathematicalExpression(node, this->parseRelationExpression(), op));
+        }
+
+        nodeCleanup.release();
+
+        return node;
+    }
+
+    // (parseEqualityExpression) ? (parseEqualityExpression) : (parseEqualityExpression)
+    ASTNode *Parser::parseTernaryConditional() {
+        auto node = this->parseEqualityExpression();
+
+        auto nodeCleanup = SCOPE_GUARD { delete node; };
+
         while (MATCHES(sequence(OPERATOR_TERNARYCONDITIONAL))) {
-            auto second = this->parseBooleanOr();
+            auto second = this->parseEqualityExpression();
 
             if (!MATCHES(sequence(OPERATOR_INHERIT)))
                 throwParserError("expected ':' in ternary expression");
 
-            auto third = this->parseBooleanOr();
+            auto third = this->parseEqualityExpression();
             node       = create(new ASTNodeTernaryExpression(node, second, third, Token::Operator::TernaryConditional));
         }
 
