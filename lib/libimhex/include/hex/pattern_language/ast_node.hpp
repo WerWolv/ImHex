@@ -89,7 +89,7 @@ namespace hex::pl {
         }
 
     public:
-        void addAttribute(ASTNodeAttribute *attribute) {
+        virtual void addAttribute(ASTNodeAttribute *attribute) {
             this->m_attributes.push_back(attribute);
         }
 
@@ -480,6 +480,13 @@ namespace hex::pl {
             }
 
             return patterns;
+        }
+
+        void addAttribute(ASTNodeAttribute *attribute) override {
+            Attributable::addAttribute(attribute);
+
+            if (auto attributable = dynamic_cast<Attributable *>(this->m_type); attributable != nullptr)
+                attributable->addAttribute(static_cast<ASTNodeAttribute *>(attribute->clone()));
         }
 
     private:
@@ -1517,6 +1524,15 @@ namespace hex::pl {
                     delete field;
             };
 
+            auto &attributes = this->getAttributes();
+
+            bool isLeftToRight = false;
+
+            if (std::any_of(attributes.begin(), attributes.end(), [](ASTNodeAttribute *attribute) { return attribute->getAttribute() == "left_to_right" && !attribute->getValue().has_value(); }))
+                isLeftToRight = true;
+            else if (std::any_of(attributes.begin(), attributes.end(), [](ASTNodeAttribute *attribute) { return attribute->getAttribute() == "right_to_left" && !attribute->getValue().has_value(); }))
+                isLeftToRight = false;
+
             evaluator->pushScope(pattern, fields);
             for (auto [name, bitSizeNode] : this->m_entries) {
                 auto literal = bitSizeNode->evaluate(evaluator);
@@ -1532,7 +1548,11 @@ namespace hex::pl {
                 if (name != "padding") {
                     auto field = new PatternDataBitfieldField(evaluator, evaluator->dataOffset(), bitOffset, bitSize, pattern);
                     field->setVariableName(name);
-                    fields.push_back(field);
+
+                    if (isLeftToRight)
+                        fields.insert(fields.begin(), field);
+                    else
+                        fields.push_back(field);
                 }
 
                 bitOffset += bitSize;

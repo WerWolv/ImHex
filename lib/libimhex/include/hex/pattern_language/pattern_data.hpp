@@ -1469,7 +1469,7 @@ namespace hex::pl {
             std::vector<u8> value(this->m_bitField->getSize(), 0);
             provider->read(this->m_bitField->getOffset(), &value[0], value.size());
 
-            if (this->m_bitField->getEndian() == std::endian::little)
+            if (this->m_bitField->getEndian() != std::endian::native)
                 std::reverse(value.begin(), value.end());
 
             ImGui::TableNextRow();
