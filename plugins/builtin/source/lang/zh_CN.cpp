@@ -459,6 +459,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.nodes.data_access.size", "数据大小"},
                         { "hex.builtin.nodes.data_access.size.header", "数据大小"},
                         { "hex.builtin.nodes.data_access.size.size", "大小"},
+                    //{ "hex.builtin.nodes.data_access.selection", "Selected Region"},
+                        //{ "hex.builtin.nodes.data_access.selection.header", "Selected Region"},
+                        //{ "hex.builtin.nodes.data_access.selection.address", "Address"},
+                        //{ "hex.builtin.nodes.data_access.selection.size", "Size"},
 
                 { "hex.builtin.nodes.casting", "数据转换" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "整数到缓冲区" },

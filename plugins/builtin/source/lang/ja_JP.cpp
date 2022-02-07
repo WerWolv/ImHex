@@ -467,6 +467,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.nodes.data_access.size", "データサイズ"},
                         { "hex.builtin.nodes.data_access.size.header", "データサイズ"},
                         { "hex.builtin.nodes.data_access.size.size", "サイズ"},
+                    //{ "hex.builtin.nodes.data_access.selection", "Selected Region"},
+                        //{ "hex.builtin.nodes.data_access.selection.header", "Selected Region"},
+                        //{ "hex.builtin.nodes.data_access.selection.address", "Address"},
+                        //{ "hex.builtin.nodes.data_access.selection.size", "Size"},
 
                 { "hex.builtin.nodes.casting", "データ変換" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "整数からバッファ" },

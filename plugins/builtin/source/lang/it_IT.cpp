@@ -464,6 +464,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.nodes.data_access.size", "Dati Dimensione"},
                         { "hex.builtin.nodes.data_access.size.header", "Dati Dimensione"},
                         { "hex.builtin.nodes.data_access.size.size", "Dimensione"},
+                    //{ "hex.builtin.nodes.data_access.selection", "Selected Region"},
+                        //{ "hex.builtin.nodes.data_access.selection.header", "Selected Region"},
+                        //{ "hex.builtin.nodes.data_access.selection.address", "Address"},
+                        //{ "hex.builtin.nodes.data_access.selection.size", "Size"},
 
                 { "hex.builtin.nodes.casting", "Conversione Dati" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "Da Intero a Buffer" },

@@ -468,6 +468,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.nodes.data_access.size", "Data Size"},
                         { "hex.builtin.nodes.data_access.size.header", "Data Size"},
                         { "hex.builtin.nodes.data_access.size.size", "Size"},
+                    { "hex.builtin.nodes.data_access.selection", "Selected Region"},
+                        { "hex.builtin.nodes.data_access.selection.header", "Selected Region"},
+                        { "hex.builtin.nodes.data_access.selection.address", "Address"},
+                        { "hex.builtin.nodes.data_access.selection.size", "Size"},
 
                 { "hex.builtin.nodes.casting", "Data conversion" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "Integer to Buffer" },
