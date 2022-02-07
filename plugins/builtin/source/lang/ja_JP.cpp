@@ -3,9 +3,8 @@
 
 namespace hex::plugin::builtin {
 
-    void registerLanguageEnUS() {
+    void registerLanguageJaJP() {
         ContentRegistry::Language::registerLanguage("Japanese", "ja-JP");
-        LangEntry::setFallbackLanguage("en-US");
 
         ContentRegistry::Language::addLocalizations("ja-JP", {
                 { "hex.builtin.welcome.header.main", "ImHexへようこそ" },
