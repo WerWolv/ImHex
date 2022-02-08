@@ -519,7 +519,10 @@ namespace ImGui {
 
         RenderNavHighlight(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
+        ImGui::PopStyleVar();
 
         return value_changed;
     }
