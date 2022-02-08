@@ -209,7 +209,7 @@ namespace hex::plugin::builtin {
                             if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
                                 u64 address = u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress();
                                 address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
-                                EventManager::post<RequestSelectionChange>(Region { address, 1 });
+                                ImHexApi::HexEditor::setSelection(address, 1);
                             }
 
                             ImPlot::EndPlot();

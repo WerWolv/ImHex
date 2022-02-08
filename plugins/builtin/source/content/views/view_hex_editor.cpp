@@ -726,7 +726,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Button("hex.builtin.view.hex_editor.menu.file.goto"_lang) || runGoto) {
                     provider->setCurrentPage(std::floor(double(newOffset - baseAddress) / hex::prv::Provider::PageSize));
-                    EventManager::post<RequestSelectionChange>(Region { newOffset, 1 });
+                    ImHexApi::HexEditor::setSelection(newOffset, 1);
                 }
 
                 ImGui::EndTabBar();
@@ -775,7 +775,7 @@ namespace hex::plugin::builtin {
             this->pasteBytes();
 
         if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, "CTRL + A", false, providerValid))
-            EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
+            ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
 
         ImGui::Separator();
 
@@ -992,7 +992,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRL + Keys::A, [] {
             auto provider = ImHexApi::Provider::get();
-            EventManager::post<RequestSelectionChange>(Region { provider->getBaseAddress(), provider->getActualSize() });
+            ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
         });
     }
 
