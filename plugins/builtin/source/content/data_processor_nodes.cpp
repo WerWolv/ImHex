@@ -109,10 +109,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            std::vector<u8> data(sizeof(this->m_value), 0);
-
-            std::memcpy(data.data(), &this->m_value, sizeof(u64));
-            this->setBufferOnOutput(0, data);
+            this->setIntegerOnOutput(0, this->m_value);
         }
 
         void store(nlohmann::json &j) override {
@@ -140,11 +137,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            std::vector<u8> data;
-            data.resize(sizeof(this->m_value));
-
-            std::copy(&this->m_value, &this->m_value + 1, data.data());
-            this->setBufferOnOutput(0, data);
+            this->setFloatOnOutput(0, this->m_value);
         }
 
         void store(nlohmann::json &j) override {
@@ -427,8 +420,11 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            u64 output;
-            std::memcpy(&output, input.data(), sizeof(u64));
+            if (input.size() == 0 || input.size() > sizeof(u64))
+                throwNodeError("Buffer is empty or bigger than 64 bits");
+
+            u64 output = 0;
+            std::memcpy(&output, input.data(), input.size());
 
             this->setIntegerOnOutput(1, output);
         }
@@ -538,7 +534,7 @@ namespace hex::plugin::builtin {
                 throwNodeError("'from' input out of range");
             if (to < 0 || from >= input.size())
                 throwNodeError("'to' input out of range");
-            if (to >= from)
+            if (to <= from)
                 throwNodeError("'to' input needs to be greater than 'from' input");
 
             this->setBufferOnOutput(3, std::vector(input.begin() + from, input.begin() + to));
