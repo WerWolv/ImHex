@@ -495,7 +495,7 @@ namespace ImGui {
         return pressed;
     }
 
-    bool InputIntegerPrefix(const char *label, const char *prefix, ImU64 *value, ImGuiInputTextFlags flags) {
+    bool InputIntegerPrefix(const char *label, const char *prefix, u64 *value, ImGuiInputTextFlags flags) {
         auto window             = ImGui::GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
@@ -527,7 +527,7 @@ namespace ImGui {
         return value_changed;
     }
 
-    bool InputHexadecimal(const char *label, ImU64 *value, ImGuiInputTextFlags flags) {
+    bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
         return InputIntegerPrefix(label, "0x", value, flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
