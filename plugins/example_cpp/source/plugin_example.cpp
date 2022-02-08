@@ -1,5 +1,5 @@
 #include <hex/plugin.hpp>
-
+#include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
 
 class ViewExample : public hex::View {
@@ -17,5 +17,5 @@ public:
 
 IMHEX_PLUGIN_SETUP("Example C++", "WerWolv", "Example C++ plugin used as template for plugin devs") {
 
-    ContentRegistry::Views::add<ViewExample>();
+    hex::ContentRegistry::Views::add<ViewExample>();
 }

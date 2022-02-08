@@ -17,6 +17,7 @@ detectBadClone()
 set(PLUGINS
     builtin
     windows
+    example_cpp
 )
 
 # Add various defines
