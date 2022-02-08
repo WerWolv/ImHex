@@ -2,8 +2,6 @@
 
 #include <hex/api/content_registry.hpp>
 
-#include <hex/providers/provider.hpp>
-
 namespace hex::plugin::builtin {
 
     ViewTools::ViewTools() : View("hex.builtin.view.tools.name") { }

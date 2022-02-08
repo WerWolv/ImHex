@@ -505,13 +505,23 @@ namespace ImGui {
         const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0f);
         const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
 
-        ImGui::SameLine(0, frame_size.x);
-        bool result = ImGui::InputScalar(label, ImGuiDataType_U64, value, nullptr, nullptr, "%llX", flags);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
+
+        char buf[64];
+        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), ImGuiDataType_U64, value, "%llX");
+
+        bool value_changed = false;
+        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), flags))
+            value_changed = DataTypeApplyOpFromText(buf, GImGui->InputTextState.InitialTextA.Data, ImGuiDataType_U64, value, "%llX");
+
+        if (value_changed)
+            MarkItemEdited(GImGui->LastItemData.ID);
+
         RenderNavHighlight(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
 
-        return result;
+        return value_changed;
     }
 
     bool InputHexadecimal(const char *label, ImU64 *value, ImGuiInputTextFlags flags) {
