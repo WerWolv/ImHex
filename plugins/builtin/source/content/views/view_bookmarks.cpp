@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
                         ImGui::EndChild();
 
                         if (ImGui::Button("hex.builtin.view.bookmarks.button.jump"_lang))
-                            EventManager::post<RequestSelectionChange>(region);
+                            ImHexApi::HexEditor::setSelection(region);
                         ImGui::SameLine(0, 15);
 
                         if (ImGui::Button("hex.builtin.view.bookmarks.button.remove"_lang))

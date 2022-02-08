@@ -48,6 +48,10 @@ namespace hex {
             void removeHighlight(u32 id);
             std::map<u32, Highlighting> &getHighlights();
 
+            Region getSelection();
+            void setSelection(const Region &region);
+            void setSelection(u64 address, size_t size);
+
         }
 
         namespace Bookmarks {

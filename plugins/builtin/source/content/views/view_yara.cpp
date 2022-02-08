@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGui::PushID(i);
                         if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                            EventManager::post<RequestSelectionChange>(Region { u64(address), size_t(size) });
+                            ImHexApi::HexEditor::setSelection(address, size);
                         }
                         ImGui::PopID();
                         ImGui::SameLine();

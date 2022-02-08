@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
                     this->m_hashRegion[0] = this->m_hashRegion[1] = 0;
                 } else {
                     this->m_hashRegion[0] = region.address;
-                    this->m_hashRegion[1] = region.size + 1;    // WARNING: get size - 1 as region size
+                    this->m_hashRegion[1] = region.size;
                 }
                 this->m_shouldInvalidate = true;
             }
@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
                     ImGui::Checkbox("hex.builtin.common.match_selection"_lang, &this->m_shouldMatchSelection);
                     if (ImGui::IsItemEdited()) {
                         // Force execution of Region Selection Event
-                        EventManager::post<RequestSelectionChange>(Region { 0, 0 });
+                        ImHexApi::HexEditor::setSelection(0, 0);
                         this->m_shouldInvalidate = true;
                     }
 

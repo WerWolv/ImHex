@@ -59,7 +59,7 @@ namespace hex {
         using EventList = std::list<std::pair<EventId, EventBase *>>;
 
         template<typename E>
-        [[nodiscard]] static EventList::iterator subscribe(typename E::Callback function) {
+        static EventList::iterator subscribe(typename E::Callback function) {
             return s_events.insert(s_events.end(), std::make_pair(E::id, new E(function)));
         }
 
