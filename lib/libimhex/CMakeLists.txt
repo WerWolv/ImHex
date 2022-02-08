@@ -17,7 +17,12 @@ set(LIBROMFS_RESOURCE_LOCATION ${IMHEX_BASE_FOLDER}/resources/romfs)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/external/libromfs EXCLUDE_FROM_ALL)
 set_target_properties(libromfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/selene ${CMAKE_CURRENT_BINARY_DIR}/external/selene EXCLUDE_FROM_ALL)
+set(SELENE_LIBRARIES luaconfig)
+
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../external/xdgpp")
+set(SELENE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../external/selene")
 set(CURL_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
 set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
@@ -124,6 +129,7 @@ set(LIBIMHEX_SOURCES
     source/helpers/encoding_file.cpp
     source/helpers/loader_script_handler.cpp
     source/helpers/logger.cpp
+    source/helpers/LuaConfig.cpp
 
     source/pattern_language/pattern_language.cpp
     source/pattern_language/preprocessor.cpp
@@ -157,7 +163,7 @@ add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS})
+target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS} ${SELENE_INCLUDE_DIRS})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (APPLE)
@@ -165,4 +171,4 @@ if (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs)
+target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs ${SELENE_LIBRARIES} ${LUA_LIBRARIES})
