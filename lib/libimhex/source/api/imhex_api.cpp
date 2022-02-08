@@ -54,6 +54,23 @@ namespace hex {
             return s_highlights;
         }
 
+        Region getSelection() {
+            static Region selectedRegion;
+            EventManager::subscribe<EventRegionSelected>([](const Region &region) {
+                selectedRegion = region;
+            });
+
+            return selectedRegion;
+        }
+
+        void setSelection(const Region &region) {
+            EventManager::post<RequestSelectionChange>(region);
+        }
+
+        void setSelection(u64 address, size_t size) {
+            setSelection({ address, size });
+        }
+
     }
 
 

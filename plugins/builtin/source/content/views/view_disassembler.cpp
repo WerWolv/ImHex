@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
                     this->m_codeRegion[0] = this->m_codeRegion[1] = 0;
                 } else {
                     this->m_codeRegion[0] = region.address;
-                    this->m_codeRegion[1] = region.address + region.size;
+                    this->m_codeRegion[1] = region.address + region.size - 1;
                 }
             }
         });
@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
                 ImGui::Checkbox("hex.builtin.common.match_selection"_lang, &this->m_shouldMatchSelection);
                 if (ImGui::IsItemEdited()) {
                     // Force execution of Region Selection Event
-                    EventManager::post<RequestSelectionChange>(Region { 0, 0 });
+                    ImHexApi::HexEditor::setSelection(0, 0);
                 }
 
                 ImGui::NewLine();
@@ -356,7 +356,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
                                 if (ImGui::Selectable(("##DisassemblyLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                    EventManager::post<RequestSelectionChange>(Region { instruction.offset, instruction.size });
+                                    ImHexApi::HexEditor::setSelection(instruction.offset, instruction.size);
                                 }
                                 ImGui::SameLine();
                                 ImGui::TextFormatted("0x{0:X}", instruction.address);
