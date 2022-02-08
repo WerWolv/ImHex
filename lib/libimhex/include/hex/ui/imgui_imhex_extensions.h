@@ -72,6 +72,9 @@ namespace ImGui {
     bool ToolBarButton(const char *symbol, ImVec4 color);
     bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
 
+    bool InputIntegerPrefix(const char* label, const char *prefix, ImU64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputHexadecimal(const char* label, ImU64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
     }

@@ -495,6 +495,29 @@ namespace ImGui {
         return pressed;
     }
 
+    bool InputIntegerPrefix(const char *label, const char *prefix, ImU64 *value, ImGuiInputTextFlags flags) {
+        auto window             = ImGui::GetCurrentWindow();
+        const ImGuiID id        = window->GetID(label);
+        const ImGuiStyle &style = GImGui->Style;
+
+
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0f);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
+
+        ImGui::SameLine(0, frame_size.x);
+        bool result = ImGui::InputScalar(label, ImGuiDataType_U64, value, nullptr, nullptr, "%llX", flags);
+        RenderNavHighlight(frame_bb, id);
+        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+        RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
+
+        return result;
+    }
+
+    bool InputHexadecimal(const char *label, ImU64 *value, ImGuiInputTextFlags flags) {
+        return InputIntegerPrefix(label, "0x", value, flags | ImGuiInputTextFlags_CharsHexadecimal);
+    }
+
     void SmallProgressBar(float fraction, float yOffset) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
