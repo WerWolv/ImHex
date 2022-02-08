@@ -18,7 +18,6 @@ set(PLUGINS
     builtin
     windows
     example_cpp
-    heximage
 )
 
 # Add various defines
