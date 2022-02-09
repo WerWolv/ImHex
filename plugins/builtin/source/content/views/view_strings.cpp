@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             if (ImGui::Selectable(("##StringLine"s + std::to_string(i)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                ImHexApi::HexEditor::setSelection(foundString.offset, foundString.size);
+                                EventManager::post<RequestSelectionChange>(Region { foundString.offset, foundString.size });
                             }
                             ImGui::PushID(i + 1);
                             createStringContextMenu(foundString);

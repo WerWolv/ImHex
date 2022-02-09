@@ -22,10 +22,10 @@ macro(addVersionDefines)
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
 
     add_compile_definitions(
-            $<$<CONFIG:Release>:IMHEX_VERSION="${IMHEX_VERSION}">
-            $<$<CONFIG:Debug>:IMHEX_VERSION="${IMHEX_VERSION}-Debug">
-            $<$<CONFIG:RelWithDebInfo>:IMHEX_VERSION="${IMHEX_VERSION}-ReleaseWithDebugInfo">
-            $<$<CONFIG:MinSizeRel>:IMHEX_VERSION="${IMHEX_VERSION}-ReleaseMinimumSize">
+            $<$<CONFIG:Release>:IMHEX_VERSION="${PROJECT_VERSION}">
+            $<$<CONFIG:Debug>:IMHEX_VERSION="${PROJECT_VERSION}-Debug">
+            $<$<CONFIG:RelWithDebInfo>:IMHEX_VERSION="${PROJECT_VERSION}-ReleaseWithDebugInfo">
+            $<$<CONFIG:MinSizeRel>:IMHEX_VERSION="${PROJECT_VERSION}-ReleaseMinimumSize">
     )
 
     add_compile_definitions(
@@ -106,7 +106,7 @@ macro(configurePackingResources)
 
     if (WIN32)
         set(APPLICATION_TYPE)
-        set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/resource.rc")
+        set(IMHEX_ICON "${CMAKE_SOURCE_DIR}/resources/resource.rc")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--allow-multiple-definition")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-subsystem,windows")
 
@@ -123,7 +123,7 @@ macro(configurePackingResources)
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/resources/LICENSE.rtf")
         endif()
     elseif (APPLE)
-        set (IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/AppIcon.icns")
+        set (IMHEX_ICON "${CMAKE_SOURCE_DIR}/resources/AppIcon.icns")
 
         if (CREATE_BUNDLE)
             set(APPLICATION_TYPE MACOSX_BUNDLE)

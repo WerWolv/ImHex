@@ -267,8 +267,8 @@ namespace hex::pl {
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
-            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             this->drawCommentTooltip();
             ImGui::SameLine();
@@ -363,8 +363,8 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
                 }
                 this->drawCommentTooltip();
                 ImGui::SameLine(0, 0);
@@ -802,8 +802,8 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
                 }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
@@ -952,8 +952,8 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
                 }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
@@ -1112,8 +1112,8 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
                 }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
@@ -1262,8 +1262,8 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
                 }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
@@ -1427,8 +1427,8 @@ namespace hex::pl {
             ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             this->drawCommentTooltip();
             ImGui::TableNextColumn();
-            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
             }
             ImGui::SameLine();
             ImGui::TextUnformatted(this->getDisplayName().c_str());
@@ -1581,8 +1581,8 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
+                if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(this->getOffset())).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    EventManager::post<RequestSelectionChange>(Region { this->getOffset(), this->getSize() });
                 }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();

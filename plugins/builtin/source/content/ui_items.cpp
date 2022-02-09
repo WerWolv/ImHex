@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::Bookmarks::add(region.address, region.size, {}, {});
                 }
             },
-                !ImHexApi::Provider::isValid() || !provider->isReadable() || ImHexApi::HexEditor::getSelection().size == 0);
+                !ImHexApi::Provider::isValid() || !provider->isReadable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);

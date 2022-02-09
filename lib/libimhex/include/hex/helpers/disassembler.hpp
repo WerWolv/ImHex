@@ -1,13 +1,15 @@
 #pragma once
 
+#if __has_include(<capstone/capstone.h>)
+    #include <capstone/capstone.h>
+#else
+    #include <capstone.h>
+#endif
 #include <hex.hpp>
-
-#include <capstone/capstone.h>
 
 namespace hex {
 
-    enum class Architecture : i32
-    {
+    enum class Architecture : i32 {
         ARM,
         ARM64,
         MIPS,

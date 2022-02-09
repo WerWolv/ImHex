@@ -232,7 +232,7 @@ struct MemoryEditor
         if (ImGui::Begin(title, p_open, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs))
         {
             if (DataPreviewAddr != DataPreviewAddrOld || DataPreviewAddrEnd != DataPreviewAddrEndOld) {
-                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd) + base_display_addr, (std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd)) + 1 };
+                hex::Region selectionRegion = { std::min(DataPreviewAddr, DataPreviewAddrEnd) + base_display_addr, std::max(DataPreviewAddr, DataPreviewAddrEnd) - std::min(DataPreviewAddr, DataPreviewAddrEnd) };
                 hex::EventManager::post<hex::EventRegionSelected>(selectionRegion);
             }
 
@@ -335,7 +335,7 @@ struct MemoryEditor
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)) && DataPreviewAddr < mem_size - 1)          { DataPreviewAddr = data_preview_addr_next = mem_size - 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
             }
         } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-            DataPreviewAddr = DataPreviewAddrOld = DataPreviewAddrEnd = DataPreviewAddrEndOld = data_preview_addr_next = (size_t)-1;
+            DataPreviewAddr = data_preview_addr_next = DataPreviewAddrEnd = (size_t)-1;
             HighlightMin = HighlightMax = (size_t)-1;
 
             hex::EventManager::post<hex::EventRegionSelected>(hex::Region{ (size_t)-1, 0 });
