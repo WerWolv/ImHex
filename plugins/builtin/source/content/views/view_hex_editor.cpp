@@ -660,6 +660,9 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
 
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
             ImGui::EndPopup();
         }
     }
@@ -677,49 +680,49 @@ namespace hex::plugin::builtin {
                 u64 newOffset = 0;
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.absolute"_lang)) {
                     ImGui::SetKeyboardFocusHere();
-                    runGoto = ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
+                    runGoto = ImGui::InputHexadecimal("##goto", &this->m_gotoAddressAbsolute, ImGuiInputTextFlags_EnterReturnsTrue);
 
-                    if (this->m_gotoAddress < baseAddress || this->m_gotoAddress > baseAddress + dataSize)
-                        this->m_gotoAddress = baseAddress;
+                    if (this->m_gotoAddressAbsolute < baseAddress || this->m_gotoAddressAbsolute > baseAddress + dataSize)
+                        this->m_gotoAddressAbsolute = baseAddress;
 
-                    newOffset = this->m_gotoAddress;
+                    newOffset = this->m_gotoAddressAbsolute;
 
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.begin"_lang)) {
                     ImGui::SetKeyboardFocusHere();
-                    runGoto = ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
+                    runGoto = ImGui::InputScalar("##goto", ImGuiDataType_U64, &this->m_gotoAddressAbsolute, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
-                    if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
-                        this->m_gotoAddress = 0;
+                    if (this->m_gotoAddressAbsolute < 0 || this->m_gotoAddressAbsolute > dataSize)
+                        this->m_gotoAddressAbsolute = 0;
 
-                    newOffset = this->m_gotoAddress + baseAddress;
+                    newOffset = this->m_gotoAddressAbsolute + baseAddress;
 
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.current"_lang)) {
                     ImGui::SetKeyboardFocusHere();
-                    runGoto = ImGui::InputScalar("dec", ImGuiDataType_S64, &this->m_gotoAddress, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue);
+                    runGoto = ImGui::InputScalar("##goto", ImGuiDataType_S64, &this->m_gotoAddressRelative, nullptr, nullptr, "%lld", ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
                     i64 currSelectionOffset = std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
 
-                    if (currSelectionOffset + this->m_gotoAddress < 0)
-                        this->m_gotoAddress = -currSelectionOffset;
-                    else if (currSelectionOffset + this->m_gotoAddress > dataSize)
-                        this->m_gotoAddress = dataSize - currSelectionOffset;
+                    if (currSelectionOffset + this->m_gotoAddressRelative < 0)
+                        this->m_gotoAddressRelative = -currSelectionOffset;
+                    else if (currSelectionOffset + this->m_gotoAddressRelative > dataSize)
+                        this->m_gotoAddressRelative = dataSize - currSelectionOffset;
 
-                    newOffset = currSelectionOffset + this->m_gotoAddress + baseAddress;
+                    newOffset = currSelectionOffset + this->m_gotoAddressRelative + baseAddress;
 
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.end"_lang)) {
                     ImGui::SetKeyboardFocusHere();
-                    runGoto = ImGui::InputScalar("hex", ImGuiDataType_U64, &this->m_gotoAddress, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
+                    runGoto = ImGui::InputHexadecimal("##goto", &this->m_gotoAddressAbsolute, ImGuiInputTextFlags_EnterReturnsTrue);
 
-                    if (this->m_gotoAddress < 0 || this->m_gotoAddress > dataSize)
-                        this->m_gotoAddress = 0;
+                    if (this->m_gotoAddressAbsolute < 0 || this->m_gotoAddressAbsolute > dataSize)
+                        this->m_gotoAddressAbsolute = 0;
 
-                    newOffset = (baseAddress + dataSize) - this->m_gotoAddress - 1;
+                    newOffset = (baseAddress + dataSize) - this->m_gotoAddressAbsolute - 1;
 
                     ImGui::EndTabItem();
                 }
@@ -731,6 +734,9 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTabBar();
             }
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
 
             ImGui::EndPopup();
         }
