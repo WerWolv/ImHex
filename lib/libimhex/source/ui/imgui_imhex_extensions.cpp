@@ -495,6 +495,42 @@ namespace ImGui {
         return pressed;
     }
 
+    bool InputIntegerPrefix(const char *label, const char *prefix, u64 *value, ImGuiInputTextFlags flags) {
+        auto window             = ImGui::GetCurrentWindow();
+        const ImGuiID id        = window->GetID(label);
+        const ImGuiStyle &style = GImGui->Style;
+
+
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0f);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
+
+        char buf[64];
+        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), ImGuiDataType_U64, value, "%llX");
+
+        bool value_changed = false;
+        if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), flags))
+            value_changed = DataTypeApplyOpFromText(buf, GImGui->InputTextState.InitialTextA.Data, ImGuiDataType_U64, value, "%llX");
+
+        if (value_changed)
+            MarkItemEdited(GImGui->LastItemData.ID);
+
+        RenderNavHighlight(frame_bb, id);
+        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
+        RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
+        ImGui::PopStyleVar();
+
+        return value_changed;
+    }
+
+    bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
+        return InputIntegerPrefix(label, "0x", value, flags | ImGuiInputTextFlags_CharsHexadecimal);
+    }
+
     void SmallProgressBar(float fraction, float yOffset) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)

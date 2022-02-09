@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <functional>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -71,6 +73,9 @@ namespace ImGui {
     bool TitleBarButton(const char *label, ImVec2 size_arg);
     bool ToolBarButton(const char *symbol, ImVec4 color);
     bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
+
+    bool InputIntegerPrefix(const char* label, const char *prefix, u64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputHexadecimal(const char* label, u64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);

@@ -50,7 +50,8 @@ namespace hex::plugin::builtin {
         std::vector<std::pair<u64, u64>> m_lastStringSearch;
         std::vector<std::pair<u64, u64>> m_lastHexSearch;
 
-        i64 m_gotoAddress = 0;
+        u64 m_gotoAddressAbsolute = 0;
+        i64 m_gotoAddressRelative = 0;
 
         char m_baseAddressBuffer[0x20] = { 0 };
         u64 m_resizeSize               = 0;
