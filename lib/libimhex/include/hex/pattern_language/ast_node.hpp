@@ -859,7 +859,7 @@ namespace hex::pl {
 
             applyVariableAttributes(evaluator, this, pattern);
 
-            if (this->m_placementOffset != nullptr) {
+            if (this->m_placementOffset != nullptr && !evaluator->isGlobalScope()) {
                 evaluator->dataOffset() = startOffset;
             }
 
@@ -943,7 +943,7 @@ namespace hex::pl {
 
             applyVariableAttributes(evaluator, this, pattern);
 
-            if (this->m_placementOffset != nullptr) {
+            if (this->m_placementOffset != nullptr && !evaluator->isGlobalScope()) {
                 evaluator->dataOffset() = startOffset;
             }
 
@@ -1259,7 +1259,7 @@ namespace hex::pl {
                 pattern->setEndian(sizePattern->getEndian());
             }
 
-            if (this->m_placementOffset != nullptr) {
+            if (this->m_placementOffset != nullptr && !evaluator->isGlobalScope()) {
                 evaluator->dataOffset() = startOffset;
             } else {
                 evaluator->dataOffset() = pointerEndOffset;
