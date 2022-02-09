@@ -807,8 +807,6 @@ namespace hex::pl {
                 }
                 this->drawCommentTooltip();
                 ImGui::TableNextColumn();
-                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-                ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:04X}", this->getSize());
@@ -956,8 +954,6 @@ namespace hex::pl {
                     ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
                 }
                 this->drawCommentTooltip();
-                ImGui::TableNextColumn();
-                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
                 ImGui::TableNextColumn();
