@@ -50,12 +50,15 @@ namespace hex::pl {
         [[nodiscard]] bool hasDangerousFunctionBeenCalled() const;
         void allowDangerousFunctions(bool allow);
 
-        [[nodiscard]] std::vector<PatternData *> &getPatterns() {
-            return this->m_patterns;
+        [[nodiscard]] const std::vector<PatternData *> &getPatterns() {
+            const static std::vector<PatternData *> empty;
+
+            if (isRunning()) return empty;
+            else return this->m_patterns;
         }
 
         void reset();
-        bool isRunning() const { return this->m_running; }
+        [[nodiscard]] bool isRunning() const { return this->m_running; }
 
     private:
         Preprocessor *m_preprocessor;

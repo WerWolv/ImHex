@@ -2281,16 +2281,15 @@ namespace hex::pl {
         FunctionResult execute(Evaluator *evaluator) const override {
             auto returnValue = this->getReturnValue();
 
+            auto literal = dynamic_cast<ASTNodeLiteral *>(returnValue->evaluate(evaluator));
+            ON_SCOPE_EXIT { delete literal; };
+
             evaluator->setCurrentControlFlowStatement(this->m_type);
 
-            if (returnValue == nullptr)
+            if (literal == nullptr)
                 return std::nullopt;
-            else {
-                auto literal = dynamic_cast<ASTNodeLiteral *>(returnValue->evaluate(evaluator));
-                ON_SCOPE_EXIT { delete literal; };
-
+            else
                 return literal->getValue();
-            }
         }
 
     private:
