@@ -969,7 +969,7 @@ namespace hex::pl {
 
             evaluator->dataOffset() = startOffset;
 
-            u128 entryCount = 0;
+            i128 entryCount = 0;
 
             if (this->m_size != nullptr) {
                 auto sizeNode = this->m_size->evaluate(evaluator);
@@ -988,6 +988,9 @@ namespace hex::pl {
                         evaluator->handleAbort();
                     }
                 }
+
+                if (entryCount < 0)
+                    LogConsole::abortEvaluation("array cannot have a negative size", this);
             } else {
                 std::vector<u8> buffer(templatePattern->getSize());
                 while (true) {
