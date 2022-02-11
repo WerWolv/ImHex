@@ -16,7 +16,8 @@ namespace hex::pl {
 
     class LogConsole {
     public:
-        enum Level {
+        enum Level
+        {
             Debug,
             Info,
             Warning,
@@ -27,9 +28,7 @@ namespace hex::pl {
 
         void log(Level level, const std::string &message);
 
-        [[noreturn]] static void abortEvaluation(const std::string &message);
-
-        [[noreturn]] static void abortEvaluation(const std::string &message, const ASTNode *node);
+        [[noreturn]] static void abortEvaluation(const std::string &message, const ASTNode *node = nullptr);
 
         void clear();
 

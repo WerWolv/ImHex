@@ -8,15 +8,11 @@ namespace hex::pl {
         this->m_consoleLog.emplace_back(level, message);
     }
 
-    [[noreturn]] void LogConsole::abortEvaluation(const std::string &message) {
-        throw PatternLanguageError(0, message);
-    }
-
     [[noreturn]] void LogConsole::abortEvaluation(const std::string &message, const ASTNode *node) {
         if (node == nullptr)
-            abortEvaluation(message);
+            throw PatternLanguageError(0, "Evaluator: " + message);
         else
-            throw PatternLanguageError(node->getLineNumber(), message);
+            throw PatternLanguageError(node->getLineNumber(), "Evaluator: " + message);
     }
 
     void LogConsole::clear() {
