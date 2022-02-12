@@ -238,11 +238,13 @@ namespace hex::plugin::builtin::prv {
 
 #else
         const auto &path = this->m_path.native();
+        int mmapprot = PROT_READ | PROT_WRITE;
 
         this->m_file = ::open(path.c_str(), O_RDWR);
         if (this->m_file == -1) {
             this->m_file     = ::open(path.c_str(), O_RDONLY);
             this->m_writable = false;
+            mmapprot &= ~(PROT_WRITE);
         }
 
         if (this->m_file == -1) {
@@ -252,8 +254,8 @@ namespace hex::plugin::builtin::prv {
 
         this->m_fileSize = this->m_fileStats.st_size;
 
-        this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, this->m_file, 0);
-        if (this->m_mappedFile == nullptr) {
+        this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, mmapprot, MAP_SHARED, this->m_file, 0);
+        if (this->m_mappedFile == MAP_FAILED) {
             ::close(this->m_file);
             this->m_file = -1;
 
