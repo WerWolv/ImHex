@@ -56,7 +56,8 @@ namespace hex {
     std::vector<u8> File::readBytes(size_t numBytes) {
         if (!isValid()) return {};
 
-        std::vector<u8> bytes(numBytes ?: getSize());
+        auto size = numBytes ?: getSize();
+        std::vector<u8> bytes(size);
         auto bytesRead = fread(bytes.data(), 1, bytes.size(), this->m_file);
 
         bytes.resize(bytesRead);
