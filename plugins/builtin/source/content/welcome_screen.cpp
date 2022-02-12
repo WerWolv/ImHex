@@ -415,8 +415,11 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
-                for (auto &path : s_recentFilePaths) {
-                    if (ImGui::MenuItem(fs::path(path).filename().string().c_str())) {
+                // Copy to avoid chaning list while iteration
+                std::list<fs::path> recentFilePaths = s_recentFilePaths;
+                for (auto &path : recentFilePaths) {
+                    auto filename = fs::path(path).filename().string();
+                    if (ImGui::MenuItem(filename.c_str())) {
                         EventManager::post<RequestOpenFile>(path);
                     }
                 }
