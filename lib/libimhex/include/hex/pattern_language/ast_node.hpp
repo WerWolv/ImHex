@@ -803,6 +803,24 @@ namespace hex::pl {
             else
                 inlinable->setInlined(true);
         }
+
+        if (auto value = attributable->getAttributeValue("format_entries"); value) {
+            auto functions = evaluator->getCustomFunctions();
+            if (!functions.contains(*value))
+                LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
+
+            const auto &function = functions[*value];
+            if (function.parameterCount != 1)
+                LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
+
+            auto array = dynamic_cast<PatternDataDynamicArray *>(pattern);
+            if (array == nullptr)
+                LogConsole::abortEvaluation("inline_array attribute can only be applied to array types", node);
+
+            for (const auto& entry : array->getEntries()) {
+                entry->setFormatterFunction(function);
+            }
+        }
     }
 
     class ASTNodeVariableDecl : public ASTNode,
