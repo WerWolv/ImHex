@@ -568,6 +568,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(),
                              flags, ViewHexEditor::inputCallback, this)) {
+            this->m_searchRequested = true;
             if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
                 performSearch(currBuffer->data());
             else
