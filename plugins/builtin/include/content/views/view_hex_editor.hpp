@@ -73,6 +73,12 @@ namespace hex::plugin::builtin {
         bool m_advancedDecodingEnabled = false;
 
         void drawSearchPopup();
+        void drawSearchInput(std::vector<char> *currBuffer, ImGuiInputTextFlags flags);
+        void performSearch(char *buffer);
+        void performSearchNext();
+        void performSearchPrevious();
+        static int inputCallback(ImGuiInputTextCallbackData *data);
+
         void drawGotoPopup();
         void drawEditPopup();
 
