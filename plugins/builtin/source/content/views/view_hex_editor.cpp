@@ -617,13 +617,19 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastStringSearch;
                     currBuffer               = &this->m_searchStringBuffer;
 
-                    ImGui::SetKeyboardFocusHere();
+                    if (this->m_searchRequested) {
+                        ImGui::SetKeyboardFocusHere();
+                        this->m_searchRequested = false;
+                    }
+
                     if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_EnterReturnsTrue, InputCallback, this)) {
+                        this->m_searchRequested = true;
                         if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
                             Find(currBuffer->data());
                         else
                             FindNext();
                     }
+
                     ImGui::EndTabItem();
                 }
 
@@ -632,13 +638,19 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastHexSearch;
                     currBuffer               = &this->m_searchHexBuffer;
 
-                    ImGui::SetKeyboardFocusHere();
+                    if (this->m_searchRequested) {
+                        ImGui::SetKeyboardFocusHere();
+                        this->m_searchRequested = false;
+                    }
+
                     if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_EnterReturnsTrue, InputCallback, this)) {
+                        this->m_searchRequested = true;
                         if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
                             Find(currBuffer->data());
                         else
                             FindNext();
                     }
+
                     ImGui::EndTabItem();
                 }
 
@@ -679,7 +691,11 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginTabBar("gotoTabs")) {
                 u64 newOffset = 0;
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.absolute"_lang)) {
-                    ImGui::SetKeyboardFocusHere();
+                    if (this->m_gotoRequested) {
+                        ImGui::SetKeyboardFocusHere();
+                        this->m_gotoRequested = false;
+                    }
+
                     runGoto = ImGui::InputHexadecimal("##goto", &this->m_gotoAddressAbsolute, ImGuiInputTextFlags_EnterReturnsTrue);
 
                     if (this->m_gotoAddressAbsolute < baseAddress || this->m_gotoAddressAbsolute > baseAddress + dataSize)
@@ -690,7 +706,10 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.begin"_lang)) {
-                    ImGui::SetKeyboardFocusHere();
+                    if (this->m_gotoRequested) {
+                        ImGui::SetKeyboardFocusHere();
+                        this->m_gotoRequested = false;
+                    }
                     runGoto = ImGui::InputScalar("##goto", ImGuiDataType_U64, &this->m_gotoAddressAbsolute, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue);
 
                     if (this->m_gotoAddressAbsolute < 0 || this->m_gotoAddressAbsolute > dataSize)
@@ -969,12 +988,16 @@ namespace hex::plugin::builtin {
         });
 
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::F, [] {
-            ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.search"_lang);
+        ShortcutManager::addShortcut(this, CTRL + Keys::F, [this] {
+            this->m_searchRequested = true;
+            ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(),
+                                     "hex.builtin.view.hex_editor.menu.file.search"_lang);
         });
 
-        ShortcutManager::addShortcut(this, CTRL + Keys::G, [] {
-            ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.goto"_lang);
+        ShortcutManager::addShortcut(this, CTRL + Keys::G, [this] {
+            this->m_gotoRequested = true;
+            ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(),
+                                     "hex.builtin.view.hex_editor.menu.file.goto"_lang);
         });
 
         ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
@@ -1249,11 +1272,13 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1400, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.search"_lang, "CTRL + F")) {
                 this->getWindowOpenState() = true;
+                this->m_searchRequested = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.search"_lang);
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.goto"_lang, "CTRL + G")) {
                 this->getWindowOpenState() = true;
+                this->m_gotoRequested = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.goto"_lang);
             }
         });
