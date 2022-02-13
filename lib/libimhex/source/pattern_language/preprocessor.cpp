@@ -84,7 +84,7 @@ namespace hex::pl {
                         preprocessor.m_defines           = this->m_defines;
                         preprocessor.m_onceIncludedFiles = this->m_onceIncludedFiles;
 
-                        auto preprocessedInclude = preprocessor.preprocess(file.readString(), true);
+                        auto preprocessedInclude = preprocessor.preprocess(file.readString(), /*initialRun =*/false);
 
                         if (!preprocessedInclude.has_value())
                             throw *preprocessor.m_error;
@@ -201,30 +201,28 @@ namespace hex::pl {
                 offset += 1;
             }
 
-            if (initialRun) {
-                // Apply defines
-                std::vector<std::tuple<std::string, std::string, u32>> sortedDefines;
-                std::copy(this->m_defines.begin(), this->m_defines.end(), std::back_inserter(sortedDefines));
-                std::sort(sortedDefines.begin(), sortedDefines.end(), [](const auto &left, const auto &right) {
-                    return std::get<0>(left).size() > std::get<0>(right).size();
-                });
+            // Apply defines
+            std::vector<std::tuple<std::string, std::string, u32>> sortedDefines;
+            std::copy(this->m_defines.begin(), this->m_defines.end(), std::back_inserter(sortedDefines));
+            std::sort(sortedDefines.begin(), sortedDefines.end(), [](const auto &left, const auto &right) {
+                return std::get<0>(left).size() > std::get<0>(right).size();
+            });
 
-                for (const auto &[define, value, defineLine] : sortedDefines) {
-                    i32 index = 0;
-                    while ((index = output.find(define, index)) != std::string::npos) {
-                        output.replace(index, define.length(), value);
-                        index += value.length();
-                    }
+            for (const auto &[define, value, defineLine] : sortedDefines) {
+                i32 index = 0;
+                while ((index = output.find(define, index)) != std::string::npos) {
+                    output.replace(index, define.length(), value);
+                    index += value.length();
                 }
+            }
 
-                // Handle pragmas
-                for (const auto &[type, value, pragmaLine] : this->m_pragmas) {
-                    if (this->m_pragmaHandlers.contains(type)) {
-                        if (!this->m_pragmaHandlers[type](value))
-                            throwPreprocessorError(hex::format("invalid value provided to '{0}' #pragma directive", type.c_str()), pragmaLine);
-                    } else
-                        throwPreprocessorError(hex::format("no #pragma handler registered for type {0}", type.c_str()), pragmaLine);
-                }
+            // Handle pragmas
+            for (const auto &[type, value, pragmaLine] : this->m_pragmas) {
+                if (this->m_pragmaHandlers.contains(type)) {
+                    if (!this->m_pragmaHandlers[type](value))
+                        throwPreprocessorError(hex::format("invalid value provided to '{0}' #pragma directive", type.c_str()), pragmaLine);
+                } else
+                    throwPreprocessorError(hex::format("no #pragma handler registered for type {0}", type.c_str()), pragmaLine);
             }
         } catch (PatternLanguageError &e) {
             this->m_error = e;
