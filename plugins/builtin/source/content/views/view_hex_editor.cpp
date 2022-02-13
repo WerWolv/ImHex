@@ -568,6 +568,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(),
                              flags, ViewHexEditor::inputCallback, this)) {
+            this->m_searchRequested = true;
             if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
                 performSearch(currBuffer->data());
             else
@@ -743,6 +744,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::Button("hex.builtin.view.hex_editor.menu.file.goto"_lang) || runGoto) {
+                    this->m_gotoRequested = true;
                     provider->setCurrentPage(std::floor(double(newOffset - baseAddress) / hex::prv::Provider::PageSize));
                     ImHexApi::HexEditor::setSelection(newOffset, 1);
                 }
