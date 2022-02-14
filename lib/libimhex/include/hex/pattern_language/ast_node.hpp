@@ -669,7 +669,9 @@ namespace hex::pl {
 
                 evaluator->pushScope(nullptr, variables);
                 evaluator->getScope(0).parameterPack = parameterPack;
-                ON_SCOPE_EXIT { evaluator->popScope(); };
+                ON_SCOPE_EXIT {
+                    evaluator->popScope();
+                };
 
                 auto ctrlFlow = ControlFlowStatement::None;
                 for (auto &statement : this->m_body) {
@@ -1378,6 +1380,9 @@ namespace hex::pl {
             };
 
             evaluator->pushScope(pattern, memberPatterns);
+            ON_SCOPE_EXIT {
+                evaluator->popScope();
+            };
 
             for (auto inheritance : this->m_inheritance) {
                 auto inheritancePatterns = inheritance->createPatterns(evaluator).front();
@@ -1397,8 +1402,6 @@ namespace hex::pl {
                     memberPatterns.push_back(memberPattern);
                 }
             }
-
-            evaluator->popScope();
 
             pattern->setMembers(memberPatterns);
             pattern->setSize(evaluator->dataOffset() - startOffset);
@@ -1452,6 +1455,10 @@ namespace hex::pl {
             };
 
             evaluator->pushScope(pattern, memberPatterns);
+            ON_SCOPE_EXIT {
+                evaluator->popScope();
+            };
+
             for (auto member : this->m_members) {
                 for (auto &memberPattern : member->createPatterns(evaluator)) {
                     memberPattern->setOffset(startOffset);
@@ -1459,7 +1466,6 @@ namespace hex::pl {
                     size = std::max(memberPattern->getSize(), size);
                 }
             }
-            evaluator->popScope();
 
             evaluator->dataOffset() = startOffset + size;
             pattern->setMembers(memberPatterns);
@@ -1578,6 +1584,10 @@ namespace hex::pl {
                 std::reverse(entries.begin(), entries.end());
 
             evaluator->pushScope(pattern, fields);
+            ON_SCOPE_EXIT {
+                evaluator->popScope();
+            };
+
             for (auto [name, bitSizeNode] : entries) {
                 auto literal = bitSizeNode->evaluate(evaluator);
                 ON_SCOPE_EXIT { delete literal; };
@@ -1598,7 +1608,6 @@ namespace hex::pl {
 
                 bitOffset += bitSize;
             }
-            evaluator->popScope();
 
             pattern->setSize((bitOffset + 7) / 8);
             pattern->setFields(fields);
@@ -2015,7 +2024,10 @@ namespace hex::pl {
 
             evaluator->pushScope(nullptr, variables);
             evaluator->getScope(0).parameterPack = parameterPack;
-            ON_SCOPE_EXIT { evaluator->popScope(); };
+            ON_SCOPE_EXIT {
+                evaluator->popScope();
+            };
+
             for (auto &statement : body) {
                 auto result = statement->execute(evaluator);
                 if (auto ctrlStatement = evaluator->getCurrentControlFlowStatement(); ctrlStatement != ControlFlowStatement::None) {

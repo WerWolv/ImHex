@@ -156,6 +156,9 @@ namespace hex::pl {
         try {
             this->setCurrentControlFlowStatement(ControlFlowStatement::None);
             pushScope(nullptr, patterns);
+            ON_SCOPE_EXIT {
+                popScope();
+            };
 
             for (auto node : ast) {
                 if (dynamic_cast<ASTNodeTypeDecl *>(node)) {
@@ -195,8 +198,6 @@ namespace hex::pl {
 
                 this->m_mainResult = mainFunction.func(this, {});
             }
-
-            popScope();
         } catch (PatternLanguageError &error) {
             this->m_console.log(LogConsole::Level::Error, error.what());
 
