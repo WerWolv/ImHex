@@ -118,15 +118,16 @@ namespace hex::plugin::builtin {
 
         auto startY = ImGui::GetCursorPosY();
 
+        ImGui::TableNextColumn();
         ImGui::TextFormatted(this->m_upperCaseHex ? "{:0{}X}:" : "{:0{}x}:", row * this->m_columnCount, addressDigitCount);
         ImGui::SetCursorPosY(startY);
-        ImGui::TableNextColumn();
 
         const ImColor colorText     = ImGui::GetColorU32(ImGuiCol_Text);
         const ImColor colorDisabled = this->m_greyedOutZeros ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : static_cast<u32>(colorText);
 
 
         for (i8 curr = 0; curr < 2; curr++) {
+            ImGui::TableNextColumn();
             auto other = !curr;
 
             std::optional<ImVec2> lastHighlightEnd;
@@ -167,7 +168,6 @@ namespace hex::plugin::builtin {
                     lastHighlightEnd.reset();
                 }
             }
-            ImGui::TableNextColumn();
         }
     }
 
@@ -202,11 +202,11 @@ namespace hex::plugin::builtin {
                 {
                     auto glyphWidth = ImGui::CalcTextSize("0").x + 1;
                     for (u8 i = 0; i < 2; i++) {
+                        ImGui::TableNextColumn();
                         for (u32 col = 0; col < this->m_columnCount; col++) {
                             ImGui::TextFormatted(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col);
                             ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
                         }
-                        ImGui::TableNextColumn();
                     }
                 }
 
@@ -219,7 +219,6 @@ namespace hex::plugin::builtin {
                     while (clipper.Step()) {
                         for (u64 row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                             ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
                             drawDiffLine({ this->m_providerA, this->m_providerB }, row);
                         }
                     }
