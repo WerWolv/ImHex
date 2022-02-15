@@ -43,6 +43,13 @@ static void detectSystemTheme() {
     });
 }
 
+static void checkBorderlessWindowOverride() {
+    bool borderlessWindowForced = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.force_borderless_window_mode", 0) != 0;
+
+    if (borderlessWindowForced)
+        ImHexApi::System::impl::setBorderlessWindowMode(true);
+}
+
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     using namespace hex::plugin::windows;
 
@@ -57,4 +64,5 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     registerSettings();
 
     detectSystemTheme();
+    checkBorderlessWindowOverride();
 }

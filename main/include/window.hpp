@@ -16,7 +16,7 @@ namespace hex {
 
     class Window {
     public:
-        Window(bool borderlessWindow);
+        Window();
         ~Window();
 
         void loop();
@@ -52,8 +52,6 @@ namespace hex {
 
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
-
-        bool m_useBorderlessWindow = false;
     };
 
 }

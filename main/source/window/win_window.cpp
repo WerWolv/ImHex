@@ -241,7 +241,7 @@ namespace hex {
         // Setup borderless window
         auto hwnd = glfwGetWin32Window(this->m_window);
 
-        if (this->m_useBorderlessWindow) {
+        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
             g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
 
             MARGINS borderless = { 1, 1, 1, 1 };
@@ -300,7 +300,7 @@ namespace hex {
     }
 
     void Window::drawTitleBar() {
-        if (!this->m_useBorderlessWindow) return;
+        if (!ImHexApi::System::isBorderlessWindowModeEnabled()) return;
 
         auto buttonSize = ImVec2(g_titleBarHeight * 1.5F, g_titleBarHeight - 1);
 

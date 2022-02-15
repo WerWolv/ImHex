@@ -112,6 +112,8 @@ namespace hex {
                 void setGlobalScale(float scale);
 
                 void setProgramArguments(int argc, char **argv, char **envp);
+
+                void setBorderlessWindowMode(bool enabled);
             }
 
             struct ProgramArguments {
@@ -130,6 +132,8 @@ namespace hex {
             ImVec2 getMainWindowPosition();
             ImVec2 getMainWindowSize();
             ImGuiID getMainDockSpaceId();
+
+            bool isBorderlessWindowModeEnabled();
 
             std::map<std::string, std::string> &getInitArguments();
 

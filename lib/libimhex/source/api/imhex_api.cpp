@@ -189,6 +189,11 @@ namespace hex {
                 s_programArguments.envp = envp;
             }
 
+            static bool s_borderlessWindowMode;
+            void setBorderlessWindowMode(bool enabled) {
+                s_borderlessWindowMode = enabled;
+            }
+
         }
 
 
@@ -223,6 +228,10 @@ namespace hex {
 
         ImGuiID getMainDockSpaceId() {
             return impl::s_mainDockSpaceId;
+        }
+
+        bool isBorderlessWindowModeEnabled() {
+            return impl::s_borderlessWindowMode;
         }
 
         std::map<std::string, std::string> &getInitArguments() {

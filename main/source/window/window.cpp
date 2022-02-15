@@ -71,7 +71,7 @@ namespace hex {
         buf->append("\n");
     }
 
-    Window::Window(bool borderlessWindow) : m_useBorderlessWindow(borderlessWindow) {
+    Window::Window() {
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
@@ -289,7 +289,7 @@ namespace hex {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
             if (ImGui::BeginMainMenuBar()) {
 
-                if (this->m_useBorderlessWindow) {
+                if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
                     ImGui::SetCursorPosX(5);
                     ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
@@ -501,7 +501,7 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-        glfwWindowHint(GLFW_DECORATED, this->m_useBorderlessWindow ? GL_FALSE : GL_TRUE);
+        glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
