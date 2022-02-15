@@ -159,6 +159,7 @@ namespace hex {
 
         ContentRegistry::Settings::store();
         EventManager::post<EventSettingsChanged>();
+        EventManager::post<EventWindowInitialized>();
     }
 
     Window::~Window() {
