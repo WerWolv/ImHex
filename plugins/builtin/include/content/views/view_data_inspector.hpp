@@ -25,6 +25,8 @@ namespace hex::plugin::builtin {
         struct InspectorCacheEntry {
             std::string unlocalizedName;
             ContentRegistry::DataInspector::impl::DisplayFunction displayFunction;
+            std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
+            bool editing;
         };
 
         bool m_shouldInvalidate = true;
@@ -35,6 +37,8 @@ namespace hex::plugin::builtin {
         u64 m_startAddress  = 0;
         size_t m_validBytes = 0;
         std::vector<InspectorCacheEntry> m_cachedData;
+
+        std::string m_editingValue;
     };
 
 }

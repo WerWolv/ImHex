@@ -68,7 +68,8 @@ namespace hex {
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
         namespace CommandPaletteCommands {
 
-            enum class Type : u32 {
+            enum class Type : u32
+            {
                 SymbolCommand,
                 KeywordCommand
             };
@@ -173,7 +174,8 @@ namespace hex {
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
         namespace DataInspector {
 
-            enum class NumberDisplayStyle {
+            enum class NumberDisplayStyle
+            {
                 Decimal,
                 Hexadecimal,
                 Octal
@@ -182,17 +184,19 @@ namespace hex {
             namespace impl {
 
                 using DisplayFunction   = std::function<std::string()>;
+                using EditingFunction   = std::function<std::vector<u8>(std::string, std::endian)>;
                 using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8> &, std::endian, NumberDisplayStyle)>;
 
                 struct Entry {
                     std::string unlocalizedName;
                     size_t requiredSize;
                     impl::GeneratorFunction generatorFunction;
+                    std::optional<impl::EditingFunction> editingFunction;
                 };
 
             }
 
-            void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction function);
+            void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
 
             std::vector<impl::Entry> &getEntries();
         }

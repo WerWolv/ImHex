@@ -297,10 +297,10 @@ namespace hex {
 
     namespace ContentRegistry::DataInspector {
 
-        void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction function) {
+        void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
             log::info("Registered new data inspector format: {}", unlocalizedName);
 
-            getEntries().push_back({ unlocalizedName, requiredSize, std::move(function) });
+            getEntries().push_back({ unlocalizedName, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
 
         std::vector<impl::Entry> &getEntries() {

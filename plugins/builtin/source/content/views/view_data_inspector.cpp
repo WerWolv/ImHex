@@ -1,5 +1,7 @@
 #include "content/views/view_data_inspector.hpp"
 
+#include <hex/ui/imgui_imhex_extensions.h>
+
 #include <hex/providers/provider.hpp>
 
 #include <cstring>
@@ -42,7 +44,7 @@ namespace hex::plugin::builtin {
                 std::vector<u8> buffer(entry.requiredSize);
                 provider->read(this->m_startAddress, buffer.data(), buffer.size());
 
-                this->m_cachedData.push_back({ entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle) });
+                this->m_cachedData.push_back({ entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle), entry.editingFunction, false });
             }
         }
 
@@ -59,16 +61,44 @@ namespace hex::plugin::builtin {
                     ImGui::TableHeadersRow();
 
                     u32 i = 0;
-                    for (const auto &[unlocalizedName, function] : this->m_cachedData) {
+                    for (auto &[unlocalizedName, displayFunction, editingFunction, editing] : this->m_cachedData) {
                         ImGui::PushID(i);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(LangEntry(unlocalizedName));
                         ImGui::TableNextColumn();
-                        const auto &copyValue = function();
-                        ImGui::SameLine();
-                        if (ImGui::Selectable("##InspectorLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                            ImGui::SetClipboardText(copyValue.c_str());
+
+                        if (!editing) {
+                            const auto &copyValue = displayFunction();
+                            ImGui::SameLine();
+
+                            if (ImGui::Selectable("##InspectorLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                                ImGui::SetClipboardText(copyValue.c_str());
+                            }
+
+                            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editingFunction.has_value()) {
+                                editing              = true;
+                                this->m_editingValue = copyValue;
+                            }
+
+                        } else {
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                            ImGui::SetKeyboardFocusHere();
+                            if (ImGui::InputText("##InspectorLineEditing", this->m_editingValue.data(), this->m_editingValue.capacity(), ImGuiInputTextFlags_CallbackResize | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll, ImGui::UpdateStringSizeCallback, &this->m_editingValue)) {
+                                auto bytes = (*editingFunction)(this->m_editingValue, this->m_endian);
+
+                                provider->write(this->m_startAddress, bytes.data(), bytes.size());
+                                this->m_editingValue.clear();
+                                editing                  = false;
+                                this->m_shouldInvalidate = true;
+                            }
+                            ImGui::PopStyleVar();
+
+                            if (!ImGui::IsItemHovered() && ImGui::IsAnyMouseDown()) {
+                                this->m_editingValue.clear();
+                                editing = false;
+                            }
                         }
 
                         ImGui::PopID();
