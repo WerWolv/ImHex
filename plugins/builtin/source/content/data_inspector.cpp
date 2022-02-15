@@ -24,7 +24,7 @@ namespace hex::plugin::builtin {
     };
 
     template<std::integral T>
-    requires(sizeof(T) <= sizeof(u64)) static std::vector<u8> stringToUnsigned(const std::string &value, std::endian endian) {
+    static std::vector<u8> stringToUnsigned(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(u64)) {
         u64 result = std::strtoull(value.c_str(), nullptr, 0);
         if (result > std::numeric_limits<T>::max()) return {};
 
@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
     }
 
     template<std::integral T>
-    requires(sizeof(T) <= sizeof(u64)) static std::vector<u8> stringToSigned(const std::string &value, std::endian endian) {
+    static std::vector<u8> stringToSigned(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(u64)) {
         i64 result = std::strtoull(value.c_str(), nullptr, 0);
         if (result > std::numeric_limits<T>::max() || result < std::numeric_limits<T>::min()) return {};
 
@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
     }
 
     template<std::floating_point T>
-    requires(sizeof(T) <= sizeof(long double)) static std::vector<u8> stringToFloat(const std::string &value, std::endian endian) {
+    static std::vector<u8> stringToFloat(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(long double)) {
         auto result = std::strtold(value.c_str(), nullptr);
 
         std::vector<u8> bytes(sizeof(T), 0x00);
@@ -65,7 +65,7 @@ namespace hex::plugin::builtin {
     }
 
     template<std::integral T>
-    requires(sizeof(T) <= sizeof(u64)) static std::vector<u8> stringToInteger(const std::string &value, std::endian endian) {
+    static std::vector<u8> stringToInteger(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(u64)) {
         if constexpr (std::is_unsigned_v<T>)
             return stringToUnsigned<T>(value, endian);
         else if constexpr (std::is_signed_v<T>)

@@ -402,6 +402,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.float16", "half float (16 bit)" },
                 { "hex.builtin.inspector.float", "float (32 bit)" },
                 { "hex.builtin.inspector.double", "double (64 bit)" },
+                { "hex.builtin.inspector.long_double", "long double (128 bit)" },
                 { "hex.builtin.inspector.ascii", "ASCII Character" },
                 { "hex.builtin.inspector.wide", "Wide Character" },
                 { "hex.builtin.inspector.utf8", "UTF-8 code point" },

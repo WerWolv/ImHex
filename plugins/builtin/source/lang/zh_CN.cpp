@@ -404,6 +404,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.float16", "半浮点(16位)" },
                 { "hex.builtin.inspector.float", "float(32位单精度浮点)" },
                 { "hex.builtin.inspector.double", "double(64位双精度浮点)" },
+                { "hex.builtin.inspector.long_double", "long double(128位双精度浮点)" },
                 { "hex.builtin.inspector.ascii", "ASCII字符" },
                 { "hex.builtin.inspector.wide", "宽字符" },
                 { "hex.builtin.inspector.utf8", "UTF-8代码点" },
