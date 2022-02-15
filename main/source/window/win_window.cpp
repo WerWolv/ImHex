@@ -241,16 +241,18 @@ namespace hex {
         // Setup borderless window
         auto hwnd = glfwGetWin32Window(this->m_window);
 
-        g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
+        if (this->m_useBorderlessWindow) {
+            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
 
-        MARGINS borderless = { 1, 1, 1, 1 };
-        ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
+            MARGINS borderless = { 1, 1, 1, 1 };
+            ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
 
-        DWORD attribute = DWMNCRP_ENABLED;
-        ::DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &attribute, sizeof(attribute));
+            DWORD attribute = DWMNCRP_ENABLED;
+            ::DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &attribute, sizeof(attribute));
 
-        ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
-        ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
+            ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
+            ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
+        }
 
         // Setup system theme change detector
         bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
@@ -318,6 +320,8 @@ namespace hex {
     }
 
     void Window::drawTitleBar() {
+        if (!this->m_useBorderlessWindow) return;
+
         auto buttonSize = ImVec2(g_titleBarHeight * 1.5F, g_titleBarHeight - 1);
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));

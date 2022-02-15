@@ -71,7 +71,7 @@ namespace hex {
         buf->append("\n");
     }
 
-    Window::Window() {
+    Window::Window(bool borderlessWindow) : m_useBorderlessWindow(borderlessWindow) {
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
@@ -288,9 +288,11 @@ namespace hex {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
             if (ImGui::BeginMainMenuBar()) {
 
-                auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
-                ImGui::SetCursorPosX(5);
-                ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
+                if (this->m_useBorderlessWindow) {
+                    auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+                    ImGui::SetCursorPosX(5);
+                    ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
+                }
 
                 for (const auto &[priority, menuItem] : ContentRegistry::Interface::getMainMenuItems()) {
                     if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
@@ -494,12 +496,11 @@ namespace hex {
             std::abort();
         }
 
-#if defined(OS_WINDOWS)
-        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-#elif defined(OS_MACOS)
+#if defined(OS_MACOS)
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
+        glfwWindowHint(GLFW_DECORATED, this->m_useBorderlessWindow ? GL_FALSE : GL_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);

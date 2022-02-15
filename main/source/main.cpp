@@ -14,6 +14,12 @@ int main(int argc, char **argv, char **envp) {
     using namespace hex;
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
 
+    bool useBorderlessWindow = false;
+
+#if defined(OS_WINDOWS)
+    useBorderlessWindow = true;
+#endif
+
     // Initialization
     {
         Window::initNative();
@@ -27,6 +33,8 @@ int main(int argc, char **argv, char **envp) {
 
         if (!splashWindow.loop())
             ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
+
+        useBorderlessWindow = !hex::containsIgnoreCase(splashWindow.getGPUVendor(), "Intel");
     }
 
     // Clean up
@@ -37,7 +45,7 @@ int main(int argc, char **argv, char **envp) {
 
     // Main window
     {
-        Window window;
+        Window window(useBorderlessWindow);
 
         if (argc == 1)
             ;    // No arguments provided

@@ -16,7 +16,7 @@ namespace hex {
 
     class Window {
     public:
-        Window();
+        Window(bool borderlessWindow);
         ~Window();
 
         void loop();
@@ -46,12 +46,14 @@ namespace hex {
 
         std::string m_windowTitle;
 
-        double m_lastFrameTime;
+        double m_lastFrameTime = 0;
 
-        ImGui::Texture m_logoTexture   = { 0 };
+        ImGui::Texture m_logoTexture = { nullptr };
 
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
+
+        bool m_useBorderlessWindow = false;
     };
 
 }

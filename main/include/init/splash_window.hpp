@@ -23,6 +23,8 @@ namespace hex::init {
             this->m_tasks.emplace_back(taskName, task);
         }
 
+        const std::string &getGPUVendor() const { return this->m_gpuVendor; }
+
     private:
         GLFWwindow *m_window;
         std::mutex m_progressMutex;
@@ -38,6 +40,8 @@ namespace hex::init {
         std::future<bool> processTasksAsync();
 
         std::vector<std::pair<std::string, TaskFunction>> m_tasks;
+
+        std::string m_gpuVendor;
     };
 
 }

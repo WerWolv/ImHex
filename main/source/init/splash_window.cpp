@@ -29,6 +29,8 @@ namespace hex::init {
     WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
         this->initImGui();
+
+        this->m_gpuVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
     }
 
     WindowSplash::~WindowSplash() {
