@@ -694,7 +694,7 @@ struct MemoryEditor
 
         if (data_next && DataEditingAddr < mem_size)
         {
-            DataEditingAddr = DataPreviewAddr = DataEditingAddr + 1;
+            DataEditingAddr = DataPreviewAddr = DataPreviewAddrEnd = DataEditingAddr + 1;
             DataEditingTakeFocus = true;
         }
         else if (data_editing_addr_next != (size_t)-1)

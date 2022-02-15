@@ -62,7 +62,7 @@ namespace hex::plugin::builtin::prv {
         if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        addPatch(offset, buffer, size);
+        addPatch(offset, buffer, size, true);
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
@@ -238,7 +238,7 @@ namespace hex::plugin::builtin::prv {
 
 #else
         const auto &path = this->m_path.native();
-        int mmapprot = PROT_READ | PROT_WRITE;
+        int mmapprot     = PROT_READ | PROT_WRITE;
 
         this->m_file = ::open(path.c_str(), O_RDWR);
         if (this->m_file == -1) {
