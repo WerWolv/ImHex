@@ -458,7 +458,7 @@ namespace hex::plugin::builtin {
         }
 
         for (const auto &path : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files"))
-            s_recentFilePaths.emplace_back(path);
+            s_recentFilePaths.emplace_back(std::u8string(path.begin(), path.end()));
 
         if (ImHexApi::System::getInitArguments().contains("tip-of-the-day")) {
             s_tipOfTheDay = ImHexApi::System::getInitArguments()["tip-of-the-day"];
