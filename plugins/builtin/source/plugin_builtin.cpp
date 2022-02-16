@@ -32,6 +32,12 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     using namespace hex::plugin::builtin;
 
+    registerLanguageEnUS();
+    registerLanguageDeDE();
+    registerLanguageItIT();
+    registerLanguageJaJP();
+    registerLanguageZhCN();
+
     registerViews();
     registerDataInspectorEntries();
     registerToolEntries();
@@ -47,12 +53,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addToolbarItems();
     registerLayouts();
     registerMainMenuEntries();
-
-    registerLanguageEnUS();
-    registerLanguageDeDE();
-    registerLanguageItIT();
-    registerLanguageJaJP();
-    registerLanguageZhCN();
 }
 
 // This is the default plugin

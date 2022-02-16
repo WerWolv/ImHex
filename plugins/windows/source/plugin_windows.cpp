@@ -53,11 +53,11 @@ static void checkBorderlessWindowOverride() {
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     using namespace hex::plugin::windows;
 
-    hex::ContentRegistry::Views::add<ViewTTYConsole>();
-
     registerLanguageEnUS();
     registerLanguageDeDE();
     registerLanguageZhCN();
+
+    hex::ContentRegistry::Views::add<ViewTTYConsole>();
 
     addFooterItems();
     addTitleBarButtons();
