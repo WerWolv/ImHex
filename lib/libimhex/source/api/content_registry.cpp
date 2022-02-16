@@ -314,7 +314,7 @@ namespace hex {
     namespace ContentRegistry::DataProcessorNode {
 
         void impl::add(const impl::Entry &entry) {
-            log::info("Registered new data processor node type: [{}]: ", entry.category, entry.name);
+            log::info("Registered new data processor node type: [{}]: {}", entry.category, entry.name);
 
             getEntries().push_back(entry);
         }

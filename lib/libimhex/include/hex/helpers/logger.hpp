@@ -13,18 +13,26 @@ namespace hex::log {
 
     namespace {
 
-        void printPrefix(const fmt::text_style &ts, const std::string &level) {
+        void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
             const auto now = fmt::localtime(std::chrono::system_clock::now());
-            fmt::print("[{0:%H:%M:%S}] ", now);
-            fmt::print(ts, "{0} ", level);
-            fmt::print("[{0}] ", IMHEX_PROJECT_NAME);
+
+            fmt::print(dest, "[{0:%H:%M:%S}] ", now);
+
+            if (isRedirected())
+                fmt::print(dest, "{0} ", level);
+            else
+                fmt::print(dest, ts, "{0} ", level);
+
+            fmt::print(dest, "[{0}] ", IMHEX_PROJECT_NAME);
         }
 
         template<typename... T>
         void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
-            printPrefix(ts, level);
-            fmt::print(getDestination(), fmt::runtime(fmt), args...);
-            fmt::print("\n");
+            auto dest = getDestination();
+
+            printPrefix(dest, ts, level);
+            fmt::print(dest, fmt::runtime(fmt), args...);
+            fmt::print(dest, "\n");
         }
 
     }
