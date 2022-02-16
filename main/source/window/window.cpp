@@ -99,7 +99,7 @@ namespace hex {
             EventManager::post<RequestChangeWindowTitle>("");
         });
 
-        EventManager::subscribe<RequestChangeWindowTitle>(this, [this](std::string windowTitle) {
+        EventManager::subscribe<RequestChangeWindowTitle>(this, [this](const std::string &windowTitle) {
             std::string title = "ImHex";
 
             if (ImHexApi::Provider::isValid()) {
@@ -108,6 +108,9 @@ namespace hex {
 
                 if (ProjectFile::hasUnsavedChanges())
                     title += " (*)";
+
+                if (!ImHexApi::Provider::get()->isWritable())
+                    title += " (Read Only)";
             }
 
             this->m_windowTitle = title;
@@ -600,7 +603,7 @@ namespace hex {
                 return;
 
             for (u32 i = 0; i < count; i++) {
-                auto path = std::filesystem::path(paths[i]);
+                auto path = std::filesystem::path(reinterpret_cast<const char8_t *>(paths[i]));
 
                 bool handled = false;
                 for (const auto &[extensions, handler] : ContentRegistry::FileHandler::getEntries()) {
@@ -616,7 +619,7 @@ namespace hex {
                 }
 
                 if (!handled)
-                    EventManager::post<RequestOpenFile>(path.string());
+                    EventManager::post<RequestOpenFile>(path);
             }
         });
 

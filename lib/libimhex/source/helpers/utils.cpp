@@ -22,6 +22,8 @@
     #include <ApplicationServices/ApplicationServices.h>
 #endif
 
+#include <hex/helpers/logger.hpp>
+
 namespace hex {
 
     long double operator""_scaled(long double value) {
@@ -106,6 +108,18 @@ namespace hex {
                 break;
             default:
                 result = "A lot!";
+        }
+
+        return result;
+    }
+
+    std::string makeStringPrintable(const std::string &string) {
+        std::string result;
+        for (char c : string) {
+            if (std::isprint(c))
+                result += c;
+            else
+                result += hex::format("\\x{0:02X}", u8(c));
         }
 
         return result;
@@ -282,7 +296,7 @@ namespace hex {
         }
 
         if (result == NFD_OKAY) {
-            callback(outPath);
+            callback(reinterpret_cast<const char8_t *>(outPath));
             NFD::FreePath(outPath);
         }
 

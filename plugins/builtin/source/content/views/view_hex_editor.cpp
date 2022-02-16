@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
         this->m_searchHexBuffer.resize(0xFFF, 0x00);
 
         ContentRegistry::FileHandler::add({ ".hexproj" }, [](const auto &path) {
-            return ProjectFile::load(path.string());
+            return ProjectFile::load(path);
         });
 
         ContentRegistry::FileHandler::add({ ".tbl" }, [this](const auto &path) {
@@ -566,8 +566,7 @@ namespace hex::plugin::builtin {
             this->m_searchRequested = false;
         }
 
-        if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(),
-                             flags, ViewHexEditor::inputCallback, this)) {
+        if (ImGui::InputText("##nolabel", currBuffer->data(), currBuffer->size(), flags, ViewHexEditor::inputCallback, this)) {
             this->m_searchRequested = true;
             if (this->m_lastSearchBuffer == nullptr || this->m_lastSearchBuffer->empty())
                 performSearch(currBuffer->data());
@@ -637,8 +636,7 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastStringSearch;
                     currBuffer               = &this->m_searchStringBuffer;
 
-                    drawSearchInput(currBuffer, ImGuiInputTextFlags_CallbackCompletion |
-                                                ImGuiInputTextFlags_EnterReturnsTrue);
+                    drawSearchInput(currBuffer, ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_EnterReturnsTrue);
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
@@ -646,9 +644,7 @@ namespace hex::plugin::builtin {
                     this->m_lastSearchBuffer = &this->m_lastHexSearch;
                     currBuffer               = &this->m_searchHexBuffer;
 
-                    drawSearchInput(currBuffer, ImGuiInputTextFlags_CharsHexadecimal |
-                                                ImGuiInputTextFlags_CallbackCompletion |
-                                                ImGuiInputTextFlags_EnterReturnsTrue);
+                    drawSearchInput(currBuffer, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_EnterReturnsTrue);
                 }
 
                 if (currBuffer != nullptr) {
@@ -989,13 +985,13 @@ namespace hex::plugin::builtin {
         ShortcutManager::addShortcut(this, CTRL + Keys::F, [this] {
             this->m_searchRequested = true;
             ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(),
-                                     "hex.builtin.view.hex_editor.menu.file.search"_lang);
+                "hex.builtin.view.hex_editor.menu.file.search"_lang);
         });
 
         ShortcutManager::addShortcut(this, CTRL + Keys::G, [this] {
             this->m_gotoRequested = true;
             ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(),
-                                     "hex.builtin.view.hex_editor.menu.file.goto"_lang);
+                "hex.builtin.view.hex_editor.menu.file.goto"_lang);
         });
 
         ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
@@ -1071,12 +1067,12 @@ namespace hex::plugin::builtin {
                     hex::openFileBrowser("hex.builtin.view.hex_editor.save_project"_lang, DialogMode::Save, {
                                                                                                                 {"Project File", "hexproj"}
                     },
-                        [](const auto &path) {
-                            if (path.extension() == ".hexproj") {
-                                ProjectFile::store(path);
-                            } else {
-                                ProjectFile::store(path.string() + ".hexproj");
+                        [](fs::path path) {
+                            if (path.extension() != ".hexproj") {
+                                path.replace_extension(".hexproj");
                             }
+
+                            ProjectFile::store(path);
                         });
                 } else
                     ProjectFile::store();
@@ -1270,13 +1266,13 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1400, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.search"_lang, "CTRL + F")) {
                 this->getWindowOpenState() = true;
-                this->m_searchRequested = true;
+                this->m_searchRequested    = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.search"_lang);
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.goto"_lang, "CTRL + G")) {
                 this->getWindowOpenState() = true;
-                this->m_gotoRequested = true;
+                this->m_gotoRequested      = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.goto"_lang);
             }
         });
