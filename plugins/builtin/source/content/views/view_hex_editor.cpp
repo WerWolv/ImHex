@@ -454,7 +454,7 @@ namespace hex::plugin::builtin {
         if (!isValidHexString) return;
 
         // Remove all whitespace
-        std::erase_if(clipboard, [](char c) { return std::isspace(c); });
+        clipboard.erase(std::remove_if(clipboard.begin(), clipboard.end(), [](char c) { return std::isspace(c); }), clipboard.end());
 
         // Only paste whole bytes
         if (clipboard.length() % 2 != 0) return;
