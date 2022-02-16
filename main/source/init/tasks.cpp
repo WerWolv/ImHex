@@ -165,7 +165,8 @@ namespace hex::init {
     bool deleteSharedData() {
         ImHexApi::System::getInitArguments().clear();
         ImHexApi::Tasks::getDeferredCalls().clear();
-        ImHexApi::HexEditor::getHighlights().clear();
+        ImHexApi::HexEditor::impl::getHighlights().clear();
+        ImHexApi::HexEditor::impl::getHighlightingFunctions().clear();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());

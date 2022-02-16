@@ -1,6 +1,8 @@
 #include "content/views/view_hex_editor.hpp"
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/content_registry.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/file.hpp>
@@ -9,7 +11,6 @@
 #include <hex/helpers/project_file_handler.hpp>
 #include <hex/helpers/loader_script_handler.hpp>
 
-#include <hex/pattern_language/pattern_data.hpp>
 #include <content/providers/file_provider.hpp>
 
 
@@ -97,7 +98,7 @@ namespace hex::plugin::builtin {
                     std::optional<color_t> highlightColor;
                     std::string highlightTooltip;
 
-                    for (const auto &[id, highlight] : ImHexApi::HexEditor::getHighlights()) {
+                    for (const auto &[id, highlight] : ImHexApi::HexEditor::impl::getHighlights()) {
                         auto &region  = highlight.getRegion();
                         auto &color   = highlight.getColor();
                         auto &tooltip = highlight.getTooltip();
@@ -108,13 +109,11 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    auto patterns = provider->getPatternLanguageRuntime().getPatterns();
-                    for (const auto &pattern : patterns) {
-                        auto child = pattern->getPattern(blockStartOffset + i);
-                        if (child != nullptr) {
-                            auto color     = (child->getColor() & 0x00FFFFFF) | alpha;
-                            highlightColor = highlightColor.has_value() ? ImAlphaBlendColors(color, highlightColor.value()) : color;
-                            break;
+                    for (const auto &[id, function] : ImHexApi::HexEditor::impl::getHighlightingFunctions()) {
+                        auto highlight = function(blockStartOffset + i);
+                        if (highlight.has_value()) {
+                            highlightColor   = highlightColor.has_value() ? ImAlphaBlendColors(highlight->getColor(), highlightColor.value()) : highlight->getColor();
+                            highlightTooltip = highlight->getTooltip();
                         }
                     }
 

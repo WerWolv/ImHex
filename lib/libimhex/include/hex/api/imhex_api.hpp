@@ -3,8 +3,9 @@
 #include <hex.hpp>
 
 #include <list>
-#include <vector>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include <hex/helpers/concepts.hpp>
 #include <hex/api/task.hpp>
@@ -32,21 +33,32 @@ namespace hex {
             class Highlighting {
             public:
                 Highlighting() = default;
-                Highlighting(Region region, color_t color, const std::string &tooltip = "");
+                Highlighting(Region region, color_t color, std::string tooltip = "");
 
                 [[nodiscard]] const Region &getRegion() const { return this->m_region; }
                 [[nodiscard]] const color_t &getColor() const { return this->m_color; }
                 [[nodiscard]] const std::string &getTooltip() const { return this->m_tooltip; }
 
             private:
-                Region m_region;
-                color_t m_color;
+                Region m_region = {};
+                color_t m_color = 0x00;
                 std::string m_tooltip;
             };
 
-            u32 addHighlight(const Region &region, color_t color, std::string tooltip = "");
+            namespace impl {
+
+                using HighlightingFunction = std::function<std::optional<Highlighting>(u64)>;
+
+                std::map<u32, Highlighting> &getHighlights();
+                std::map<u32, HighlightingFunction> &getHighlightingFunctions();
+
+            }
+
+            u32 addHighlight(const Region &region, color_t color, const std::string &tooltip = "");
             void removeHighlight(u32 id);
-            std::map<u32, Highlighting> &getHighlights();
+
+            u32 addHighlightingProvider(const impl::HighlightingFunction &function);
+            void removeHighlightingProvider(u32 id);
 
             Region getSelection();
             void setSelection(const Region &region);

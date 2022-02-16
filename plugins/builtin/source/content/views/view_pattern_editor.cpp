@@ -222,6 +222,19 @@ namespace hex::plugin::builtin {
                     });
             }
         });
+
+
+        ImHexApi::HexEditor::addHighlightingProvider([](u64 address) -> std::optional<ImHexApi::HexEditor::Highlighting> {
+            auto patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
+            for (const auto &pattern : patterns) {
+                auto child = pattern->getPattern(address);
+                if (child != nullptr) {
+                    return ImHexApi::HexEditor::Highlighting(Region { address, 1 }, child->getColor(), child->getVariableName());
+                }
+            }
+
+            return std::nullopt;
+        });
     }
 
     ViewPatternEditor::~ViewPatternEditor() {

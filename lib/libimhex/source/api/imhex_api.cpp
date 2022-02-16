@@ -2,6 +2,7 @@
 
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
+#include <utility>
 
 #include <unistd.h>
 
@@ -26,16 +27,29 @@ namespace hex {
 
     namespace ImHexApi::HexEditor {
 
-        static std::map<u32, ImHexApi::HexEditor::Highlighting> s_highlights;
-
-        Highlighting::Highlighting(Region region, color_t color, const std::string &tooltip)
-            : m_region(region), m_color(color), m_tooltip(tooltip) {
+        Highlighting::Highlighting(Region region, color_t color, std::string tooltip)
+            : m_region(region), m_color(color), m_tooltip(std::move(tooltip)) {
         }
 
-        u32 addHighlight(const Region &region, color_t color, std::string tooltip) {
-            auto id = s_highlights.size();
+        namespace impl {
 
-            s_highlights.insert({
+            static std::map<u32, Highlighting> s_highlights;
+            std::map<u32, Highlighting> &getHighlights() {
+                return s_highlights;
+            }
+
+            static std::map<u32, HighlightingFunction> s_highlightingFunctions;
+            std::map<u32, HighlightingFunction> &getHighlightingFunctions() {
+                return s_highlightingFunctions;
+            }
+
+        }
+
+        u32 addHighlight(const Region &region, color_t color, const std::string &tooltip) {
+            auto &highlights = impl::getHighlights();
+            auto id          = highlights.size();
+
+            highlights.insert({
                 id, Highlighting {region, color, tooltip}
             });
 
@@ -45,13 +59,27 @@ namespace hex {
         }
 
         void removeHighlight(u32 id) {
-            s_highlights.erase(id);
+            impl::getHighlights().erase(id);
 
             EventManager::post<EventHighlightingChanged>();
         }
 
-        std::map<u32, Highlighting> &getHighlights() {
-            return s_highlights;
+        u32 addHighlightingProvider(const impl::HighlightingFunction &function) {
+            auto &highlightFuncs = impl::getHighlightingFunctions();
+
+            auto id = highlightFuncs.size();
+
+            highlightFuncs.insert({ id, function });
+
+            EventManager::post<EventHighlightingChanged>();
+
+            return id;
+        }
+
+        void removeHighlightingProvider(u32 id) {
+            impl::getHighlightingFunctions().erase(id);
+
+            EventManager::post<EventHighlightingChanged>();
         }
 
         Region getSelection() {

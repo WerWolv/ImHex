@@ -43,9 +43,9 @@ namespace hex::plugin::builtin {
 
         std::vector<char> m_searchStringBuffer;
         std::vector<char> m_searchHexBuffer;
-        SearchFunction m_searchFunction = nullptr;
-        std::vector<std::pair<u64, u64>> *m_lastSearchBuffer;
-        bool m_searchRequested = false;
+        SearchFunction m_searchFunction                      = nullptr;
+        std::vector<std::pair<u64, u64>> *m_lastSearchBuffer = nullptr;
+        bool m_searchRequested                               = false;
 
         i64 m_lastSearchIndex = 0;
         std::vector<std::pair<u64, u64>> m_lastStringSearch;
@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
 
         u64 m_gotoAddressAbsolute = 0;
         i64 m_gotoAddressRelative = 0;
-        bool m_gotoRequested = false;
+        bool m_gotoRequested      = false;
 
         char m_baseAddressBuffer[0x20] = { 0 };
         u64 m_resizeSize               = 0;
