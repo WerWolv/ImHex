@@ -63,20 +63,24 @@ namespace hex::pl {
 
                         if (includeFile[0] != '/') {
                             for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                                fs::path tempPath = dir / includePath;
-                                if (fs::exists(tempPath)) {
+                               fs::path tempPath = dir / includePath;
+                                if (fs::is_regular_file(tempPath)) {
                                     includePath = tempPath;
                                     break;
                                 }
                             }
                         }
 
+                        if (!fs::is_regular_file(includePath)) {
+                            if (includePath.parent_path().filename().string() == "std")
+                                throwPreprocessorError(hex::format("{0}: No such file.\n\nThis file might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store.", includeFile.c_str()), lineNumber);
+                            else
+                                throwPreprocessorError(hex::format("{0}: No such file", includeFile.c_str()), lineNumber);
+                        }
+
                         File file(includePath, File::Mode::Read);
                         if (!file.isValid()) {
-                            if (includePath.parent_path().filename().string() == "std")
-                                throwPreprocessorError(hex::format("{0}: No such file or directory.\n\nThis file might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store.", includeFile.c_str()), lineNumber);
-                            else
-                                throwPreprocessorError(hex::format("{0}: No such file or directory", includeFile.c_str()), lineNumber);
+                            throwPreprocessorError(hex::format("{0}: Failed to open file", includeFile.c_str()), lineNumber);
                         }
 
                         Preprocessor preprocessor;
