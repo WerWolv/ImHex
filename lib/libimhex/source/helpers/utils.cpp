@@ -276,6 +276,124 @@ namespace hex {
 #endif
     }
 
+    std::string encodeByteString(const std::vector<u8> &bytes) {
+        std::string result;
+
+        for (u8 byte : bytes) {
+            if (std::isprint(byte) && byte != '\\')
+                result += char(byte);
+            else {
+                switch (byte) {
+                    case '\\':
+                        result += "\\";
+                        break;
+                    case '\a':
+                        result += "\\a";
+                        break;
+                    case '\b':
+                        result += "\\b";
+                        break;
+                    case '\f':
+                        result += "\\f";
+                        break;
+                    case '\n':
+                        result += "\\n";
+                        break;
+                    case '\r':
+                        result += "\\r";
+                        break;
+                    case '\t':
+                        result += "\\t";
+                        break;
+                    case '\v':
+                        result += "\\v";
+                        break;
+                    default:
+                        result += hex::format("\\x{:02X}", byte);
+                        break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    std::vector<u8> decodeByteString(const std::string &string) {
+        u32 offset = 0;
+        std::vector<u8> result;
+
+        while (offset < string.length()) {
+            auto c = [&] { return string[offset]; };
+
+            if (c() == '\\') {
+                if ((offset + 2) >= string.length()) return {};
+
+                offset++;
+
+                char escapeChar = c();
+
+                offset++;
+
+                switch (escapeChar) {
+                    case 'a':
+                        result.push_back('\a');
+                        break;
+                    case 'b':
+                        result.push_back('\b');
+                        break;
+                    case 'f':
+                        result.push_back('\f');
+                        break;
+                    case 'n':
+                        result.push_back('\n');
+                        break;
+                    case 'r':
+                        result.push_back('\r');
+                        break;
+                    case 't':
+                        result.push_back('\t');
+                        break;
+                    case 'v':
+                        result.push_back('\v');
+                        break;
+                    case '\\':
+                        result.push_back('\\');
+                        break;
+                    case 'x':
+                        {
+                            u8 byte = 0x00;
+                            if ((offset + 1) >= string.length()) return {};
+
+                            for (u8 i = 0; i < 2; i++) {
+                                byte <<= 4;
+                                if (c() >= '0' && c() <= '9')
+                                    byte |= 0x00 + (c() - '0');
+                                else if (c() >= 'A' && c() <= 'F')
+                                    byte |= 0x0A + (c() - 'A');
+                                else if (c() >= 'a' && c() <= 'f')
+                                    byte |= 0x0A + (c() - 'a');
+                                else
+                                    return {};
+
+                                offset++;
+                            }
+
+                            result.push_back(byte);
+                        }
+                        break;
+                    default:
+                        return {};
+                }
+            } else {
+                result.push_back(c());
+                offset++;
+            }
+        }
+
+        return result;
+    }
+
+
     void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 

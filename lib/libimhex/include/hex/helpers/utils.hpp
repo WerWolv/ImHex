@@ -41,6 +41,10 @@ namespace hex {
     void runCommand(const std::string &command);
     void openWebpage(std::string url);
 
+    std::string encodeByteString(const std::vector<u8> &bytes);
+    std::vector<u8> decodeByteString(const std::string &string);
+
+
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);
 
@@ -247,7 +251,8 @@ namespace hex {
         trimRight(s);
     }
 
-    enum class DialogMode {
+    enum class DialogMode
+    {
         Open,
         Save,
         Folder
@@ -307,7 +312,9 @@ namespace hex {
             ScopeGuard &operator=(ScopeGuard &&) = delete;
         };
 
-        enum class ScopeGuardOnExit { };
+        enum class ScopeGuardOnExit
+        {
+        };
 
         template<typename F>
         constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F &&f) {
@@ -328,7 +335,9 @@ namespace hex {
             FirstTimeExecute &operator=(FirstTimeExecute &&) = delete;
         };
 
-        enum class FirstTimeExecutor { };
+        enum class FirstTimeExecutor
+        {
+        };
 
         template<typename F>
         constexpr FirstTimeExecute<F> operator+(FirstTimeExecutor, F &&f) {
@@ -352,7 +361,9 @@ namespace hex {
             FinalCleanupExecute &operator=(FinalCleanupExecute &&) = delete;
         };
 
-        enum class FinalCleanupExecutor { };
+        enum class FinalCleanupExecutor
+        {
+        };
 
         template<typename F>
         constexpr FinalCleanupExecute<F> operator+(FinalCleanupExecutor, F &&f) {

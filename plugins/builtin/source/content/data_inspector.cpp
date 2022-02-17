@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <imgui_internal.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin {
 
@@ -39,7 +40,7 @@ namespace hex::plugin::builtin {
 
     template<std::integral T>
     static std::vector<u8> stringToSigned(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(u64)) {
-        i64 result = std::strtoull(value.c_str(), nullptr, 0);
+        i64 result = std::strtoll(value.c_str(), nullptr, 0);
         if (result > std::numeric_limits<T>::max() || result < std::numeric_limits<T>::min()) return {};
 
         std::vector<u8> bytes(sizeof(T), 0x00);
@@ -74,12 +75,13 @@ namespace hex::plugin::builtin {
             return {};
     }
 
+    // clang-format off
     void registerDataInspectorEntries() {
 
         using Style = ContentRegistry::DataInspector::NumberDisplayStyle;
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.binary", sizeof(u8), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.binary", sizeof(u8),
+            [](auto buffer, auto endian, auto style) {
                 std::string binary = "0b";
                 for (u8 i = 0; i < 8; i++)
                     binary += ((buffer[0] << i) & 0x80) == 0 ? '0' : '1';
@@ -87,7 +89,8 @@ namespace hex::plugin::builtin {
                 return [binary] {
                     ImGui::TextUnformatted(binary.c_str());
                     return binary;
-                }; }, [](std::string value, std::endian endian) -> std::vector<u8> {
+                };
+            }, [](std::string value, std::endian endian) -> std::vector<u8> {
                 if (value.starts_with("0b"))
                     value = value.substr(2);
 
@@ -104,20 +107,23 @@ namespace hex::plugin::builtin {
                         return { };
                 }
 
-                return { byte }; });
+                return { byte };
+            }
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.u8", sizeof(u8), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.u8", sizeof(u8),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:02X}" : "0o{0:03o}");
 
                 auto value = hex::format(format, *reinterpret_cast<u8 *>(buffer.data()));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<u8>);
+            stringToInteger<u8>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.i8", sizeof(i8), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i8", sizeof(i8),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:02X}" : "{0}0o{1:03o}");
 
                 auto number   = hex::changeEndianess(*reinterpret_cast<i8 *>(buffer.data()), endian);
@@ -126,20 +132,22 @@ namespace hex::plugin::builtin {
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<i8>);
+            stringToInteger<i8>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.u16", sizeof(u16), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.u16", sizeof(u16),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:04X}" : "0o{0:06o}");
 
                 auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u16 *>(buffer.data()), endian));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<u16>);
+            stringToInteger<u16>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.i16", sizeof(i16), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i16", sizeof(i16),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:04X}" : "{0}0o{1:06o}");
 
                 auto number   = hex::changeEndianess(*reinterpret_cast<i16 *>(buffer.data()), endian);
@@ -148,20 +156,22 @@ namespace hex::plugin::builtin {
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<i16>);
+            stringToInteger<i16>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.u32", sizeof(u32), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.u32", sizeof(u32),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:08X}" : "0o{0:011o}");
 
                 auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u32 *>(buffer.data()), endian));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<u32>);
+            stringToInteger<u32>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.i32", sizeof(i32), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i32", sizeof(i32),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:08X}" : "{0}0o{1:011o}");
 
                 auto number   = hex::changeEndianess(*reinterpret_cast<i32 *>(buffer.data()), endian);
@@ -170,20 +180,22 @@ namespace hex::plugin::builtin {
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<i32>);
+            stringToInteger<i32>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.u64", sizeof(u64), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.u64", sizeof(u64),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:016X}" : "0o{0:022o}");
 
                 auto value = hex::format(format, hex::changeEndianess(*reinterpret_cast<u64 *>(buffer.data()), endian));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<u64>);
+            stringToInteger<u64>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.i64", sizeof(i64), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.i64", sizeof(i64),
+            [](auto buffer, auto endian, auto style) {
                 auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:016X}" : "{0}0o{1:022o}");
 
                 auto number   = hex::changeEndianess(*reinterpret_cast<i64 *>(buffer.data()), endian);
@@ -192,98 +204,118 @@ namespace hex::plugin::builtin {
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToInteger<i64>);
+            stringToInteger<i64>
+        );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.float16", sizeof(u16), [](auto buffer, auto endian, auto style) {
-            auto value = hex::format("{0:G}", hex::changeEndianess(float16ToFloat32(*reinterpret_cast<u16 *>(buffer.data())), endian));
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.float16", sizeof(u16),
+            [](auto buffer, auto endian, auto style) {
+                auto value = hex::format("{0:G}", hex::changeEndianess(float16ToFloat32(*reinterpret_cast<u16 *>(buffer.data())), endian));
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.float", sizeof(float), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.float", sizeof(float),
+            [](auto buffer, auto endian, auto style) {
                 auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<float *>(buffer.data()), endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToFloat<float>);
+            stringToFloat<float>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.double", sizeof(double), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.double", sizeof(double),
+            [](auto buffer, auto endian, auto style) {
                 auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<double *>(buffer.data()), endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToFloat<double>);
+            stringToFloat<double>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.long_double", sizeof(long double), [](auto buffer, auto endian, auto style) {
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.long_double", sizeof(long double),
+            [](auto buffer, auto endian, auto style) {
                 auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<long double *>(buffer.data()), endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
-            stringToFloat<long double>);
+            stringToFloat<long double>
+        );
 
-        ContentRegistry::DataInspector::add(
-            "hex.builtin.inspector.ascii", sizeof(char8_t), [](auto buffer, auto endian, auto style) {
-                auto value = hex::format("'{0}'", makePrintable(*reinterpret_cast<char8_t *>(buffer.data())).c_str());
-                return [value] { ImGui::TextUnformatted(value.c_str()); return value; }; }, [](const std::string &value, std::endian endian) -> std::vector<u8> {
-                if (value.length() > 3) return { };
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.ascii", sizeof(char8_t),
+            [](auto buffer, auto endian, auto style) {
+                auto value = makePrintable(*reinterpret_cast<char8_t *>(buffer.data()));
+                return [value] { ImGui::TextFormatted("'{0}'", value.c_str()); return value; };
+            },
+            [](const std::string &value, std::endian endian) -> std::vector<u8> {
+                if (value.length() > 1) return { };
 
-                u8 character = 0x00;
-                if (value.length() == 3 && value.starts_with('\'') && value.ends_with('\''))
-                    character = value[1];
-                else if (value.length() == 1)
-                    character = value[0];
-                else
-                    return { };
+                return { u8(value[0]) };
+            }
+        );
 
-                return { character }; });
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(wchar_t),
+            [](auto buffer, auto endian, auto style) {
+                wchar_t wideChar = '\x00';
+                std::memcpy(&wideChar, buffer.data(), std::min(sizeof(wchar_t), buffer.size()));
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.wide", sizeof(wchar_t), [](auto buffer, auto endian, auto style) {
-            wchar_t wideChar = '\x00';
-            std::memcpy(&wideChar, buffer.data(), std::min(sizeof(wchar_t), buffer.size()));
+                auto c = hex::changeEndianess(wideChar, endian);
 
-            auto c = hex::changeEndianess(wideChar, endian);
+                std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
 
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
+                auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : converter.to_bytes(c));
+                return [value] { ImGui::TextFormatted("'{0}'", value.c_str()); return value; };
+            },
+            [](const std::string &value, std::endian endian) -> std::vector<u8> {
+                std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("");
 
-            auto value = hex::format("'{0}'", c <= 255 ? makePrintable(c) : converter.to_bytes(c));
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
+                std::vector<u8> bytes;
+                auto wideString = converter.from_bytes(value.c_str());
+                std::copy(wideString.begin(), wideString.end(), std::back_inserter(bytes));
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.utf8", sizeof(char8_t) * 4, [](auto buffer, auto endian, auto style) {
-            char utf8Buffer[5]      = { 0 };
-            char codepointString[5] = { 0 };
-            u32 codepoint           = 0;
+                if (endian != std::endian::native)
+                    std::reverse(bytes.begin(), bytes.end());
 
-            std::memcpy(utf8Buffer, reinterpret_cast<char8_t *>(buffer.data()), 4);
-            u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, utf8Buffer + 4);
+                return bytes;
+            }
+        );
 
-            std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
-            auto value = hex::format("'{0}' (U+0x{1:04X})",
-                codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
-                codepoint);
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.utf8", sizeof(char8_t) * 4,
+            [](auto buffer, auto endian, auto style) {
+                char utf8Buffer[5]      = { 0 };
+                char codepointString[5] = { 0 };
+                u32 codepoint           = 0;
 
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
+                std::memcpy(utf8Buffer, reinterpret_cast<char8_t *>(buffer.data()), 4);
+                u8 codepointSize = ImTextCharFromUtf8(&codepoint, utf8Buffer, utf8Buffer + 4);
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1, [](auto buffer, auto endian, auto style) {
-            Region currSelection = { 0 };
-            EventManager::post<QuerySelection>(currSelection);
+                std::memcpy(codepointString, utf8Buffer, std::min(codepointSize, u8(4)));
+                auto value = hex::format("'{0}' (U+0x{1:04X})",
+                    codepoint == 0xFFFD ? "Invalid" : (codepointSize == 1 ? makePrintable(codepointString[0]) : codepointString),
+                    codepoint);
 
-            constexpr static auto MaxStringLength = 32;
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
+        );
 
-            std::string stringBuffer(std::min<ssize_t>(MaxStringLength, currSelection.size), 0x00);
-            ImHexApi::Provider::get()->read(currSelection.address, stringBuffer.data(), stringBuffer.size());
-            if (currSelection.size > MaxStringLength)
-                stringBuffer += "...";
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1,
+            [](auto buffer, auto endian, auto style) {
+                Region currSelection = { 0 };
+                EventManager::post<QuerySelection>(currSelection);
 
-            for (auto &c : stringBuffer)
-                if (c < 0x20)
-                    c = ' ';
+                constexpr static auto MaxStringLength = 32;
 
+                std::vector<u8> stringBuffer(std::min<ssize_t>(MaxStringLength, currSelection.size), 0x00);
+                ImHexApi::Provider::get()->read(currSelection.address, stringBuffer.data(), stringBuffer.size());
 
-            auto value = hex::format("\"{0}\"", stringBuffer);
+                auto value = hex::encodeByteString(stringBuffer);
+                auto copyValue = hex::encodeByteString(buffer);
 
-            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
-        });
+                if (currSelection.size > MaxStringLength)
+                    value += "...";
+
+                return [value, copyValue] { ImGui::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
+            },
+            [](const std::string &value, std::endian endian) -> std::vector<u8> {
+                return hex::decodeByteString(value);
+            }
+        );
 
 #if defined(OS_WINDOWS) && defined(ARCH_64_BIT)
 
@@ -331,7 +363,7 @@ namespace hex::plugin::builtin {
 #endif
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.guid", sizeof(GUID), [](auto buffer, auto endian, auto style) {
-            GUID guid;
+            GUID guid = { 0 };
             std::memcpy(&guid, buffer.data(), sizeof(GUID));
             auto value = hex::format("{}{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",
                 (hex::changeEndianess(guid.data3, endian) >> 12) <= 5 && ((guid.data4[0] >> 4) >= 8 || (guid.data4[0] >> 4) == 0) ? "" : "Invalid ",
@@ -353,13 +385,14 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataInspector::add("hex.builtin.inspector.rgba8", sizeof(u32), [](auto buffer, auto endian, auto style) {
             ImColor value(hex::changeEndianess(*reinterpret_cast<u32 *>(buffer.data()), endian));
 
-            auto stringValue = hex::format("(0x{:02X}, 0x{:02X}, 0x{:02X}, 0x{:02X})", u8(0xFF * (value.Value.x)), u8(0xFF * (value.Value.y)), u8(0xFF * (value.Value.z)), u8(0xFF * (value.Value.w)));
+            auto copyValue = hex::format("#{:02X}{:02X}{:02X}{:02X}", u8(0xFF * (value.Value.x)), u8(0xFF * (value.Value.y)), u8(0xFF * (value.Value.z)), u8(0xFF * (value.Value.w)));
 
-            return [value, stringValue] {
+            return [value, copyValue] {
                 ImGui::ColorButton("##inspectorColor", value, ImGuiColorEditFlags_None, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight()));
-                return stringValue;
+                return copyValue;
             };
         });
     }
+    // clang-format on
 
 }

@@ -21,6 +21,8 @@
 [submodule "lib/external/capstone"]
 	path = lib/external/capstone
 	url = https://github.com/capstone-engine/capstone
+	ignore = dirty
 [submodule "lib/external/libromfs"]
 	path = lib/external/libromfs
 	url = https://github.com/WerWolv/libromfs
+	ignore = dirty
