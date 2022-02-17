@@ -50,7 +50,7 @@ namespace hex::pl {
                         offset += 1;
 
                         std::string includeFile;
-                        while (code[offset] != endChar) {
+                        while (code[offset] != endChar && code[offset] != '\n') {
                             includeFile += code[offset];
                             offset += 1;
 
