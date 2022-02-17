@@ -30,12 +30,13 @@ int main(int argc, char **argv, char **envp) {
         // Intel's OpenGL driver has weird bugs that cause the drawn window to be offset to the bottom right.
         // This can be fixed by either using Mesa3D's OpenGL Software renderer or by simply disabling it.
         // If you want to try if it works anyways on your GPU, set the hex.builtin.setting.interface.force_borderless_window_mode setting to 1
+        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+            bool isIntelGPU = hex::containsIgnoreCase(splashWindow.getGPUVendor(), "Intel");
+            ImHexApi::System::impl::setBorderlessWindowMode(!isIntelGPU);
 
-        bool isIntelGPU = hex::containsIgnoreCase(splashWindow.getGPUVendor(), "Intel");
-        ImHexApi::System::impl::setBorderlessWindowMode(!isIntelGPU);
-
-        if (isIntelGPU)
-            log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+            if (isIntelGPU)
+                log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+        }
 
         for (const auto &[name, task] : init::getInitTasks())
             splashWindow.addStartupTask(name, task);
