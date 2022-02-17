@@ -49,6 +49,7 @@
 
 #include <hex.hpp>
 #include <hex/api/event.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <string>
 
@@ -687,7 +688,7 @@ struct MemoryEditor
                 }
             }
         }
-        IM_ASSERT(clipper.Step() == false);
+        clipper.Step();
         clipper.End();
         ImGui::PopStyleVar(2);
         ImGui::EndChild();

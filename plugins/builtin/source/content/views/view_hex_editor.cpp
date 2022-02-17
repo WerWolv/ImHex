@@ -124,8 +124,6 @@ namespace hex::plugin::builtin {
                 }
 
                 _this->m_highlights.push_back(std::move(newBlock));
-
-                return _this->m_memoryEditor.HighlightFn(data, off, next);
             }
 
             if (next && prevColor != currColor) {
