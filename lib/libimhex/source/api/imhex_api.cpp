@@ -6,6 +6,8 @@
 
 #include <unistd.h>
 
+#include <imgui.h>
+
 namespace hex {
 
     namespace ImHexApi::Common {

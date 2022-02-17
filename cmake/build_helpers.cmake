@@ -21,19 +21,17 @@ macro(addVersionDefines)
 
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
 
-    add_compile_definitions(
-            $<$<CONFIG:Release>:IMHEX_VERSION="${IMHEX_VERSION}">
-            $<$<CONFIG:Debug>:IMHEX_VERSION="${IMHEX_VERSION}-Debug">
-            $<$<CONFIG:RelWithDebInfo>:IMHEX_VERSION="${IMHEX_VERSION}-ReleaseWithDebugInfo">
-            $<$<CONFIG:MinSizeRel>:IMHEX_VERSION="${IMHEX_VERSION}-ReleaseMinimumSize">
-    )
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(IMHEX_VERSION_STRING ${IMHEX_VERSION})
+    elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(IMHEX_VERSION_STRING ${IMHEX_VERSION}-Debug)
+    elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        set(IMHEX_VERSION_STRING ${IMHEX_VERSION}-RelWithDebInfo)
+    elseif (CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+        set(IMHEX_VERSION_STRING ${IMHEX_VERSION}-MinSizeRel)
+    endif ()
 
-    add_compile_definitions(
-            $<$<CONFIG:Release>:RELEASE>
-            $<$<CONFIG:Debug>:DEBUG>
-            $<$<CONFIG:RelWithDebInfo>:RELEASE>
-            $<$<CONFIG:MinSizeRel>:RELEASE>
-    )
+    add_compile_definitions(IMHEX_VERSION="${IMHEX_VERSION_STRING}")
 
 endmacro()
 

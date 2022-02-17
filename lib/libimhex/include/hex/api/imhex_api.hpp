@@ -11,7 +11,8 @@
 #include <hex/api/task.hpp>
 #include <hex/api/keybinding.hpp>
 
-#include <imgui.h>
+using ImGuiID = unsigned int;
+struct ImVec2;
 
 namespace hex {
 

@@ -13,17 +13,6 @@ impl Parse for AttrList {
     }
 }
 
-fn symbol(name: &str) -> String {
-    let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
-    format!(
-        "_ZN3hex6plugin{}{}8internal{}{}Ev",
-        pkg_name.len(),
-        pkg_name,
-        name.len(),
-        name,
-    )
-}
-
 #[proc_macro_attribute]
 pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = syn::parse_macro_input!(attr as AttrList)
@@ -36,11 +25,14 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let function = syn::parse_macro_input!(item as syn::ItemFn);
 
-    let plugin_name_export = symbol("getPluginName");
-    let plugin_author_export = symbol("getPluginAuthor");
-    let plugin_desc_export = symbol("getPluginDescription");
-    let plugin_init_export = symbol("initializePlugin");
-    let plugin_set_imgui_ctxt_export = symbol("setImGuiContext");
+    let plugin_name_export = "getPluginName";
+    let plugin_author_export = "getPluginAuthor";
+    let plugin_desc_export = "getPluginDescription";
+    let plugin_version_export = "getCompatibleVersion";
+    let plugin_init_export = "initializePlugin";
+    let plugin_set_imgui_ctx_export = "setImGuiContext";
+
+    let imhex_version = std::env::var("IMHEX_VERSION").unwrap();
 
     quote!(
         #[export_name = #plugin_name_export]
@@ -58,9 +50,14 @@ pub fn plugin_setup(attr: TokenStream, item: TokenStream) -> TokenStream {
             concat!(#description, "\0").as_ptr()
         }
 
-        #[export_name = #plugin_set_imgui_ctxt_export]
+        #[export_name = #plugin_set_imgui_ctx_export]
         pub unsafe extern "C" fn set_imgui_context(context: *mut ::hex::imgui::sys::ImGuiContext) {
             ::hex::imgui::sys::igSetCurrentContext(context);
+        }
+
+        #[export_name = #plugin_version_export]
+        pub unsafe extern "C" fn plugin_version() -> *const u8 {
+            concat!(#imhex_version, "\0").as_ptr()
         }
 
         #[export_name = #plugin_init_export]

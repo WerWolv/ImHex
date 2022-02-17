@@ -13,7 +13,8 @@ namespace hex {
 
     struct View;
 
-    enum class Keys {
+    enum class Keys
+    {
         Space          = GLFW_KEY_SPACE,
         Apostrophe     = GLFW_KEY_APOSTROPHE,
         Comma          = GLFW_KEY_COMMA,
@@ -141,6 +142,9 @@ namespace hex {
 
     class Shortcut {
     public:
+        Shortcut() = default;
+        Shortcut(Keys key) : m_keys({ key }) { }
+
         Shortcut operator+(const Key &other) const {
             Shortcut result = *this;
             result.m_keys.insert(other);
