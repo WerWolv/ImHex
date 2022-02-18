@@ -674,6 +674,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "Grey out zeros" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Upper case Hex characters" },
                     { "hex.builtin.setting.hex_editor.extra_info", "Display extra information" },
+                { "hex.builtin.setting.folders", "Folders" },
 
                 { "hex.builtin.provider.file.path", "File path" },
                 { "hex.builtin.provider.file.size", "Size" },

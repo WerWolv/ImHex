@@ -1,4 +1,4 @@
-#include <hex/helpers/paths.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/helpers/paths_mac.h>
 
 #include <xdg.hpp>
@@ -13,8 +13,6 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <string>
-#include <vector>
 
 namespace hex {
 
@@ -38,9 +36,17 @@ namespace hex {
 
     std::vector<fs::path> getPath(ImHexPath path, bool listNonExisting) {
         std::vector<fs::path> result;
+        const auto exePath = getExecutablePath();
+        const std::string settingName { "hex.builtin.setting.folders" };
+        auto userDirs = ContentRegistry::Settings::getStringArray(settingName, settingName);
+
+        auto addUserDirs = [&userDirs](auto &paths) {
+            std::transform(userDirs.begin(), userDirs.end(), std::back_inserter(paths), [](auto &item) {
+                return std::move(item);
+            });
+        };
 
 #if defined(OS_WINDOWS)
-        const auto exePath   = getExecutablePath();
         const auto parentDir = fs::path(exePath).parent_path();
 
         fs::path appDataDir;
@@ -57,21 +63,25 @@ namespace hex {
 
         switch (path) {
             case ImHexPath::Patterns:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "patterns").string();
                 });
                 break;
             case ImHexPath::PatternsInclude:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "includes").string();
                 });
                 break;
             case ImHexPath::Magic:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "magic").string();
                 });
                 break;
             case ImHexPath::Python:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "python").string();
                 });
@@ -82,6 +92,7 @@ namespace hex {
                 });
                 break;
             case ImHexPath::Yara:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "yara").string();
                 });
@@ -94,11 +105,13 @@ namespace hex {
                 });
                 break;
             case ImHexPath::Constants:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "constants").string();
                 });
                 break;
             case ImHexPath::Encodings:
+                addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return (path / "encodings").string();
                 });
@@ -113,7 +126,6 @@ namespace hex {
         }
 #elif defined(OS_MACOS)
         // Get path to special directories
-        const auto exePath = getExecutablePath();
         const fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
         std::vector<fs::path> paths = { exePath, applicationSupportDir };
@@ -167,28 +179,31 @@ namespace hex {
         for (auto &dir : dataDirs)
             dir = dir / "imhex";
 
-        const auto exePath = getExecutablePath();
-
         if (!exePath.empty())
             dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
 
         switch (path) {
             case ImHexPath::Patterns:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "patterns").string(); });
                 break;
             case ImHexPath::PatternsInclude:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "includes").string(); });
                 break;
             case ImHexPath::Magic:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "magic").string(); });
                 break;
             case ImHexPath::Python:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p).string(); });
                 break;
             case ImHexPath::Plugins:
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "plugins").string(); });
                 break;
             case ImHexPath::Yara:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "yara").string(); });
                 break;
             case ImHexPath::Config:
@@ -198,9 +213,11 @@ namespace hex {
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "resources").string(); });
                 break;
             case ImHexPath::Constants:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "constants").string(); });
                 break;
             case ImHexPath::Encodings:
+                addUserDirs(dataDirs);
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "encodings").string(); });
                 break;
             case ImHexPath::Logs:

@@ -67,6 +67,19 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
         }
 
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback) {
+            log::info("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+
+            getEntries()[unlocalizedCategory].emplace_back(Entry { unlocalizedName, callback });
+
+            auto &json = getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_array())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+        }
+
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
             auto &json = getSettingsData();
 
@@ -160,6 +173,15 @@ namespace hex {
             static nlohmann::json settings;
 
             return settings;
+        }
+
+        std::vector<std::string> getStringArray(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
+            auto setting = getSetting(unlocalizedCategory, unlocalizedName);
+            if (setting.is_array()) {
+                return setting;
+            }
+
+            return {};
         }
 
     }

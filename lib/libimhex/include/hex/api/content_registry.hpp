@@ -51,6 +51,7 @@ namespace hex {
 
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback);
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback);
 
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
@@ -63,6 +64,7 @@ namespace hex {
             std::map<std::string, std::vector<Entry>> &getEntries();
             nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
             nlohmann::json &getSettingsData();
+            std::vector<std::string> getStringArray(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
