@@ -295,7 +295,6 @@ struct MemoryEditor
 
         const int line_total_count = (int)((mem_size + Cols - 1) / Cols);
         clipper.Begin(line_total_count, s.LineHeight);
-        clipper.Step();
         const size_t visible_start_addr = clipper.DisplayStart * Cols;
         const size_t visible_end_addr = clipper.DisplayEnd * Cols;
         const size_t visible_count = visible_end_addr - visible_start_addr;
@@ -362,7 +361,7 @@ struct MemoryEditor
         // Draw vertical separator
         ImVec2 window_pos = ImGui::GetWindowPos();
         float scrollX = ImGui::GetScrollX();
-        
+
         if (OptShowAscii)
             draw_list->AddLine(ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth - scrollX, window_pos.y), ImVec2(window_pos.x + s.PosAsciiStart - s.GlyphWidth - scrollX, window_pos.y + 9999), ImGui::GetColorU32(ImGuiCol_Border));
         if (OptShowAdvancedDecoding)
@@ -377,197 +376,20 @@ struct MemoryEditor
         const char* format_byte_space = OptUpperCaseHex ? "%02X " : "%02x ";
 
         bool tooltipShown = false;
-        for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible lines
+        while (clipper.Step())
         {
-            size_t addr = (size_t)(line_i * Cols);
-            ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr + addr);
-
-            // Draw Hexadecimal
-            for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
+            for (int line_i = clipper.DisplayStart; line_i < clipper.DisplayEnd; line_i++) // display only visible lines
             {
-                float byte_pos_x = s.PosHexStart + s.HexCellWidth * n;
-                if (OptMidColsCount > 0)
-                    byte_pos_x += (float)(n / OptMidColsCount) * s.SpacingBetweenMidCols;
-                ImGui::SameLine(byte_pos_x);
+                size_t addr = (size_t)(line_i * Cols);
+                ImGui::Text(format_address, s.AddrDigitsCount, base_display_addr + addr);
 
-                // Draw highlight
-                bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
-                bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
-                bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
-                if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
-                {
-                    ImVec2 pos = ImGui::GetCursorScreenPos() - ImVec2(ImGui::GetStyle().CellPadding.x / 2, 0);
-                    float highlight_width = s.GlyphWidth * 2 + ImGui::GetStyle().CellPadding.x / 2;
-                    bool is_next_byte_highlighted = (addr + 1 < mem_size) &&
-                                                    ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) ||
-                                                    (HighlightFn && HighlightFn(mem_data, addr + 1, true)) ||
-                                                    ((addr + 1) >= DataPreviewAddr && (addr + 1) <= DataPreviewAddrEnd) || ((addr + 1) >= DataPreviewAddrEnd && (addr + 1) <= DataPreviewAddr));
-                    if (is_next_byte_highlighted)
-                    {
-                        highlight_width = s.HexCellWidth;
-                        if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
-                            highlight_width += s.SpacingBetweenMidCols;
-                    }
-
-                    ImU32 color = HighlightColor;
-                    if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
-                        color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
-
-                    draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), color);
-
-                    if (is_highlight_from_preview) {
-                        size_t min = std::min(DataPreviewAddr, DataPreviewAddrEnd);
-                        size_t max = std::max(DataPreviewAddr, DataPreviewAddrEnd);
-
-                        // Draw vertical line at the left of first byte and the start of the line
-                        if (n == 0 || addr == min)
-                            draw_list->AddLine(pos, pos + ImVec2(0, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
-
-                        // Draw vertical line at the right of the last byte and the end of the line
-                        if (n == Cols - 1 || addr == max) {
-                            draw_list->AddRectFilled(pos + ImVec2(highlight_width, 0), pos + ImVec2(highlight_width + 1, s.LineHeight), color);
-                            draw_list->AddLine(pos + ImVec2(highlight_width + 1, -1), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
-                        }
-
-                        // Draw horizontal line at the top of the bytes
-                        if ((addr - Cols) < min)
-                            draw_list->AddLine(pos, pos + ImVec2(highlight_width + 1, 0), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
-
-                        // Draw horizontal line at the bottom of the bytes
-                        if ((addr + Cols) == (max + 1) && OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 1)
-                            draw_list->AddLine(pos + ImVec2(-s.SpacingBetweenMidCols, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
-                        else if ((addr + Cols) > max)
-                            draw_list->AddLine(pos + ImVec2(0, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
-                    }
-                }
-
-                if (DataEditingAddr == addr)
-                {
-                    // Display text input on current byte
-                    bool data_write = false;
-                    ImGui::PushID((void*)addr);
-                    if (DataEditingTakeFocus)
-                    {
-                        ImGui::SetKeyboardFocusHere();
-                        ImGui::CaptureKeyboardFromApp(true);
-                        sprintf(AddrInputBuf, format_data, s.AddrDigitsCount, base_display_addr + addr);
-                        sprintf(DataInputBuf, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
-                    }
-                    ImGui::PushItemWidth(s.GlyphWidth * 2);
-                    struct UserData
-                    {
-                        // FIXME: We should have a way to retrieve the text edit cursor position more easily in the API, this is rather tedious. This is such a ugly mess we may be better off not using InputText() at all here.
-                        static int Callback(ImGuiInputTextCallbackData* data)
-                        {
-                            UserData* user_data = (UserData*)data->UserData;
-                            if (!data->HasSelection())
-                                user_data->CursorPos = data->CursorPos;
-                            if (data->SelectionStart == 0 && data->SelectionEnd == data->BufTextLen)
-                            {
-                                // When not editing a byte, always rewrite its content (this is a bit tricky, since InputText technically "owns" the master copy of the buffer we edit it in there)
-                                data->DeleteChars(0, data->BufTextLen);
-                                data->InsertChars(0, user_data->CurrentBufOverwrite);
-                                data->SelectionStart = 0;
-                                data->SelectionEnd = 2;
-                                data->CursorPos = 0;
-                            }
-                            return 0;
-                        }
-                        char   CurrentBufOverwrite[3];  // Input
-                        int    CursorPos;               // Output
-                    };
-                    UserData user_data;
-                    user_data.CursorPos = -1;
-                    sprintf(user_data.CurrentBufOverwrite, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
-                    ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode | ImGuiInputTextFlags_CallbackAlways;
-                    if (ImGui::InputText("##data", DataInputBuf, 32, flags, UserData::Callback, &user_data))
-                        data_write = data_next = true;
-                    else if (!DataEditingTakeFocus && !ImGui::IsItemActive())
-                        DataEditingAddr = data_editing_addr_next = (size_t)-1;
-                    DataEditingTakeFocus = false;
-                    ImGui::PopItemWidth();
-                    if (user_data.CursorPos >= 2)
-                        data_write = data_next = true;
-                    if (data_editing_addr_next != (size_t)-1)
-                        data_write = data_next = false;
-                    unsigned int data_input_value = 0;
-                    if (data_write && sscanf(DataInputBuf, "%X", &data_input_value) == 1)
-                    {
-                        if (WriteFn)
-                            WriteFn(mem_data, addr, (ImU8)data_input_value);
-                        else
-                            mem_data[addr] = (ImU8)data_input_value;
-                    }
-                    ImGui::PopID();
-                }
-                else
-                {
-                    // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
-                    ImU8 b = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
-
-                    if (OptShowHexII)
-                    {
-                        if ((b >= 32 && b < 128))
-                            ImGui::Text(".%c ", b);
-                        else if (b == 0xFF && OptGreyOutZeroes)
-                            ImGui::TextDisabled("## ");
-                        else if (b == 0x00)
-                            ImGui::Text("   ");
-                        else
-                            ImGui::Text(format_byte_space, b);
-                    }
-                    else
-                    {
-                        if (b == 0 && OptGreyOutZeroes)
-                            ImGui::TextDisabled("00 ");
-                        else
-                            ImGui::Text(format_byte_space, b);
-                    }
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
-                    {
-                        if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
-                            DataEditingTakeFocus = true;
-                            data_editing_addr_next = addr;
-                        }
-
-                        DataPreviewAddr = addr;
-                        DataPreviewAddrEnd = addr;
-                    }
-                    if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
-                        DataPreviewAddrEnd = addr;
-                    }
-                    if (ImGui::IsItemHovered() && !tooltipShown) {
-                        if (HoverFn) {
-                            HoverFn(mem_data, addr);
-                            tooltipShown = true;
-                        }
-                    }
-                }
-            }
-
-            if (OptShowAscii)
-            {
-                // Draw ASCII values
-                ImGui::SameLine(s.PosAsciiStart);
-                ImVec2 pos = ImGui::GetCursorScreenPos();
-                addr = line_i * Cols;
-
-                ImGui::PushID(-1);
-                ImGui::SameLine();
-                ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
-
-                ImGui::PopID();
-
+                // Draw Hexadecimal
                 for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
                 {
-                    if (addr == DataEditingAddr)
-                    {
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
-                    }
-                    unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
-                    char display_c = (c < 32 || c >= 128) ? '.' : c;
-                    draw_list->AddText(pos, (display_c == c) ? color_text : color_disabled, &display_c, &display_c + 1);
+                    float byte_pos_x = s.PosHexStart + s.HexCellWidth * n;
+                    if (OptMidColsCount > 0)
+                        byte_pos_x += (float)(n / OptMidColsCount) * s.SpacingBetweenMidCols;
+                    ImGui::SameLine(byte_pos_x);
 
                     // Draw highlight
                     bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
@@ -575,121 +397,300 @@ struct MemoryEditor
                     bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
                     if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
                     {
+                        ImVec2 pos = ImGui::GetCursorScreenPos() - ImVec2(ImGui::GetStyle().CellPadding.x / 2, 0);
+                        float highlight_width = s.GlyphWidth * 2 + ImGui::GetStyle().CellPadding.x / 2;
+                        bool is_next_byte_highlighted = (addr + 1 < mem_size) &&
+                                                        ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) ||
+                                                        (HighlightFn && HighlightFn(mem_data, addr + 1, true)) ||
+                                                        ((addr + 1) >= DataPreviewAddr && (addr + 1) <= DataPreviewAddrEnd) || ((addr + 1) >= DataPreviewAddrEnd && (addr + 1) <= DataPreviewAddr));
+                        if (is_next_byte_highlighted)
+                        {
+                            highlight_width = s.HexCellWidth;
+                            if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
+                                highlight_width += s.SpacingBetweenMidCols;
+                        }
+
                         ImU32 color = HighlightColor;
                         if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
                             color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
 
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), color);
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), color);
+
+                        if (is_highlight_from_preview) {
+                            size_t min = std::min(DataPreviewAddr, DataPreviewAddrEnd);
+                            size_t max = std::max(DataPreviewAddr, DataPreviewAddrEnd);
+
+                            // Draw vertical line at the left of first byte and the start of the line
+                            if (n == 0 || addr == min)
+                                draw_list->AddLine(pos, pos + ImVec2(0, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+
+                            // Draw vertical line at the right of the last byte and the end of the line
+                            if (n == Cols - 1 || addr == max) {
+                                draw_list->AddRectFilled(pos + ImVec2(highlight_width, 0), pos + ImVec2(highlight_width + 1, s.LineHeight), color);
+                                draw_list->AddLine(pos + ImVec2(highlight_width + 1, -1), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                            }
+
+                            // Draw horizontal line at the top of the bytes
+                            if ((addr - Cols) < min)
+                                draw_list->AddLine(pos, pos + ImVec2(highlight_width + 1, 0), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+
+                            // Draw horizontal line at the bottom of the bytes
+                            if ((addr + Cols) == (max + 1) && OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 1)
+                                draw_list->AddLine(pos + ImVec2(-s.SpacingBetweenMidCols, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                            else if ((addr + Cols) > max)
+                                draw_list->AddLine(pos + ImVec2(0, s.LineHeight), pos + ImVec2(highlight_width + 1, s.LineHeight), ImColor(ImGui::GetStyleColorVec4(ImGuiCol_Text)), 1.0F);
+                        }
                     }
 
+                    if (DataEditingAddr == addr)
+                    {
+                        // Display text input on current byte
+                        bool data_write = false;
+                        ImGui::PushID((void*)addr);
+                        if (DataEditingTakeFocus)
+                        {
+                            ImGui::SetKeyboardFocusHere();
+                            ImGui::CaptureKeyboardFromApp(true);
+                            sprintf(AddrInputBuf, format_data, s.AddrDigitsCount, base_display_addr + addr);
+                            sprintf(DataInputBuf, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
+                        }
+                        ImGui::PushItemWidth(s.GlyphWidth * 2);
+                        struct UserData
+                        {
+                            // FIXME: We should have a way to retrieve the text edit cursor position more easily in the API, this is rather tedious. This is such a ugly mess we may be better off not using InputText() at all here.
+                            static int Callback(ImGuiInputTextCallbackData* data)
+                            {
+                                UserData* user_data = (UserData*)data->UserData;
+                                if (!data->HasSelection())
+                                    user_data->CursorPos = data->CursorPos;
+                                if (data->SelectionStart == 0 && data->SelectionEnd == data->BufTextLen)
+                                {
+                                    // When not editing a byte, always rewrite its content (this is a bit tricky, since InputText technically "owns" the master copy of the buffer we edit it in there)
+                                    data->DeleteChars(0, data->BufTextLen);
+                                    data->InsertChars(0, user_data->CurrentBufOverwrite);
+                                    data->SelectionStart = 0;
+                                    data->SelectionEnd = 2;
+                                    data->CursorPos = 0;
+                                }
+                                return 0;
+                            }
+                            char   CurrentBufOverwrite[3];  // Input
+                            int    CursorPos;               // Output
+                        };
+                        UserData user_data;
+                        user_data.CursorPos = -1;
+                        sprintf(user_data.CurrentBufOverwrite, format_byte, ReadFn ? ReadFn(mem_data, addr) : mem_data[addr]);
+                        ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode | ImGuiInputTextFlags_CallbackAlways;
+                        if (ImGui::InputText("##data", DataInputBuf, 32, flags, UserData::Callback, &user_data))
+                            data_write = data_next = true;
+                        else if (!DataEditingTakeFocus && !ImGui::IsItemActive())
+                            DataEditingAddr = data_editing_addr_next = (size_t)-1;
+                        DataEditingTakeFocus = false;
+                        ImGui::PopItemWidth();
+                        if (user_data.CursorPos >= 2)
+                            data_write = data_next = true;
+                        if (data_editing_addr_next != (size_t)-1)
+                            data_write = data_next = false;
+                        unsigned int data_input_value = 0;
+                        if (data_write && sscanf(DataInputBuf, "%X", &data_input_value) == 1)
+                        {
+                            if (WriteFn)
+                                WriteFn(mem_data, addr, (ImU8)data_input_value);
+                            else
+                                mem_data[addr] = (ImU8)data_input_value;
+                        }
+                        ImGui::PopID();
+                    }
+                    else
+                    {
+                        // NB: The trailing space is not visible but ensure there's no gap that the mouse cannot click on.
+                        ImU8 b = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
 
-                    ImGui::PushID(line_i * Cols + n);
+                        if (OptShowHexII)
+                        {
+                            if ((b >= 32 && b < 128))
+                                ImGui::Text(".%c ", b);
+                            else if (b == 0xFF && OptGreyOutZeroes)
+                                ImGui::TextDisabled("## ");
+                            else if (b == 0x00)
+                                ImGui::Text("   ");
+                            else
+                                ImGui::Text(format_byte_space, b);
+                        }
+                        else
+                        {
+                            if (b == 0 && OptGreyOutZeroes)
+                                ImGui::TextDisabled("00 ");
+                            else
+                                ImGui::Text(format_byte_space, b);
+                        }
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                        {
+                            if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
+                                DataEditingTakeFocus = true;
+                                data_editing_addr_next = addr;
+                            }
+
+                            DataPreviewAddr = addr;
+                            DataPreviewAddrEnd = addr;
+                        }
+                        if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                            DataPreviewAddrEnd = addr;
+                        }
+                        if (ImGui::IsItemHovered() && !tooltipShown) {
+                            if (HoverFn) {
+                                HoverFn(mem_data, addr);
+                                tooltipShown = true;
+                            }
+                        }
+                    }
+                }
+
+                if (OptShowAscii)
+                {
+                    // Draw ASCII values
+                    ImGui::SameLine(s.PosAsciiStart);
+                    ImVec2 pos = ImGui::GetCursorScreenPos();
+                    addr = line_i * Cols;
+
+                    ImGui::PushID(-1);
                     ImGui::SameLine();
                     ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
 
                     ImGui::PopID();
 
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                    for (int n = 0; n < Cols && addr < mem_size; n++, addr++)
                     {
-                        if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
-                            DataEditingTakeFocus = true;
-                            data_editing_addr_next = addr;
+                        if (addr == DataEditingAddr)
+                        {
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                        }
+                        unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
+                        char display_c = (c < 32 || c >= 128) ? '.' : c;
+                        draw_list->AddText(pos, (display_c == c) ? color_text : color_disabled, &display_c, &display_c + 1);
+
+                        // Draw highlight
+                        bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
+                        bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
+                        bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
+                        if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
+                        {
+                            ImU32 color = HighlightColor;
+                            if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
+                                color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
+
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), color);
                         }
 
-                        DataPreviewAddr = addr;
-                        DataPreviewAddrEnd = addr;
 
-                    }
-                    if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
-                        DataPreviewAddrEnd = addr;
+                        ImGui::PushID(line_i * Cols + n);
+                        ImGui::SameLine();
+                        ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+
+                        ImGui::PopID();
+
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                        {
+                            if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
+                                DataEditingTakeFocus = true;
+                                data_editing_addr_next = addr;
+                            }
+
+                            DataPreviewAddr = addr;
+                            DataPreviewAddrEnd = addr;
+
+                        }
+                        if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                            DataPreviewAddrEnd = addr;
+                        }
+
+                        pos.x += s.GlyphWidth;
                     }
 
-                    pos.x += s.GlyphWidth;
+                    ImGui::PushID(-1);
+                    ImGui::SameLine();
+                    ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+
+                    ImGui::PopID();
                 }
 
-                ImGui::PushID(-1);
-                ImGui::SameLine();
-                ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
+                if (OptShowAdvancedDecoding && DecodeFn) {
+                    // Draw decoded bytes
+                    ImGui::SameLine(s.PosDecodingStart);
+                    ImVec2 pos = ImGui::GetCursorScreenPos();
+                    addr = line_i * Cols;
 
-                ImGui::PopID();
-            }
-
-            if (OptShowAdvancedDecoding && DecodeFn) {
-                // Draw decoded bytes
-                ImGui::SameLine(s.PosDecodingStart);
-                ImVec2 pos = ImGui::GetCursorScreenPos();
-                addr = line_i * Cols;
-
-                ImGui::PushID(-1);
-                ImGui::SameLine();
-                ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
-
-                ImGui::PopID();
-
-                for (int n = 0; n < Cols && addr < mem_size;)
-                {
-                    auto decodedData = DecodeFn(mem_data, addr);
-
-                    auto displayData = decodedData.data;
-                    auto glyphWidth = ImGui::CalcTextSize(displayData.c_str()).x + 1;
-
-                    if (addr == DataEditingAddr)
-                    {
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
-                    }
-
-                    draw_list->AddText(pos, decodedData.color, displayData.c_str(), displayData.c_str() + displayData.length());
-
-                    // Draw highlight
-                    bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
-                    bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
-                    bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
-                    if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
-                    {
-                        ImU32 color = HighlightColor;
-                        if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
-                            color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
-
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), color);
-                    }
-
-
-                    ImGui::PushID(line_i * Cols + n);
+                    ImGui::PushID(-1);
                     ImGui::SameLine();
-                    ImGui::Dummy(ImVec2(glyphWidth, s.LineHeight));
+                    ImGui::Dummy(ImVec2(s.GlyphWidth, s.LineHeight));
 
                     ImGui::PopID();
 
-                    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                    for (int n = 0; n < Cols && addr < mem_size;)
                     {
-                        if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
-                            DataEditingTakeFocus = true;
-                            data_editing_addr_next = addr;
+                        auto decodedData = DecodeFn(mem_data, addr);
+
+                        auto displayData = decodedData.data;
+                        auto glyphWidth = ImGui::CalcTextSize(displayData.c_str()).x + 1;
+
+                        if (addr == DataEditingAddr)
+                        {
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
                         }
 
-                        DataPreviewAddr = addr;
-                        DataPreviewAddrEnd = addr;
+                        draw_list->AddText(pos, decodedData.color, displayData.c_str(), displayData.c_str() + displayData.length());
 
-                    }
-                    if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
-                        DataPreviewAddrEnd = addr;
-                    }
+                        // Draw highlight
+                        bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
+                        bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr, false));
+                        bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr <= DataPreviewAddrEnd) || (addr >= DataPreviewAddrEnd && addr <= DataPreviewAddr);
+                        if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
+                        {
+                            ImU32 color = HighlightColor;
+                            if ((is_highlight_from_user_range + is_highlight_from_user_func + is_highlight_from_preview) > 1)
+                                color = (ImAlphaBlendColors(HighlightColor, 0x60C08080) & 0x00FFFFFF) | 0x90000000;
 
-                    pos.x += glyphWidth;
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + glyphWidth, pos.y + s.LineHeight), color);
+                        }
 
-                    if (addr <= 1) {
-                        n++;
-                        addr++;
-                    } else {
-                        n += decodedData.advance;
-                        addr += decodedData.advance;
+
+                        ImGui::PushID(line_i * Cols + n);
+                        ImGui::SameLine();
+                        ImGui::Dummy(ImVec2(glyphWidth, s.LineHeight));
+
+                        ImGui::PopID();
+
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyShift)
+                        {
+                            if (!ReadOnly && ImGui::IsMouseDoubleClicked(0)) {
+                                DataEditingTakeFocus = true;
+                                data_editing_addr_next = addr;
+                            }
+
+                            DataPreviewAddr = addr;
+                            DataPreviewAddrEnd = addr;
+
+                        }
+                        if (ImGui::IsItemHovered() && ((ImGui::IsMouseClicked(0) && ImGui::GetIO().KeyShift) || ImGui::IsMouseDragging(0))) {
+                            DataPreviewAddrEnd = addr;
+                        }
+
+                        pos.x += glyphWidth;
+
+                        if (addr <= 1) {
+                            n++;
+                            addr++;
+                        } else {
+                            n += decodedData.advance;
+                            addr += decodedData.advance;
+                        }
                     }
                 }
             }
         }
-        clipper.Step();
-        clipper.End();
+
         ImGui::PopStyleVar(2);
         ImGui::EndChild();
 
