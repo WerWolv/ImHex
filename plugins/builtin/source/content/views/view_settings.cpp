@@ -42,14 +42,17 @@ namespace hex::plugin::builtin {
                     return item0->first.slot < item1->first.slot;
                 });
 
+                const auto &descriptions = ContentRegistry::Settings::getCategoryDescriptions();
+
                 for (auto &it : sortedCategories) {
                     auto &[category, entries] = *it;
                     if (ImGui::BeginTabItem(LangEntry(category))) {
-                        ImGui::TextUnformatted(LangEntry(category));
+                        const std::string &categoryDesc = descriptions.count(category) ? descriptions.at(category) : category.name;
+                        ImGui::TextUnformatted(LangEntry(categoryDesc));
                         ImGui::Separator();
 
                         for (auto &[name, callback] : entries) {
-                            if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category][name]))
+                            if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category.name][name]))
                                 EventManager::post<EventSettingsChanged>();
                         }
 

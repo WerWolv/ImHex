@@ -675,6 +675,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Upper case Hex characters" },
                     { "hex.builtin.setting.hex_editor.extra_info", "Display extra information" },
                 { "hex.builtin.setting.folders", "Folders" },
+                { "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
 
                 { "hex.builtin.provider.file.path", "File path" },
                 { "hex.builtin.provider.file.size", "Size" },

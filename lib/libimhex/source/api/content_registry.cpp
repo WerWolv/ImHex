@@ -93,6 +93,10 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = defaultValue;
         }
 
+        void addCategoryDescrition(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription) {
+            getCategoryDescriptions()[unlocalizedCategory] = unlocalizedCategoryDescription;
+        }
+
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
             auto &json = getSettingsData();
 
@@ -171,6 +175,12 @@ namespace hex {
             static std::map<Category, std::vector<Entry>> entries;
 
             return entries;
+        }
+
+        std::map<std::string, std::string> &getCategoryDescriptions() {
+            static std::map<std::string, std::string> descriptions;
+
+            return descriptions;
         }
 
         nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {

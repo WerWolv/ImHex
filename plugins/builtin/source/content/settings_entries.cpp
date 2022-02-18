@@ -224,6 +224,8 @@ namespace hex::plugin::builtin {
 
         static const std::string dirsSetting { "hex.builtin.setting.folders" };
 
+        ContentRegistry::Settings::addCategoryDescrition(dirsSetting, "hex.builtin.setting.folders.description");
+
         ContentRegistry::Settings::add(dirsSetting, dirsSetting, std::vector<std::string> {}, [](auto name, nlohmann::json &setting) {
             static std::vector<std::string> folders = setting;
             static int currentItemIndex             = 0;

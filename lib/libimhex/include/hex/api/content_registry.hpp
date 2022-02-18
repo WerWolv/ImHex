@@ -66,6 +66,8 @@ namespace hex {
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback);
 
+            void addCategoryDescrition(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription);
+
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value);
@@ -75,6 +77,7 @@ namespace hex {
             std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue = {});
 
             std::map<Category, std::vector<Entry>> &getEntries();
+            std::map<std::string, std::string> &getCategoryDescriptions();
             nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
             nlohmann::json &getSettingsData();
             std::vector<std::string> getStringArray(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
