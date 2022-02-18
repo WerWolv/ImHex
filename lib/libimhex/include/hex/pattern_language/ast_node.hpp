@@ -732,6 +732,8 @@ namespace hex::pl {
         if (auto value = attributable->getAttributeValue("color"); value) {
             u32 color = strtoul(value->c_str(), nullptr, 16);
             pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
+        } else if (auto value = attributable->hasAttribute("single_color", false); value) {
+            pattern->setColor(ContentRegistry::PatternLanguage::getNextColor());
         }
 
         if (auto value = attributable->getAttributeValue("name"); value) {
@@ -819,7 +821,7 @@ namespace hex::pl {
             if (array == nullptr)
                 LogConsole::abortEvaluation("inline_array attribute can only be applied to array types", node);
 
-            for (const auto& entry : array->getEntries()) {
+            for (const auto &entry : array->getEntries()) {
                 entry->setFormatterFunction(function);
             }
         }
@@ -1050,7 +1052,6 @@ namespace hex::pl {
 
             outputPattern->setVariableName(this->m_name);
             outputPattern->setEndian(templatePattern->getEndian());
-            outputPattern->setColor(templatePattern->getColor());
             outputPattern->setTypeName(templatePattern->getTypeName());
             outputPattern->setSize(templatePattern->getSize() * entryCount);
 
@@ -1407,6 +1408,15 @@ namespace hex::pl {
             pattern->setSize(evaluator->dataOffset() - startOffset);
 
             structCleanup.release();
+
+            if (!pattern->hasOverriddenColor()) {
+                if (auto value = getAttributeValue("color"); value) {
+                    u32 color = strtoul(value->c_str(), nullptr, 16);
+                    pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
+                } else if (auto value = hasAttribute("single_color", false); value) {
+                    pattern->setColor(ContentRegistry::PatternLanguage::getNextColor());
+                }
+            }
 
             return { pattern };
         }
