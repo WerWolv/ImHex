@@ -46,6 +46,19 @@ namespace hex {
                 Callback callback;
             };
 
+            struct Category {
+                std::string name;
+                size_t slot = 0;
+                
+                bool operator<(const Category &other) const {
+                    return name < other.name;
+                }
+
+                operator const std::string &() const {
+                    return name;
+                }
+            };
+
             void load();
             void store();
 
@@ -61,7 +74,7 @@ namespace hex {
             std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
             std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue = {});
 
-            std::map<std::string, std::vector<Entry>> &getEntries();
+            std::map<Category, std::vector<Entry>> &getEntries();
             nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
             nlohmann::json &getSettingsData();
             std::vector<std::string> getStringArray(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
