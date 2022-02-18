@@ -27,6 +27,7 @@ namespace hex::plugin::builtin {
 
     static bool s_layoutConfigured = false;
     static ImGui::Texture s_bannerTexture;
+    static std::string s_bannerTextureName;
     static std::list<fs::path> s_recentFilePaths;
 
     static fs::path s_safetyBackupPath;
@@ -288,8 +289,14 @@ namespace hex::plugin::builtin {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
-                if (theme.is_number())
-                    EventManager::post<RequestChangeTheme>(theme.get<int>());
+                if (theme.is_number()) {
+                    static int lastTheme = theme.get<int>();
+
+                    if (const int thisTheme = theme.get<int>(); thisTheme != lastTheme) {
+                        EventManager::post<RequestChangeTheme>(thisTheme);
+                        lastTheme = thisTheme;
+                    }
+                }
             }
 
             {
@@ -319,8 +326,18 @@ namespace hex::plugin::builtin {
         });
 
         (void)EventManager::subscribe<RequestChangeTheme>([](u32 theme) {
-            if (s_bannerTexture.valid())
-                ImGui::UnloadImage(s_bannerTexture);
+            auto changeBannerTexture = [&](const char newTexture[]) {
+                if (s_bannerTextureName == newTexture) {
+                    return;
+                }
+
+                s_bannerTextureName   = newTexture;
+                auto banner           = romfs::get(newTexture);
+                auto oldBannerTexture = s_bannerTexture;
+                s_bannerTexture       = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+
+                if (oldBannerTexture.valid()) { ImGui::UnloadImage(oldBannerTexture); }
+            };
 
             switch (theme) {
                 default:
@@ -329,9 +346,7 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsDark();
                         ImGui::StyleCustomColorsDark();
                         ImPlot::StyleColorsDark();
-
-                        auto banner     = romfs::get("banner_dark.png");
-                        s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                        changeBannerTexture("banner_dark.png");
 
                         break;
                     }
@@ -340,9 +355,7 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsLight();
                         ImGui::StyleCustomColorsLight();
                         ImPlot::StyleColorsLight();
-
-                        auto banner     = romfs::get("banner_light.png");
-                        s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                        changeBannerTexture("banner_light.png");
 
                         break;
                     }
@@ -351,9 +364,7 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsClassic();
                         ImGui::StyleCustomColorsClassic();
                         ImPlot::StyleColorsClassic();
-
-                        auto banner     = romfs::get("banner_dark.png");
-                        s_bannerTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                        changeBannerTexture("banner_dark.png");
 
                         break;
                     }
