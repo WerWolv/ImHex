@@ -125,7 +125,7 @@ namespace hex::init {
         };
 
         ImWchar unifontRange[] = {
-            0x0020, 0xFFF0, 0
+            0x0100, 0xFFF0, 0
         };
 
         float fontSize = 13.0F * ImHexApi::System::getGlobalScale();
