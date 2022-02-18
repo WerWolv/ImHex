@@ -4,6 +4,8 @@
 #include <hex/api/localization.hpp>
 
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
+#include <fonts/codicons_font.h>
 
 #include <nlohmann/json.hpp>
 
@@ -218,6 +220,50 @@ namespace hex::plugin::builtin {
             }
 
             return false;
+        });
+
+        static const std::string dirsSetting { "hex.builtin.setting.folders" };
+
+        ContentRegistry::Settings::addCategoryDescrition(dirsSetting, "hex.builtin.setting.folders.description");
+
+        ContentRegistry::Settings::add(dirsSetting, dirsSetting, std::vector<std::string> {}, [](auto name, nlohmann::json &setting) {
+            static std::vector<std::string> folders = setting;
+            static int currentItemIndex             = 0;
+
+            if (!ImGui::BeginListBox("", ImVec2(-38, -FLT_MIN))) {
+                return false;
+            } else {
+                for (size_t n = 0; n < folders.size(); n++) {
+                    const bool isSelected = (currentItemIndex == n);
+                    if (ImGui::Selectable(folders.at(n).c_str(), isSelected)) { currentItemIndex = n; }
+                    if (isSelected) { ImGui::SetItemDefaultFocus(); }
+                }
+                ImGui::EndListBox();
+            }
+            ImGui::SameLine();
+            ImGui::BeginGroup();
+
+            if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
+                hex::openFileBrowser("Select include folder", hex::DialogMode::Folder, {}, [&](fs::path path) {
+                    auto pathStr = path.string();
+
+                    if (std::find(folders.begin(), folders.end(), pathStr) == folders.end()) {
+                        folders.emplace_back(pathStr);
+                        ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+                    }
+                });
+            }
+
+            if (ImGui::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
+                if (!folders.empty()) {
+                    folders.erase(std::next(folders.begin(), currentItemIndex));
+                    ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+                }
+            }
+
+            ImGui::EndGroup();
+
+            return true;
         });
     }
 
