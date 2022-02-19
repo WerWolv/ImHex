@@ -497,6 +497,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.buffer.combine.header", "Combine buffers" },
                     { "hex.builtin.nodes.buffer.slice", "Slice" },
                         { "hex.builtin.nodes.buffer.slice.header", "Slice buffer" },
+                        { "hex.builtin.nodes.buffer.slice.input.buffer", "Input" },
                         { "hex.builtin.nodes.buffer.slice.input.from", "From" },
                         { "hex.builtin.nodes.buffer.slice.input.to", "To" },
                     { "hex.builtin.nodes.buffer.repeat", "Repeat" },
