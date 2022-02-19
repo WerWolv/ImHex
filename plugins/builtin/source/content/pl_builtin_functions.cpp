@@ -106,12 +106,14 @@ namespace hex::plugin::builtin {
                 return u128(ctx->getProvider()->getActualSize());
             });
 
-            /* find_sequence(occurrence_index, bytes...) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "find_sequence", ContentRegistry::PatternLanguage::MoreParametersThan | 1, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            /* find_sequence_in_range(occurrence_index, start_offset, end_offset, bytes...) */
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "find_sequence_in_range", ContentRegistry::PatternLanguage::MoreParametersThan | 3, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto occurrenceIndex = Token::literalToUnsigned(params[0]);
+                auto offsetFrom      = Token::literalToUnsigned(params[1]);
+                auto offsetTo        = Token::literalToUnsigned(params[2]);
 
                 std::vector<u8> sequence;
-                for (u32 i = 1; i < params.size(); i++) {
+                for (u32 i = 3; i < params.size(); i++) {
                     auto byte = Token::literalToUnsigned(params[i]);
 
                     if (byte > 0xFF)
@@ -121,8 +123,10 @@ namespace hex::plugin::builtin {
                 }
 
                 std::vector<u8> bytes(sequence.size(), 0x00);
-                u32 occurrences = 0;
-                for (u64 offset = 0; offset < ctx->getProvider()->getSize() - sequence.size(); offset++) {
+                u32 occurrences      = 0;
+                const u64 bufferSize = ctx->getProvider()->getSize();
+                const u64 endOffset  = offsetTo <= offsetFrom ? bufferSize : std::min(bufferSize, u64(offsetTo));
+                for (u64 offset = offsetFrom; offset < endOffset - sequence.size(); offset++) {
                     ctx->getProvider()->read(offset, bytes.data(), bytes.size());
 
                     if (bytes == sequence) {
@@ -249,7 +253,6 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::Namespace nsStdFile = { "builtin", "std", "file" };
         {
-
             static u32 fileCounter = 0;
             static std::map<u32, File> openFiles;
 
@@ -509,5 +512,4 @@ namespace hex::plugin::builtin {
             });
         }
     }
-
 }
