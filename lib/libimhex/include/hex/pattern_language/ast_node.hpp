@@ -127,6 +127,132 @@ namespace hex::pl {
         std::vector<ASTNodeAttribute *> m_attributes;
     };
 
+
+    inline void applyTypeAttributes(Evaluator *evaluator, const ASTNode *node, PatternData *pattern) {
+        auto attributable = dynamic_cast<const Attributable *>(node);
+        if (attributable == nullptr)
+            LogConsole::abortEvaluation("attribute cannot be applied here", node);
+
+        if (attributable->hasAttribute("inline", false)) {
+            auto inlinable = dynamic_cast<Inlinable *>(pattern);
+
+            if (inlinable == nullptr)
+                LogConsole::abortEvaluation("inline attribute can only be applied to nested types", node);
+            else
+                inlinable->setInlined(true);
+        }
+
+        if (auto value = attributable->getAttributeValue("format"); value) {
+            auto functions = evaluator->getCustomFunctions();
+            if (!functions.contains(*value))
+                LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
+
+            const auto &function = functions[*value];
+            if (function.parameterCount != 1)
+                LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
+
+            pattern->setFormatterFunction(function);
+        }
+
+        if (auto value = attributable->getAttributeValue("format_entries"); value) {
+            auto functions = evaluator->getCustomFunctions();
+            if (!functions.contains(*value))
+                LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
+
+            const auto &function = functions[*value];
+            if (function.parameterCount != 1)
+                LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
+
+            auto array = dynamic_cast<PatternDataDynamicArray *>(pattern);
+            if (array == nullptr)
+                LogConsole::abortEvaluation("inline_array attribute can only be applied to array types", node);
+
+            for (const auto &entry : array->getEntries()) {
+                entry->setFormatterFunction(function);
+            }
+        }
+
+        if (auto value = attributable->getAttributeValue("transform"); value) {
+            auto functions = evaluator->getCustomFunctions();
+            if (!functions.contains(*value))
+                LogConsole::abortEvaluation(hex::format("cannot find transform function '{}'", *value), node);
+
+            const auto &function = functions[*value];
+            if (function.parameterCount != 1)
+                LogConsole::abortEvaluation("transform function needs exactly one parameter", node);
+
+            pattern->setTransformFunction(function);
+        }
+
+        if (auto value = attributable->getAttributeValue("pointer_base"); value) {
+            auto functions = evaluator->getCustomFunctions();
+            if (!functions.contains(*value))
+                LogConsole::abortEvaluation(hex::format("cannot find pointer base function '{}'", *value), node);
+
+            const auto &function = functions[*value];
+            if (function.parameterCount != 1)
+                LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
+
+            if (auto pointerPattern = dynamic_cast<PatternDataPointer *>(pattern)) {
+                u128 pointerValue = pointerPattern->getPointedAtAddress();
+
+                auto result = function.func(evaluator, { pointerValue });
+
+                if (!result.has_value())
+                    LogConsole::abortEvaluation("pointer base function did not return a value", node);
+
+                pointerPattern->setPointedAtAddress(Token::literalToUnsigned(result.value()) + pointerValue);
+            } else {
+                LogConsole::abortEvaluation("pointer_base attribute may only be applied to a pointer");
+            }
+        }
+
+        if (attributable->hasAttribute("hidden", false)) {
+            pattern->setHidden(true);
+        }
+
+        if (!pattern->hasOverriddenColor()) {
+            if (auto value = attributable->getAttributeValue("color"); value) {
+                u32 color = strtoul(value->c_str(), nullptr, 16);
+                pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
+            } else if (auto value = attributable->hasAttribute("single_color", false); value) {
+                pattern->setColor(ContentRegistry::PatternLanguage::getNextColor());
+            }
+        }
+    }
+
+    inline void applyVariableAttributes(Evaluator *evaluator, const ASTNode *node, PatternData *pattern) {
+        auto attributable = dynamic_cast<const Attributable *>(node);
+        if (attributable == nullptr)
+            LogConsole::abortEvaluation("attribute cannot be applied here", node);
+
+        auto endOffset          = evaluator->dataOffset();
+        evaluator->dataOffset() = pattern->getOffset();
+        ON_SCOPE_EXIT { evaluator->dataOffset() = endOffset; };
+
+        applyTypeAttributes(evaluator, node, pattern);
+
+        if (auto value = attributable->getAttributeValue("color"); value) {
+            u32 color = strtoul(value->c_str(), nullptr, 16);
+            pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
+        } else if (auto value = attributable->hasAttribute("single_color", false); value) {
+            pattern->setColor(ContentRegistry::PatternLanguage::getNextColor());
+        }
+
+        if (auto value = attributable->getAttributeValue("name"); value) {
+            pattern->setDisplayName(*value);
+        }
+
+        if (auto value = attributable->getAttributeValue("comment"); value) {
+            pattern->setComment(*value);
+        }
+
+        if (attributable->hasAttribute("no_unique_address", false)) {
+            endOffset -= pattern->getSize();
+        }
+    }
+
+
     class ASTNodeLiteral : public ASTNode {
     public:
         explicit ASTNodeLiteral(Token::Literal literal) : ASTNode(), m_literal(std::move(literal)) { }
@@ -503,6 +629,8 @@ namespace hex::pl {
 
                 if (this->m_endian.has_value())
                     pattern->setEndian(this->m_endian.value());
+
+                applyTypeAttributes(evaluator, this, pattern);
             }
 
             return patterns;
@@ -719,113 +847,6 @@ namespace hex::pl {
         std::vector<ASTNode *> m_body;
         ASTNode *m_postExpression;
     };
-
-    inline void applyVariableAttributes(Evaluator *evaluator, const ASTNode *node, PatternData *pattern) {
-        auto attributable = dynamic_cast<const Attributable *>(node);
-        if (attributable == nullptr)
-            LogConsole::abortEvaluation("attribute cannot be applied here", node);
-
-        auto endOffset          = evaluator->dataOffset();
-        evaluator->dataOffset() = pattern->getOffset();
-        ON_SCOPE_EXIT { evaluator->dataOffset() = endOffset; };
-
-        if (auto value = attributable->getAttributeValue("color"); value) {
-            u32 color = strtoul(value->c_str(), nullptr, 16);
-            pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
-        } else if (auto value = attributable->hasAttribute("single_color", false); value) {
-            pattern->setColor(ContentRegistry::PatternLanguage::getNextColor());
-        }
-
-        if (auto value = attributable->getAttributeValue("name"); value) {
-            pattern->setDisplayName(*value);
-        }
-
-        if (auto value = attributable->getAttributeValue("comment"); value) {
-            pattern->setComment(*value);
-        }
-
-        if (auto value = attributable->getAttributeValue("format"); value) {
-            auto functions = evaluator->getCustomFunctions();
-            if (!functions.contains(*value))
-                LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
-
-            const auto &function = functions[*value];
-            if (function.parameterCount != 1)
-                LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
-
-            pattern->setFormatterFunction(function);
-        }
-
-        if (auto value = attributable->getAttributeValue("transform"); value) {
-            auto functions = evaluator->getCustomFunctions();
-            if (!functions.contains(*value))
-                LogConsole::abortEvaluation(hex::format("cannot find transform function '{}'", *value), node);
-
-            const auto &function = functions[*value];
-            if (function.parameterCount != 1)
-                LogConsole::abortEvaluation("transform function needs exactly one parameter", node);
-
-            pattern->setTransformFunction(function);
-        }
-
-        if (auto value = attributable->getAttributeValue("pointer_base"); value) {
-            auto functions = evaluator->getCustomFunctions();
-            if (!functions.contains(*value))
-                LogConsole::abortEvaluation(hex::format("cannot find pointer base function '{}'", *value), node);
-
-            const auto &function = functions[*value];
-            if (function.parameterCount != 1)
-                LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
-
-            if (auto pointerPattern = dynamic_cast<PatternDataPointer *>(pattern)) {
-                u128 pointerValue = pointerPattern->getPointedAtAddress();
-
-                auto result = function.func(evaluator, { pointerValue });
-
-                if (!result.has_value())
-                    LogConsole::abortEvaluation("pointer base function did not return a value", node);
-
-                pointerPattern->setPointedAtAddress(Token::literalToUnsigned(result.value()) + pointerValue);
-            } else {
-                LogConsole::abortEvaluation("pointer_base attribute may only be applied to a pointer");
-            }
-        }
-
-        if (attributable->hasAttribute("hidden", false)) {
-            pattern->setHidden(true);
-        }
-
-        if (attributable->hasAttribute("no_unique_address", false)) {
-            endOffset -= pattern->getSize();
-        }
-
-        if (attributable->hasAttribute("inline", false)) {
-            auto inlinable = dynamic_cast<Inlinable *>(pattern);
-
-            if (inlinable == nullptr)
-                LogConsole::abortEvaluation("inline attribute can only be applied to nested types", node);
-            else
-                inlinable->setInlined(true);
-        }
-
-        if (auto value = attributable->getAttributeValue("format_entries"); value) {
-            auto functions = evaluator->getCustomFunctions();
-            if (!functions.contains(*value))
-                LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
-
-            const auto &function = functions[*value];
-            if (function.parameterCount != 1)
-                LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
-
-            auto array = dynamic_cast<PatternDataDynamicArray *>(pattern);
-            if (array == nullptr)
-                LogConsole::abortEvaluation("inline_array attribute can only be applied to array types", node);
-
-            for (const auto &entry : array->getEntries()) {
-                entry->setFormatterFunction(function);
-            }
-        }
-    }
 
     class ASTNodeVariableDecl : public ASTNode,
                                 public Attributable {
@@ -1409,14 +1430,7 @@ namespace hex::pl {
 
             structCleanup.release();
 
-            if (!pattern->hasOverriddenColor()) {
-                if (auto value = getAttributeValue("color"); value) {
-                    u32 color = strtoul(value->c_str(), nullptr, 16);
-                    pattern->setColor(hex::changeEndianess(color, std::endian::big) >> 8);
-                } else if (auto value = hasAttribute("single_color", false); value) {
-                    pattern->setColor(ContentRegistry::PatternLanguage::getNextColor());
-                }
-            }
+            applyTypeAttributes(evaluator, this, pattern);
 
             return { pattern };
         }
@@ -1481,6 +1495,8 @@ namespace hex::pl {
             pattern->setMembers(memberPatterns);
             pattern->setSize(size);
 
+            applyTypeAttributes(evaluator, this, pattern);
+
             unionCleanup.release();
 
             return { pattern };
@@ -1533,6 +1549,8 @@ namespace hex::pl {
             ON_SCOPE_EXIT { delete underlying; };
             pattern->setSize(underlying->getSize());
             pattern->setEndian(underlying->getEndian());
+
+            applyTypeAttributes(evaluator, this, pattern);
 
             enumCleanup.release();
 
@@ -1623,6 +1641,8 @@ namespace hex::pl {
             pattern->setFields(fields);
 
             evaluator->dataOffset() += pattern->getSize();
+
+            applyTypeAttributes(evaluator, this, pattern);
 
             bitfieldCleanup.release();
 
