@@ -106,6 +106,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.no_data", "没有选中字节"},
 
                 { "hex.builtin.view.data_processor.name", "数据处理器" },
+                    //{ "hex.builtin.view.data_processor.help_text", "Right click to add a new node" },
                     { "hex.builtin.view.data_processor.menu.remove_selection", "移除已选" },
                     { "hex.builtin.view.data_processor.menu.remove_node", "移除节点" },
                     { "hex.builtin.view.data_processor.menu.remove_link", "移除链接" },

@@ -107,6 +107,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.no_data", "Keine bytes angewählt"},
 
                 { "hex.builtin.view.data_processor.name", "Datenprozessor" },
+                    { "hex.builtin.view.data_processor.help_text", "Rechtsklicken um neuen Knoten zu erstellen" },
                     { "hex.builtin.view.data_processor.menu.remove_selection", "Auswahl entfernen" },
                     { "hex.builtin.view.data_processor.menu.remove_node", "Knoten entfernen" },
                     { "hex.builtin.view.data_processor.menu.remove_link", "Link entfernen" },

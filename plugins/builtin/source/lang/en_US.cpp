@@ -107,6 +107,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.no_data", "No bytes selected"},
 
                 { "hex.builtin.view.data_processor.name", "Data Processor" },
+                    { "hex.builtin.view.data_processor.help_text", "Right click to add a new node" },
                     { "hex.builtin.view.data_processor.menu.remove_selection", "Remove Selected" },
                     { "hex.builtin.view.data_processor.menu.remove_node", "Remove Node" },
                     { "hex.builtin.view.data_processor.menu.remove_link", "Remove Link" },

@@ -106,6 +106,7 @@ namespace hex::plugin::builtin {
 
 
                 { "hex.builtin.view.data_processor.name", "Processa Dati"  },
+                    //{ "hex.builtin.view.data_processor.help_text", "Right click to add a new node" },
                     { "hex.builtin.view.data_processor.menu.remove_selection", "Rimuovi i selezionati" },
                     { "hex.builtin.view.data_processor.menu.remove_node", "Rimuovi Nodo" },
                     { "hex.builtin.view.data_processor.menu.remove_link", "Rimuovi Link" },

@@ -340,6 +340,9 @@ namespace hex::plugin::builtin {
 
                 ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
 
+                if (this->m_nodes.empty())
+                    ImGui::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
+
                 ImNodes::EndNodeEditor();
             }
             ImGui::EndChild();
