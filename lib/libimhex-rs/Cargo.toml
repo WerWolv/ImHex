@@ -11,6 +11,8 @@ imhex-macros = { path = "proc_macros" }
 imgui = { path = "imgui-rs" }
 
 cxx = "1.0.55"
+autocxx = "0.16"
 
 [build-dependencies]
-cxx-build = "1.0.55"
+autocxx-build = "0.16"
+#cxx-build = "1.0.55"
