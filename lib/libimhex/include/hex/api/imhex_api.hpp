@@ -80,7 +80,6 @@ namespace hex {
                 u32 highlightId;
             };
 
-            void add(Region region, const std::string &name, const std::string &comment, color_t color = 0x00000000);
             void add(u64 address, size_t size, const std::string &name, const std::string &comment, color_t color = 0x00000000);
 
         }
