@@ -7,6 +7,7 @@ include_cpp! {
 
     generate!("hex::ImHexApi::Common::closeImHex")
     generate!("hex::ImHexApi::Common::restartImHex")
+    generate!("hex::ImHexApi::Bookmarks::add")
 }
 
 //pub use crate::ffi::*;

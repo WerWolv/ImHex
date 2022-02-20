@@ -1,15 +1,7 @@
+use autocxx::c_ulong;
+
 use crate::Color;
 use std::ops::Range;
-
-#[cxx::bridge]
-mod ffi {
-    #[namespace = "hex::ImHexApi::Bookmarks"]
-    extern "C++" {
-        include!("hex/api/imhex_api.hpp");
-
-        pub unsafe fn add(addr: u64, size: u64, name: &CxxString, comment: &CxxString, color: u32);
-    }
-}
 
 /// Add a bookmark to a region of the current imhex view with an optionally provided color
 ///
@@ -25,13 +17,11 @@ pub fn add(region: Range<u64>, name: &str, comment: &str, color: impl Into<Optio
     cxx::let_cxx_string!(cpp_name = name);
     cxx::let_cxx_string!(cpp_comment = comment);
 
-    unsafe {
-        ffi::add(
-            region.start,
-            region.end.saturating_sub(region.start),
-            &cpp_name,
-            &cpp_comment,
-            color.into().unwrap_or(crate::Color::new(0, 0, 0, 0)).rgba(),
-        );
-    }
+    crate::ffi::hex::ImHexApi::Bookmarks::add(
+        region.start,
+        c_ulong::from(region.end.saturating_sub(region.start)),
+        &cpp_name,
+        &cpp_comment,
+        color.into().unwrap_or(crate::Color::new(0, 0, 0, 0)).rgba(),
+    );
 }
