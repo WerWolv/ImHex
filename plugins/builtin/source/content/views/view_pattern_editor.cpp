@@ -229,7 +229,7 @@ namespace hex::plugin::builtin {
             for (const auto &pattern : patterns) {
                 auto child = pattern->getPattern(address);
                 if (child != nullptr) {
-                    return ImHexApi::HexEditor::Highlighting(Region { address, 1 }, child->getColor(), child->getVariableName());
+                    return ImHexApi::HexEditor::Highlighting(Region { address, 1 }, child->getColor(), child->getDisplayName());
                 }
             }
 
@@ -672,7 +672,7 @@ namespace hex::plugin::builtin {
             }
 
             if (result) {
-                EventManager::post<EventHighlightingChanged>();
+                ImHexApi::HexEditor::invalidateHighlight();
             }
 
             this->m_runningEvaluators--;

@@ -267,9 +267,15 @@ namespace hex::pl {
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
-            if (ImGui::Selectable(("##PatternDataLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+
+            ImGui::PushID(this->getOffset());
+            ImGui::PushID(this->getVariableName().c_str());
+            if (ImGui::Selectable("##PatternDataLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
             }
+            ImGui::PopID();
+            ImGui::PopID();
+
             this->drawCommentTooltip();
             ImGui::SameLine();
             ImGui::TextUnformatted(this->getDisplayName().c_str());
@@ -1019,7 +1025,6 @@ namespace hex::pl {
         void setColor(u32 color) override {
             PatternData::setColor(color);
             this->m_template->setColor(color);
-            this->m_highlightTemplate->setColor(color);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -1057,6 +1062,10 @@ namespace hex::pl {
 
         [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
+
+            this->m_highlightTemplate->setColor(this->getColor());
+            this->m_highlightTemplate->setVariableName(this->getVariableName());
+            this->m_highlightTemplate->setDisplayName(this->getDisplayName());
 
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize())) {
                 this->m_highlightTemplate->setOffset((offset / this->m_highlightTemplate->getSize()) * this->m_highlightTemplate->getSize());
