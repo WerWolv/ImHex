@@ -11,6 +11,7 @@ namespace hex::pl {
 
     bool Validator::validate(const std::vector<ASTNode *> &ast) {
         std::unordered_set<std::string> identifiers;
+        std::unordered_set<std::string> types;
 
         try {
 
@@ -24,8 +25,8 @@ namespace hex::pl {
 
                     this->validate({ variableDeclNode->getType() });
                 } else if (auto typeDeclNode = dynamic_cast<ASTNodeTypeDecl *>(node); typeDeclNode != nullptr) {
-                    if (!identifiers.insert(typeDeclNode->getName().data()).second)
-                        throwValidatorError(hex::format("redefinition of identifier '{0}'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
+                    if (!types.insert(typeDeclNode->getName().data()).second)
+                        throwValidatorError(hex::format("redefinition of type '{0}'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
 
                     this->validate({ typeDeclNode->getType() });
                 } else if (auto structNode = dynamic_cast<ASTNodeStruct *>(node); structNode != nullptr) {
