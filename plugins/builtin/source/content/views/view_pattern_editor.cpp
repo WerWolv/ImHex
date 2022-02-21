@@ -672,7 +672,7 @@ namespace hex::plugin::builtin {
             }
 
             if (result) {
-                ImHexApi::HexEditor::invalidateHighlight();
+                EventManager::post<EventHighlightingChanged>();
             }
 
             this->m_runningEvaluators--;
