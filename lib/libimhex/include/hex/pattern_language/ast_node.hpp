@@ -1037,7 +1037,7 @@ namespace hex::pl {
             } else {
                 std::vector<u8> buffer(templatePattern->getSize());
                 while (true) {
-                    if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size())
+                    if (evaluator->dataOffset() > evaluator->getProvider()->getActualSize() - buffer.size())
                         LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
 
                     evaluator->getProvider()->read(evaluator->dataOffset(), buffer.data(), buffer.size());
@@ -1183,7 +1183,7 @@ namespace hex::pl {
                     for (auto pattern : patterns) {
                         std::vector<u8> buffer(pattern->getSize());
 
-                        if (evaluator->dataOffset() >= evaluator->getProvider()->getActualSize() - buffer.size()) {
+                        if (evaluator->dataOffset() > evaluator->getProvider()->getActualSize() - buffer.size()) {
                             delete pattern;
                             LogConsole::abortEvaluation("reached end of file before finding end of unsized array", this);
                         }
