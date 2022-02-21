@@ -59,6 +59,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.info", "Information" },
                 { "hex.builtin.common.error", "Fehler" },
                 { "hex.builtin.common.fatal", "Fataler Fehler" },
+                { "hex.builtin.common.question", "Frage" },
                 { "hex.builtin.common.address", "Adresse" },
                 { "hex.builtin.common.size", "Länge" },
                 { "hex.builtin.common.region", "Region" },
@@ -330,6 +331,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_data.value", "Wert" },
 
                 { "hex.builtin.view.settings.name", "Einstellungen" },
+                    { "hex.builtin.view.settings.restart_question", "Eine Änderung die du gemacht hast benötigt einen neustart von ImHex. Möchtest du ImHex jetzt neu starten?" },
 
                 { "hex.builtin.view.strings.name", "Strings" },
                     { "hex.builtin.view.strings.copy", "String kopieren" },
@@ -672,6 +674,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "Nullen ausgrauen" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Hex Zeichen als Grossbuchstaben" },
                     { "hex.builtin.setting.hex_editor.extra_info", "Extra informationen anzeigen" },
+                { "hex.builtin.setting.folders", "Ordner" },
+                    { "hex.builtin.setting.folders.description", "Gib zusätzliche Orderpfade an in welchen Pattern, Scripts, Yara Rules und anderes gesucht wird" },
+                { "hex.builtin.setting.font", "Schriftart" },
+                    { "hex.builtin.setting.font.font_path", "Eigene Schriftart" },
+                    { "hex.builtin.setting.font.font_size", "Schriftgrösse" },
 
                 { "hex.builtin.provider.file.path", "Dateipfad" },
                 { "hex.builtin.provider.file.size", "Größe" },

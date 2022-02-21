@@ -38,7 +38,7 @@ namespace hex {
         std::vector<fs::path> result;
         const auto exePath = getExecutablePath();
         const std::string settingName { "hex.builtin.setting.folders" };
-        auto userDirs = ContentRegistry::Settings::getStringArray(settingName, settingName);
+        auto userDirs = ContentRegistry::Settings::read(settingName, settingName, std::vector<std::string> {});
 
         auto addUserDirs = [&userDirs](auto &paths) {
             std::transform(userDirs.begin(), userDirs.end(), std::back_inserter(paths), [](auto &item) {

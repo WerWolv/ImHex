@@ -10,6 +10,8 @@ namespace hex {
 
     std::string View::s_popupMessage;
 
+    std::function<void()> View::s_yesCallback, View::s_noCallback;
+
     u32 View::s_selectableFileIndex;
     std::vector<fs::path> View::s_selectableFiles;
     std::function<void(fs::path)> View::s_selectableFileOpenCallback;
@@ -65,6 +67,23 @@ namespace hex {
             ImGui::EndPopup();
         }
 
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
+        if (ImGui::BeginPopupModal("hex.builtin.common.question"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+
+            View::confirmButtons(
+                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] {
+                    s_yesCallback();
+                    ImGui::CloseCurrentPopup(); }, [] {
+                    s_noCallback();
+                    ImGui::CloseCurrentPopup(); });
+
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::EndPopup();
+        }
+
         bool opened = true;
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -115,6 +134,15 @@ namespace hex {
         s_popupMessage = errorMessage;
 
         ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.fatal"_lang); });
+    }
+
+    void View::showYesNoQuestionPopup(const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback) {
+        s_popupMessage = message;
+
+        s_yesCallback = yesCallback;
+        s_noCallback  = noCallback;
+
+        ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
     }
 
     void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {

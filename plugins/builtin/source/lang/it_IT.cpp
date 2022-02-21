@@ -58,6 +58,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.info", "Informazioni" },
                 { "hex.builtin.common.error", "Errore" },
                 { "hex.builtin.common.fatal", "Errore Fatale" },
+                //{ "hex.builtin.common.question", "Question" },
                 { "hex.builtin.common.address", "Indirizzo" },
                 { "hex.builtin.common.size", "Dimensione" },
                 { "hex.builtin.common.region", "Regione" },
@@ -329,6 +330,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_data.value", "Valore" },
 
                 { "hex.builtin.view.settings.name", "Impostazioni" },
+                    //{ "hex.builtin.view.settings.restart_question", "A change you made requires a restart of ImHex to take effect. Would you like to restart it now?" },
 
                 { "hex.builtin.view.strings.name", "Stringhe" },
                     { "hex.builtin.view.strings.copy", "Copia stringa" },
@@ -673,6 +675,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "Taglia fuori gli zeri" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Caratteri esadecimali maiuscoli" },
                     { "hex.builtin.setting.hex_editor.extra_info", "Mostra informazioni extra" },
+                //{ "hex.builtin.setting.folders", "Folders" },
+                    //{ "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
+                //{ "hex.builtin.setting.font", "Font" },
+                    //{ "hex.builtin.setting.font.font_path", "Custom Font Path" },
+                    //{ "hex.builtin.setting.font.font_size", "Font Size" },
 
                 { "hex.builtin.provider.file.path", "Percorso del File" },
                 { "hex.builtin.provider.file.size", "Dimensione" },

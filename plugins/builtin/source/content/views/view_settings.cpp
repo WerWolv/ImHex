@@ -2,6 +2,8 @@
 
 #include <hex/api/content_registry.hpp>
 
+#include <hex/helpers/logger.hpp>
+
 #include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
@@ -45,15 +47,20 @@ namespace hex::plugin::builtin {
                 const auto &descriptions = ContentRegistry::Settings::getCategoryDescriptions();
 
                 for (auto &it : sortedCategories) {
-                    auto &[category, entries] = *it;
+                    auto &[category, settings] = *it;
                     if (ImGui::BeginTabItem(LangEntry(category))) {
                         const std::string &categoryDesc = descriptions.count(category) ? descriptions.at(category) : category.name;
                         ImGui::TextUnformatted(LangEntry(categoryDesc));
                         ImGui::Separator();
 
-                        for (auto &[name, callback] : entries) {
-                            if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category.name][name]))
+                        for (auto &[name, requiresRestart, callback] : settings) {
+                            if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category.name][name])) {
+                                log::info("Setting [{}]: {} was changed", category.name, name);
                                 EventManager::post<EventSettingsChanged>();
+
+                                if (requiresRestart)
+                                    this->m_restartRequested = true;
+                            }
                         }
 
                         ImGui::EndTabItem();
@@ -65,6 +72,10 @@ namespace hex::plugin::builtin {
             ImGui::EndPopup();
         } else
             this->getWindowOpenState() = false;
+
+        if (this->getWindowOpenState() == false && this->m_restartRequested) {
+            View::showYesNoQuestionPopup("hex.builtin.view.settings.restart_question"_lang, ImHexApi::Common::restartImHex, [] {});
+        }
     }
 
 }

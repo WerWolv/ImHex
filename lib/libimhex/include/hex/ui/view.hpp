@@ -38,6 +38,7 @@ namespace hex {
         static void showMessagePopup(const std::string &message);
         static void showErrorPopup(const std::string &errorMessage);
         static void showFatalPopup(const std::string &errorMessage);
+        static void showYesNoQuestionPopup(const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback);
 
         static void showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback);
 
@@ -70,6 +71,8 @@ namespace hex {
         std::map<Shortcut, std::function<void()>> m_shortcuts;
 
         static std::string s_popupMessage;
+
+        static std::function<void()> s_yesCallback, s_noCallback;
 
         static u32 s_selectableFileIndex;
         static std::vector<fs::path> s_selectableFiles;

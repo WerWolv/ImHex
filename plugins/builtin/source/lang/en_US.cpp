@@ -60,6 +60,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.info", "Information" },
                 { "hex.builtin.common.error", "Error" },
                 { "hex.builtin.common.fatal", "Fatal Error" },
+                { "hex.builtin.common.question", "Question" },
                 { "hex.builtin.common.address", "Address" },
                 { "hex.builtin.common.size", "Size" },
                 { "hex.builtin.common.region", "Region" },
@@ -334,6 +335,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_data.value", "Value" },
 
                 { "hex.builtin.view.settings.name", "Settings" },
+                    { "hex.builtin.view.settings.restart_question", "A change you made requires a restart of ImHex to take effect. Would you like to restart it now?" },
 
                 { "hex.builtin.view.strings.name", "Strings" },
                     { "hex.builtin.view.strings.copy", "Copy string" },
@@ -677,7 +679,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Upper case Hex characters" },
                     { "hex.builtin.setting.hex_editor.extra_info", "Display extra information" },
                 { "hex.builtin.setting.folders", "Folders" },
-                { "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
+                    { "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, Yara rules and more" },
+                { "hex.builtin.setting.font", "Font" },
+                    { "hex.builtin.setting.font.font_path", "Custom Font Path" },
+                    { "hex.builtin.setting.font.font_size", "Font Size" },
 
                 { "hex.builtin.provider.file.path", "File path" },
                 { "hex.builtin.provider.file.size", "Size" },

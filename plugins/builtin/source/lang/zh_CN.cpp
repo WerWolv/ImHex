@@ -59,6 +59,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.info", "信息" },
                 { "hex.builtin.common.error", "错误" },
                 { "hex.builtin.common.fatal", "致命错误" },
+                // { "hex.builtin.common.question", "Question" },
                 { "hex.builtin.common.address", "地址" },
                 { "hex.builtin.common.size", "大小" },
                 { "hex.builtin.common.region", "区域" },
@@ -329,6 +330,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_data.value", "值" },
 
                 { "hex.builtin.view.settings.name", "设置" },
+                    //{ "hex.builtin.view.settings.restart_question", "A change you made requires a restart of ImHex to take effect. Would you like to restart it now?" },
 
                 { "hex.builtin.view.strings.name", "字符串" },
                     { "hex.builtin.view.strings.copy", "复制字符串" },
@@ -668,6 +670,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "显示零字节为灰色" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "大写Hex字符" },
                     { "hex.builtin.setting.hex_editor.extra_info", "显示额外信息" },
+                //{ "hex.builtin.setting.folders", "Folders" },
+                    //{ "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
+                //{ "hex.builtin.setting.font", "Font" },
+                    //{ "hex.builtin.setting.font.font_path", "Custom Font Path" },
+                    //{ "hex.builtin.setting.font.font_size", "Font Size" },
 
                 { "hex.builtin.provider.file.path", "路径" },
                 { "hex.builtin.provider.file.size", "大小" },

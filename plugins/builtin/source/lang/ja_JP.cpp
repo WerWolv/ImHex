@@ -59,6 +59,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.info", "情報" },
                 { "hex.builtin.common.error", "エラー" },
                 { "hex.builtin.common.fatal", "深刻なエラー" },
+                //{ "hex.builtin.common.question", "Question" },
                 { "hex.builtin.common.address", "アドレス" },
                 { "hex.builtin.common.size", "サイズ" },
                 { "hex.builtin.common.region", "住所" },
@@ -333,6 +334,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_data.value", "値" },
 
                 { "hex.builtin.view.settings.name", "設定" },
+                    //{ "hex.builtin.view.settings.restart_question", "A change you made requires a restart of ImHex to take effect. Would you like to restart it now?" },
 
                 { "hex.builtin.view.strings.name", "文字列" },
                     { "hex.builtin.view.strings.copy", "文字列をコピー" },
@@ -674,6 +676,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "ゼロをグレーアウト" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "16進数を大文字表記" },
                     { "hex.builtin.setting.hex_editor.extra_info", "追加情報を表示" },
+                //{ "hex.builtin.setting.folders", "Folders" },
+                    //{ "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
+                //{ "hex.builtin.setting.font", "Font" },
+                    //{ "hex.builtin.setting.font.font_path", "Custom Font Path" },
+                    //{ "hex.builtin.setting.font.font_size", "Font Size" },
 
                 { "hex.builtin.provider.file.path", "ファイルパス" },
                 { "hex.builtin.provider.file.size", "サイズ" },

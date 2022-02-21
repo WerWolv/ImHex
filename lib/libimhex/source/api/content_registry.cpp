@@ -54,10 +54,10 @@ namespace hex {
             return found;
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart) {
             log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName.c_str(), callback });
+            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName.c_str(), requiresRestart, callback });
 
             auto &json = getSettingsData();
 
@@ -67,10 +67,10 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart) {
             log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, callback });
+            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
             auto &json = getSettingsData();
 
@@ -80,10 +80,10 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart) {
             log::info("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, callback });
+            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
             auto &json = getSettingsData();
 
@@ -93,7 +93,7 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = defaultValue;
         }
 
-        void addCategoryDescrition(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription) {
+        void addCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription) {
             getCategoryDescriptions()[unlocalizedCategory] = unlocalizedCategoryDescription;
         }
 
@@ -196,15 +196,6 @@ namespace hex {
             static nlohmann::json settings;
 
             return settings;
-        }
-
-        std::vector<std::string> getStringArray(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
-            auto setting = getSetting(unlocalizedCategory, unlocalizedName);
-            if (setting.is_array()) {
-                return setting;
-            }
-
-            return {};
         }
 
     }

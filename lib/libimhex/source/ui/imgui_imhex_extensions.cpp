@@ -18,7 +18,7 @@ namespace ImGui {
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
         auto &mathInput = *static_cast<std::string *>(data->UserData);
 
-        mathInput.resize(data->BufTextLen);
+        mathInput.resize(data->BufTextLen + 1);
         return 0;
     }
 

@@ -57,27 +57,29 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0, [](auto name, nlohmann::json &setting) {
-            static int selection = static_cast<int>(setting);
+        ContentRegistry::Settings::add(
+            "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0, [](auto name, nlohmann::json &setting) {
+                static int selection = static_cast<int>(setting);
 
-            const char *scaling[] = {
-                "hex.builtin.setting.interface.scaling.native"_lang,
-                "hex.builtin.setting.interface.scaling.x0_5"_lang,
-                "hex.builtin.setting.interface.scaling.x1_0"_lang,
-                "hex.builtin.setting.interface.scaling.x1_5"_lang,
-                "hex.builtin.setting.interface.scaling.x2_0"_lang,
-            };
+                const char *scaling[] = {
+                    "hex.builtin.setting.interface.scaling.native"_lang,
+                    "hex.builtin.setting.interface.scaling.x0_5"_lang,
+                    "hex.builtin.setting.interface.scaling.x1_0"_lang,
+                    "hex.builtin.setting.interface.scaling.x1_5"_lang,
+                    "hex.builtin.setting.interface.scaling.x2_0"_lang,
+                };
 
-            if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
-                setting = selection;
+                if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
+                    setting = selection;
 
-                ImHexApi::Common::restartImHex();
+                    ImHexApi::Common::restartImHex();
 
-                return true;
-            }
+                    return true;
+                }
 
-            return false;
-        });
+                return false;
+            },
+            true);
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US", [](auto name, nlohmann::json &setting) {
             auto &languages = LangEntry::getSupportedLanguages();
@@ -222,9 +224,58 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+
+        static std::string fontPath;
+        ContentRegistry::Settings::add(
+            "hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "", [](auto name, nlohmann::json &setting) {
+                fontPath = static_cast<std::string>(setting);
+
+                if (ImGui::InputText("##font_path", fontPath.data(), fontPath.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &fontPath)) {
+                    setting = fontPath;
+                    return true;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    return hex::openFileBrowser("hex.builtin.setting.font.font_path", DialogMode::Open, {
+                                                                                                            {"TTF Font", "ttf"}
+                    },
+                        [&](const fs::path &path) {
+                            fontPath = path.string();
+                            setting  = fontPath;
+                        });
+                }
+
+                ImGui::SameLine();
+
+                ImGui::TextFormatted("{}", name);
+
+                return false;
+            },
+            true);
+
+        ContentRegistry::Settings::add(
+            "hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13, [](auto name, nlohmann::json &setting) {
+                static int fontSize = static_cast<int>(setting);
+
+                ImGui::BeginDisabled(fontPath.empty());
+
+                if (ImGui::SliderInt(name.data(), &fontSize, 0, 100, "%d", ImGuiSliderFlags_NoInput)) {
+                    setting = fontSize;
+                    return true;
+                }
+
+                ImGui::EndDisabled();
+
+                return false;
+            },
+            true);
+
+
         static const std::string dirsSetting { "hex.builtin.setting.folders" };
 
-        ContentRegistry::Settings::addCategoryDescrition(dirsSetting, "hex.builtin.setting.folders.description");
+        ContentRegistry::Settings::addCategoryDescription(dirsSetting, "hex.builtin.setting.folders.description");
 
         ContentRegistry::Settings::add(dirsSetting, dirsSetting, std::vector<std::string> {}, [](auto name, nlohmann::json &setting) {
             static std::vector<std::string> folders = setting;

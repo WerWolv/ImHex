@@ -258,7 +258,7 @@ namespace hex {
         Folder
     };
 
-    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath = {});
+    bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath = {});
 
     float float16ToFloat32(u16 float16);
 

@@ -19,6 +19,9 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] ImVec2 getMinSize() const override { return { 500, 300 }; }
         [[nodiscard]] ImVec2 getMaxSize() const override { return { 500, 300 }; }
+
+    private:
+        bool m_restartRequested = false;
     };
 
 }

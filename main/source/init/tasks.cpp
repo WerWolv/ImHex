@@ -92,14 +92,18 @@ namespace hex::init {
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
 
-        fs::path fontFile;
-        for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
-            auto path = dir / "font.ttf";
-            if (fs::exists(path)) {
-                log::info("Loading custom front from {}", path.string());
+        fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
 
-                fontFile = path;
-                break;
+        // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
+        if (fontFile.empty()) {
+            for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
+                auto path = dir / "font.ttf";
+                if (fs::exists(path)) {
+                    log::info("Loading custom front from {}", path.string());
+
+                    fontFile = path;
+                    break;
+                }
             }
         }
 
@@ -130,7 +134,7 @@ namespace hex::init {
 
         float fontSize = 13.0F * ImHexApi::System::getGlobalScale();
         if (fontFile.empty()) {
-            // Load default font
+            // Load default font if no custom one has been specified
 
             fonts->Clear();
 
@@ -140,7 +144,7 @@ namespace hex::init {
         } else {
             // Load custom font
 
-            fontSize = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.font_size", 14) * ImHexApi::System::getGlobalScale();
+            fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
 
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = fontSize;

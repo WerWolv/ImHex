@@ -43,13 +43,14 @@ namespace hex {
 
             struct Entry {
                 std::string name;
+                bool requiresRestart;
                 Callback callback;
             };
 
             struct Category {
                 std::string name;
                 size_t slot = 0;
-                
+
                 bool operator<(const Category &other) const {
                     return name < other.name;
                 }
@@ -62,11 +63,11 @@ namespace hex {
             void load();
             void store();
 
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback);
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback);
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart = false);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart = false);
+            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart = false);
 
-            void addCategoryDescrition(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription);
+            void addCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription);
 
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
@@ -80,7 +81,6 @@ namespace hex {
             std::map<std::string, std::string> &getCategoryDescriptions();
             nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
             nlohmann::json &getSettingsData();
-            std::vector<std::string> getStringArray(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */

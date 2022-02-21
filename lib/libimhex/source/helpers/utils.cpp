@@ -394,7 +394,7 @@ namespace hex {
     }
 
 
-    void openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath) {
+    bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 
         nfdchar_t *outPath;
@@ -419,6 +419,8 @@ namespace hex {
         }
 
         NFD::Quit();
+
+        return result == NFD_OKAY;
     }
 
     float float16ToFloat32(u16 float16) {
