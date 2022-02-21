@@ -261,7 +261,7 @@ namespace hex::plugin::builtin {
             bool removedFile   = fs::remove(path / fs::path(fileName));
             bool removedFolder = fs::remove(path / fs::path(fileName).stem());
 
-            removed = removedFile || removedFolder;
+            removed = removed || removedFile || removedFolder;
         }
 
         return removed;
