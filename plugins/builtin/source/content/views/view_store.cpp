@@ -161,7 +161,7 @@ namespace hex::plugin::builtin {
         this->m_yara.clear();
         this->m_encodings.clear();
 
-        this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s);
+        this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s, 30'0000);
     }
 
     void ViewStore::parseResponse() {
@@ -218,8 +218,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::drawContent() {
-        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(600, 400)), ImVec2(FLT_MAX, FLT_MAX));
-        if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState())) {
             if (this->m_apiRequest.valid()) {
                 if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
                     ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
@@ -242,7 +241,7 @@ namespace hex::plugin::builtin {
             if (!update || fs::exists(fullPath)) {
                 downloading          = true;
                 this->m_downloadPath = fullPath;
-                this->m_download     = this->m_net.downloadFile(url, fullPath);
+                this->m_download     = this->m_net.downloadFile(url, fullPath, 30'0000);
                 break;
             }
         }

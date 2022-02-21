@@ -35,11 +35,13 @@ namespace hex {
         Net();
         ~Net();
 
-        std::future<Response<std::string>> getString(const std::string &url, u32 timeout = 2000);
-        std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = 2000);
+        static constexpr u32 DefaultTimeout = 2'000;
 
-        std::future<Response<std::string>> uploadFile(const std::string &url, const fs::path &filePath, u32 timeout = 2000);
-        std::future<Response<void>> downloadFile(const std::string &url, const fs::path &filePath, u32 timeout = 2000);
+        std::future<Response<std::string>> getString(const std::string &url, u32 timeout = DefaultTimeout);
+        std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = DefaultTimeout);
+
+        std::future<Response<std::string>> uploadFile(const std::string &url, const fs::path &filePath, u32 timeout = DefaultTimeout);
+        std::future<Response<void>> downloadFile(const std::string &url, const fs::path &filePath, u32 timeout = DefaultTimeout);
 
         [[nodiscard]] std::string encode(const std::string &input);
 

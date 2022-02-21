@@ -121,7 +121,7 @@ namespace hex {
     std::optional<i32> Net::execute() {
         CURLcode result = curl_easy_perform(this->m_ctx);
         if (result != CURLE_OK)
-            log::error("Net request failed with error {}!", curl_easy_strerror(result));
+            log::error("Net request failed with error {0}: '{1}'", result, curl_easy_strerror(result));
 
         i32 responseCode = 0;
         curl_easy_getinfo(this->m_ctx, CURLINFO_RESPONSE_CODE, &responseCode);
