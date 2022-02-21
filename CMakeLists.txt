@@ -28,7 +28,7 @@ configurePackingResources()
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
-add_custom_target(imhex ALL DEPENDS main)
+add_custom_target(imhex_all ALL DEPENDS main)
 
 # Add unit tests
 add_subdirectory(tests EXCLUDE_FROM_ALL)
