@@ -23,6 +23,8 @@ namespace hex::pl {
         auto pattern       = type == nullptr ? nullptr : type->createPatterns(this).front();
         this->dataOffset() = startOffset;
 
+        bool referenceType = false;
+
         if (pattern == nullptr) {
             // Handle auto variables
             if (!value.has_value())
@@ -38,19 +40,23 @@ namespace hex::pl {
                 pattern = new PatternDataBoolean(this, 0);
             else if (std::get_if<char>(&value.value()) != nullptr)
                 pattern = new PatternDataCharacter(this, 0);
-            else if (std::get_if<PatternData *>(&value.value()) != nullptr)
-                pattern = std::get<PatternData *>(value.value())->clone();
             else if (std::get_if<std::string>(&value.value()) != nullptr)
                 pattern = new PatternDataString(this, 0, 1);
-            else
+            else if (std::get_if<PatternData *>(&value.value()) != nullptr) {
+                pattern       = std::get<PatternData *>(value.value())->clone();
+                referenceType = true;
+            } else
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
         }
 
         pattern->setVariableName(name);
-        pattern->setLocal(true);
-        pattern->setOffset(this->getStack().size());
 
-        this->getStack().emplace_back();
+        if (!referenceType) {
+            pattern->setOffset(this->getStack().size());
+            pattern->setLocal(true);
+            this->getStack().emplace_back();
+        }
+
         variables.push_back(pattern);
 
         if (outVariable)
@@ -85,6 +91,8 @@ namespace hex::pl {
 
         if (pattern == nullptr)
             LogConsole::abortEvaluation(hex::format("no variable with name '{}' found", name));
+
+        if (!pattern->isLocal()) return;
 
         Token::Literal castedLiteral = std::visit(overloaded {
                                                       [&](double &value) -> Token::Literal {
