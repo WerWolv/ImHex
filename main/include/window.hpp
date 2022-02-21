@@ -52,6 +52,8 @@ namespace hex {
 
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
+
+        fs::path m_imguiSettingsPath;
     };
 
 }

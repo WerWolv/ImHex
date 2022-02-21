@@ -720,14 +720,16 @@ namespace hex {
         handler.UserData   = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
-        static std::string iniFileName;
         for (const auto &dir : hex::getPath(ImHexPath::Config)) {
             if (std::filesystem::exists(dir)) {
-                iniFileName = (dir / "interface.ini").string();
+                this->m_imguiSettingsPath = dir / "interface.ini";
                 break;
             }
         }
-        io.IniFilename = iniFileName.c_str();
+        io.IniFilename = nullptr;
+
+        if (!this->m_imguiSettingsPath.empty() && fs::exists(this->m_imguiSettingsPath))
+            ImGui::LoadIniSettingsFromDisk(this->m_imguiSettingsPath.string().c_str());
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
@@ -747,6 +749,8 @@ namespace hex {
 
         ImNodes::PopAttributeFlag();
         ImNodes::PopAttributeFlag();
+
+        ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
