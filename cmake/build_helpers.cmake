@@ -1,3 +1,5 @@
+include(FetchContent)
+
 macro(addVersionDefines)
     if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
         # Get the current working branch
@@ -279,3 +281,20 @@ macro(detectBadClone)
         endif()
     endforeach ()
 endmacro()
+
+
+function(downloadImHexPatternsFiles)
+    FetchContent_Declare(
+        imhex_patterns
+        GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
+        GIT_TAG master
+    )
+
+    FetchContent_Populate(imhex_patterns)
+
+    set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns yara magic)
+    foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
+        install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "./")
+    endforeach()
+
+endfunction()

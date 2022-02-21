@@ -59,7 +59,7 @@ namespace hex {
             CoTaskMemFree(wAppDataPath);
         }
 
-        std::vector<fs::path> paths = { parentDir, appDataDir / "imhex" };
+        std::vector<fs::path> paths = { appDataDir / "imhex", parentDir };
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -128,7 +128,7 @@ namespace hex {
         // Get path to special directories
         const fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
-        std::vector<fs::path> paths = { exePath, applicationSupportDir };
+        std::vector<fs::path> paths = { applicationSupportDir, exePath };
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -179,9 +179,6 @@ namespace hex {
         for (auto &dir : dataDirs)
             dir = dir / "imhex";
 
-        if (!exePath.empty())
-            dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
-
         switch (path) {
             case ImHexPath::Patterns:
                 addUserDirs(dataDirs);
@@ -226,6 +223,9 @@ namespace hex {
             default:
                 __builtin_unreachable();
         }
+
+        if (!exePath.empty())
+            dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
 #endif
 
         if (!listNonExisting) {
