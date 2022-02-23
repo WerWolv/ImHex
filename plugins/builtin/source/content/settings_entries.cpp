@@ -260,13 +260,12 @@ namespace hex::plugin::builtin {
                 static int fontSize = static_cast<int>(setting);
 
                 ImGui::BeginDisabled(fontPath.empty());
+                ON_SCOPE_EXIT { ImGui::EndDisabled(); };
 
                 if (ImGui::SliderInt(name.data(), &fontSize, 0, 100, "%d", ImGuiSliderFlags_NoInput)) {
                     setting = fontSize;
                     return true;
                 }
-
-                ImGui::EndDisabled();
 
                 return false;
             },
