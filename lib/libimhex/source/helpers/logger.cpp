@@ -23,7 +23,8 @@ namespace hex::log {
     void redirectToFile() {
         if (g_loggerFile.isValid()) return;
 
-        for (const auto &path : hex::getPath(ImHexPath::Logs)) {
+        for (const auto &path : hex::getPath(ImHexPath::Logs, true)) {
+            fs::create_directories(path);
             g_loggerFile = File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::now())), File::Mode::Create);
 
             if (g_loggerFile.isValid()) break;
