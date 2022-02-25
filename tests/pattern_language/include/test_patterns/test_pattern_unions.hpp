@@ -13,9 +13,15 @@ namespace hex::test {
             array->setEntries(create<PatternDataSigned>("s32", "", 0x200, sizeof(i32)), 2);
             auto variable = create<PatternDataUnsigned>("u128", "variable", 0x200, sizeof(u128));
 
-            testUnion->setMembers({ array, variable });
+            std::vector<std::shared_ptr<hex::pl::PatternData>> unionMembers;
+            {
+                unionMembers.push_back(std::move(array));
+                unionMembers.push_back(std::move(variable));
+            }
 
-            addPattern(testUnion);
+            testUnion->setMembers(std::move(unionMembers));
+
+            addPattern(std::move(testUnion));
         }
         ~TestPatternUnions() override = default;
 

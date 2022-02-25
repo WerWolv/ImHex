@@ -1,13 +1,17 @@
 #include "content/views/view_pattern_editor.hpp"
 
-#include <hex/helpers/project_file_handler.hpp>
+
 #include <hex/pattern_language/preprocessor.hpp>
 #include <hex/pattern_language/pattern_data.hpp>
-#include <hex/pattern_language/ast_node.hpp>
+#include <hex/pattern_language/ast/ast_node.hpp>
+#include <hex/pattern_language/ast/ast_node_variable_decl.hpp>
+#include <hex/pattern_language/ast/ast_node_type_decl.hpp>
+#include <hex/pattern_language/ast/ast_node_builtin_type.hpp>
+
 #include <hex/helpers/paths.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
-
+#include <hex/helpers/project_file_handler.hpp>
 #include <hex/helpers/magic.hpp>
 
 namespace hex::plugin::builtin {
@@ -603,12 +607,12 @@ namespace hex::plugin::builtin {
             this->m_patternTypes.clear();
 
             if (ast) {
-                for (auto node : *ast) {
-                    if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl *>(node)) {
-                        auto type = dynamic_cast<pl::ASTNodeTypeDecl *>(variableDecl->getType());
+                for (auto &node : *ast) {
+                    if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl *>(node.get())) {
+                        auto type = dynamic_cast<pl::ASTNodeTypeDecl *>(variableDecl->getType().get());
                         if (type == nullptr) continue;
 
-                        auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType *>(type->getType());
+                        auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType *>(type->getType().get());
                         if (builtinType == nullptr) continue;
 
                         PatternVariable variable = {

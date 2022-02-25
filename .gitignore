@@ -12,3 +12,5 @@ imgui.ini
 plugins/.rustc_info.json
 
 **/target
+
+plugins/example_rust/Cargo.lock

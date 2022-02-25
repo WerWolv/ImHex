@@ -3,6 +3,7 @@
 #include <hex.hpp>
 #include <hex/api/event.hpp>
 #include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/pattern_language.hpp>
 
 #include <cmath>
 #include <cstring>
@@ -14,6 +15,7 @@ namespace hex::prv {
 
     Provider::Provider() {
         this->m_patches.emplace_back();
+        this->m_patternLanguageRuntime = std::make_unique<pl::PatternLanguage>();
 
         if (this->hasLoadInterface())
             EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));

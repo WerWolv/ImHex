@@ -16,7 +16,7 @@ namespace hex::test {
             });
             testEnum->setEndian(std::endian::big);
 
-            addPattern(testEnum);
+            addPattern(std::move(testEnum));
         }
         ~TestPatternEnums() override = default;
 

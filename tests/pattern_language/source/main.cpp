@@ -7,13 +7,42 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/pattern_language/pattern_language.hpp>
 #include <hex/pattern_language/evaluator.hpp>
-#include <hex/pattern_language/ast_node.hpp>
+#include <hex/pattern_language/ast/ast_node.hpp>
+#include <hex/pattern_language/pattern_data.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include "test_provider.hpp"
 #include "test_patterns/test_pattern.hpp"
 
+#include <fmt/args.h>
+
 using namespace hex::test;
+
+static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
+    auto format = hex::pl::Token::literalToString(params[0], true);
+    std::string message;
+
+    fmt::dynamic_format_arg_store<fmt::format_context> formatArgs;
+
+    for (u32 i = 1; i < params.size(); i++) {
+        auto &param = params[i];
+
+        std::visit(hex::overloaded {
+                       [&](const std::shared_ptr<hex::pl::PatternData> &value) {
+                           formatArgs.push_back(value->toString(ctx->getProvider()));
+                       },
+                       [&](auto &&value) {
+                           formatArgs.push_back(value);
+                       } },
+            param);
+    }
+
+    try {
+        return fmt::vformat(format, formatArgs);
+    } catch (fmt::format_error &error) {
+        hex::pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
+    }
+}
 
 void addFunctions() {
     hex::ContentRegistry::PatternLanguage::Namespace nsStd = { "std" };
@@ -25,6 +54,12 @@ void addFunctions() {
             LogConsole::abortEvaluation(hex::format("assertion failed \"{0}\"", message));
 
         return {};
+    });
+
+    hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "print", hex::ContentRegistry::PatternLanguage::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+        ctx->getConsole().log(LogConsole::Level::Info, format(ctx, params));
+
+        return std::nullopt;
     });
 }
 
@@ -55,7 +90,6 @@ int test(int argc, char **argv) {
     }
 
     hex::pl::PatternLanguage language;
-    addFunctions();
 
     // Check if compilation succeeded
     auto result = language.executeString(provider, testPatterns[testName]->getSourceCode());
@@ -74,11 +108,6 @@ int test(int argc, char **argv) {
         hex::log::fatal("Failing test succeeded!");
         return EXIT_FAILURE;
     }
-
-    ON_SCOPE_EXIT {
-        for (auto &pattern : language.getPatterns())
-            delete pattern;
-    };
 
     // Check if the right number of patterns have been produced
     if (language.getPatterns().size() != currTest->getPatterns().size() && !currTest->getPatterns().empty()) {
@@ -102,6 +131,8 @@ int test(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     int result = EXIT_SUCCESS;
+
+    addFunctions();
 
     for (u32 i = 0; i < 16; i++) {
         result = test(argc, argv);

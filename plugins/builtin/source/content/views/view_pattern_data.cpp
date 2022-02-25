@@ -1,6 +1,8 @@
 #include "content/views/view_pattern_data.hpp"
 
 #include <hex/providers/provider.hpp>
+
+#include <hex/pattern_language/pattern_language.hpp>
 #include <hex/pattern_language/pattern_data.hpp>
 
 namespace hex::plugin::builtin {
@@ -18,7 +20,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventHighlightingChanged>(this);
     }
 
-    static bool beginPatternDataTable(prv::Provider *&provider, const std::vector<pl::PatternData *> &patterns, std::vector<pl::PatternData *> &sortedPatterns) {
+    static bool beginPatternDataTable(prv::Provider *&provider, const std::vector<std::shared_ptr<pl::PatternData>> &patterns, std::vector<pl::PatternData *> &sortedPatterns) {
         if (ImGui::BeginTable("##patterndatatable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.builtin.view.pattern_data.var_name"_lang, 0, 0, ImGui::GetID("name"));
@@ -31,7 +33,8 @@ namespace hex::plugin::builtin {
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
             if (sortSpecs->SpecsDirty || sortedPatterns.empty()) {
-                sortedPatterns = patterns;
+                for (const auto &pattern : patterns)
+                    sortedPatterns.push_back(pattern.get());
 
                 std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs, &provider](pl::PatternData *left, pl::PatternData *right) -> bool {
                     return pl::PatternData::sortPatternDataTable(sortSpecs, provider, left, right);

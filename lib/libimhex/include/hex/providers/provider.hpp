@@ -9,7 +9,11 @@
 #include <vector>
 
 #include <hex/providers/overlay.hpp>
-#include <hex/pattern_language/pattern_language.hpp>
+#include <hex/helpers/paths.hpp>
+
+namespace hex::pl {
+    class PatternLanguage;
+}
 
 namespace hex::prv {
 
@@ -79,7 +83,7 @@ namespace hex::prv {
         virtual void drawLoadInterface();
         virtual void drawInterface();
 
-        pl::PatternLanguage &getPatternLanguageRuntime() { return this->m_patternLanguageRuntime; }
+        pl::PatternLanguage &getPatternLanguageRuntime() { return *this->m_patternLanguageRuntime; }
         std::string &getPatternLanguageSourceCode() { return this->m_patternLanguageSourceCode; }
 
     protected:
@@ -90,7 +94,7 @@ namespace hex::prv {
         std::list<std::map<u64, u8>> m_patches;
         std::list<Overlay *> m_overlays;
 
-        pl::PatternLanguage m_patternLanguageRuntime;
+        std::unique_ptr<pl::PatternLanguage> m_patternLanguageRuntime;
         std::string m_patternLanguageSourceCode;
     };
 

@@ -13,8 +13,8 @@ namespace hex::test {
                 placementPointer->setPointedAtAddress(0x49);
 
                 auto pointedTo = create<PatternDataUnsigned>("u32", "", 0x49, sizeof(u32));
-                placementPointer->setPointedAtPattern(pointedTo);
-                addPattern(placementPointer);
+                placementPointer->setPointedAtPattern(std::move(pointedTo));
+                addPattern(std::move(placementPointer));
             }
         }
         ~TestPatternPointers() override = default;

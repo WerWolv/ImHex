@@ -15,8 +15,8 @@ namespace hex::test {
             // placementArray
             {
                 auto placementArray = create<PatternDataStaticArray>("u8", "placementArray", 0x10, sizeof(u8) * 10);
-                placementArray->setEntries(create<PatternDataUnsigned>("u8", "", 0x10, sizeof(u8)), 10);
-                addPattern(placementArray);
+                placementArray->setEntries(std::move(create<PatternDataUnsigned>("u8", "", 0x10, sizeof(u8))), 10);
+                addPattern(std::move(placementArray));
             }
         }
         ~TestPatternPlacement() override = default;

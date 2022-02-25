@@ -134,9 +134,9 @@ namespace hex::pl {
         virtual void createEntry(prv::Provider *&provider)         = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
-        [[nodiscard]] virtual const PatternData *getPattern(u64 offset) const {
+        [[nodiscard]] virtual std::unique_ptr<const PatternData> getPattern(u64 offset) const {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()) && !this->isHidden())
-                return this;
+                return this->clone();
             else
                 return nullptr;
         }
@@ -324,8 +324,8 @@ namespace hex::pl {
     public:
         PatternDataPadding(Evaluator *evaluator, u64 offset, size_t size) : PatternData(evaluator, offset, size, 0xFF000000) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataPadding(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataPadding(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -349,12 +349,8 @@ namespace hex::pl {
             this->m_pointedAt = other.m_pointedAt->clone();
         }
 
-        ~PatternDataPointer() override {
-            delete this->m_pointedAt;
-        }
-
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataPointer(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataPointer(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -421,8 +417,8 @@ namespace hex::pl {
             return result;
         }
 
-        void setPointedAtPattern(PatternData *pattern) {
-            this->m_pointedAt = pattern;
+        void setPointedAtPattern(std::unique_ptr<PatternData> &&pattern) {
+            this->m_pointedAt = std::move(pattern);
             this->m_pointedAt->setVariableName(hex::format("*({})", this->getVariableName()));
             this->m_pointedAt->setOffset(this->m_pointedAtAddress);
         }
@@ -435,7 +431,7 @@ namespace hex::pl {
             return this->m_pointedAtAddress;
         }
 
-        [[nodiscard]] PatternData *getPointedAtPattern() {
+        [[nodiscard]] const std::unique_ptr<PatternData> &getPointedAtPattern() {
             return this->m_pointedAt;
         }
 
@@ -458,9 +454,9 @@ namespace hex::pl {
             this->m_pointerBase = base;
         }
 
-        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
+        [[nodiscard]] std::unique_ptr<const PatternData> getPattern(u64 offset) const override {
             if (offset >= this->getOffset() && offset < (this->getOffset() + this->getSize()) && !this->isHidden())
-                return this;
+                return std::unique_ptr<const PatternData>(this);
             else
                 return this->m_pointedAt->getPattern(offset);
         }
@@ -472,8 +468,8 @@ namespace hex::pl {
         }
 
     private:
-        PatternData *m_pointedAt = nullptr;
-        u64 m_pointedAtAddress   = 0;
+        std::unique_ptr<PatternData> m_pointedAt;
+        u64 m_pointedAtAddress = 0;
 
         u64 m_pointerBase = 0;
     };
@@ -483,8 +479,8 @@ namespace hex::pl {
         PatternDataUnsigned(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternData(evaluator, offset, size, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataUnsigned(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataUnsigned(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -520,8 +516,8 @@ namespace hex::pl {
         PatternDataSigned(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternData(evaluator, offset, size, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataSigned(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataSigned(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -558,8 +554,8 @@ namespace hex::pl {
         PatternDataFloat(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternData(evaluator, offset, size, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataFloat(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataFloat(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -597,8 +593,8 @@ namespace hex::pl {
         explicit PatternDataBoolean(Evaluator *evaluator, u64 offset, u32 color = 0)
             : PatternData(evaluator, offset, 1, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataBoolean(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataBoolean(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -625,8 +621,8 @@ namespace hex::pl {
         explicit PatternDataCharacter(Evaluator *evaluator, u64 offset, u32 color = 0)
             : PatternData(evaluator, offset, 1, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataCharacter(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataCharacter(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -648,8 +644,8 @@ namespace hex::pl {
         explicit PatternDataCharacter16(Evaluator *evaluator, u64 offset, u32 color = 0)
             : PatternData(evaluator, offset, 2, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataCharacter16(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataCharacter16(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -681,8 +677,8 @@ namespace hex::pl {
         PatternDataString(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternData(evaluator, offset, size, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataString(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataString(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -721,8 +717,8 @@ namespace hex::pl {
         PatternDataString16(Evaluator *evaluator, u64 offset, size_t size, u32 color = 0)
             : PatternData(evaluator, offset, size, color) { }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataString16(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataString16(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -776,20 +772,15 @@ namespace hex::pl {
         }
 
         PatternDataDynamicArray(const PatternDataDynamicArray &other) : PatternData(other) {
-            std::vector<PatternData *> entries;
+            std::vector<std::shared_ptr<PatternData>> entries;
             for (const auto &entry : other.m_entries)
                 entries.push_back(entry->clone());
 
-            this->setEntries(entries);
+            this->setEntries(std::move(entries));
         }
 
-        ~PatternDataDynamicArray() override {
-            for (const auto &entry : this->m_entries)
-                delete entry;
-        }
-
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataDynamicArray(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataDynamicArray(*this));
         }
 
         void setColor(u32 color) override {
@@ -827,7 +818,7 @@ namespace hex::pl {
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", std::shared_ptr<PatternData>(this)));
             }
 
             if (open) {
@@ -870,12 +861,12 @@ namespace hex::pl {
             PatternData::setOffset(offset);
         }
 
-        [[nodiscard]] const std::vector<PatternData *> &getEntries() {
+        [[nodiscard]] const auto &getEntries() {
             return this->m_entries;
         }
 
-        void setEntries(const std::vector<PatternData *> &entries) {
-            this->m_entries = entries;
+        void setEntries(std::vector<std::shared_ptr<PatternData>> &&entries) {
+            this->m_entries = std::move(entries);
 
             if (this->hasOverriddenColor()) {
                 for (auto &entry : this->m_entries) {
@@ -900,13 +891,13 @@ namespace hex::pl {
             return true;
         }
 
-        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
+        [[nodiscard]] std::unique_ptr<const PatternData> getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            for (auto pattern : this->m_entries) {
+            for (auto &pattern : this->m_entries) {
                 auto result = pattern->getPattern(offset);
                 if (result != nullptr)
-                    return result;
+                    return result->clone();
             }
 
             return nullptr;
@@ -921,7 +912,7 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData *> m_entries;
+        std::vector<std::shared_ptr<PatternData>> m_entries;
         u64 m_displayEnd = 50;
     };
 
@@ -936,13 +927,8 @@ namespace hex::pl {
             this->setEntries(other.getTemplate()->clone(), other.getEntryCount());
         }
 
-        ~PatternDataStaticArray() override {
-            delete this->m_template;
-            delete this->m_highlightTemplate;
-        }
-
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataStaticArray(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataStaticArray(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -975,7 +961,7 @@ namespace hex::pl {
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", std::shared_ptr<PatternData>(this)));
             }
 
             if (open) {
@@ -996,7 +982,6 @@ namespace hex::pl {
                         break;
                     }
                 }
-                delete entry;
 
                 if (!this->isInlined())
                     ImGui::TreePop();
@@ -1012,8 +997,6 @@ namespace hex::pl {
                 entry->setOffset(address);
                 entry->getHighlightedAddresses(highlight);
             }
-
-            delete entry;
         }
 
         void setOffset(u64 offset) override {
@@ -1031,7 +1014,7 @@ namespace hex::pl {
             return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
         }
 
-        [[nodiscard]] PatternData *getTemplate() const {
+        [[nodiscard]] const std::shared_ptr<PatternData> &getTemplate() const {
             return this->m_template;
         }
 
@@ -1043,13 +1026,12 @@ namespace hex::pl {
             this->m_entryCount = count;
         }
 
-        void setEntries(PatternData *templatePattern, size_t count) {
-            this->m_template          = templatePattern;
+        void setEntries(std::unique_ptr<PatternData> &&templatePattern, size_t count) {
+            this->m_template          = std::move(templatePattern);
             this->m_highlightTemplate = this->m_template->clone();
             this->m_entryCount        = count;
 
             if (this->hasOverriddenColor()) this->setColor(this->m_template->getColor());
-            this->m_template->setEndian(templatePattern->getEndian());
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
@@ -1060,7 +1042,7 @@ namespace hex::pl {
             return *this->m_template == *otherArray.m_template && this->m_entryCount == otherArray.m_entryCount;
         }
 
-        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
+        [[nodiscard]] std::unique_ptr<const PatternData> getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
             this->m_highlightTemplate->setColor(this->getColor());
@@ -1082,10 +1064,10 @@ namespace hex::pl {
         }
 
     private:
-        PatternData *m_template                  = nullptr;
-        mutable PatternData *m_highlightTemplate = nullptr;
-        size_t m_entryCount                      = 0;
-        u64 m_displayEnd                         = 50;
+        std::shared_ptr<PatternData> m_template                  = nullptr;
+        mutable std::unique_ptr<PatternData> m_highlightTemplate = nullptr;
+        size_t m_entryCount                                      = 0;
+        u64 m_displayEnd                                         = 50;
     };
 
     class PatternDataStruct : public PatternData,
@@ -1096,18 +1078,16 @@ namespace hex::pl {
         }
 
         PatternDataStruct(const PatternDataStruct &other) : PatternData(other) {
-            for (const auto &member : other.m_members)
-                this->m_members.push_back(member->clone());
-            this->m_sortedMembers = this->m_members;
+            for (const auto &member : other.m_members) {
+                auto copy = member->clone();
+
+                this->m_sortedMembers.push_back(copy.get());
+                this->m_members.push_back(std::move(copy));
+            }
         }
 
-        ~PatternDataStruct() override {
-            for (const auto &member : this->m_members)
-                delete member;
-        }
-
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataStruct(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataStruct(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -1131,7 +1111,7 @@ namespace hex::pl {
                 ImGui::SameLine();
                 ImGui::TextUnformatted(this->getTypeName().c_str());
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", std::shared_ptr<PatternData>(this)));
             }
 
             if (open) {
@@ -1165,7 +1145,9 @@ namespace hex::pl {
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
-            this->m_sortedMembers = this->m_members;
+            this->m_sortedMembers.clear();
+            for (auto &member : this->m_members)
+                this->m_sortedMembers.push_back(member.get());
 
             std::sort(this->m_sortedMembers.begin(), this->m_sortedMembers.end(), [&sortSpecs, &provider](PatternData *left, PatternData *right) {
                 return PatternData::sortPatternDataTable(sortSpecs, provider, left, right);
@@ -1183,16 +1165,15 @@ namespace hex::pl {
             return this->m_members;
         }
 
-        void setMembers(const std::vector<PatternData *> &members) {
+        void setMembers(std::vector<std::shared_ptr<PatternData>> &&members) {
             this->m_members.clear();
 
             for (auto &member : members) {
                 if (member == nullptr) continue;
 
-                this->m_members.push_back(member);
+                this->m_sortedMembers.push_back(member.get());
+                this->m_members.push_back(std::move(member));
             }
-
-            this->m_sortedMembers = this->m_members;
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
@@ -1211,10 +1192,10 @@ namespace hex::pl {
             return true;
         }
 
-        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
+        [[nodiscard]] std::unique_ptr<const PatternData> getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](PatternData *pattern) {
+            auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](const std::shared_ptr<PatternData> &pattern) {
                 return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
             });
 
@@ -1234,7 +1215,7 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData *> m_members;
+        std::vector<std::shared_ptr<PatternData>> m_members;
         std::vector<PatternData *> m_sortedMembers;
     };
 
@@ -1246,18 +1227,16 @@ namespace hex::pl {
         }
 
         PatternDataUnion(const PatternDataUnion &other) : PatternData(other) {
-            for (const auto &member : other.m_members)
-                this->m_members.push_back(member->clone());
-            this->m_sortedMembers = this->m_members;
+            for (const auto &member : other.m_members) {
+                auto copy = member->clone();
+
+                this->m_sortedMembers.push_back(copy.get());
+                this->m_members.push_back(std::move(copy));
+            }
         }
 
-        ~PatternDataUnion() override {
-            for (const auto &member : this->m_members)
-                delete member;
-        }
-
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataUnion(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataUnion(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -1282,7 +1261,7 @@ namespace hex::pl {
                 ImGui::TextUnformatted(PatternData::getTypeName().c_str());
 
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", std::shared_ptr<PatternData>(this)));
             }
 
             if (open) {
@@ -1316,7 +1295,9 @@ namespace hex::pl {
         }
 
         void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) override {
-            this->m_sortedMembers = this->m_members;
+            this->m_sortedMembers.clear();
+            for (auto &member : this->m_members)
+                this->m_sortedMembers.push_back(member.get());
 
             std::sort(this->m_sortedMembers.begin(), this->m_sortedMembers.end(), [&sortSpecs, &provider](PatternData *left, PatternData *right) {
                 return PatternData::sortPatternDataTable(sortSpecs, provider, left, right);
@@ -1335,15 +1316,14 @@ namespace hex::pl {
             return this->m_members;
         }
 
-        void setMembers(const std::vector<PatternData *> &members) {
+        void setMembers(std::vector<std::shared_ptr<PatternData>> &&members) {
             this->m_members.clear();
             for (auto &member : members) {
                 if (member == nullptr) continue;
 
-                this->m_members.push_back(member);
+                this->m_sortedMembers.push_back(member.get());
+                this->m_members.push_back(std::move(member));
             }
-
-            this->m_sortedMembers = this->m_members;
         }
 
         [[nodiscard]] bool operator==(const PatternData &other) const override {
@@ -1362,10 +1342,10 @@ namespace hex::pl {
             return true;
         }
 
-        [[nodiscard]] const PatternData *getPattern(u64 offset) const override {
+        [[nodiscard]] std::unique_ptr<const PatternData> getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            auto largestMember = std::find_if(this->m_members.begin(), this->m_members.end(), [this](PatternData *pattern) {
+            auto largestMember = std::find_if(this->m_members.begin(), this->m_members.end(), [this](const std::shared_ptr<PatternData> &pattern) {
                 return pattern->getSize() == this->getSize();
             });
 
@@ -1386,7 +1366,7 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData *> m_members;
+        std::vector<std::shared_ptr<PatternData>> m_members;
         std::vector<PatternData *> m_sortedMembers;
     };
 
@@ -1396,8 +1376,8 @@ namespace hex::pl {
             : PatternData(evaluator, offset, size, color) {
         }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataEnum(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataEnum(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -1420,7 +1400,7 @@ namespace hex::pl {
                                                   return false;
                                               },
                                               [](std::string &) { return false; },
-                                              [](PatternData *) { return false; } },
+                                              [](std::shared_ptr<PatternData> &) { return false; } },
                     entryValueLiteral);
                 if (matches)
                     break;
@@ -1449,7 +1429,7 @@ namespace hex::pl {
             ImGui::SameLine();
             ImGui::TextUnformatted(PatternData::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this));
+            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), std::shared_ptr<PatternData>(this)));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -1491,8 +1471,8 @@ namespace hex::pl {
             : PatternData(evaluator, offset, 0, color), m_bitOffset(bitOffset), m_bitSize(bitSize), m_bitField(bitField) {
         }
 
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataBitfieldField(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataBitfieldField(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -1524,7 +1504,7 @@ namespace hex::pl {
                 u8 numBytes = (this->m_bitSize / 8) + 1;
 
                 u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
-                ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), this));
+                ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), std::shared_ptr<PatternData>(this)));
             }
         }
 
@@ -1565,13 +1545,8 @@ namespace hex::pl {
                 this->m_fields.push_back(field->clone());
         }
 
-        ~PatternDataBitfield() override {
-            for (auto field : this->m_fields)
-                delete field;
-        }
-
-        [[nodiscard]] PatternData *clone() const override {
-            return new PatternDataBitfield(*this);
+        [[nodiscard]] std::unique_ptr<PatternData> clone() const override {
+            return std::unique_ptr<PatternData>(new PatternDataBitfield(*this));
         }
 
         void createEntry(prv::Provider *&provider) override {
@@ -1606,7 +1581,7 @@ namespace hex::pl {
                     valueString += hex::format("{0:02X} ", i);
                 valueString += "}";
 
-                ImGui::TextFormatted("{}", this->formatDisplayValue(valueString, this));
+                ImGui::TextFormatted("{}", this->formatDisplayValue(valueString, std::shared_ptr<PatternData>(this)));
             }
 
             if (open) {
@@ -1634,8 +1609,8 @@ namespace hex::pl {
             return this->m_fields;
         }
 
-        void setFields(const std::vector<PatternData *> &fields) {
-            this->m_fields = fields;
+        void setFields(std::vector<std::shared_ptr<PatternData>> &&fields) {
+            this->m_fields = std::move(fields);
 
             for (auto &field : this->m_fields) {
                 field->setSize(this->getSize());
@@ -1666,7 +1641,7 @@ namespace hex::pl {
         }
 
     private:
-        std::vector<PatternData *> m_fields;
+        std::vector<std::shared_ptr<PatternData>> m_fields;
     };
 
 }

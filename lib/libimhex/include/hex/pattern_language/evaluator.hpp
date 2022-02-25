@@ -42,7 +42,7 @@ namespace hex::pl {
     public:
         Evaluator() = default;
 
-        std::optional<std::vector<PatternData *>> evaluate(const std::vector<ASTNode *> &ast);
+        std::optional<std::vector<std::shared_ptr<PatternData>>> evaluate(const std::vector<std::shared_ptr<ASTNode>> &ast);
 
         [[nodiscard]] LogConsole &getConsole() {
             return this->m_console;
@@ -55,10 +55,10 @@ namespace hex::pl {
 
         struct Scope {
             PatternData *parent;
-            std::vector<PatternData *> *scope;
+            std::vector<std::shared_ptr<PatternData>> *scope;
             std::optional<ParameterPack> parameterPack;
         };
-        void pushScope(PatternData *parent, std::vector<PatternData *> &scope) {
+        void pushScope(PatternData *parent, std::vector<std::shared_ptr<PatternData>> &scope) {
             if (this->m_scopes.size() > this->getEvaluationDepth())
                 LogConsole::abortEvaluation(hex::format("evaluation depth exceeded set limit of {}", this->getEvaluationDepth()));
 
@@ -197,9 +197,10 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::optional<Token::Literal> getEnvVariable(const std::string &name) const {
-            if (this->m_envVariables.contains(name))
+            if (this->m_envVariables.contains(name)) {
+                auto value = this->m_envVariables.at(name);
                 return this->m_envVariables.at(name);
-            else
+            } else
                 return std::nullopt;
         }
 
@@ -232,7 +233,7 @@ namespace hex::pl {
             return this->m_currControlFlowStatement;
         }
 
-        [[nodiscard]] std::optional<Token::Literal> getMainResult() {
+        [[nodiscard]] const std::optional<Token::Literal> &getMainResult() {
             return this->m_mainResult;
         }
 
@@ -257,7 +258,7 @@ namespace hex::pl {
 
         std::vector<Scope> m_scopes;
         std::map<std::string, ContentRegistry::PatternLanguage::Function> m_customFunctions;
-        std::vector<ASTNode *> m_customFunctionDefinitions;
+        std::vector<std::unique_ptr<ASTNode>> m_customFunctionDefinitions;
         std::vector<Token::Literal> m_stack;
 
         std::optional<Token::Literal> m_mainResult;

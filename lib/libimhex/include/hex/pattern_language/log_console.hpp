@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include <hex/helpers/concepts.hpp>
+
 #include <hex/pattern_language/error.hpp>
 
 namespace hex::pl {
@@ -26,11 +28,25 @@ namespace hex::pl {
 
         [[nodiscard]] const auto &getLog() const { return this->m_consoleLog; }
 
-        void log(Level level, const std::string &message);
+        void log(Level level, const std::string &message) {
+            this->m_consoleLog.emplace_back(level, message);
+        }
 
-        [[noreturn]] static void abortEvaluation(const std::string &message, const ASTNode *node = nullptr);
+        [[noreturn]] static void abortEvaluation(const std::string &message) {
+            abortEvaluation(message, nullptr);
+        }
 
-        void clear();
+        template<typename T = ASTNode>
+        [[noreturn]] static void abortEvaluation(const std::string &message, const std::unique_ptr<T> &node) {
+            abortEvaluation(message, node.get());
+        }
+
+        [[noreturn]] static void abortEvaluation(const std::string &message, const ASTNode *node);
+
+        void clear() {
+            this->m_consoleLog.clear();
+            this->m_lastHardError.reset();
+        }
 
         void setHardError(const PatternLanguageError &error) { this->m_lastHardError = error; }
 

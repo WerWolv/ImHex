@@ -14,9 +14,16 @@ namespace hex::test {
             auto array    = create<PatternDataStaticArray>("u8", "array", 0x100 + sizeof(i32) + 20, sizeof(u8[0x10]));
             array->setEntries(create<PatternDataUnsigned>("u8", "", 0x100 + sizeof(i32) + 20, sizeof(u8)), 0x10);
 
-            testStruct->setMembers({ variable, padding, array });
+            std::vector<std::shared_ptr<hex::pl::PatternData>> structMembers;
+            {
+                structMembers.push_back(std::move(variable));
+                structMembers.push_back(std::move(padding));
+                structMembers.push_back(std::move(array));
+            }
 
-            addPattern(testStruct);
+            testStruct->setMembers(std::move(structMembers));
+
+            addPattern(std::move(testStruct));
         }
         ~TestPatternPadding() override = default;
 

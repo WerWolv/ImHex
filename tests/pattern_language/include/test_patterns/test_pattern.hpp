@@ -11,7 +11,8 @@ namespace hex::test {
 
     using namespace pl;
 
-    enum class Mode {
+    enum class Mode
+    {
         Succeeding,
         Failing
     };
@@ -22,25 +23,22 @@ namespace hex::test {
             TestPattern::s_tests.insert({ name, this });
         }
 
-        virtual ~TestPattern() {
-            for (auto &pattern : this->m_patterns)
-                delete pattern;
-        }
+        virtual ~TestPattern() = default;
 
         template<typename T>
-        static T *create(const std::string &typeName, const std::string &varName, auto... args) {
-            auto pattern = new T(nullptr, args...);
+        static std::unique_ptr<T> create(const std::string &typeName, const std::string &varName, auto... args) {
+            auto pattern = std::make_unique<T>(nullptr, args...);
             pattern->setTypeName(typeName);
             pattern->setVariableName(varName);
 
-            return pattern;
+            return std::move(pattern);
         }
 
         [[nodiscard]] virtual std::string getSourceCode() const = 0;
 
-        [[nodiscard]] virtual const std::vector<PatternData *> &getPatterns() const final { return this->m_patterns; }
-        virtual void addPattern(PatternData *pattern) final {
-            this->m_patterns.push_back(pattern);
+        [[nodiscard]] virtual const std::vector<std::unique_ptr<PatternData>> &getPatterns() const final { return this->m_patterns; }
+        virtual void addPattern(std::unique_ptr<PatternData> &&pattern) final {
+            this->m_patterns.push_back(std::move(pattern));
         }
 
         [[nodiscard]] auto failing() {
@@ -58,7 +56,7 @@ namespace hex::test {
         }
 
     private:
-        std::vector<PatternData *> m_patterns;
+        std::vector<std::unique_ptr<PatternData>> m_patterns;
         Mode m_mode;
 
         static inline std::map<std::string, TestPattern *> s_tests;
