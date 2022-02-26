@@ -103,8 +103,11 @@ namespace hex {
 
         auto startPos = ftello64(this->m_file);
         fseeko64(this->m_file, 0, SEEK_END);
-        size_t size = ftello64(this->m_file);
+        auto size = ftello64(this->m_file);
         fseeko64(this->m_file, startPos, SEEK_SET);
+
+        if (size < 0)
+            return 0;
 
         return size;
     }
