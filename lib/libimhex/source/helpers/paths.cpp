@@ -173,11 +173,14 @@ namespace hex {
         std::vector<fs::path> configDirs = xdg::ConfigDirs();
         std::vector<fs::path> dataDirs   = xdg::DataDirs();
 
-        configDirs.insert(configDirs.begin(), xdg::ConfigHomeDir());
-        dataDirs.insert(dataDirs.begin(), xdg::DataHomeDir());
+        configDirs.push_back(xdg::ConfigHomeDir());
+        dataDirs.push_back(xdg::DataHomeDir());
 
         for (auto &dir : dataDirs)
             dir = dir / "imhex";
+
+        if (!exePath.empty())
+            dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -224,8 +227,6 @@ namespace hex {
                 __builtin_unreachable();
         }
 
-        if (!exePath.empty())
-            dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
 #endif
 
         if (!listNonExisting) {
