@@ -57,6 +57,8 @@ namespace hex {
         if (!isValid()) return {};
 
         auto size = numBytes ?: getSize();
+        if (size == 0) return {};
+
         std::vector<u8> bytes(size);
         auto bytesRead = fread(bytes.data(), 1, bytes.size(), this->m_file);
 
@@ -71,6 +73,9 @@ namespace hex {
         if (getSize() == 0) return {};
 
         auto bytes = readBytes(numBytes);
+
+        if (bytes.empty())
+            return "";
 
         return { reinterpret_cast<char *>(bytes.data()), bytes.size() };
     }

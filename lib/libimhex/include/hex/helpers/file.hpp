@@ -20,7 +20,8 @@ namespace hex {
 
     class File {
     public:
-        enum class Mode {
+        enum class Mode
+        {
             Read,
             Write,
             Create
@@ -36,7 +37,9 @@ namespace hex {
         File &operator=(File &&other) noexcept;
 
 
-        [[nodiscard]] bool isValid() const { return this->m_file != nullptr; }
+        [[nodiscard]] bool isValid() const {
+            return this->m_file != nullptr && fs::exists(this->m_path) && !fs::is_directory(this->m_path);
+        }
 
         void seek(u64 offset);
         void close();
