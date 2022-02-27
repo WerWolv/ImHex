@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <type_traits>
+#include <memory>
 
 namespace hex {
 
@@ -166,7 +167,7 @@ namespace hex {
     template<typename T>
     class Cloneable {
     public:
-        [[nodiscard]] virtual T *clone() const = 0;
+        [[nodiscard]] virtual std::unique_ptr<T> clone() const = 0;
     };
 
 }

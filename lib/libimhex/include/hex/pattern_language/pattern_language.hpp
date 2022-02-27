@@ -11,6 +11,7 @@
 
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/pattern_language/token.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 
 namespace hex::prv {
     class Provider;
@@ -23,7 +24,7 @@ namespace hex::pl {
     class Parser;
     class Validator;
     class Evaluator;
-    class PatternData;
+    class Pattern;
 
     class ASTNode;
 
@@ -32,11 +33,11 @@ namespace hex::pl {
         PatternLanguage();
         ~PatternLanguage();
 
-        [[nodiscard]] std::optional<std::vector<ASTNode *>> parseString(const std::string &code);
+        [[nodiscard]] std::optional<std::vector<std::shared_ptr<ASTNode>>> parseString(const std::string &code);
         [[nodiscard]] bool executeString(prv::Provider *provider, const std::string &string, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {}, bool checkResult = true);
         [[nodiscard]] bool executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars = {}, const std::map<std::string, Token::Literal> &inVariables = {});
         [[nodiscard]] std::pair<bool, std::optional<Token::Literal>> executeFunction(prv::Provider *provider, const std::string &code);
-        [[nodiscard]] const std::vector<ASTNode *> &getCurrentAST() const;
+        [[nodiscard]] const std::vector<std::shared_ptr<ASTNode>> &getCurrentAST() const;
 
         void abort();
 
@@ -50,8 +51,8 @@ namespace hex::pl {
         [[nodiscard]] bool hasDangerousFunctionBeenCalled() const;
         void allowDangerousFunctions(bool allow);
 
-        [[nodiscard]] const std::vector<PatternData *> &getPatterns() {
-            const static std::vector<PatternData *> empty;
+        [[nodiscard]] const std::vector<std::shared_ptr<Pattern>> &getPatterns() {
+            const static std::vector<std::shared_ptr<Pattern>> empty;
 
             if (isRunning()) return empty;
             else return this->m_patterns;
@@ -67,11 +68,11 @@ namespace hex::pl {
         Validator *m_validator;
         Evaluator *m_evaluator;
 
-        std::vector<ASTNode *> m_currAST;
+        std::vector<std::shared_ptr<ASTNode>> m_currAST;
 
         std::optional<PatternLanguageError> m_currError;
 
-        std::vector<PatternData *> m_patterns;
+        std::vector<std::shared_ptr<Pattern>> m_patterns;
 
         bool m_running = false;
     };

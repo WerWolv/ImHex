@@ -11,11 +11,13 @@
 
 namespace hex::pl {
 
-    class PatternData;
+    class ASTNode;
+    class Pattern;
 
     class Token {
     public:
-        enum class Type : u64 {
+        enum class Type : u64
+        {
             Keyword,
             ValueType,
             Operator,
@@ -25,7 +27,8 @@ namespace hex::pl {
             Separator
         };
 
-        enum class Keyword {
+        enum class Keyword
+        {
             Struct,
             Union,
             Using,
@@ -48,7 +51,8 @@ namespace hex::pl {
             Continue
         };
 
-        enum class Operator {
+        enum class Operator
+        {
             AtDeclaration,
             Assignment,
             Inherit,
@@ -80,7 +84,8 @@ namespace hex::pl {
             ScopeResolution
         };
 
-        enum class ValueType {
+        enum class ValueType
+        {
             Unsigned8Bit   = 0x10,
             Signed8Bit     = 0x11,
             Unsigned16Bit  = 0x20,
@@ -108,7 +113,8 @@ namespace hex::pl {
             Any           = 0xFFFF
         };
 
-        enum class Separator {
+        enum class Separator
+        {
             RoundBracketOpen,
             RoundBracketClose,
             CurlyBracketOpen,
@@ -133,7 +139,7 @@ namespace hex::pl {
             std::string m_identifier;
         };
 
-        using Literal    = std::variant<char, bool, u128, i128, double, std::string, PatternData *>;
+        using Literal    = std::variant<char, bool, u128, i128, double, std::string, std::shared_ptr<Pattern>>;
         using ValueTypes = std::variant<Keyword, Identifier, Operator, Literal, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -158,7 +164,7 @@ namespace hex::pl {
         static u128 literalToUnsigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> u128 { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](PatternData *) -> u128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](const std::shared_ptr<Pattern> &) -> u128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> u128 { return result; } },
                 literal);
         }
@@ -166,7 +172,7 @@ namespace hex::pl {
         static i128 literalToSigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> i128 { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](PatternData *) -> i128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](const std::shared_ptr<Pattern> &) -> i128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> i128 { return result; } },
                 literal);
         }
@@ -174,7 +180,7 @@ namespace hex::pl {
         static double literalToFloatingPoint(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> double { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](PatternData *) -> double { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](const std::shared_ptr<Pattern> &) -> double { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> double { return result; } },
                 literal);
         }
@@ -182,7 +188,7 @@ namespace hex::pl {
         static bool literalToBoolean(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> bool { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](PatternData *) -> bool { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](const std::unique_ptr<Pattern> &) -> bool { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> bool { return result != 0; } },
                 literal);
         }
@@ -197,7 +203,7 @@ namespace hex::pl {
                                   [](i128 result) -> std::string { return hex::to_string(result); },
                                   [](bool result) -> std::string { return result ? "true" : "false"; },
                                   [](char result) -> std::string { return { 1, result }; },
-                                  [](PatternData *) -> std::string { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](const std::shared_ptr<Pattern> &) -> std::string { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> std::string { return std::to_string(result); } },
                 literal);
         }

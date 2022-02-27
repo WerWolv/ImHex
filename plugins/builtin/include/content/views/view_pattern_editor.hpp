@@ -51,7 +51,8 @@ namespace hex::plugin::builtin {
         std::map<std::string, PatternVariable> m_patternVariables;
         std::vector<std::string> m_patternTypes;
 
-        enum class EnvVarType {
+        enum class EnvVarType
+        {
             Integer,
             Float,
             String,
@@ -77,7 +78,7 @@ namespace hex::plugin::builtin {
         void drawVariableSettings(ImVec2 size);
 
         void loadPatternFile(const fs::path &path);
-        void clearPatternData();
+        void clearPatterns();
 
         void parsePattern(const std::string &code);
         void evaluatePattern(const std::string &code);

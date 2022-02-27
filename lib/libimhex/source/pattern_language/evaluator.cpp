@@ -1,6 +1,19 @@
 #include <hex/pattern_language/evaluator.hpp>
-#include <hex/pattern_language/ast_node.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
+
+#include <hex/pattern_language/ast/ast_node.hpp>
+#include <hex/pattern_language/ast/ast_node_type_decl.hpp>
+#include <hex/pattern_language/ast/ast_node_variable_decl.hpp>
+#include <hex/pattern_language/ast/ast_node_function_call.hpp>
+#include <hex/pattern_language/ast/ast_node_function_definition.hpp>
+
+#include <hex/pattern_language/patterns/pattern_unsigned.hpp>
+#include <hex/pattern_language/patterns/pattern_signed.hpp>
+#include <hex/pattern_language/patterns/pattern_float.hpp>
+#include <hex/pattern_language/patterns/pattern_boolean.hpp>
+#include <hex/pattern_language/patterns/pattern_character.hpp>
+#include <hex/pattern_language/patterns/pattern_string.hpp>
+#include <hex/pattern_language/patterns/pattern_enum.hpp>
 
 namespace hex::pl {
 
@@ -19,34 +32,37 @@ namespace hex::pl {
             }
         }
 
-        auto startOffset   = this->dataOffset();
-        auto pattern       = type == nullptr ? nullptr : type->createPatterns(this).front();
+        auto startOffset = this->dataOffset();
+
+        std::unique_ptr<Pattern> pattern;
         this->dataOffset() = startOffset;
 
         bool referenceType = false;
 
-        if (pattern == nullptr) {
+        if (type == nullptr) {
             // Handle auto variables
             if (!value.has_value())
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
 
             if (std::get_if<u128>(&value.value()) != nullptr)
-                pattern = new PatternDataUnsigned(this, 0, sizeof(u128));
+                pattern = std::unique_ptr<Pattern>(new PatternUnsigned(this, 0, sizeof(u128)));
             else if (std::get_if<i128>(&value.value()) != nullptr)
-                pattern = new PatternDataSigned(this, 0, sizeof(i128));
+                pattern = std::unique_ptr<Pattern>(new PatternSigned(this, 0, sizeof(i128)));
             else if (std::get_if<double>(&value.value()) != nullptr)
-                pattern = new PatternDataFloat(this, 0, sizeof(double));
+                pattern = std::unique_ptr<Pattern>(new PatternFloat(this, 0, sizeof(double)));
             else if (std::get_if<bool>(&value.value()) != nullptr)
-                pattern = new PatternDataBoolean(this, 0);
+                pattern = std::unique_ptr<Pattern>(new PatternBoolean(this, 0));
             else if (std::get_if<char>(&value.value()) != nullptr)
-                pattern = new PatternDataCharacter(this, 0);
+                pattern = std::unique_ptr<Pattern>(new PatternCharacter(this, 0));
             else if (std::get_if<std::string>(&value.value()) != nullptr)
-                pattern = new PatternDataString(this, 0, 1);
-            else if (std::get_if<PatternData *>(&value.value()) != nullptr) {
-                pattern       = std::get<PatternData *>(value.value())->clone();
+                pattern = std::unique_ptr<Pattern>(new PatternString(this, 0, 1));
+            else if (auto patternValue = std::get_if<std::shared_ptr<Pattern>>(&value.value()); patternValue != nullptr) {
+                pattern       = (*patternValue)->clone();
                 referenceType = true;
             } else
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
+        } else {
+            pattern = std::move(type->createPatterns(this).front());
         }
 
         pattern->setVariableName(name);
@@ -57,20 +73,20 @@ namespace hex::pl {
             this->getStack().emplace_back();
         }
 
-        variables.push_back(pattern);
-
         if (outVariable)
             this->m_outVariables[name] = pattern->getOffset();
+
+        variables.push_back(std::move(pattern));
     }
 
     void Evaluator::setVariable(const std::string &name, const Token::Literal &value) {
-        PatternData *pattern = nullptr;
+        std::unique_ptr<Pattern> pattern = nullptr;
 
         {
             auto &variables = *this->getScope(0).scope;
             for (auto &variable : variables) {
                 if (variable->getVariableName() == name) {
-                    pattern = variable;
+                    pattern = variable->clone();
                     break;
                 }
             }
@@ -83,7 +99,7 @@ namespace hex::pl {
                     if (!variable->isLocal())
                         LogConsole::abortEvaluation(hex::format("cannot modify global variable '{}' which has been placed in memory", name));
 
-                    pattern = variable;
+                    pattern = variable->clone();
                     break;
                 }
             }
@@ -96,37 +112,37 @@ namespace hex::pl {
 
         Token::Literal castedLiteral = std::visit(overloaded {
                                                       [&](double &value) -> Token::Literal {
-                                                          if (dynamic_cast<PatternDataUnsigned *>(pattern))
+                                                          if (dynamic_cast<PatternUnsigned *>(pattern.get()))
                                                               return u128(value) & bitmask(pattern->getSize() * 8);
-                                                          else if (dynamic_cast<PatternDataSigned *>(pattern))
+                                                          else if (dynamic_cast<PatternSigned *>(pattern.get()))
                                                               return i128(value) & bitmask(pattern->getSize() * 8);
-                                                          else if (dynamic_cast<PatternDataFloat *>(pattern))
+                                                          else if (dynamic_cast<PatternFloat *>(pattern.get()))
                                                               return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
                                                           else
                                                               LogConsole::abortEvaluation(hex::format("cannot cast type 'double' to type '{}'", pattern->getTypeName()));
                                                       },
                                                       [&](const std::string &value) -> Token::Literal {
-                                                          if (dynamic_cast<PatternDataString *>(pattern))
+                                                          if (dynamic_cast<PatternString *>(pattern.get()))
                                                               return value;
                                                           else
                                                               LogConsole::abortEvaluation(hex::format("cannot cast type 'string' to type '{}'", pattern->getTypeName()));
                                                       },
-                                                      [&](PatternData *const &value) -> Token::Literal {
+                                                      [&](const std::shared_ptr<Pattern> &value) -> Token::Literal {
                                                           if (value->getTypeName() == pattern->getTypeName())
                                                               return value;
                                                           else
                                                               LogConsole::abortEvaluation(hex::format("cannot cast type '{}' to type '{}'", value->getTypeName(), pattern->getTypeName()));
                                                       },
                                                       [&](auto &&value) -> Token::Literal {
-                                                          if (dynamic_cast<PatternDataUnsigned *>(pattern) || dynamic_cast<PatternDataEnum *>(pattern))
+                                                          if (dynamic_cast<PatternUnsigned *>(pattern.get()) || dynamic_cast<PatternEnum *>(pattern.get()))
                                                               return u128(value) & bitmask(pattern->getSize() * 8);
-                                                          else if (dynamic_cast<PatternDataSigned *>(pattern))
+                                                          else if (dynamic_cast<PatternSigned *>(pattern.get()))
                                                               return i128(value) & bitmask(pattern->getSize() * 8);
-                                                          else if (dynamic_cast<PatternDataCharacter *>(pattern))
+                                                          else if (dynamic_cast<PatternCharacter *>(pattern.get()))
                                                               return char(value);
-                                                          else if (dynamic_cast<PatternDataBoolean *>(pattern))
+                                                          else if (dynamic_cast<PatternBoolean *>(pattern.get()))
                                                               return bool(value);
-                                                          else if (dynamic_cast<PatternDataFloat *>(pattern))
+                                                          else if (dynamic_cast<PatternFloat *>(pattern.get()))
                                                               return pattern->getSize() == sizeof(float) ? double(float(value)) : value;
                                                           else
                                                               LogConsole::abortEvaluation(hex::format("cannot cast integer literal to type '{}'", pattern->getTypeName()));
@@ -136,7 +152,7 @@ namespace hex::pl {
         this->getStack()[pattern->getOffset()] = castedLiteral;
     }
 
-    std::optional<std::vector<PatternData *>> Evaluator::evaluate(const std::vector<ASTNode *> &ast) {
+    std::optional<std::vector<std::shared_ptr<Pattern>>> Evaluator::evaluate(const std::vector<std::shared_ptr<ASTNode>> &ast) {
         this->m_stack.clear();
         this->m_customFunctions.clear();
         this->m_scopes.clear();
@@ -155,11 +171,9 @@ namespace hex::pl {
         this->dataOffset()       = 0x00;
         this->m_currPatternCount = 0;
 
-        for (auto &func : this->m_customFunctionDefinitions)
-            delete func;
         this->m_customFunctionDefinitions.clear();
 
-        std::vector<PatternData *> patterns;
+        std::vector<std::shared_ptr<Pattern>> patterns;
 
         try {
             this->setCurrentControlFlowStatement(ControlFlowStatement::None);
@@ -168,33 +182,30 @@ namespace hex::pl {
                 popScope();
             };
 
-            for (auto node : ast) {
-                if (dynamic_cast<ASTNodeTypeDecl *>(node)) {
+            for (auto &node : ast) {
+                if (dynamic_cast<ASTNodeTypeDecl *>(node.get())) {
                     ;    // Don't create patterns from type declarations
-                } else if (dynamic_cast<ASTNodeFunctionCall *>(node)) {
-                    delete node->evaluate(this);
-                } else if (dynamic_cast<ASTNodeFunctionDefinition *>(node)) {
+                } else if (dynamic_cast<ASTNodeFunctionCall *>(node.get())) {
+                    (void)node->evaluate(this);
+                } else if (dynamic_cast<ASTNodeFunctionDefinition *>(node.get())) {
                     this->m_customFunctionDefinitions.push_back(node->evaluate(this));
-                } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl *>(node)) {
-                    auto pattern = node->createPatterns(this).front();
+                } else if (auto varDeclNode = dynamic_cast<ASTNodeVariableDecl *>(node.get())) {
+                    for (auto &pattern : node->createPatterns(this)) {
+                        if (varDeclNode->getPlacementOffset() == nullptr) {
+                            auto type = varDeclNode->getType()->evaluate(this);
 
-                    if (varDeclNode->getPlacementOffset() == nullptr) {
-                        auto type = varDeclNode->getType()->evaluate(this);
-                        ON_SCOPE_EXIT { delete type; };
+                            auto &name = pattern->getVariableName();
+                            this->createVariable(name, type.get(), std::nullopt, varDeclNode->isOutVariable());
 
-                        auto &name = pattern->getVariableName();
-                        this->createVariable(name, type, std::nullopt, varDeclNode->isOutVariable());
-
-                        if (varDeclNode->isInVariable() && this->m_inVariables.contains(name))
-                            this->setVariable(name, this->m_inVariables[name]);
-
-                        delete pattern;
-                    } else {
-                        patterns.push_back(pattern);
+                            if (varDeclNode->isInVariable() && this->m_inVariables.contains(name))
+                                this->setVariable(name, this->m_inVariables[name]);
+                        } else {
+                            patterns.push_back(std::move(pattern));
+                        }
                     }
                 } else {
                     auto newPatterns = node->createPatterns(this);
-                    std::copy(newPatterns.begin(), newPatterns.end(), std::back_inserter(patterns));
+                    std::move(newPatterns.begin(), newPatterns.end(), std::back_inserter(patterns));
                 }
             }
 
@@ -212,8 +223,6 @@ namespace hex::pl {
             if (error.getLineNumber() != 0)
                 this->m_console.setHardError(error);
 
-            for (auto &pattern : patterns)
-                delete pattern;
             patterns.clear();
 
             this->m_currPatternCount = 0;
@@ -222,7 +231,7 @@ namespace hex::pl {
         }
 
         // Remove global local variables
-        std::erase_if(patterns, [](PatternData *pattern) {
+        std::erase_if(patterns, [](const std::shared_ptr<Pattern> &pattern) {
             return pattern->isLocal();
         });
 

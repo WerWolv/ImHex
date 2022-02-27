@@ -5,7 +5,11 @@
 
 #include <hex/pattern_language/error.hpp>
 #include <hex/pattern_language/token.hpp>
-#include <hex/pattern_language/ast_node.hpp>
+
+#include <hex/pattern_language/ast/ast_node.hpp>
+#include <hex/pattern_language/ast/ast_node_rvalue.hpp>
+#include <hex/pattern_language/ast/ast_node_attribute.hpp>
+#include <hex/pattern_language/ast/ast_node_type_decl.hpp>
 
 #include <unordered_map>
 #include <stdexcept>
@@ -21,7 +25,7 @@ namespace hex::pl {
         Parser()  = default;
         ~Parser() = default;
 
-        std::optional<std::vector<ASTNode *>> parse(const std::vector<Token> &tokens);
+        std::optional<std::vector<std::shared_ptr<ASTNode>>> parse(const std::vector<Token> &tokens);
         const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 
     private:
@@ -29,7 +33,7 @@ namespace hex::pl {
         TokenIter m_curr;
         TokenIter m_originalPosition, m_partOriginalPosition;
 
-        std::unordered_map<std::string, ASTNode *> m_types;
+        std::unordered_map<std::string, std::shared_ptr<ASTNode>> m_types;
         std::vector<TokenIter> m_matchedOptionals;
         std::vector<std::vector<std::string>> m_currNamespace;
 
@@ -37,9 +41,10 @@ namespace hex::pl {
             return this->m_curr[index].lineNumber;
         }
 
-        auto *create(auto *node) {
+        template<typename T>
+        std::unique_ptr<T> create(T *node) {
             node->setLineNumber(this->getLineNumber(-1));
-            return node;
+            return std::unique_ptr<T>(node);
         }
 
         template<typename T>
@@ -67,78 +72,72 @@ namespace hex::pl {
             return result;
         }
 
-        ASTNode *parseFunctionCall();
-        ASTNode *parseStringLiteral();
+        std::unique_ptr<ASTNode> parseFunctionCall();
+        std::unique_ptr<ASTNode> parseStringLiteral();
         std::string parseNamespaceResolution();
-        ASTNode *parseScopeResolution();
-        ASTNode *parseRValue();
-        ASTNode *parseRValue(ASTNodeRValue::Path &path);
-        ASTNode *parseFactor();
-        ASTNode *parseCastExpression();
-        ASTNode *parseUnaryExpression();
-        ASTNode *parseMultiplicativeExpression();
-        ASTNode *parseAdditiveExpression();
-        ASTNode *parseShiftExpression();
-        ASTNode *parseBinaryAndExpression();
-        ASTNode *parseBinaryXorExpression();
-        ASTNode *parseBinaryOrExpression();
-        ASTNode *parseBooleanAnd();
-        ASTNode *parseBooleanXor();
-        ASTNode *parseBooleanOr();
-        ASTNode *parseRelationExpression();
-        ASTNode *parseEqualityExpression();
-        ASTNode *parseTernaryConditional();
-        ASTNode *parseMathematicalExpression();
+        std::unique_ptr<ASTNode> parseScopeResolution();
+        std::unique_ptr<ASTNode> parseRValue();
+        std::unique_ptr<ASTNode> parseRValue(ASTNodeRValue::Path &path);
+        std::unique_ptr<ASTNode> parseFactor();
+        std::unique_ptr<ASTNode> parseCastExpression();
+        std::unique_ptr<ASTNode> parseUnaryExpression();
+        std::unique_ptr<ASTNode> parseMultiplicativeExpression();
+        std::unique_ptr<ASTNode> parseAdditiveExpression();
+        std::unique_ptr<ASTNode> parseShiftExpression();
+        std::unique_ptr<ASTNode> parseBinaryAndExpression();
+        std::unique_ptr<ASTNode> parseBinaryXorExpression();
+        std::unique_ptr<ASTNode> parseBinaryOrExpression();
+        std::unique_ptr<ASTNode> parseBooleanAnd();
+        std::unique_ptr<ASTNode> parseBooleanXor();
+        std::unique_ptr<ASTNode> parseBooleanOr();
+        std::unique_ptr<ASTNode> parseRelationExpression();
+        std::unique_ptr<ASTNode> parseEqualityExpression();
+        std::unique_ptr<ASTNode> parseTernaryConditional();
+        std::unique_ptr<ASTNode> parseMathematicalExpression();
 
-        ASTNode *parseFunctionDefinition();
-        ASTNode *parseFunctionVariableDecl();
-        ASTNode *parseFunctionStatement();
-        ASTNode *parseFunctionVariableAssignment(const std::string &lvalue);
-        ASTNode *parseFunctionVariableCompoundAssignment(const std::string &lvalue);
-        ASTNode *parseFunctionControlFlowStatement();
-        std::vector<ASTNode *> parseStatementBody();
-        ASTNode *parseFunctionConditional();
-        ASTNode *parseFunctionWhileLoop();
-        ASTNode *parseFunctionForLoop();
+        std::unique_ptr<ASTNode> parseFunctionDefinition();
+        std::unique_ptr<ASTNode> parseFunctionVariableDecl();
+        std::unique_ptr<ASTNode> parseFunctionStatement();
+        std::unique_ptr<ASTNode> parseFunctionVariableAssignment(const std::string &lvalue);
+        std::unique_ptr<ASTNode> parseFunctionVariableCompoundAssignment(const std::string &lvalue);
+        std::unique_ptr<ASTNode> parseFunctionControlFlowStatement();
+        std::vector<std::unique_ptr<ASTNode>> parseStatementBody();
+        std::unique_ptr<ASTNode> parseFunctionConditional();
+        std::unique_ptr<ASTNode> parseFunctionWhileLoop();
+        std::unique_ptr<ASTNode> parseFunctionForLoop();
 
         void parseAttribute(Attributable *currNode);
-        ASTNode *parseConditional();
-        ASTNode *parseWhileStatement();
-        ASTNodeTypeDecl *parseType(bool allowFunctionTypes = false);
-        ASTNode *parseUsingDeclaration();
-        ASTNode *parsePadding();
-        ASTNode *parseMemberVariable(ASTNodeTypeDecl *type);
-        ASTNode *parseMemberArrayVariable(ASTNodeTypeDecl *type);
-        ASTNode *parseMemberPointerVariable(ASTNodeTypeDecl *type);
-        ASTNode *parseMember();
-        ASTNode *parseStruct();
-        ASTNode *parseUnion();
-        ASTNode *parseEnum();
-        ASTNode *parseBitfield();
-        ASTNode *parseVariablePlacement(ASTNodeTypeDecl *type);
-        ASTNode *parseArrayVariablePlacement(ASTNodeTypeDecl *type);
-        ASTNode *parsePointerVariablePlacement(ASTNodeTypeDecl *type);
-        ASTNode *parsePlacement();
-        std::vector<ASTNode *> parseNamespace();
-        std::vector<ASTNode *> parseStatements();
+        std::unique_ptr<ASTNode> parseConditional();
+        std::unique_ptr<ASTNode> parseWhileStatement();
+        std::unique_ptr<ASTNodeTypeDecl> parseType(bool allowFunctionTypes = false);
+        std::shared_ptr<ASTNodeTypeDecl> parseUsingDeclaration();
+        std::unique_ptr<ASTNode> parsePadding();
+        std::unique_ptr<ASTNode> parseMemberVariable(std::unique_ptr<ASTNodeTypeDecl> &&type);
+        std::unique_ptr<ASTNode> parseMemberArrayVariable(std::unique_ptr<ASTNodeTypeDecl> &&type);
+        std::unique_ptr<ASTNode> parseMemberPointerVariable(std::unique_ptr<ASTNodeTypeDecl> &&type);
+        std::unique_ptr<ASTNode> parseMember();
+        std::shared_ptr<ASTNodeTypeDecl> parseStruct();
+        std::shared_ptr<ASTNodeTypeDecl> parseUnion();
+        std::shared_ptr<ASTNodeTypeDecl> parseEnum();
+        std::shared_ptr<ASTNodeTypeDecl> parseBitfield();
+        std::unique_ptr<ASTNode> parseVariablePlacement(std::unique_ptr<ASTNodeTypeDecl> &&type);
+        std::unique_ptr<ASTNode> parseArrayVariablePlacement(std::unique_ptr<ASTNodeTypeDecl> &&type);
+        std::unique_ptr<ASTNode> parsePointerVariablePlacement(std::unique_ptr<ASTNodeTypeDecl> &&type);
+        std::unique_ptr<ASTNode> parsePlacement();
+        std::vector<std::shared_ptr<ASTNode>> parseNamespace();
+        std::vector<std::shared_ptr<ASTNode>> parseStatements();
 
-        ASTNodeTypeDecl *addType(const std::string &name, ASTNode *node, std::optional<std::endian> endian = std::nullopt);
+        std::shared_ptr<ASTNodeTypeDecl> addType(const std::string &name, std::unique_ptr<ASTNode> &&node, std::optional<std::endian> endian = std::nullopt);
 
-        std::vector<ASTNode *> parseTillToken(Token::Type endTokenType, const auto value) {
-            std::vector<ASTNode *> program;
-            auto guard = SCOPE_GUARD {
-                for (auto &node : program)
-                    delete node;
-            };
+        std::vector<std::shared_ptr<ASTNode>> parseTillToken(Token::Type endTokenType, const auto value) {
+            std::vector<std::shared_ptr<ASTNode>> program;
 
             while (this->m_curr->type != endTokenType || (*this->m_curr) != value) {
-                for (auto statement : parseStatements())
-                    program.push_back(statement);
+                for (auto &statement : parseStatements())
+                    program.push_back(std::move(statement));
             }
 
             this->m_curr++;
-
-            guard.release();
 
             return program;
         }

@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::map<prv::Provider *, std::vector<pl::PatternData *>> m_sortedPatterns;
+        std::map<prv::Provider *, std::vector<std::shared_ptr<pl::Pattern>>> m_sortedPatterns;
     };
 
 }

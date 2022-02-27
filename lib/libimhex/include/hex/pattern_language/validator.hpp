@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -16,7 +17,7 @@ namespace hex::pl {
     public:
         Validator() = default;
 
-        bool validate(const std::vector<ASTNode *> &ast);
+        bool validate(const std::vector<std::shared_ptr<ASTNode>> &ast);
 
         const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 

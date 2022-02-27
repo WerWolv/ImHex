@@ -31,6 +31,7 @@ add_subdirectory(main)
 add_custom_target(imhex_all ALL DEPENDS main)
 
 # Add unit tests
+enable_testing()
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 # Configure packaging

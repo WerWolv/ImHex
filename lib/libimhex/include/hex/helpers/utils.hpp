@@ -193,6 +193,22 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
+    template<typename T, typename... Args>
+    void moveToVector(std::vector<T> &buffer, T &&first, Args &&...rest) {
+        buffer.push_back(std::move(first));
+
+        if constexpr (sizeof...(rest) > 0)
+            moveToVector(buffer, std::move(rest)...);
+    }
+
+    template<typename T, typename... Args>
+    std::vector<T> moveToVector(T &&first, Args &&...rest) {
+        std::vector<T> result;
+        moveToVector(result, T(std::move(first)), std::move(rest)...);
+
+        return result;
+    }
+
     std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
     std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
 

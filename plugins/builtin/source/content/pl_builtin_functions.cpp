@@ -7,7 +7,7 @@
 #include <hex/pattern_language/token.hpp>
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/pattern_language/evaluator.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 
 #include <vector>
 
@@ -15,7 +15,7 @@
 
 namespace hex::plugin::builtin {
 
-    std::string format(pl::Evaluator *ctx, auto params) {
+    std::string format(pl::Evaluator *ctx, const auto &params) {
         auto format = pl::Token::literalToString(params[0], true);
         std::string message;
 
@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
             auto &param = params[i];
 
             std::visit(overloaded {
-                           [&](pl::PatternData *value) {
+                           [&](const std::shared_ptr<pl::Pattern> &value) {
                                formatArgs.push_back(value->toString(ctx->getProvider()));
                            },
                            [&](auto &&value) {

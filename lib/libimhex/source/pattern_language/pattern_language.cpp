@@ -12,7 +12,7 @@
 
 namespace hex::pl {
 
-    class PatternData;
+    class Pattern;
 
     PatternLanguage::PatternLanguage() {
         this->m_preprocessor = new Preprocessor();
@@ -92,7 +92,7 @@ namespace hex::pl {
         delete this->m_validator;
     }
 
-    std::optional<std::vector<ASTNode *>> PatternLanguage::parseString(const std::string &code) {
+    std::optional<std::vector<std::shared_ptr<ASTNode>>> PatternLanguage::parseString(const std::string &code) {
         auto preprocessedCode = this->m_preprocessor->preprocess(code);
         if (!preprocessedCode.has_value()) {
             this->m_currError = this->m_preprocessor->getError();
@@ -113,9 +113,6 @@ namespace hex::pl {
 
         if (!this->m_validator->validate(*ast)) {
             this->m_currError = this->m_validator->getError();
-
-            for (auto &node : *ast)
-                delete node;
 
             return std::nullopt;
         }
@@ -140,17 +137,18 @@ namespace hex::pl {
         for (const auto &[name, value] : envVars)
             this->m_evaluator->setEnvVariable(name, value);
 
-        for (auto &node : this->m_currAST)
-            delete node;
         this->m_currAST.clear();
 
-        auto ast = this->parseString(code);
-        if (!ast)
-            return false;
+        {
+            auto ast = this->parseString(code);
+            if (!ast)
+                return false;
 
-        this->m_currAST = ast.value();
+            this->m_currAST = std::move(ast.value());
+        }
 
-        auto patterns = this->m_evaluator->evaluate(ast.value());
+
+        auto patterns = this->m_evaluator->evaluate(this->m_currAST);
         if (!patterns.has_value()) {
             this->m_currError = this->m_evaluator->getConsole().getLastHardError();
             return false;
@@ -187,14 +185,14 @@ namespace hex::pl {
         auto success = this->executeString(provider, functionContent, {}, {}, false);
         auto result  = this->m_evaluator->getMainResult();
 
-        return { success, result };
+        return { success, std::move(result) };
     }
 
     void PatternLanguage::abort() {
         this->m_evaluator->abort();
     }
 
-    const std::vector<ASTNode *> &PatternLanguage::getCurrentAST() const {
+    const std::vector<std::shared_ptr<ASTNode>> &PatternLanguage::getCurrentAST() const {
         return this->m_currAST;
     }
 
@@ -229,8 +227,6 @@ namespace hex::pl {
     }
 
     void PatternLanguage::reset() {
-        for (auto &pattern : this->m_patterns)
-            delete pattern;
         this->m_patterns.clear();
 
         this->m_currAST.clear();

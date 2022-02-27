@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
         u64 m_resizeSize               = 0;
 
         std::vector<u8> m_dataToSave;
-        std::set<pl::PatternData *> m_highlightedPatterns;
+        std::set<pl::Pattern *> m_highlightedPatterns;
 
         std::string m_loaderScriptScriptPath;
         std::string m_loaderScriptFilePath;
