@@ -2,6 +2,8 @@
 
 #include <hex/pattern_language/patterns/pattern.hpp>
 
+#include <codecvt>
+
 namespace hex::pl {
 
     class PatternWideCharacter : public Pattern {
