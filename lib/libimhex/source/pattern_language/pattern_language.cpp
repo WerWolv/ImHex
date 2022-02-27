@@ -83,6 +83,18 @@ namespace hex::pl {
             ImHexApi::Provider::get()->setBaseAddress(baseAddress);
             return true;
         });
+
+        this->m_preprocessor->addPragmaHandler("bitfield_order", [this](const std::string &value) {
+            if (value == "left_to_right") {
+                this->m_evaluator->setBitfieldOrder(BitfieldOrder::LeftToRight);
+                return true;
+            } else if (value == "right_to_left") {
+                this->m_evaluator->setBitfieldOrder(BitfieldOrder::RightToLeft);
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
 
     PatternLanguage::~PatternLanguage() {

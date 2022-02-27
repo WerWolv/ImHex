@@ -34,6 +34,12 @@ namespace hex::pl {
         Return
     };
 
+    enum class BitfieldOrder
+    {
+        RightToLeft,
+        LeftToRight
+    };
+
     class Pattern;
     class PatternCreationLimiter;
     class ASTNode;
@@ -161,6 +167,14 @@ namespace hex::pl {
             return this->m_loopLimit;
         }
 
+        void setBitfieldOrder(BitfieldOrder order) {
+            this->m_bitfieldOrder = order;
+        }
+
+        [[nodiscard]] BitfieldOrder getBitfieldOrder() {
+            return this->m_bitfieldOrder;
+        }
+
         u64 &dataOffset() { return this->m_currOffset; }
 
         bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguage::Callback &function) {
@@ -270,6 +284,7 @@ namespace hex::pl {
         std::atomic<bool> m_dangerousFunctionCalled                        = false;
         std::atomic<DangerousFunctionPermission> m_allowDangerousFunctions = DangerousFunctionPermission::Ask;
         ControlFlowStatement m_currControlFlowStatement;
+        BitfieldOrder m_bitfieldOrder = BitfieldOrder::RightToLeft;
 
         friend class PatternCreationLimiter;
     };

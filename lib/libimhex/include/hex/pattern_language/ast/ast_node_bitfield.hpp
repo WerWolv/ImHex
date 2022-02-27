@@ -30,17 +30,17 @@ namespace hex::pl {
             size_t bitOffset = 0;
             std::vector<std::shared_ptr<Pattern>> fields;
 
-            bool isLeftToRight = false;
+            BitfieldOrder order = evaluator->getBitfieldOrder();
             if (this->hasAttribute("left_to_right", false))
-                isLeftToRight = true;
+                order = BitfieldOrder::LeftToRight;
             else if (this->hasAttribute("right_to_left", false))
-                isLeftToRight = false;
+                order = BitfieldOrder::RightToLeft;
 
             std::vector<std::pair<std::string, ASTNode *>> entries;
             for (const auto &[name, entry] : this->m_entries)
                 entries.push_back({ name, entry.get() });
 
-            if (isLeftToRight)
+            if (order == BitfieldOrder::LeftToRight)
                 std::reverse(entries.begin(), entries.end());
 
             evaluator->pushScope(pattern.get(), fields);
