@@ -27,7 +27,7 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             this->execute(evaluator);
 
             return {};

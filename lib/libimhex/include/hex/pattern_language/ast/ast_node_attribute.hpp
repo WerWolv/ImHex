@@ -2,6 +2,9 @@
 
 #include <hex/pattern_language/ast/ast_node.hpp>
 
+#include <hex/pattern_language/patterns/pattern_pointer.hpp>
+#include <hex/pattern_language/patterns/pattern_array_dynamic.hpp>
+
 namespace hex::pl {
 
     class ASTNodeAttribute : public ASTNode {
@@ -40,7 +43,8 @@ namespace hex::pl {
 
         Attributable(const Attributable &other) {
             for (auto &attribute : other.m_attributes) {
-                if (auto node = dynamic_cast<ASTNodeAttribute *>(attribute.get()))
+                auto copy = attribute->clone();
+                if (auto node = dynamic_cast<ASTNodeAttribute *>(copy.get()))
                     this->m_attributes.push_back(std::unique_ptr<ASTNodeAttribute>(node));
             }
         }
@@ -85,7 +89,7 @@ namespace hex::pl {
     };
 
 
-    inline void applyTypeAttributes(Evaluator *evaluator, const ASTNode *node, PatternData *pattern) {
+    inline void applyTypeAttributes(Evaluator *evaluator, const ASTNode *node, Pattern *pattern) {
         auto attributable = dynamic_cast<const Attributable *>(node);
         if (attributable == nullptr)
             LogConsole::abortEvaluation("attribute cannot be applied here", node);
@@ -120,7 +124,7 @@ namespace hex::pl {
             if (function.parameterCount != 1)
                 LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
 
-            auto array = dynamic_cast<PatternDataDynamicArray *>(pattern);
+            auto array = dynamic_cast<PatternArrayDynamic *>(pattern);
             if (array == nullptr)
                 LogConsole::abortEvaluation("inline_array attribute can only be applied to array types", node);
 
@@ -150,7 +154,7 @@ namespace hex::pl {
             if (function.parameterCount != 1)
                 LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
 
-            if (auto pointerPattern = dynamic_cast<PatternDataPointer *>(pattern)) {
+            if (auto pointerPattern = dynamic_cast<PatternPointer *>(pattern)) {
                 u128 pointerValue = pointerPattern->getPointedAtAddress();
 
                 auto result = function.func(evaluator, { pointerValue });
@@ -178,7 +182,7 @@ namespace hex::pl {
         }
     }
 
-    inline void applyVariableAttributes(Evaluator *evaluator, const ASTNode *node, PatternData *pattern) {
+    inline void applyVariableAttributes(Evaluator *evaluator, const ASTNode *node, Pattern *pattern) {
         auto attributable = dynamic_cast<const Attributable *>(node);
         if (attributable == nullptr)
             LogConsole::abortEvaluation("attribute cannot be applied here", node);

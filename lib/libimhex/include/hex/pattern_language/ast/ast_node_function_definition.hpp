@@ -46,7 +46,7 @@ namespace hex::pl {
                 paramCount |= ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan;
 
             evaluator->addCustomFunction(this->m_name, paramCount, [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
-                std::vector<std::shared_ptr<PatternData>> variables;
+                std::vector<std::shared_ptr<Pattern>> variables;
 
                 ctx->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT {

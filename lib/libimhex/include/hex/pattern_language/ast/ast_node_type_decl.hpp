@@ -39,7 +39,7 @@ namespace hex::pl {
             return type;
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             auto patterns = this->m_type->createPatterns(evaluator);
 
             for (auto &pattern : patterns) {
@@ -59,8 +59,9 @@ namespace hex::pl {
         }
 
         void addAttribute(std::unique_ptr<ASTNodeAttribute> &&attribute) override {
-            if (auto attributable = dynamic_cast<Attributable *>(this->m_type.get()); attributable != nullptr)
-                attributable->addAttribute(std::move(attribute));
+            if (auto attributable = dynamic_cast<Attributable *>(this->m_type.get()); attributable != nullptr) {
+                attributable->addAttribute(std::unique_ptr<ASTNodeAttribute>(static_cast<ASTNodeAttribute *>(attribute->clone().release())));
+            }
 
             Attributable::addAttribute(std::move(attribute));
         }

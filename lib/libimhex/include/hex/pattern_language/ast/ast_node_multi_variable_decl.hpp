@@ -23,8 +23,8 @@ namespace hex::pl {
             return this->m_variables;
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
-            std::vector<std::unique_ptr<PatternData>> patterns;
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
+            std::vector<std::unique_ptr<Pattern>> patterns;
 
             for (auto &node : this->m_variables) {
                 auto newPatterns = node->createPatterns(evaluator);

@@ -7,6 +7,7 @@ namespace hex::pl {
     class ASTNodeCast : public ASTNode {
     public:
         ASTNodeCast(std::unique_ptr<ASTNode> &&value, std::unique_ptr<ASTNode> &&type) : m_value(std::move(value)), m_type(std::move(type)) { }
+
         ASTNodeCast(const ASTNodeCast &other) : ASTNode(other) {
             this->m_value = other.m_value->clone();
             this->m_type  = other.m_type->clone();
@@ -29,7 +30,7 @@ namespace hex::pl {
             auto &typePattern = typePatterns.front();
 
             return std::unique_ptr<ASTNode>(std::visit(overloaded {
-                                                           [&, this](const std::shared_ptr<PatternData> &value) -> ASTNode * { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(type)), this); },
+                                                           [&, this](const std::shared_ptr<Pattern> &value) -> ASTNode * { LogConsole::abortEvaluation(hex::format("cannot cast custom type '{}' to '{}'", value->getTypeName(), Token::getTypeName(type)), this); },
                                                            [&, this](const std::string &) -> ASTNode * { LogConsole::abortEvaluation(hex::format("cannot cast string to '{}'", Token::getTypeName(type)), this); },
                                                            [&, this](auto &&value) -> ASTNode * {
                                                                auto endianAdjustedValue = hex::changeEndianess(value, typePattern->getSize(), typePattern->getEndian());

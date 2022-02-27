@@ -2,8 +2,10 @@
 
 #include <hex.hpp>
 #include <hex/api/event.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 #include <hex/pattern_language/pattern_language.hpp>
+
+#include <hex/ui/view.hpp>
 
 #include <cmath>
 #include <cstring>

@@ -6,7 +6,7 @@ namespace hex::pl {
 
     class ASTNodeControlFlowStatement : public ASTNode {
     public:
-        explicit ASTNodeControlFlowStatement(ControlFlowStatement type, std::unique_ptr<ASTNode> rvalue) : m_type(type), m_rvalue(std::move(rvalue)) {
+        explicit ASTNodeControlFlowStatement(ControlFlowStatement type, std::unique_ptr<ASTNode> &&rvalue) : m_type(type), m_rvalue(std::move(rvalue)) {
         }
 
         ASTNodeControlFlowStatement(const ASTNodeControlFlowStatement &other) : ASTNode(other) {
@@ -26,7 +26,7 @@ namespace hex::pl {
             return this->m_rvalue;
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
 
             this->execute(evaluator);
 

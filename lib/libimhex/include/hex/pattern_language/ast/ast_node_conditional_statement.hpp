@@ -23,7 +23,7 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeConditionalStatement(*this));
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             auto &scope = *evaluator->getScope(0).scope;
             auto &body  = evaluateCondition(evaluator) ? this->m_trueBody : this->m_falseBody;
 
@@ -80,7 +80,7 @@ namespace hex::pl {
 
             return std::visit(overloaded {
                                   [](const std::string &value) -> bool { return !value.empty(); },
-                                  [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                                  [this](Pattern *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
                                   [](auto &&value) -> bool { return value != 0; } },
                 literal->getValue());
         }

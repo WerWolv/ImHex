@@ -11,7 +11,7 @@
 
 #include <hex/pattern_language/log_console.hpp>
 #include <hex/pattern_language/token.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 
 namespace hex::prv {
     class Provider;
@@ -24,7 +24,7 @@ namespace hex::pl {
     class Parser;
     class Validator;
     class Evaluator;
-    class PatternData;
+    class Pattern;
 
     class ASTNode;
 
@@ -51,8 +51,8 @@ namespace hex::pl {
         [[nodiscard]] bool hasDangerousFunctionBeenCalled() const;
         void allowDangerousFunctions(bool allow);
 
-        [[nodiscard]] const std::vector<std::shared_ptr<PatternData>> &getPatterns() {
-            const static std::vector<std::shared_ptr<PatternData>> empty;
+        [[nodiscard]] const std::vector<std::shared_ptr<Pattern>> &getPatterns() {
+            const static std::vector<std::shared_ptr<Pattern>> empty;
 
             if (isRunning()) return empty;
             else return this->m_patterns;
@@ -72,7 +72,7 @@ namespace hex::pl {
 
         std::optional<PatternLanguageError> m_currError;
 
-        std::vector<std::shared_ptr<PatternData>> m_patterns;
+        std::vector<std::shared_ptr<Pattern>> m_patterns;
 
         bool m_running = false;
     };

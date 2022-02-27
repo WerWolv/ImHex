@@ -76,19 +76,19 @@ namespace hex::pl {
 
             return std::unique_ptr<ASTNode>(std::visit(overloaded {
                                                            // TODO: :notlikethis:
-                                                           [this](u128 left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](i128 left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](double left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](char left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](bool left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::string &left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, u128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, i128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, double right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, char right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, bool right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, const std::string &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::shared_ptr<PatternData> &left, const std::shared_ptr<PatternData> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](u128 left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](i128 left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](double left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](char left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](bool left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::string &left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, u128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, i128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, double right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, char right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, bool right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, const std::string &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::shared_ptr<Pattern> &left, const std::shared_ptr<Pattern> &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
 
                                                            [this](auto &&left, const std::string &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                                                            [this](const std::string &left, auto &&right) -> ASTNode * {

@@ -4,6 +4,20 @@
 #include <hex/pattern_language/ast/ast_node_literal.hpp>
 #include <hex/pattern_language/ast/ast_node_parameter_pack.hpp>
 
+#include <hex/pattern_language/patterns/pattern_pointer.hpp>
+#include <hex/pattern_language/patterns/pattern_unsigned.hpp>
+#include <hex/pattern_language/patterns/pattern_signed.hpp>
+#include <hex/pattern_language/patterns/pattern_float.hpp>
+#include <hex/pattern_language/patterns/pattern_boolean.hpp>
+#include <hex/pattern_language/patterns/pattern_character.hpp>
+#include <hex/pattern_language/patterns/pattern_string.hpp>
+#include <hex/pattern_language/patterns/pattern_array_dynamic.hpp>
+#include <hex/pattern_language/patterns/pattern_array_static.hpp>
+#include <hex/pattern_language/patterns/pattern_struct.hpp>
+#include <hex/pattern_language/patterns/pattern_union.hpp>
+#include <hex/pattern_language/patterns/pattern_enum.hpp>
+#include <hex/pattern_language/patterns/pattern_bitfield.hpp>
+
 namespace hex::pl {
 
     class ASTNodeRValue : public ASTNode {
@@ -35,9 +49,9 @@ namespace hex::pl {
                 if (auto name = std::get_if<std::string>(&this->getPath().front()); name != nullptr) {
                     if (*name == "$") return std::unique_ptr<ASTNode>(new ASTNodeLiteral(u128(evaluator->dataOffset())));
 
-                    auto &parameterPack = evaluator->getScope(0).parameterPack;
+                    auto parameterPack = evaluator->getScope(0).parameterPack;
                     if (parameterPack && *name == parameterPack->name)
-                        return std::unique_ptr<ASTNode>(new ASTNodeParameterPack(parameterPack->values));
+                        return std::unique_ptr<ASTNode>(new ASTNodeParameterPack(std::move(parameterPack->values)));
                 }
             }
 
@@ -45,16 +59,16 @@ namespace hex::pl {
             auto &pattern = patterns.front();
 
             Token::Literal literal;
-            if (dynamic_cast<PatternDataUnsigned *>(pattern.get()) || dynamic_cast<PatternDataEnum *>(pattern.get())) {
+            if (dynamic_cast<PatternUnsigned *>(pattern.get()) || dynamic_cast<PatternEnum *>(pattern.get())) {
                 u128 value = 0;
                 readVariable(evaluator, value, pattern.get());
                 literal = value;
-            } else if (dynamic_cast<PatternDataSigned *>(pattern.get())) {
+            } else if (dynamic_cast<PatternSigned *>(pattern.get())) {
                 i128 value = 0;
                 readVariable(evaluator, value, pattern.get());
                 value   = hex::signExtend(pattern->getSize() * 8, value);
                 literal = value;
-            } else if (dynamic_cast<PatternDataFloat *>(pattern.get())) {
+            } else if (dynamic_cast<PatternFloat *>(pattern.get())) {
                 if (pattern->getSize() == sizeof(u16)) {
                     u16 value = 0;
                     readVariable(evaluator, value, pattern.get());
@@ -68,15 +82,15 @@ namespace hex::pl {
                     readVariable(evaluator, value, pattern.get());
                     literal = value;
                 } else LogConsole::abortEvaluation("invalid floating point type access", this);
-            } else if (dynamic_cast<PatternDataCharacter *>(pattern.get())) {
+            } else if (dynamic_cast<PatternCharacter *>(pattern.get())) {
                 char value = 0;
                 readVariable(evaluator, value, pattern.get());
                 literal = value;
-            } else if (dynamic_cast<PatternDataBoolean *>(pattern.get())) {
+            } else if (dynamic_cast<PatternBoolean *>(pattern.get())) {
                 bool value = false;
                 readVariable(evaluator, value, pattern.get());
                 literal = value;
-            } else if (dynamic_cast<PatternDataString *>(pattern.get())) {
+            } else if (dynamic_cast<PatternString *>(pattern.get())) {
                 std::string value;
 
                 if (pattern->isLocal()) {
@@ -85,8 +99,8 @@ namespace hex::pl {
                     std::visit(overloaded {
                                    [&](char assignmentValue) { if (assignmentValue != 0x00) value = std::string({ assignmentValue }); },
                                    [&](std::string &assignmentValue) { value = assignmentValue; },
-                                   [&, this](PatternData *const &assignmentValue) {
-                                       if (!dynamic_cast<PatternDataString *>(assignmentValue) && !dynamic_cast<PatternDataCharacter *>(assignmentValue))
+                                   [&, this](Pattern *const &assignmentValue) {
+                                       if (!dynamic_cast<PatternString *>(assignmentValue) && !dynamic_cast<PatternCharacter *>(assignmentValue))
                                            LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this);
 
                                        readVariable(evaluator, value, assignmentValue);
@@ -100,7 +114,7 @@ namespace hex::pl {
                 }
 
                 literal = value;
-            } else if (auto bitfieldFieldPattern = dynamic_cast<PatternDataBitfieldField *>(pattern.get())) {
+            } else if (auto bitfieldFieldPattern = dynamic_cast<PatternBitfieldField *>(pattern.get())) {
                 u64 value = 0;
                 readVariable(evaluator, value, pattern.get());
                 literal = u128(hex::extract(bitfieldFieldPattern->getBitOffset() + (bitfieldFieldPattern->getBitSize() - 1), bitfieldFieldPattern->getBitOffset(), value));
@@ -119,9 +133,9 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeLiteral(std::move(literal)));
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
-            std::vector<std::shared_ptr<PatternData>> searchScope;
-            std::unique_ptr<PatternData> currPattern;
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
+            std::vector<std::shared_ptr<Pattern>> searchScope;
+            std::unique_ptr<Pattern> currPattern;
             i32 scopeIndex = 0;
 
 
@@ -191,14 +205,14 @@ namespace hex::pl {
 
                     std::visit(overloaded {
                                    [this](const std::string &) { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                                   [this](const std::shared_ptr<PatternData> &) { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                   [this](const std::shared_ptr<Pattern> &) { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                    [&, this](auto &&index) {
-                                       if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray *>(currPattern.get())) {
+                                       if (auto dynamicArrayPattern = dynamic_cast<PatternArrayDynamic *>(currPattern.get())) {
                                            if (index >= searchScope.size() || index < 0)
                                                LogConsole::abortEvaluation("array index out of bounds", this);
 
                                            currPattern = searchScope[index]->clone();
-                                       } else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray *>(currPattern.get())) {
+                                       } else if (auto staticArrayPattern = dynamic_cast<PatternArrayStatic *>(currPattern.get())) {
                                            if (index >= staticArrayPattern->getEntryCount() || index < 0)
                                                LogConsole::abortEvaluation("array index out of bounds", this);
 
@@ -213,42 +227,42 @@ namespace hex::pl {
                 if (currPattern == nullptr)
                     break;
 
-                if (auto pointerPattern = dynamic_cast<PatternDataPointer *>(currPattern.get())) {
+                if (auto pointerPattern = dynamic_cast<PatternPointer *>(currPattern.get())) {
                     currPattern = pointerPattern->getPointedAtPattern()->clone();
                 }
 
-                std::shared_ptr<PatternData> indexPattern;
+                std::shared_ptr<Pattern> indexPattern;
                 if (currPattern->isLocal()) {
                     auto stackLiteral = evaluator->getStack()[currPattern->getOffset()];
-                    if (auto stackPattern = std::get_if<std::shared_ptr<PatternData>>(&stackLiteral); stackPattern != nullptr)
+                    if (auto stackPattern = std::get_if<std::shared_ptr<Pattern>>(&stackLiteral); stackPattern != nullptr)
                         indexPattern = *stackPattern;
                     else
-                        return hex::moveToVector<std::unique_ptr<PatternData>>(std::move(currPattern));
+                        return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(currPattern));
                 } else
                     indexPattern = currPattern->clone();
 
-                if (auto structPattern = dynamic_cast<PatternDataStruct *>(indexPattern.get()))
+                if (auto structPattern = dynamic_cast<PatternStruct *>(indexPattern.get()))
                     searchScope = structPattern->getMembers();
-                else if (auto unionPattern = dynamic_cast<PatternDataUnion *>(indexPattern.get()))
+                else if (auto unionPattern = dynamic_cast<PatternUnion *>(indexPattern.get()))
                     searchScope = unionPattern->getMembers();
-                else if (auto bitfieldPattern = dynamic_cast<PatternDataBitfield *>(indexPattern.get()))
+                else if (auto bitfieldPattern = dynamic_cast<PatternBitfield *>(indexPattern.get()))
                     searchScope = bitfieldPattern->getFields();
-                else if (auto dynamicArrayPattern = dynamic_cast<PatternDataDynamicArray *>(indexPattern.get()))
+                else if (auto dynamicArrayPattern = dynamic_cast<PatternArrayDynamic *>(indexPattern.get()))
                     searchScope = dynamicArrayPattern->getEntries();
-                else if (auto staticArrayPattern = dynamic_cast<PatternDataStaticArray *>(indexPattern.get()))
+                else if (auto staticArrayPattern = dynamic_cast<PatternArrayStatic *>(indexPattern.get()))
                     searchScope = { staticArrayPattern->getTemplate() };
             }
 
             if (currPattern == nullptr)
                 LogConsole::abortEvaluation("cannot reference global scope", this);
 
-            return hex::moveToVector<std::unique_ptr<PatternData>>(std::move(currPattern));
+            return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(currPattern));
         }
 
     private:
         Path m_path;
 
-        void readVariable(Evaluator *evaluator, auto &value, PatternData *variablePattern) const {
+        void readVariable(Evaluator *evaluator, auto &value, Pattern *variablePattern) const {
             constexpr bool isString = std::same_as<std::remove_cvref_t<decltype(value)>, std::string>;
 
             if (variablePattern->isLocal()) {
@@ -258,7 +272,7 @@ namespace hex::pl {
                                [&](std::string &assignmentValue) {
                                    if constexpr (isString) value = assignmentValue;
                                },
-                               [&](std::shared_ptr<PatternData> &assignmentValue) { readVariable(evaluator, value, assignmentValue.get()); },
+                               [&](std::shared_ptr<Pattern> &assignmentValue) { readVariable(evaluator, value, assignmentValue.get()); },
                                [&](auto &&assignmentValue) { value = assignmentValue; } },
                     literal);
             } else {

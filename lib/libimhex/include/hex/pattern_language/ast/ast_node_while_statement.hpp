@@ -93,7 +93,7 @@ namespace hex::pl {
 
             return std::visit(overloaded {
                                   [](const std::string &value) -> bool { return !value.empty(); },
-                                  [this](PatternData *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                                  [this](Pattern *const &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
                                   [](auto &&value) -> bool { return value != 0; } },
                 literal->getValue());
         }

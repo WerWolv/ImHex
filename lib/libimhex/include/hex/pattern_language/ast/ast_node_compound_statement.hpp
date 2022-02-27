@@ -31,8 +31,8 @@ namespace hex::pl {
             return result;
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
-            std::vector<std::unique_ptr<PatternData>> result;
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
+            std::vector<std::unique_ptr<Pattern>> result;
 
             for (const auto &statement : this->m_statements) {
                 auto patterns = statement->createPatterns(evaluator);

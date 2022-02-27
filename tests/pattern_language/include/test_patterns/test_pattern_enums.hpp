@@ -2,12 +2,14 @@
 
 #include "test_pattern.hpp"
 
+#include <hex/pattern_language/patterns/pattern_enum.hpp>
+
 namespace hex::test {
 
     class TestPatternEnums : public TestPattern {
     public:
         TestPatternEnums() : TestPattern("Enums") {
-            auto testEnum = create<PatternDataEnum>("TestEnum", "testEnum", 0x08, sizeof(u32));
+            auto testEnum = create<PatternEnum>("TestEnum", "testEnum", 0x08, sizeof(u32));
             testEnum->setEnumValues({
                 {u128(0x00),  "A"},
                 { i128(0x0C), "B"},

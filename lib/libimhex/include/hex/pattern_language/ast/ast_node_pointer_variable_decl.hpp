@@ -3,6 +3,8 @@
 #include <hex/pattern_language/ast/ast_node.hpp>
 #include <hex/pattern_language/ast/ast_node_attribute.hpp>
 
+#include <hex/pattern_language/patterns/pattern_pointer.hpp>
+
 namespace hex::pl {
 
     class ASTNodePointerVariableDecl : public ASTNode,
@@ -31,7 +33,7 @@ namespace hex::pl {
         [[nodiscard]] constexpr const std::shared_ptr<ASTNode> &getSizeType() const { return this->m_sizeType; }
         [[nodiscard]] constexpr const std::unique_ptr<ASTNode> &getPlacementOffset() const { return this->m_placementOffset; }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             auto startOffset = evaluator->dataOffset();
 
             if (this->m_placementOffset != nullptr) {
@@ -40,7 +42,7 @@ namespace hex::pl {
 
                 evaluator->dataOffset() = std::visit(overloaded {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                                                         [this](const std::shared_ptr<PatternData> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [this](const std::shared_ptr<Pattern> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return u64(offset); } },
                     offset->getValue());
             }
@@ -50,7 +52,7 @@ namespace hex::pl {
             const auto sizePatterns = this->m_sizeType->createPatterns(evaluator);
             const auto &sizePattern = sizePatterns.front();
 
-            auto pattern = std::make_unique<PatternDataPointer>(evaluator, pointerStartOffset, sizePattern->getSize());
+            auto pattern = std::make_unique<PatternPointer>(evaluator, pointerStartOffset, sizePattern->getSize());
             pattern->setVariableName(this->m_name);
 
             auto pointerEndOffset = evaluator->dataOffset();
@@ -80,7 +82,7 @@ namespace hex::pl {
                 evaluator->dataOffset() = pointerEndOffset;
             }
 
-            return hex::moveToVector<std::unique_ptr<PatternData>>(std::move(pattern));
+            return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(pattern));
         }
 
     private:

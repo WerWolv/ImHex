@@ -3,6 +3,8 @@
 #include <hex/pattern_language/ast/ast_node.hpp>
 #include <hex/pattern_language/ast/ast_node_attribute.hpp>
 
+#include <hex/pattern_language/patterns/pattern_struct.hpp>
+
 namespace hex::pl {
 
     class ASTNodeStruct : public ASTNode,
@@ -21,11 +23,11 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeStruct(*this));
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = std::make_unique<PatternDataStruct>(evaluator, evaluator->dataOffset(), 0);
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
+            auto pattern = std::make_unique<PatternStruct>(evaluator, evaluator->dataOffset(), 0);
 
             u64 startOffset = evaluator->dataOffset();
-            std::vector<std::shared_ptr<PatternData>> memberPatterns;
+            std::vector<std::shared_ptr<Pattern>> memberPatterns;
 
             evaluator->pushScope(pattern.get(), memberPatterns);
             ON_SCOPE_EXIT {
@@ -36,7 +38,7 @@ namespace hex::pl {
                 auto inheritancePatterns = inheritance->createPatterns(evaluator);
                 auto &inheritancePattern = inheritancePatterns.front();
 
-                if (auto structPattern = dynamic_cast<PatternDataStruct *>(inheritancePattern.get())) {
+                if (auto structPattern = dynamic_cast<PatternStruct *>(inheritancePattern.get())) {
                     for (auto &member : structPattern->getMembers()) {
                         memberPatterns.push_back(member->clone());
                     }
@@ -54,7 +56,7 @@ namespace hex::pl {
 
             applyTypeAttributes(evaluator, this, pattern.get());
 
-            return hex::moveToVector<std::unique_ptr<PatternData>>(std::move(pattern));
+            return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(pattern));
         }
 
         [[nodiscard]] const std::vector<std::shared_ptr<ASTNode>> &getMembers() const { return this->m_members; }

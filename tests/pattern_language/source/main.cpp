@@ -8,7 +8,7 @@
 #include <hex/pattern_language/pattern_language.hpp>
 #include <hex/pattern_language/evaluator.hpp>
 #include <hex/pattern_language/ast/ast_node.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include "test_provider.hpp"
@@ -28,7 +28,7 @@ static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
         auto &param = params[i];
 
         std::visit(hex::overloaded {
-                       [&](const std::shared_ptr<hex::pl::PatternData> &value) {
+                       [&](const std::shared_ptr<hex::pl::Pattern> &value) {
                            formatArgs.push_back(value->toString(ctx->getProvider()));
                        },
                        [&](auto &&value) {

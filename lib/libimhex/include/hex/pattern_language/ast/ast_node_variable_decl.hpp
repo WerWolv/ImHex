@@ -36,7 +36,7 @@ namespace hex::pl {
         [[nodiscard]] constexpr bool isInVariable() const { return this->m_inVariable; }
         [[nodiscard]] constexpr bool isOutVariable() const { return this->m_outVariable; }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             u64 startOffset = evaluator->dataOffset();
 
             if (this->m_placementOffset != nullptr) {
@@ -45,7 +45,7 @@ namespace hex::pl {
 
                 evaluator->dataOffset() = std::visit(overloaded {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                                                         [this](const std::shared_ptr<PatternData> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [this](const std::shared_ptr<Pattern> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return offset; } },
                     offset->getValue());
             }
@@ -60,7 +60,7 @@ namespace hex::pl {
                 evaluator->dataOffset() = startOffset;
             }
 
-            return hex::moveToVector<std::unique_ptr<PatternData>>(std::move(pattern));
+            return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(pattern));
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {

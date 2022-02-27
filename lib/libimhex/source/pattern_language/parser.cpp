@@ -711,9 +711,7 @@ namespace hex::pl {
         if (!MATCHES(sequence(OPERATOR_ASSIGNMENT)))
             throwParserError("expected '=' after type name of using declaration");
 
-        auto node = parseType();
-        auto type = std::unique_ptr<ASTNodeTypeDecl>(dynamic_cast<ASTNodeTypeDecl *>(node.get()));
-        if (type == nullptr) throwParserError("invalid type used in variable declaration", -1);
+        auto type = parseType();
 
         auto endian = type->getEndian();
         return addType(name, std::move(type), endian);

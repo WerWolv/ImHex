@@ -97,7 +97,7 @@ namespace hex {
     };
 
     namespace pl {
-        class PatternData;
+        class Pattern;
     }
 
     /* Default Events */

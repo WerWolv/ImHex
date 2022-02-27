@@ -34,7 +34,7 @@ namespace hex::pl {
         Return
     };
 
-    class PatternData;
+    class Pattern;
     class PatternCreationLimiter;
     class ASTNode;
 
@@ -42,7 +42,7 @@ namespace hex::pl {
     public:
         Evaluator() = default;
 
-        std::optional<std::vector<std::shared_ptr<PatternData>>> evaluate(const std::vector<std::shared_ptr<ASTNode>> &ast);
+        std::optional<std::vector<std::shared_ptr<Pattern>>> evaluate(const std::vector<std::shared_ptr<ASTNode>> &ast);
 
         [[nodiscard]] LogConsole &getConsole() {
             return this->m_console;
@@ -54,11 +54,11 @@ namespace hex::pl {
         };
 
         struct Scope {
-            PatternData *parent;
-            std::vector<std::shared_ptr<PatternData>> *scope;
+            Pattern *parent;
+            std::vector<std::shared_ptr<Pattern>> *scope;
             std::optional<ParameterPack> parameterPack;
         };
-        void pushScope(PatternData *parent, std::vector<std::shared_ptr<PatternData>> &scope) {
+        void pushScope(Pattern *parent, std::vector<std::shared_ptr<Pattern>> &scope) {
             if (this->m_scopes.size() > this->getEvaluationDepth())
                 LogConsole::abortEvaluation(hex::format("evaluation depth exceeded set limit of {}", this->getEvaluationDepth()));
 

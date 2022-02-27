@@ -3,6 +3,7 @@
 #include <hex/helpers/socket.hpp>
 #include <hex/providers/provider.hpp>
 
+#include <array>
 #include <mutex>
 #include <string_view>
 #include <thread>

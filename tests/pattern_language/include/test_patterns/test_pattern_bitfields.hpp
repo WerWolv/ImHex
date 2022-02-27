@@ -2,20 +2,22 @@
 
 #include "test_pattern.hpp"
 
+#include <hex/pattern_language/patterns/pattern_bitfield.hpp>
+
 namespace hex::test {
 
     class TestPatternBitfields : public TestPattern {
     public:
         TestPatternBitfields() : TestPattern("Bitfields") {
-            auto testBitfield = create<PatternDataBitfield>("TestBitfield", "testBitfield", 0x12, (4 * 4) / 8);
+            auto testBitfield = create<PatternBitfield>("TestBitfield", "testBitfield", 0x12, (4 * 4) / 8);
             testBitfield->setEndian(std::endian::big);
 
-            std::vector<std::shared_ptr<hex::pl::PatternData>> bitfieldFields;
+            std::vector<std::shared_ptr<hex::pl::Pattern>> bitfieldFields;
             {
-                bitfieldFields.push_back(create<PatternDataBitfieldField>("", "a", 0x12, 0, 4, testBitfield.get()));
-                bitfieldFields.push_back(create<PatternDataBitfieldField>("", "b", 0x12, 4, 4, testBitfield.get()));
-                bitfieldFields.push_back(create<PatternDataBitfieldField>("", "c", 0x12, 8, 4, testBitfield.get()));
-                bitfieldFields.push_back(create<PatternDataBitfieldField>("", "d", 0x12, 12, 4, testBitfield.get()));
+                bitfieldFields.push_back(create<PatternBitfieldField>("", "a", 0x12, 0, 4, testBitfield.get()));
+                bitfieldFields.push_back(create<PatternBitfieldField>("", "b", 0x12, 4, 4, testBitfield.get()));
+                bitfieldFields.push_back(create<PatternBitfieldField>("", "c", 0x12, 8, 4, testBitfield.get()));
+                bitfieldFields.push_back(create<PatternBitfieldField>("", "d", 0x12, 12, 4, testBitfield.get()));
             }
 
             testBitfield->setFields(std::move(bitfieldFields));

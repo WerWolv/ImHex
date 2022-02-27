@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 
 #define TEST(name) (hex::test::TestPattern *)new hex::test::TestPattern##name()
 
@@ -36,8 +36,8 @@ namespace hex::test {
 
         [[nodiscard]] virtual std::string getSourceCode() const = 0;
 
-        [[nodiscard]] virtual const std::vector<std::unique_ptr<PatternData>> &getPatterns() const final { return this->m_patterns; }
-        virtual void addPattern(std::unique_ptr<PatternData> &&pattern) final {
+        [[nodiscard]] virtual const std::vector<std::unique_ptr<Pattern>> &getPatterns() const final { return this->m_patterns; }
+        virtual void addPattern(std::unique_ptr<Pattern> &&pattern) final {
             this->m_patterns.push_back(std::move(pattern));
         }
 
@@ -56,7 +56,7 @@ namespace hex::test {
         }
 
     private:
-        std::vector<std::unique_ptr<PatternData>> m_patterns;
+        std::vector<std::unique_ptr<Pattern>> m_patterns;
         Mode m_mode;
 
         static inline std::map<std::string, TestPattern *> s_tests;

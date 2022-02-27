@@ -6,6 +6,14 @@
 #include <hex/pattern_language/ast/ast_node_builtin_type.hpp>
 #include <hex/pattern_language/ast/ast_node_while_statement.hpp>
 
+#include <hex/pattern_language/patterns/pattern_padding.hpp>
+#include <hex/pattern_language/patterns/pattern_character.hpp>
+#include <hex/pattern_language/patterns/pattern_wide_character.hpp>
+#include <hex/pattern_language/patterns/pattern_string.hpp>
+#include <hex/pattern_language/patterns/pattern_wide_string.hpp>
+#include <hex/pattern_language/patterns/pattern_array_dynamic.hpp>
+#include <hex/pattern_language/patterns/pattern_array_static.hpp>
+
 namespace hex::pl {
 
     class ASTNodeArrayVariableDecl : public ASTNode,
@@ -32,7 +40,7 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeArrayVariableDecl(*this));
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             auto startOffset = evaluator->dataOffset();
 
             if (this->m_placementOffset != nullptr) {
@@ -41,14 +49,14 @@ namespace hex::pl {
 
                 evaluator->dataOffset() = std::visit(overloaded {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                                                         [this](const std::shared_ptr<PatternData> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [this](const std::shared_ptr<Pattern> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return offset; } },
                     offset->getValue());
             }
 
             auto type = this->m_type->evaluate(evaluator);
 
-            std::unique_ptr<PatternData> pattern;
+            std::unique_ptr<Pattern> pattern;
             if (dynamic_cast<ASTNodeBuiltinType *>(type.get()))
                 pattern = createStaticArray(evaluator);
             else if (auto attributable = dynamic_cast<Attributable *>(type.get())) {
@@ -77,7 +85,7 @@ namespace hex::pl {
         std::unique_ptr<ASTNode> m_size;
         std::unique_ptr<ASTNode> m_placementOffset;
 
-        std::unique_ptr<PatternData> createStaticArray(Evaluator *evaluator) const {
+        std::unique_ptr<Pattern> createStaticArray(Evaluator *evaluator) const {
             u64 startOffset = evaluator->dataOffset();
 
             auto templatePatterns = this->m_type->createPatterns(evaluator);
@@ -93,7 +101,7 @@ namespace hex::pl {
                 if (auto literal = dynamic_cast<ASTNodeLiteral *>(sizeNode.get())) {
                     entryCount = std::visit(overloaded {
                                                 [this](const std::string &) -> i128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                                                [this](const std::shared_ptr<PatternData> &) -> i128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                                [this](const std::shared_ptr<Pattern> &) -> i128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                                 [](auto &&size) -> i128 { return size; } },
                         literal->getValue());
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement *>(sizeNode.get())) {
@@ -130,15 +138,15 @@ namespace hex::pl {
                 }
             }
 
-            std::unique_ptr<PatternData> outputPattern;
-            if (dynamic_cast<PatternDataPadding *>(templatePattern.get())) {
-                outputPattern = std::unique_ptr<PatternData>(new PatternDataPadding(evaluator, startOffset, 0));
-            } else if (dynamic_cast<PatternDataCharacter *>(templatePattern.get())) {
-                outputPattern = std::unique_ptr<PatternData>(new PatternDataString(evaluator, startOffset, 0));
-            } else if (dynamic_cast<PatternDataCharacter16 *>(templatePattern.get())) {
-                outputPattern = std::unique_ptr<PatternData>(new PatternDataString16(evaluator, startOffset, 0));
+            std::unique_ptr<Pattern> outputPattern;
+            if (dynamic_cast<PatternPadding *>(templatePattern.get())) {
+                outputPattern = std::unique_ptr<Pattern>(new PatternPadding(evaluator, startOffset, 0));
+            } else if (dynamic_cast<PatternCharacter *>(templatePattern.get())) {
+                outputPattern = std::unique_ptr<Pattern>(new PatternString(evaluator, startOffset, 0));
+            } else if (dynamic_cast<PatternWideCharacter *>(templatePattern.get())) {
+                outputPattern = std::unique_ptr<Pattern>(new PatternWideString(evaluator, startOffset, 0));
             } else {
-                auto arrayPattern = std::make_unique<PatternDataStaticArray>(evaluator, startOffset, 0);
+                auto arrayPattern = std::make_unique<PatternArrayStatic>(evaluator, startOffset, 0);
                 arrayPattern->setEntries(templatePattern->clone(), entryCount);
                 outputPattern = std::move(arrayPattern);
             }
@@ -153,16 +161,16 @@ namespace hex::pl {
             return outputPattern;
         }
 
-        std::unique_ptr<PatternData> createDynamicArray(Evaluator *evaluator) const {
-            auto arrayPattern = std::make_unique<PatternDataDynamicArray>(evaluator, evaluator->dataOffset(), 0);
+        std::unique_ptr<Pattern> createDynamicArray(Evaluator *evaluator) const {
+            auto arrayPattern = std::make_unique<PatternArrayDynamic>(evaluator, evaluator->dataOffset(), 0);
             arrayPattern->setVariableName(this->m_name);
 
-            std::vector<std::shared_ptr<PatternData>> entries;
+            std::vector<std::shared_ptr<Pattern>> entries;
 
             size_t size    = 0;
             u64 entryIndex = 0;
 
-            auto addEntries = [&](std::vector<std::unique_ptr<PatternData>> &&patterns) {
+            auto addEntries = [&](std::vector<std::unique_ptr<Pattern>> &&patterns) {
                 for (auto &pattern : patterns) {
                     pattern->setVariableName(hex::format("[{}]", entryIndex));
                     pattern->setEndian(arrayPattern->getEndian());
@@ -189,7 +197,7 @@ namespace hex::pl {
                 if (auto literal = dynamic_cast<ASTNodeLiteral *>(sizeNode.get())) {
                     auto entryCount = std::visit(overloaded {
                                                      [this](const std::string &) -> u128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                                                     [this](const std::shared_ptr<PatternData> &) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                                     [this](const std::shared_ptr<Pattern> &) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                                      [](auto &&size) -> u128 { return size; } },
                         literal->getValue());
 
@@ -292,7 +300,6 @@ namespace hex::pl {
             if (auto &arrayEntries = arrayPattern->getEntries(); !entries.empty())
                 arrayPattern->setTypeName(arrayEntries.front()->getTypeName());
 
-            arrayPattern->setEntries(std::move(entries));
             arrayPattern->setSize(size);
 
             return std::move(arrayPattern);

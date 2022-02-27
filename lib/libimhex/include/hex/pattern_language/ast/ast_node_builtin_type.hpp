@@ -2,6 +2,15 @@
 
 #include <hex/pattern_language/ast/ast_node.hpp>
 
+#include <hex/pattern_language/patterns/pattern_padding.hpp>
+#include <hex/pattern_language/patterns/pattern_unsigned.hpp>
+#include <hex/pattern_language/patterns/pattern_signed.hpp>
+#include <hex/pattern_language/patterns/pattern_float.hpp>
+#include <hex/pattern_language/patterns/pattern_boolean.hpp>
+#include <hex/pattern_language/patterns/pattern_character.hpp>
+#include <hex/pattern_language/patterns/pattern_wide_character.hpp>
+#include <hex/pattern_language/patterns/pattern_string.hpp>
+
 namespace hex::pl {
 
     class ASTNodeBuiltinType : public ASTNode {
@@ -15,29 +24,29 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeBuiltinType(*this));
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
             auto offset = evaluator->dataOffset();
             auto size   = Token::getTypeSize(this->m_type);
 
             evaluator->dataOffset() += size;
 
-            std::unique_ptr<PatternData> pattern;
+            std::unique_ptr<Pattern> pattern;
             if (Token::isUnsigned(this->m_type))
-                pattern = std::unique_ptr<PatternData>(new PatternDataUnsigned(evaluator, offset, size));
+                pattern = std::unique_ptr<Pattern>(new PatternUnsigned(evaluator, offset, size));
             else if (Token::isSigned(this->m_type))
-                pattern = std::unique_ptr<PatternData>(new PatternDataSigned(evaluator, offset, size));
+                pattern = std::unique_ptr<Pattern>(new PatternSigned(evaluator, offset, size));
             else if (Token::isFloatingPoint(this->m_type))
-                pattern = std::unique_ptr<PatternData>(new PatternDataFloat(evaluator, offset, size));
+                pattern = std::unique_ptr<Pattern>(new PatternFloat(evaluator, offset, size));
             else if (this->m_type == Token::ValueType::Boolean)
-                pattern = std::unique_ptr<PatternData>(new PatternDataBoolean(evaluator, offset));
+                pattern = std::unique_ptr<Pattern>(new PatternBoolean(evaluator, offset));
             else if (this->m_type == Token::ValueType::Character)
-                pattern = std::unique_ptr<PatternData>(new PatternDataCharacter(evaluator, offset));
+                pattern = std::unique_ptr<Pattern>(new PatternCharacter(evaluator, offset));
             else if (this->m_type == Token::ValueType::Character16)
-                pattern = std::unique_ptr<PatternData>(new PatternDataCharacter16(evaluator, offset));
+                pattern = std::unique_ptr<Pattern>(new PatternWideCharacter(evaluator, offset));
             else if (this->m_type == Token::ValueType::Padding)
-                pattern = std::unique_ptr<PatternData>(new PatternDataPadding(evaluator, offset, 1));
+                pattern = std::unique_ptr<Pattern>(new PatternPadding(evaluator, offset, 1));
             else if (this->m_type == Token::ValueType::String)
-                pattern = std::unique_ptr<PatternData>(new PatternDataString(evaluator, offset, 1));
+                pattern = std::unique_ptr<Pattern>(new PatternString(evaluator, offset, 1));
             else if (this->m_type == Token::ValueType::Auto)
                 return {};
             else

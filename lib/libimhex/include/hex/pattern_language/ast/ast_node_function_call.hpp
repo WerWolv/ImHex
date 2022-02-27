@@ -14,9 +14,6 @@ namespace hex::pl {
         explicit ASTNodeFunctionCall(std::string functionName, std::vector<std::unique_ptr<ASTNode>> &&params)
             : ASTNode(), m_functionName(std::move(functionName)), m_params(std::move(params)) { }
 
-        ~ASTNodeFunctionCall() override {
-        }
-
         ASTNodeFunctionCall(const ASTNodeFunctionCall &other) : ASTNode(other) {
             this->m_functionName = other.m_functionName;
 
@@ -36,7 +33,7 @@ namespace hex::pl {
             return this->m_params;
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
 
             this->execute(evaluator);
 
@@ -105,7 +102,7 @@ namespace hex::pl {
                 auto result = function.func(evaluator, evaluatedParams);
 
                 if (result.has_value())
-                    return std::unique_ptr<ASTNode>(new ASTNodeLiteral(result.value()));
+                    return std::unique_ptr<ASTNode>(new ASTNodeLiteral(std::move(result.value())));
                 else
                     return std::unique_ptr<ASTNode>(new ASTNodeMathematicalExpression(nullptr, nullptr, Token::Operator::Plus));
             } catch (std::string &error) {

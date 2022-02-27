@@ -2,7 +2,7 @@
 
 
 #include <hex/pattern_language/preprocessor.hpp>
-#include <hex/pattern_language/pattern_data.hpp>
+#include <hex/pattern_language/patterns/pattern.hpp>
 #include <hex/pattern_language/ast/ast_node.hpp>
 #include <hex/pattern_language/ast/ast_node_variable_decl.hpp>
 #include <hex/pattern_language/ast/ast_node_type_decl.hpp>
@@ -229,7 +229,7 @@ namespace hex::plugin::builtin {
 
 
         ImHexApi::HexEditor::addHighlightingProvider([](u64 address) -> std::optional<ImHexApi::HexEditor::Highlighting> {
-            auto patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
+            const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
             for (const auto &pattern : patterns) {
                 auto child = pattern->getPattern(address);
                 if (child != nullptr) {
@@ -590,7 +590,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewPatternEditor::clearPatternData() {
+    void ViewPatternEditor::clearPatterns() {
         if (!ImHexApi::Provider::isValid()) return;
 
         ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
@@ -638,7 +638,7 @@ namespace hex::plugin::builtin {
 
         this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
-        this->clearPatternData();
+        this->clearPatterns();
 
         EventManager::post<EventHighlightingChanged>();
 

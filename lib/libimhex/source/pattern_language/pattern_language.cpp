@@ -12,7 +12,7 @@
 
 namespace hex::pl {
 
-    class PatternData;
+    class Pattern;
 
     PatternLanguage::PatternLanguage() {
         this->m_preprocessor = new Preprocessor();

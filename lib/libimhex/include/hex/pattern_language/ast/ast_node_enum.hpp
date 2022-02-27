@@ -3,6 +3,8 @@
 #include <hex/pattern_language/ast/ast_node.hpp>
 #include <hex/pattern_language/ast/ast_node_attribute.hpp>
 
+#include <hex/pattern_language/patterns/pattern_enum.hpp>
+
 namespace hex::pl {
 
     class ASTNodeEnum : public ASTNode,
@@ -20,8 +22,8 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeEnum(*this));
         }
 
-        [[nodiscard]] std::vector<std::unique_ptr<PatternData>> createPatterns(Evaluator *evaluator) const override {
-            auto pattern = std::make_unique<PatternDataEnum>(evaluator, evaluator->dataOffset(), 0);
+        [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
+            auto pattern = std::make_unique<PatternEnum>(evaluator, evaluator->dataOffset(), 0);
 
             std::vector<std::pair<Token::Literal, std::string>> enumEntries;
             for (const auto &[name, value] : this->m_entries) {
@@ -41,7 +43,7 @@ namespace hex::pl {
 
             applyTypeAttributes(evaluator, this, pattern.get());
 
-            return hex::moveToVector<std::unique_ptr<PatternData>>(std::move(pattern));
+            return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(pattern));
         }
 
         [[nodiscard]] const std::map<std::string, std::unique_ptr<ASTNode>> &getEntries() const { return this->m_entries; }

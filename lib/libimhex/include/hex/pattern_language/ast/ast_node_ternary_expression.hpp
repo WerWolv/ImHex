@@ -34,7 +34,7 @@ namespace hex::pl {
 
             auto condition = std::visit(overloaded {
                                             [](const std::string &value) -> bool { return !value.empty(); },
-                                            [this](const std::shared_ptr<PatternData> &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
+                                            [this](const std::shared_ptr<Pattern> &) -> bool { LogConsole::abortEvaluation("cannot cast custom type to bool", this); },
                                             [](auto &&value) -> bool { return bool(value); } },
                 first->getValue());
 
