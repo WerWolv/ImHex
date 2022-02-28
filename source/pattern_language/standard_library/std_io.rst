@@ -62,8 +62,6 @@ Please check its `documentation <https://fmt.dev/latest/syntax.html>`_ for furth
 
     return std::format("Hello {} {}", "World", 42); // Returns "Hello World 42"
 
-------------------------
-
 ``std::error(str message)`` :version:`1.14.0`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -86,7 +84,7 @@ When run, execution is aborted immediately with a given message
 ``std::warning(str message)`` :version:`1.14.0`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Throws an error**
+**Throws a warning**
 
 When run, a warning is thrown with a given message
 
@@ -99,60 +97,3 @@ When run, a warning is thrown with a given message
     =========== =========================================================
     ``message`` Message to print
     =========== =========================================================
-
-------------------------
-
-``std::assert(bool condition, str message)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Aborts evaluation and prints an error to the console if condition evaluates to false**
-
-
-.. table::
-    :align: left
-
-    =============== =========================================================================
-    Parameter       Description
-    =============== =========================================================================
-    ``condition``   Condition that needs to be met
-    ``message``     Message to be printed to the console if ``condition`` evaluated to false.
-    =============== =========================================================================
-
-------------------------
-
-``std::assert_warn(bool condition, str message)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Prints a warning to the console if condition evaluates to false**
-
-
-.. table::
-    :align: left
-
-    =============== =========================================================================
-    Parameter       Description
-    =============== =========================================================================
-    ``condition``   Condition that needs to be met
-    ``message``     Message to be printed to the console if ``condition`` evaluated to false.
-    =============== =========================================================================
-
-------------------------
-
-``std::env(str var) -> auto`` :version:`1.12.0`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Gets the value of a environment variable specified in the Environment Variables tab**
-
-.. note::
-
-    The type returned from this function depends on the type specified in the Environment Variables tab.
-
-.. table::
-    :align: left
-
-    =============== =========================================================================
-    Parameter       Description
-    =============== =========================================================================
-    ``var``         Name of environment variable to query
-    ``return``      Integer, floating point, bool or string with the value of that env var
-    =============== =========================================================================
