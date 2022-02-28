@@ -44,6 +44,7 @@ namespace hex {
     std::string encodeByteString(const std::vector<u8> &bytes);
     std::vector<u8> decodeByteString(const std::string &string);
 
+    bool isPathWritable(fs::path path);
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);

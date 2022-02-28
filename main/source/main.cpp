@@ -8,8 +8,6 @@
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
-#include <hex/helpers/file.hpp>
-
 int main(int argc, char **argv, char **envp) {
     using namespace hex;
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);

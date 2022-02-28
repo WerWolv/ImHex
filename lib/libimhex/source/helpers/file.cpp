@@ -122,9 +122,9 @@ namespace hex {
         fflush(this->m_file);
     }
 
-    void File::remove() {
+    bool File::remove() {
         this->close();
-        std::remove(this->m_path.string().c_str());
+        return std::remove(this->m_path.string().c_str()) == 0;
     }
 
 }

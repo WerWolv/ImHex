@@ -23,6 +23,7 @@
 #endif
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file.hpp>
 
 namespace hex {
 
@@ -393,6 +394,23 @@ namespace hex {
         return result;
     }
 
+    bool isPathWritable(fs::path path) {
+        constexpr static auto TestFileName = "__imhex__tmp__";
+        {
+            File file(path / TestFileName, File::Mode::Read);
+            if (file.isValid()) {
+                if (!file.remove())
+                    return false;
+            }
+        }
+
+        File file(path / TestFileName, File::Mode::Create);
+        bool result = file.isValid();
+        if (!file.remove())
+            return false;
+
+        return result;
+    }
 
     bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();

@@ -56,7 +56,7 @@ namespace hex {
         void setSize(u64 size);
 
         void flush();
-        void remove();
+        bool remove();
 
         auto getHandle() { return this->m_file; }
         const fs::path &getPath() { return this->m_path; }

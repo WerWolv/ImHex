@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
 
                                         downloadDoneCallback(entry);
                                     } else
-                                        log::error("Download failed!");
+                                        log::error("Download failed! HTTP Code {}", response.code);
 
 
                                     this->m_download = {};
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
 
                                 auto path = folder / fs::path(storeEntry.fileName);
 
-                                if (fs::exists(path)) {
+                                if (fs::exists(path) && hex::isPathWritable(folder)) {
                                     storeEntry.installed = true;
 
                                     std::ifstream file(path, std::ios::in | std::ios::binary);
@@ -237,7 +237,11 @@ namespace hex::plugin::builtin {
     bool ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
         bool downloading = false;
         for (const auto &path : hex::getPath(pathType)) {
+            if (!hex::isPathWritable(path))
+                continue;
+
             auto fullPath = path / fs::path(fileName);
+
             if (!update || fs::exists(fullPath)) {
                 downloading          = true;
                 this->m_downloadPath = fullPath;
@@ -257,8 +261,10 @@ namespace hex::plugin::builtin {
     bool ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
         bool removed = false;
         for (const auto &path : hex::getPath(pathType)) {
-            bool removedFile   = fs::remove(path / fs::path(fileName));
-            bool removedFolder = fs::remove(path / fs::path(fileName).stem());
+            std::error_code error;
+
+            bool removedFile   = fs::remove(path / fs::path(fileName), error);
+            bool removedFolder = fs::remove(path / fs::path(fileName).stem(), error);
 
             removed = removed || removedFile || removedFolder;
         }
