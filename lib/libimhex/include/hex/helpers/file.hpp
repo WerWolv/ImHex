@@ -61,6 +61,8 @@ namespace hex {
         auto getHandle() { return this->m_file; }
         const fs::path &getPath() { return this->m_path; }
 
+        void disableBuffering();
+
     private:
         FILE *m_file;
         fs::path m_path;

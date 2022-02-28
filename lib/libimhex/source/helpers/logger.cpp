@@ -26,6 +26,7 @@ namespace hex::log {
         for (const auto &path : hex::getPath(ImHexPath::Logs, true)) {
             fs::create_directories(path);
             g_loggerFile = File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::now())), File::Mode::Create);
+            g_loggerFile.disableBuffering();
 
             if (g_loggerFile.isValid()) break;
         }

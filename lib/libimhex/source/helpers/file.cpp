@@ -42,7 +42,7 @@ namespace hex {
 
     void File::close() {
         if (isValid()) {
-            fclose(this->m_file);
+            std::fclose(this->m_file);
             this->m_file = nullptr;
         }
     }
@@ -83,19 +83,19 @@ namespace hex {
     void File::write(const u8 *buffer, size_t size) {
         if (!isValid()) return;
 
-        fwrite(buffer, size, 1, this->m_file);
+        std::fwrite(buffer, size, 1, this->m_file);
     }
 
     void File::write(const std::vector<u8> &bytes) {
         if (!isValid()) return;
 
-        fwrite(bytes.data(), 1, bytes.size(), this->m_file);
+        std::fwrite(bytes.data(), 1, bytes.size(), this->m_file);
     }
 
     void File::write(const std::string &string) {
         if (!isValid()) return;
 
-        fwrite(string.data(), string.size(), 1, this->m_file);
+        std::fwrite(string.data(), string.size(), 1, this->m_file);
     }
 
     size_t File::getSize() const {
@@ -119,12 +119,18 @@ namespace hex {
     }
 
     void File::flush() {
-        fflush(this->m_file);
+        std::fflush(this->m_file);
     }
 
     bool File::remove() {
         this->close();
         return std::remove(this->m_path.string().c_str()) == 0;
+    }
+
+    void File::disableBuffering() {
+        if (!isValid()) return;
+
+        std::setvbuf(this->m_file, nullptr, _IONBF, 0);
     }
 
 }
