@@ -89,7 +89,7 @@ namespace hex {
             filePath = ProjectFile::s_currProjectFilePath;
 
         try {
-            projectFileData["filePath"]      = ProjectFile::s_filePath;
+            projectFileData["filePath"]      = ProjectFile::s_filePath.string();
             projectFileData["pattern"]       = ProjectFile::s_pattern;
             projectFileData["patches"]       = ProjectFile::s_patches;
             projectFileData["dataProcessor"] = ProjectFile::s_dataProcessorContent;
