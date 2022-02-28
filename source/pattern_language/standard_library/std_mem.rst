@@ -84,6 +84,27 @@ Functions
 
 ------------------------
 
+``std::mem::find_sequence_in_range(u128 occurence_index, u128 offsetFrom, u128 offsetTo, u8 bytes...) -> u128`` :version:`1.16.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Searches the data for the ``occurence_index``th occurence of a sequence of ``bytes`` in a region spanning from ``offsetFrom`` to ``offsetTo``**
+
+
+.. table::
+    :align: left
+
+    =================== ===========================================================================
+    Parameter           Description
+    =================== ===========================================================================
+    ``occurence_index`` Index of found sequence if there's more than one. Zero yields the first one
+    ``offsetFrom``      Address of where to start the search
+    ``offsetTo``        Address of where to end the search
+    ``bytes...``        One or more bytes to search for
+    ``return``          Start address of the sequence
+    =================== ===========================================================================
+
+------------------------
+
 ``std::mem::read_unsigned(u128 address, u128 size) -> u128``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

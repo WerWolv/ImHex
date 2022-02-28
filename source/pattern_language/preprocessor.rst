@@ -98,3 +98,10 @@ This pragma takes no value and simply marks the current file to only be includab
 for example when it's being included explicitly first and later on again inside of another included file, it will only be included the first time.
 
 This is mainly useful to prevent functions, types and variables that are defined in that file, from being defined multiple times.
+
+``bitfield_order`` :version:`1.16.0`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Possible values:** ``right_to_left``, ``left_to_right``
+**Default:** ``right_to_left``
+
+This pragma overrides the default bitfield bit order. It works the same as the ``[[left_to_right]]`` and ``[[right_to_left]]`` attributes but is automatically applied to all created bitfields

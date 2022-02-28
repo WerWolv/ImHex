@@ -23,6 +23,12 @@ It's also possible to apply multiple attributes to the same variable or type: ``
 Variable Attributes
 ^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+  :version:`1.16.0`
+  Variable attributes may also be applied to types directly to cause all patterns
+  created from them to have those attributes applied.
+
 ``[[color("RRGGBB")]]``
 -----------------------
 
@@ -43,6 +49,12 @@ Adds a comment to the current variable that is displayed when hovering over it i
 
 Overrides the default display value formatter with a custom function. 
 The function requires a single argument representing the value to be formatted (e.g ``u32`` if this attribute was applied to a variable of type ``u32``) and return a string which will be displayed in place of the default value.
+
+``[[format_entries("formatter_function_name")]]`` :version:`1.15.0`
+-------------------------------------------------------------------
+
+Can be applied to arrays and works the same as the ``[[format]]`` attribute but overrides the default dispay value formatter of all array entries
+instead of just the array pattern itself.
 
 ``[[hidden]]``
 --------------
@@ -74,6 +86,10 @@ There's a number of :ref:`predefined pointer helper functions <Pointer Helpers>`
 
 A variable marked by this attribute will be placed in memory but not increment the current cursor position. 
 
+``[[single_color]]`` :version:`1.16.0`
+-------------------------------------------
+
+Forces all members of the struct, union or array to be highlighted using the same color instead of individual ones
 
 Type Attributes
 ^^^^^^^^^^^^^^^
@@ -84,3 +100,9 @@ Type Attributes
 | ImHex by default optimizes arrays of built-in types so they don't use up as much memory and are evaluated quicker.
 | This same optimization can be applied to custom data types when they are marked with this attribute to tell ImHex the size and layout of this type will always be the same.
 | **However** if the layout of the type this is applied to is not static, highlighing and decoding of the data will be wrong and only use the layout of the first array entry.
+
+
+``[[left_to_right]]`` / ``[[right_to_left]]`` :version:`1.15.0`
+-------------------------------------------
+
+These attributes can be applied to bitfields to set if bits should be ordered from left to right or from right to left
