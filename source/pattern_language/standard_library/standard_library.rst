@@ -3,6 +3,11 @@ Standard Library
 
 The Pattern Language Standard Library is a set of utility functions and intrinsics to interact with ImHex or the currently loaded data.
 
+.. note::
+
+   To use the Standard Library, it first needs to be installed. The easiest way to do that is through the Content Store under ``Help -> Content Store``.
+   Select the ``Libraries`` tab and install ``std`` from there.
+
 Libraries
 ---------
 
