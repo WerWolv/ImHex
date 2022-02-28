@@ -1,7 +1,7 @@
 ImHex Documentation
 ===================
 
-ImHex is a modern Hex Eeditor and Reverse Engineering Tool written in pure C++20 using GLFW and Dear ImGui. 
+ImHex is a modern Hex Editor and Reverse Engineering Tool written in pure C++20 using GLFW and Dear ImGui. 
 
 .. warning:: 
 
