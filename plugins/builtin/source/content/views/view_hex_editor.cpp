@@ -495,12 +495,15 @@ namespace hex::plugin::builtin {
     static std::vector<std::pair<u64, u64>> findString(hex::prv::Provider *&provider, std::string string) {
         std::vector<std::pair<u64, u64>> results;
 
+        if (string.empty())
+            return {};
+
         u32 foundCharacters = 0;
 
         std::vector<u8> buffer(1024, 0x00);
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
-            size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
+            size_t usedBufferSize = std::min<size_t>({ buffer.size(), dataSize - offset, string.size() });
             provider->read(offset + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
@@ -525,6 +528,9 @@ namespace hex::plugin::builtin {
         if ((string.size() % 2) == 1)
             string = "0" + string;
 
+        if (string.empty())
+            return {};
+
         std::vector<u8> hex;
         hex.reserve(string.size() / 2);
 
@@ -538,7 +544,7 @@ namespace hex::plugin::builtin {
         std::vector<u8> buffer(1024, 0x00);
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
-            size_t usedBufferSize = std::min(u64(buffer.size()), dataSize - offset);
+            size_t usedBufferSize = std::min<size_t>({ buffer.size(), dataSize - offset, hex.size() });
             provider->read(offset + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
@@ -574,7 +580,7 @@ namespace hex::plugin::builtin {
         ImGui::EndTabItem();
     }
 
-    void ViewHexEditor::performSearch(char *buffer) {
+    void ViewHexEditor::performSearch(const char *buffer) {
         auto provider = ImHexApi::Provider::get();
 
         *this->m_lastSearchBuffer = this->m_searchFunction(provider, buffer);
