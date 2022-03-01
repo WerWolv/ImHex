@@ -34,18 +34,20 @@ namespace hex::pl {
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {
-            evaluator->setCurrentControlFlowStatement(this->m_type);
-
-            if (this->m_rvalue == nullptr)
+            if (this->m_rvalue == nullptr) {
+                evaluator->setCurrentControlFlowStatement(this->m_type);
                 return std::nullopt;
+            } else {
+                auto returnValue = this->m_rvalue->evaluate(evaluator);
+                auto literal     = dynamic_cast<ASTNodeLiteral *>(returnValue.get());
 
-            auto returnValue = this->m_rvalue->evaluate(evaluator);
-            auto literal     = dynamic_cast<ASTNodeLiteral *>(returnValue.get());
+                evaluator->setCurrentControlFlowStatement(this->m_type);
 
-            if (literal == nullptr)
-                return std::nullopt;
-            else
-                return literal->getValue();
+                if (literal == nullptr)
+                    return std::nullopt;
+                else
+                    return literal->getValue();
+            }
         }
 
     private:
