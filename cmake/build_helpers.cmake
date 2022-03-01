@@ -292,7 +292,7 @@ function(downloadImHexPatternsFiles)
 
     FetchContent_Populate(imhex_patterns)
 
-    set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns yara magic)
+    set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic)
     foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
         install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "./")
     endforeach()
