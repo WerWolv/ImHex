@@ -55,8 +55,8 @@ namespace hex::plugin::builtin {
         i64 m_gotoAddressRelative = 0;
         bool m_gotoRequested      = false;
 
-        char m_baseAddressBuffer[0x20] = { 0 };
-        u64 m_resizeSize               = 0;
+        u64 m_baseAddress = 0;
+        u64 m_resizeSize  = 0;
 
         std::vector<u8> m_dataToSave;
         std::set<pl::Pattern *> m_highlightedPatterns;

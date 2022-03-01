@@ -330,12 +330,12 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hex_editor.menu.edit.set_base"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::InputText("hex.builtin.common.address"_lang, this->m_baseAddressBuffer, 16, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons(
                 "hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang, [this, &provider] {
-                               provider->setBaseAddress(strtoull(this->m_baseAddressBuffer, nullptr, 16));
+                               provider->setBaseAddress(this->m_baseAddress);
                                ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
@@ -802,7 +802,7 @@ namespace hex::plugin::builtin {
         ImGui::Separator();
 
         if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.bookmark"_lang, nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
-            auto base = ImHexApi::Provider::get()->getBaseAddress();
+            auto base = provider->getBaseAddress();
 
             size_t start = base + std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
             size_t end   = base + std::max(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -811,7 +811,7 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.set_base"_lang, nullptr, false, providerValid && provider->isReadable())) {
-            std::memset(this->m_baseAddressBuffer, 0x00, sizeof(this->m_baseAddressBuffer));
+            this->m_baseAddress = provider->getBaseAddress();
             ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.view.hex_editor.menu.edit.set_base"_lang); });
         }
 
