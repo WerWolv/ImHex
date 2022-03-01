@@ -34,11 +34,13 @@ namespace hex::pl {
         }
 
         FunctionResult execute(Evaluator *evaluator) const override {
-            auto returnValue = this->m_rvalue->evaluate(evaluator);
-
-            auto literal = dynamic_cast<ASTNodeLiteral *>(returnValue.get());
-
             evaluator->setCurrentControlFlowStatement(this->m_type);
+
+            if (this->m_rvalue == nullptr)
+                return std::nullopt;
+
+            auto returnValue = this->m_rvalue->evaluate(evaluator);
+            auto literal     = dynamic_cast<ASTNodeLiteral *>(returnValue.get());
 
             if (literal == nullptr)
                 return std::nullopt;
