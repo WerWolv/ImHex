@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
                         if (locked)
                             ImGui::TextUnformatted(name.data());
                         else
-                            ImGui::InputText("##nameInput", name.data(), name.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
+                            ImGui::InputText("##nameInput", name.data(), name.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
 
                         ImGui::NewLine();
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.comment"_lang);
@@ -157,7 +157,7 @@ namespace hex::plugin::builtin {
                         if (locked)
                             ImGui::TextFormattedWrapped("{}", comment.data());
                         else
-                            ImGui::InputTextMultiline("##commentInput", comment.data(), comment.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &comment);
+                            ImGui::InputTextMultiline("##commentInput", comment.data(), comment.size(), ImVec2(0, 0), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &comment);
 
                         ImGui::NewLine();
                     }

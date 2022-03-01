@@ -16,9 +16,13 @@
 namespace ImGui {
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
-        auto &mathInput = *static_cast<std::string *>(data->UserData);
+        if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+            auto &string = *static_cast<std::string *>(data->UserData);
 
-        mathInput.resize(data->BufTextLen + 1);
+            string.resize(data->BufSize);
+            data->Buf = string.data();
+        }
+
         return 0;
     }
 

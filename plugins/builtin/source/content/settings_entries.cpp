@@ -230,7 +230,7 @@ namespace hex::plugin::builtin {
             "hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "", [](auto name, nlohmann::json &setting) {
                 fontPath = static_cast<std::string>(setting);
 
-                if (ImGui::InputText("##font_path", fontPath.data(), fontPath.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &fontPath)) {
+                if (ImGui::InputText("##font_path", fontPath.data(), fontPath.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &fontPath)) {
                     setting = fontPath;
                     return true;
                 }

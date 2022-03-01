@@ -421,7 +421,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-                    ImGui::InputText("###name", name.data(), name.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
+                    ImGui::InputText("###name", name.data(), name.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &name);
                     ImGui::PopItemWidth();
 
                     ImGui::TableNextColumn();
@@ -452,7 +452,7 @@ namespace hex::plugin::builtin {
                         case EnvVarType::String:
                             {
                                 auto displayValue = hex::get_or<std::string>(value, "");
-                                ImGui::InputText("###value", displayValue.data(), displayValue.capacity(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
+                                ImGui::InputText("###value", displayValue.data(), displayValue.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &displayValue);
                                 value = displayValue;
                                 break;
                             }

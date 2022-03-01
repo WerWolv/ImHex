@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
                             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                             ImGui::SetKeyboardFocusHere();
-                            if (ImGui::InputText("##InspectorLineEditing", this->m_editingValue.data(), this->m_editingValue.capacity(), ImGuiInputTextFlags_CallbackResize | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll, ImGui::UpdateStringSizeCallback, &this->m_editingValue)) {
+                            if (ImGui::InputText("##InspectorLineEditing", this->m_editingValue.data(), this->m_editingValue.size(), ImGuiInputTextFlags_CallbackResize | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll, ImGui::UpdateStringSizeCallback, &this->m_editingValue)) {
                                 auto bytes = (*editingFunction)(this->m_editingValue, this->m_endian);
 
                                 provider->write(this->m_startAddress, bytes.data(), bytes.size());
