@@ -48,9 +48,11 @@ namespace hex::pl {
             evaluator->addCustomFunction(this->m_name, paramCount, [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
                 std::vector<std::shared_ptr<Pattern>> variables;
 
+                auto startOffset = ctx->dataOffset();
                 ctx->pushScope(nullptr, variables);
                 ON_SCOPE_EXIT {
                     ctx->popScope();
+                    ctx->dataOffset() = startOffset;
                 };
 
                 if (this->m_parameterPack.has_value()) {
