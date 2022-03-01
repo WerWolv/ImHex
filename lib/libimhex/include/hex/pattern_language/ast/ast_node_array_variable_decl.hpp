@@ -215,6 +215,7 @@ namespace hex::pl {
                             addEntries(std::move(patterns));
 
                         auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
                         if (ctrlFlow == ControlFlowStatement::Break)
                             break;
                         else if (ctrlFlow == ControlFlowStatement::Continue) {
@@ -238,6 +239,7 @@ namespace hex::pl {
                             addEntries(std::move(patterns));
 
                         auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                        evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
                         if (ctrlFlow == ControlFlowStatement::Break)
                             break;
                         else if (ctrlFlow == ControlFlowStatement::Continue) {
@@ -284,6 +286,7 @@ namespace hex::pl {
                     }
 
                     auto ctrlFlow = evaluator->getCurrentControlFlowStatement();
+                    evaluator->setCurrentControlFlowStatement(ControlFlowStatement::None);
                     if (ctrlFlow == ControlFlowStatement::Break)
                         break;
                     else if (ctrlFlow == ControlFlowStatement::Continue) {
