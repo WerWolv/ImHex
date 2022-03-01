@@ -139,7 +139,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                LogConsole::abortEvaluation("failed to find sequence");
+                return i128(-1);
             });
 
             /* read_unsigned(address, size) */
