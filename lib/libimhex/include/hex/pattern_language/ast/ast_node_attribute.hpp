@@ -44,8 +44,10 @@ namespace hex::pl {
         Attributable(const Attributable &other) {
             for (auto &attribute : other.m_attributes) {
                 auto copy = attribute->clone();
-                if (auto node = dynamic_cast<ASTNodeAttribute *>(copy.get()))
+                if (auto node = dynamic_cast<ASTNodeAttribute *>(copy.get())) {
                     this->m_attributes.push_back(std::unique_ptr<ASTNodeAttribute>(node));
+                    (void)copy.release();
+                }
             }
         }
 
