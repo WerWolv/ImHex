@@ -41,7 +41,9 @@ namespace hex::pl {
 
         bool referenceType = false;
 
-        if (type == nullptr) {
+        auto typePattern = type->createPatterns(this);
+
+        if (typePattern.empty()) {
             // Handle auto variables
             if (!value.has_value())
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
@@ -64,7 +66,7 @@ namespace hex::pl {
             } else
                 LogConsole::abortEvaluation("cannot determine type of auto variable", type);
         } else {
-            pattern = std::move(type->createPatterns(this).front());
+            pattern = std::move(typePattern.front());
         }
 
         pattern->setVariableName(name);
