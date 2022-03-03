@@ -559,16 +559,10 @@ namespace ImGui {
     }
 
     bool InputText(const char *label, std::string &buffer, ImGuiInputTextFlags flags) {
-        if (buffer.empty())
-            buffer.resize(1, 0x00);
-
         return ImGui::InputText(label, buffer.data(), buffer.size(), ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
     }
 
     bool InputTextMultiline(const char *label, std::string &buffer, const ImVec2 &size, ImGuiInputTextFlags flags) {
-        if (buffer.empty())
-            buffer.resize(1, 0x00);
-
         return ImGui::InputTextMultiline(label, buffer.data(), buffer.size(), size, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
     }
 

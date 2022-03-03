@@ -131,13 +131,7 @@ namespace hex::plugin::builtin {
         void drawMathEvaluator() {
             static std::vector<long double> mathHistory;
             static std::string lastMathError;
-            static auto mathInput = [] {
-                std::string s;
-                s.reserve(0xFFFF);
-                std::memset(s.data(), 0x00, s.capacity());
-
-                return s;
-            }();
+            static std::string mathInput;
             bool evaluate = false;
 
             static MathEvaluator mathEvaluator = [&] {
