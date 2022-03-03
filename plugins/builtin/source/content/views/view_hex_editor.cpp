@@ -503,7 +503,7 @@ namespace hex::plugin::builtin {
         std::vector<u8> buffer(1024, 0x00);
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
-            size_t usedBufferSize = std::min<size_t>({ buffer.size(), dataSize - offset, string.size() });
+            size_t usedBufferSize = std::min<size_t>(buffer.size(), dataSize - offset);
             provider->read(offset + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
@@ -544,7 +544,7 @@ namespace hex::plugin::builtin {
         std::vector<u8> buffer(1024, 0x00);
         size_t dataSize = provider->getSize();
         for (u64 offset = 0; offset < dataSize; offset += 1024) {
-            size_t usedBufferSize = std::min<size_t>({ buffer.size(), dataSize - offset, hex.size() });
+            size_t usedBufferSize = std::min<size_t>(buffer.size(), dataSize - offset);
             provider->read(offset + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), usedBufferSize);
 
             for (u64 i = 0; i < usedBufferSize; i++) {
