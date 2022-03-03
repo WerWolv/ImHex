@@ -45,7 +45,7 @@ namespace hex::pl {
 
                 evaluator->dataOffset() = std::visit(overloaded {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                                                         [this](const std::shared_ptr<Pattern> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [this](Pattern *) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return offset; } },
                     offset->getValue());
             }

@@ -119,7 +119,7 @@ namespace hex::pl {
                 readVariable(evaluator, value, pattern.get());
                 literal = u128(hex::extract(bitfieldFieldPattern->getBitOffset() + (bitfieldFieldPattern->getBitSize() - 1), bitfieldFieldPattern->getBitOffset(), value));
             } else {
-                literal = pattern->clone();
+                literal = pattern.get();
             }
 
             if (auto transformFunc = pattern->getTransformFunction(); transformFunc.has_value()) {
@@ -205,7 +205,7 @@ namespace hex::pl {
 
                     std::visit(overloaded {
                                    [this](const std::string &) { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                                   [this](const std::shared_ptr<Pattern> &) { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                   [this](Pattern *) { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                    [&, this](auto &&index) {
                                        if (auto dynamicArrayPattern = dynamic_cast<PatternArrayDynamic *>(currPattern.get())) {
                                            if (index >= searchScope.size() || index < 0)
@@ -231,25 +231,25 @@ namespace hex::pl {
                     currPattern = pointerPattern->getPointedAtPattern()->clone();
                 }
 
-                std::shared_ptr<Pattern> indexPattern;
+                Pattern *indexPattern;
                 if (currPattern->isLocal()) {
                     auto stackLiteral = evaluator->getStack()[currPattern->getOffset()];
-                    if (auto stackPattern = std::get_if<std::shared_ptr<Pattern>>(&stackLiteral); stackPattern != nullptr)
+                    if (auto stackPattern = std::get_if<Pattern *>(&stackLiteral); stackPattern != nullptr)
                         indexPattern = *stackPattern;
                     else
                         return hex::moveToVector<std::unique_ptr<Pattern>>(std::move(currPattern));
                 } else
-                    indexPattern = currPattern->clone();
+                    indexPattern = currPattern.get();
 
-                if (auto structPattern = dynamic_cast<PatternStruct *>(indexPattern.get()))
+                if (auto structPattern = dynamic_cast<PatternStruct *>(indexPattern))
                     searchScope = structPattern->getMembers();
-                else if (auto unionPattern = dynamic_cast<PatternUnion *>(indexPattern.get()))
+                else if (auto unionPattern = dynamic_cast<PatternUnion *>(indexPattern))
                     searchScope = unionPattern->getMembers();
-                else if (auto bitfieldPattern = dynamic_cast<PatternBitfield *>(indexPattern.get()))
+                else if (auto bitfieldPattern = dynamic_cast<PatternBitfield *>(indexPattern))
                     searchScope = bitfieldPattern->getFields();
-                else if (auto dynamicArrayPattern = dynamic_cast<PatternArrayDynamic *>(indexPattern.get()))
+                else if (auto dynamicArrayPattern = dynamic_cast<PatternArrayDynamic *>(indexPattern))
                     searchScope = dynamicArrayPattern->getEntries();
-                else if (auto staticArrayPattern = dynamic_cast<PatternArrayStatic *>(indexPattern.get()))
+                else if (auto staticArrayPattern = dynamic_cast<PatternArrayStatic *>(indexPattern))
                     searchScope = { staticArrayPattern->getTemplate() };
             }
 
@@ -272,7 +272,7 @@ namespace hex::pl {
                                [&](std::string &assignmentValue) {
                                    if constexpr (isString) value = assignmentValue;
                                },
-                               [&](std::shared_ptr<Pattern> &assignmentValue) { readVariable(evaluator, value, assignmentValue.get()); },
+                               [&](Pattern *assignmentValue) { readVariable(evaluator, value, assignmentValue); },
                                [&](auto &&assignmentValue) { value = assignmentValue; } },
                     literal);
             } else {

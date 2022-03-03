@@ -49,7 +49,7 @@ namespace hex::pl {
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this->clone()));
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
 
             if (open) {

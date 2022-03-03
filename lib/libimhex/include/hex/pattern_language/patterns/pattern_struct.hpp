@@ -45,7 +45,7 @@ namespace hex::pl {
                 ImGui::SameLine();
                 ImGui::TextUnformatted(this->getTypeName().c_str());
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this->clone()));
+                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
             }
 
             if (open) {

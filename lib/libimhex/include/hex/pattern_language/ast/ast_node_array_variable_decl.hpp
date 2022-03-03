@@ -49,7 +49,7 @@ namespace hex::pl {
 
                 evaluator->dataOffset() = std::visit(overloaded {
                                                          [this](const std::string &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a string", this); },
-                                                         [this](const std::shared_ptr<Pattern> &) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
+                                                         [this](Pattern *) -> u64 { LogConsole::abortEvaluation("placement offset cannot be a custom type", this); },
                                                          [](auto &&offset) -> u64 { return offset; } },
                     offset->getValue());
             }
@@ -101,7 +101,7 @@ namespace hex::pl {
                 if (auto literal = dynamic_cast<ASTNodeLiteral *>(sizeNode.get())) {
                     entryCount = std::visit(overloaded {
                                                 [this](const std::string &) -> i128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                                                [this](const std::shared_ptr<Pattern> &) -> i128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                                [this](Pattern *) -> i128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                                 [](auto &&size) -> i128 { return size; } },
                         literal->getValue());
                 } else if (auto whileStatement = dynamic_cast<ASTNodeWhileStatement *>(sizeNode.get())) {
@@ -197,7 +197,7 @@ namespace hex::pl {
                 if (auto literal = dynamic_cast<ASTNodeLiteral *>(sizeNode.get())) {
                     auto entryCount = std::visit(overloaded {
                                                      [this](const std::string &) -> u128 { LogConsole::abortEvaluation("cannot use string to index array", this); },
-                                                     [this](const std::shared_ptr<Pattern> &) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
+                                                     [this](Pattern *) -> u128 { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                                      [](auto &&size) -> u128 { return size; } },
                         literal->getValue());
 

@@ -53,7 +53,7 @@ namespace hex::pl {
 
                 u8 bitSize = std::visit(overloaded {
                                             [this](const std::string &) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a string", this); },
-                                            [this](const std::shared_ptr<Pattern> &) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a custom type", this); },
+                                            [this](Pattern *) -> u8 { LogConsole::abortEvaluation("bitfield field size cannot be a custom type", this); },
                                             [](auto &&offset) -> u8 { return static_cast<u8>(offset); } },
                     dynamic_cast<ASTNodeLiteral *>(literal.get())->getValue());
 

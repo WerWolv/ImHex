@@ -233,7 +233,7 @@ namespace hex::pl {
         }
 
     protected:
-        void createDefaultEntry(const std::string &value, const Token::Literal &literal) const {
+        void createDefaultEntry(const std::string &value, Token::Literal &&literal) const {
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::TableNextColumn();
@@ -258,7 +258,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", formatDisplayValue(value, literal));
+            ImGui::TextFormatted("{}", formatDisplayValue(value, std::move(literal)));
         }
 
         void drawCommentTooltip() const {

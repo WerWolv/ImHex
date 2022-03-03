@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
             auto &param = params[i];
 
             std::visit(overloaded {
-                           [&](const std::shared_ptr<pl::Pattern> &value) {
+                           [&](pl::Pattern *value) {
                                formatArgs.push_back(value->toString(ctx->getProvider()));
                            },
                            [&](auto &&value) {

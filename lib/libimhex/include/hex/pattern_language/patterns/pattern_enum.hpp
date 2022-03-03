@@ -34,7 +34,7 @@ namespace hex::pl {
                                                   return false;
                                               },
                                               [](std::string &) { return false; },
-                                              [](std::shared_ptr<Pattern> &) { return false; } },
+                                              [](Pattern *) { return false; } },
                     entryValueLiteral);
                 if (matches)
                     break;
@@ -63,7 +63,7 @@ namespace hex::pl {
             ImGui::SameLine();
             ImGui::TextUnformatted(Pattern::getTypeName().c_str());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this->clone()));
+            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {

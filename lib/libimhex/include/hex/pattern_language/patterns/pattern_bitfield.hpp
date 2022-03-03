@@ -43,7 +43,7 @@ namespace hex::pl {
                 u8 numBytes = (this->m_bitSize / 8) + 1;
 
                 u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
-                ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), this->clone()));
+                ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), this));
             }
         }
 
@@ -120,7 +120,7 @@ namespace hex::pl {
                     valueString += hex::format("{0:02X} ", i);
                 valueString += "}";
 
-                ImGui::TextFormatted("{}", this->formatDisplayValue(valueString, this->clone()));
+                ImGui::TextFormatted("{}", this->formatDisplayValue(valueString, this));
             }
 
             if (open) {

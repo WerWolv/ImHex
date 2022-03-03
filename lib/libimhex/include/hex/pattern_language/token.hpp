@@ -139,7 +139,7 @@ namespace hex::pl {
             std::string m_identifier;
         };
 
-        using Literal    = std::variant<char, bool, u128, i128, double, std::string, std::shared_ptr<Pattern>>;
+        using Literal    = std::variant<char, bool, u128, i128, double, std::string, Pattern *>;
         using ValueTypes = std::variant<Keyword, Identifier, Operator, Literal, ValueType, Separator>;
 
         Token(Type type, auto value, u32 lineNumber) : type(type), value(value), lineNumber(lineNumber) {
@@ -164,7 +164,7 @@ namespace hex::pl {
         static u128 literalToUnsigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> u128 { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](const std::shared_ptr<Pattern> &) -> u128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](Pattern *) -> u128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> u128 { return result; } },
                 literal);
         }
@@ -172,7 +172,7 @@ namespace hex::pl {
         static i128 literalToSigned(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> i128 { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](const std::shared_ptr<Pattern> &) -> i128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](Pattern *) -> i128 { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> i128 { return result; } },
                 literal);
         }
@@ -180,7 +180,7 @@ namespace hex::pl {
         static double literalToFloatingPoint(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> double { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](const std::shared_ptr<Pattern> &) -> double { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](Pattern *) -> double { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> double { return result; } },
                 literal);
         }
@@ -188,7 +188,7 @@ namespace hex::pl {
         static bool literalToBoolean(const pl::Token::Literal &literal) {
             return std::visit(overloaded {
                                   [](const std::string &) -> bool { LogConsole::abortEvaluation("expected integral type, got string"); },
-                                  [](const std::unique_ptr<Pattern> &) -> bool { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](Pattern *) -> bool { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> bool { return result != 0; } },
                 literal);
         }
@@ -203,7 +203,7 @@ namespace hex::pl {
                                   [](i128 result) -> std::string { return hex::to_string(result); },
                                   [](bool result) -> std::string { return result ? "true" : "false"; },
                                   [](char result) -> std::string { return { 1, result }; },
-                                  [](const std::shared_ptr<Pattern> &) -> std::string { LogConsole::abortEvaluation("expected integral type, got custom type"); },
+                                  [](Pattern *) -> std::string { LogConsole::abortEvaluation("expected integral type, got custom type"); },
                                   [](auto &&result) -> std::string { return std::to_string(result); } },
                 literal);
         }

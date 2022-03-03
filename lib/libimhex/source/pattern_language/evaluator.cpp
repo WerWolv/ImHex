@@ -15,6 +15,8 @@
 #include <hex/pattern_language/patterns/pattern_string.hpp>
 #include <hex/pattern_language/patterns/pattern_enum.hpp>
 
+#include <hex/helpers/logger.hpp>
+
 namespace hex::pl {
 
     void Evaluator::createParameterPack(const std::string &name, const std::vector<Token::Literal> &values) {
@@ -56,7 +58,7 @@ namespace hex::pl {
                 pattern = std::unique_ptr<Pattern>(new PatternCharacter(this, 0));
             else if (std::get_if<std::string>(&value.value()) != nullptr)
                 pattern = std::unique_ptr<Pattern>(new PatternString(this, 0, 1));
-            else if (auto patternValue = std::get_if<std::shared_ptr<Pattern>>(&value.value()); patternValue != nullptr) {
+            else if (auto patternValue = std::get_if<Pattern *>(&value.value()); patternValue != nullptr) {
                 pattern       = (*patternValue)->clone();
                 referenceType = true;
             } else
@@ -127,7 +129,7 @@ namespace hex::pl {
                                                           else
                                                               LogConsole::abortEvaluation(hex::format("cannot cast type 'string' to type '{}'", pattern->getTypeName()));
                                                       },
-                                                      [&](const std::shared_ptr<Pattern> &value) -> Token::Literal {
+                                                      [&](Pattern *value) -> Token::Literal {
                                                           if (value->getTypeName() == pattern->getTypeName())
                                                               return value;
                                                           else
