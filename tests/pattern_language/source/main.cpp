@@ -28,7 +28,7 @@ static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
         auto &param = params[i];
 
         std::visit(hex::overloaded {
-                       [&](const std::shared_ptr<hex::pl::Pattern> &value) {
+                       [&](hex::pl::Pattern *value) {
                            formatArgs.push_back(value->toString(ctx->getProvider()));
                        },
                        [&](auto &&value) {
