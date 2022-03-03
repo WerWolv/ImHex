@@ -297,7 +297,7 @@ namespace hex::plugin::builtin::prv {
 
 
     void GDBProvider::drawLoadInterface() {
-        ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, this->m_ipAddress.data(), this->m_ipAddress.size(), ImGuiInputTextFlags_CallbackEdit, ImGui::UpdateStringSizeCallback, &this->m_ipAddress);
+        ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, this->m_ipAddress);
         ImGui::InputInt("hex.builtin.provider.gdb.port"_lang, &this->m_port, 0, 0);
 
         ImGui::Separator();

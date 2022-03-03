@@ -314,7 +314,7 @@ namespace hex::plugin::builtin::prv {
 
 #else
 
-        if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer))
+        if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer))
             this->m_path = this->m_pathBuffer;
 
 #endif

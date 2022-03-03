@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <functional>
+#include <string>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
@@ -127,4 +128,7 @@ namespace ImGui {
         ImGui::TextFormattedWrapped("{}", text);
         ImGui::PopTextWrapPos();
     }
+
+    bool InputText(const char* label, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputTextMultiline(const char* label, std::string &buffer, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 }
