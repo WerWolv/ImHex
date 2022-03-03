@@ -256,7 +256,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormatted("0x{0:04X}", this->getSize());
             ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getTypeName().empty() ? this->getFormattedName() : this->getTypeName());
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", formatDisplayValue(value, std::move(literal)));
         }

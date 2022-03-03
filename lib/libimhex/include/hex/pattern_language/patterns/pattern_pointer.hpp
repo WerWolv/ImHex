@@ -61,7 +61,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
-            std::string result = this->m_pointedAt->getFormattedName() + "* : ";
+            std::string result = this->getTypeName().empty() ? this->getFormattedName() : this->getTypeName() + "* : ";
             switch (this->getSize()) {
                 case 1:
                     result += "u8";
