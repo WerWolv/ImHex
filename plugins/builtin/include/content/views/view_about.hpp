@@ -15,10 +15,10 @@ namespace hex::plugin::builtin {
         class Provider;
     }
 
-    class ViewHelp : public View {
+    class ViewAbout : public View {
     public:
-        ViewHelp();
-        ~ViewHelp() override;
+        ViewAbout();
+        ~ViewAbout() override;
 
         void drawContent() override;
 

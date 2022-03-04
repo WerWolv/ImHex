@@ -29,7 +29,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/views/view_pattern_data.cpp
         source/content/views/view_hashes.cpp
         source/content/views/view_information.cpp
-        source/content/views/view_help.cpp
+        source/content/views/view_about.cpp
         source/content/views/view_tools.cpp
         source/content/views/view_strings.cpp
         source/content/views/view_data_inspector.cpp

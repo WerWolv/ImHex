@@ -1,9 +1,8 @@
-#include "content/views/view_help.hpp"
+#include "content/views/view_about.hpp"
 
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 
@@ -11,7 +10,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewHelp::ViewHelp() : View("hex.builtin.view.help.about.name") {
+    ViewAbout::ViewAbout() : View("hex.builtin.view.help.about.name") {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
@@ -26,16 +25,27 @@ namespace hex::plugin::builtin {
         });
     }
 
-    ViewHelp::~ViewHelp() {
+    ViewAbout::~ViewAbout() {
         ImGui::UnloadImage(this->m_logoTexture);
     }
 
-    static void link(const std::string &label, const std::string &url) {
-        if (ImGui::BulletHyperlink(label.data()))
+    static void link(const std::string &name, const std::string &author, const std::string &url) {
+        if (ImGui::BulletHyperlink(name.c_str()))
             hex::openWebpage(url);
+
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::TextFormatted("{}", url);
+            ImGui::EndTooltip();
+        }
+
+        if (!author.empty()) {
+            ImGui::SameLine(0, 0);
+            ImGui::TextFormatted("by {}", author);
+        }
     }
 
-    void ViewHelp::drawAboutMainPage() {
+    void ViewAbout::drawAboutMainPage() {
         if (ImGui::BeginTable("about_table", 2, ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -83,37 +93,55 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewHelp::drawContributorPage() {
-        link("Mary for porting ImHex to MacOS", "https://github.com/Thog");
-        link("Roblabla for adding the MSI Windows installer", "https://github.com/roblabla");
-        link("jam1garner for adding support for Rust plugins", "https://github.com/jam1garner");
+    void ViewAbout::drawContributorPage() {
+        ImGui::TextFormattedWrapped("These amazing people have contributed to ImHex in the past. If you'd like to become part of them, please submit a PR to the GitHub Repository!");
+        ImGui::NewLine();
+
+        link("Mary for porting ImHex to MacOS", "", "https://github.com/Thog");
+        link("Roblabla for adding the MSI Windows installer", "", "https://github.com/roblabla");
+        link("jam1garner for adding support for Rust plugins", "", "https://github.com/jam1garner");
+
+        ImGui::NewLine();
+
+        link("All other amazing contributors", "", "https://github.com/WerWolv/ImHex/graphs/contributors/");
     }
 
-    void ViewHelp::drawLibraryCreditsPage() {
+    void ViewAbout::drawLibraryCreditsPage() {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
 
-        link("ImGui by ocornut", "https://github.com/ocornut/imgui");
-        link("imgui_club by ocornut", "https://github.com/ocornut/imgui_club");
-        link("imnodes by Nelarius", "https://github.com/Nelarius/imnodes");
-        link("ImGuiColorTextEdit by BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit");
-        link("ImPlot by epezent", "https://github.com/epezent/implot");
-        link("capstone by aquynh", "https://github.com/aquynh/capstone");
-        link("JSON for Modern C++ by nlohmann", "https://github.com/nlohmann/json");
-        link("YARA by VirusTotal", "https://github.com/VirusTotal/yara");
-        link("Native File Dialog Extended by btzy and mlabbe", "https://github.com/btzy/nativefiledialog-extended");
-        link("Native File Dialog Extended by btzy and mlabbe", "https://github.com/btzy/nativefiledialog-extended");
+        link("ImGui", "ocornut", "https://github.com/ocornut/imgui/");
+        link("imgui_club", "ocornut", "https://github.com/ocornut/imgui_club/");
+        link("imnodes", "Nelarius", "https://github.com/Nelarius/imnodes/");
+        link("ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit/");
+        link("ImPlot", "epezent", "https://github.com/epezent/implot/");
+
         ImGui::NewLine();
-        link("GNU libmagic", "http://www.darwinsys.com/file/");
-        link("GLFW3", "https://github.com/glfw/glfw");
-        link("LLVM", "https://github.com/llvm/llvm-project");
-        link("Python 3", "https://github.com/python/cpython");
-        link("FreeType", "https://gitlab.freedesktop.org/freetype/freetype");
-        link("Mbed TLS", "https://github.com/ARMmbed/mbedtls");
+
+        link("capstone", "aquynh", "https://github.com/aquynh/capstone/");
+        link("JSON for Modern C++", "nlohmann", "https://github.com/nlohmann/json/");
+        link("YARA", "VirusTotal", "https://github.com/VirusTotal/yara/");
+        link("Native File Dialog Extended", "btzy and mlabbe", "https://github.com/btzy/nativefiledialog-extended/");
+        link("libromfs", "WerWolv", "https://github.com/WerWolv/libromfs/");
+        link("microtar", "rxi", "https://github.com/rxi/microtar/");
+        link("xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp/");
+        link("FreeType", "David Turner", "https://gitlab.freedesktop.org/freetype/freetype/");
+        link("Mbed TLS", "ARM", "https://github.com/ARMmbed/mbedtls/");
+        link("libcurl", "Daniel Stenberg", "https://curl.se/");
+        link("libfmt", "vitaut", "https://fmt.dev/");
+
+        ImGui::NewLine();
+
+        link("GNU libmagic", "", "https://www.darwinsys.com/file/");
+        link("GLFW3", "", "https://github.com/glfw/glfw/");
+        link("LLVM", "", "https://github.com/llvm/llvm-project/");
+        link("Python 3", "", "https://github.com/python/cpython/");
 
         ImGui::PopStyleColor();
+
+        ImGui::NewLine();
     }
 
-    void ViewHelp::drawPathsPage() {
+    void ViewAbout::drawPathsPage() {
         if (ImGui::BeginTable("##imhex_paths", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("Type");
@@ -145,11 +173,11 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewHelp::drawLicensePage() {
+    void ViewAbout::drawLicensePage() {
         ImGui::TextFormattedWrapped("{}", romfs::get("LICENSE").string());
     }
 
-    void ViewHelp::drawAboutPopup() {
+    void ViewAbout::drawAboutPopup() {
         ImGui::SetNextWindowSize(scaled(ImVec2(600, 350)), ImGuiCond_Always);
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.help.about.name").c_str(), &this->m_aboutWindowOpen, ImGuiWindowFlags_NoResize)) {
 
@@ -209,7 +237,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewHelp::drawContent() {
+    void ViewAbout::drawContent() {
         if (!this->m_aboutWindowOpen)
             this->getWindowOpenState() = false;
 

@@ -3,7 +3,7 @@
 #include "content/views/view_pattern_data.hpp"
 #include "content/views/view_hashes.hpp"
 #include "content/views/view_information.hpp"
-#include "content/views/view_help.hpp"
+#include "content/views/view_about.hpp"
 #include "content/views/view_tools.hpp"
 #include "content/views/view_strings.hpp"
 #include "content/views/view_data_inspector.hpp"
@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewPatches>();
         ContentRegistry::Views::add<ViewTools>();
         ContentRegistry::Views::add<ViewCommandPalette>();
-        ContentRegistry::Views::add<ViewHelp>();
+        ContentRegistry::Views::add<ViewAbout>();
         ContentRegistry::Views::add<ViewSettings>();
         ContentRegistry::Views::add<ViewDataProcessor>();
         ContentRegistry::Views::add<ViewYara>();
