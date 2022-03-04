@@ -1,3 +1,5 @@
+#include <hex/helpers/fs.hpp>
+
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/fs_macos.h>
 #include <hex/helpers/file.hpp>
