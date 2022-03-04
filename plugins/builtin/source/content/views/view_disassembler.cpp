@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
 
             cs_mode mode = this->m_mode;
 
-            if (cs_open(Disassembler::toCapstoneArchictecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
+            if (cs_open(Disassembler::toCapstoneArchitecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
 
                 cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
 

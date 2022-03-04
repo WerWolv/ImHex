@@ -258,7 +258,7 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getTypeName().empty() ? this->getFormattedName() : this->getTypeName());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", formatDisplayValue(value, std::move(literal)));
+            ImGui::TextFormatted("{}", formatDisplayValue(value, literal));
         }
 
         void drawCommentTooltip() const {

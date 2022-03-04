@@ -41,7 +41,7 @@ namespace hex::test {
             this->m_testFile.write(static_cast<const u8 *>(buffer), size);
         }
 
-        size_t getActualSize() const override {
+        [[nodiscard]] size_t getActualSize() const override {
             return this->m_testFile.getSize();
         }
 

@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
 
         constexpr static size_t Size = 0x2000;
 
-        u64 base;
+        u64 base = 0x00;
         std::array<Highlight, Size> highlight;
     };
 

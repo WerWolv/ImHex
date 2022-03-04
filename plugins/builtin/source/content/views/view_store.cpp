@@ -35,8 +35,6 @@ namespace hex::plugin::builtin {
         });
     }
 
-    ViewStore::~ViewStore() { }
-
     void ViewStore::drawStore() {
         ImGui::Header("hex.builtin.view.store.desc"_lang, true);
 

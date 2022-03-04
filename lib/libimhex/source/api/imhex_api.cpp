@@ -169,7 +169,7 @@ namespace hex {
     namespace ImHexApi::Tasks {
 
         Task createTask(const std::string &unlocalizedName, u64 maxValue) {
-            return Task(unlocalizedName, maxValue);
+            return { unlocalizedName, maxValue };
         }
 
 

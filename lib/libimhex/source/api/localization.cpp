@@ -8,7 +8,7 @@ namespace hex {
     std::map<std::string, std::string> LangEntry::s_currStrings;
 
     LanguageDefinition::LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries) {
-        for (auto pair : entries)
+        for (const auto &pair : entries)
             this->m_entries.insert(pair);
     }
 
@@ -17,7 +17,7 @@ namespace hex {
     }
 
     LangEntry::LangEntry(const char *unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
-    LangEntry::LangEntry(const std::string &unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
+    LangEntry::LangEntry(std::string unlocalizedString) : m_unlocalizedString(std::move(unlocalizedString)) { }
     LangEntry::LangEntry(std::string_view unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
 
     LangEntry::operator std::string() const {

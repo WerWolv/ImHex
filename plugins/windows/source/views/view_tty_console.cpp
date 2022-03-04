@@ -13,9 +13,6 @@ namespace hex::plugin::windows {
         this->m_receiveDataBuffer.push_back(0x00);
     }
 
-    ViewTTYConsole::~ViewTTYConsole() {
-    }
-
     void ViewTTYConsole::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.windows.view.tty_console.name").c_str(), &this->getWindowOpenState())) {
 
@@ -185,7 +182,7 @@ namespace hex::plugin::windows {
     }
 
     bool ViewTTYConsole::connect() {
-        if (this->m_comPorts.size() == 0 || this->m_selectedPort >= this->m_comPorts.size()) {
+        if (this->m_comPorts.empty() || this->m_selectedPort >= this->m_comPorts.size()) {
             View::showErrorPopup("hex.windows.view.tty_console.no_available_port"_lang);
             return true;    // If false, connect_error error popup will override this error popup
         }

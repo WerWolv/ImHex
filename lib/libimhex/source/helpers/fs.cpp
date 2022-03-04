@@ -38,7 +38,7 @@ namespace hex::fs {
     }
 
 
-    bool isPathWritable(std::fs::path path) {
+    bool isPathWritable(const std::fs::path &path) {
         constexpr static auto TestFileName = "__imhex__tmp__";
         {
             File file(path / TestFileName, File::Mode::Read);

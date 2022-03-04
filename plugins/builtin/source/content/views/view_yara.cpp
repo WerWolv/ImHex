@@ -133,14 +133,14 @@ namespace hex::plugin::builtin {
     void ViewYara::reloadRules() {
         this->m_rules.clear();
 
-        for (const auto path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
+        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
             if (!fs::exists(path))
                 continue;
 
             std::error_code error;
             for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
                 if (entry.is_regular_file() && entry.path().extension() == ".yar") {
-                    this->m_rules.push_back({ std::fs::relative(entry.path(), std::fs::path(path)).string(), entry.path().string() });
+                    this->m_rules.emplace_back(std::fs::relative(entry.path(), std::fs::path(path)).string(), entry.path().string());
                 }
             }
         }
@@ -207,9 +207,9 @@ namespace hex::plugin::builtin {
             YR_MEMORY_BLOCK_ITERATOR iterator;
 
             struct ScanContext {
-                Task *task;
+                Task *task = nullptr;
                 std::vector<u8> buffer;
-                YR_MEMORY_BLOCK currBlock;
+                YR_MEMORY_BLOCK currBlock = {};
             };
 
             ScanContext context;

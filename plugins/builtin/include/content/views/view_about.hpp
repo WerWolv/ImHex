@@ -11,10 +11,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewAbout : public View {
     public:
         ViewAbout();
@@ -22,11 +18,11 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
-        bool isAvailable() const override { return true; }
-        bool hasViewMenuItemEntry() const override { return false; }
+        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
-        ImVec2 getMinSize() const override {
-            return ImVec2(400, 300);
+        [[nodiscard]] ImVec2 getMinSize() const override {
+            return { 400, 300 };
         }
 
     private:

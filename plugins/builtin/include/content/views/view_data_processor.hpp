@@ -12,10 +12,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewDataProcessor : public View {
     public:
         ViewDataProcessor();

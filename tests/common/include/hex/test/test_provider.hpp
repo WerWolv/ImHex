@@ -9,7 +9,7 @@ namespace hex::test {
 
     class TestProvider : public prv::Provider {
     public:
-        TestProvider(std::vector<u8> *data) : Provider() {
+        explicit TestProvider(std::vector<u8> *data) : Provider() {
             this->setData(data);
         }
         ~TestProvider() override = default;
@@ -44,7 +44,7 @@ namespace hex::test {
             std::memcpy(m_data->data() + offset, buffer, size);
         }
 
-        size_t getActualSize() const override {
+        [[nodiscard]] size_t getActualSize() const override {
             return this->m_data->size();
         }
 
@@ -52,7 +52,7 @@ namespace hex::test {
         void close() override { }
 
     private:
-        std::vector<u8> *m_data;
+        std::vector<u8> *m_data = nullptr;
     };
 
 }

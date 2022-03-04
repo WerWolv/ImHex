@@ -16,9 +16,6 @@ namespace hex::plugin::builtin {
         });
     }
 
-    ViewCommandPalette::~ViewCommandPalette() {
-    }
-
     void ViewCommandPalette::drawContent() {
 
         if (!this->m_commandPaletteOpen) return;

@@ -20,7 +20,7 @@ namespace hex {
         this->connect(address, port);
     }
 
-    Socket::Socket(Socket &&other) {
+    Socket::Socket(Socket &&other) noexcept {
         this->m_socket    = other.m_socket;
         this->m_connected = other.m_connected;
 

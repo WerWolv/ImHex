@@ -156,7 +156,7 @@ namespace hex {
                 ipsOffset += 1;
             }
 
-            if (std::memcmp(ipsPatch.data(), "EOF", 3))
+            if (std::memcmp(ipsPatch.data(), "EOF", 3) == 0)
                 foundEOF = true;
         }
 
@@ -207,7 +207,7 @@ namespace hex {
                 ipsOffset += 1;
             }
 
-            if (std::memcmp(ipsPatch.data(), "EEOF", 4))
+            if (std::memcmp(ipsPatch.data(), "EEOF", 4) == 0)
                 foundEEOF = true;
         }
 

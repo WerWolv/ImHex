@@ -70,10 +70,6 @@ namespace hex::pl {
             return "enum " + Pattern::getTypeName();
         }
 
-        [[nodiscard]] const auto &getEnumValues() const {
-            return this->m_enumValues;
-        }
-
         void setEnumValues(const std::vector<std::pair<Token::Literal, std::string>> &enumValues) {
             this->m_enumValues = enumValues;
         }

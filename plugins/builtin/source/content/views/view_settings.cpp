@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
                 std::vector<std::decay_t<decltype(entries)>::const_iterator> sortedCategories;
 
                 for (auto it = entries.cbegin(); it != entries.cend(); it++) {
-                    sortedCategories.emplace_back(std::move(it));
+                    sortedCategories.emplace_back(it);
                 }
 
                 std::sort(sortedCategories.begin(), sortedCategories.end(), [](auto &item0, auto &item1) {

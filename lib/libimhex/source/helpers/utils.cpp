@@ -49,7 +49,7 @@ namespace hex {
             index--;
         }
 
-        return std::string(data + index + 1);
+        return { data + index + 1 };
     }
 
     std::string to_string(i128 value) {
@@ -66,9 +66,9 @@ namespace hex {
 
         if (value < 0) {
             data[index] = '-';
-            return std::string(data + index);
+            return { data + index };
         } else
-            return std::string(data + index + 1);
+            return { data + index + 1 };
     }
 
     std::string toByteString(u64 bytes) {

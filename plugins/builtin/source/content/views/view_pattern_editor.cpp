@@ -94,7 +94,7 @@ namespace hex::plugin::builtin {
             this->evaluatePattern(this->m_textEditor.GetText());
         });
 
-        EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](std::string code) {
+        EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
             this->m_textEditor.SelectAll();
             this->m_textEditor.Delete();
             this->m_textEditor.InsertText(code);

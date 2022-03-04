@@ -38,7 +38,7 @@ namespace hex::pl {
 
             std::vector<std::pair<std::string, ASTNode *>> entries;
             for (const auto &[name, entry] : this->m_entries)
-                entries.push_back({ name, entry.get() });
+                entries.emplace_back(name, entry.get());
 
             if (order == BitfieldOrder::LeftToRight)
                 std::reverse(entries.begin(), entries.end());

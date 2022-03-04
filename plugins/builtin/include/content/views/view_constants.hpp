@@ -7,7 +7,8 @@
 
 namespace hex::plugin::builtin {
 
-    enum class ConstantType {
+    enum class ConstantType
+    {
         Int10,
         Int16BigEndian,
         Int16LittleEndian
@@ -23,7 +24,7 @@ namespace hex::plugin::builtin {
     class ViewConstants : public View {
     public:
         explicit ViewConstants();
-        ~ViewConstants() override;
+        ~ViewConstants() override = default;
 
         void drawContent() override;
 

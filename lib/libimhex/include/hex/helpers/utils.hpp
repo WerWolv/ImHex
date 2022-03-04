@@ -303,7 +303,7 @@ namespace hex {
             bool m_active;
 
         public:
-            constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
+            explicit constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
             ~ScopeGuard() {
                 if (this->m_active) { this->m_func(); }
             }
@@ -334,7 +334,7 @@ namespace hex {
         template<class F>
         class FirstTimeExecute {
         public:
-            constexpr FirstTimeExecute(F func) { func(); }
+            explicit constexpr FirstTimeExecute(F func) { func(); }
 
             FirstTimeExecute &operator=(FirstTimeExecute &&) = delete;
         };
@@ -359,7 +359,7 @@ namespace hex {
             F m_func;
 
         public:
-            constexpr FinalCleanupExecute(F func) : m_func(func) { }
+            explicit constexpr FinalCleanupExecute(F func) : m_func(func) { }
             constexpr ~FinalCleanupExecute() { this->m_func(); }
 
             FinalCleanupExecute &operator=(FinalCleanupExecute &&) = delete;

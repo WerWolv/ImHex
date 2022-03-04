@@ -81,6 +81,8 @@ namespace hex {
                         case HTCLIENT:
                             g_mouseCursorIcon = ImGuiMouseCursor_None;
                             break;
+                        default:
+                            break;
                     }
 
                     return TRUE;

@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
     class ViewStore : public View {
     public:
         ViewStore();
-        ~ViewStore() override;
+        ~ViewStore() override = default;
 
         void drawContent() override;
 

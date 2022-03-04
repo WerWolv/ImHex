@@ -20,7 +20,7 @@ namespace hex {
     ImFontAtlas *View::s_fontAtlas;
     ImFontConfig View::s_fontConfig;
 
-    View::View(std::string unlocalizedName) : m_unlocalizedViewName(unlocalizedName) { }
+    View::View(std::string unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
 
     bool View::isAvailable() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();

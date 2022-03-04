@@ -33,7 +33,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - Hex string
     - C, C++, C#, Rust, Python, Java & JavaScript array
     - ASCII-Art hex view
-    - HTML self contained div
+    - HTML self-contained div
   - String and hex search
   - Colorful highlighting
   - Goto from start, end and current cursor position
@@ -84,7 +84,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 - Built-in Content Store
   - Download all files found in the database directly from within ImHex
 - Yara Rules support
-  - Quickly scan a file for vulnearabilities with official yara rules
+  - Quickly scan a file for vulnerabilities with official yara rules
 - Helpful tools
   - Itanium and MSVC demangler
   - ASCII table
@@ -98,7 +98,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - File utilities
     - File splitter
     - File combiner
-    - File shredderer
+    - File shredder
 - Built-in cheat sheet for pattern language and Math evaluator
 - Doesn't burn out your retinas when used in late-night sessions
 
@@ -108,7 +108,7 @@ The custom C-like Pattern Language developed and used by ImHex is easy to read, 
 
 ## Plugin development
 
-To develop plugins for ImHex, use one of the following two templates projects to get startet. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
+To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
 - [C++ Plugin Template](https://github.com/WerWolv/ImHex-Cpp-Plugin-Template)
 - [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
 
@@ -230,7 +230,7 @@ with the environment variables `XDG_CONFIG_HOME`, `XDG_CONFIG_DIRS`,
 - [Mary](https://github.com/Thog) for her immense help porting ImHex to MacOS and help during development
 - [Roblabla](https://github.com/Roblabla) for adding MSI Installer support to ImHex
 - [jam1garner](https://github.com/jam1garner) and [raytwo](https://github.com/raytwo) for their help with adding Rust support to plugins
-- All other people that have been reporting issues on Discord or GitHub that I had great conversations with :)
+- Everybody else who has reported issues on Discord or GitHub that I had great conversations with :)
 
 ### Libraries
 

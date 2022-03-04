@@ -23,7 +23,7 @@ namespace hex::init {
             this->m_tasks.emplace_back(taskName, task);
         }
 
-        const std::string &getGPUVendor() const { return this->m_gpuVendor; }
+        [[nodiscard]] const std::string &getGPUVendor() const { return this->m_gpuVendor; }
 
     private:
         GLFWwindow *m_window;

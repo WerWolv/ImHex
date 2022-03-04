@@ -6,8 +6,6 @@
 
 #include <cstring>
 
-extern int ImTextCharFromUtf8(unsigned int *out_char, const char *in_text, const char *in_text_end);
-
 namespace hex::plugin::builtin {
 
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;

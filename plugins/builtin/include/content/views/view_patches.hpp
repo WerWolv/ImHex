@@ -9,10 +9,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewPatches : public View {
     public:
         explicit ViewPatches();
@@ -21,7 +17,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        u64 m_selectedPatch;
+        u64 m_selectedPatch = 0x00;
     };
 
 }

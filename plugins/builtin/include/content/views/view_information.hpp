@@ -10,10 +10,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewInformation : public View {
     public:
         explicit ViewInformation();

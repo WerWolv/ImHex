@@ -11,7 +11,7 @@ namespace hex {
     public:
         LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries);
 
-        const std::map<std::string, std::string> &getEntries() const;
+        [[nodiscard]] const std::map<std::string, std::string> &getEntries() const;
 
     private:
         std::map<std::string, std::string> m_entries;
@@ -20,7 +20,7 @@ namespace hex {
     class LangEntry {
     public:
         explicit LangEntry(const char *unlocalizedString);
-        explicit LangEntry(const std::string &unlocalizedString);
+        explicit LangEntry(std::string unlocalizedString);
         explicit LangEntry(std::string_view unlocalizedString);
 
         operator std::string() const;

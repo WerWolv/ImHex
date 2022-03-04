@@ -51,7 +51,7 @@ namespace hex::fs {
         else return size;
     }
 
-    bool isPathWritable(std::fs::path path);
+    bool isPathWritable(const std::fs::path &path);
 
     enum class DialogMode
     {

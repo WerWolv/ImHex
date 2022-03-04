@@ -51,10 +51,10 @@ namespace hex::plugin::builtin::prv {
         int m_diskHandle = -1;
 #endif
 
-        size_t m_diskSize;
-        size_t m_sectorSize;
+        size_t m_diskSize   = 0;
+        size_t m_sectorSize = 0;
 
-        u64 m_sectorBufferAddress;
+        u64 m_sectorBufferAddress = 0;
         std::vector<u8> m_sectorBuffer;
 
         bool m_readable = false;

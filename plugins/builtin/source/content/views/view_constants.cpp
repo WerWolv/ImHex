@@ -17,9 +17,6 @@ namespace hex::plugin::builtin {
         std::memset(this->m_filter.data(), 0x00, this->m_filter.capacity());
     }
 
-    ViewConstants::~ViewConstants() {
-    }
-
     void ViewConstants::reloadConstants() {
         this->m_constants.clear();
         this->m_filterIndices.clear();

@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
     class ViewCommandPalette : public View {
     public:
         ViewCommandPalette();
-        ~ViewCommandPalette() override;
+        ~ViewCommandPalette() override = default;
 
         void drawContent() override;
 
@@ -26,7 +26,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] ImVec2 getMaxSize() const override { return { 400, 100 }; }
 
     private:
-        enum class MatchType {
+        enum class MatchType
+        {
             NoMatch,
             InfoMatch,
             PartialMatch,

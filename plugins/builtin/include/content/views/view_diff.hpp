@@ -11,10 +11,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewDiff : public View {
     public:
         ViewDiff();

@@ -77,11 +77,11 @@ namespace hex::pl {
             this->m_scopes.pop_back();
         }
 
-        Scope &getScope(i32 index) {
+        [[nodiscard]] Scope &getScope(i32 index) {
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
-        const Scope &getScope(i32 index) const {
+        [[nodiscard]] const Scope &getScope(i32 index) const {
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
@@ -151,11 +151,11 @@ namespace hex::pl {
             this->m_patternLimit = limit;
         }
 
-        [[nodiscard]] u64 getPatternLimit() {
+        [[nodiscard]] u64 getPatternLimit() const {
             return this->m_patternLimit;
         }
 
-        [[nodiscard]] u64 getPatternCount() {
+        [[nodiscard]] u64 getPatternCount() const {
             return this->m_currPatternCount;
         }
 
@@ -163,7 +163,7 @@ namespace hex::pl {
             this->m_loopLimit = limit;
         }
 
-        [[nodiscard]] u64 getLoopLimit() {
+        [[nodiscard]] u64 getLoopLimit() const {
             return this->m_loopLimit;
         }
 

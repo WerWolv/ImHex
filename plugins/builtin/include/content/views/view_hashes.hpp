@@ -8,10 +8,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewHashes : public View {
     public:
         explicit ViewHashes();
@@ -20,7 +16,8 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        enum class HashFunctions {
+        enum class HashFunctions
+        {
             Crc8,
             Crc16,
             Crc32,

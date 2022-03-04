@@ -10,14 +10,10 @@
 
 namespace hex::plugin::windows {
 
-    namespace prv {
-        class Provider;
-    }
-
     class ViewTTYConsole : public View {
     public:
         ViewTTYConsole();
-        ~ViewTTYConsole() override;
+        ~ViewTTYConsole() override = default;
 
         void drawContent() override;
 

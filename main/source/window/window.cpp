@@ -17,7 +17,7 @@
 #include <numeric>
 #include <set>
 #include <thread>
-#include <assert.h>
+#include <cassert>
 
 #include <romfs/romfs.hpp>
 

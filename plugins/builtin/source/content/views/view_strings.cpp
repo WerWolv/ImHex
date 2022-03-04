@@ -147,7 +147,7 @@ namespace hex::plugin::builtin {
                 if (this->m_searching) {
                     ImGui::SameLine();
                     ImGui::TextSpinner("hex.builtin.view.strings.searching"_lang);
-                } else if (this->m_foundStrings.size() > 0) {
+                } else if (!this->m_foundStrings.empty()) {
                     ImGui::SameLine();
                     ImGui::TextFormatted("hex.builtin.view.strings.results"_lang, this->m_filterIndices.size());
                 }

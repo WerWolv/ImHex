@@ -80,7 +80,7 @@ namespace hex::dp {
         return *reinterpret_cast<float *>(outputData->data());
     }
 
-    void Node::setBufferOnOutput(u32 index, std::vector<u8> data) {
+    void Node::setBufferOnOutput(u32 index, const std::vector<u8> &data) {
         if (index >= this->getAttributes().size())
             throw std::runtime_error("Attribute index out of bounds!");
 

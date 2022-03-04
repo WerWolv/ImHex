@@ -68,7 +68,7 @@ namespace hex {
         Py_RETURN_NONE;
     }
 
-    static PyObject *createStructureType(std::string keyword, PyObject *args) {
+    static PyObject *createStructureType(const std::string &keyword, PyObject *args) {
         auto type = PyTuple_GetItem(args, 0);
         if (type == nullptr) {
             PyErr_BadArgument();

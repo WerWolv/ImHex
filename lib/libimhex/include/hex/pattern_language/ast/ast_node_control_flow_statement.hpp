@@ -22,10 +22,6 @@ namespace hex::pl {
             return std::unique_ptr<ASTNode>(new ASTNodeControlFlowStatement(*this));
         }
 
-        [[nodiscard]] const std::unique_ptr<ASTNode> &getReturnValue() const {
-            return this->m_rvalue;
-        }
-
         [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
 
             this->execute(evaluator);

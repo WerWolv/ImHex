@@ -31,12 +31,12 @@ namespace hex {
 
     class Disassembler {
     public:
-        static constexpr cs_arch toCapstoneArchictecture(Architecture architecture) {
+        static constexpr cs_arch toCapstoneArchitecture(Architecture architecture) {
             return static_cast<cs_arch>(architecture);
         }
 
         static inline bool isSupported(Architecture architecture) {
-            return cs_support(toCapstoneArchictecture(architecture));
+            return cs_support(toCapstoneArchitecture(architecture));
         }
 
         constexpr static const char *const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "MOS65XX", "WebAssembly", "Berkeley Packet Filter", "RISC-V" };

@@ -90,8 +90,10 @@ namespace hex::pl {
 
                         auto preprocessedInclude = preprocessor.preprocess(file.readString(), /*initialRun =*/false);
 
-                        if (!preprocessedInclude.has_value())
-                            throw *preprocessor.m_error;
+                        if (!preprocessedInclude.has_value()) {
+                            auto error = *preprocessor.m_error;
+                            throw error;
+                        }
 
                         if (preprocessor.shouldOnlyIncludeOnce()) {
                             auto [iter, added] = this->m_onceIncludedFiles.insert(includePath);

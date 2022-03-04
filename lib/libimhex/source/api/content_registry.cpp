@@ -57,7 +57,7 @@ namespace hex {
         void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart) {
             log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName.c_str(), requiresRestart, callback });
+            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
             auto &json = getSettingsData();
 

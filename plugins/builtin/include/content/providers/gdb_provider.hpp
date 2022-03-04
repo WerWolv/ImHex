@@ -46,9 +46,9 @@ namespace hex::plugin::builtin::prv {
         hex::Socket m_socket;
 
         std::string m_ipAddress;
-        int m_port;
+        int m_port = 0;
 
-        u64 m_size;
+        u64 m_size = 0;
 
         constexpr static size_t CacheLineSize = 0x1000;
 

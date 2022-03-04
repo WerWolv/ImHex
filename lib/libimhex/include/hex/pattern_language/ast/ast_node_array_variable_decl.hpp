@@ -298,11 +298,11 @@ namespace hex::pl {
                 }
             }
 
-            arrayPattern->setEntries(std::move(entries));
 
             if (auto &arrayEntries = arrayPattern->getEntries(); !entries.empty())
                 arrayPattern->setTypeName(arrayEntries.front()->getTypeName());
 
+            arrayPattern->setEntries(std::move(entries));
             arrayPattern->setSize(size);
 
             return std::move(arrayPattern);

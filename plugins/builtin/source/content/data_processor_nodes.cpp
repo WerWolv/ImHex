@@ -420,7 +420,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            if (input.size() == 0 || input.size() > sizeof(u64))
+            if (input.empty() || input.size() > sizeof(u64))
                 throwNodeError("Buffer is empty or bigger than 64 bits");
 
             u64 output = 0;
@@ -785,7 +785,7 @@ namespace hex::plugin::builtin {
                 float xStep = (viewSize.x * 0.95F) / 0xFF;
                 float yStep = (viewSize.y * 0.95F) / 0xFF;
 
-                for (size_t i = 0; i < ((this->m_buffer.size() == 0) ? 0 : this->m_buffer.size() - 1); i++) {
+                for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
                     const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, this->m_buffer[i + 1] * yStep };
 
                     auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());
@@ -868,7 +868,7 @@ namespace hex::plugin::builtin {
                 float xStep = (viewSize.x * 0.95F) / 0xFF;
                 float yStep = (viewSize.y * 0.95F) / 0xFF;
 
-                for (size_t i = 0; i < ((this->m_buffer.size() == 0) ? 0 : this->m_buffer.size()); i++) {
+                for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size()); i++) {
                     const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, yStep * ((float(i) / this->m_buffer.size()) * 0xFF) };
 
                     auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());

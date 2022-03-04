@@ -8,7 +8,7 @@ namespace hex::prv {
 
     class Overlay {
     public:
-        Overlay() { }
+        Overlay() = default;
 
         void setAddress(u64 address) { this->m_address = address; }
         [[nodiscard]] u64 getAddress() const { return this->m_address; }

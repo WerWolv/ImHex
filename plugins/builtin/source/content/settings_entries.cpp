@@ -294,7 +294,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginGroup();
 
             if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
-                fs::openFileBrowser("Select include folder", fs::DialogMode::Folder, {}, [&](std::fs::path path) {
+                fs::openFileBrowser("Select include folder", fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
                     auto pathStr = path.string();
 
                     if (std::find(folders.begin(), folders.end(), pathStr) == folders.end()) {

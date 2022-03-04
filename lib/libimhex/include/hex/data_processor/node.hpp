@@ -93,7 +93,7 @@ namespace hex::dp {
         u64 getIntegerOnInput(u32 index);
         float getFloatOnInput(u32 index);
 
-        void setBufferOnOutput(u32 index, std::vector<u8> data);
+        void setBufferOnOutput(u32 index, const std::vector<u8> &data);
         void setIntegerOnOutput(u32 index, u64 integer);
         void setFloatOnOutput(u32 index, float floatingPoint);
 

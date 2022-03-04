@@ -27,7 +27,7 @@ namespace hex::pl {
 
         const std::optional<PatternLanguageError> &getError() { return this->m_error; }
 
-        bool shouldOnlyIncludeOnce() {
+        [[nodiscard]] bool shouldOnlyIncludeOnce() const {
             return this->m_onlyIncludeOnce;
         }
 

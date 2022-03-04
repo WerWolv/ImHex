@@ -164,7 +164,7 @@ namespace hex {
                             else if (expression.empty())
                                 break;
 
-                            auto newInputQueue = parseInput(expression.c_str());
+                            auto newInputQueue = parseInput(expression);
                             auto postfixTokens = toPostfix(newInputQueue);
                             auto result        = evaluate(postfixTokens);
 
@@ -321,7 +321,7 @@ namespace hex {
 
 
     std::optional<long double> MathEvaluator::evaluate(const std::string &input) {
-        auto inputQueue = parseInput(input.c_str());
+        auto inputQueue = parseInput(input);
 
         std::string resultVariable = "ans";
 

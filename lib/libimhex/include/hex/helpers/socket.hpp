@@ -26,7 +26,7 @@ namespace hex {
     public:
         Socket()               = default;
         Socket(const Socket &) = delete;
-        Socket(Socket &&other);
+        Socket(Socket &&other) noexcept;
 
         Socket(const std::string &address, u16 port);
         ~Socket();
@@ -36,8 +36,8 @@ namespace hex {
 
         [[nodiscard]] bool isConnected() const;
 
-        std::string readString(size_t size = 0x1000) const;
-        std::vector<u8> readBytes(size_t size = 0x1000) const;
+        [[nodiscard]] std::string readString(size_t size = 0x1000) const;
+        [[nodiscard]] std::vector<u8> readBytes(size_t size = 0x1000) const;
 
         void writeString(const std::string &string) const;
         void writeBytes(const std::vector<u8> &bytes) const;
