@@ -7,19 +7,18 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
-#include <numbers>
 
 namespace hex {
 
     i16 comparePrecedence(const Operator &a, const Operator &b) {
-        return (static_cast<i8>(a) & 0x0F0) - (static_cast<i8>(b) & 0x0F0);
+        return static_cast<i16>((static_cast<i8>(a) & 0x0F0) - (static_cast<i8>(b) & 0x0F0));
     }
 
     bool isLeftAssociative(const Operator op) {
         return (static_cast<u32>(op) & 0xF00) == 0;
     }
 
-    std::pair<Operator, size_t> toOperator(std::string input) {
+    std::pair<Operator, size_t> toOperator(const std::string &input) {
         if (input.starts_with("##")) return { Operator::Combine, 2 };
         if (input.starts_with("==")) return { Operator::Equals, 2 };
         if (input.starts_with("!=")) return { Operator::NotEquals, 2 };
@@ -48,10 +47,59 @@ namespace hex {
         return { Operator::Invalid, 0 };
     }
 
-    std::queue<Token> MathEvaluator::parseInput(const char *input) {
+    static std::queue<Token> toPostfix(std::queue<Token> inputQueue) {
+        std::queue<Token> outputQueue;
+        std::stack<Token> operatorStack;
+
+        while (!inputQueue.empty()) {
+            Token currToken = inputQueue.front();
+            inputQueue.pop();
+
+            if (currToken.type == TokenType::Number || currToken.type == TokenType::Variable || currToken.type == TokenType::Function)
+                outputQueue.push(currToken);
+            else if (currToken.type == TokenType::Operator) {
+                while ((!operatorStack.empty()) && (operatorStack.top().type == TokenType::Operator && currToken.type == TokenType::Operator && (comparePrecedence(operatorStack.top().op, currToken.op) > 0) || (comparePrecedence(operatorStack.top().op, currToken.op) == 0 && isLeftAssociative(currToken.op))) && operatorStack.top().type != TokenType::Bracket) {
+                    outputQueue.push(operatorStack.top());
+                    operatorStack.pop();
+                }
+                operatorStack.push(currToken);
+            } else if (currToken.type == TokenType::Bracket) {
+                if (currToken.bracketType == BracketType::Left)
+                    operatorStack.push(currToken);
+                else {
+                    if (operatorStack.empty())
+                        throw std::invalid_argument("Mismatching parenthesis!");
+
+                    while (operatorStack.top().type != TokenType::Bracket || (operatorStack.top().type == TokenType::Bracket && operatorStack.top().bracketType != BracketType::Left)) {
+                        if (operatorStack.empty())
+                            throw std::invalid_argument("Mismatching parenthesis!");
+
+                        outputQueue.push(operatorStack.top());
+                        operatorStack.pop();
+                    }
+
+                    operatorStack.pop();
+                }
+            }
+        }
+
+        while (!operatorStack.empty()) {
+            auto top = operatorStack.top();
+
+            if (top.type == TokenType::Bracket)
+                throw std::invalid_argument("Mismatching parenthesis!");
+
+            outputQueue.push(top);
+            operatorStack.pop();
+        }
+
+        return outputQueue;
+    }
+
+    std::queue<Token> MathEvaluator::parseInput(std::string input) {
         std::queue<Token> inputQueue;
 
-        char *prevPos = const_cast<char *>(input);
+        char *prevPos = input.data();
         for (char *pos = prevPos; *pos != 0x00;) {
             if (std::isdigit(*pos) || *pos == '.') {
                 auto number = std::strtold(pos, &pos);
@@ -111,13 +159,13 @@ namespace hex {
                         pos++;
 
                         for (const auto &expression : expressions) {
-                            if (expression == "" && expressions.size() > 1)
+                            if (expression.empty() && expressions.size() > 1)
                                 throw std::invalid_argument("Invalid function call syntax!");
-                            else if (expression == "")
+                            else if (expression.empty())
                                 break;
 
-                            auto inputQueue    = parseInput(expression.c_str());
-                            auto postfixTokens = toPostfix(inputQueue);
+                            auto newInputQueue = parseInput(expression.c_str());
+                            auto postfixTokens = toPostfix(newInputQueue);
                             auto result        = evaluate(postfixTokens);
 
                             if (!result.has_value())
@@ -143,55 +191,6 @@ namespace hex {
         }
 
         return inputQueue;
-    }
-
-    std::queue<Token> MathEvaluator::toPostfix(std::queue<Token> inputQueue) {
-        std::queue<Token> outputQueue;
-        std::stack<Token> operatorStack;
-
-        while (!inputQueue.empty()) {
-            Token currToken = inputQueue.front();
-            inputQueue.pop();
-
-            if (currToken.type == TokenType::Number || currToken.type == TokenType::Variable || currToken.type == TokenType::Function)
-                outputQueue.push(currToken);
-            else if (currToken.type == TokenType::Operator) {
-                while ((!operatorStack.empty()) && (operatorStack.top().type == TokenType::Operator && currToken.type == TokenType::Operator && (comparePrecedence(operatorStack.top().op, currToken.op) > 0) || (comparePrecedence(operatorStack.top().op, currToken.op) == 0 && isLeftAssociative(currToken.op))) && operatorStack.top().type != TokenType::Bracket) {
-                    outputQueue.push(operatorStack.top());
-                    operatorStack.pop();
-                }
-                operatorStack.push(currToken);
-            } else if (currToken.type == TokenType::Bracket) {
-                if (currToken.bracketType == BracketType::Left)
-                    operatorStack.push(currToken);
-                else {
-                    if (operatorStack.empty())
-                        throw std::invalid_argument("Mismatching parenthesis!");
-
-                    while (operatorStack.top().type != TokenType::Bracket || (operatorStack.top().type == TokenType::Bracket && operatorStack.top().bracketType != BracketType::Left)) {
-                        if (operatorStack.empty())
-                            throw std::invalid_argument("Mismatching parenthesis!");
-
-                        outputQueue.push(operatorStack.top());
-                        operatorStack.pop();
-                    }
-
-                    operatorStack.pop();
-                }
-            }
-        }
-
-        while (!operatorStack.empty()) {
-            auto top = operatorStack.top();
-
-            if (top.type == TokenType::Bracket)
-                throw std::invalid_argument("Mismatching parenthesis!");
-
-            outputQueue.push(top);
-            operatorStack.pop();
-        }
-
-        return outputQueue;
     }
 
     std::optional<long double> MathEvaluator::evaluate(std::queue<Token> postfixTokens) {
@@ -227,7 +226,7 @@ namespace hex {
                         result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
                         break;
                     case Operator::Or:
-                        result = static_cast<i64>(leftOperand) && static_cast<i64>(rightOperand);
+                        result = static_cast<i64>(leftOperand) || static_cast<i64>(rightOperand);
                         break;
                     case Operator::Xor:
                         result = (static_cast<i64>(leftOperand) ^ static_cast<i64>(rightOperand)) > 0;
@@ -321,7 +320,7 @@ namespace hex {
     }
 
 
-    std::optional<long double> MathEvaluator::evaluate(std::string input) {
+    std::optional<long double> MathEvaluator::evaluate(const std::string &input) {
         auto inputQueue = parseInput(input.c_str());
 
         std::string resultVariable = "ans";
@@ -351,11 +350,11 @@ namespace hex {
         return result;
     }
 
-    void MathEvaluator::setVariable(std::string name, long double value) {
+    void MathEvaluator::setVariable(const std::string &name, long double value) {
         this->m_variables[name] = value;
     }
 
-    void MathEvaluator::setFunction(std::string name, std::function<std::optional<long double>(std::vector<long double>)> function, size_t minNumArgs, size_t maxNumArgs) {
+    void MathEvaluator::setFunction(const std::string &name, const std::function<std::optional<long double>(std::vector<long double>)> &function, size_t minNumArgs, size_t maxNumArgs) {
         this->m_functions[name] = [minNumArgs, maxNumArgs, function](auto args) {
             if (args.size() < minNumArgs || args.size() > maxNumArgs)
                 throw std::invalid_argument("Invalid number of function arguments!");

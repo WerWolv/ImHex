@@ -11,7 +11,8 @@
 
 namespace hex {
 
-    enum class TokenType {
+    enum class TokenType
+    {
         Number,
         Variable,
         Function,
@@ -19,7 +20,8 @@ namespace hex {
         Bracket
     };
 
-    enum class Operator : u16 {
+    enum class Operator : u16
+    {
         Invalid             = 0x000,
         Assign              = 0x010,
         Or                  = 0x020,
@@ -47,7 +49,8 @@ namespace hex {
         Not                 = 0x0F1
     };
 
-    enum class BracketType : std::uint8_t {
+    enum class BracketType : std::uint8_t
+    {
         Left,
         Right
     };
@@ -66,19 +69,18 @@ namespace hex {
     public:
         MathEvaluator() = default;
 
-        std::optional<long double> evaluate(std::string input);
+        std::optional<long double> evaluate(const std::string &input);
 
         void registerStandardVariables();
         void registerStandardFunctions();
 
-        void setVariable(std::string name, long double value);
-        void setFunction(std::string name, std::function<std::optional<long double>(std::vector<long double>)> function, size_t minNumArgs, size_t maxNumArgs);
+        void setVariable(const std::string &name, long double value);
+        void setFunction(const std::string &name, const std::function<std::optional<long double>(std::vector<long double>)> &function, size_t minNumArgs, size_t maxNumArgs);
 
         std::unordered_map<std::string, long double> &getVariables() { return this->m_variables; }
 
     private:
-        std::queue<Token> parseInput(const char *input);
-        std::queue<Token> toPostfix(std::queue<Token> inputQueue);
+        std::queue<Token> parseInput(std::string input);
         std::optional<long double> evaluate(std::queue<Token> postfixTokens);
 
         std::unordered_map<std::string, long double> m_variables;
