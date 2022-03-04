@@ -232,7 +232,7 @@ namespace hex::fs {
             dir = dir / "imhex";
 
         if (!exePath.empty())
-            dataDirs.emplace(dataDirs.begin(), fs::path(exePath.data()).parent_path());
+            dataDirs.emplace(dataDirs.begin(), std::fs::path(exePath.data()).parent_path());
 
         switch (path) {
             case ImHexPath::Patterns:
