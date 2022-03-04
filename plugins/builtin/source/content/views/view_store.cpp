@@ -11,7 +11,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <fstream>
 #include <filesystem>
@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
             this->refresh();
         }
 
-        auto drawTab = [this](auto title, ImHexPath pathType, auto &content, const std::function<void(const StoreEntry &)> &downloadDoneCallback) {
+        auto drawTab = [this](auto title, fs::ImHexPath pathType, auto &content, const std::function<void(const StoreEntry &)> &downloadDoneCallback) {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -84,14 +84,14 @@ namespace hex::plugin::builtin {
                                             mtar_header_t header;
                                             auto extractBasePath = this->m_downloadPath.parent_path() / this->m_downloadPath.stem();
                                             while (mtar_read_header(&ctx, &header) != MTAR_ENULLRECORD) {
-                                                auto filePath = extractBasePath / fs::path(header.name);
+                                                auto filePath = extractBasePath / std::fs::path(header.name);
                                                 if (filePath.filename() == "@PaxHeader") {
                                                     mtar_next(&ctx);
                                                     continue;
                                                 }
 
-                                                fs::create_directories(filePath.parent_path());
-                                                File outputFile(filePath.string(), File::Mode::Create);
+                                                fs::createDirectories(filePath.parent_path());
+                                                fs::File outputFile(filePath.string(), fs::File::Mode::Create);
 
                                                 std::vector<u8> buffer(0x10000);
                                                 for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
@@ -142,12 +142,12 @@ namespace hex::plugin::builtin {
         };
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            drawTab("hex.builtin.view.store.tab.patterns"_lang, ImHexPath::Patterns, this->m_patterns, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.libraries"_lang, ImHexPath::PatternsInclude, this->m_includes, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.magics"_lang, ImHexPath::Magic, this->m_magics, [](auto) { magic::compile(); });
-            drawTab("hex.builtin.view.store.tab.constants"_lang, ImHexPath::Constants, this->m_constants, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.encodings"_lang, ImHexPath::Encodings, this->m_encodings, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.yara"_lang, ImHexPath::Yara, this->m_yara, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.patterns"_lang, fs::ImHexPath::Patterns, this->m_patterns, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.libraries"_lang, fs::ImHexPath::PatternsInclude, this->m_includes, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.magics"_lang, fs::ImHexPath::Magic, this->m_magics, [](auto) { magic::compile(); });
+            drawTab("hex.builtin.view.store.tab.constants"_lang, fs::ImHexPath::Constants, this->m_constants, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.encodings"_lang, fs::ImHexPath::Encodings, this->m_encodings, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.yara"_lang, fs::ImHexPath::Yara, this->m_yara, [](auto) {});
 
             ImGui::EndTabBar();
         }
@@ -169,7 +169,7 @@ namespace hex::plugin::builtin {
         if (response.code == 200) {
             auto json = nlohmann::json::parse(response.body);
 
-            auto parseStoreEntries = [](auto storeJson, const std::string &name, ImHexPath pathType, std::vector<StoreEntry> &results) {
+            auto parseStoreEntries = [](auto storeJson, const std::string &name, fs::ImHexPath pathType, std::vector<StoreEntry> &results) {
                 // Check if the response handles the type of files
                 if (storeJson.contains(name)) {
 
@@ -182,15 +182,15 @@ namespace hex::plugin::builtin {
                             StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false };
 
                             // Check if file is installed already or has an update available
-                            for (const auto &folder : hex::getPath(pathType)) {
+                            for (const auto &folder : fs::getDefaultPaths(pathType)) {
 
-                                auto path = folder / fs::path(storeEntry.fileName);
+                                auto path = folder / std::fs::path(storeEntry.fileName);
 
-                                if (fs::exists(path) && hex::isPathWritable(folder)) {
+                                if (fs::exists(path) && fs::isPathWritable(folder)) {
                                     storeEntry.installed = true;
 
                                     std::ifstream file(path, std::ios::in | std::ios::binary);
-                                    std::vector<u8> data(fs::file_size(path), 0x00);
+                                    std::vector<u8> data(fs::getFileSize(path), 0x00);
                                     file.read(reinterpret_cast<char *>(data.data()), data.size());
 
                                     auto fileHash = crypt::sha256(data);
@@ -207,12 +207,12 @@ namespace hex::plugin::builtin {
                 }
             };
 
-            parseStoreEntries(json, "patterns", ImHexPath::Patterns, this->m_patterns);
-            parseStoreEntries(json, "includes", ImHexPath::PatternsInclude, this->m_includes);
-            parseStoreEntries(json, "magic", ImHexPath::Magic, this->m_magics);
-            parseStoreEntries(json, "constants", ImHexPath::Constants, this->m_constants);
-            parseStoreEntries(json, "yara", ImHexPath::Yara, this->m_yara);
-            parseStoreEntries(json, "encodings", ImHexPath::Encodings, this->m_encodings);
+            parseStoreEntries(json, "patterns", fs::ImHexPath::Patterns, this->m_patterns);
+            parseStoreEntries(json, "includes", fs::ImHexPath::PatternsInclude, this->m_includes);
+            parseStoreEntries(json, "magic", fs::ImHexPath::Magic, this->m_magics);
+            parseStoreEntries(json, "constants", fs::ImHexPath::Constants, this->m_constants);
+            parseStoreEntries(json, "yara", fs::ImHexPath::Yara, this->m_yara);
+            parseStoreEntries(json, "encodings", fs::ImHexPath::Encodings, this->m_encodings);
         }
         this->m_apiRequest = {};
     }
@@ -234,13 +234,13 @@ namespace hex::plugin::builtin {
         }
     }
 
-    bool ViewStore::download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
+    bool ViewStore::download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
         bool downloading = false;
-        for (const auto &path : hex::getPath(pathType)) {
-            if (!hex::isPathWritable(path))
+        for (const auto &path : fs::getDefaultPaths(pathType)) {
+            if (!fs::isPathWritable(path))
                 continue;
 
-            auto fullPath = path / fs::path(fileName);
+            auto fullPath = path / std::fs::path(fileName);
 
             if (!update || fs::exists(fullPath)) {
                 downloading          = true;
@@ -258,13 +258,11 @@ namespace hex::plugin::builtin {
         return true;
     }
 
-    bool ViewStore::remove(ImHexPath pathType, const std::string &fileName) {
+    bool ViewStore::remove(fs::ImHexPath pathType, const std::string &fileName) {
         bool removed = false;
-        for (const auto &path : hex::getPath(pathType)) {
-            std::error_code error;
-
-            bool removedFile   = fs::remove(path / fs::path(fileName), error);
-            bool removedFolder = fs::remove(path / fs::path(fileName).stem(), error);
+        for (const auto &path : fs::getDefaultPaths(pathType)) {
+            bool removedFile   = fs::remove(path / std::fs::path(fileName));
+            bool removedFolder = fs::remove(path / std::fs::path(fileName).stem());
 
             removed = removed || removedFile || removedFolder;
         }

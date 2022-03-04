@@ -3,7 +3,7 @@
 #include <hex.hpp>
 
 #include <hex/helpers/concepts.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <array>
 #include <bit>
@@ -17,8 +17,6 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
-
-#include <nfd.hpp>
 
 #define TOKEN_CONCAT_IMPL(x, y)    x##y
 #define TOKEN_CONCAT(x, y)         TOKEN_CONCAT_IMPL(x, y)
@@ -43,8 +41,6 @@ namespace hex {
 
     std::string encodeByteString(const std::vector<u8> &bytes);
     std::vector<u8> decodeByteString(const std::string &string);
-
-    bool isPathWritable(fs::path path);
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);
@@ -267,15 +263,6 @@ namespace hex {
         trimLeft(s);
         trimRight(s);
     }
-
-    enum class DialogMode
-    {
-        Open,
-        Save,
-        Folder
-    };
-
-    bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath = {});
 
     float float16ToFloat32(u16 float16);
 

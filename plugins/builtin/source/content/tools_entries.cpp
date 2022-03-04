@@ -6,7 +6,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/literals.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/api/localization.hpp>
 
 #include <hex/ui/view.hpp>
@@ -571,7 +571,7 @@ namespace hex::plugin::builtin {
 
         static hex::Net net;
         static std::future<Response<std::string>> uploadProcess;
-        static fs::path currFile;
+        static std::fs::path currFile;
         static std::vector<UploadedFile> links;
 
         bool uploading = uploadProcess.valid() && uploadProcess.wait_for(0s) != std::future_status::ready;
@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
         ImGui::Header("hex.builtin.tools.file_uploader.control"_lang, true);
         if (!uploading) {
             if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
-                hex::openFileBrowser("hex.builtin.tools.file_uploader.done"_lang, DialogMode::Open, {}, [&](auto path) {
+                fs::openFileBrowser("hex.builtin.tools.file_uploader.done"_lang, fs::DialogMode::Open, {}, [&](auto path) {
                     uploadProcess = net.uploadFile("https://api.anonfiles.com/upload", path);
                     currFile      = path;
                 });
@@ -744,7 +744,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##path", selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...")) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, DialogMode::Open, {}, [](const auto &path) {
+                    fs::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
                         selectedFile = path.string();
                     });
                 }
@@ -768,7 +768,7 @@ namespace hex::plugin::builtin {
                             shredding = false;
                             selectedFile.clear();
                         };
-                        File file(selectedFile, File::Mode::Write);
+                        fs::File file(selectedFile, fs::File::Mode::Write);
 
                         if (!file.isValid()) {
                             View::showErrorPopup("hex.builtin.tools.file_tools.shredder.error.open"_lang);
@@ -886,7 +886,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##path", selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...##input")) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, DialogMode::Open, {}, [](const auto &path) {
+                    fs::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
                         selectedFile = path.string();
                     });
                 }
@@ -896,7 +896,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##base_path", baseOutputPath);
                 ImGui::SameLine();
                 if (ImGui::Button("...##output")) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, DialogMode::Save, {}, [](const auto &path) {
+                    fs::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, fs::DialogMode::Save, {}, [](const auto &path) {
                         baseOutputPath = path.string();
                     });
                 }
@@ -934,7 +934,7 @@ namespace hex::plugin::builtin {
                             selectedFile.clear();
                             baseOutputPath.clear();
                         };
-                        File file(selectedFile, File::Mode::Read);
+                        fs::File file(selectedFile, fs::File::Mode::Read);
 
                         if (!file.isValid()) {
                             View::showErrorPopup("hex.builtin.tools.file_tools.splitter.error.open"_lang);
@@ -951,7 +951,7 @@ namespace hex::plugin::builtin {
                         for (u64 offset = 0; offset < file.getSize(); offset += splitSize) {
                             task.update(offset);
 
-                            File partFile(baseOutputPath + hex::format(".{:05}", index), File::Mode::Create);
+                            fs::File partFile(baseOutputPath + hex::format(".{:05}", index), fs::File::Mode::Create);
 
                             if (!partFile.isValid()) {
                                 View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.error.create"_lang, index));
@@ -991,7 +991,7 @@ namespace hex::plugin::builtin {
 
                 i32 index = 0;
                 for (auto &file : files) {
-                    if (ImGui::Selectable(fs::path(file).filename().string().c_str(), index == selectedIndex))
+                    if (ImGui::Selectable(std::fs::path(file).filename().string().c_str(), index == selectedIndex))
                         selectedIndex = index;
                     index++;
                 }
@@ -1025,7 +1025,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(combining);
             {
                 if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
-                    hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.add.picker"_lang, DialogMode::Open, {}, [](const auto &path) {
+                    fs::openFileBrowser("hex.builtin.tools.file_tools.combiner.add.picker"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
                         files.push_back(path.string());
                     });
                 }
@@ -1049,7 +1049,7 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##output_path", outputPath);
             ImGui::SameLine();
             if (ImGui::Button("...")) {
-                hex::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, DialogMode::Save, {}, [](const auto &path) {
+                fs::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, fs::DialogMode::Save, {}, [](const auto &path) {
                     outputPath = path.string();
                 });
             }
@@ -1069,7 +1069,7 @@ namespace hex::plugin::builtin {
                     std::thread([] {
                         ON_SCOPE_EXIT { combining = false; };
 
-                        File output(outputPath, File::Mode::Create);
+                        fs::File output(outputPath, fs::File::Mode::Create);
 
                         if (!output.isValid()) {
                             View::showErrorPopup("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
@@ -1083,9 +1083,9 @@ namespace hex::plugin::builtin {
                             task.update(fileIndex);
                             fileIndex++;
 
-                            File input(file, File::Mode::Read);
+                            fs::File input(file, fs::File::Mode::Read);
                             if (!input.isValid()) {
-                                View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, fs::path(file).filename().string()));
+                                View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, std::fs::path(file).filename().string()));
                                 return;
                             }
 

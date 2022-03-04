@@ -1,9 +1,9 @@
 #include <hex/helpers/file.hpp>
 #include <unistd.h>
 
-namespace hex {
+namespace hex::fs {
 
-    File::File(const fs::path &path, Mode mode) noexcept : m_path(path) {
+    File::File(const std::fs::path &path, Mode mode) noexcept : m_path(path) {
         if (mode == File::Mode::Read)
             this->m_file = fopen64(path.string().c_str(), "rb");
         else if (mode == File::Mode::Write)

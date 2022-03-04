@@ -2,7 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/helpers/concepts.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <hex/pattern_language/token.hpp>
 #include <hex/api/imhex_api.hpp>
@@ -372,7 +372,7 @@ namespace hex {
 
             namespace impl {
 
-                using Callback = std::function<bool(fs::path)>;
+                using Callback = std::function<bool(std::fs::path)>;
                 struct Entry {
                     std::vector<std::string> extensions;
                     Callback callback;

@@ -2,7 +2,7 @@
 
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 using namespace std::literals::string_literals;
 

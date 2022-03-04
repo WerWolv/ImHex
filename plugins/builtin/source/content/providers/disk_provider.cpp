@@ -60,7 +60,7 @@ namespace hex::plugin::builtin::prv {
     }
 
 
-    void DiskProvider::setPath(const fs::path &path) {
+    void DiskProvider::setPath(const std::fs::path &path) {
         this->m_path = path;
     }
 

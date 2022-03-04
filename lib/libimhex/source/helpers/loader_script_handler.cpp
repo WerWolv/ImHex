@@ -1,7 +1,7 @@
 #include <hex/helpers/loader_script_handler.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
@@ -178,11 +178,11 @@ namespace hex {
         return createStructureType("union", args);
     }
 
-    bool LoaderScript::processFile(const fs::path &scriptPath) {
+    bool LoaderScript::processFile(const std::fs::path &scriptPath) {
         Py_SetProgramName(Py_DecodeLocale("ImHex", nullptr));
 
-        for (const auto &dir : hex::getPath(ImHexPath::Python)) {
-            if (fs::exists(fs::path(dir / "lib" / "python" PYTHON_VERSION_MAJOR_MINOR))) {
+        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Python)) {
+            if (fs::exists(std::fs::path(dir / "lib" / "python" PYTHON_VERSION_MAJOR_MINOR))) {
                 Py_SetPythonHome(Py_DecodeLocale(dir.string().c_str(), nullptr));
                 break;
             }
@@ -218,7 +218,7 @@ namespace hex {
             PyList_Insert(sysPath, 0, path);
         }
 
-        File scriptFile(scriptPath, File::Mode::Read);
+        fs::File scriptFile(scriptPath, fs::File::Mode::Read);
         PyRun_SimpleFile(scriptFile.getHandle(), scriptFile.getPath().string().c_str());
 
         Py_Finalize();

@@ -394,53 +394,6 @@ namespace hex {
         return result;
     }
 
-    bool isPathWritable(fs::path path) {
-        constexpr static auto TestFileName = "__imhex__tmp__";
-        {
-            File file(path / TestFileName, File::Mode::Read);
-            if (file.isValid()) {
-                if (!file.remove())
-                    return false;
-            }
-        }
-
-        File file(path / TestFileName, File::Mode::Create);
-        bool result = file.isValid();
-        if (!file.remove())
-            return false;
-
-        return result;
-    }
-
-    bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback, const std::string &defaultPath) {
-        NFD::Init();
-
-        nfdchar_t *outPath;
-        nfdresult_t result;
-        switch (mode) {
-            case DialogMode::Open:
-                result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
-                break;
-            case DialogMode::Save:
-                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
-                break;
-            case DialogMode::Folder:
-                result = NFD::PickFolder(outPath, defaultPath.c_str());
-                break;
-            default:
-                __builtin_unreachable();
-        }
-
-        if (result == NFD_OKAY) {
-            callback(reinterpret_cast<const char8_t *>(outPath));
-            NFD::FreePath(outPath);
-        }
-
-        NFD::Quit();
-
-        return result == NFD_OKAY;
-    }
-
     float float16ToFloat32(u16 float16) {
         u32 sign     = float16 >> 15;
         u32 exponent = (float16 >> 10) & 0x1F;

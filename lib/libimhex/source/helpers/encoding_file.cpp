@@ -6,7 +6,7 @@
 
 namespace hex {
 
-    EncodingFile::EncodingFile(Type type, const fs::path &path) {
+    EncodingFile::EncodingFile(Type type, const std::fs::path &path) {
         std::ifstream encodingFile(path.c_str());
 
         switch (type) {

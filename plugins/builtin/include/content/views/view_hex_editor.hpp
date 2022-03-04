@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
         void drawGotoPopup();
         void drawEditPopup();
 
-        void openFile(const fs::path &path);
+        void openFile(const std::fs::path &path);
 
         void copyBytes() const;
         void pasteBytes() const;

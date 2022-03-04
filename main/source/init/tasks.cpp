@@ -7,7 +7,7 @@
 #include <hex/pattern_language/patterns/pattern.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/net.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <fontawesome_font.h>
@@ -60,23 +60,23 @@ namespace hex::init {
         bool result = true;
 
         constexpr std::array paths = {
-            ImHexPath::Patterns,
-            ImHexPath::PatternsInclude,
-            ImHexPath::Magic,
-            ImHexPath::Plugins,
-            ImHexPath::Resources,
-            ImHexPath::Config,
-            ImHexPath::Constants,
-            ImHexPath::Yara,
-            ImHexPath::Encodings,
-            ImHexPath::Python,
-            ImHexPath::Logs
+            fs::ImHexPath::Patterns,
+            fs::ImHexPath::PatternsInclude,
+            fs::ImHexPath::Magic,
+            fs::ImHexPath::Plugins,
+            fs::ImHexPath::Resources,
+            fs::ImHexPath::Config,
+            fs::ImHexPath::Constants,
+            fs::ImHexPath::Yara,
+            fs::ImHexPath::Encodings,
+            fs::ImHexPath::Python,
+            fs::ImHexPath::Logs
         };
 
         for (auto path : paths) {
-            for (auto &folder : hex::getPath(path, true)) {
+            for (auto &folder : fs::getDefaultPaths(path, true)) {
                 try {
-                    fs::create_directories(folder);
+                    fs::createDirectories(folder);
                 } catch (...) {
                     log::error("Failed to create folder {}!", folder.string());
                     result = false;
@@ -94,11 +94,11 @@ namespace hex::init {
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
 
-        fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
+        std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
 
         // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
         if (fontFile.empty()) {
-            for (const auto &dir : hex::getPath(ImHexPath::Resources)) {
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                 auto path = dir / "font.ttf";
                 if (fs::exists(path)) {
                     log::info("Loading custom front from {}", path.string());
@@ -218,7 +218,7 @@ namespace hex::init {
     }
 
     bool loadPlugins() {
-        for (const auto &dir : hex::getPath(ImHexPath::Plugins)) {
+        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
             PluginManager::load(dir);
         }
 

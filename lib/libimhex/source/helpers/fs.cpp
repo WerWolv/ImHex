@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/paths_mac.h>
+#include <hex/helpers/fs_macos.h>
+#include <hex/helpers/file.hpp>
 
 #include <xdg.hpp>
 
@@ -14,7 +15,7 @@
 #include <algorithm>
 #include <filesystem>
 
-namespace hex {
+namespace hex::fs {
 
     std::string getExecutablePath() {
 #if defined(OS_WINDOWS)
@@ -34,8 +35,57 @@ namespace hex {
 #endif
     }
 
-    std::vector<fs::path> getPath(ImHexPath path, bool listNonExisting) {
-        std::vector<fs::path> result;
+
+    bool isPathWritable(std::fs::path path) {
+        constexpr static auto TestFileName = "__imhex__tmp__";
+        {
+            File file(path / TestFileName, File::Mode::Read);
+            if (file.isValid()) {
+                if (!file.remove())
+                    return false;
+            }
+        }
+
+        File file(path / TestFileName, File::Mode::Create);
+        bool result = file.isValid();
+        if (!file.remove())
+            return false;
+
+        return result;
+    }
+
+    bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
+        NFD::Init();
+
+        nfdchar_t *outPath;
+        nfdresult_t result;
+        switch (mode) {
+            case DialogMode::Open:
+                result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
+                break;
+            case DialogMode::Save:
+                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
+                break;
+            case DialogMode::Folder:
+                result = NFD::PickFolder(outPath, defaultPath.c_str());
+                break;
+            default:
+                __builtin_unreachable();
+        }
+
+        if (result == NFD_OKAY) {
+            callback(reinterpret_cast<const char8_t *>(outPath));
+            NFD::FreePath(outPath);
+        }
+
+        NFD::Quit();
+
+        return result == NFD_OKAY;
+    }
+
+
+    std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting) {
+        std::vector<std::fs::path> result;
         const auto exePath = getExecutablePath();
         const std::string settingName { "hex.builtin.setting.folders" };
         auto userDirs = ContentRegistry::Settings::read(settingName, settingName, std::vector<std::string> {});
@@ -47,9 +97,9 @@ namespace hex {
         };
 
 #if defined(OS_WINDOWS)
-        const auto parentDir = fs::path(exePath).parent_path();
+        const auto parentDir = std::fs::path(exePath).parent_path();
 
-        fs::path appDataDir;
+        std::fs::path appDataDir;
         {
             LPWSTR wAppDataPath = nullptr;
             if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath)))
@@ -59,7 +109,7 @@ namespace hex {
             CoTaskMemFree(wAppDataPath);
         }
 
-        std::vector<fs::path> paths = { appDataDir / "imhex", parentDir };
+        std::vector<std::fs::path> paths = { appDataDir / "imhex", parentDir };
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -126,9 +176,9 @@ namespace hex {
         }
 #elif defined(OS_MACOS)
         // Get path to special directories
-        const fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
+        const std::fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
-        std::vector<fs::path> paths = { applicationSupportDir, exePath };
+        std::vector<std::fs::path> paths = { applicationSupportDir, exePath };
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -170,8 +220,8 @@ namespace hex {
                 __builtin_unreachable();
         }
 #else
-        std::vector<fs::path> configDirs = xdg::ConfigDirs();
-        std::vector<fs::path> dataDirs   = xdg::DataDirs();
+        std::vector<std::fs::path> configDirs = xdg::ConfigDirs();
+        std::vector<std::fs::path> dataDirs   = xdg::DataDirs();
 
         configDirs.push_back(xdg::ConfigHomeDir());
         dataDirs.push_back(xdg::DataHomeDir());
@@ -231,7 +281,7 @@ namespace hex {
 
         if (!listNonExisting) {
             result.erase(std::remove_if(result.begin(), result.end(), [](const auto &path) {
-                return !fs::is_directory(path);
+                return !fs::isDirectory(path);
             }),
                 result.end());
         }

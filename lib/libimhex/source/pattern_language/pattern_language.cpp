@@ -184,8 +184,8 @@ namespace hex::pl {
         return true;
     }
 
-    bool PatternLanguage::executeFile(prv::Provider *provider, const fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
-        File file(path, File::Mode::Read);
+    bool PatternLanguage::executeFile(prv::Provider *provider, const std::fs::path &path, const std::map<std::string, Token::Literal> &envVars, const std::map<std::string, Token::Literal> &inVariables) {
+        fs::File file(path, fs::File::Mode::Read);
 
         return this->executeString(provider, file.readString(), envVars, inVariables, true);
     }

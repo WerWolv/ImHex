@@ -217,7 +217,7 @@ namespace hex::plugin::builtin::prv {
         this->applyPatches();
     }
 
-    void GDBProvider::saveAs(const fs::path &path) {
+    void GDBProvider::saveAs(const std::fs::path &path) {
     }
 
     size_t GDBProvider::getActualSize() const {

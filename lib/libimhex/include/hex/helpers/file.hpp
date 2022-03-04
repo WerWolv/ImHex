@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #if defined(OS_MACOS)
     #define off64_t     off_t
@@ -16,7 +16,7 @@
     #define ftruncate64 ftruncate
 #endif
 
-namespace hex {
+namespace hex::fs {
 
     class File {
     public:
@@ -27,7 +27,7 @@ namespace hex {
             Create
         };
 
-        explicit File(const fs::path &path, Mode mode) noexcept;
+        explicit File(const std::fs::path &path, Mode mode) noexcept;
         File() noexcept;
         File(const File &) = delete;
         File(File &&other) noexcept;
@@ -38,7 +38,7 @@ namespace hex {
 
 
         [[nodiscard]] bool isValid() const {
-            return this->m_file != nullptr && fs::exists(this->m_path) && !fs::is_directory(this->m_path);
+            return this->m_file != nullptr && fs::exists(this->m_path) && !fs::isDirectory(this->m_path);
         }
 
         void seek(u64 offset);
@@ -59,13 +59,13 @@ namespace hex {
         bool remove();
 
         auto getHandle() { return this->m_file; }
-        const fs::path &getPath() { return this->m_path; }
+        const std::fs::path &getPath() { return this->m_path; }
 
         void disableBuffering();
 
     private:
         FILE *m_file;
-        fs::path m_path;
+        std::fs::path m_path;
     };
 
 }

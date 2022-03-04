@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
     private:
         pl::PatternLanguage *m_parserRuntime;
 
-        std::vector<fs::path> m_possiblePatternFiles;
+        std::vector<std::fs::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
         bool m_runAutomatically   = false;
 
@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
         void drawEnvVars(ImVec2 size);
         void drawVariableSettings(ImVec2 size);
 
-        void loadPatternFile(const fs::path &path);
+        void loadPatternFile(const std::fs::path &path);
         void clearPatterns();
 
         void parsePattern(const std::string &code);

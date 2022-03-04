@@ -13,8 +13,8 @@ namespace hex {
     std::function<void()> View::s_yesCallback, View::s_noCallback;
 
     u32 View::s_selectableFileIndex;
-    std::vector<fs::path> View::s_selectableFiles;
-    std::function<void(fs::path)> View::s_selectableFileOpenCallback;
+    std::vector<std::fs::path> View::s_selectableFiles;
+    std::function<void(std::fs::path)> View::s_selectableFileOpenCallback;
     std::vector<nfdfilteritem_t> View::s_selectableFilesValidExtensions;
 
     ImFontAtlas *View::s_fontAtlas;
@@ -108,7 +108,7 @@ namespace hex {
             ImGui::SameLine();
 
             if (ImGui::Button("hex.builtin.common.browse"_lang)) {
-                hex::openFileBrowser("hex.builtin.common.open"_lang, DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
+                fs::openFileBrowser("hex.builtin.common.open"_lang, fs::DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
                     View::s_selectableFileOpenCallback(path);
                     ImGui::CloseCurrentPopup();
                 });
@@ -145,9 +145,9 @@ namespace hex {
         ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
     }
 
-    void View::showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback) {
+    void View::showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
         if (paths.empty()) {
-            hex::openFileBrowser("hex.builtin.common.open"_lang, DialogMode::Open, validExtensions, [callback](const auto &path) {
+            fs::openFileBrowser("hex.builtin.common.open"_lang, fs::DialogMode::Open, validExtensions, [callback](const auto &path) {
                 callback(path);
             });
         } else {

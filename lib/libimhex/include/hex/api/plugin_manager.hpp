@@ -3,7 +3,7 @@
 #include <hex.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <string>
 
@@ -13,7 +13,7 @@ namespace hex {
 
     class Plugin {
     public:
-        explicit Plugin(const fs::path &path);
+        explicit Plugin(const std::fs::path &path);
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
@@ -26,7 +26,7 @@ namespace hex {
         void setImGuiContext(ImGuiContext *ctx) const;
         [[nodiscard]] bool isBuiltinPlugin() const;
 
-        [[nodiscard]] const fs::path &getPath() const;
+        [[nodiscard]] const std::fs::path &getPath() const;
 
         [[nodiscard]] bool isLoaded() const;
 
@@ -40,7 +40,7 @@ namespace hex {
         using IsBuiltinPluginFunc      = bool (*)();
 
         void *m_handle = nullptr;
-        fs::path m_path;
+        std::fs::path m_path;
 
         mutable bool m_initialized = false;
 
@@ -65,7 +65,7 @@ namespace hex {
     public:
         PluginManager() = delete;
 
-        static bool load(const fs::path &pluginFolder);
+        static bool load(const std::fs::path &pluginFolder);
         static void unload();
         static void reload();
 
@@ -74,7 +74,7 @@ namespace hex {
         }
 
     private:
-        static fs::path s_pluginFolder;
+        static std::fs::path s_pluginFolder;
         static std::vector<Plugin> s_plugins;
     };
 

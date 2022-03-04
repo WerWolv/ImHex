@@ -8,7 +8,7 @@
 #include <hex/pattern_language/ast/ast_node_type_decl.hpp>
 #include <hex/pattern_language/ast/ast_node_builtin_type.hpp>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/project_file_handler.hpp>
@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
             this->m_textEditor.InsertText(code);
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path) {
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
             if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
                 return;
 
@@ -124,13 +124,13 @@ namespace hex::plugin::builtin {
             this->m_possiblePatternFiles.clear();
 
             std::error_code errorCode;
-            for (const auto &dir : hex::getPath(ImHexPath::Patterns)) {
-                for (auto &entry : fs::directory_iterator(dir, errorCode)) {
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                for (auto &entry : std::fs::directory_iterator(dir, errorCode)) {
                     foundCorrectType = false;
                     if (!entry.is_regular_file())
                         continue;
 
-                    File file(entry.path().string(), File::Mode::Read);
+                    fs::File file(entry.path().string(), fs::File::Mode::Read);
                     if (!file.isValid())
                         continue;
 
@@ -181,8 +181,8 @@ namespace hex::plugin::builtin {
             });
         }
 
-        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const fs::path &path) -> bool {
-            File file(path.string(), File::Mode::Read);
+        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
+            fs::File file(path.string(), fs::File::Mode::Read);
 
             if (file.isValid()) {
                 EventManager::post<RequestSetPatternLanguageCode>(file.readString());
@@ -195,12 +195,13 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang)) {
 
-                std::vector<fs::path> paths;
+                std::vector<std::fs::path> paths;
 
-                for (const auto &imhexPath : hex::getPath(ImHexPath::Patterns)) {
+                for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
                     if (!fs::exists(imhexPath)) continue;
 
-                    for (auto &entry : fs::recursive_directory_iterator(imhexPath)) {
+                    std::error_code error;
+                    for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
                             paths.push_back(entry.path());
                         }
@@ -210,17 +211,17 @@ namespace hex::plugin::builtin {
                 View::showFileChooserPopup(paths, {
                                                       {"Pattern File", "hexpat"}
                 },
-                    [this](const fs::path &path) {
+                    [this](const std::fs::path &path) {
                         this->loadPatternFile(path);
                     });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, DialogMode::Save, {
-                                                                                                                          {"Pattern", "hexpat"}
+                fs::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, fs::DialogMode::Save, {
+                                                                                                                             {"Pattern", "hexpat"}
                 },
                     [this](const auto &path) {
-                        File file(path, File::Mode::Create);
+                        fs::File file(path, fs::File::Mode::Create);
 
                         file.write(this->m_textEditor.GetText());
                     });
@@ -549,7 +550,7 @@ namespace hex::plugin::builtin {
             entries.resize(this->m_possiblePatternFiles.size());
 
             for (u32 i = 0; i < entries.size(); i++) {
-                entries[i] = fs::path(this->m_possiblePatternFiles[i]).filename().string();
+                entries[i] = std::fs::path(this->m_possiblePatternFiles[i]).filename().string();
             }
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
@@ -580,8 +581,8 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewPatternEditor::loadPatternFile(const fs::path &path) {
-        File file(path, File::Mode::Read);
+    void ViewPatternEditor::loadPatternFile(const std::fs::path &path) {
+        fs::File file(path, fs::File::Mode::Read);
         if (file.isValid()) {
             auto code = file.readString();
 

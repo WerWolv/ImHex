@@ -27,7 +27,7 @@ namespace hex::plugin::builtin::prv {
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override;
 
-        void setPath(const fs::path &path);
+        void setPath(const std::fs::path &path);
 
         [[nodiscard]] bool open() override;
         void close() override;
@@ -42,7 +42,7 @@ namespace hex::plugin::builtin::prv {
         void reloadDrives();
 
         std::set<std::string> m_availableDrives;
-        fs::path m_path;
+        std::fs::path m_path;
 
 #if defined(OS_WINDOWS)
         HANDLE m_diskHandle = INVALID_HANDLE_VALUE;

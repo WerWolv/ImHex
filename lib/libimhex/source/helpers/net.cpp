@@ -171,7 +171,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<std::string>> Net::uploadFile(const std::string &url, const fs::path &filePath, u32 timeout) {
+    std::future<Response<std::string>> Net::uploadFile(const std::string &url, const std::fs::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this] {
@@ -179,7 +179,7 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            File file(filePath.string(), File::Mode::Read);
+            fs::File file(filePath.string(), fs::File::Mode::Read);
             if (!file.isValid())
                 return Response<std::string> { 400, {} };
 
@@ -209,7 +209,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<void>> Net::downloadFile(const std::string &url, const fs::path &filePath, u32 timeout) {
+    std::future<Response<void>> Net::downloadFile(const std::string &url, const std::fs::path &filePath, u32 timeout) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this] {
@@ -217,7 +217,7 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            File file(filePath.string(), File::Mode::Create);
+            fs::File file(filePath.string(), fs::File::Mode::Create);
             if (!file.isValid())
                 return Response<void> { 400 };
 

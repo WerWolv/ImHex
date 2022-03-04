@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <hex/pattern_language/error.hpp>
 
@@ -41,7 +41,7 @@ namespace hex::pl {
         std::set<std::tuple<std::string, std::string, u32>> m_defines;
         std::set<std::tuple<std::string, std::string, u32>> m_pragmas;
 
-        std::set<fs::path> m_onceIncludedFiles;
+        std::set<std::fs::path> m_onceIncludedFiles;
 
         std::optional<PatternLanguageError> m_error;
 

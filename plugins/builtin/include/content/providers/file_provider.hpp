@@ -38,12 +38,12 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
-        void saveAs(const fs::path &path) override;
+        void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
 
-        void setPath(const fs::path &path);
+        void setPath(const std::fs::path &path);
 
         [[nodiscard]] bool open() override;
         void close() override;
@@ -56,7 +56,7 @@ namespace hex::plugin::builtin::prv {
         int m_file = -1;
 #endif
 
-        fs::path m_path;
+        std::fs::path m_path;
         void *m_mappedFile = nullptr;
         size_t m_fileSize  = 0;
 

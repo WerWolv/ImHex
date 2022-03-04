@@ -238,10 +238,10 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    return hex::openFileBrowser("hex.builtin.setting.font.font_path", DialogMode::Open, {
-                                                                                                            {"TTF Font", "ttf"}
+                    return fs::openFileBrowser("hex.builtin.setting.font.font_path", fs::DialogMode::Open, {
+                                                                                                               {"TTF Font", "ttf"}
                     },
-                        [&](const fs::path &path) {
+                        [&](const std::fs::path &path) {
                             fontPath = path.string();
                             setting  = fontPath;
                         });
@@ -294,7 +294,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginGroup();
 
             if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
-                hex::openFileBrowser("Select include folder", hex::DialogMode::Folder, {}, [&](fs::path path) {
+                fs::openFileBrowser("Select include folder", fs::DialogMode::Folder, {}, [&](std::fs::path path) {
                     auto pathStr = path.string();
 
                     if (std::find(folders.begin(), folders.end(), pathStr) == folders.end()) {

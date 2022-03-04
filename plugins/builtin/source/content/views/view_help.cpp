@@ -4,7 +4,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <romfs/romfs.hpp>
@@ -119,15 +119,15 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("Type");
             ImGui::TableSetupColumn("Paths");
 
-            constexpr std::array<std::pair<const char *, ImHexPath>, 8> PathTypes = {
-                {{ "Resources", ImHexPath::Resources },
-                 { "Config", ImHexPath::Config },
-                 { "Magic", ImHexPath::Magic },
-                 { "Patterns", ImHexPath::Patterns },
-                 { "Patterns Includes", ImHexPath::PatternsInclude },
-                 { "Plugins", ImHexPath::Plugins },
-                 { "Python Scripts", ImHexPath::Python },
-                 { "Yara Patterns", ImHexPath::Yara }}
+            constexpr std::array<std::pair<const char *, fs::ImHexPath>, 8> PathTypes = {
+                {{ "Resources", fs::ImHexPath::Resources },
+                 { "Config", fs::ImHexPath::Config },
+                 { "Magic", fs::ImHexPath::Magic },
+                 { "Patterns", fs::ImHexPath::Patterns },
+                 { "Patterns Includes", fs::ImHexPath::PatternsInclude },
+                 { "Plugins", fs::ImHexPath::Plugins },
+                 { "Python Scripts", fs::ImHexPath::Python },
+                 { "Yara Patterns", fs::ImHexPath::Yara }}
             };
 
             ImGui::TableHeadersRow();
@@ -137,7 +137,7 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted(name);
 
                 ImGui::TableNextColumn();
-                for (auto &path : hex::getPath(type))
+                for (auto &path : fs::getDefaultPaths(type))
                     ImGui::TextUnformatted(path.string().c_str());
             }
 

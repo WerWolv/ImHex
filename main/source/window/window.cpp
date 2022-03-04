@@ -7,7 +7,7 @@
 #include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/file.hpp>
 
@@ -123,8 +123,8 @@ namespace hex {
             if (!ProjectFile::hasUnsavedChanges())
                 return;
 
-            for (const auto &path : hex::getPath(ImHexPath::Config)) {
-                if (ProjectFile::store((fs::path(path) / CrashBackupFileName).string()))
+            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                if (ProjectFile::store((std::fs::path(path) / CrashBackupFileName).string()))
                     break;
             }
         });
@@ -352,7 +352,7 @@ namespace hex {
 
                     ImGui::TableHeadersRow();
 
-                    for (const auto &path : hex::getPath(ImHexPath::Plugins, true)) {
+                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Plugins, true)) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(path.string().c_str());
@@ -720,7 +720,7 @@ namespace hex {
         handler.UserData   = this;
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
-        for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             if (std::filesystem::exists(dir)) {
                 this->m_imguiSettingsPath = dir / "interface.ini";
                 break;

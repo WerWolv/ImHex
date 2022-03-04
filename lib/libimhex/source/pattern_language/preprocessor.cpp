@@ -1,7 +1,7 @@
 #include <hex/pattern_language/preprocessor.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/file.hpp>
 
 #include <filesystem>
@@ -59,26 +59,26 @@ namespace hex::pl {
                         }
                         offset += 1;
 
-                        fs::path includePath = includeFile;
+                        std::fs::path includePath = includeFile;
 
                         if (includeFile[0] != '/') {
-                            for (const auto &dir : hex::getPath(ImHexPath::PatternsInclude)) {
-                               fs::path tempPath = dir / includePath;
-                                if (fs::is_regular_file(tempPath)) {
+                            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::PatternsInclude)) {
+                                std::fs::path tempPath = dir / includePath;
+                                if (fs::isRegularFile(tempPath)) {
                                     includePath = tempPath;
                                     break;
                                 }
                             }
                         }
 
-                        if (!fs::is_regular_file(includePath)) {
+                        if (!fs::isRegularFile(includePath)) {
                             if (includePath.parent_path().filename().string() == "std")
                                 throwPreprocessorError(hex::format("{0}: No such file.\n\nThis file might be part of the standard library.\nYou can install the standard library though\nthe Content Store found under Help -> Content Store.", includeFile.c_str()), lineNumber);
                             else
                                 throwPreprocessorError(hex::format("{0}: No such file", includeFile.c_str()), lineNumber);
                         }
 
-                        File file(includePath, File::Mode::Read);
+                        fs::File file(includePath, fs::File::Mode::Read);
                         if (!file.isValid()) {
                             throwPreprocessorError(hex::format("{0}: Failed to open file", includeFile.c_str()), lineNumber);
                         }

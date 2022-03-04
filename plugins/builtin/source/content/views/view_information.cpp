@@ -3,7 +3,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/literals.hpp>
 
@@ -46,9 +46,8 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
-            for (const auto &destPath : hex::getPath(ImHexPath::Magic)) {
-                std::error_code error;
-                if (fs::copy_file(path, destPath / path.filename(), fs::copy_options::overwrite_existing, error)) {
+            for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
+                if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     View::showMessagePopup("hex.builtin.view.information.magic_db_added"_lang);
                     return true;
                 }

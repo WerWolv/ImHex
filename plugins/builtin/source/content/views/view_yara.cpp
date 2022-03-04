@@ -5,14 +5,14 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <yara.h>
 #include <filesystem>
 #include <thread>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -22,9 +22,8 @@ namespace hex::plugin::builtin {
         this->reloadRules();
 
         ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
-            for (const auto &destPath : hex::getPath(ImHexPath::Yara)) {
-                std::error_code error;
-                if (fs::copy_file(path, destPath / path.filename(), fs::copy_options::overwrite_existing, error)) {
+            for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
+                if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     View::showMessagePopup("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
@@ -134,13 +133,14 @@ namespace hex::plugin::builtin {
     void ViewYara::reloadRules() {
         this->m_rules.clear();
 
-        for (const auto path : hex::getPath(ImHexPath::Yara)) {
+        for (const auto path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
             if (!fs::exists(path))
                 continue;
 
-            for (const auto &entry : fs::recursive_directory_iterator(path)) {
+            std::error_code error;
+            for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
                 if (entry.is_regular_file() && entry.path().extension() == ".yar") {
-                    this->m_rules.push_back({ fs::relative(entry.path(), fs::path(path)).string(), entry.path().string() });
+                    this->m_rules.push_back({ std::fs::relative(entry.path(), std::fs::path(path)).string(), entry.path().string() });
                 }
             }
         }
@@ -172,7 +172,7 @@ namespace hex::plugin::builtin {
                 [](const char *includeName, const char *callingRuleFileName, const char *callingRuleNamespace, void *userData) -> const char * {
                     auto currFilePath = static_cast<const char *>(userData);
 
-                    File file((fs::path(currFilePath).parent_path() / includeName).string(), File::Mode::Read);
+                    fs::File file((std::fs::path(currFilePath).parent_path() / includeName).string(), fs::File::Mode::Read);
                     if (!file.isValid())
                         return nullptr;
 
@@ -189,7 +189,7 @@ namespace hex::plugin::builtin {
                 this->m_rules[this->m_selectedRule].second.data());
 
 
-            File file(this->m_rules[this->m_selectedRule].second, File::Mode::Read);
+            fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
             if (!file.isValid()) return;
 
             if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {

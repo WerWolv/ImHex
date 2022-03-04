@@ -254,29 +254,29 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::Namespace nsStdFile = { "builtin", "std", "file" };
         {
             static u32 fileCounter = 0;
-            static std::map<u32, File> openFiles;
+            static std::map<u32, fs::File> openFiles;
 
             /* open(path, mode) */
             ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "open", 2, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 const auto path     = Token::literalToString(params[0], false);
                 const auto modeEnum = Token::literalToUnsigned(params[1]);
 
-                File::Mode mode;
+                fs::File::Mode mode;
                 switch (modeEnum) {
                     case 1:
-                        mode = File::Mode::Read;
+                        mode = fs::File::Mode::Read;
                         break;
                     case 2:
-                        mode = File::Mode::Write;
+                        mode = fs::File::Mode::Write;
                         break;
                     case 3:
-                        mode = File::Mode::Create;
+                        mode = fs::File::Mode::Create;
                         break;
                     default:
                         LogConsole::abortEvaluation("invalid file open mode");
                 }
 
-                auto file = File(path, mode);
+                fs::File file(path, mode);
 
                 if (!file.isValid())
                     LogConsole::abortEvaluation(hex::format("failed to open file {}", path));

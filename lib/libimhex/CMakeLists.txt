@@ -113,7 +113,7 @@ set(LIBIMHEX_SOURCES
     source/data_processor/node.cpp
 
     source/helpers/utils.cpp
-    source/helpers/paths.cpp
+    source/helpers/fs.cpp
     source/helpers/magic.cpp
     source/helpers/crypto.cpp
     source/helpers/net.cpp
@@ -149,7 +149,7 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/paths_mac.mm)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/fs_macos.mm)
 endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")

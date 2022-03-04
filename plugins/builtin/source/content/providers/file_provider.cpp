@@ -1,6 +1,5 @@
 #include "content/providers/file_provider.hpp"
 
-#include <ctime>
 #include <cstring>
 
 #include <hex/api/localization.hpp>
@@ -83,8 +82,8 @@ namespace hex::plugin::builtin::prv {
         this->applyPatches();
     }
 
-    void FileProvider::saveAs(const fs::path &path) {
-        File file(path, File::Mode::Create);
+    void FileProvider::saveAs(const std::fs::path &path) {
+        fs::File file(path, fs::File::Mode::Create);
 
         if (file.isValid()) {
             auto provider = ImHexApi::Provider::get();
@@ -106,7 +105,7 @@ namespace hex::plugin::builtin::prv {
         this->close();
 
         {
-            auto file = File(this->m_path, File::Mode::Write);
+            fs::File file(this->m_path, fs::File::Mode::Write);
 
             file.setSize(newSize);
             this->m_fileSize = file.getSize();
@@ -141,7 +140,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string FileProvider::getName() const {
-        return fs::path(this->m_path).filename().string();
+        return std::fs::path(this->m_path).filename().string();
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {
@@ -159,7 +158,7 @@ namespace hex::plugin::builtin::prv {
         return result;
     }
 
-    void FileProvider::setPath(const fs::path &path) {
+    void FileProvider::setPath(const std::fs::path &path) {
         this->m_path = path;
     }
 

@@ -6,18 +6,19 @@
 #include <string_view>
 #include <vector>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 namespace hex {
 
     class EncodingFile {
     public:
-        enum class Type {
+        enum class Type
+        {
             Thingy
         };
 
         EncodingFile() = default;
-        EncodingFile(Type type, const fs::path &path);
+        EncodingFile(Type type, const std::fs::path &path);
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(const std::vector<u8> &buffer) const;
         [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }

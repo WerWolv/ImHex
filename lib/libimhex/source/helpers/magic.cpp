@@ -1,7 +1,7 @@
 #include <hex/helpers/magic.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <hex/providers/provider.hpp>
 
@@ -24,8 +24,8 @@ namespace hex::magic {
         std::string magicFiles;
 
         std::error_code error;
-        for (const auto &dir : hex::getPath(ImHexPath::Magic)) {
-            for (const auto &entry : fs::directory_iterator(dir, error)) {
+        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
+            for (const auto &entry : std::fs::directory_iterator(dir, error)) {
                 if (entry.is_regular_file() && ((sourceFiles && entry.path().extension().empty()) || (!sourceFiles && entry.path().extension() == ".mgc")))
                     magicFiles += entry.path().string() + MAGIC_PATH_SEPARATOR;
             }

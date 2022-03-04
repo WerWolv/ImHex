@@ -41,7 +41,7 @@ namespace hex {
         static void showFatalPopup(const std::string &errorMessage);
         static void showYesNoQuestionPopup(const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback);
 
-        static void showFileChooserPopup(const std::vector<fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(fs::path)> &callback);
+        static void showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback);
 
         [[nodiscard]] virtual bool hasViewMenuItemEntry() const;
         [[nodiscard]] virtual ImVec2 getMinSize() const;
@@ -76,8 +76,8 @@ namespace hex {
         static std::function<void()> s_yesCallback, s_noCallback;
 
         static u32 s_selectableFileIndex;
-        static std::vector<fs::path> s_selectableFiles;
-        static std::function<void(fs::path)> s_selectableFileOpenCallback;
+        static std::vector<std::fs::path> s_selectableFiles;
+        static std::function<void(std::fs::path)> s_selectableFileOpenCallback;
         static std::vector<nfdfilteritem_t> s_selectableFilesValidExtensions;
 
         static ImFontAtlas *s_fontAtlas;

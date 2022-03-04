@@ -4,7 +4,7 @@
 #include <hex/api/localization.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
 
@@ -28,9 +28,9 @@ namespace hex::plugin::builtin {
     static bool s_layoutConfigured = false;
     static ImGui::Texture s_bannerTexture;
     static std::string s_bannerTextureName;
-    static std::list<fs::path> s_recentFilePaths;
+    static std::list<std::fs::path> s_recentFilePaths;
 
-    static fs::path s_safetyBackupPath;
+    static std::fs::path s_safetyBackupPath;
 
     static std::string s_tipOfTheDay;
 
@@ -153,7 +153,7 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 for (auto &path : s_recentFilePaths) {
-                    if (ImGui::BulletHyperlink(fs::path(path).filename().string().c_str())) {
+                    if (ImGui::BulletHyperlink(std::fs::path(path).filename().string().c_str())) {
                         EventManager::post<RequestOpenFile>(path);
                         break;
                     }
@@ -384,7 +384,7 @@ namespace hex::plugin::builtin {
             s_recentFilePaths.push_front(path);
 
             {
-                std::list<fs::path> uniques;
+                std::list<std::fs::path> uniques;
                 for (auto &file : s_recentFilePaths) {
 
                     bool exists = false;
@@ -420,16 +420,16 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                hex::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, DialogMode::Open, {}, [](const auto &path) {
+                fs::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                 });
             }
 
             if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
-                // Copy to avoid chaning list while iteration
-                std::list<fs::path> recentFilePaths = s_recentFilePaths;
+                // Copy to avoid changing list while iteration
+                std::list<std::fs::path> recentFilePaths = s_recentFilePaths;
                 for (auto &path : recentFilePaths) {
-                    auto filename = fs::path(path).filename().string();
+                    auto filename = std::fs::path(path).filename().string();
                     if (ImGui::MenuItem(filename.c_str())) {
                         EventManager::post<RequestOpenFile>(path);
                     }
@@ -461,8 +461,8 @@ namespace hex::plugin::builtin {
 
 
         constexpr auto CrashBackupFileName = "crash_backup.hexproj";
-        for (const auto &path : hex::getPath(ImHexPath::Config)) {
-            if (auto filePath = fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
+        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+            if (auto filePath = std::fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
                 s_safetyBackupPath = filePath;
                 ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
             }

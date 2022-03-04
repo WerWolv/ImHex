@@ -1,6 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <hex/ui/view.hpp>
@@ -16,7 +16,7 @@ namespace hex {
 
         void load() {
             bool loaded = false;
-            for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
                 std::ifstream settingsFile(dir / "settings.json");
 
                 if (settingsFile.good()) {
@@ -31,7 +31,7 @@ namespace hex {
         }
 
         void store() {
-            for (const auto &dir : hex::getPath(ImHexPath::Config)) {
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
                 std::ofstream settingsFile(dir / "settings.json", std::ios::trunc);
 
                 if (settingsFile.good()) {

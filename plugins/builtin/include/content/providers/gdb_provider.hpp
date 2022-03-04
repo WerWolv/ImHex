@@ -29,7 +29,7 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
-        void saveAs(const fs::path &path) override;
+        void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;

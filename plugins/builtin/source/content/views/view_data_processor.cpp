@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const fs::path &path) {
+        EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
             }
@@ -54,22 +54,22 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang)) {
-                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, DialogMode::Open, {
-                                                                                                                            {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
+                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, fs::DialogMode::Open, {
+                                                                                                                               {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
                 },
-                    [this](const fs::path &path) {
-                        File file(path, File::Mode::Read);
+                    [this](const std::fs::path &path) {
+                        fs::File file(path, fs::File::Mode::Read);
                         if (file.isValid())
                             this->loadNodes(file.readString());
                     });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty())) {
-                hex::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, DialogMode::Save, {
-                                                                                                                            {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
+                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, fs::DialogMode::Save, {
+                                                                                                                               {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
                 },
-                    [this](const fs::path &path) {
-                        File file(path, File::Mode::Create);
+                    [this](const std::fs::path &path) {
+                        fs::File file(path, fs::File::Mode::Create);
                         if (file.isValid())
                             file.write(this->saveNodes());
                     });
@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
-            File file(path, File::Mode::Read);
+            fs::File file(path, fs::File::Mode::Read);
             if (!file.isValid()) return false;
 
             this->loadNodes(file.readString());

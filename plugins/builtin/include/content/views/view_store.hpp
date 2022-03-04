@@ -4,7 +4,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/net.hpp>
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <array>
 #include <future>
@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         Net m_net;
         std::future<Response<std::string>> m_apiRequest;
         std::future<Response<void>> m_download;
-        fs::path m_downloadPath;
+        std::fs::path m_downloadPath;
 
         std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara, m_encodings;
 
@@ -53,8 +53,8 @@ namespace hex::plugin::builtin {
         void refresh();
         void parseResponse();
 
-        bool download(ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
-        bool remove(ImHexPath pathType, const std::string &fileName);
+        bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
+        bool remove(fs::ImHexPath pathType, const std::string &fileName);
     };
 
 }

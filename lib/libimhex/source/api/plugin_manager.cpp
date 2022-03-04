@@ -7,7 +7,7 @@
 
 namespace hex {
 
-    Plugin::Plugin(const fs::path &path) : m_path(path) {
+    Plugin::Plugin(const std::fs::path &path) : m_path(path) {
         this->m_handle = dlopen(path.string().c_str(), RTLD_LAZY);
 
         if (this->m_handle == nullptr) {
@@ -15,7 +15,7 @@ namespace hex {
             return;
         }
 
-        auto pluginName = fs::path(path).stem().string();
+        auto pluginName = std::fs::path(path).stem().string();
 
         this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
         this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
@@ -110,7 +110,7 @@ namespace hex {
             return false;
     }
 
-    const fs::path &Plugin::getPath() const {
+    const std::fs::path &Plugin::getPath() const {
         return this->m_path;
     }
 
@@ -124,16 +124,16 @@ namespace hex {
     }
 
 
-    fs::path PluginManager::s_pluginFolder;
+    std::fs::path PluginManager::s_pluginFolder;
     std::vector<Plugin> PluginManager::s_plugins;
 
-    bool PluginManager::load(const fs::path &pluginFolder) {
+    bool PluginManager::load(const std::fs::path &pluginFolder) {
         if (!fs::exists(pluginFolder))
             return false;
 
         PluginManager::s_pluginFolder = pluginFolder;
 
-        for (auto &pluginPath : fs::directory_iterator(pluginFolder)) {
+        for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
                 PluginManager::s_plugins.emplace_back(pluginPath.path().string());
         }

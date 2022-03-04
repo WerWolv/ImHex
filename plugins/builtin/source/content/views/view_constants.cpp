@@ -1,6 +1,6 @@
 #include "content/views/view_constants.hpp"
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
@@ -24,10 +24,11 @@ namespace hex::plugin::builtin {
         this->m_constants.clear();
         this->m_filterIndices.clear();
 
-        for (const auto &path : hex::getPath(ImHexPath::Constants)) {
+        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Constants)) {
             if (!fs::exists(path)) continue;
 
-            for (auto &file : fs::directory_iterator(path)) {
+            std::error_code error;
+            for (auto &file : std::fs::directory_iterator(path, error)) {
                 if (!file.is_regular_file()) continue;
 
                 try {

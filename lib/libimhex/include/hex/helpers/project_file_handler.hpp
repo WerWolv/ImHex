@@ -8,7 +8,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 namespace hex {
 
@@ -16,8 +16,8 @@ namespace hex {
     public:
         ProjectFile() = delete;
 
-        static bool load(const fs::path &filePath);
-        static bool store(fs::path filePath = {});
+        static bool load(const std::fs::path &filePath);
+        static bool store(std::fs::path filePath = {});
 
         [[nodiscard]] static bool hasUnsavedChanges() {
             return ProjectFile::s_hasUnsavedChanged;
@@ -29,10 +29,10 @@ namespace hex {
             ProjectFile::s_hasUnsavedChanged = true;
 
             if (setWindowTitle)
-                EventManager::post<RequestChangeWindowTitle>(fs::path(getFilePath()).filename().string());
+                EventManager::post<RequestChangeWindowTitle>(std::fs::path(getFilePath()).filename().string());
         }
 
-        [[nodiscard]] static const fs::path &getProjectFilePath() {
+        [[nodiscard]] static const std::fs::path &getProjectFilePath() {
             return ProjectFile::s_currProjectFilePath;
         }
 
@@ -41,11 +41,11 @@ namespace hex {
         }
 
 
-        [[nodiscard]] static const fs::path &getFilePath() {
+        [[nodiscard]] static const std::fs::path &getFilePath() {
             return ProjectFile::s_filePath;
         }
 
-        static void setFilePath(const fs::path &filePath) {
+        static void setFilePath(const std::fs::path &filePath) {
             ProjectFile::s_filePath = filePath;
 
             EventManager::post<RequestChangeWindowTitle>(filePath.filename().string());
@@ -92,10 +92,10 @@ namespace hex {
         }
 
     private:
-        static fs::path s_currProjectFilePath;
+        static std::fs::path s_currProjectFilePath;
         static bool s_hasUnsavedChanged;
 
-        static fs::path s_filePath;
+        static std::fs::path s_filePath;
         static std::string s_pattern;
         static Patches s_patches;
         static std::list<ImHexApi::Bookmarks::Entry> s_bookmarks;

@@ -12,7 +12,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <curl/system.h>
 
-#include <hex/helpers/paths.hpp>
+#include <hex/helpers/fs.hpp>
 
 using CURL = void;
 struct curl_slist;
@@ -40,8 +40,8 @@ namespace hex {
         std::future<Response<std::string>> getString(const std::string &url, u32 timeout = DefaultTimeout);
         std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = DefaultTimeout);
 
-        std::future<Response<std::string>> uploadFile(const std::string &url, const fs::path &filePath, u32 timeout = DefaultTimeout);
-        std::future<Response<void>> downloadFile(const std::string &url, const fs::path &filePath, u32 timeout = DefaultTimeout);
+        std::future<Response<std::string>> uploadFile(const std::string &url, const std::fs::path &filePath, u32 timeout = DefaultTimeout);
+        std::future<Response<void>> downloadFile(const std::string &url, const std::fs::path &filePath, u32 timeout = DefaultTimeout);
 
         [[nodiscard]] std::string encode(const std::string &input);
 
