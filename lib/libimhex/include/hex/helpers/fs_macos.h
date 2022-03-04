@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(OS_MACOS)
-    #include <hex/helpers/paths.hpp>
+    #include <hex/helpers/fs.hpp>
 
 namespace hex {
     std::string getMacExecutableDirectoryPath();

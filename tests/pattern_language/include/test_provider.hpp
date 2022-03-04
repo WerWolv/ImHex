@@ -9,7 +9,7 @@ namespace hex::test {
 
     class TestProvider : public prv::Provider {
     public:
-        TestProvider() : Provider(), m_testFile(File("test_data", File::Mode::Read)) {
+        TestProvider() : Provider(), m_testFile(fs::File("test_data", fs::File::Mode::Read)) {
             if (!this->m_testFile.isValid() || this->m_testFile.getSize() == 0) {
                 hex::log::fatal("Failed to open test data!");
                 throw std::runtime_error("");
@@ -49,7 +49,7 @@ namespace hex::test {
         void close() override { }
 
     private:
-        File m_testFile;
+        fs::File m_testFile;
     };
 
 }

@@ -6,25 +6,25 @@
 using namespace std::literals::string_literals;
 
 TEST_SEQUENCE("FileAccess") {
-    const auto FilePath    = hex::fs::current_path() / "file.txt";
+    const auto FilePath    = std::fs::current_path() / "file.txt";
     const auto FileContent = "Hello World";
 
     {
-        hex::File file(FilePath, hex::File::Mode::Create);
+        hex::fs::File file(FilePath, hex::fs::File::Mode::Create);
         TEST_ASSERT(file.isValid());
 
         file.write(FileContent);
     }
 
     {
-        hex::File file(FilePath, hex::File::Mode::Read);
+        hex::fs::File file(FilePath, hex::fs::File::Mode::Read);
         TEST_ASSERT(file.isValid());
 
         TEST_ASSERT(file.readString() == FileContent);
     }
 
     {
-        hex::File file(FilePath, hex::File::Mode::Write);
+        hex::fs::File file(FilePath, hex::fs::File::Mode::Write);
         TEST_ASSERT(file.isValid());
 
 
@@ -33,7 +33,7 @@ TEST_SEQUENCE("FileAccess") {
     }
 
     {
-        hex::File file(FilePath, hex::File::Mode::Read);
+        hex::fs::File file(FilePath, hex::fs::File::Mode::Read);
         if (file.isValid())
             TEST_FAIL();
     }

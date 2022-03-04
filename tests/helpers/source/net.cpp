@@ -37,13 +37,13 @@ TEST_SEQUENCE("TipsAPI") {
 TEST_SEQUENCE("ContentAPI") {
     hex::Net net;
 
-    const auto FilePath = hex::fs::current_path() / "elf.hexpat";
+    const auto FilePath = std::fs::current_path() / "elf.hexpat";
 
     auto result = net.downloadFile("https://api.werwolv.net/content/imhex/patterns/elf.hexpat", FilePath).get();
 
     TEST_ASSERT(result.code == 200);
 
-    hex::File file(FilePath, hex::File::Mode::Read);
+    hex::fs::File file(FilePath, hex::fs::File::Mode::Read);
     if (!file.isValid())
         TEST_FAIL();
 
