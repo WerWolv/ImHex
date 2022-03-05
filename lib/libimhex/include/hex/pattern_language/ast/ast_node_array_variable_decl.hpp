@@ -299,7 +299,7 @@ namespace hex::pl {
             }
 
 
-            if (auto &arrayEntries = arrayPattern->getEntries(); !entries.empty())
+            if (auto &arrayEntries = arrayPattern->getEntries(); !arrayEntries.empty())
                 arrayPattern->setTypeName(arrayEntries.front()->getTypeName());
 
             arrayPattern->setEntries(std::move(entries));

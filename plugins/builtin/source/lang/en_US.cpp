@@ -680,6 +680,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.extra_info", "Display extra information" },
                 { "hex.builtin.setting.folders", "Folders" },
                     { "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, Yara rules and more" },
+                    { "hex.builtin.setting.folders.add_folder", "Add new folder" },
+                    { "hex.builtin.setting.folders.remove_folder", "Remove currently selected folder from list" },
                 { "hex.builtin.setting.font", "Font" },
                     { "hex.builtin.setting.font.font_path", "Custom Font Path" },
                     { "hex.builtin.setting.font.font_size", "Font Size" },

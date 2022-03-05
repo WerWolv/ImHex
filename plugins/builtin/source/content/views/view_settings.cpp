@@ -50,7 +50,9 @@ namespace hex::plugin::builtin {
                     auto &[category, settings] = *it;
                     if (ImGui::BeginTabItem(LangEntry(category))) {
                         const std::string &categoryDesc = descriptions.count(category) ? descriptions.at(category) : category.name;
-                        ImGui::TextUnformatted(LangEntry(categoryDesc));
+                        LangEntry descriptionEntry{categoryDesc};
+                        ImGui::TextUnformatted(descriptionEntry);
+                        ImGui::InfoTooltip(descriptionEntry);
                         ImGui::Separator();
 
                         for (auto &[name, requiresRestart, callback] : settings) {

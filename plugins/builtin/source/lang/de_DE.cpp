@@ -676,6 +676,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.extra_info", "Extra informationen anzeigen" },
                 { "hex.builtin.setting.folders", "Ordner" },
                     { "hex.builtin.setting.folders.description", "Gib zusätzliche Orderpfade an in welchen Pattern, Scripts, Yara Rules und anderes gesucht wird" },
+                    // { "hex.builtin.setting.folders.add_folder", "Add new folder" },
+                    // { "hex.builtin.setting.folders.remove_folder", "Remove currently selected folder from list" },
                 { "hex.builtin.setting.font", "Schriftart" },
                     { "hex.builtin.setting.font.font_path", "Eigene Schriftart" },
                     { "hex.builtin.setting.font.font_size", "Schriftgrösse" },

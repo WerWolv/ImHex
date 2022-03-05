@@ -670,8 +670,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "显示零字节为灰色" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "大写Hex字符" },
                     { "hex.builtin.setting.hex_editor.extra_info", "显示额外信息" },
+
                 { "hex.builtin.setting.folders", "扩展搜索路径" },
                     { "hex.builtin.setting.folders.description", "为模式、脚本和规则等指定额外的搜索路径" },
+                 // { "hex.builtin.setting.folders.add_folder", "Add new folder" },
+                 // { "hex.builtin.setting.folders.remove_folder", "Remove currently selected folder from list" },
                 { "hex.builtin.setting.font", "字体" },
                     { "hex.builtin.setting.font.font_path", "自定义字体路径" },
                     { "hex.builtin.setting.font.font_size", "字体大小" },
