@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.no_data", "没有选中字节"},
 
                 { "hex.builtin.view.data_processor.name", "数据处理器" },
-                    { "hex.builtin.view.data_processor.help_text", "右键以添加一个新的节点" },
+                    { "hex.builtin.view.data_processor.help_text", "右键以添加新的节点" },
                     { "hex.builtin.view.data_processor.menu.remove_selection", "移除已选" },
                     { "hex.builtin.view.data_processor.menu.remove_node", "移除节点" },
                     { "hex.builtin.view.data_processor.menu.remove_link", "移除链接" },
@@ -545,13 +545,13 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.nodes.visualizer", "可视化" },
                     { "hex.builtin.nodes.visualizer.digram", "图表" },
-                        { "hex.builtin.nodes.visualizer.digram.header", "图标可视化" },
+                        { "hex.builtin.nodes.visualizer.digram.header", "图表可视化" },
                     { "hex.builtin.nodes.visualizer.layered_dist", "分层布局" },
                         { "hex.builtin.nodes.visualizer.layered_dist.header", "分层布局" },
                     { "hex.builtin.nodes.visualizer.image", "图像" },
                         { "hex.builtin.nodes.visualizer.image.header", "图像可视化" },
-                    { "hex.builtin.nodes.visualizer.byte_distribution", "字节布局" },
-                        { "hex.builtin.nodes.visualizer.byte_distribution.header", "字节布局" },
+                    { "hex.builtin.nodes.visualizer.byte_distribution", "字节分布" },
+                        { "hex.builtin.nodes.visualizer.byte_distribution.header", "字节分布" },
 
 
                 { "hex.builtin.tools.demangler", "Itanium/MSVC名还原" },
@@ -670,7 +670,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "显示零字节为灰色" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "大写Hex字符" },
                     { "hex.builtin.setting.hex_editor.extra_info", "显示额外信息" },
-                { "hex.builtin.setting.folders", "文件夹" },
+                { "hex.builtin.setting.folders", "扩展搜索路径" },
                     { "hex.builtin.setting.folders.description", "为模式、脚本和规则等指定额外的搜索路径" },
                 { "hex.builtin.setting.font", "字体" },
                     { "hex.builtin.setting.font.font_path", "自定义字体路径" },
