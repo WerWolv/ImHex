@@ -303,6 +303,7 @@ namespace hex::plugin::builtin {
                     }
                 });
             }
+            ImGui::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
             if (ImGui::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
                 if (!folders.empty()) {
@@ -310,6 +311,7 @@ namespace hex::plugin::builtin {
                     ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
                 }
             }
+            ImGui::InfoTooltip("hex.builtin.setting.folders.remove_folder"_lang);
 
             ImGui::EndGroup();
 
