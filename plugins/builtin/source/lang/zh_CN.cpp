@@ -191,7 +191,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.help.name", "帮助" },
                     { "hex.builtin.view.help.about.name", "关于" },
                         { "hex.builtin.view.help.about.translator", "由xtexChooser翻译" },
-                        { "hex.builtin.view.help.about.source", "源代码位于GitHub:" },
+                        { "hex.builtin.view.help.about.source", "源代码位于GitHub：" },
                         { "hex.builtin.view.help.about.donations", "赞助" },
                         { "hex.builtin.view.help.about.thanks", "如果你喜欢我的工作，请赞助以帮助此项目继续前进。非常感谢 <3" },
                         { "hex.builtin.view.help.about.contributor", "贡献者" },
