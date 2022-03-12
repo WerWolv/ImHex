@@ -155,6 +155,10 @@ namespace hex::pl {
             Pattern::setEndian(endian);
         }
 
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
+
     private:
         std::shared_ptr<Pattern> m_template                  = nullptr;
         mutable std::unique_ptr<Pattern> m_highlightTemplate = nullptr;

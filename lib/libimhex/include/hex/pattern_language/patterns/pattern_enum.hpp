@@ -90,6 +90,10 @@ namespace hex::pl {
             return true;
         }
 
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
+
     private:
         std::vector<std::pair<Token::Literal, std::string>> m_enumValues;
     };

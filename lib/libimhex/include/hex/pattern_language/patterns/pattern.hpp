@@ -6,6 +6,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/pattern_language/evaluator.hpp>
+#include <hex/pattern_language/pattern_visitor.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <string>
@@ -249,6 +250,8 @@ namespace hex::pl {
         void clearFormatCache() {
             this->m_cachedDisplayValue.reset();
         }
+
+        virtual void accept(PatternVisitor &v) = 0;
 
     protected:
         void createDefaultEntry(const std::string &value, Token::Literal &&literal) const {

@@ -151,6 +151,10 @@ namespace hex::pl {
             Pattern::setEndian(endian);
         }
 
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
+
     private:
         std::vector<std::shared_ptr<Pattern>> m_entries;
         u64 m_displayEnd = 50;

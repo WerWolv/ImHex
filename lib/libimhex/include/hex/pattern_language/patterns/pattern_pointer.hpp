@@ -135,6 +135,10 @@ namespace hex::pl {
             Pattern::setEndian(endian);
         }
 
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
+
     private:
         std::unique_ptr<Pattern> m_pointedAt;
         u64 m_pointedAtAddress = 0;

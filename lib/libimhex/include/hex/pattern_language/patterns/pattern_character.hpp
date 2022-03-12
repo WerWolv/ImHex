@@ -25,6 +25,10 @@ namespace hex::pl {
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
     };
 
 }

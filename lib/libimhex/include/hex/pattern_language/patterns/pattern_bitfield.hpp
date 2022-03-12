@@ -71,6 +71,10 @@ namespace hex::pl {
             return this->m_bitOffset == otherBitfieldField.m_bitOffset && this->m_bitSize == otherBitfieldField.m_bitSize;
         }
 
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
+
     private:
         u8 m_bitOffset, m_bitSize;
         Pattern *m_bitField;
@@ -184,6 +188,10 @@ namespace hex::pl {
             }
 
             return true;
+        }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
         }
 
     private:
