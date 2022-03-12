@@ -41,7 +41,7 @@ namespace hex::pl {
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                pattern.drawCommentTooltip();
+                this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
                 ImGui::TableNextColumn();
@@ -98,7 +98,7 @@ namespace hex::pl {
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                pattern.drawCommentTooltip();
+                this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
                 ImGui::TableNextColumn();
@@ -185,7 +185,7 @@ namespace hex::pl {
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                pattern.drawCommentTooltip();
+                this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
                 ImGui::TableNextColumn();
@@ -220,16 +220,16 @@ namespace hex::pl {
             u8 boolean = pattern.getValue(m_provider);
 
             if (boolean == 0)
-                pattern.createDefaultEntry("false", false);
+                this->createDefaultEntry(pattern, "false", false);
             else if (boolean == 1)
-                pattern.createDefaultEntry("true", true);
+                this->createDefaultEntry(pattern, "true", true);
             else
-                pattern.createDefaultEntry("true*", true);
+                this->createDefaultEntry(pattern, "true*", true);
         }
 
         void visit(PatternCharacter& pattern) override {
             char character = pattern.getValue(m_provider);
-            pattern.createDefaultEntry(hex::format("'{0}'", character), character);
+            this->createDefaultEntry(pattern, hex::format("'{0}'", character), character);
         }
 
         void visit(PatternEnum& pattern) override {
@@ -266,7 +266,7 @@ namespace hex::pl {
                                                                 ImGuiTreeNodeFlags_NoTreePushOnOpen |
                                                                 ImGuiTreeNodeFlags_SpanFullWidth |
                                                                 ImGuiTreeNodeFlags_AllowItemOverlap);
-            pattern.drawCommentTooltip();
+            this->drawCommentTooltip(pattern);
             ImGui::TableNextColumn();
             if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                 ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
@@ -291,11 +291,11 @@ namespace hex::pl {
             if (pattern.getSize() == 4) {
                 float f32 = pattern.getValue(m_provider);
                 u32 data = *reinterpret_cast<u32 *>(&f32);
-                pattern.createDefaultEntry(hex::format("{:e} (0x{:0{}X})", f32, data, pattern.getSize() * 2), f32);
+                this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f32, data, pattern.getSize() * 2), f32);
             } else if (pattern.getSize() == 8) {
                 double f64 = pattern.getValue(m_provider);
                 u64 data = *reinterpret_cast<u64 *>(&f64);
-                pattern.createDefaultEntry(hex::format("{:e} (0x{:0{}X})", f64, data, pattern.getSize() * 2), f64);
+                this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f64, data, pattern.getSize() * 2), f64);
             }
         }
 
@@ -316,7 +316,7 @@ namespace hex::pl {
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                pattern.drawCommentTooltip();
+                this->drawCommentTooltip(pattern);
                 ImGui::SameLine(0, 0);
                 ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
                 ImGui::TableNextColumn();
@@ -341,7 +341,7 @@ namespace hex::pl {
 
         void visit(PatternSigned& pattern) override {
             i128 data = pattern.getValue(m_provider);
-            pattern.createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
+            this->createDefaultEntry(pattern, hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
         }
 
         void visit(PatternString& pattern) override {
@@ -351,7 +351,7 @@ namespace hex::pl {
                 return;
 
             std::string displayString = pattern.getValue(m_provider, size);
-            pattern.createDefaultEntry(hex::format("\"{0}\" {1}", displayString, size > pattern.getSize() ? "(truncated)" : ""), displayString);
+            this->createDefaultEntry(pattern, hex::format("\"{0}\" {1}", displayString, size > pattern.getSize() ? "(truncated)" : ""), displayString);
         }
 
         void visit(PatternStruct& pattern) override {
@@ -365,7 +365,7 @@ namespace hex::pl {
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                pattern.drawCommentTooltip();
+                this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
                 ImGui::TableNextColumn();
@@ -401,7 +401,7 @@ namespace hex::pl {
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                pattern.drawCommentTooltip();
+                this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), std::max(pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1), u64(0)));
                 ImGui::TableNextColumn();
@@ -429,14 +429,14 @@ namespace hex::pl {
 
         void visit(PatternUnsigned& pattern) override {
             u128 data = pattern.getValue(m_provider);
-            pattern.createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, pattern.getSize() * 2), data);
+            this->createDefaultEntry(pattern, hex::format("{:d} (0x{:0{}X})", data, data, pattern.getSize() * 2), data);
         }
 
         void visit(PatternWideCharacter& pattern) override {
             char16_t character = pattern.getValue(m_provider);
             u128 literal = character;
             auto str = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(character);
-            pattern.createDefaultEntry(hex::format("'{0}'", str), literal);
+            this->createDefaultEntry(pattern, hex::format("'{0}'", str), literal);
         }
 
         void visit(PatternWideString& pattern) override {
@@ -447,9 +447,46 @@ namespace hex::pl {
 
             std::string utf8String = pattern.getValue(m_provider, size);
 
-            pattern.createDefaultEntry(hex::format("\"{0}\" {1}", utf8String, size > pattern.getSize() ? "(truncated)" : ""), utf8String);
+            this->createDefaultEntry(pattern, hex::format("\"{0}\" {1}", utf8String, size > pattern.getSize() ? "(truncated)" : ""), utf8String);
         }
+
     private:
+        void createDefaultEntry(const Pattern &pattern, const std::string &value, Token::Literal &&literal) const {
+            ImGui::TableNextRow();
+            ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            ImGui::TableNextColumn();
+
+            ImGui::PushID(pattern.getOffset());
+            ImGui::PushID(pattern.getVariableName().c_str());
+            if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+            }
+            ImGui::PopID();
+            ImGui::PopID();
+
+            this->drawCommentTooltip(pattern);
+            ImGui::SameLine();
+            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
+            ImGui::TableNextColumn();
+            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::TableNextColumn();
+            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
+            ImGui::TableNextColumn();
+            ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
+            ImGui::TableNextColumn();
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getTypeName().empty() ? pattern.getFormattedName() : pattern.getTypeName());
+            ImGui::TableNextColumn();
+            ImGui::TextFormatted("{}", pattern.formatDisplayValue(value, literal));
+        }
+
+        void drawCommentTooltip(const Pattern &pattern) const {
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && pattern.getComment().has_value()) {
+                ImGui::BeginTooltip();
+                ImGui::TextUnformatted(pattern.getComment()->c_str());
+                ImGui::EndTooltip();
+            }
+        }
+
         void draw(Pattern& pattern) {
             if (pattern.isHidden())
                 return;

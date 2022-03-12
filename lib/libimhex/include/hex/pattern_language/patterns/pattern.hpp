@@ -246,42 +246,6 @@ namespace hex::pl {
 
         virtual void accept(PatternVisitor &v) = 0;
 
-        void createDefaultEntry(const std::string &value, Token::Literal &&literal) const {
-            ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            ImGui::TableNextColumn();
-
-            ImGui::PushID(this->getOffset());
-            ImGui::PushID(this->getVariableName().c_str());
-            if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-            }
-            ImGui::PopID();
-            ImGui::PopID();
-
-            this->drawCommentTooltip();
-            ImGui::SameLine();
-            ImGui::TextUnformatted(this->getDisplayName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:04X}", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getTypeName().empty() ? this->getFormattedName() : this->getTypeName());
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", formatDisplayValue(value, literal));
-        }
-
-        void drawCommentTooltip() const {
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && this->getComment().has_value()) {
-                ImGui::BeginTooltip();
-                ImGui::TextUnformatted(this->getComment()->c_str());
-                ImGui::EndTooltip();
-            }
-        }
-
     protected:
         std::optional<std::endian> m_endian;
         bool m_hidden = false;
