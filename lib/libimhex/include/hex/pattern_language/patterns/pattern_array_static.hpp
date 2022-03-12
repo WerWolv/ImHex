@@ -81,6 +81,15 @@ namespace hex::pl {
             }
         }
 
+        void forEachArrayEntry(const std::function<void(int, Pattern&)>& fn) {
+            auto entry = std::shared_ptr(this->m_template->clone());
+            for (u64 index = 0; index < this->m_entryCount; index++) {
+                entry->setVariableName(hex::format("[{0}]", index));
+                entry->setOffset(this->getOffset() + index * this->m_template->getSize());
+                fn(index, *entry);
+            }
+        }
+
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             auto entry = this->m_template->clone();
 
@@ -103,6 +112,10 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
+        }
+
+        [[nodiscard]] std::string getTypeName() const {
+            return this->m_template->getTypeName();
         }
 
         [[nodiscard]] const std::shared_ptr<Pattern> &getTemplate() const {
@@ -157,6 +170,18 @@ namespace hex::pl {
 
         void accept(PatternVisitor &v) override {
             v.visit(*this);
+        }
+
+        u64 getDisplayEnd() const {
+            return m_displayEnd;
+        }
+
+        void resetDisplayEnd() {
+            m_displayEnd = 50;
+        }
+
+        void increaseDisplayEnd() {
+            m_displayEnd += 50;
         }
 
     private:

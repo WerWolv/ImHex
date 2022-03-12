@@ -70,8 +70,16 @@ namespace hex::pl {
             return "enum " + Pattern::getTypeName();
         }
 
+        [[nodiscard]] std::string getTypeName() const {
+            return Pattern::getTypeName();
+        }
+
         void setEnumValues(const std::vector<std::pair<Token::Literal, std::string>> &enumValues) {
             this->m_enumValues = enumValues;
+        }
+
+        const auto& getEnumValues() const {
+            return this->m_enumValues;
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override {

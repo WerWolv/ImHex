@@ -96,6 +96,10 @@ namespace hex::pl {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
 
+        [[nodiscard]] std::string getTypeName() const {
+            return this->m_entries[0]->getTypeName();
+        }
+
         void setOffset(u64 offset) override {
             for (auto &entry : this->m_entries)
                 entry->setOffset(entry->getOffset() - this->getOffset() + offset);
@@ -103,8 +107,17 @@ namespace hex::pl {
             Pattern::setOffset(offset);
         }
 
+        [[nodiscard]] size_t getEntryCount() const {
+            return this->m_entries.size();
+        }
+
         [[nodiscard]] const auto &getEntries() {
             return this->m_entries;
+        }
+
+        void forEachArrayEntry(const std::function<void(int, Pattern&)>& fn) {
+            for (u64 i = 0; i < this->m_entries.size(); i++)
+                fn(i, *this->m_entries[i]);
         }
 
         void setEntries(std::vector<std::shared_ptr<Pattern>> &&entries) {
@@ -153,6 +166,18 @@ namespace hex::pl {
 
         void accept(PatternVisitor &v) override {
             v.visit(*this);
+        }
+
+        u64 getDisplayEnd() const {
+            return m_displayEnd;
+        }
+
+        void resetDisplayEnd() {
+            m_displayEnd = 50;
+        }
+
+        void increaseDisplayEnd() {
+            m_displayEnd += 50;
         }
 
     private:

@@ -144,6 +144,11 @@ namespace hex::pl {
 
         }
 
+        void forEachMember(const std::function<void(Pattern&)>& fn) {
+            for (auto &field : this->m_fields)
+                fn(*field);
+        }
+
         void setOffset(u64 offset) override {
             for (auto &field : this->m_fields)
                 field->setOffset(field->getOffset() - this->getOffset() + offset);

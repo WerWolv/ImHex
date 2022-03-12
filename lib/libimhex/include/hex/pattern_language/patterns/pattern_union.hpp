@@ -60,6 +60,11 @@ namespace hex::pl {
             }
         }
 
+        void forEachMember(const std::function<void(Pattern&)>& fn) {
+            for (auto &member : this->m_sortedMembers)
+                fn(*member);
+        }
+
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             for (auto &member : this->m_members) {
                 member->getHighlightedAddresses(highlight);
@@ -96,7 +101,10 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
             return "union " + Pattern::getTypeName();
-            ;
+        }
+
+        [[nodiscard]] std::string getTypeName() const {
+            return Pattern::getTypeName();
         }
 
         [[nodiscard]] const auto &getMembers() const {

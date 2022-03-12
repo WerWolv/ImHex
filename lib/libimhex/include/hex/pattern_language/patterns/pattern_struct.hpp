@@ -65,6 +65,11 @@ namespace hex::pl {
             }
         }
 
+        void forEachMember(const std::function<void(Pattern&)>& fn) {
+            for (auto &member : this->m_sortedMembers)
+                fn(*member);
+        }
+
         void setOffset(u64 offset) override {
             for (auto &member : this->m_members)
                 member->setOffset(member->getOffset() - this->getOffset() + offset);
