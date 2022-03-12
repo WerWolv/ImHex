@@ -29,129 +29,19 @@ namespace hex::pl {
         { }
 
         void visit(PatternArrayDynamic& pattern) override {
-            if (pattern.getEntryCount() == 0)
-                return;
-
-            bool open = true;
-            if (!pattern.isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
-                this->drawCommentTooltip(pattern);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
-                ImGui::SameLine(0, 0);
-
-                ImGui::TextUnformatted("[");
-                ImGui::SameLine(0, 0);
-                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", pattern.getEntryCount());
-                ImGui::SameLine(0, 0);
-                ImGui::TextUnformatted("]");
-
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                pattern.forEachArrayEntry([&] (u64 idx, auto &entry){
-                    u64 lastVisible = pattern.getDisplayEnd() - 1;
-                    if (idx < lastVisible) {
-                        this->draw(entry);
-                    } else if (idx == lastVisible) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-
-                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            pattern.increaseDisplayEnd();
-                    }
-                });
-
-                ImGui::TreePop();
-            } else {
-                pattern.resetDisplayEnd();
-            }
+            this->drawArray(pattern);
         }
 
         void visit(PatternArrayStatic& pattern) override {
-            if (pattern.getEntryCount() == 0)
-                return;
-
-            bool open = true;
-
-            if (!pattern.isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
-                this->drawCommentTooltip(pattern);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName().c_str());
-                ImGui::SameLine(0, 0);
-
-                ImGui::TextUnformatted("[");
-                ImGui::SameLine(0, 0);
-                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", pattern.getEntryCount());
-                ImGui::SameLine(0, 0);
-                ImGui::TextUnformatted("]");
-
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                pattern.forEachArrayEntry([&] (u64 index, auto &entry){
-                    u64 lastVisible = pattern.getDisplayEnd();
-                    if (index < lastVisible) {
-                        this->draw(entry);
-                    } else if (index == lastVisible) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-
-                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            pattern.increaseDisplayEnd();
-                    }
-                });
-
-                ImGui::TreePop();
-            } else {
-                pattern.resetDisplayEnd();
-            }
+            this->drawArray(pattern);
         }
 
         void visit(PatternBitfieldField& pattern) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
-            ImGui::SameLine();
-            if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-            }
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
+            this->drawNameColumn(pattern);
+            this->makeSelectable(pattern);
+            this->drawColorColumn(pattern);
 
             auto byteAddr = pattern.getOffset() + pattern.getBitOffset() / 8;
             auto firstBitIdx = pattern.getBitOffset() % 8;
@@ -180,21 +70,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                open = this->createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
+                this->makeSelectable(pattern);
                 this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "bitfield");
-                ImGui::SameLine();
-                ImGui::TextUnformatted(pattern.getTypeName().c_str());
-                ImGui::TableNextColumn();
+                this->drawOffsetColumn(pattern);
+                this->drawSizeColumn(pattern);
+                this->drawTypenameColumn(pattern, "bitfield");
 
                 std::string valueString = "{ ";
                 for (auto i : value)
@@ -262,28 +145,16 @@ namespace hex::pl {
                 valueString += "???";
 
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
-                                                                ImGuiTreeNodeFlags_NoTreePushOnOpen |
-                                                                ImGuiTreeNodeFlags_SpanFullWidth |
-                                                                ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->createLeafNode(pattern);
             this->drawCommentTooltip(pattern);
             ImGui::TableNextColumn();
-            if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-            }
+            this->makeSelectable(pattern);
             ImGui::SameLine();
-            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "enum");
-            ImGui::SameLine();
-            ImGui::TextUnformatted(pattern.getTypeName().c_str());
-            ImGui::TableNextColumn();
+            this->drawNameColumn(pattern);
+            this->drawColorColumn(pattern);
+            this->drawOffsetColumn(pattern);
+            this->drawSizeColumn(pattern);
+            this->drawTypenameColumn(pattern, "enum");
             ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, pattern.getSize() * 2), &pattern));
         }
 
@@ -311,19 +182,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                open = this->createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
+                this->makeSelectable(pattern);
                 this->drawCommentTooltip(pattern);
                 ImGui::SameLine(0, 0);
-                ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-                ImGui::TableNextColumn();
+                this->drawColorColumn(pattern);
+                this->drawOffsetColumn(pattern);
+                this->drawSizeColumn(pattern);
                 ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
@@ -360,21 +226,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                open = this->createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
+                this->makeSelectable(pattern);
                 this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "struct");
-                ImGui::SameLine();
-                ImGui::TextUnformatted(pattern.getTypeName().c_str());
-                ImGui::TableNextColumn();
+                this->drawOffsetColumn(pattern);
+                this->drawSizeColumn(pattern);
+                this->drawTypenameColumn(pattern, "struct");
                 ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
             } else {
                 ImGui::SameLine();
@@ -396,22 +255,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                open = this->createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
+                this->makeSelectable(pattern);
                 this->drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), std::max(pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1), u64(0)));
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "union");
-                ImGui::SameLine();
-                ImGui::TextUnformatted(pattern.getTypeName().c_str());
-
-                ImGui::TableNextColumn();
+                this->drawOffsetColumn(pattern);
+                this->drawSizeColumn(pattern);
+                this->drawTypenameColumn(pattern, "union");
                 ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
             } else {
                 ImGui::SameLine();
@@ -453,30 +304,30 @@ namespace hex::pl {
     private:
         void createDefaultEntry(const Pattern &pattern, const std::string &value, Token::Literal &&literal) const {
             ImGui::TableNextRow();
-            ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
+            this->createLeafNode(pattern);
             ImGui::TableNextColumn();
 
             ImGui::PushID(pattern.getOffset());
             ImGui::PushID(pattern.getVariableName().c_str());
-            if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-            }
+            this->makeSelectable(pattern);
             ImGui::PopID();
             ImGui::PopID();
 
             this->drawCommentTooltip(pattern);
             ImGui::SameLine();
-            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
-            ImGui::TableNextColumn();
+            this->drawNameColumn(pattern);
+            this->drawColorColumn(pattern);
+            this->drawOffsetColumn(pattern);
+            this->drawSizeColumn(pattern);
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getTypeName().empty() ? pattern.getFormattedName() : pattern.getTypeName());
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", pattern.formatDisplayValue(value, literal));
+        }
+
+        void makeSelectable(const Pattern &pattern) const {
+            if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+            }
         }
 
         void drawCommentTooltip(const Pattern &pattern) const {
@@ -492,6 +343,99 @@ namespace hex::pl {
                 return;
 
             pattern.accept(*this);
+        }
+
+        template<class ArrayPattern>
+        void drawArray(ArrayPattern& pattern) {
+            if (pattern.getEntryCount() == 0)
+                return;
+
+            bool open = true;
+            if (!pattern.isInlined()) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                open = this->createTreeNode(pattern);
+                ImGui::TableNextColumn();
+                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+                }
+                this->drawCommentTooltip(pattern);
+                ImGui::TableNextColumn();
+                this->drawOffsetColumn(pattern);
+                this->drawSizeColumn(pattern);
+                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+                ImGui::SameLine(0, 0);
+
+                ImGui::TextUnformatted("[");
+                ImGui::SameLine(0, 0);
+                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", pattern.getEntryCount());
+                ImGui::SameLine(0, 0);
+                ImGui::TextUnformatted("]");
+
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
+            } else {
+                ImGui::SameLine();
+                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
+            }
+
+            if (open) {
+                pattern.forEachArrayEntry([&] (u64 idx, auto &entry){
+                    u64 lastVisible = pattern.getDisplayEnd() - 1;
+                    if (idx < lastVisible) {
+                        this->draw(entry);
+                    } else if (idx == lastVisible) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                            pattern.increaseDisplayEnd();
+                    }
+                });
+
+                ImGui::TreePop();
+            } else {
+                pattern.resetDisplayEnd();
+            }
+        }
+
+        void createLeafNode(const Pattern& pattern) const {
+            ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
+                                                                ImGuiTreeNodeFlags_NoTreePushOnOpen |
+                                                                ImGuiTreeNodeFlags_SpanFullWidth |
+                                                                ImGuiTreeNodeFlags_AllowItemOverlap);
+        }
+
+        bool createTreeNode(const Pattern& pattern) const {
+            return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+        }
+
+        void drawTypenameColumn(const Pattern& pattern, const std::string& pattern_name) const {
+            ImGui::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
+            ImGui::SameLine();
+            ImGui::TextUnformatted(pattern.getTypeName().c_str());
+            ImGui::TableNextColumn();
+        }
+
+        void drawNameColumn(const Pattern& pattern) const {
+            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
+            ImGui::TableNextColumn();
+        }
+
+        void drawColorColumn(const Pattern& pattern) const {
+            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::TableNextColumn();
+        }
+
+        void drawOffsetColumn(const Pattern& pattern) const {
+            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+            ImGui::TableNextColumn();
+        }
+
+        void drawSizeColumn(const Pattern& pattern) const {
+            ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
+            ImGui::TableNextColumn();
         }
 
     private:
