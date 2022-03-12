@@ -253,7 +253,6 @@ namespace hex::pl {
 
         virtual void accept(PatternVisitor &v) = 0;
 
-    protected:
         void createDefaultEntry(const std::string &value, Token::Literal &&literal) const {
             ImGui::TableNextRow();
             ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
