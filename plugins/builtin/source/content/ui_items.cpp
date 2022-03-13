@@ -64,21 +64,22 @@ namespace hex::plugin::builtin {
 
     void addToolbarItems() {
         ContentRegistry::Interface::addToolbarItem([] {
-            auto provider = ImHexApi::Provider::get();
+            auto provider      = ImHexApi::Provider::get();
+            bool providerValid = provider != nullptr;
 
             // Undo
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->undo();
             },
-                !ImHexApi::Provider::isValid() || !provider->canUndo());
+                !providerValid || !provider->canUndo());
 
             // Redo
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->redo();
             },
-                !ImHexApi::Provider::isValid() || !provider->canRedo());
+                !providerValid || !provider->canRedo());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -99,7 +100,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->save();
             },
-                !ImHexApi::Provider::isValid() || !provider->isWritable() || !provider->isSavable());
+                !providerValid || !provider->isWritable() || !provider->isSavable());
 
             // Save file as
             ImGui::Disabled([&provider] {
@@ -108,7 +109,7 @@ namespace hex::plugin::builtin {
                         provider->saveAs(path);
                     });
             },
-                !ImHexApi::Provider::isValid() || !provider->isSavable());
+                !providerValid || !provider->isSavable());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -123,7 +124,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::Bookmarks::add(region.address, region.size, {}, {});
                 }
             },
-                !ImHexApi::Provider::isValid() || !provider->isReadable() || ImHexApi::HexEditor::getSelection().size == 0);
+                !providerValid || !provider->isReadable() || ImHexApi::HexEditor::getSelection().size == 0);
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
@@ -149,7 +150,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndCombo();
                 }
             },
-                !ImHexApi::Provider::isValid());
+                !providerValid);
         });
     }
 
