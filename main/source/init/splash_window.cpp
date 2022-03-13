@@ -236,6 +236,7 @@ namespace hex::init {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
         io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
+        io.IniFilename = nullptr;
     }
 
     void WindowSplash::exitGLFW() {
