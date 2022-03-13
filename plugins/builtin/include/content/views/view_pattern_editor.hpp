@@ -30,6 +30,12 @@ namespace hex::plugin::builtin {
         u32 m_selectedPatternFile = 0;
         bool m_runAutomatically   = false;
 
+        bool m_lastEvaluationProcessed = true;
+        bool m_lastEvaluationResult    = false;
+        std::optional<pl::PatternLanguageError> m_lastEvaluationError;
+        std::vector<std::pair<pl::LogConsole::Level, std::string>> m_lastEvaluationLog;
+        std::map<std::string, pl::Token::Literal> m_lastEvaluationOutVars;
+
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
 

@@ -204,6 +204,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<RequestOpenWindow>(this);
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventHighlightingChanged>(this);
+        EventManager::unsubscribe<EventProviderChanged>(this);
     }
 
     void ViewHexEditor::drawContent() {
@@ -961,6 +962,10 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventHighlightingChanged>(this, [this] {
             this->m_highlights.clear();
+        });
+
+        EventManager::subscribe<EventProviderChanged>(this, [](auto, auto) {
+            EventManager::post<EventHighlightingChanged>();
         });
     }
 

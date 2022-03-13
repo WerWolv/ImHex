@@ -352,6 +352,26 @@ namespace hex::plugin::builtin {
             View::discardNavigationRequests();
         }
         ImGui::End();
+
+        if (!this->m_lastEvaluationProcessed) {
+            this->m_console = this->m_lastEvaluationLog;
+
+            if (!this->m_lastEvaluationResult) {
+                TextEditor::ErrorMarkers errorMarkers = {
+                    {this->m_lastEvaluationError->getLineNumber(), this->m_lastEvaluationError->what()}
+                };
+                this->m_textEditor.SetErrorMarkers(errorMarkers);
+            } else {
+                for (auto &[name, variable] : this->m_patternVariables) {
+                    if (variable.outVariable && this->m_lastEvaluationOutVars.contains(name))
+                        variable.value = this->m_lastEvaluationOutVars.at(name);
+                }
+
+                EventManager::post<EventHighlightingChanged>();
+            }
+
+            this->m_lastEvaluationProcessed = true;
+        }
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
@@ -657,30 +677,16 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             auto &runtime = provider->getPatternLanguageRuntime();
 
-            auto result = runtime.executeString(provider, code, envVars, inVariables);
-            if (!result) {
-                auto error = runtime.getError();
-                if (error) {
-                    TextEditor::ErrorMarkers errorMarkers = {
-                        {error->getLineNumber(), error->what()}
-                    };
-                    this->m_textEditor.SetErrorMarkers(errorMarkers);
-                }
+            this->m_lastEvaluationResult = runtime.executeString(provider, code, envVars, inVariables);
+            if (!this->m_lastEvaluationResult) {
+                this->m_lastEvaluationError = runtime.getError();
             }
 
-            this->m_console = runtime.getConsoleLog();
-
-            auto outVariables = runtime.getOutVariables();
-            for (auto &[name, variable] : this->m_patternVariables) {
-                if (variable.outVariable && outVariables.contains(name))
-                    variable.value = outVariables.at(name);
-            }
-
-            if (result) {
-                EventManager::post<EventHighlightingChanged>();
-            }
-
+            this->m_lastEvaluationLog     = runtime.getConsoleLog();
+            this->m_lastEvaluationOutVars = runtime.getOutVariables();
             this->m_runningEvaluators--;
+
+            this->m_lastEvaluationProcessed = false;
         }).detach();
     }
 
