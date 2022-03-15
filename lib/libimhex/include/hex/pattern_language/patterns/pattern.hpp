@@ -211,7 +211,7 @@ namespace hex::pl {
                    this->m_local == other.m_local;
         }
 
-        [[nodiscard]] std::string formatDisplayValue(const std::string &value, const Token::Literal &literal) const {
+        [[nodiscard]] std::string calcDisplayValue(const std::string &value, const Token::Literal &literal) const {
             if (!this->m_formatterFunction.has_value())
                 return value;
             else {
@@ -230,6 +230,14 @@ namespace hex::pl {
                     return "Error: "s + error.what();
                 }
             }
+        }
+
+        [[nodiscard]] std::string formatDisplayValue(const std::string &value, const Token::Literal &literal) const {
+            if (!this->m_cachedDisplayValue.has_value()) {
+                this->m_cachedDisplayValue = calcDisplayValue(value, literal);
+            }
+
+            return this->m_cachedDisplayValue.value();
         }
 
     protected:
@@ -279,6 +287,7 @@ namespace hex::pl {
 
         u32 m_color = 0x00;
         std::optional<std::string> m_displayName;
+        mutable std::optional<std::string> m_cachedDisplayValue;
         std::string m_variableName;
         std::optional<std::string> m_comment;
         std::string m_typeName;
