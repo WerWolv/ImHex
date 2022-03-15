@@ -40,11 +40,6 @@ namespace hex::plugin::builtin {
     void ViewYara::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.yara.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            if (!this->m_matching && !this->m_errorMessage.empty()) {
-                View::showErrorPopup("hex.builtin.view.yara.error"_lang + this->m_errorMessage.data());
-                this->m_errorMessage.clear();
-            }
-
             ImGui::TextUnformatted("hex.builtin.view.yara.header.rules"_lang);
             ImGui::Separator();
 
@@ -81,7 +76,11 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.yara.header.matches"_lang);
             ImGui::Separator();
 
-            if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            auto matchesTableSize = ImGui::GetContentRegionAvail();
+            matchesTableSize.y *= 3.75 / 5.0;
+            matchesTableSize.y -= ImGui::GetTextLineHeightWithSpacing();
+
+            if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang);
@@ -90,44 +89,68 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableHeadersRow();
 
-                ImGuiListClipper clipper;
-                clipper.Begin(this->m_matches.size());
+                if (!this->m_matching) {
+                    ImGuiListClipper clipper;
+                    clipper.Begin(this->m_matches.size());
 
-                while (clipper.Step()) {
-                    for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &[identifier, variableName, address, size, wholeDataMatch, highlightId] = this->m_matches[i];
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::PushID(i);
-                        if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                            ImHexApi::HexEditor::setSelection(address, size);
-                        }
-                        ImGui::PopID();
-                        ImGui::SameLine();
-                        ImGui::TextUnformatted(identifier.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(variableName.c_str());
+                    while (clipper.Step()) {
+                        for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId] = this->m_matches[i];
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGui::PushID(i);
+                            if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                                ImHexApi::HexEditor::setSelection(address, size);
+                            }
+                            ImGui::PopID();
+                            ImGui::SameLine();
+                            ImGui::TextUnformatted(identifier.c_str());
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(variableName.c_str());
 
-                        if (!wholeDataMatch) {
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormatted("0x{0:X}", size);
-                        } else {
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted("");
+                            if (!wholeDataMatch) {
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormatted("0x{0:X}", size);
+                            } else {
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted("");
+                            }
                         }
                     }
-                }
 
-                clipper.End();
+                    clipper.End();
+                }
 
                 ImGui::EndTable();
             }
+
+            auto consoleSize = ImGui::GetContentRegionAvail();
+
+            if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
+                ImGuiListClipper clipper(this->m_consoleMessages.size());
+                while (clipper.Step())
+                    for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        const auto &message = this->m_consoleMessages[i];
+
+                        if (ImGui::Selectable(message.c_str()))
+                            ImGui::SetClipboardText(message.c_str());
+                    }
+            }
+            ImGui::EndChild();
         }
         ImGui::End();
+    }
+
+    void ViewYara::clearResult() {
+        for (const auto &match : this->m_matches)
+            ImHexApi::HexEditor::removeHighlight(match.highlightId);
+
+        this->m_matches.clear();
+        this->m_consoleMessages.clear();
     }
 
     void ViewYara::reloadRules() {
@@ -147,11 +170,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::applyRules() {
-        for (const auto &match : this->m_matches)
-            ImHexApi::HexEditor::removeHighlight(match.highlightId);
+        this->clearResult();
 
-        this->m_matches.clear();
-        this->m_errorMessage.clear();
         this->m_matching = true;
 
         std::thread([this] {
@@ -193,16 +213,22 @@ namespace hex::plugin::builtin {
             if (!file.isValid()) return;
 
             if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
-                this->m_errorMessage.resize(0xFFFF);
-                yr_compiler_get_error_message(compiler, this->m_errorMessage.data(), this->m_errorMessage.size());
+                std::string errorMessage(0xFFFF, '\x00');
+                yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
+                hex::trim(errorMessage);
+
+                ImHexApi::Tasks::doLater([this, errorMessage] {
+                    this->clearResult();
+
+                    this->m_consoleMessages.push_back("Error: " + errorMessage);
+                });
+
                 return;
             }
 
             YR_RULES *rules;
             yr_compiler_get_rules(compiler, &rules);
             ON_SCOPE_EXIT { yr_rules_destroy(rules); };
-
-            std::vector<YaraMatch> newMatches;
 
             YR_MEMORY_BLOCK_ITERATOR iterator;
 
@@ -262,36 +288,59 @@ namespace hex::plugin::builtin {
             };
 
 
+            struct ResultContext {
+                std::vector<YaraMatch> newMatches;
+                std::vector<std::string> consoleMessages;
+            };
+
+            ResultContext resultContext;
+
             yr_rules_scan_mem_blocks(
                 rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
-                    if (message == CALLBACK_MSG_RULE_MATCHING) {
-                        auto &newMatches = *static_cast<std::vector<YaraMatch> *>(userData);
-                        auto rule        = static_cast<YR_RULE *>(data);
+                    auto &results = *static_cast<ResultContext *>(userData);
 
-                        YR_STRING *string;
-                        YR_MATCH *match;
+                    switch (message) {
+                        case CALLBACK_MSG_RULE_MATCHING:
+                            {
+                                auto rule = static_cast<YR_RULE *>(data);
 
-                        if (rule->strings != nullptr) {
-                            yr_rule_strings_foreach(rule, string) {
-                                yr_string_matches_foreach(context, string, match) {
-                                    newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false });
+                                YR_STRING *string;
+                                YR_MATCH *match;
+
+                                if (rule->strings != nullptr) {
+                                    yr_rule_strings_foreach(rule, string) {
+                                        yr_string_matches_foreach(context, string, match) {
+                                            results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false });
+                                        }
+                                    }
+                                } else {
+                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true });
                                 }
                             }
-                        } else {
-                            newMatches.push_back({ rule->identifier, "", 0, 0, true });
-                        }
+                            break;
+                        case CALLBACK_MSG_CONSOLE_LOG:
+                            {
+                                results.consoleMessages.emplace_back(static_cast<const char *>(data));
+                            }
+                            break;
+                        default:
+                            break;
                     }
 
                     return CALLBACK_CONTINUE;
                 },
-                &newMatches,
+                &resultContext,
                 0);
 
-            for (auto &match : newMatches) {
-                match.highlightId = ImHexApi::HexEditor::addHighlight({ match.address, match.size }, 0x70B4771F, hex::format("{0} [{1}]", match.identifier, match.variable));
-            }
 
-            std::copy(newMatches.begin(), newMatches.end(), std::back_inserter(this->m_matches));
+            ImHexApi::Tasks::doLater([this, resultContext] {
+                this->m_matches         = resultContext.newMatches;
+                this->m_consoleMessages = resultContext.consoleMessages;
+
+                for (auto &match : this->m_matches) {
+                    match.highlightId = ImHexApi::HexEditor::addHighlight({ match.address, match.size }, 0x70B4771F, hex::format("{0} [{1}]", match.identifier, match.variable));
+                }
+            });
         }).detach();
     }
 

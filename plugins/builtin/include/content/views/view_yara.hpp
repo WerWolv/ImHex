@@ -28,10 +28,12 @@ namespace hex::plugin::builtin {
         std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
         bool m_matching    = false;
-        std::vector<char> m_errorMessage;
+
+        std::vector<std::string> m_consoleMessages;
 
         void reloadRules();
         void applyRules();
+        void clearResult();
     };
 
 }

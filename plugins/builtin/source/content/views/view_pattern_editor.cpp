@@ -263,20 +263,20 @@ namespace hex::plugin::builtin {
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
                 this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
-                auto size = ImGui::GetContentRegionAvail();
-                size.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5;
+                auto settingsSize = ImGui::GetContentRegionAvail();
+                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5;
 
                 if (ImGui::BeginTabBar("##settings")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
-                        this->drawConsole(size);
+                        this->drawConsole(settingsSize);
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
-                        this->drawEnvVars(size);
+                        this->drawEnvVars(settingsSize);
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.settings"_lang)) {
-                        this->drawVariableSettings(size);
+                        this->drawVariableSettings(settingsSize);
                         ImGui::EndTabItem();
                     }
 
