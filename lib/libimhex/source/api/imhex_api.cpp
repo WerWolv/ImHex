@@ -172,15 +172,17 @@ namespace hex {
             return { unlocalizedName, maxValue };
         }
 
-
-        std::vector<std::function<void()>> s_deferredCalls;
-
         void doLater(const std::function<void()> &function) {
+            static std::mutex tasksMutex;
+            std::scoped_lock lock(tasksMutex);
+
             getDeferredCalls().push_back(function);
         }
 
         std::vector<std::function<void()>> &getDeferredCalls() {
-            return s_deferredCalls;
+            static std::vector<std::function<void()>> deferredCalls;
+
+            return deferredCalls;
         }
 
     }
