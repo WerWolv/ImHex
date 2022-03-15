@@ -81,17 +81,20 @@ set(LIBYARA_SOURCE
         )
 
 set(LIBYARA_MODULES
-        ${LIBYARA_SOURCE_PATH}/modules/tests/tests.c
-        ${LIBYARA_SOURCE_PATH}/modules/pe/pe.c
-        ${LIBYARA_SOURCE_PATH}/modules/pe/pe_utils.c
-        ${LIBYARA_SOURCE_PATH}/modules/elf/elf.c
-        ${LIBYARA_SOURCE_PATH}/modules/math/math.c
-        ${LIBYARA_SOURCE_PATH}/modules/time/time.c
-        ${LIBYARA_SOURCE_PATH}/modules/macho/macho.c
-        ${LIBYARA_SOURCE_PATH}/modules/hash/hash.c
+        ${LIBYARA_SOURCE_PATH}/modules/console/console.c
+        ${LIBYARA_SOURCE_PATH}/modules/cuckoo/cuckoo.c
         ${LIBYARA_SOURCE_PATH}/modules/dex/dex.c
         ${LIBYARA_SOURCE_PATH}/modules/dotnet/dotnet.c
-        ${LIBYARA_SOURCE_PATH}/modules/magic/magic.c)
+        ${LIBYARA_SOURCE_PATH}/modules/elf/elf.c
+        ${LIBYARA_SOURCE_PATH}/modules/hash/hash.c
+        ${LIBYARA_SOURCE_PATH}/modules/macho/macho.c
+        ${LIBYARA_SOURCE_PATH}/modules/magic/magic.c
+        ${LIBYARA_SOURCE_PATH}/modules/math/math.c
+        ${LIBYARA_SOURCE_PATH}/modules/pe/pe.c
+        ${LIBYARA_SOURCE_PATH}/modules/pe/pe_utils.c
+        ${LIBYARA_SOURCE_PATH}/modules/tests/tests.c
+        ${LIBYARA_SOURCE_PATH}/modules/time/time.c
+)
 
 # Add mbedtls crypto wrappers
 add_compile_definitions("HAVE_MBEDTLS")
