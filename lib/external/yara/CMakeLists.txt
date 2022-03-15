@@ -82,7 +82,6 @@ set(LIBYARA_SOURCE
 
 set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/console/console.c
-        ${LIBYARA_SOURCE_PATH}/modules/cuckoo/cuckoo.c
         ${LIBYARA_SOURCE_PATH}/modules/dex/dex.c
         ${LIBYARA_SOURCE_PATH}/modules/dotnet/dotnet.c
         ${LIBYARA_SOURCE_PATH}/modules/elf/elf.c
