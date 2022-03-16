@@ -119,7 +119,9 @@ namespace hex {
 
         constexpr auto CrashBackupFileName = "crash_backup.hexproj";
 
-        EventManager::subscribe<EventAbnormalTermination>(this, [CrashBackupFileName](int signal) {
+        EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int signal) {
+            ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
+
             if (!ProjectFile::hasUnsavedChanges())
                 return;
 
@@ -603,7 +605,7 @@ namespace hex {
                 return;
 
             for (u32 i = 0; i < count; i++) {
-                auto path = std::filesystem::path(reinterpret_cast<const char8_t *>(paths[i]));
+                auto path = std::fs::path(reinterpret_cast<const char8_t *>(paths[i]));
 
                 bool handled = false;
                 for (const auto &[extensions, handler] : ContentRegistry::FileHandler::getEntries()) {
@@ -721,12 +723,12 @@ namespace hex {
         ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            if (std::filesystem::exists(dir)) {
+            if (std::fs::exists(dir) && fs::isPathWritable(dir)) {
                 this->m_imguiSettingsPath = dir / "interface.ini";
+                io.IniFilename            = nullptr;
                 break;
             }
         }
-        io.IniFilename = nullptr;
 
         if (!this->m_imguiSettingsPath.empty() && fs::exists(this->m_imguiSettingsPath))
             ImGui::LoadIniSettingsFromDisk(this->m_imguiSettingsPath.string().c_str());
