@@ -21,10 +21,10 @@
 
 namespace hex::pl {
 
-    class ImGuiDrawer : public PatternVisitor
+    class PatternDrawer : public PatternVisitor
     {
     public:
-        ImGuiDrawer(prv::Provider *provider)
+        PatternDrawer(prv::Provider *provider)
             : m_provider{provider}
         { }
 
