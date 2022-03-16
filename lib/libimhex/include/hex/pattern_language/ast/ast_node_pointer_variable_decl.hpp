@@ -10,13 +10,13 @@ namespace hex::pl {
     class ASTNodePointerVariableDecl : public ASTNode,
                                        public Attributable {
     public:
-        ASTNodePointerVariableDecl(std::string name, std::shared_ptr<ASTNode> &&type, std::shared_ptr<ASTNode> &&sizeType, std::unique_ptr<ASTNode> &&placementOffset = nullptr)
+        ASTNodePointerVariableDecl(std::string name, std::shared_ptr<ASTNodeTypeDecl> type, std::shared_ptr<ASTNodeTypeDecl> sizeType, std::unique_ptr<ASTNode> &&placementOffset = nullptr)
             : ASTNode(), m_name(std::move(name)), m_type(std::move(type)), m_sizeType(std::move(sizeType)), m_placementOffset(std::move(placementOffset)) { }
 
         ASTNodePointerVariableDecl(const ASTNodePointerVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name     = other.m_name;
-            this->m_type     = other.m_type->clone();
-            this->m_sizeType = other.m_sizeType->clone();
+            this->m_type     = other.m_type;
+            this->m_sizeType = other.m_sizeType;
 
             if (other.m_placementOffset != nullptr)
                 this->m_placementOffset = other.m_placementOffset->clone();
@@ -29,8 +29,8 @@ namespace hex::pl {
         }
 
         [[nodiscard]] const std::string &getName() const { return this->m_name; }
-        [[nodiscard]] constexpr const std::shared_ptr<ASTNode> &getType() const { return this->m_type; }
-        [[nodiscard]] constexpr const std::shared_ptr<ASTNode> &getSizeType() const { return this->m_sizeType; }
+        [[nodiscard]] constexpr const std::shared_ptr<ASTNodeTypeDecl> &getType() const { return this->m_type; }
+        [[nodiscard]] constexpr const std::shared_ptr<ASTNodeTypeDecl> &getSizeType() const { return this->m_sizeType; }
         [[nodiscard]] constexpr const std::unique_ptr<ASTNode> &getPlacementOffset() const { return this->m_placementOffset; }
 
         [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
@@ -87,8 +87,8 @@ namespace hex::pl {
 
     private:
         std::string m_name;
-        std::shared_ptr<ASTNode> m_type;
-        std::shared_ptr<ASTNode> m_sizeType;
+        std::shared_ptr<ASTNodeTypeDecl> m_type;
+        std::shared_ptr<ASTNodeTypeDecl> m_sizeType;
         std::unique_ptr<ASTNode> m_placementOffset;
     };
 

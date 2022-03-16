@@ -357,10 +357,12 @@ namespace hex::plugin::builtin {
             this->m_console = this->m_lastEvaluationLog;
 
             if (!this->m_lastEvaluationResult) {
-                TextEditor::ErrorMarkers errorMarkers = {
-                    {this->m_lastEvaluationError->getLineNumber(), this->m_lastEvaluationError->what()}
-                };
-                this->m_textEditor.SetErrorMarkers(errorMarkers);
+                if (this->m_lastEvaluationError) {
+                    TextEditor::ErrorMarkers errorMarkers = {
+                        {this->m_lastEvaluationError->getLineNumber(), this->m_lastEvaluationError->what()}
+                    };
+                    this->m_textEditor.SetErrorMarkers(errorMarkers);
+                }
             } else {
                 for (auto &[name, variable] : this->m_patternVariables) {
                     if (variable.outVariable && this->m_lastEvaluationOutVars.contains(name))

@@ -3,18 +3,19 @@
 #include <hex/pattern_language/ast/ast_node.hpp>
 #include <hex/pattern_language/ast/ast_node_attribute.hpp>
 #include <hex/pattern_language/ast/ast_node_literal.hpp>
+#include <hex/pattern_language/ast/ast_node_type_decl.hpp>
 
 namespace hex::pl {
 
     class ASTNodeVariableDecl : public ASTNode,
                                 public Attributable {
     public:
-        ASTNodeVariableDecl(std::string name, std::unique_ptr<ASTNode> &&type, std::unique_ptr<ASTNode> &&placementOffset = nullptr, bool inVariable = false, bool outVariable = false)
+        ASTNodeVariableDecl(std::string name, std::shared_ptr<ASTNodeTypeDecl> type, std::unique_ptr<ASTNode> &&placementOffset = nullptr, bool inVariable = false, bool outVariable = false)
             : ASTNode(), m_name(std::move(name)), m_type(std::move(type)), m_placementOffset(std::move(placementOffset)), m_inVariable(inVariable), m_outVariable(outVariable) { }
 
         ASTNodeVariableDecl(const ASTNodeVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
-            this->m_type = other.m_type->clone();
+            this->m_type = other.m_type;
 
             if (other.m_placementOffset != nullptr)
                 this->m_placementOffset = other.m_placementOffset->clone();
@@ -30,7 +31,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] const std::string &getName() const { return this->m_name; }
-        [[nodiscard]] constexpr const std::unique_ptr<ASTNode> &getType() const { return this->m_type; }
+        [[nodiscard]] constexpr const std::shared_ptr<ASTNodeTypeDecl> &getType() const { return this->m_type; }
         [[nodiscard]] constexpr const std::unique_ptr<ASTNode> &getPlacementOffset() const { return this->m_placementOffset; }
 
         [[nodiscard]] constexpr bool isInVariable() const { return this->m_inVariable; }
@@ -71,7 +72,7 @@ namespace hex::pl {
 
     private:
         std::string m_name;
-        std::unique_ptr<ASTNode> m_type;
+        std::shared_ptr<ASTNodeTypeDecl> m_type;
         std::unique_ptr<ASTNode> m_placementOffset;
 
         bool m_inVariable = false, m_outVariable = false;

@@ -8,7 +8,7 @@ namespace hex::pl {
     class ASTNodeTypeDecl : public ASTNode,
                             public Attributable {
     public:
-        ASTNodeTypeDecl(std::string name, std::shared_ptr<ASTNode> &&type, std::optional<std::endian> endian = std::nullopt)
+        ASTNodeTypeDecl(std::string name, std::shared_ptr<ASTNode> type, std::optional<std::endian> endian = std::nullopt)
             : ASTNode(), m_name(std::move(name)), m_type(std::move(type)), m_endian(endian) { }
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl &other) : ASTNode(other), Attributable(other) {

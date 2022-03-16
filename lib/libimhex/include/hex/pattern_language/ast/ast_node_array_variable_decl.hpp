@@ -19,12 +19,12 @@ namespace hex::pl {
     class ASTNodeArrayVariableDecl : public ASTNode,
                                      public Attributable {
     public:
-        ASTNodeArrayVariableDecl(std::string name, std::unique_ptr<ASTNode> &&type, std::unique_ptr<ASTNode> &&size, std::unique_ptr<ASTNode> &&placementOffset = {})
+        ASTNodeArrayVariableDecl(std::string name, std::shared_ptr<ASTNodeTypeDecl> type, std::unique_ptr<ASTNode> &&size, std::unique_ptr<ASTNode> &&placementOffset = {})
             : ASTNode(), m_name(std::move(name)), m_type(std::move(type)), m_size(std::move(size)), m_placementOffset(std::move(placementOffset)) { }
 
         ASTNodeArrayVariableDecl(const ASTNodeArrayVariableDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name = other.m_name;
-            this->m_type = other.m_type->clone();
+            this->m_type = other.m_type;
             if (other.m_size != nullptr)
                 this->m_size = other.m_size->clone();
             else
@@ -81,7 +81,7 @@ namespace hex::pl {
 
     private:
         std::string m_name;
-        std::unique_ptr<ASTNode> m_type;
+        std::shared_ptr<ASTNodeTypeDecl> m_type;
         std::unique_ptr<ASTNode> m_size;
         std::unique_ptr<ASTNode> m_placementOffset;
 

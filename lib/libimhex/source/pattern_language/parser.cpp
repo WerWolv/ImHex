@@ -686,9 +686,9 @@ namespace hex::pl {
             std::string typeName = parseNamespaceResolution();
 
             if (this->m_types.contains(typeName))
-                return create(new ASTNodeTypeDecl({}, this->m_types[typeName]->clone(), endian));
+                return create(new ASTNodeTypeDecl({}, this->m_types[typeName], endian));
             else if (this->m_types.contains(getNamespacePrefixedName(typeName)))
-                return create(new ASTNodeTypeDecl({}, this->m_types[getNamespacePrefixedName(typeName)]->clone(), endian));
+                return create(new ASTNodeTypeDecl({}, this->m_types[getNamespacePrefixedName(typeName)], endian));
             else
                 throwParserError(hex::format("unknown type '{}'", typeName));
         } else if (MATCHES(sequence(VALUETYPE_ANY))) {    // Builtin type
@@ -728,24 +728,24 @@ namespace hex::pl {
     }
 
     // (parseType) Identifier
-    std::unique_ptr<ASTNode> Parser::parseMemberVariable(std::unique_ptr<ASTNodeTypeDecl> &&type) {
+    std::unique_ptr<ASTNode> Parser::parseMemberVariable(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         if (peek(SEPARATOR_COMMA)) {
 
             std::vector<std::unique_ptr<ASTNode>> variables;
 
             do {
-                variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type->clone())));
+                variables.push_back(create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type)));
             } while (MATCHES(sequence(SEPARATOR_COMMA, IDENTIFIER)));
 
             return create(new ASTNodeMultiVariableDecl(std::move(variables)));
         } else if (MATCHES(sequence(OPERATOR_AT)))
-            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-2).get(), std::move(type), parseMathematicalExpression()));
+            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-2).get(), type, parseMathematicalExpression()));
         else
-            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), std::move(type)));
+            return create(new ASTNodeVariableDecl(getValue<Token::Identifier>(-1).get(), type));
     }
 
     // (parseType) Identifier[(parseMathematicalExpression)]
-    std::unique_ptr<ASTNode> Parser::parseMemberArrayVariable(std::unique_ptr<ASTNodeTypeDecl> &&type) {
+    std::unique_ptr<ASTNode> Parser::parseMemberArrayVariable(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         std::unique_ptr<ASTNode> size;
@@ -761,13 +761,13 @@ namespace hex::pl {
         }
 
         if (MATCHES(sequence(OPERATOR_AT)))
-            return create(new ASTNodeArrayVariableDecl(name, std::move(type), std::move(size), parseMathematicalExpression()));
+            return create(new ASTNodeArrayVariableDecl(name, type, std::move(size), parseMathematicalExpression()));
         else
-            return create(new ASTNodeArrayVariableDecl(name, std::move(type), std::move(size)));
+            return create(new ASTNodeArrayVariableDecl(name, type, std::move(size)));
     }
 
     // (parseType) *Identifier : (parseType)
-    std::unique_ptr<ASTNode> Parser::parseMemberPointerVariable(std::unique_ptr<ASTNodeTypeDecl> &&type) {
+    std::unique_ptr<ASTNode> Parser::parseMemberPointerVariable(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         auto sizeType = parseType();
@@ -780,9 +780,9 @@ namespace hex::pl {
         }
 
         if (MATCHES(sequence(OPERATOR_AT)))
-            return create(new ASTNodePointerVariableDecl(name, std::move(type), std::move(sizeType), parseMathematicalExpression()));
+            return create(new ASTNodePointerVariableDecl(name, type, std::move(sizeType), parseMathematicalExpression()));
         else
-            return create(new ASTNodePointerVariableDecl(name, std::move(type), std::move(sizeType)));
+            return create(new ASTNodePointerVariableDecl(name, type, std::move(sizeType)));
     }
 
     // [(parsePadding)|(parseMemberVariable)|(parseMemberArrayVariable)|(parseMemberPointerVariable)]
@@ -977,7 +977,7 @@ namespace hex::pl {
     }
 
     // (parseType) Identifier @ Integer
-    std::unique_ptr<ASTNode> Parser::parseVariablePlacement(std::unique_ptr<ASTNodeTypeDecl> &&type) {
+    std::unique_ptr<ASTNode> Parser::parseVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         bool inVariable  = false;
         bool outVariable = false;
 
@@ -992,11 +992,11 @@ namespace hex::pl {
             outVariable = true;
         }
 
-        return create(new ASTNodeVariableDecl(name, type->clone(), std::move(placementOffset), inVariable, outVariable));
+        return create(new ASTNodeVariableDecl(name, type, std::move(placementOffset), inVariable, outVariable));
     }
 
     // (parseType) Identifier[[(parseMathematicalExpression)]] @ Integer
-    std::unique_ptr<ASTNode> Parser::parseArrayVariablePlacement(std::unique_ptr<ASTNodeTypeDecl> &&type) {
+    std::unique_ptr<ASTNode> Parser::parseArrayVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         std::unique_ptr<ASTNode> size;
@@ -1016,11 +1016,11 @@ namespace hex::pl {
 
         auto placementOffset = parseMathematicalExpression();
 
-        return create(new ASTNodeArrayVariableDecl(name, std::move(type), std::move(size), std::move(placementOffset)));
+        return create(new ASTNodeArrayVariableDecl(name, type, std::move(size), std::move(placementOffset)));
     }
 
     // (parseType) *Identifier : (parseType) @ Integer
-    std::unique_ptr<ASTNode> Parser::parsePointerVariablePlacement(std::unique_ptr<ASTNodeTypeDecl> &&type) {
+    std::unique_ptr<ASTNode> Parser::parsePointerVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         auto name = getValue<Token::Identifier>(-2).get();
 
         auto sizeType = parseType();
@@ -1037,7 +1037,7 @@ namespace hex::pl {
 
         auto placementOffset = parseMathematicalExpression();
 
-        return create(new ASTNodePointerVariableDecl(name, type->clone(), std::move(sizeType), std::move(placementOffset)));
+        return create(new ASTNodePointerVariableDecl(name, type, std::move(sizeType), std::move(placementOffset)));
     }
 
     std::vector<std::shared_ptr<ASTNode>> Parser::parseNamespace() {
