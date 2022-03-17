@@ -45,13 +45,15 @@ namespace hex::pl {
                 ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
+            } else {
+                ImGui::SameLine();
+                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
             }
 
             if (open) {
                 this->m_pointedAt->createEntry(provider);
 
-                if (!this->isInlined())
-                    ImGui::TreePop();
+                ImGui::TreePop();
             }
         }
 

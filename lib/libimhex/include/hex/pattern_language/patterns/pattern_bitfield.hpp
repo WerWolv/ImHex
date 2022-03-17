@@ -121,6 +121,9 @@ namespace hex::pl {
                 valueString += "}";
 
                 ImGui::TextFormatted("{}", this->formatDisplayValue(valueString, this));
+            } else {
+                ImGui::SameLine();
+                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
             }
 
             if (open) {
@@ -128,9 +131,9 @@ namespace hex::pl {
                 for (auto &field : this->m_fields)
                     field->draw(provider);
 
-                if (!this->isInlined())
-                    ImGui::TreePop();
+                ImGui::TreePop();
             }
+
         }
 
         void setOffset(u64 offset) override {

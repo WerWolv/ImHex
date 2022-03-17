@@ -50,6 +50,9 @@ namespace hex::pl {
 
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
+            } else {
+                ImGui::SameLine();
+                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
             }
 
             if (open) {
@@ -72,8 +75,7 @@ namespace hex::pl {
                     }
                 }
 
-                if (!this->isInlined())
-                    ImGui::TreePop();
+                ImGui::TreePop();
             } else {
                 this->m_displayEnd = 50;
             }

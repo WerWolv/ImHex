@@ -47,14 +47,16 @@ namespace hex::pl {
 
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
+            } else {
+                ImGui::SameLine();
+                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
             }
 
             if (open) {
                 for (auto &member : this->m_sortedMembers)
                     member->draw(provider);
 
-                if (!this->isInlined())
-                    ImGui::TreePop();
+                ImGui::TreePop();
             }
         }
 
