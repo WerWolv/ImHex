@@ -110,23 +110,10 @@ namespace hex::pl {
             v.visit(*this);
         }
 
-        u64 getDisplayEnd() const {
-            return m_displayEnd;
-        }
-
-        void resetDisplayEnd() {
-            m_displayEnd = 50;
-        }
-
-        void increaseDisplayEnd() {
-            m_displayEnd += 50;
-        }
-
     private:
         std::shared_ptr<Pattern> m_template                  = nullptr;
         mutable std::unique_ptr<Pattern> m_highlightTemplate = nullptr;
         size_t m_entryCount                                  = 0;
-        u64 m_displayEnd                                     = 50;
     };
 
 }

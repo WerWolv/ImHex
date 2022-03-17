@@ -111,21 +111,8 @@ namespace hex::pl {
             v.visit(*this);
         }
 
-        u64 getDisplayEnd() const {
-            return m_displayEnd;
-        }
-
-        void resetDisplayEnd() {
-            m_displayEnd = 50;
-        }
-
-        void increaseDisplayEnd() {
-            m_displayEnd += 50;
-        }
-
     private:
         std::vector<std::shared_ptr<Pattern>> m_entries;
-        u64 m_displayEnd = 50;
     };
 
 }

@@ -19,14 +19,23 @@
 
 #include <nlohmann/json.hpp>
 
+namespace {
+    constexpr static auto DisplayEndDefault = 50u;
+    constexpr static auto DisplayEndStep = 50u;
+};
+
 namespace hex::pl {
 
     class PatternDrawer : public PatternVisitor
     {
     public:
-        PatternDrawer(prv::Provider *provider)
-            : m_provider{provider}
+        PatternDrawer()
+            : m_provider{nullptr}
         { }
+
+        void setProvider(prv::Provider *provider) {
+            m_provider = provider;
+        }
 
         void visit(PatternArrayDynamic& pattern) override {
             this->drawArray(pattern);
@@ -379,9 +388,10 @@ namespace hex::pl {
                 ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
             }
 
+            auto& displayEnd = this->getDisplayEnd(pattern);
             if (open) {
                 pattern.forEachArrayEntry([&] (u64 idx, auto &entry){
-                    u64 lastVisible = pattern.getDisplayEnd() - 1;
+                    u64 lastVisible = displayEnd - 1;
                     if (idx < lastVisible) {
                         this->draw(entry);
                     } else if (idx == lastVisible) {
@@ -390,13 +400,13 @@ namespace hex::pl {
 
                         ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            pattern.increaseDisplayEnd();
+                            displayEnd += DisplayEndStep;
                     }
                 });
 
                 ImGui::TreePop();
             } else {
-                pattern.resetDisplayEnd();
+                displayEnd = DisplayEndDefault;
             }
         }
 
@@ -438,7 +448,18 @@ namespace hex::pl {
             ImGui::TableNextColumn();
         }
 
+        u64& getDisplayEnd(const Pattern& pattern) {
+            auto it = m_displayEnd.find(&pattern);
+            if (it != m_displayEnd.end()) {
+                return it->second;
+            }
+
+            auto [inserted, success] = m_displayEnd.emplace(&pattern, DisplayEndDefault);
+            return inserted->second;
+        }
+
     private:
         prv::Provider *m_provider;
+        std::map<const Pattern*, u64> m_displayEnd;
     };
 };

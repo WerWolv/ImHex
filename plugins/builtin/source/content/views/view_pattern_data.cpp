@@ -3,7 +3,6 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex/pattern_language/pattern_language.hpp>
-#include <hex/pattern_language/pattern_drawer.hpp>
 #include <hex/pattern_language/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
@@ -62,9 +61,9 @@ namespace hex::plugin::builtin {
                     ImGui::TableHeadersRow();
                     if (!sortedPatterns.empty()) {
 
-                        hex::pl::PatternDrawer drawer(provider);
+                        m_drawer.setProvider(provider);
                         for (auto &patterns : sortedPatterns)
-                            patterns->accept(drawer);
+                            patterns->accept(m_drawer);
                     }
 
                     ImGui::EndTable();
