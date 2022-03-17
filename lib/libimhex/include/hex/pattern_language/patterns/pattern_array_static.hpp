@@ -55,6 +55,7 @@ namespace hex::pl {
             if (open) {
                 auto entry = this->m_template->clone();
                 for (u64 index = 0; index < this->m_entryCount; index++) {
+                    entry->clearFormatCache();
                     entry->setVariableName(hex::format("[{0}]", index));
                     entry->setOffset(this->getOffset() + index * this->m_template->getSize());
                     entry->draw(provider);

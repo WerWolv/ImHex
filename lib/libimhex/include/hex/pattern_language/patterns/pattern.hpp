@@ -240,6 +240,10 @@ namespace hex::pl {
             return this->m_cachedDisplayValue.value();
         }
 
+        void clearFormatCache() {
+            this->m_cachedDisplayValue.reset();
+        }
+
     protected:
         void createDefaultEntry(const std::string &value, Token::Literal &&literal) const {
             ImGui::TableNextRow();
