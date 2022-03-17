@@ -110,10 +110,8 @@ namespace hex::pl {
         void setEntries(std::vector<std::shared_ptr<Pattern>> &&entries) {
             this->m_entries = std::move(entries);
 
-            if (this->hasOverriddenColor()) {
-                for (auto &entry : this->m_entries) {
-                    entry->setColor(this->getColor());
-                }
+            for (auto &entry : this->m_entries) {
+                entry->setBaseColor(this->getColor());
             }
         }
 

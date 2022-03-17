@@ -84,6 +84,12 @@ namespace hex::pl {
             this->m_color       = color;
             this->m_manualColor = true;
         }
+        void setBaseColor(u32 color) {
+            if (this->hasOverriddenColor())
+                this->setColor(color);
+            else
+                this->m_color = color;
+        }
         [[nodiscard]] bool hasOverriddenColor() const { return this->m_manualColor; }
 
         [[nodiscard]] std::endian getEndian() const {

@@ -122,8 +122,8 @@ namespace hex::pl {
             this->m_highlightTemplate = this->m_template->clone();
             this->m_entryCount        = count;
 
-            if (this->hasOverriddenColor())
-                this->setColor(this->m_template->getColor());
+            this->m_template->setBaseColor(this->getColor());
+            this->m_highlightTemplate->setBaseColor(this->getColor());
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override {
