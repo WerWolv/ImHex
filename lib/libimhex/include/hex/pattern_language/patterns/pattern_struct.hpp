@@ -131,14 +131,15 @@ namespace hex::pl {
         [[nodiscard]] const Pattern *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            auto iter = std::find_if(this->m_members.begin(), this->m_members.end(), [offset](const std::shared_ptr<Pattern> &pattern) {
-                return offset >= pattern->getOffset() && offset < (pattern->getOffset() + pattern->getSize());
-            });
+            for (auto member : this->m_members) {
+                if (offset >= member->getOffset() && offset < (member->getOffset() + member->getSize())) {
+                    auto candidate = member->getPattern(offset);
+                    if (candidate != nullptr)
+                        return candidate;
+                }
+            }
 
-            if (iter == this->m_members.end())
-                return nullptr;
-            else
-                return (*iter)->getPattern(offset);
+            return nullptr;
         }
 
         void setEndian(std::endian endian) override {
