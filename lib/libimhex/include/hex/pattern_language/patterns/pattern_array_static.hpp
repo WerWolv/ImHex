@@ -137,7 +137,7 @@ namespace hex::pl {
         [[nodiscard]] const Pattern *getPattern(u64 offset) const override {
             if (this->isHidden()) return nullptr;
 
-            this->m_highlightTemplate->setColor(this->getColor());
+            this->m_highlightTemplate->setBaseColor(this->getColor());
             this->m_highlightTemplate->setVariableName(this->getVariableName());
             this->m_highlightTemplate->setDisplayName(this->getDisplayName());
 
