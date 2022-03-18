@@ -13,7 +13,7 @@ namespace hex::pl {
 
         ASTNodeTypeDecl(const ASTNodeTypeDecl &other) : ASTNode(other), Attributable(other) {
             this->m_name   = other.m_name;
-            this->m_type   = other.m_type->clone();
+            this->m_type   = other.m_type;
             this->m_endian = other.m_endian;
         }
 
@@ -31,8 +31,11 @@ namespace hex::pl {
 
             if (auto attributable = dynamic_cast<Attributable *>(type.get())) {
                 for (auto &attribute : this->getAttributes()) {
-                    if (auto node = dynamic_cast<ASTNodeAttribute *>(attribute.get()))
+                    auto copy = attribute->clone();
+                    if (auto node = dynamic_cast<ASTNodeAttribute *>(copy.get())) {
                         attributable->addAttribute(std::unique_ptr<ASTNodeAttribute>(node));
+                        (void)copy.release();
+                    }
                 }
             }
 
