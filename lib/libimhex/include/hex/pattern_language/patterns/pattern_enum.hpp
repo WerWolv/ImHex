@@ -20,55 +20,6 @@ namespace hex::pl {
             return hex::changeEndianess(value, this->getSize(), this->getEndian());
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            u64 value = this->getValue(provider);
-            std::string valueString = Pattern::getTypeName() + "::";
-
-            bool foundValue = false;
-            for (auto &[entryValueLiteral, entryName] : this->m_enumValues) {
-                bool matches = std::visit(overloaded {
-                                              [&, name = entryName](auto &&entryValue) {
-                                                  if (value == entryValue) {
-                                                      valueString += name;
-                                                      foundValue = true;
-                                                      return true;
-                                                  }
-
-                                                  return false;
-                                              },
-                                              [](std::string &) { return false; },
-                                              [](Pattern *) { return false; } },
-                    entryValueLiteral);
-                if (matches)
-                    break;
-            }
-
-            if (!foundValue)
-                valueString += "???";
-
-            ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            this->drawCommentTooltip();
-            ImGui::TableNextColumn();
-            if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-            }
-            ImGui::SameLine();
-            ImGui::TextUnformatted(this->getDisplayName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:04X}", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFFD69C56), "enum");
-            ImGui::SameLine();
-            ImGui::TextUnformatted(Pattern::getTypeName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, this->getSize() * 2), this));
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "enum " + Pattern::getTypeName();
         }

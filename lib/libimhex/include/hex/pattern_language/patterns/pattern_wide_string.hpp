@@ -33,17 +33,6 @@ namespace hex::pl {
             return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(buffer);
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            auto size = std::min<size_t>(this->getSize(), 0x100);
-
-            if (size == 0)
-                return;
-
-            auto utf8String = this->getValue(provider,size);
-
-            this->createDefaultEntry(hex::format("\"{0}\" {1}", utf8String, size > this->getSize() ? "(truncated)" : ""), utf8String);
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "String16";
         }

@@ -21,11 +21,6 @@ namespace hex::pl {
             return hex::signExtend(this->getSize() * 8, data);
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            i128 data = this->getValue(provider);
-            this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 1:

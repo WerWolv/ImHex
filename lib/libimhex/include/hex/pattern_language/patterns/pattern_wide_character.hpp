@@ -21,12 +21,6 @@ namespace hex::pl {
             return hex::changeEndianess(character, this->getEndian());
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            char16_t character = this->getValue(provider);
-            u128 literal = character;
-            this->createDefaultEntry(hex::format("'{0}'", std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(character)), literal);
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "char16";
         }

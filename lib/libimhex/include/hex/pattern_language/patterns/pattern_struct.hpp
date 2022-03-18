@@ -24,41 +24,6 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternStruct(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            bool open = true;
-
-            if (!this->isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-                }
-                this->drawCommentTooltip();
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - (this->getSize() == 0 ? 0 : 1));
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", this->getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "struct");
-                ImGui::SameLine();
-                ImGui::TextUnformatted(this->getTypeName().c_str());
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                for (auto &member : this->m_sortedMembers)
-                    member->draw(provider);
-
-                ImGui::TreePop();
-            }
-        }
-
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             for (auto &member : this->m_members) {
                 member->getHighlightedAddresses(highlight);

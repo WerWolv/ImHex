@@ -23,16 +23,6 @@ namespace hex::pl {
             return hex::encodeByteString(buffer);
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            auto size = std::min<size_t>(this->getSize(), 0x7F);
-
-            if (size == 0)
-                return;
-
-            std::string displayString = this->getValue(provider, size);
-            this->createDefaultEntry(hex::format("\"{0}\" {1}", displayString, size > this->getSize() ? "(truncated)" : ""), displayString);
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "String";
         }

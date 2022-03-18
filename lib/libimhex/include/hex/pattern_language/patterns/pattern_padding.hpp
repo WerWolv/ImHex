@@ -12,9 +12,6 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternPadding(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "";
         }

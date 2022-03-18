@@ -19,17 +19,6 @@ namespace hex::pl {
             return boolean;
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            u8 boolean = this->getValue(provider);
-
-            if (boolean == 0)
-                this->createDefaultEntry("false", false);
-            else if (boolean == 1)
-                this->createDefaultEntry("true", true);
-            else
-                this->createDefaultEntry("true*", true);
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "bool";
         }

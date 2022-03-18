@@ -19,12 +19,6 @@ namespace hex::pl {
             return character;
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            char character = this->getValue(provider);
-
-            this->createDefaultEntry(hex::format("'{0}'", character), character);
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "char";
         }

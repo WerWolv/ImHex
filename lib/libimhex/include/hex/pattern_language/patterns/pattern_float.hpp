@@ -30,18 +30,6 @@ namespace hex::pl {
             }
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            if (this->getSize() == 4) {
-                float f32 = this->getValue(provider);
-                u32 data = *reinterpret_cast<u32 *>(&f32);
-                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", f32, data, this->getSize() * 2), f32);
-            } else if (this->getSize() == 8) {
-                double f64 = this->getValue(provider);
-                u64 data = *reinterpret_cast<u64 *>(&f64);
-                this->createDefaultEntry(hex::format("{:e} (0x{:0{}X})", f64, data, this->getSize() * 2), f64);
-            }
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             switch (this->getSize()) {
                 case 4:

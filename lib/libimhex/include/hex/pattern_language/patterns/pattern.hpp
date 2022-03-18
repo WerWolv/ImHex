@@ -108,7 +108,6 @@ namespace hex::pl {
         [[nodiscard]] const auto &getFormatterFunction() const { return this->m_formatterFunction; }
         void setFormatterFunction(const ContentRegistry::PatternLanguage::Function &function) { this->m_formatterFunction = function; }
 
-        virtual void createEntry(prv::Provider *&provider)         = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
         [[nodiscard]] virtual const Pattern *getPattern(u64 offset) const {
@@ -178,12 +177,6 @@ namespace hex::pl {
             }
 
             return false;
-        }
-
-        void draw(prv::Provider *provider) {
-            if (isHidden()) return;
-
-            this->createEntry(provider);
         }
 
         void setHidden(bool hidden) {

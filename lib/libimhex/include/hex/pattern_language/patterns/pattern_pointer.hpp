@@ -25,42 +25,6 @@ namespace hex::pl {
             return hex::changeEndianess(data, this->getSize(), this->getEndian());
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            u64 data = this->getValue(provider);
-
-            bool open = true;
-
-            if (!this->isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-                }
-                this->drawCommentTooltip();
-                ImGui::SameLine(0, 0);
-                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", this->getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                this->m_pointedAt->createEntry(provider);
-
-                ImGui::TreePop();
-            }
-        }
-
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             Pattern::getHighlightedAddresses(highlight);
             this->m_pointedAt->getHighlightedAddresses(highlight);

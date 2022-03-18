@@ -29,63 +29,6 @@ namespace hex::pl {
                 entry->setColor(color);
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            if (this->m_entries.empty())
-                return;
-
-            bool open = true;
-            if (!this->isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-                }
-                this->drawCommentTooltip();
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", this->getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", this->m_entries[0]->getTypeName());
-                ImGui::SameLine(0, 0);
-
-                ImGui::TextUnformatted("[");
-                ImGui::SameLine(0, 0);
-                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", this->m_entries.size());
-                ImGui::SameLine(0, 0);
-                ImGui::TextUnformatted("]");
-
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                for (u64 i = 0; i < this->m_entries.size(); i++) {
-                    this->m_entries[i]->draw(provider);
-
-                    if (i >= (this->m_displayEnd - 1)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-
-                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            this->m_displayEnd += 50;
-
-                        break;
-                    }
-                }
-
-                ImGui::TreePop();
-            } else {
-                this->m_displayEnd = 50;
-            }
-        }
-
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
             for (auto &entry : this->m_entries) {
                 entry->getHighlightedAddresses(highlight);
