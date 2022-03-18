@@ -13,9 +13,14 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternBoolean(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u8 getValue(prv::Provider *&provider) {
             u8 boolean;
             provider->read(this->getOffset(), &boolean, 1);
+            return boolean;
+        }
+
+        void createEntry(prv::Provider *&provider) override {
+            u8 boolean = this->getValue(provider);
 
             if (boolean == 0)
                 this->createDefaultEntry("false", false);

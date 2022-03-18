@@ -14,13 +14,19 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternBitfieldField(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u64 getValue(prv::Provider *&provider) {
             std::vector<u8> value(this->m_bitField->getSize(), 0);
             provider->read(this->m_bitField->getOffset(), &value[0], value.size());
 
             if (this->m_bitField->getEndian() != std::endian::native)
                 std::reverse(value.begin(), value.end());
 
+            u8 numBytes = (this->m_bitSize / 8) + 1;
+
+            return hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
+        }
+
+        void createEntry(prv::Provider *&provider) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::TextUnformatted(this->getDisplayName().c_str());
@@ -43,12 +49,9 @@ namespace hex::pl {
             ImGui::TableNextColumn();
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
             ImGui::TableNextColumn();
-            {
-                u8 numBytes = (this->m_bitSize / 8) + 1;
 
-                u64 extractedValue = hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
-                ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), this));
-            }
+            u64 value = this->getValue(provider);
+            ImGui::TextFormatted("{}", this->formatDisplayValue(hex::format("{0} (0x{1:X})", value, value), this));
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -96,12 +99,18 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternBitfield(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        std::vector<u8> getValue(prv::Provider *&provider) const {
             std::vector<u8> value(this->getSize(), 0);
             provider->read(this->getOffset(), &value[0], value.size());
 
-            if (this->m_endian == std::endian::little)
+            if (this->getEndian() == std::endian::little)
                 std::reverse(value.begin(), value.end());
+
+            return value;
+        }
+
+        void createEntry(prv::Provider *&provider) override {
+            std::vector<u8> value = getValue(provider);
 
             bool open = true;
             if (!this->isInlined()) {

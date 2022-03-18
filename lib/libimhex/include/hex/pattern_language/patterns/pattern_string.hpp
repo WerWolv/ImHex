@@ -13,16 +13,23 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternString(*this));
         }
 
+        std::string getValue(prv::Provider *&provider) {
+            return this->getValue(provider, this->getSize());
+        }
+
+        std::string getValue(prv::Provider *&provider, size_t size) {
+            std::vector<u8> buffer(size, 0x00);
+            provider->read(this->getOffset(), buffer.data(), size);
+            return hex::encodeByteString(buffer);
+        }
+
         void createEntry(prv::Provider *&provider) override {
             auto size = std::min<size_t>(this->getSize(), 0x7F);
 
             if (size == 0)
                 return;
 
-            std::vector<u8> buffer(size, 0x00);
-            provider->read(this->getOffset(), buffer.data(), size);
-
-            auto displayString = hex::encodeByteString(buffer);
+            std::string displayString = this->getValue(provider, size);
             this->createDefaultEntry(hex::format("\"{0}\" {1}", displayString, size > this->getSize() ? "(truncated)" : ""), displayString);
         }
 

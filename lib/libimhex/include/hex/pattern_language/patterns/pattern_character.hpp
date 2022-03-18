@@ -13,9 +13,14 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternCharacter(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        char getValue(prv::Provider *&provider) {
             char character;
             provider->read(this->getOffset(), &character, 1);
+            return character;
+        }
+
+        void createEntry(prv::Provider *&provider) override {
+            char character = this->getValue(provider);
 
             this->createDefaultEntry(hex::format("'{0}'", character), character);
         }

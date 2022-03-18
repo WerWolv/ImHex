@@ -19,10 +19,14 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternPointer(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u64 getValue(prv::Provider *&provider) {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), this->getEndian());
+            return hex::changeEndianess(data, this->getSize(), this->getEndian());
+        }
+
+        void createEntry(prv::Provider *&provider) override {
+            u64 data = this->getValue(provider);
 
             bool open = true;
 

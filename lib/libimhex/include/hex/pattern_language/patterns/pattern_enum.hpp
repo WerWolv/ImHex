@@ -14,11 +14,14 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternEnum(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u64 getValue(prv::Provider *&provider) {
             u64 value = 0;
             provider->read(this->getOffset(), &value, this->getSize());
-            value = hex::changeEndianess(value, this->getSize(), this->getEndian());
+            return hex::changeEndianess(value, this->getSize(), this->getEndian());
+        }
 
+        void createEntry(prv::Provider *&provider) override {
+            u64 value = this->getValue(provider);
             std::string valueString = Pattern::getTypeName() + "::";
 
             bool foundValue = false;

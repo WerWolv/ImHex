@@ -13,11 +13,14 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternUnsigned(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u128 getValue(prv::Provider *&provider) {
             u128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), this->getEndian());
+            return hex::changeEndianess(data, this->getSize(), this->getEndian());
+        }
 
+        void createEntry(prv::Provider *&provider) override {
+            u128 data = this->getValue(provider);
             this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, this->getSize() * 2), data);
         }
 
