@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
                 if (theme.is_number()) {
-                    static int lastTheme = theme.get<int>();
+                    static int lastTheme = 0;
 
                     if (const int thisTheme = theme.get<int>(); thisTheme != lastTheme) {
                         EventManager::post<RequestChangeTheme>(thisTheme);
