@@ -19,6 +19,8 @@ set(AVAILABLE_TESTS
         Namespaces
         ExtraSemicolon
         Pointers
+        Arrays
+        NestedStructs
 )
 
 
