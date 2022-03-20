@@ -238,12 +238,12 @@ jobs:
           mv ImHex-AppImage-x86_64.AppImage ../imhex.AppImage
           cd ..
 
-      - name: ⬆️ Upload Flatpak
-        uses: actions/upload-artifact@v2
-        with:
-          name: Linux Flatpak
-          path: |
-            imhex.flatpak
+      #- name: ⬆️ Upload Flatpak
+      #  uses: actions/upload-artifact@v2
+      #  with:
+      #    name: Linux Flatpak
+      #    path: |
+      #      imhex.flatpak
 
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v2
