@@ -236,7 +236,7 @@ jobs:
         with:
           name: Linux ELF
           path: |
-            build/install/*
+            build/AppDir/*
 
       - name: ⬆️ Upload Flatpak
         uses: actions/upload-artifact@v2
@@ -245,7 +245,7 @@ jobs:
           path: |
             imhex.flatpak
 
-      - name: ⬆️ Upload .deb
+      - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v2
         with:
           name: Linux DEB
