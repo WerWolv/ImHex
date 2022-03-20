@@ -228,7 +228,7 @@ jobs:
         run: |
           cd build
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-          mv ImHex-x86_64-*.AppImage ../imhex.AppImage
+          mv ImHex-x86_64-AppImage.AppImage ../imhex.AppImage
           cd ..
 
       - name: ⬆️ Upload ELF
