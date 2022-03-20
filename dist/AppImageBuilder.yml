@@ -82,7 +82,7 @@ AppDir:
     - /lib/x86_64-linux-gnu/libedit.so.2
     - /lib/x86_64-linux-gnu/libelf.so.1
     - /lib/x86_64-linux-gnu/libepoxy.so.0
-    - /lib/x86_64-linux-gnu/libffi.so.8
+    - /lib/x86_64-linux-gnu/libffi.so.7
     - /lib/x86_64-linux-gnu/libfontconfig.so.1
     - /lib/x86_64-linux-gnu/libfreetype.so.6
     - /lib/x86_64-linux-gnu/libfribidi.so.0
