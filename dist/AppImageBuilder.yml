@@ -20,7 +20,6 @@ AppDir:
     id: imhex
     name: ImHex
     icon: imhex
-    version: v1.16.2
     exec: usr/bin/imhex
     exec_args: $@
   apt:
