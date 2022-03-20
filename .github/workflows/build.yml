@@ -217,6 +217,13 @@ jobs:
       #    flatpak-builder --jobs=4 --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
       #    flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
 
+      - name: ⬆️ Upload ELF
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux ELF
+          path: |
+            build/AppDir/*
+
       - name: 📦 Bundle DEB
         run: |
           cp -r build/DEBIAN build/AppDir
@@ -230,13 +237,6 @@ jobs:
           appimage-builder --recipe ../dist/AppImageBuilder.yml
           mv ImHex-AppImage-x86_64.AppImage ../imhex.AppImage
           cd ..
-
-      - name: ⬆️ Upload ELF
-        uses: actions/upload-artifact@v2
-        with:
-          name: Linux ELF
-          path: |
-            build/AppDir/*
 
       - name: ⬆️ Upload Flatpak
         uses: actions/upload-artifact@v2
