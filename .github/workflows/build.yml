@@ -180,6 +180,11 @@ jobs:
 
           sudo apt update
           sudo bash dist/get_deps_debian.sh
+          
+          sudo apt install -y python3-pip python3-setuptools patchelf desktop-file-utils libgdk-pixbuf2.0-dev fakeroot strace fuse
+          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+          sudo chmod +x /usr/local/bin/appimagetool
+          sudo pip3 install appimage-builder
 
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
           sh rustup-init.sh -y --default-toolchain none
@@ -192,16 +197,16 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc-10 CXX=g++-10 cmake                  \
+          CC=gcc-11 CXX=g++-11 cmake                  \
             -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-            -DCMAKE_INSTALL_PREFIX="$PWD/install/usr" \
+            -DCMAKE_INSTALL_PREFIX="/usr" 	      \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
             -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
             -DRUST_PATH="$HOME/.cargo/bin/"           \
             ..
-          make -j 4 install
+          make -j 4 install DESTDIR=AppDir
 
       #- name: 📦 Bundle Flatpak
       #  run: |
@@ -214,15 +219,17 @@ jobs:
 
       - name: 📦 Bundle DEB
         run: |
-          cp -r build/DEBIAN build/install
-          dpkg-deb --build build/install
-          mv build/install.deb imhex.deb
-          rm -rf build/install/DEBIAN
+          cp -r build/DEBIAN build/AppDir
+          dpkg-deb --build build/AppDir
+          mv build/AppDir.deb imhex.deb
+          rm -rf build/AppDir/DEBIAN
 
       - name: 📦 Bundle AppImage
         run: |
-          dist/AppImage/package.sh build
-          mv build/ImHex-x86_64.AppImage imhex.AppImage
+          cd build
+          appimage-builder --recipe ../dist/AppImageBuilder.yml
+          mv ImHex-x86_64.AppImage ../imhex.AppImage
+          cd ..
 
       - name: ⬆️ Upload ELF
         uses: actions/upload-artifact@v2

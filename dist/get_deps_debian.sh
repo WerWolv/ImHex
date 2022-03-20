@@ -12,8 +12,8 @@ fi
 
 apt install -y \
   build-essential       \
-  gcc-10                \
-  g++-10                \
+  gcc-11                \
+  g++-11                \
   lld                   \
   ${PKGCONF:-}          \
   cmake                 \
@@ -28,4 +28,4 @@ apt install -y \
   libgtk-3-dev          \
 
 echo "Please consider this before running cmake (useful on e.g. Ubuntu 20.04):"
-echo "export CXX=g++-10"
+echo "export CXX=g++-11"
