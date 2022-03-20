@@ -14,6 +14,8 @@
 #include "test_patterns/test_pattern_namespaces.hpp"
 #include "test_patterns/test_pattern_extra_semicolon.hpp"
 #include "test_patterns/test_pattern_pointers.hpp"
+#include "test_patterns/test_pattern_arrays.hpp"
+#include "test_patterns/test_pattern_nested_structs.hpp"
 
 std::array Tests = {
     TEST(Placement),
@@ -29,5 +31,7 @@ std::array Tests = {
     TEST(RValues),
     TEST(Namespaces),
     TEST(ExtraSemicolon),
-    TEST(Pointers)
+    TEST(Pointers),
+    TEST(Arrays),
+    TEST(NestedStructs),
 };

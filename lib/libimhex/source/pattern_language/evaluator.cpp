@@ -37,11 +37,12 @@ namespace hex::pl {
         auto startOffset = this->dataOffset();
 
         std::unique_ptr<Pattern> pattern;
-        this->dataOffset() = startOffset;
 
         bool referenceType = false;
 
         auto typePattern = type->createPatterns(this);
+
+        this->dataOffset() = startOffset;
 
         if (typePattern.empty()) {
             // Handle auto variables
