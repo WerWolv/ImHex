@@ -15,26 +15,22 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternWideString(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            auto size = std::min<size_t>(this->getSize(), 0x100);
+        std::string getValue(prv::Provider *&provider) {
+            return this->getValue(provider, this->getSize());
+        }
 
-            if (size == 0)
-                return;
-
+        std::string getValue(prv::Provider *&provider, size_t size) {
             std::u16string buffer(this->getSize() / sizeof(char16_t), 0x00);
             provider->read(this->getOffset(), buffer.data(), size);
 
             for (auto &c : buffer)
                 c = hex::changeEndianess(c, 2, this->getEndian());
 
-            buffer.erase(std::remove_if(buffer.begin(), buffer.end(), [](auto c) {
-                return c == 0x00;
-            }),
-                buffer.end());
+            auto it = std::remove_if(buffer.begin(), buffer.end(),
+                                     [](auto c) { return c == 0x00; });
+            buffer.erase(it, buffer.end());
 
-            auto utf8String = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(buffer);
-
-            this->createDefaultEntry(hex::format("\"{0}\" {1}", utf8String, size > this->getSize() ? "(truncated)" : ""), utf8String);
+            return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(buffer);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -56,6 +52,10 @@ namespace hex::pl {
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
     };
 
 }

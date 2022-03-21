@@ -19,42 +19,10 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternPointer(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u64 getValue(prv::Provider *&provider) {
             u64 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
-            data = hex::changeEndianess(data, this->getSize(), this->getEndian());
-
-            bool open = true;
-
-            if (!this->isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-                }
-                this->drawCommentTooltip();
-                ImGui::SameLine(0, 0);
-                ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", this->getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getFormattedName());
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                this->m_pointedAt->createEntry(provider);
-
-                ImGui::TreePop();
-            }
+            return hex::changeEndianess(data, this->getSize(), this->getEndian());
         }
 
         void getHighlightedAddresses(std::map<u64, u32> &highlight) const override {
@@ -133,6 +101,10 @@ namespace hex::pl {
             this->m_pointedAt->setEndian(endian);
 
             Pattern::setEndian(endian);
+        }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
         }
 
     private:

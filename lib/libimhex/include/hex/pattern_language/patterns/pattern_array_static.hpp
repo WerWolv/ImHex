@@ -19,65 +19,12 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternArrayStatic(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
-            if (this->getEntryCount() == 0)
-                return;
-
-            bool open = true;
-
-            if (!this->isInlined()) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                open = ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
-                ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(this))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-                }
-                this->drawCommentTooltip();
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:04X}", this->getSize());
-                ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", this->m_template->getTypeName().c_str());
-                ImGui::SameLine(0, 0);
-
-                ImGui::TextUnformatted("[");
-                ImGui::SameLine(0, 0);
-                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", this->m_entryCount);
-                ImGui::SameLine(0, 0);
-                ImGui::TextUnformatted("]");
-
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{}", this->formatDisplayValue("{ ... }", this));
-            } else {
-                ImGui::SameLine();
-                ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
-            }
-
-            if (open) {
-                auto entry = this->m_template->clone();
-                for (u64 index = 0; index < this->m_entryCount; index++) {
-                    entry->clearFormatCache();
-                    entry->setVariableName(hex::format("[{0}]", index));
-                    entry->setOffset(this->getOffset() + index * this->m_template->getSize());
-                    entry->draw(provider);
-
-                    if (index >= (this->m_displayEnd - 1)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-
-                        ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                            this->m_displayEnd += 50;
-
-                        break;
-                    }
-                }
-
-                ImGui::TreePop();
-            } else {
-                this->m_displayEnd = 50;
+        void forEachArrayEntry(const std::function<void(int, Pattern&)>& fn) {
+            auto entry = std::shared_ptr(this->m_template->clone());
+            for (u64 index = 0; index < this->m_entryCount; index++) {
+                entry->setVariableName(hex::format("[{0}]", index));
+                entry->setOffset(this->getOffset() + index * this->m_template->getSize());
+                fn(index, *entry);
             }
         }
 
@@ -103,6 +50,10 @@ namespace hex::pl {
 
         [[nodiscard]] std::string getFormattedName() const override {
             return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
+        }
+
+        [[nodiscard]] std::string getTypeName() const {
+            return this->m_template->getTypeName();
         }
 
         [[nodiscard]] const std::shared_ptr<Pattern> &getTemplate() const {
@@ -155,11 +106,14 @@ namespace hex::pl {
             Pattern::setEndian(endian);
         }
 
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
+
     private:
         std::shared_ptr<Pattern> m_template                  = nullptr;
         mutable std::unique_ptr<Pattern> m_highlightTemplate = nullptr;
         size_t m_entryCount                                  = 0;
-        u64 m_displayEnd                                     = 50;
     };
 
 }

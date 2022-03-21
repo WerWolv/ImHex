@@ -13,13 +13,12 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternSigned(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        i128 getValue(prv::Provider *&provider) {
             i128 data = 0;
             provider->read(this->getOffset(), &data, this->getSize());
             data = hex::changeEndianess(data, this->getSize(), this->getEndian());
 
-            data = hex::signExtend(this->getSize() * 8, data);
-            this->createDefaultEntry(hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
+            return hex::signExtend(this->getSize() * 8, data);
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -40,6 +39,10 @@ namespace hex::pl {
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
     };
 
 }

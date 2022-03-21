@@ -61,8 +61,9 @@ namespace hex::plugin::builtin {
                     ImGui::TableHeadersRow();
                     if (!sortedPatterns.empty()) {
 
+                        m_drawer.setProvider(provider);
                         for (auto &patterns : sortedPatterns)
-                            patterns->draw(provider);
+                            patterns->accept(m_drawer);
                     }
 
                     ImGui::EndTable();

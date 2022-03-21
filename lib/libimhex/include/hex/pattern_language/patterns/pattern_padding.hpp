@@ -12,14 +12,15 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternPadding(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
-        }
-
         [[nodiscard]] std::string getFormattedName() const override {
             return "";
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
     };
 
 }

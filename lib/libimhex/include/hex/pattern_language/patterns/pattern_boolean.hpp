@@ -13,16 +13,10 @@ namespace hex::pl {
             return std::unique_ptr<Pattern>(new PatternBoolean(*this));
         }
 
-        void createEntry(prv::Provider *&provider) override {
+        u8 getValue(prv::Provider *&provider) {
             u8 boolean;
             provider->read(this->getOffset(), &boolean, 1);
-
-            if (boolean == 0)
-                this->createDefaultEntry("false", false);
-            else if (boolean == 1)
-                this->createDefaultEntry("true", true);
-            else
-                this->createDefaultEntry("true*", true);
+            return boolean;
         }
 
         [[nodiscard]] std::string getFormattedName() const override {
@@ -30,6 +24,10 @@ namespace hex::pl {
         }
 
         [[nodiscard]] bool operator==(const Pattern &other) const override { return areCommonPropertiesEqual<decltype(*this)>(other); }
+
+        void accept(PatternVisitor &v) override {
+            v.visit(*this);
+        }
     };
 
 }

@@ -6,6 +6,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <hex/pattern_language/evaluator.hpp>
+#include <hex/pattern_language/pattern_visitor.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <string>
@@ -107,7 +108,6 @@ namespace hex::pl {
         [[nodiscard]] const auto &getFormatterFunction() const { return this->m_formatterFunction; }
         void setFormatterFunction(const ContentRegistry::PatternLanguage::Function &function) { this->m_formatterFunction = function; }
 
-        virtual void createEntry(prv::Provider *&provider)         = 0;
         [[nodiscard]] virtual std::string getFormattedName() const = 0;
 
         [[nodiscard]] virtual const Pattern *getPattern(u64 offset) const {
@@ -179,12 +179,6 @@ namespace hex::pl {
             return false;
         }
 
-        void draw(prv::Provider *provider) {
-            if (isHidden()) return;
-
-            this->createEntry(provider);
-        }
-
         void setHidden(bool hidden) {
             this->m_hidden = hidden;
         }
@@ -250,42 +244,7 @@ namespace hex::pl {
             this->m_cachedDisplayValue.reset();
         }
 
-    protected:
-        void createDefaultEntry(const std::string &value, Token::Literal &&literal) const {
-            ImGui::TableNextRow();
-            ImGui::TreeNodeEx(this->getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowItemOverlap);
-            ImGui::TableNextColumn();
-
-            ImGui::PushID(this->getOffset());
-            ImGui::PushID(this->getVariableName().c_str());
-            if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                ImHexApi::HexEditor::setSelection(this->getOffset(), this->getSize());
-            }
-            ImGui::PopID();
-            ImGui::PopID();
-
-            this->drawCommentTooltip();
-            ImGui::SameLine();
-            ImGui::TextUnformatted(this->getDisplayName().c_str());
-            ImGui::TableNextColumn();
-            ImGui::ColorButton("color", ImColor(this->getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", this->getOffset(), this->getOffset() + this->getSize() - 1);
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("0x{0:04X}", this->getSize());
-            ImGui::TableNextColumn();
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", this->getTypeName().empty() ? this->getFormattedName() : this->getTypeName());
-            ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", formatDisplayValue(value, literal));
-        }
-
-        void drawCommentTooltip() const {
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && this->getComment().has_value()) {
-                ImGui::BeginTooltip();
-                ImGui::TextUnformatted(this->getComment()->c_str());
-                ImGui::EndTooltip();
-            }
-        }
+        virtual void accept(PatternVisitor &v) = 0;
 
     protected:
         std::optional<std::endian> m_endian;
