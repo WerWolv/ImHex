@@ -22,6 +22,11 @@
 namespace {
     constexpr static auto DisplayEndDefault = 50u;
     constexpr static auto DisplayEndStep = 50u;
+
+    template<typename T>
+    concept ArrayPattern = requires(T pattern, std::function<void(int, hex::pl::Pattern&)> fn) {
+       { pattern.forEachArrayEntry(fn) } -> std::same_as<void>;
+    };
 };
 
 namespace hex::pl {
@@ -354,8 +359,8 @@ namespace hex::pl {
             pattern.accept(*this);
         }
 
-        template<class ArrayPattern>
-        void drawArray(ArrayPattern& pattern) {
+        template<ArrayPattern T>
+        void drawArray(T& pattern) {
             if (pattern.getEntryCount() == 0)
                 return;
 
