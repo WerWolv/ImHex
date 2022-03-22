@@ -4,6 +4,7 @@
 
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/intrinsics.hpp>
 
 #include <array>
 #include <bit>
@@ -128,7 +129,7 @@ namespace hex {
                 swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
                 break;
             default:
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         T result;
@@ -168,7 +169,7 @@ namespace hex {
                 swapped = (u128(__builtin_bswap64(unswapped & 0xFFFF'FFFF'FFFF'FFFF)) << 64) | __builtin_bswap64(u128(unswapped) >> 64);
                 break;
             default:
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         T result = 0;

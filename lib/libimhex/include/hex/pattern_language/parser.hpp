@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/intrinsics.hpp>
 
 #include <hex/pattern_language/error.hpp>
 #include <hex/pattern_language/token.hpp>
@@ -189,7 +190,7 @@ namespace hex::pl {
             else if constexpr (S == Not)
                 return false;
             else
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         template<Setting S = Normal>
@@ -220,7 +221,7 @@ namespace hex::pl {
                 partReset();
                 return false;
             } else
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         template<Setting S = Normal>
@@ -235,7 +236,7 @@ namespace hex::pl {
             else if constexpr (S == Not)
                 return true;
             else
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         template<Setting S = Normal>
@@ -245,7 +246,7 @@ namespace hex::pl {
             else if constexpr (S == Not)
                 return sequenceImpl<Not>(type, value) && oneOfImpl(args...);
             else
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         template<Setting S = Normal>

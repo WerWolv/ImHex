@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/fs_macos.h>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/intrinsics.hpp>
 
 #include <xdg.hpp>
 
@@ -72,7 +73,7 @@ namespace hex::fs {
                 result = NFD::PickFolder(outPath, defaultPath.c_str());
                 break;
             default:
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
         if (result == NFD_OKAY) {
@@ -174,7 +175,7 @@ namespace hex::fs {
                 });
                 break;
             default:
-                __builtin_unreachable();
+                hex::unreachable();
         }
 #elif defined(OS_MACOS)
         // Get path to special directories
@@ -219,7 +220,7 @@ namespace hex::fs {
                 result.push_back((applicationSupportDir / "logs").string());
                 break;
             default:
-                __builtin_unreachable();
+                hex::unreachable();
         }
 #else
         std::vector<std::fs::path> configDirs = xdg::ConfigDirs();
@@ -276,7 +277,7 @@ namespace hex::fs {
                 std::transform(dataDirs.begin(), dataDirs.end(), std::back_inserter(result), [](auto p) { return (p / "logs").string(); });
                 break;
             default:
-                __builtin_unreachable();
+                hex::unreachable();
         }
 
 #endif
