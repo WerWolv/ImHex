@@ -4,7 +4,7 @@
 
 namespace hex {
 
-    [[noreturn]] void unreachable() {
+    [[noreturn]] inline void unreachable() {
         __builtin_unreachable();
     }
 

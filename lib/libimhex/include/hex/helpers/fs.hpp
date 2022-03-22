@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 #include <filesystem>
@@ -77,7 +78,7 @@ namespace hex::fs {
         Logs
     };
 
-    std::string getExecutablePath();
+    std::optional<std::fs::path> getExecutablePath();
 
     std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting = false);
 

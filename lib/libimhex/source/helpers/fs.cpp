@@ -20,21 +20,23 @@
 
 namespace hex::fs {
 
-    std::string getExecutablePath() {
+    std::optional<std::fs::path> getExecutablePath() {
 #if defined(OS_WINDOWS)
         std::string exePath(MAX_PATH, '\0');
-        GetModuleFileName(nullptr, exePath.data(), exePath.length());
+        if (GetModuleFileName(nullptr, exePath.data(), exePath.length()) == 0)
+            return std::nullopt;
 
         return exePath;
 #elif defined(OS_LINUX)
         std::string exePath(PATH_MAX, '\0');
-        readlink("/proc/self/exe", exePath.data(), PATH_MAX);
+        if (readlink("/proc/self/exe", exePath.data(), PATH_MAX) < 0)
+            return std::nullopt;
 
         return exePath;
 #elif defined(OS_MACOS)
         return getMacExecutableDirectoryPath();
 #else
-        return "";
+        return std::nullopt;
 #endif
     }
 
@@ -100,8 +102,6 @@ namespace hex::fs {
         };
 
 #if defined(OS_WINDOWS)
-        const auto parentDir = std::fs::path(exePath).parent_path();
-
         std::fs::path appDataDir;
         {
             LPWSTR wAppDataPath = nullptr;
@@ -112,7 +112,10 @@ namespace hex::fs {
             CoTaskMemFree(wAppDataPath);
         }
 
-        std::vector<std::fs::path> paths = { appDataDir / "imhex", parentDir };
+        std::vector<std::fs::path> paths = { appDataDir / "imhex" };
+
+        if (exePath)
+            paths.push_back(exePath->parent_path());
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -181,7 +184,10 @@ namespace hex::fs {
         // Get path to special directories
         const std::fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
 
-        std::vector<std::fs::path> paths = { applicationSupportDir, exePath };
+        std::vector<std::fs::path> paths = { applicationSupportDir };
+
+        if (exePath)
+            paths.push_back(exePath->parent_path());
 
         switch (path) {
             case ImHexPath::Patterns:
@@ -232,8 +238,8 @@ namespace hex::fs {
         for (auto &dir : dataDirs)
             dir = dir / "imhex";
 
-        if (!exePath.empty())
-            dataDirs.emplace(dataDirs.begin(), std::fs::path(exePath.data()).parent_path());
+        if (exePath && !exePath->empty())
+            dataDirs.push_back(exePath->parent_path());
 
         switch (path) {
             case ImHexPath::Patterns:
