@@ -451,4 +451,13 @@ namespace hex {
 #endif
     }
 
+    std::optional<std::string> getEnvironmentVariable(const std::string &env) {
+        auto value = std::getenv(env.c_str());
+
+        if (value == nullptr)
+            return std::nullopt;
+        else
+            return value;
+    }
+
 }

@@ -291,6 +291,8 @@ namespace hex {
 
     bool isProcessElevated();
 
+    std::optional<std::string> getEnvironmentVariable(const std::string &env);
+
     namespace scope_guard {
 
 #define SCOPE_GUARD   ::hex::scope_guard::ScopeGuardOnExit() + [&]()

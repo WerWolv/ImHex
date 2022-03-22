@@ -41,6 +41,7 @@
 #include "init/tasks.hpp"
 
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 #include <nlohmann/json.hpp>
 
@@ -650,9 +651,12 @@ namespace hex {
         style.WindowRounding = 0.0F;
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
-#if !defined(OS_LINUX)
-        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-#endif
+
+        {
+            auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
+            if (!sessionType || !hex::containsIgnoreCase(*sessionType, "wayland"))
+                io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+        }
 
         for (auto &entry : fonts->ConfigData)
             io.Fonts->ConfigData.push_back(entry);
