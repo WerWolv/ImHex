@@ -51,9 +51,9 @@ namespace hex::plugin::builtin {
         std::vector<std::pair<u64, u64>> m_lastStringSearch;
         std::vector<std::pair<u64, u64>> m_lastHexSearch;
 
-        u64 m_gotoAddressAbsolute = 0;
-        i64 m_gotoAddressRelative = 0;
-        bool m_gotoRequested      = false;
+        std::string m_gotoAddressInput;
+        bool m_gotoRequested = false;
+        bool m_evaluateGoto = false;
 
         u64 m_baseAddress = 0;
         u64 m_resizeSize  = 0;
