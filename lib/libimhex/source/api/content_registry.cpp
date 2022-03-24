@@ -230,16 +230,16 @@ namespace hex {
             return functionName;
         }
 
-        void addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func) {
+        void addFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func) {
             log::info("Registered new pattern language function: {}", getFunctionName(ns, name));
 
-            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, false };
+            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, { }, func, false };
         }
 
-        void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func) {
+        void addDangerousFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func) {
             log::info("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
 
-            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, func, true };
+            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, { }, func, true };
         }
 
         std::map<std::string, Function> &getFunctions() {

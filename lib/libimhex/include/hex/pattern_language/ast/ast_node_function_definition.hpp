@@ -6,18 +6,23 @@ namespace hex::pl {
 
     class ASTNodeFunctionDefinition : public ASTNode {
     public:
-        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, std::unique_ptr<ASTNode>>> &&params, std::vector<std::unique_ptr<ASTNode>> &&body, std::optional<std::string> parameterPack)
-            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)), m_parameterPack(std::move(parameterPack)) {
+        ASTNodeFunctionDefinition(std::string name, std::vector<std::pair<std::string, std::unique_ptr<ASTNode>>> &&params, std::vector<std::unique_ptr<ASTNode>> &&body, std::optional<std::string> parameterPack, std::vector<std::unique_ptr<ASTNode>> &&defaultParameters)
+            : m_name(std::move(name)), m_params(std::move(params)), m_body(std::move(body)), m_parameterPack(std::move(parameterPack)), m_defaultParameters(std::move(defaultParameters)) {
         }
 
         ASTNodeFunctionDefinition(const ASTNodeFunctionDefinition &other) : ASTNode(other) {
             this->m_name = other.m_name;
+            this->m_parameterPack = other.m_parameterPack;
 
             for (const auto &[name, type] : other.m_params) {
                 this->m_params.emplace_back(name, type->clone());
             }
 
             for (auto &statement : other.m_body) {
+                this->m_body.push_back(statement->clone());
+            }
+
+            for (auto &statement : other.m_defaultParameters) {
                 this->m_body.push_back(statement->clone());
             }
         }
@@ -39,13 +44,29 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::unique_ptr<ASTNode> evaluate(Evaluator *evaluator) const override {
+            using namespace ContentRegistry::PatternLanguage;
 
-            size_t paramCount = this->m_params.size();
+            ParameterCount paramCount;
 
             if (this->m_parameterPack.has_value())
-                paramCount |= ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan;
+                paramCount = ParameterCount::atLeast(this->m_params.size());
+            else if (!this->m_defaultParameters.empty())
+                paramCount = ParameterCount::between(this->m_params.size() - this->m_defaultParameters.size(), this->m_params.size());
+            else
+                paramCount = ParameterCount::exactly(this->m_params.size());
 
-            evaluator->addCustomFunction(this->m_name, paramCount, [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
+            std::vector<Token::Literal> evaluatedDefaultParams;
+            for (const auto &param : this->m_defaultParameters) {
+                const auto expression = param->evaluate(evaluator)->evaluate(evaluator);
+
+                if (auto literal = dynamic_cast<ASTNodeLiteral *>(expression.get())) {
+                    evaluatedDefaultParams.push_back(literal->getValue());
+                } else {
+                    LogConsole::abortEvaluation(hex::format("invalid default parameter for function {}", this->m_name), expression);
+                }
+            }
+
+            evaluator->addCustomFunction(this->m_name, paramCount, evaluatedDefaultParams, [this](Evaluator *ctx, const std::vector<Token::Literal> &params) -> std::optional<Token::Literal> {
                 std::vector<std::shared_ptr<Pattern>> variables;
 
                 auto startOffset = ctx->dataOffset();
@@ -100,6 +121,7 @@ namespace hex::pl {
         std::vector<std::pair<std::string, std::unique_ptr<ASTNode>>> m_params;
         std::vector<std::unique_ptr<ASTNode>> m_body;
         std::optional<std::string> m_parameterPack;
+        std::vector<std::unique_ptr<ASTNode>> m_defaultParameters;
     };
 
 }

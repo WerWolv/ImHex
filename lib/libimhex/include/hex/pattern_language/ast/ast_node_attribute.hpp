@@ -105,13 +105,15 @@ namespace hex::pl {
                 inlinable->setInlined(true);
         }
 
+        using namespace ContentRegistry::PatternLanguage;
+
         if (auto value = attributable->getAttributeValue("format"); value) {
             auto functions = evaluator->getCustomFunctions();
             if (!functions.contains(*value))
                 LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
 
             const auto &function = functions[*value];
-            if (function.parameterCount != 1)
+            if (function.parameterCount != ParameterCount::exactly(1))
                 LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
 
             pattern->setFormatterFunction(function);
@@ -123,7 +125,7 @@ namespace hex::pl {
                 LogConsole::abortEvaluation(hex::format("cannot find formatter function '{}'", *value), node);
 
             const auto &function = functions[*value];
-            if (function.parameterCount != 1)
+            if (function.parameterCount != ParameterCount::exactly(1))
                 LogConsole::abortEvaluation("formatter function needs exactly one parameter", node);
 
             auto array = dynamic_cast<PatternArrayDynamic *>(pattern);
@@ -141,7 +143,7 @@ namespace hex::pl {
                 LogConsole::abortEvaluation(hex::format("cannot find transform function '{}'", *value), node);
 
             const auto &function = functions[*value];
-            if (function.parameterCount != 1)
+            if (function.parameterCount != ParameterCount::exactly(1))
                 LogConsole::abortEvaluation("transform function needs exactly one parameter", node);
 
             pattern->setTransformFunction(function);
@@ -153,7 +155,7 @@ namespace hex::pl {
                 LogConsole::abortEvaluation(hex::format("cannot find pointer base function '{}'", *value), node);
 
             const auto &function = functions[*value];
-            if (function.parameterCount != 1)
+            if (function.parameterCount != ParameterCount::exactly(1))
                 LogConsole::abortEvaluation("pointer base function needs exactly one parameter", node);
 
             if (auto pointerPattern = dynamic_cast<PatternPointer *>(pattern)) {

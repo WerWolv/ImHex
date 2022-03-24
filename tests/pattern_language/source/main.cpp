@@ -45,8 +45,10 @@ static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
 }
 
 void addFunctions() {
-    hex::ContentRegistry::PatternLanguage::Namespace nsStd = { "std" };
-    hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "assert", 2, [](Evaluator *ctx, auto params) -> Token::Literal {
+    using namespace hex::ContentRegistry::PatternLanguage;
+
+    Namespace nsStd = { "std" };
+    hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "assert", ParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> Token::Literal {
         auto condition = Token::literalToBoolean(params[0]);
         auto message   = Token::literalToString(params[1], false);
 
@@ -56,7 +58,7 @@ void addFunctions() {
         return {};
     });
 
-    hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "print", hex::ContentRegistry::PatternLanguage::MoreParametersThan | 0, [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+    hex::ContentRegistry::PatternLanguage::addFunction(nsStd, "print", ParameterCount::atLeast(1), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
         ctx->getConsole().log(LogConsole::Level::Info, format(ctx, params));
 
         return std::nullopt;

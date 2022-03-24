@@ -406,6 +406,8 @@ namespace hex::pl {
         // Parse parameter list
         bool hasParams        = !peek(SEPARATOR_ROUNDBRACKETCLOSE);
         u32 unnamedParamCount = 0;
+        std::vector<std::unique_ptr<ASTNode>> defaultParameters;
+
         while (hasParams) {
             if (MATCHES(sequence(VALUETYPE_AUTO, SEPARATOR_DOT, SEPARATOR_DOT, SEPARATOR_DOT, IDENTIFIER))) {
                 parameterPack = getValue<Token::Identifier>(-1).get();
@@ -422,6 +424,14 @@ namespace hex::pl {
                 else {
                     params.emplace_back(std::to_string(unnamedParamCount), std::move(type));
                     unnamedParamCount++;
+                }
+
+                if (MATCHES(sequence(OPERATOR_ASSIGNMENT))) {
+                    // Parse default parameters
+                    defaultParameters.push_back(parseMathematicalExpression());
+                } else {
+                    if (!defaultParameters.empty())
+                        throwParserError(hex::format("default argument missing for parameter {}", params.size()));
                 }
 
                 if (!MATCHES(sequence(SEPARATOR_COMMA))) {
@@ -444,7 +454,7 @@ namespace hex::pl {
             body.push_back(this->parseFunctionStatement());
         }
 
-        return create(new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), std::move(params), std::move(body), parameterPack));
+        return create(new ASTNodeFunctionDefinition(getNamespacePrefixedName(functionName), std::move(params), std::move(body), parameterPack, std::move(defaultParameters)));
     }
 
     std::unique_ptr<ASTNode> Parser::parseFunctionVariableDecl() {

@@ -217,14 +217,12 @@ namespace hex::pl {
             if (this->m_customFunctions.contains("main")) {
                 auto mainFunction = this->m_customFunctions["main"];
 
-                if (mainFunction.parameterCount > 0)
+                if (mainFunction.parameterCount.max > 0)
                     LogConsole::abortEvaluation("main function may not accept any arguments");
 
                 this->m_mainResult = mainFunction.func(this, {});
             }
         } catch (PatternLanguageError &error) {
-            this->m_console.log(LogConsole::Level::Error, error.what());
-
             if (error.getLineNumber() != 0)
                 this->m_console.setHardError(error);
 

@@ -136,6 +136,17 @@ namespace hex::pl {
         this->m_running = true;
         ON_SCOPE_EXIT { this->m_running = false; };
 
+        ON_SCOPE_EXIT {
+            if (this->m_currError.has_value()) {
+                const auto &error = this->m_currError.value();
+
+                if (error.getLineNumber() > 0)
+                    this->m_evaluator->getConsole().log(LogConsole::Level::Error, hex::format("{}: {}", error.getLineNumber(), error.what()));
+                else
+                    this->m_evaluator->getConsole().log(LogConsole::Level::Error, error.what());
+            }
+        };
+
         this->m_currError.reset();
         this->m_evaluator->getConsole().clear();
         this->m_evaluator->setProvider(provider);
@@ -170,10 +181,7 @@ namespace hex::pl {
             auto returnCode = Token::literalToSigned(*mainResult);
 
             if (returnCode != 0) {
-                auto errorMessage = hex::format("non-success value returned from main: {}", returnCode);
-
-                this->m_evaluator->getConsole().log(LogConsole::Level::Error, errorMessage);
-                this->m_currError = PatternLanguageError(0, errorMessage);
+                this->m_currError = PatternLanguageError(0, hex::format("non-success value returned from main: {}", returnCode));
 
                 return false;
             }

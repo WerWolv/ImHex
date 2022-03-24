@@ -124,23 +124,58 @@ namespace hex {
 
             }
 
-            constexpr static u32 UnlimitedParameters         = 0xFFFF'FFFF;
-            constexpr static u32 MoreParametersThan          = 0x8000'0000;
-            constexpr static u32 LessParametersThan          = 0x4000'0000;
-            constexpr static u32 ExactlyOrMoreParametersThan = 0x2000'0000;
-            constexpr static u32 NoParameters                = 0x0000'0000;
+            struct ParameterCount {
+                ParameterCount() = default;
+
+                constexpr bool operator==(const ParameterCount &other) const {
+                    return this->min == other.min && this->max == other.max;
+                }
+
+                [[nodiscard]] static ParameterCount unlimited() {
+                    return ParameterCount { 0, 0xFFFF'FFFF };
+                }
+
+                [[nodiscard]] static ParameterCount none() {
+                    return ParameterCount { 0, 0 };
+                }
+
+                [[nodiscard]] static ParameterCount exactly(u32 value) {
+                    return ParameterCount { value, value };
+                }
+
+                [[nodiscard]] static ParameterCount moreThan(u32 value) {
+                    return ParameterCount { value + 1, 0xFFFF'FFFF };
+                }
+
+                [[nodiscard]] static ParameterCount lessThan(u32 value) {
+                    return ParameterCount { 0, u32(std::max<i64>(i64(value) - 1, 0)) };
+                }
+
+                [[nodiscard]] static ParameterCount atLeast(u32 value) {
+                    return ParameterCount { value, 0xFFFF'FFFF };
+                }
+
+                [[nodiscard]] static ParameterCount between(u32 min, u32 max) {
+                    return ParameterCount { min, max };
+                }
+
+                u32 min = 0, max = 0;
+            private:
+                ParameterCount(u32 min, u32 max) : min(min), max(max) { }
+            };
 
             using Namespace = std::vector<std::string>;
             using Callback  = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator *, const std::vector<hex::pl::Token::Literal> &)>;
 
             struct Function {
-                u32 parameterCount;
+                ParameterCount parameterCount;
+                std::vector<pl::Token::Literal> defaultParameters;
                 Callback func;
                 bool dangerous;
             };
 
-            void addFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
-            void addDangerousFunction(const Namespace &ns, const std::string &name, u32 parameterCount, const Callback &func);
+            void addFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func);
+            void addDangerousFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func);
             std::map<std::string, ContentRegistry::PatternLanguage::Function> &getFunctions();
 
             std::vector<impl::ColorPalette> &getPalettes();

@@ -177,9 +177,9 @@ namespace hex::pl {
 
         u64 &dataOffset() { return this->m_currOffset; }
 
-        bool addCustomFunction(const std::string &name, u32 numParams, const ContentRegistry::PatternLanguage::Callback &function) {
+        bool addCustomFunction(const std::string &name, ContentRegistry::PatternLanguage::ParameterCount numParams, std::vector<Token::Literal> defaultParameters, const ContentRegistry::PatternLanguage::Callback &function) {
             const auto [iter, inserted] = this->m_customFunctions.insert({
-                name, {numParams, function}
+                name, {numParams, std::move(defaultParameters), function}
             });
 
             return inserted;

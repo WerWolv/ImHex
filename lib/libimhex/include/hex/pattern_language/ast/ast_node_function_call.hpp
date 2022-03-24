@@ -71,21 +71,25 @@ namespace hex::pl {
                 LogConsole::abortEvaluation(hex::format("call to unknown function '{}'", this->m_functionName), this);
             }
 
+            using namespace ContentRegistry::PatternLanguage;
+
             auto function = functions[this->m_functionName];
-            if (function.parameterCount == ContentRegistry::PatternLanguage::UnlimitedParameters) {
-                ;    // Don't check parameter count
-            } else if (function.parameterCount & ContentRegistry::PatternLanguage::LessParametersThan) {
-                if (evaluatedParams.size() >= (function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected less than {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::LessParametersThan), this);
-            } else if (function.parameterCount & ContentRegistry::PatternLanguage::MoreParametersThan) {
-                if (evaluatedParams.size() <= (function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected more than {1}", this->m_functionName, function.parameterCount & ~ContentRegistry::PatternLanguage::MoreParametersThan), this);
-            } else if (function.parameterCount & ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan) {
-                if (evaluatedParams.size() < (function.parameterCount & ~ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan))
-                    LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected more than {1}", this->m_functionName, (function.parameterCount - 1) & ~ContentRegistry::PatternLanguage::ExactlyOrMoreParametersThan), this);
-            } else if (function.parameterCount != evaluatedParams.size()) {
-                LogConsole::abortEvaluation(hex::format("invalid number of parameters for function '{0}'. Expected {1}", this->m_functionName, function.parameterCount), this);
+            const auto &[min, max] = function.parameterCount;
+
+            if (evaluatedParams.size() >= min && evaluatedParams.size() < max && evaluatedParams.size() + function.defaultParameters.size() >= max) {
+                while (true) {
+                    auto remainingParams = max - evaluatedParams.size();
+                    if (remainingParams <= 0) break;
+
+                    auto offset = evaluatedParams.size() - min;
+                    evaluatedParams.push_back(function.defaultParameters[offset]);
+                }
             }
+
+            if (evaluatedParams.size() < min)
+                LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1} at least", this->m_functionName, min), this);
+            else if (evaluatedParams.size() > max)
+                LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1} at most", this->m_functionName, max), this);
 
             try {
                 if (function.dangerous && evaluator->getDangerousFunctionPermission() != DangerousFunctionPermission::Allow) {
