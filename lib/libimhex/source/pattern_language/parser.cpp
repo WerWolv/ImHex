@@ -706,10 +706,7 @@ namespace hex::pl {
 
     // using Identifier = (parseType)
     std::shared_ptr<ASTNodeTypeDecl> Parser::parseUsingDeclaration() {
-        auto name = parseNamespaceResolution();
-
-        if (!MATCHES(sequence(OPERATOR_ASSIGNMENT)))
-            throwParserError("expected '=' after type name of using declaration");
+        auto name = getNamespacePrefixedName(getValue<Token::Identifier>(-2).get());
 
         auto type = parseType();
 
@@ -976,6 +973,16 @@ namespace hex::pl {
         return typeDecl;
     }
 
+    // using Identifier;
+    void Parser::parseForwardDeclaration() {
+        std::string typeName = getNamespacePrefixedName(getValue<Token::Identifier>(-1).get());
+
+        if (this->m_types.contains(typeName))
+            return;
+
+        this->m_types.insert({ typeName, create(new ASTNodeTypeDecl(typeName) )});
+    }
+
     // (parseType) Identifier @ Integer
     std::unique_ptr<ASTNode> Parser::parseVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type) {
         bool inVariable  = false;
@@ -1088,8 +1095,10 @@ namespace hex::pl {
     std::vector<std::shared_ptr<ASTNode>> Parser::parseStatements() {
         std::shared_ptr<ASTNode> statement;
 
-        if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER)))
+        if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER, OPERATOR_ASSIGNMENT)))
             statement = parseUsingDeclaration();
+        else if (MATCHES(sequence(KEYWORD_USING, IDENTIFIER)))
+            parseForwardDeclaration();
         else if (peek(IDENTIFIER)) {
             auto originalPos = this->m_curr;
             this->m_curr++;
@@ -1118,7 +1127,7 @@ namespace hex::pl {
             return parseNamespace();
         else throwParserError("invalid sequence", 0);
 
-        if (MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
+        if (statement && MATCHES(sequence(SEPARATOR_SQUAREBRACKETOPEN, SEPARATOR_SQUAREBRACKETOPEN)))
             parseAttribute(dynamic_cast<Attributable *>(statement.get()));
 
         if (!MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
@@ -1128,19 +1137,28 @@ namespace hex::pl {
         while (MATCHES(sequence(SEPARATOR_ENDOFEXPRESSION)))
             ;
 
+        if (!statement)
+            return { };
+
         return hex::moveToVector(std::move(statement));
     }
 
     std::shared_ptr<ASTNodeTypeDecl> Parser::addType(const std::string &name, std::unique_ptr<ASTNode> &&node, std::optional<std::endian> endian) {
         auto typeName = getNamespacePrefixedName(name);
 
-        if (this->m_types.contains(typeName))
-            throwParserError(hex::format("redefinition of type '{}'", typeName));
+        if (this->m_types.contains(typeName) && this->m_types.at(typeName)->isForwardDeclared()) {
+            this->m_types.at(typeName)->setType(std::move(node));
 
-        std::shared_ptr typeDecl = create(new ASTNodeTypeDecl(typeName, std::move(node), endian));
-        this->m_types.insert({ typeName, typeDecl });
+            return this->m_types.at(typeName);
+        } else {
+            if (this->m_types.contains(typeName))
+                throwParserError(hex::format("redefinition of type '{}'", typeName));
 
-        return typeDecl;
+            std::shared_ptr typeDecl = create(new ASTNodeTypeDecl(typeName, std::move(node), endian));
+            this->m_types.insert({ typeName, typeDecl });
+
+            return typeDecl;
+        }
     }
 
     // <(parseNamespace)...> EndOfProgram

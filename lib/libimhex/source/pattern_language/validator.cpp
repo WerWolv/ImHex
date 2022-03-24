@@ -33,7 +33,8 @@ namespace hex::pl {
                     if (!types.insert(typeDeclNode->getName().data()).second)
                         throwValidatorError(hex::format("redefinition of type '{0}'", typeDeclNode->getName().data()), typeDeclNode->getLineNumber());
 
-                    this->validate(hex::moveToVector<std::shared_ptr<ASTNode>>(typeDeclNode->getType()->clone()));
+                    if (!typeDeclNode->isForwardDeclared())
+                        this->validate(hex::moveToVector<std::shared_ptr<ASTNode>>(typeDeclNode->getType()->clone()));
                 } else if (auto structNode = dynamic_cast<ASTNodeStruct *>(node.get()); structNode != nullptr) {
                     this->validate(structNode->getMembers());
                 } else if (auto unionNode = dynamic_cast<ASTNodeUnion *>(node.get()); unionNode != nullptr) {

@@ -8,6 +8,8 @@ namespace hex::pl {
     class ASTNodeTypeDecl : public ASTNode,
                             public Attributable {
     public:
+        ASTNodeTypeDecl(std::string name) : m_forwardDeclared(true), m_name(name) { }
+
         ASTNodeTypeDecl(std::string name, std::shared_ptr<ASTNode> type, std::optional<std::endian> endian = std::nullopt)
             : ASTNode(), m_name(std::move(name)), m_type(std::move(type)), m_endian(endian) { }
 
@@ -69,7 +71,18 @@ namespace hex::pl {
             Attributable::addAttribute(std::move(attribute));
         }
 
+        [[nodiscard]]
+        bool isForwardDeclared() const {
+            return this->m_forwardDeclared;
+        }
+
+        void setType(std::shared_ptr<ASTNode> type) {
+            this->m_forwardDeclared = false;
+            this->m_type = type;
+        }
+
     private:
+        bool m_forwardDeclared = false;
         std::string m_name;
         std::shared_ptr<ASTNode> m_type;
         std::optional<std::endian> m_endian;

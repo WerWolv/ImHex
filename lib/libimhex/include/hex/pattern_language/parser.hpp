@@ -34,7 +34,7 @@ namespace hex::pl {
         TokenIter m_curr;
         TokenIter m_originalPosition, m_partOriginalPosition;
 
-        std::unordered_map<std::string, std::shared_ptr<ASTNode>> m_types;
+        std::unordered_map<std::string, std::shared_ptr<ASTNodeTypeDecl>> m_types;
         std::vector<TokenIter> m_matchedOptionals;
         std::vector<std::vector<std::string>> m_currNamespace;
 
@@ -121,6 +121,7 @@ namespace hex::pl {
         std::shared_ptr<ASTNodeTypeDecl> parseUnion();
         std::shared_ptr<ASTNodeTypeDecl> parseEnum();
         std::shared_ptr<ASTNodeTypeDecl> parseBitfield();
+        void parseForwardDeclaration();
         std::unique_ptr<ASTNode> parseVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type);
         std::unique_ptr<ASTNode> parseArrayVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type);
         std::unique_ptr<ASTNode> parsePointerVariablePlacement(const std::shared_ptr<ASTNodeTypeDecl> &type);
