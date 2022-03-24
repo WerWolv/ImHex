@@ -25,11 +25,16 @@ namespace hex::pl {
 
         void setName(const std::string &name) { this->m_name = name; }
         [[nodiscard]] const std::string &getName() const { return this->m_name; }
-        [[nodiscard]] const std::shared_ptr<ASTNode> &getType() { return this->m_type; }
+        [[nodiscard]] const std::shared_ptr<ASTNode> &getType() const {
+            if (this->isForwardDeclared())
+                LogConsole::abortEvaluation(hex::format("cannot use incomplete type '{}'", this->m_name), this);
+            
+            return this->m_type;
+        }
         [[nodiscard]] std::optional<std::endian> getEndian() const { return this->m_endian; }
 
         [[nodiscard]] std::unique_ptr<ASTNode> evaluate(Evaluator *evaluator) const override {
-            auto type = this->m_type->evaluate(evaluator);
+            auto type = this->getType()->evaluate(evaluator);
 
             if (auto attributable = dynamic_cast<Attributable *>(type.get())) {
                 for (auto &attribute : this->getAttributes()) {
@@ -45,7 +50,7 @@ namespace hex::pl {
         }
 
         [[nodiscard]] std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const override {
-            auto patterns = this->m_type->createPatterns(evaluator);
+            auto patterns = this->getType()->createPatterns(evaluator);
 
             for (auto &pattern : patterns) {
                 if (pattern == nullptr)
@@ -64,7 +69,7 @@ namespace hex::pl {
         }
 
         void addAttribute(std::unique_ptr<ASTNodeAttribute> &&attribute) override {
-            if (auto attributable = dynamic_cast<Attributable *>(this->m_type.get()); attributable != nullptr) {
+            if (auto attributable = dynamic_cast<Attributable *>(this->getType().get()); attributable != nullptr) {
                 attributable->addAttribute(std::unique_ptr<ASTNodeAttribute>(static_cast<ASTNodeAttribute *>(attribute->clone().release())));
             }
 
