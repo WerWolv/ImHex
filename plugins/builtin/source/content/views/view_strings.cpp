@@ -9,6 +9,7 @@
 
 #include <llvm/Demangle/Demangle.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <imgui_internal.h>
 
 using namespace std::literals::string_literals;
 
@@ -108,36 +109,52 @@ namespace hex::plugin::builtin {
                     if (ImGui::InputInt("hex.builtin.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                         this->m_foundStrings.clear();
 
+                    if (this->m_minimumLength < 1)
+                        this->m_minimumLength = 1;
+
                     ImGui::Checkbox("Regex", &this->m_regex);
 
+                    bool filterError = this->m_regex && !this->m_pattern_parsed;
+                    if (filterError)
+                        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImAlphaBlendColors(ImGui::GetColorU32(ImGuiCol_FrameBg), ImColor(1.0f, 0.2f, 0.2f, 0.5f)));
+
                     ImGui::InputText(
-                        "hex.builtin.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
+                        "hex.builtin.view.strings.filter"_lang, this->m_filter.data(), this->m_filter.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackResize, [](ImGuiInputTextCallbackData *data) {
                             auto &view = *static_cast<ViewStrings *>(data->UserData);
-                            view.m_filter.resize(data->BufTextLen);
-                            view.m_filterIndices.clear();
-                            std::regex pattern;
-                            if (view.m_regex) {
-                                try {
-                                    pattern               = std::regex(data->Buf);
-                                    view.m_pattern_parsed = true;
-                                } catch (std::regex_error &e) {
-                                    view.m_pattern_parsed = false;
-                                }
+
+                            if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+                                view.m_filter.resize(data->BufSize);
+                                data->Buf = view.m_filter.data();
                             }
-                            for (u64 i = 0; i < view.m_foundStrings.size(); i++) {
-                                if (view.m_regex) {
-                                    if (view.m_pattern_parsed && std::regex_search(readString(view.m_foundStrings[i]), pattern))
-                                        view.m_filterIndices.push_back(i);
-                                } else if (readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos) {
-                                    view.m_filterIndices.push_back(i);
-                                }
+
+                            if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
+                               view.m_filterIndices.clear();
+
+                               std::regex pattern;
+                               if (view.m_regex) {
+                                   try {
+                                       pattern               = std::regex(data->Buf);
+                                       view.m_pattern_parsed = true;
+                                   } catch (std::regex_error &e) {
+                                       view.m_pattern_parsed = false;
+                                   }
+                               }
+                               for (u64 i = 0; i < view.m_foundStrings.size(); i++) {
+                                   if (view.m_regex) {
+                                       if (view.m_pattern_parsed && std::regex_search(readString(view.m_foundStrings[i]), pattern))
+                                           view.m_filterIndices.push_back(i);
+                                   } else if (readString(view.m_foundStrings[i]).find(data->Buf) != std::string::npos) {
+                                       view.m_filterIndices.push_back(i);
+                                   }
+                               }
                             }
+
                             return 0;
                         },
                         this);
-                    if (this->m_regex && !this->m_pattern_parsed) {
-                        ImGui::TextFormattedColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "{}", "hex.builtin.view.strings.regex_error"_lang);
-                    }
+
+                    if (filterError)
+                        ImGui::PopStyleColor();
 
                     if (ImGui::Button("hex.builtin.view.strings.extract"_lang))
                         this->searchStrings();

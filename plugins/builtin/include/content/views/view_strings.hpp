@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
     private:
         bool m_searching      = false;
         bool m_regex          = false;
-        bool m_pattern_parsed = false;
+        bool m_pattern_parsed = true;
 
         std::vector<FoundString> m_foundStrings;
         std::vector<size_t> m_filterIndices;
