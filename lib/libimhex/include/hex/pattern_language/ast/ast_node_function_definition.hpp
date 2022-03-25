@@ -48,7 +48,9 @@ namespace hex::pl {
 
             ParameterCount paramCount;
 
-            if (this->m_parameterPack.has_value())
+            if (this->m_parameterPack.has_value() && !this->m_defaultParameters.empty())
+                paramCount = ParameterCount::atLeast(this->m_params.size() - this->m_defaultParameters.size());
+            else if (this->m_parameterPack.has_value())
                 paramCount = ParameterCount::atLeast(this->m_params.size());
             else if (!this->m_defaultParameters.empty())
                 paramCount = ParameterCount::between(this->m_params.size() - this->m_defaultParameters.size(), this->m_params.size());
@@ -84,7 +86,7 @@ namespace hex::pl {
                     ctx->createParameterPack(this->m_parameterPack.value(), parameterPackContent);
                 }
 
-                for (u32 paramIndex = 0; paramIndex < this->m_params.size(); paramIndex++) {
+                for (u32 paramIndex = 0; paramIndex < this->m_params.size() && paramIndex < params.size(); paramIndex++) {
                     const auto &[name, type] = this->m_params[paramIndex];
 
                     ctx->createVariable(name, type.get(), params[paramIndex]);

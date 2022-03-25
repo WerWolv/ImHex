@@ -76,20 +76,24 @@ namespace hex::pl {
             auto function = functions[this->m_functionName];
             const auto &[min, max] = function.parameterCount;
 
-            if (evaluatedParams.size() >= min && evaluatedParams.size() < max && evaluatedParams.size() + function.defaultParameters.size() >= max) {
+            if (evaluatedParams.size() >= min && evaluatedParams.size() < max) {
                 while (true) {
                     auto remainingParams = max - evaluatedParams.size();
-                    if (remainingParams <= 0) break;
+                    if (remainingParams <= 0)
+                        break;
 
                     auto offset = evaluatedParams.size() - min;
+                    if (offset >= function.defaultParameters.size())
+                        break;
+
                     evaluatedParams.push_back(function.defaultParameters[offset]);
                 }
             }
 
             if (evaluatedParams.size() < min)
-                LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1} at least", this->m_functionName, min), this);
+                LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1} at least", this->m_functionName, min), this);
             else if (evaluatedParams.size() > max)
-                LogConsole::abortEvaluation(hex::format("too few parameters for function '{0}'. Expected {1} at most", this->m_functionName, max), this);
+                LogConsole::abortEvaluation(hex::format("too many parameters for function '{0}'. Expected {1} at most", this->m_functionName, max), this);
 
             try {
                 if (function.dangerous && evaluator->getDangerousFunctionPermission() != DangerousFunctionPermission::Allow) {
