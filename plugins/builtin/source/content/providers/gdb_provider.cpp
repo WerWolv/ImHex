@@ -302,9 +302,7 @@ namespace hex::plugin::builtin::prv {
 
         ImGui::Separator();
 
-        ImGui::TextUnformatted("0x");
-        ImGui::SameLine();
-        ImGui::InputScalar("hex.builtin.common.size"_lang, ImGuiDataType_U64, &this->m_size, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+        ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size, ImGuiInputTextFlags_CharsHexadecimal);
 
         if (this->m_port < 0)
             this->m_port = 0;

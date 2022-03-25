@@ -347,9 +347,7 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hex_editor.menu.edit.resize"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextUnformatted("0x");
-            ImGui::SameLine();
-            ImGui::InputScalar("hex.builtin.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_resizeSize, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons(
@@ -364,9 +362,7 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::BeginPopupModal("hex.builtin.view.hex_editor.menu.edit.insert"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextUnformatted("0x");
-            ImGui::SameLine();
-            ImGui::InputScalar("hex.builtin.common.size"_lang, ImGuiDataType_U64, &this->m_resizeSize, nullptr, nullptr, "%llx", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_resizeSize, ImGuiInputTextFlags_CharsHexadecimal);
             ImGui::NewLine();
 
             confirmButtons(
