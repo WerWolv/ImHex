@@ -249,11 +249,11 @@ namespace hex {
     void runCommand(const std::string &command) {
 
 #if defined(OS_WINDOWS)
-        system(hex::format("start {0}", command).c_str());
+        (void)system(hex::format("start {0}", command).c_str());
 #elif defined(OS_MACOS)
-        system(hex::format("open {0}", command).c_str());
+        (void)system(hex::format("open {0}", command).c_str());
 #elif defined(OS_LINUX)
-        system(hex::format("xdg-open {0}", command).c_str());
+        (void)system(hex::format("xdg-open {0}", command).c_str());
 #else
     #warning "Unknown OS, can't open webpages"
 #endif
@@ -271,7 +271,7 @@ namespace hex {
         LSOpenCFURLRef(urlRef, nullptr);
         CFRelease(urlRef);
 #elif defined(OS_LINUX)
-        system(hex::format("xdg-open {0}", url).c_str());
+        (void)system(hex::format("xdg-open {0}", url).c_str());
 #else
     #warning "Unknown OS, can't open webpages"
 #endif
