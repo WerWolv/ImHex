@@ -95,6 +95,7 @@ namespace hex::fs {
         const std::string settingName { "hex.builtin.setting.folders" };
         auto userDirs = ContentRegistry::Settings::read(settingName, settingName, std::vector<std::string> {});
 
+        [[maybe_unused]]
         auto addUserDirs = [&userDirs](auto &paths) {
             std::transform(userDirs.begin(), userDirs.end(), std::back_inserter(paths), [](auto &item) {
                 return std::move(item);

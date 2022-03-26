@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <chrono>
 
 #include <fmt/core.h>
@@ -13,7 +15,7 @@ namespace hex::log {
 
     namespace {
 
-        void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
+        [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
             const auto now = fmt::localtime(std::chrono::system_clock::now());
 
             fmt::print(dest, "[{0:%H:%M:%S}] ", now);
@@ -27,7 +29,7 @@ namespace hex::log {
         }
 
         template<typename... T>
-        void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
+        [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
             auto dest = getDestination();
 
             printPrefix(dest, ts, level);
@@ -37,30 +39,30 @@ namespace hex::log {
 
     }
 
-    void debug(const std::string &fmt, auto &&...args) {
+    [[maybe_unused]] void debug(const std::string &fmt, auto &&...args) {
 #if defined(DEBUG)
-        log::print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+        print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
 #else
         hex::unused(fmt, args...);
 #endif
     }
 
-    void info(const std::string &fmt, auto &&...args) {
-        log::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
+    [[maybe_unused]] void info(const std::string &fmt, auto &&...args) {
+        print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
     }
 
-    void warn(const std::string &fmt, auto &&...args) {
-        log::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
+    [[maybe_unused]] void warn(const std::string &fmt, auto &&...args) {
+        print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
     }
 
-    void error(const std::string &fmt, auto &&...args) {
-        log::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
+    [[maybe_unused]] void error(const std::string &fmt, auto &&...args) {
+        print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
     }
 
-    void fatal(const std::string &fmt, auto &&...args) {
-        log::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+    [[maybe_unused]] void fatal(const std::string &fmt, auto &&...args) {
+        print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
 
-    void redirectToFile();
+    [[maybe_unused]] void redirectToFile();
 
 }
