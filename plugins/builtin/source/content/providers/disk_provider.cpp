@@ -180,8 +180,8 @@ namespace hex::plugin::builtin::prv {
 
             if (this->m_sectorBufferAddress != seekPosition) {
                 ::lseek(this->m_diskHandle, seekPosition, SEEK_SET);
-                size = ::read(this->m_diskHandle, buffer, size);
-                if (size < 0) break;
+                if (::read(this->m_diskHandle, buffer, size) < 0)
+                    break;
 
                 this->m_sectorBufferAddress = seekPosition;
             }

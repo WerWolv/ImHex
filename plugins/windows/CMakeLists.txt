@@ -37,6 +37,6 @@ if (WIN32)
 
     add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
     set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Werror)
 
 endif ()

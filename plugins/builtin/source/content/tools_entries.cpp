@@ -485,10 +485,10 @@ namespace hex::plugin::builtin {
                 auto base8String  = hex::format("{0:#o}", number);
                 auto base2String  = hex::toBinaryString(number);
 
-                std::strncpy(buffer[0], base10String.c_str(), sizeof(buffer[0]));
-                std::strncpy(buffer[1], base16String.c_str(), sizeof(buffer[1]));
-                std::strncpy(buffer[2], base8String.c_str(), sizeof(buffer[2]));
-                std::strncpy(buffer[3], base2String.c_str(), sizeof(buffer[3]));
+                std::strncpy(buffer[0], base10String.c_str(), sizeof(buffer[0]) - 1);
+                std::strncpy(buffer[1], base16String.c_str(), sizeof(buffer[1]) - 1);
+                std::strncpy(buffer[2], base8String.c_str(), sizeof(buffer[2]) - 1);
+                std::strncpy(buffer[3], base2String.c_str(), sizeof(buffer[3]) - 1);
 
                 buffer[0][0xFFF] = '\x00';
                 buffer[1][0xFFF] = '\x00';

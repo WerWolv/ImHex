@@ -130,7 +130,8 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
             auto other = !curr;
 
-            std::optional<ImVec2> lastHighlightEnd = std::nullopt;
+            bool hasLastHighlight = false;
+            ImVec2 lastHighlightEnd = { };
 
             for (i64 col = 0; col < lineInfo[curr].validBytes; col++) {
                 auto pos = ImGui::GetCursorScreenPos();
@@ -162,10 +163,15 @@ namespace hex::plugin::builtin {
 
                 // Draw highlighting
                 if (highlightColor.has_value()) {
-                    drawList->AddRectFilled(lastHighlightEnd.value_or(pos), pos + highlightSize, highlightColor.value());
+                    if (hasLastHighlight)
+                        drawList->AddRectFilled(lastHighlightEnd, pos + highlightSize, highlightColor.value());
+                    else
+                        drawList->AddRectFilled(pos, pos + highlightSize, highlightColor.value());
+
+                    hasLastHighlight = true;
                     lastHighlightEnd = pos + ImVec2((glyphWidth - 1) * 2, 0);
                 } else {
-                    lastHighlightEnd.reset();
+                    hasLastHighlight = false;
                 }
             }
         }
