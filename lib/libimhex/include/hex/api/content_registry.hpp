@@ -18,7 +18,7 @@
 
 namespace hex {
 
-    struct View;
+    class View;
     class LanguageDefinition;
     namespace pl {
         class Evaluator;

@@ -16,7 +16,7 @@
         explicit event_name(Callback func) noexcept : Event(std::move(func)) { } \
     }
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace hex {
 

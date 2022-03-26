@@ -40,6 +40,8 @@ namespace hex::log {
     void debug(const std::string &fmt, auto &&...args) {
 #if defined(DEBUG)
         log::print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+#else
+        hex::unused(fmt, args...);
 #endif
     }
 

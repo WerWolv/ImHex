@@ -234,7 +234,10 @@ namespace hex::plugin::builtin {
             [](auto buffer, auto endian, auto style) {
                 hex::unused(style);
 
-                auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<double *>(buffer.data()), endian));
+                double result = 0;
+                std::memcpy(&result, buffer.data(), sizeof(double));
+
+                auto value = hex::format("{0:G}", hex::changeEndianess(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<double>

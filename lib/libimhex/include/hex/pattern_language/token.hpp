@@ -132,7 +132,6 @@ namespace hex::pl {
 
             [[nodiscard]] const std::string &get() const { return this->m_identifier; }
 
-            auto operator<=>(const Identifier &) const = default;
             bool operator==(const Identifier &) const  = default;
 
         private:

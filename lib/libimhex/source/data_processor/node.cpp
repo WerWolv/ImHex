@@ -77,7 +77,9 @@ namespace hex::dp {
         if (outputData->size() < sizeof(float))
             throw std::runtime_error("Not enough data provided for float");
 
-        return *reinterpret_cast<float *>(outputData->data());
+        float result = 0;
+        std::memcpy(&result, outputData->data(), sizeof(float));
+        return result;
     }
 
     void Node::setBufferOnOutput(u32 index, const std::vector<u8> &data) {
