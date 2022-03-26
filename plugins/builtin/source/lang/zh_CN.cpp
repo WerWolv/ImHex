@@ -50,9 +50,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "恢复" },
                 { "hex.builtin.welcome.safety_backup.delete", "删除" },
 
-
+                { "hex.builtin.common.endian", "端序" },
                 { "hex.builtin.common.little_endian", "小端序" },
                 { "hex.builtin.common.big_endian", "大端序" },
+                { "hex.builtin.common.little", "小" },
+                { "hex.builtin.common.big", "大" },
+                //{ "hex.builtin.common.number_format", "Format" },
                 { "hex.builtin.common.decimal", "十进制" },
                 { "hex.builtin.common.hexadecimal", "十六进制" },
                 { "hex.builtin.common.octal", "八进制" },

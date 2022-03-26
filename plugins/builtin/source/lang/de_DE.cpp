@@ -50,9 +50,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "Ja, Wiederherstellen" },
                 { "hex.builtin.welcome.safety_backup.delete", "Nein, Entfernen" },
 
-
+                { "hex.builtin.common.endian", "Endian" },
                 { "hex.builtin.common.little_endian", "Little Endian" },
                 { "hex.builtin.common.big_endian", "Big Endian" },
+                { "hex.builtin.common.little", "Little" },
+                { "hex.builtin.common.big", "Big" },
+                { "hex.builtin.common.number_format", "Format" },
                 { "hex.builtin.common.decimal", "Dezimal" },
                 { "hex.builtin.common.hexadecimal", "Hexadezimal" },
                 { "hex.builtin.common.octal", "Oktal" },

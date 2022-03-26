@@ -110,29 +110,49 @@ namespace hex::plugin::builtin {
                 ImGui::Separator();
                 ImGui::NewLine();
 
-                if (ImGui::RadioButton("hex.builtin.common.little_endian"_lang, this->m_endian == std::endian::little)) {
-                    this->m_endian           = std::endian::little;
-                    this->m_shouldInvalidate = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("hex.builtin.common.big_endian"_lang, this->m_endian == std::endian::big)) {
-                    this->m_endian           = std::endian::big;
-                    this->m_shouldInvalidate = true;
+                {
+                    int selection = [this] {
+                       switch (this->m_endian) {
+                           default:
+                           case std::endian::little:    return 0;
+                           case std::endian::big:       return 1;
+                       }
+                    }();
+
+                    std::array options = { "hex.builtin.common.little"_lang, "hex.builtin.common.big"_lang };
+
+                    if (ImGui::SliderInt("hex.builtin.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                        this->m_shouldInvalidate = true;
+
+                        switch (selection) {
+                            default:
+                            case 0: this->m_endian = std::endian::little;   break;
+                            case 1: this->m_endian = std::endian::big;      break;
+                        }
+                    }
                 }
 
-                if (ImGui::RadioButton("hex.builtin.common.decimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Decimal)) {
-                    this->m_numberDisplayStyle = NumberDisplayStyle::Decimal;
-                    this->m_shouldInvalidate   = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("hex.builtin.common.hexadecimal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Hexadecimal)) {
-                    this->m_numberDisplayStyle = NumberDisplayStyle::Hexadecimal;
-                    this->m_shouldInvalidate   = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("hex.builtin.common.octal"_lang, this->m_numberDisplayStyle == NumberDisplayStyle::Octal)) {
-                    this->m_numberDisplayStyle = NumberDisplayStyle::Octal;
-                    this->m_shouldInvalidate   = true;
+                {
+                    int selection = [this] {
+                        switch (this->m_numberDisplayStyle) {
+                            default:
+                            case NumberDisplayStyle::Decimal:       return 0;
+                            case NumberDisplayStyle::Hexadecimal:   return 1;
+                            case NumberDisplayStyle::Octal:         return 2;
+                        }
+                    }();
+                    std::array options = { "hex.builtin.common.decimal"_lang, "hex.builtin.common.hexadecimal"_lang, "hex.builtin.common.octal"_lang };
+
+                    if (ImGui::SliderInt("hex.builtin.common.number_format"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                        this->m_shouldInvalidate = true;
+
+                        switch (selection) {
+                            default:
+                            case 0: this->m_numberDisplayStyle =  NumberDisplayStyle::Decimal;     break;
+                            case 1: this->m_numberDisplayStyle =  NumberDisplayStyle::Hexadecimal; break;
+                            case 2: this->m_numberDisplayStyle =  NumberDisplayStyle::Octal;       break;
+                        }
+                    }
                 }
             } else {
                 std::string text    = "hex.builtin.view.data_inspector.no_data"_lang;
