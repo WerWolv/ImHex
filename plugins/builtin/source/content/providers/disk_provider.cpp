@@ -180,7 +180,9 @@ namespace hex::plugin::builtin::prv {
 
             if (this->m_sectorBufferAddress != seekPosition) {
                 ::lseek(this->m_diskHandle, seekPosition, SEEK_SET);
-                ::read(this->m_diskHandle, buffer, size);
+                size = ::read(this->m_diskHandle, buffer, size);
+                if (size < 0) break;
+
                 this->m_sectorBufferAddress = seekPosition;
             }
 
@@ -234,7 +236,8 @@ namespace hex::plugin::builtin::prv {
             std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
             ::lseek(this->m_diskHandle, sectorBase, SEEK_SET);
-            ::write(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
+            if (::write(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
+                break;
 
             offset += currSize;
             size -= currSize;

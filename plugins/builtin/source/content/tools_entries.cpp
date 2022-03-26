@@ -190,13 +190,13 @@ namespace hex::plugin::builtin {
                 return evaluator;
             }();
 
-            enum class MathDisplayType
-            {
+            enum class MathDisplayType : u8 {
                 Standard,
                 Scientific,
                 Engineering,
                 Programmer
-            } mathDisplayType;
+            } mathDisplayType = MathDisplayType::Standard;
+
             if (ImGui::BeginTabBar("##mathFormatTabBar")) {
                 if (ImGui::BeginTabItem("hex.builtin.tools.format.standard"_lang)) {
                     mathDisplayType = MathDisplayType::Standard;
@@ -237,8 +237,10 @@ namespace hex::plugin::builtin {
                 if (ImGui::Button("CE", buttonSize)) mathInput.clear();
                 ImGui::SameLine();
                 if (ImGui::Button(ICON_FA_BACKSPACE, buttonSize)) mathInput.clear();
+
                 ImGui::SameLine();
                 ImGui::NewLine();
+
                 switch (mathDisplayType) {
                     case MathDisplayType::Standard:
                     case MathDisplayType::Scientific:
@@ -440,7 +442,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawBaseConverter() {
-            static char buffer[4][0xFFF] = { { '0' }, { '0' }, { '0' }, { '0' } };
+            static char buffer[4][0x1000] = { { '0' }, { '0' }, { '0' }, { '0' } };
 
             static auto CharFilter = [](ImGuiInputTextCallbackData *data) -> int {
                 switch (*static_cast<u32 *>(data->UserData)) {
@@ -487,6 +489,11 @@ namespace hex::plugin::builtin {
                 std::strncpy(buffer[1], base16String.c_str(), sizeof(buffer[1]));
                 std::strncpy(buffer[2], base8String.c_str(), sizeof(buffer[2]));
                 std::strncpy(buffer[3], base2String.c_str(), sizeof(buffer[3]));
+
+                buffer[0][0xFFF] = '\x00';
+                buffer[1][0xFFF] = '\x00';
+                buffer[2][0xFFF] = '\x00';
+                buffer[3][0xFFF] = '\x00';
             };
 
             u8 base = 10;

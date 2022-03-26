@@ -50,6 +50,7 @@
 #include <hex.hpp>
 #include <hex/api/event.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <string>
 
@@ -278,7 +279,7 @@ struct MemoryEditor
             if (OptMidColsCount > 0)
                 byte_pos_x += (float)(i / OptMidColsCount) * s.SpacingBetweenMidCols;
             ImGui::SameLine(byte_pos_x);
-            ImGui::Text("%02lX", i + (base_display_addr % Cols));
+            ImGui::TextFormatted("{:02X}", i + (base_display_addr % Cols));
         }
         ImGui::EndChild();
 

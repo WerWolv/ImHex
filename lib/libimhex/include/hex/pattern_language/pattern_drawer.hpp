@@ -175,12 +175,14 @@ namespace hex::pl {
         void visit(PatternFloat& pattern) override {
             if (pattern.getSize() == 4) {
                 float f32 = pattern.getValue(m_provider);
-                u32 data = *reinterpret_cast<u32 *>(&f32);
-                this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f32, data, pattern.getSize() * 2), f32);
+                u32 integerResult = 0;
+                std::memcpy(&integerResult, &f32, sizeof(float));
+                this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f32, integerResult, pattern.getSize() * 2), f32);
             } else if (pattern.getSize() == 8) {
                 double f64 = pattern.getValue(m_provider);
-                u64 data = *reinterpret_cast<u64 *>(&f64);
-                this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f64, data, pattern.getSize() * 2), f64);
+                u64 integerResult = 0;
+                std::memcpy(&integerResult, &f64, sizeof(double));
+                this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f64, integerResult, pattern.getSize() * 2), f64);
             }
         }
 

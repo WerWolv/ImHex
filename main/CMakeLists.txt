@@ -30,3 +30,7 @@ if (WIN32)
 else ()
     target_link_libraries(main PUBLIC libimhex pthread)
 endif ()
+
+if (APPLE)
+    add_compile_definitions(GL_SILENCE_DEPRECATION)
+endif ()

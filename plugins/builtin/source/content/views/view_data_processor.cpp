@@ -307,6 +307,7 @@ namespace hex::plugin::builtin {
                         ImNodesPinShape pinShape;
 
                         switch (attribute.getType()) {
+                            default:
                             case dp::Attribute::Type::Integer:
                                 pinShape = ImNodesPinShape_Circle;
                                 break;

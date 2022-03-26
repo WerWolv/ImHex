@@ -130,7 +130,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
             auto other = !curr;
 
-            std::optional<ImVec2> lastHighlightEnd;
+            std::optional<ImVec2> lastHighlightEnd = std::nullopt;
 
             for (i64 col = 0; col < lineInfo[curr].validBytes; col++) {
                 auto pos = ImGui::GetCursorScreenPos();
