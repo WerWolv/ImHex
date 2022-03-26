@@ -1,9 +1,10 @@
 #pragma once
 
+#include "pattern_drawer.hpp"
+
 #include <hex.hpp>
 
 #include <imgui.h>
-#include <hex/pattern_language/pattern_drawer.hpp>
 #include <hex/ui/view.hpp>
 
 #include <vector>
@@ -21,7 +22,7 @@ namespace hex::plugin::builtin {
 
     private:
         std::map<prv::Provider *, std::vector<std::shared_ptr<pl::Pattern>>> m_sortedPatterns;
-        hex::pl::PatternDrawer m_drawer;
+        hex::PatternDrawer m_drawer;
     };
 
 }
