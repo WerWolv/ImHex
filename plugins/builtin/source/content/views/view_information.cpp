@@ -181,10 +181,11 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
 
                         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
+                        ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
 
                         ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
                         ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
-                        if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1, 0), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale)) {
+                        if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale)) {
                             static auto x = [] {
                                 std::array<ImU64, 256> result { 0 };
                                 std::iota(result.begin(), result.end(), 0);
@@ -202,7 +203,7 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
 
                         ImPlot::SetNextPlotLimits(0, this->m_blockEntropy.size(), -0.1, 1.1, ImGuiCond_Always);
-                        if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1, 0), ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
+                        if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
                             ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
                             if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
@@ -214,6 +215,7 @@ namespace hex::plugin::builtin {
                             ImPlot::EndPlot();
                         }
 
+                        ImPlot::PopStyleColor();
                         ImGui::PopStyleColor();
 
                         ImGui::NewLine();
