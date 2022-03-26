@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
             return true;
         });
 
-        this->m_memoryEditor.ReadFn = [](const ImU8 *data, size_t off) -> ImU8 {
+        this->m_memoryEditor.ReadFn = [](const ImU8 *, size_t off) -> ImU8 {
             auto provider = ImHexApi::Provider::get();
             if (!provider->isAvailable() || !provider->isReadable())
                 return 0x00;
@@ -50,7 +50,7 @@ namespace hex::plugin::builtin {
             return byte;
         };
 
-        this->m_memoryEditor.WriteFn = [](ImU8 *data, size_t off, ImU8 d) -> void {
+        this->m_memoryEditor.WriteFn = [](ImU8 *, size_t off, ImU8 d) -> void {
             auto provider = ImHexApi::Provider::get();
             if (!provider->isAvailable() || !provider->isWritable())
                 return;
@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
     }
 
     static void saveAs() {
-        fs::openFileBrowser("hex.builtin.view.hex_editor.save_as"_lang, fs::DialogMode::Save, {}, [](const auto &path) {
+        fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
             ImHexApi::Provider::get()->saveAs(path);
         });
     }
@@ -299,7 +299,7 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.builtin.view.hex_editor.script.script"_lang)) {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.script.script.title"_lang, fs::DialogMode::Open, { {"Python Script", "py"} },
+                fs::openFileBrowser(fs::DialogMode::Open, { {"Python Script", "py"} },
                     [this](const auto &path) {
                         this->m_loaderScriptScriptPath = path.string();
                     });
@@ -307,7 +307,7 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##nolabel", this->m_loaderScriptFilePath.data(), this->m_loaderScriptFilePath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.builtin.view.hex_editor.script.file"_lang)) {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.script.file.title"_lang, fs::DialogMode::Open, {}, [this](const auto &path) {
+                fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
                     this->m_loaderScriptFilePath = path.string();
                 });
             }
@@ -801,7 +801,7 @@ namespace hex::plugin::builtin {
 
         ImGui::Separator();
 
-        bool bytesSelected = this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1;
+        bool bytesSelected = this->m_memoryEditor.DataPreviewAddr != static_cast<size_t>(-1) && this->m_memoryEditor.DataPreviewAddrEnd != static_cast<size_t>(-1);
 
         if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, "CTRL + C", false, bytesSelected))
             this->copyBytes();
@@ -834,7 +834,9 @@ namespace hex::plugin::builtin {
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.bookmark"_lang, nullptr, false, this->m_memoryEditor.DataPreviewAddr != -1 && this->m_memoryEditor.DataPreviewAddrEnd != -1)) {
+        if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.bookmark"_lang, nullptr, false,
+                this->m_memoryEditor.DataPreviewAddr != static_cast<size_t>(-1) && this->m_memoryEditor.DataPreviewAddrEnd != static_cast<size_t>(-1)))
+        {
             auto base = provider->getBaseAddress();
 
             size_t start = base + std::min(this->m_memoryEditor.DataPreviewAddr, this->m_memoryEditor.DataPreviewAddrEnd);
@@ -898,7 +900,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
             if (name == "Create File") {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.create_file"_lang, fs::DialogMode::Save, {}, [this](const auto &path) {
+                fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const auto &path) {
                     fs::File file(path, fs::File::Mode::Create);
 
                     if (!file.isValid()) {
@@ -912,12 +914,12 @@ namespace hex::plugin::builtin {
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open File") {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, fs::DialogMode::Open, {}, [this](const auto &path) {
+                fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open Project") {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.open_project"_lang, fs::DialogMode::Open, { {"Project File", "hexproj"} },
+                fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [this](const auto &path) {
                         ProjectFile::load(path);
                         this->getWindowOpenState() = true;
@@ -1033,7 +1035,7 @@ namespace hex::plugin::builtin {
         });
 
         ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
-            fs::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
+            fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 EventManager::post<RequestOpenFile>(path);
             });
         });
@@ -1092,7 +1094,7 @@ namespace hex::plugin::builtin {
             bool providerValid = ImHexApi::Provider::isValid();
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.open_project"_lang, "")) {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.menu.file.open_project"_lang, fs::DialogMode::Open, { {"Project File", "hexproj"}
+                fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"}
                 },
                     [](const auto &path) {
                         ProjectFile::load(path);
@@ -1101,7 +1103,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
                 if (ProjectFile::getProjectFilePath() == "") {
-                    fs::openFileBrowser("hex.builtin.view.hex_editor.save_project"_lang, fs::DialogMode::Save, { {"Project File", "hexproj"}
+                    fs::openFileBrowser(fs::DialogMode::Save, { {"Project File", "hexproj"}
                     },
                         [](std::fs::path path) {
                             if (path.extension() != ".hexproj") {
@@ -1142,7 +1144,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.import"_lang)) {
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.import.base64"_lang)) {
 
-                    fs::openFileBrowser("hex.builtin.view.hex_editor.menu.file.import.base64"_lang, fs::DialogMode::Open, {}, [this](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
                         fs::File file(path, fs::File::Mode::Read);
                         if (!file.isValid()) {
                             View::showErrorPopup("hex.builtin.view.hex_editor.error.open"_lang);
@@ -1167,7 +1169,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.import.ips"_lang, nullptr, false, !this->m_processingImportExport)) {
 
-                    fs::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, fs::DialogMode::Open, {}, [this](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
                         this->m_processingImportExport = true;
                         std::thread([this, path] {
                             auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hex_editor.processing", 0);
@@ -1195,7 +1197,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.import.ips32"_lang, nullptr, false, !this->m_processingImportExport)) {
-                    fs::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, fs::DialogMode::Open, {}, [this](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
                         this->m_processingImportExport = true;
                         std::thread([this, path] {
                             auto task = ImHexApi::Tasks::createTask("hex.builtin.view.hex_editor.processing", 0);
@@ -1250,7 +1252,7 @@ namespace hex::plugin::builtin {
                         this->m_processingImportExport = false;
 
                         ImHexApi::Tasks::doLater([this] {
-                            fs::openFileBrowser("hex.builtin.view.hex_editor.menu.file.export.title"_lang, fs::DialogMode::Save, {}, [this](const auto &path) {
+                            fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const auto &path) {
                                 auto file = fs::File(path, fs::File::Mode::Create);
                                 if (!file.isValid()) {
                                     View::showErrorPopup("hex.builtin.view.hex_editor.error.create"_lang);
@@ -1279,7 +1281,7 @@ namespace hex::plugin::builtin {
                         this->m_processingImportExport = false;
 
                         ImHexApi::Tasks::doLater([this] {
-                            fs::openFileBrowser("hex.builtin.view.hex_editor.menu.file.export.title"_lang, fs::DialogMode::Save, {}, [this](const auto &path) {
+                            fs::openFileBrowser(fs::DialogMode::Save, {}, [this](const auto &path) {
                                 auto file = fs::File(path, fs::File::Mode::Create);
                                 if (!file.isValid()) {
                                     View::showErrorPopup("hex.builtin.view.hex_editor.error.create"_lang);

@@ -9,12 +9,10 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <chrono>
 #include <csignal>
 #include <iostream>
-#include <numeric>
 #include <set>
 #include <thread>
 #include <cassert>
@@ -26,24 +24,17 @@
 #include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <imgui_freetype.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <implot.h>
 #include <implot_internal.h>
 #include <imnodes.h>
 #include <imnodes_internal.h>
 
-#include <fontawesome_font.h>
 #include <codicons_font.h>
-#include <unifont_font.h>
 
 #include <hex/helpers/project_file_handler.hpp>
-#include "init/tasks.hpp"
 
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
-#include <nlohmann/json.hpp>
 
 namespace hex {
 
@@ -53,14 +44,14 @@ namespace hex {
         return ctx;    // Unused, but the return value has to be non-null
     }
 
-    void ImHexSettingsHandler_ReadLine(ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line) {
+    void ImHexSettingsHandler_ReadLine(ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             std::string format = std::string(view->getUnlocalizedName()) + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
         }
     }
 
-    void ImHexSettingsHandler_WriteAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
+    void ImHexSettingsHandler_WriteAll(ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
         buf->reserve(buf->size() + 0x20);    // Ballpark reserve
 
         buf->appendf("[%s][General]\n", handler->TypeName);
@@ -120,7 +111,7 @@ namespace hex {
 
         constexpr auto CrashBackupFileName = "crash_backup.hexproj";
 
-        EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int signal) {
+        EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int) {
             ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
 
             if (!ProjectFile::hasUnsavedChanges())
@@ -263,7 +254,7 @@ namespace hex {
                     ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
                     {
                         if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
-                            if (openWindow == index)
+                            if (static_cast<u32>(openWindow) == index)
                                 openWindow = -1;
                             else
                                 openWindow = index;
@@ -273,7 +264,7 @@ namespace hex {
 
                     ImGui::PopStyleColor(3);
 
-                    bool open = openWindow == index;
+                    bool open = static_cast<u32>(openWindow) == index;
                     if (open) {
                         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 2_scaled, 0));
                         ImGui::SetNextWindowSize(ImVec2(250_scaled, dockSpaceSize.y + ImGui::GetStyle().FramePadding.y + 2_scaled));
@@ -601,11 +592,11 @@ namespace hex {
             }
         });
 
-        glfwSetDropCallback(this->m_window, [](GLFWwindow *window, int count, const char **paths) {
+        glfwSetDropCallback(this->m_window, [](GLFWwindow *, int count, const char **paths) {
             if (count != 1)
                 return;
 
-            for (u32 i = 0; i < count; i++) {
+            for (int i = 0; i < count; i++) {
                 auto path = std::fs::path(reinterpret_cast<const char8_t *>(paths[i]));
 
                 bool handled = false;

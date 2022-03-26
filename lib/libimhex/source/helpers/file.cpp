@@ -115,7 +115,8 @@ namespace hex::fs {
     void File::setSize(u64 size) {
         if (!isValid()) return;
 
-        ftruncate64(fileno(this->m_file), size);
+        auto result = ftruncate64(fileno(this->m_file), size);
+        hex::unused(result);
     }
 
     void File::flush() {

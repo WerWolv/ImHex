@@ -4,12 +4,12 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <bitset>
 #include <filesystem>
 
 #include <imgui.h>
-#include <hex/ui/imgui_imhex_extensions.h>
 
 #if defined(OS_LINUX)
     #include <fcntl.h>
@@ -82,7 +82,7 @@ namespace hex::plugin::builtin::prv {
         }
 
         {
-            DISK_GEOMETRY_EX diskGeometry = { 0 };
+            DISK_GEOMETRY_EX diskGeometry = { };
             DWORD bytesRead               = 0;
             if (DeviceIoControl(
                     this->m_diskHandle,
@@ -113,8 +113,11 @@ namespace hex::plugin::builtin::prv {
 
         struct stat driveStat;
 
-        ::stat(path.c_str(), &driveStat) == 0;
-        this->m_diskSize   = driveStat.st_size;
+        if (::stat(path.c_str(), &driveStat) == 0)
+            this->m_diskSize   = driveStat.st_size;
+        else
+            this->m_diskSize = 0;
+
         this->m_sectorSize = 0;
 
         this->m_diskHandle = ::open(path.c_str(), O_RDWR);
@@ -158,7 +161,7 @@ namespace hex::plugin::builtin::prv {
             seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
             seekPosition.HighPart = offset >> 32;
 
-            if (this->m_sectorBufferAddress != seekPosition.QuadPart) {
+            if (this->m_sectorBufferAddress != static_cast<u64>(seekPosition.QuadPart)) {
                 ::SetFilePointer(this->m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
                 ::ReadFile(this->m_diskHandle, this->m_sectorBuffer.data(), this->m_sectorBuffer.size(), &bytesRead, nullptr);
                 this->m_sectorBufferAddress = seekPosition.QuadPart;
@@ -177,7 +180,9 @@ namespace hex::plugin::builtin::prv {
 
             if (this->m_sectorBufferAddress != seekPosition) {
                 ::lseek(this->m_diskHandle, seekPosition, SEEK_SET);
-                ::read(this->m_diskHandle, buffer, size);
+                if (::read(this->m_diskHandle, buffer, size) < 0)
+                    break;
+
                 this->m_sectorBufferAddress = seekPosition;
             }
 
@@ -231,7 +236,8 @@ namespace hex::plugin::builtin::prv {
             std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
             ::lseek(this->m_diskHandle, sectorBase, SEEK_SET);
-            ::write(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
+            if (::write(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
+                break;
 
             offset += currSize;
             size -= currSize;
@@ -272,7 +278,7 @@ namespace hex::plugin::builtin::prv {
 
             if (handle == INVALID_HANDLE_VALUE) continue;
 
-            VOLUME_DISK_EXTENTS diskExtents = { 0 };
+            VOLUME_DISK_EXTENTS diskExtents = { };
             DWORD bytesRead                 = 0;
             auto result                     = ::DeviceIoControl(
                 handle,
@@ -314,7 +320,7 @@ namespace hex::plugin::builtin::prv {
 
 #else
 
-        if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer))
+        if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer))
             this->m_path = this->m_pathBuffer;
 
 #endif

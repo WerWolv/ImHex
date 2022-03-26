@@ -75,7 +75,7 @@ namespace hex {
         if (this->m_socket == SOCKET_NONE)
             return;
 
-        sockaddr_in client = { 0 };
+        sockaddr_in client = { };
 
         client.sin_family = AF_INET;
         client.sin_port   = htons(port);

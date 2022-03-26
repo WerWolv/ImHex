@@ -32,7 +32,6 @@ namespace ImGui {
             return false;
 
         ImGuiContext &g         = *GImGui;
-        const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
         ImVec2 label_size       = CalcTextSize(icon, NULL, false);
         label_size.x += CalcTextSize(" ", NULL, false).x + CalcTextSize(label, NULL, false).x;
@@ -67,7 +66,6 @@ namespace ImGui {
             return false;
 
         ImGuiContext &g         = *GImGui;
-        const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
         const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
@@ -554,7 +552,6 @@ namespace ImGui {
         fraction = ImSaturate(fraction);
         RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
         bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
-        const ImVec2 fill_br = ImVec2(ImLerp(bb.Min.x, bb.Max.x, fraction), bb.Max.y);
         RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
     }
 

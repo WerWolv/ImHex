@@ -40,6 +40,8 @@ namespace hex::plugin::windows {
 
             ImGui::Combo(
                 "hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void *data, int idx, const char **out_text) -> bool {
+                    hex::unused(data);
+
                     *out_text = ViewTTYConsole::BaudRates[idx];
                     return true;
                 },
@@ -48,6 +50,7 @@ namespace hex::plugin::windows {
 
             ImGui::Combo(
                 "hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void *data, int idx, const char **out_text) -> bool {
+                    hex::unused(data);
                     *out_text = ViewTTYConsole::NumBits[idx];
                     return true;
                 },
@@ -56,6 +59,7 @@ namespace hex::plugin::windows {
 
             ImGui::Combo(
                 "hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void *data, int idx, const char **out_text) -> bool {
+                    hex::unused(data);
                     *out_text = ViewTTYConsole::StopBits[idx];
                     return true;
                 },
@@ -64,6 +68,7 @@ namespace hex::plugin::windows {
 
             ImGui::Combo(
                 "hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void *data, int idx, const char **out_text) -> bool {
+                    hex::unused(data);
                     *out_text = ViewTTYConsole::ParityBits[idx];
                     return true;
                 },
@@ -113,12 +118,12 @@ namespace hex::plugin::windows {
                 while (clipper.Step()) {
                     std::scoped_lock lock(this->m_receiveBufferMutex);
 
-                    for (u32 i = clipper.DisplayStart + 1; i < clipper.DisplayEnd; i++) {
+                    for (int i = clipper.DisplayStart + 1; i < clipper.DisplayEnd; i++) {
                         ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions[i - 1], this->m_receiveDataBuffer.data() + this->m_wrapPositions[i]);
                     }
 
                     if (!this->m_receiveDataBuffer.empty() && !this->m_wrapPositions.empty())
-                        if (clipper.DisplayEnd >= this->m_wrapPositions.size() - 1)
+                        if (static_cast<size_t>(clipper.DisplayEnd) >= this->m_wrapPositions.size() - 1)
                             ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions.back());
 
                     if (this->m_shouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
@@ -182,7 +187,7 @@ namespace hex::plugin::windows {
     }
 
     bool ViewTTYConsole::connect() {
-        if (this->m_comPorts.empty() || this->m_selectedPort >= this->m_comPorts.size()) {
+        if (this->m_comPorts.empty() || static_cast<size_t>(this->m_selectedPort) >= this->m_comPorts.size()) {
             View::showErrorPopup("hex.windows.view.tty_console.no_available_port"_lang);
             return true;    // If false, connect_error error popup will override this error popup
         }
@@ -231,7 +236,7 @@ namespace hex::plugin::windows {
 
         this->m_receiveThread = std::jthread([this](const std::stop_token &token) {
             bool waitingOnRead    = false;
-            OVERLAPPED overlapped = { 0 };
+            OVERLAPPED overlapped = { };
 
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);
             ON_SCOPE_EXIT { ::CloseHandle(&overlapped); };
@@ -298,7 +303,7 @@ namespace hex::plugin::windows {
             return;
 
         auto transmitThread = std::thread([&, this] {
-            OVERLAPPED overlapped = { 0 };
+            OVERLAPPED overlapped = { };
 
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);
             ON_SCOPE_EXIT { ::CloseHandle(&overlapped); };

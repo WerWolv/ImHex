@@ -81,7 +81,7 @@ namespace hex::plugin::builtin {
                     if (buffer[i] >= ' ' && buffer[i] <= '~' && offset < provider->getActualSize() - 1)
                         foundCharacters++;
                     else {
-                        if (foundCharacters >= this->m_minimumLength) {
+                        if (foundCharacters >= static_cast<u32>(this->m_minimumLength)) {
                             FoundString foundString = {
                                 offset + i - foundCharacters + provider->getBaseAddress(),
                                 foundCharacters
@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
                     clipper.Begin(this->m_filterIndices.size());
 
                     while (clipper.Step()) {
-                        for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             auto &foundString = this->m_foundStrings[this->m_filterIndices[i]];
                             auto string       = readString(foundString);
 

@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
 
         bool m_greyedOutZeros = true;
         bool m_upperCaseHex   = true;
-        int m_columnCount     = 16;
+        u32 m_columnCount     = 16;
     };
 
 }

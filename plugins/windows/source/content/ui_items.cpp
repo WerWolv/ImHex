@@ -1,7 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/fmt.hpp>
 
 #include <windows.h>
 #include <psapi.h>
@@ -13,18 +12,6 @@
 #include <codicons_font.h>
 
 namespace hex::plugin::windows {
-
-    static ULONGLONG subtractTimes(const FILETIME &left, const FILETIME &right) {
-        LARGE_INTEGER a, b;
-
-        a.LowPart  = left.dwLowDateTime;
-        a.HighPart = left.dwHighDateTime;
-
-        b.LowPart  = right.dwLowDateTime;
-        b.HighPart = right.dwHighDateTime;
-
-        return a.QuadPart - b.QuadPart;
-    }
 
     void addTitleBarButtons() {
 #if defined(DEBUG)
@@ -59,15 +46,17 @@ namespace hex::plugin::windows {
                 static u32 numProcessors;
                 static HANDLE self = GetCurrentProcess();
 
-                FILETIME ftime, fsys, fuser;
                 ULARGE_INTEGER now, sys, user;
+                {
+                    FILETIME ftime, fsys, fuser;
 
-                GetSystemTimeAsFileTime(&ftime);
-                memcpy(&now, &ftime, sizeof(FILETIME));
+                    GetSystemTimeAsFileTime(&ftime);
+                    memcpy(&now, &ftime, sizeof(FILETIME));
 
-                GetProcessTimes(self, &ftime, &ftime, &fsys, &fuser);
-                memcpy(&sys, &fsys, sizeof(FILETIME));
-                memcpy(&user, &fuser, sizeof(FILETIME));
+                    GetProcessTimes(self, &ftime, &ftime, &fsys, &fuser);
+                    memcpy(&sys, &fsys, sizeof(FILETIME));
+                    memcpy(&user, &fuser, sizeof(FILETIME));
+                }
 
                 if (lastCPU.QuadPart == 0) {
                     SYSTEM_INFO sysInfo;

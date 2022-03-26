@@ -530,9 +530,9 @@ namespace hex::plugin::builtin {
             auto from  = this->getIntegerOnInput(1);
             auto to    = this->getIntegerOnInput(2);
 
-            if (from < 0 || from >= input.size())
+            if (from < 0 || static_cast<u64>(from) >= input.size())
                 throwNodeError("'from' input out of range");
-            if (to < 0 || from >= input.size())
+            if (to < 0 || static_cast<u64>(from) >= input.size())
                 throwNodeError("'to' input out of range");
             if (to <= from)
                 throwNodeError("'to' input needs to be greater than 'from' input");

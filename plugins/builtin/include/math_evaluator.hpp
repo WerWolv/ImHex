@@ -58,9 +58,12 @@ namespace hex {
     struct Token {
         TokenType type;
 
-        long double number;
-        Operator op;
-        BracketType bracketType;
+        union {
+            long double number;
+            Operator op;
+            BracketType bracketType;
+        };
+
         std::string name;
         std::vector<long double> arguments;
     };

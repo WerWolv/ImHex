@@ -215,7 +215,7 @@ namespace hex::pl {
             });
 
             for (const auto &[define, value, defineLine] : sortedDefines) {
-                i32 index = 0;
+                size_t index = 0;
                 while ((index = output.find(define, index)) != std::string::npos) {
                     output.replace(index, define.length(), value);
                     index += value.length();

@@ -249,14 +249,13 @@ namespace hex {
     void runCommand(const std::string &command) {
 
 #if defined(OS_WINDOWS)
-        system(hex::format("start {0}", command).c_str());
+        auto result = system(hex::format("start {0}", command).c_str());
 #elif defined(OS_MACOS)
-        system(hex::format("open {0}", command).c_str());
+        auto result = system(hex::format("open {0}", command).c_str());
 #elif defined(OS_LINUX)
-        system(hex::format("xdg-open {0}", command).c_str());
-#else
-    #warning "Unknown OS, can't open webpages"
+        auto result = system(hex::format("xdg-open {0}", command).c_str());
 #endif
+        hex::unused(result);
     }
 
     void openWebpage(std::string url) {
@@ -271,7 +270,8 @@ namespace hex {
         LSOpenCFURLRef(urlRef, nullptr);
         CFRelease(urlRef);
 #elif defined(OS_LINUX)
-        system(hex::format("xdg-open {0}", url).c_str());
+        auto result = system(hex::format("xdg-open {0}", url).c_str());
+        hex::unused(result);
 #else
     #warning "Unknown OS, can't open webpages"
 #endif
@@ -399,7 +399,7 @@ namespace hex {
         u32 exponent = (float16 >> 10) & 0x1F;
         u32 mantissa = float16 & 0x3FF;
 
-        u32 result;
+        u32 result = 0x00;
 
         if (exponent == 0) {
             if (mantissa == 0) {
@@ -425,7 +425,10 @@ namespace hex {
             result = (sign << 31) | ((exponent + (0x7F - 15)) << 23) | (mantissa << 13);
         }
 
-        return reinterpret_cast<float &>(result);
+        float floatResult = 0;
+        std::memcpy(&floatResult, &result, sizeof(float));
+
+        return floatResult;
     }
 
     bool isProcessElevated() {
@@ -447,7 +450,7 @@ namespace hex {
         return elevated;
 
 #elif defined(OS_LINUX) || defined(OS_MACOS)
-        return getuid() < 0 || getuid() != geteuid();
+        return getuid() == 0 || getuid() != geteuid();
 #endif
     }
 

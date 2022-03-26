@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
                     result += hex::format("{0:08X}  ", col << 4);
                     for (u64 i = 0; i < 16; i++) {
 
-                        if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
+                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
                             result += "   ";
                         else
                             result += hex::format("{0:02X} ", buffer[((col << 4) - offset) + i]);
@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
 
                     for (u64 i = 0; i < 16; i++) {
 
-                        if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
+                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
                             result += " ";
                         else {
                             u8 c             = buffer[((col << 4) - offset) + i];
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
                     result += hex::format("        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", col << 4);
                     for (u64 i = 0; i < 16; i++) {
 
-                        if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
+                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
                             result += "&nbsp&nbsp ";
                         else
                             result += hex::format("{0:02X} ", buffer[((col << 4) - offset) + i]);
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
 
                     for (u64 i = 0; i < 16; i++) {
 
-                        if (col == (offset >> 4) && i < (offset & 0xF) || col == (end >> 4) && i > (end & 0xF))
+                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
                             result += "&nbsp";
                         else {
                             u8 c             = buffer[((col << 4) - offset) + i];

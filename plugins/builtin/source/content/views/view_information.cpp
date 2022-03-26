@@ -9,6 +9,7 @@
 
 #include <cstring>
 #include <cmath>
+#include <cinttypes>
 #include <filesystem>
 #include <numeric>
 #include <span>
@@ -156,7 +157,7 @@ namespace hex::plugin::builtin {
 
                     if (this->m_dataValid) {
 
-                        ImGui::LabelText("hex.builtin.view.information.region"_lang, "0x%llx - 0x%llx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
+                        ImGui::LabelText("hex.builtin.view.information.region"_lang, "%s", hex::format("0x{:X} - 0x{:X}", this->m_analyzedRegion.first, this->m_analyzedRegion.second).c_str());
 
                         ImGui::NewLine();
 

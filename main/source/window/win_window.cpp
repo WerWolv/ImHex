@@ -27,7 +27,6 @@ namespace hex {
     static LONG_PTR g_oldWndProc;
     static float g_titleBarHeight;
     static ImGuiMouseCursor g_mouseCursorIcon;
-    static BOOL g_compositionEnabled = false;
 
     static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
@@ -42,7 +41,9 @@ namespace hex {
                     CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
 
                     if (IsMaximized(hwnd)) {
-                        WINDOWINFO windowInfo = { .cbSize = sizeof(WINDOWINFO) };
+                        WINDOWINFO windowInfo = { };
+                        windowInfo.cbSize = sizeof(WINDOWINFO);
+
                         GetWindowInfo(hwnd, &windowInfo);
                         rect = RECT {
                             .left   = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
@@ -209,7 +210,7 @@ namespace hex {
             globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
         } else {
             if (ImHexApi::System::getProgramArguments().argc > 1) {
-                ::EnumWindows([](HWND hWnd, LPARAM lparam) -> BOOL {
+                ::EnumWindows([](HWND hWnd, LPARAM) -> BOOL {
                     auto &programArgs = ImHexApi::System::getProgramArguments();
 
                     auto length = ::GetWindowTextLength(hWnd);

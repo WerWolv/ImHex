@@ -105,7 +105,7 @@ namespace hex::plugin::builtin {
             // Save file as
             ImGui::Disabled([&provider] {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
-                    fs::openFileBrowser("hex.builtin.view.hex_editor.save_as"_lang, fs::DialogMode::Save, {}, [&provider](auto path) {
+                    fs::openFileBrowser(fs::DialogMode::Save, {}, [&provider](auto path) {
                         provider->saveAs(path);
                     });
             },
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
             // Create bookmark
             ImGui::Disabled([] {
                 if (ImGui::ToolBarButton(ICON_VS_BOOKMARK, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
-                    Region region = { 0 };
+                    Region region = { };
                     EventManager::post<QuerySelection>(region);
 
                     ImHexApi::Bookmarks::add(region.address, region.size, {}, {});
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
                 ImGui::SetNextItemWidth(200_scaled);
                 if (ImGui::BeginCombo("", preview.c_str())) {
 
-                    for (int i = 0; i < providers.size(); i++) {
+                    for (size_t i = 0; i < providers.size(); i++) {
                         if (ImGui::Selectable(providers[i]->getName().c_str())) {
                             ImHexApi::Provider::setCurrentProvider(i);
                         }

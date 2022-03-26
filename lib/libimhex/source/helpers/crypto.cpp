@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <bit>
 
 #if MBEDTLS_VERSION_MAJOR <= 2
 
@@ -82,91 +83,90 @@ namespace hex::crypt {
         }
     }
 
+    template<size_t NumBits> requires (std::has_single_bit(NumBits))
     class Crc {
         // use reflected algorithm, so we reflect only if refin / refout is FALSE
         // mask values, 0b1 << 64 is UB, so use 0b10 << 63
 
     public:
-        using calc_type = uint64_t;
+        constexpr Crc(u64 polynomial, u64 init, u64 xorOut, bool reflectInput, bool reflectOutput)
+            : m_value(0x00), m_init(init & ((0b10ull << (NumBits - 1)) - 1)), m_xorOut(xorOut & ((0b10ull << (NumBits - 1)) - 1)),
+              m_reflectInput(reflectInput), m_reflectOutput(reflectOutput),
+              m_table([polynomial]() {
+                auto reflectedPoly = reflect(polynomial & ((0b10ull << (NumBits - 1)) - 1), NumBits);
+                std::array<uint64_t, 256> table = { 0 };
 
-        Crc(int bits, calc_type polynomial, calc_type init, calc_type xorout, bool refin, bool refout) : m_bits(bits),
-                                                                                                         m_init(init & ((0b10ull << (bits - 1)) - 1)),
-                                                                                                         m_xorout(xorout & ((0b10ull << (bits - 1)) - 1)),
-                                                                                                         m_refin(refin),
-                                                                                                         m_refout(refout),
-                                                                                                         table([polynomial, bits]() {
-                                                                                                             auto reflectedpoly              = reflect(polynomial & ((0b10ull << (bits - 1)) - 1), bits);
-                                                                                                             std::array<uint64_t, 256> table = { 0 };
+                for (uint32_t i = 0; i < 256; i++) {
+                    uint64_t c = i;
+                    for (std::size_t j = 0; j < 8; j++) {
+                        if (c & 0b1)
+                            c = reflectedPoly ^ (c >> 1);
+                        else
+                            c >>= 1;
+                    }
+                    table[i] = c;
+                }
 
-                                                                                                             for (uint32_t i = 0; i < 256; i++) {
-                                                                                                                 uint64_t c = i;
-                                                                                                                 for (std::size_t j = 0; j < 8; j++) {
-                                                                                                                     if (c & 0b1)
-                                                                                                                         c = reflectedpoly ^ (c >> 1);
-                                                                                                                     else
-                                                                                                                         c >>= 1;
-                                                                                                                 }
-                                                                                                                 table[i] = c;
-                                                                                                             }
-
-                                                                                                             return table;
-                                                                                                         }()) {
+                return table;
+         }()) {
             reset();
         };
 
-        void reset() {
-            c = reflect(m_init, m_bits);
+        constexpr void reset() {
+            this->m_value = reflect(m_init, NumBits);
         }
 
-        void processBytes(const unsigned char *data, std::size_t size) {
+        constexpr void processBytes(const unsigned char *data, std::size_t size) {
             for (std::size_t i = 0; i < size; i++) {
-                unsigned char d;
-                if (m_refin)
-                    d = data[i];
+                u8 byte;
+                if (this->m_reflectInput)
+                    byte = data[i];
                 else
-                    d = reflect(data[i]);
+                    byte = reflect(data[i]);
 
-                c = table[(c ^ d) & 0xFFL] ^ (c >> 8);
+                this->m_value = this->m_table[(this->m_value ^ byte) & 0xFFL] ^ (this->m_value >> 8);
             }
         }
 
-        calc_type checksum() const {
-            if (m_refout)
-                return c ^ m_xorout;
+        [[nodiscard]]
+        constexpr u64 checksum() const {
+            if (this->m_reflectOutput)
+                return this->m_value ^ m_xorOut;
             else
-                return reflect(c, m_bits) ^ m_xorout;
+                return reflect(this->m_value, NumBits) ^ m_xorOut;
         }
 
     private:
-        const int m_bits;
-        const calc_type m_init;
-        const calc_type m_xorout;
-        const bool m_refin;
-        const bool m_refout;
-        const std::array<uint64_t, 256> table;
+        u64 m_value;
 
-        calc_type c;
+        u64 m_init;
+        u64 m_xorOut;
+        bool m_reflectInput;
+        bool m_reflectOutput;
+
+        std::array<uint64_t, 256> m_table;
     };
 
-    template<int bits>
+    template<size_t NumBits>
     auto calcCrc(prv::Provider *data, u64 offset, std::size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
-        Crc crc(bits, polynomial, init, xorout, reflectIn, reflectOut);
+        using Crc = Crc<NumBits>;
+        Crc crc(polynomial, init, xorout, reflectIn, reflectOut);
 
         processDataByChunks(data, offset, size, std::bind(&Crc::processBytes, &crc, _1, _2));
 
         return crc.checksum();
     }
 
-    u16 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
-        return calcCrc<8>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
+    u16 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorOut, bool reflectIn, bool reflectOut) {
+        return calcCrc<8>(data, offset, size, polynomial, init, xorOut, reflectIn, reflectOut);
     }
 
-    u16 crc16(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
-        return calcCrc<16>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
+    u16 crc16(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorOut, bool reflectIn, bool reflectOut) {
+        return calcCrc<16>(data, offset, size, polynomial, init, xorOut, reflectIn, reflectOut);
     }
 
-    u32 crc32(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut) {
-        return calcCrc<32>(data, offset, size, polynomial, init, xorout, reflectIn, reflectOut);
+    u32 crc32(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorOut, bool reflectIn, bool reflectOut) {
+        return calcCrc<32>(data, offset, size, polynomial, init, xorOut, reflectIn, reflectOut);
     }
 
 
@@ -414,7 +414,7 @@ namespace hex::crypt {
 
         std::string output(input.size() * 2, '\0');
 
-        for (int i = 0; i < input.size(); i++) {
+        for (size_t i = 0; i < input.size(); i++) {
             output[2 * i + 0] = "0123456789ABCDEF"[input[i] / 16];
             output[2 * i + 1] = "0123456789ABCDEF"[input[i] % 16];
         }
@@ -427,13 +427,15 @@ namespace hex::crypt {
 
         if (input.empty())
             return {};
+        if (key.size() > 256)
+            return {};
 
         mbedtls_cipher_context_t ctx;
         auto cipherInfo = mbedtls_cipher_info_from_type(type);
 
 
         mbedtls_cipher_setup(&ctx, cipherInfo);
-        mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, operation);
+        mbedtls_cipher_setkey(&ctx, key.data(), static_cast<int>(key.size() * 8), operation);
 
         std::array<u8, 16> nonceCounter = { 0 };
         std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());

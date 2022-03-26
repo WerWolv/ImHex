@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
                     u64 usedBytes = 0;
                     for (u32 i = 0; i < instructionCount; i++) {
                         const auto &instr       = instructions[i];
-                        Disassembly disassembly = { 0 };
+                        Disassembly disassembly = { };
                         disassembly.address     = instr.address;
                         disassembly.offset      = this->m_codeRegion[0] + address + usedBytes;
                         disassembly.size        = instr.size;
@@ -169,7 +169,7 @@ namespace hex::plugin::builtin {
                                 static bool microMode;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.mips.micro"_lang, &microMode);
 
-                                this->m_mode = cs_mode(mode | (microMode ? CS_MODE_MICRO : 0));
+                                this->m_mode = cs_mode(mode | (microMode ? CS_MODE_MICRO : cs_mode(0)));
                             }
                             break;
                         case Architecture::X86:
@@ -198,7 +198,7 @@ namespace hex::plugin::builtin {
                                 static bool booke = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.ppc.booke"_lang, &booke);
 
-                                this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : 0) | (spe ? CS_MODE_SPE : 0) | (booke ? CS_MODE_BOOKE : 0));
+                                this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)) | (spe ? CS_MODE_SPE : cs_mode(0)) | (booke ? CS_MODE_BOOKE : cs_mode(0)));
                             }
                             break;
                         case Architecture::SPARC:
@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
                                 static bool v9Mode = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.sparc.v9"_lang, &v9Mode);
 
-                                this->m_mode = cs_mode(v9Mode ? CS_MODE_V9 : 0);
+                                this->m_mode = cs_mode(v9Mode ? CS_MODE_V9 : cs_mode(0));
                             }
                             break;
                         case Architecture::RISCV:
@@ -219,7 +219,7 @@ namespace hex::plugin::builtin {
                                 static bool compressed = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.riscv.compressed"_lang, &compressed);
 
-                                this->m_mode = cs_mode(mode | (compressed ? CS_MODE_RISCVC : 0));
+                                this->m_mode = cs_mode(mode | (compressed ? CS_MODE_RISCVC : cs_mode(0)));
                             }
                             break;
                         case Architecture::M68K:
@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::TableHeadersRow();
                         while (clipper.Step()) {
-                            for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                                 const auto &instruction = this->m_disassembly[i];
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();

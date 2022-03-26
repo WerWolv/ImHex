@@ -22,12 +22,24 @@ namespace hex::pl {
 
         [[maybe_unused]] constexpr void setLineNumber(u32 lineNumber) { this->m_lineNumber = lineNumber; }
 
-        [[nodiscard]] virtual std::unique_ptr<ASTNode> evaluate(Evaluator *evaluator) const { return this->clone(); }
+        [[nodiscard]] virtual std::unique_ptr<ASTNode> evaluate(Evaluator *evaluator) const {
+            hex::unused(evaluator);
 
-        [[nodiscard]] virtual std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const { return {}; }
+            return this->clone();
+        }
+
+        [[nodiscard]] virtual std::vector<std::unique_ptr<Pattern>> createPatterns(Evaluator *evaluator) const {
+            hex::unused(evaluator);
+
+            return {};
+        }
 
         using FunctionResult = std::optional<Token::Literal>;
-        virtual FunctionResult execute(Evaluator *evaluator) const { LogConsole::abortEvaluation("cannot execute non-function statement", this); }
+        virtual FunctionResult execute(Evaluator *evaluator) const {
+            hex::unused(evaluator);
+
+            LogConsole::abortEvaluation("cannot execute non-function statement", this);
+        }
 
     private:
         u32 m_lineNumber = 1;

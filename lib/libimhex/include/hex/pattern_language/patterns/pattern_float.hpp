@@ -18,12 +18,18 @@ namespace hex::pl {
                 u32 data = 0;
                 provider->read(this->getOffset(), &data, 4);
                 data = hex::changeEndianess(data, 4, this->getEndian());
-                return *reinterpret_cast<float *>(&data);
+
+                float result = 0;
+                std::memcpy(&result, &data, sizeof(float));
+                return result;
             } else if (this->getSize() == 8) {
                 u64 data = 0;
                 provider->read(this->getOffset(), &data, 8);
                 data = hex::changeEndianess(data, 8, this->getEndian());
-                return *reinterpret_cast<double *>(&data);
+
+                double result = 0;
+                std::memcpy(&result, &data, sizeof(double));
+                return result;
             } else {
                 assert(false);
                 return std::numeric_limits<double>::quiet_NaN();

@@ -29,6 +29,8 @@ namespace hex::prv {
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
+        hex::unused(overlays);
+
         this->readRaw(offset - this->getBaseAddress(), buffer, size);
     }
 
@@ -37,9 +39,13 @@ namespace hex::prv {
     }
 
     void Provider::save() { }
-    void Provider::saveAs(const std::fs::path &path) { }
+    void Provider::saveAs(const std::fs::path &path) {
+        hex::unused(path);
+    }
 
-    void Provider::resize(size_t newSize) { }
+    void Provider::resize(size_t newSize) {
+        hex::unused(newSize);
+    }
 
     void Provider::insert(u64 offset, size_t size) {
         auto &patches = getPatches();
@@ -54,7 +60,7 @@ namespace hex::prv {
         for (const auto &[address, value] : patchesToMove)
             patches.erase(address);
         for (const auto &[address, value] : patchesToMove)
-            patches.insert({ address + offset, value });
+            patches.insert({ address + size, value });
     }
 
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
@@ -72,7 +78,7 @@ namespace hex::prv {
 
     std::map<u64, u8> &Provider::getPatches() {
         auto iter = this->m_patches.end();
-        for (auto i = 0; i < this->m_patchTreeOffset + 1; i++)
+        for (u32 i = 0; i < this->m_patchTreeOffset + 1; i++)
             iter--;
 
         return *(iter);
@@ -80,7 +86,7 @@ namespace hex::prv {
 
     const std::map<u64, u8> &Provider::getPatches() const {
         auto iter = this->m_patches.end();
-        for (auto i = 0; i < this->m_patchTreeOffset + 1; i++)
+        for (u32 i = 0; i < this->m_patchTreeOffset + 1; i++)
             iter--;
 
         return *(iter);
@@ -149,7 +155,7 @@ namespace hex::prv {
     void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
         if (this->m_patchTreeOffset > 0) {
             auto iter = this->m_patches.end();
-            for (auto i = 0; i < this->m_patchTreeOffset; i++)
+            for (u32 i = 0; i < this->m_patchTreeOffset; i++)
                 iter--;
 
             this->m_patches.erase(iter, this->m_patches.end());

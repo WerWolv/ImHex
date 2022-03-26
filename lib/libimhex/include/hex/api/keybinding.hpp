@@ -11,7 +11,7 @@ struct ImGuiWindow;
 
 namespace hex {
 
-    struct View;
+    class View;
 
     enum class Keys
     {

@@ -55,9 +55,6 @@ namespace hex {
     [[nodiscard]] inline u64 extract(u32 from, u32 to, const std::vector<u8> &bytes) {
         u8 index = 0;
         while (from > 32 && to > 32) {
-            if (from - 8 < 0 || to - 8 < 0)
-                return 0;
-
             from -= 8;
             to -= 8;
             index++;
@@ -297,7 +294,7 @@ namespace hex {
     namespace scope_guard {
 
 #define SCOPE_GUARD   ::hex::scope_guard::ScopeGuardOnExit() + [&]()
-#define ON_SCOPE_EXIT auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
+#define ON_SCOPE_EXIT [[maybe_unused]] auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
 
         template<class F>
         class ScopeGuard {
@@ -332,7 +329,7 @@ namespace hex {
 
     namespace first_time_exec {
 
-#define FIRST_TIME static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
+#define FIRST_TIME [[maybe_unused]] static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
 
         template<class F>
         class FirstTimeExecute {
@@ -355,7 +352,7 @@ namespace hex {
 
     namespace final_cleanup {
 
-#define FINAL_CLEANUP static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
+#define FINAL_CLEANUP [[maybe_unused]] static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
 
         template<class F>
         class FinalCleanupExecute {

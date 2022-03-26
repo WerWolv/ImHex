@@ -12,7 +12,7 @@ jobs:
   # Windows build
   win:
     runs-on: windows-2022
-    name: 🟦 Windows MINGW64
+    name: 🪟 Windows MINGW64
     defaults:
       run:
         shell: msys2 {0}
