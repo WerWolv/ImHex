@@ -193,7 +193,9 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang)) {
+            bool providerValid = ImHexApi::Provider::isValid();
+
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
 
                 std::vector<std::fs::path> paths;
 
@@ -208,18 +210,14 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, {
-                                                      {"Pattern File", "hexpat"}
-                },
+                View::showFileChooserPopup(paths, { {"Pattern File", "hexpat"} },
                     [this](const std::fs::path &path) {
                         this->loadPatternFile(path);
                     });
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang)) {
-                fs::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, fs::DialogMode::Save, {
-                                                                                                                             {"Pattern", "hexpat"}
-                },
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
+                fs::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                     [this](const auto &path) {
                         fs::File file(path, fs::File::Mode::Create);
 

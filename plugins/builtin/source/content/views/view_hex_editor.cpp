@@ -1120,7 +1120,7 @@ namespace hex::plugin::builtin {
                     ProjectFile::store();
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.load_encoding_file"_lang)) {
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.load_encoding_file"_lang, nullptr, false, providerValid)) {
                 std::vector<std::fs::path> paths;
                 for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Encodings)) {
                     std::error_code error;
@@ -1131,9 +1131,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, {
-                                                      {"Thingy Table File", "tbl"}
-                },
+                View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} },
                     [this](const auto &path) {
                         this->m_currEncodingFile = EncodingFile(EncodingFile::Type::Thingy, path);
                     });
@@ -1307,13 +1305,15 @@ namespace hex::plugin::builtin {
 
         /* Search / Goto */
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1400, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.search"_lang, "CTRL + F")) {
+            bool providerValid = ImHexApi::Provider::isValid();
+
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.search"_lang, "CTRL + F", false, providerValid)) {
                 this->getWindowOpenState() = true;
                 this->m_searchRequested    = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.search"_lang);
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.goto"_lang, "CTRL + G")) {
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.goto"_lang, "CTRL + G", false, providerValid)) {
                 this->getWindowOpenState() = true;
                 this->m_gotoRequested      = true;
                 ImGui::OpenPopupInWindow(View::toWindowName("hex.builtin.view.hex_editor.name").c_str(), "hex.builtin.view.hex_editor.menu.file.goto"_lang);

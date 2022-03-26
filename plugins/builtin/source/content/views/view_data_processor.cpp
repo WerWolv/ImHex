@@ -53,10 +53,10 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang)) {
-                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, fs::DialogMode::Open, {
-                                                                                                                               {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
-                },
+            bool providerValid = ImHexApi::Provider::isValid();
+
+            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang, nullptr, false, providerValid)) {
+                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
                     [this](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Read);
                         if (file.isValid())
@@ -64,10 +64,8 @@ namespace hex::plugin::builtin {
                     });
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty())) {
-                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, fs::DialogMode::Save, {
-                                                                                                                               {"hex.builtin.view.data_processor.name"_lang, "hexnode"}
-                },
+            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty() && providerValid)) {
+                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
                     [this](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Create);
                         if (file.isValid())
