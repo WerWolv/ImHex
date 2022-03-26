@@ -49,7 +49,9 @@ namespace hex {
 
         u32 addHighlight(const Region &region, color_t color, const std::string &tooltip) {
             auto &highlights = impl::getHighlights();
-            auto id          = highlights.size();
+            static u64 id = 0;
+
+            id++;
 
             highlights.insert({
                 id, Highlighting {region, color, tooltip}
