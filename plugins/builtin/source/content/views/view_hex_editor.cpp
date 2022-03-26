@@ -794,9 +794,9 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawEditPopup() {
         auto provider      = ImHexApi::Provider::get();
         bool providerValid = ImHexApi::Provider::isValid();
-        if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.undo"_lang, "CTRL + Z", false, providerValid))
+        if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.undo"_lang, "CTRL + Z", false, providerValid && provider->canUndo()))
             provider->undo();
-        if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.redo"_lang, "CTRL + Y", false, providerValid))
+        if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.redo"_lang, "CTRL + Y", false, providerValid && provider->canRedo()))
             provider->redo();
 
         ImGui::Separator();
