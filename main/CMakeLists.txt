@@ -15,6 +15,7 @@ add_executable(main ${APPLICATION_TYPE}
 )
 
 target_include_directories(main PUBLIC include)
+target_compile_options(main PRIVATE -Wall -Wextra -Werror)
 
 set_target_properties(main PROPERTIES
         OUTPUT_NAME "imhex"

@@ -6,14 +6,17 @@ namespace hex::pl {
 
 #define FLOAT_BIT_OPERATION(name)                                                    \
     auto name(hex::floating_point auto left, auto right) const {                     \
+        hex::unused(left, right);                                                    \
         LogConsole::abortEvaluation("invalid floating point operation", this);       \
         return 0;                                                                    \
     }                                                                                \
     auto name(auto left, hex::floating_point auto right) const {                     \
+        hex::unused(left, right);                                                    \
         LogConsole::abortEvaluation("invalid floating point operation", this);       \
         return 0;                                                                    \
     }                                                                                \
     auto name(hex::floating_point auto left, hex::floating_point auto right) const { \
+        hex::unused(left, right);                                                    \
         LogConsole::abortEvaluation("invalid floating point operation", this);       \
         return 0;                                                                    \
     }                                                                                \
@@ -42,7 +45,9 @@ namespace hex::pl {
         }
 
         FLOAT_BIT_OPERATION(bitNot) {
-            return ~right;
+            hex::unused(left);
+
+            return ~static_cast<u128>(right);
         }
 
         FLOAT_BIT_OPERATION(modulus) {
@@ -76,27 +81,30 @@ namespace hex::pl {
 
             return std::unique_ptr<ASTNode>(std::visit(overloaded {
                                                            // TODO: :notlikethis:
-                                                           [this](u128 left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](i128 left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](double left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](char left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](bool left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](const std::string &left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, u128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, i128 right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, double right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, char right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, bool right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, const std::string &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
-                                                           [this](Pattern *const &left, Pattern *const &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](u128, Pattern *const ) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](i128, Pattern *const &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](double, Pattern *const &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](char, Pattern *const &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](bool, Pattern *const &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](const std::string &, Pattern *const &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, u128) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, i128) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, double) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, char) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, bool) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, const std::string &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](Pattern *const &, Pattern *const &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
 
-                                                           [this](auto &&left, const std::string &right) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
+                                                           [this](auto &&, const std::string &) -> ASTNode * { LogConsole::abortEvaluation("invalid operand used in mathematical expression", this); },
                                                            [this](const std::string &left, auto &&right) -> ASTNode * {
                                                                switch (this->getOperator()) {
                                                                    case Token::Operator::Star:
                                                                        {
+                                                                           if (static_cast<i128>(right) < 0)
+                                                                               LogConsole::abortEvaluation("cannot repeat string a negative number of times", this);
+
                                                                            std::string result;
-                                                                           for (auto i = 0; i < right; i++)
+                                                                           for (u128 i = 0; i < static_cast<u128>(right); i++)
                                                                                result += left;
                                                                            return new ASTNodeLiteral(result);
                                                                        }
@@ -167,21 +175,21 @@ namespace hex::pl {
                                                                    case Token::Operator::BitNot:
                                                                        return new ASTNodeLiteral(bitNot(left, right));
                                                                    case Token::Operator::BoolEquals:
-                                                                       return new ASTNodeLiteral(bool(left == right));
+                                                                       return new ASTNodeLiteral(bool(left == static_cast<decltype(left)>(right)));
                                                                    case Token::Operator::BoolNotEquals:
-                                                                       return new ASTNodeLiteral(bool(left != right));
+                                                                       return new ASTNodeLiteral(bool(left != static_cast<decltype(left)>(right)));
                                                                    case Token::Operator::BoolGreaterThan:
-                                                                       return new ASTNodeLiteral(bool(left > right));
+                                                                       return new ASTNodeLiteral(bool(left > static_cast<decltype(left)>(right)));
                                                                    case Token::Operator::BoolLessThan:
-                                                                       return new ASTNodeLiteral(bool(left < right));
+                                                                       return new ASTNodeLiteral(bool(left < static_cast<decltype(left)>(right)));
                                                                    case Token::Operator::BoolGreaterThanOrEquals:
-                                                                       return new ASTNodeLiteral(bool(left >= right));
+                                                                       return new ASTNodeLiteral(bool(left >= static_cast<decltype(left)>(right)));
                                                                    case Token::Operator::BoolLessThanOrEquals:
-                                                                       return new ASTNodeLiteral(bool(left <= right));
+                                                                       return new ASTNodeLiteral(bool(left <= static_cast<decltype(left)>(right)));
                                                                    case Token::Operator::BoolAnd:
                                                                        return new ASTNodeLiteral(bool(left && right));
                                                                    case Token::Operator::BoolXor:
-                                                                       return new ASTNodeLiteral(bool(left && !right || !left && right));
+                                                                       return new ASTNodeLiteral(bool((left && !right) || (!left && right)));
                                                                    case Token::Operator::BoolOr:
                                                                        return new ASTNodeLiteral(bool(left || right));
                                                                    case Token::Operator::BoolNot:

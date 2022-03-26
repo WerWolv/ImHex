@@ -108,7 +108,7 @@ namespace hex {
             ImGui::SameLine();
 
             if (ImGui::Button("hex.builtin.common.browse"_lang)) {
-                fs::openFileBrowser("hex.builtin.common.open"_lang, fs::DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
+                fs::openFileBrowser(fs::DialogMode::Open, View::s_selectableFilesValidExtensions, [](const auto &path) {
                     View::s_selectableFileOpenCallback(path);
                     ImGui::CloseCurrentPopup();
                 });
@@ -147,7 +147,7 @@ namespace hex {
 
     void View::showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
         if (paths.empty()) {
-            fs::openFileBrowser("hex.builtin.common.open"_lang, fs::DialogMode::Open, validExtensions, [callback](const auto &path) {
+            fs::openFileBrowser(fs::DialogMode::Open, validExtensions, [callback](const auto &path) {
                 callback(path);
             });
         } else {

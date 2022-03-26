@@ -3,7 +3,6 @@
 
 #include <hex/pattern_language/preprocessor.hpp>
 #include <hex/pattern_language/patterns/pattern.hpp>
-#include <hex/pattern_language/ast/ast_node.hpp>
 #include <hex/pattern_language/ast/ast_node_variable_decl.hpp>
 #include <hex/pattern_language/ast/ast_node_type_decl.hpp>
 #include <hex/pattern_language/ast/ast_node_builtin_type.hpp>
@@ -101,6 +100,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
+            hex::unused(path);
+
             if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
                 return;
 
@@ -217,7 +218,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, fs::DialogMode::Save, { {"Pattern", "hexpat"} },
+                fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                     [this](const auto &path) {
                         fs::File file(path, fs::File::Mode::Create);
 
@@ -379,7 +380,7 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper(this->m_console.size());
             while (clipper.Step())
-                for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                     const auto &[level, message] = this->m_console[i];
 
                     switch (level) {
@@ -639,7 +640,8 @@ namespace hex::plugin::builtin {
                         PatternVariable variable = {
                             .inVariable  = variableDecl->isInVariable(),
                             .outVariable = variableDecl->isOutVariable(),
-                            .type        = builtinType->getType()
+                            .type        = builtinType->getType(),
+                            .value       = { }
                         };
 
                         if (variable.inVariable || variable.outVariable) {

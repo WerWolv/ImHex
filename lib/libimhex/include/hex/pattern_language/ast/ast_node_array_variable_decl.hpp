@@ -305,7 +305,7 @@ namespace hex::pl {
             arrayPattern->setEntries(std::move(entries));
             arrayPattern->setSize(size);
 
-            return std::move(arrayPattern);
+            return arrayPattern;
         }
     };
 

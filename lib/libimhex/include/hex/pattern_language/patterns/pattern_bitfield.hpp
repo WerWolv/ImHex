@@ -21,8 +21,6 @@ namespace hex::pl {
             if (this->m_bitField->getEndian() != std::endian::native)
                 std::reverse(value.begin(), value.end());
 
-            u8 numBytes = (this->m_bitSize / 8) + 1;
-
             return hex::extract(this->m_bitOffset + (this->m_bitSize - 1), this->m_bitOffset, value);
         }
 

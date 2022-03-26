@@ -50,7 +50,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextItemWidth(200_scaled);
         if (ImGui::BeginCombo("", preview.c_str())) {
 
-            for (int i = 0; i < providers.size(); i++) {
+            for (size_t i = 0; i < providers.size(); i++) {
                 if (ImGui::Selectable(providers[i]->getName().c_str())) {
                     provider = i;
                 }
@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
 
                     // Draw diff lines
                     while (clipper.Step()) {
-                        for (u64 row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
+                        for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                             ImGui::TableNextRow();
                             drawDiffLine({ this->m_providerA, this->m_providerB }, row);
                         }

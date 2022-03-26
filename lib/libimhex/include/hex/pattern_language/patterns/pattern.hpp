@@ -126,9 +126,13 @@ namespace hex::pl {
             this->getEvaluator()->handleAbort();
         }
 
-        virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) { }
+        virtual void sort(ImGuiTableSortSpecs *sortSpecs, prv::Provider *provider) {
+            hex::unused(sortSpecs, provider);
+        }
 
         [[nodiscard]] virtual std::string toString(prv::Provider *provider) const {
+            hex::unused(provider);
+
             return hex::format("{} {} @ 0x{:X}", this->getTypeName(), this->getVariableName(), this->getOffset());
         }
 

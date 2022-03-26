@@ -9,7 +9,6 @@
 #include <filesystem>
 
 #include <imgui.h>
-#include <hex/ui/imgui_imhex_extensions.h>
 
 #if defined(OS_LINUX)
     #include <fcntl.h>
@@ -82,7 +81,7 @@ namespace hex::plugin::builtin::prv {
         }
 
         {
-            DISK_GEOMETRY_EX diskGeometry = { 0 };
+            DISK_GEOMETRY_EX diskGeometry = { };
             DWORD bytesRead               = 0;
             if (DeviceIoControl(
                     this->m_diskHandle,
@@ -158,7 +157,7 @@ namespace hex::plugin::builtin::prv {
             seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
             seekPosition.HighPart = offset >> 32;
 
-            if (this->m_sectorBufferAddress != seekPosition.QuadPart) {
+            if (this->m_sectorBufferAddress != static_cast<u64>(seekPosition.QuadPart)) {
                 ::SetFilePointer(this->m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
                 ::ReadFile(this->m_diskHandle, this->m_sectorBuffer.data(), this->m_sectorBuffer.size(), &bytesRead, nullptr);
                 this->m_sectorBufferAddress = seekPosition.QuadPart;
@@ -272,7 +271,7 @@ namespace hex::plugin::builtin::prv {
 
             if (handle == INVALID_HANDLE_VALUE) continue;
 
-            VOLUME_DISK_EXTENTS diskExtents = { 0 };
+            VOLUME_DISK_EXTENTS diskExtents = { };
             DWORD bytesRead                 = 0;
             auto result                     = ::DeviceIoControl(
                 handle,

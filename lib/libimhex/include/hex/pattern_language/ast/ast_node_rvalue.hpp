@@ -105,7 +105,7 @@ namespace hex::pl {
 
                                        readVariable(evaluator, value, assignmentValue);
                                    },
-                                   [&, this](auto &&assignmentValue) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); } },
+                                   [&, this](auto &&) { LogConsole::abortEvaluation(hex::format("cannot assign '{}' to string", pattern->getTypeName()), this); } },
                         variableValue);
                 } else {
                     value.resize(pattern->getSize());
@@ -158,7 +158,7 @@ namespace hex::pl {
                     if (name == "parent") {
                         scopeIndex--;
 
-                        if (-scopeIndex >= evaluator->getScopeCount())
+                        if (static_cast<size_t>(std::abs(scopeIndex)) >= evaluator->getScopeCount())
                             LogConsole::abortEvaluation("cannot access parent of global scope", this);
 
                         searchScope     = *evaluator->getScope(scopeIndex).scope;
@@ -208,12 +208,12 @@ namespace hex::pl {
                                    [this](Pattern *) { LogConsole::abortEvaluation("cannot use custom type to index array", this); },
                                    [&, this](auto &&index) {
                                        if (auto dynamicArrayPattern = dynamic_cast<PatternArrayDynamic *>(currPattern.get())) {
-                                           if (index >= searchScope.size() || index < 0)
+                                           if (static_cast<u128>(index) >= searchScope.size() || static_cast<i128>(index) < 0)
                                                LogConsole::abortEvaluation("array index out of bounds", this);
 
                                            currPattern = searchScope[index]->clone();
                                        } else if (auto staticArrayPattern = dynamic_cast<PatternArrayStatic *>(currPattern.get())) {
-                                           if (index >= staticArrayPattern->getEntryCount() || index < 0)
+                                           if (static_cast<u128>(index) >= staticArrayPattern->getEntryCount() || static_cast<i128>(index) < 0)
                                                LogConsole::abortEvaluation("array index out of bounds", this);
 
                                            auto newPattern = searchScope.front()->clone();

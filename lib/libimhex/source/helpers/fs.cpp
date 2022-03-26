@@ -59,7 +59,7 @@ namespace hex::fs {
         return result;
     }
 
-    bool openFileBrowser(const std::string &title, DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
+    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 
         nfdchar_t *outPath;

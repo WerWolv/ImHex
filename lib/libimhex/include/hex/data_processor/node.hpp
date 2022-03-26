@@ -1,6 +1,7 @@
 #pragma once
 #include <hex.hpp>
 
+#include <hex/helpers/intrinsics.hpp>
 #include <hex/data_processor/attribute.hpp>
 
 #include <set>
@@ -38,8 +39,8 @@ namespace hex::dp {
         virtual void drawNode() { }
         virtual void process() = 0;
 
-        virtual void store(nlohmann::json &j) { }
-        virtual void load(nlohmann::json &j) { }
+        virtual void store(nlohmann::json &j) { hex::unused(j); }
+        virtual void load(nlohmann::json &j) { hex::unused(j); }
 
         using NodeError = std::pair<Node *, std::string>;
 
@@ -90,11 +91,11 @@ namespace hex::dp {
         }
 
         std::vector<u8> getBufferOnInput(u32 index);
-        u64 getIntegerOnInput(u32 index);
+        i64 getIntegerOnInput(u32 index);
         float getFloatOnInput(u32 index);
 
         void setBufferOnOutput(u32 index, const std::vector<u8> &data);
-        void setIntegerOnOutput(u32 index, u64 integer);
+        void setIntegerOnOutput(u32 index, i64 integer);
         void setFloatOnOutput(u32 index, float floatingPoint);
 
         void setOverlayData(u64 address, const std::vector<u8> &data);

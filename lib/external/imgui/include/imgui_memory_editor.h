@@ -324,7 +324,7 @@ struct MemoryEditor
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)) && DataEditingAddr < mem_size - 1)     { data_editing_addr_next = std::min<i64>(mem_size - 1, DataEditingAddr + visible_count); DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)) && DataEditingAddr > 0)                    { data_editing_addr_next = 0; DataEditingTakeFocus = true; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)) && DataEditingAddr < mem_size - 1)          { data_editing_addr_next = mem_size - 1; DataEditingTakeFocus = true; }
-            } else if (DataPreviewAddr != -1) {
+            } else if (DataPreviewAddr != (size_t)-1) {
                 if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)) && DataPreviewAddr >= (size_t)Cols)          { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr - Cols; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)) && DataPreviewAddr < mem_size - Cols) { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr + Cols; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
                 else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)) && DataPreviewAddr > 0)               { DataPreviewAddr = data_preview_addr_next = DataPreviewAddr - 1; if (!ImGui::GetIO().KeyShift) DataPreviewAddrEnd = DataPreviewAddr; }
@@ -717,7 +717,6 @@ struct MemoryEditor
     void DrawOptionsLine(const Sizes& s, void* mem_data, size_t mem_size, size_t base_display_addr)
     {
         IM_UNUSED(mem_data);
-        ImGuiStyle& style = ImGui::GetStyle();
         const char* format_range = OptUpperCaseHex ? "Range 0x%0*" _PRISizeT "X..0x%0*" _PRISizeT "X" : "Range 0x%0*" _PRISizeT "x..0x%0*" _PRISizeT "x";
         const char* format_selection = OptUpperCaseHex ? "Selection 0x%0*" _PRISizeT "X..0x%0*" _PRISizeT "X (%ld [0x%lX] %s)" : "Range 0x%0*" _PRISizeT "x..0x%0*" _PRISizeT "x (%ld [0x%lX] %s)";
 

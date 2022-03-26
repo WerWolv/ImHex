@@ -34,7 +34,7 @@ namespace hex::dp {
         return outputData.value();
     }
 
-    u64 Node::getIntegerOnInput(u32 index) {
+    i64 Node::getIntegerOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
@@ -54,7 +54,7 @@ namespace hex::dp {
         if (outputData->size() < sizeof(u64))
             throw std::runtime_error("Not enough data provided for integer");
 
-        return *reinterpret_cast<u64 *>(outputData->data());
+        return *reinterpret_cast<i64 *>(outputData->data());
     }
 
     float Node::getFloatOnInput(u32 index) {
@@ -92,7 +92,7 @@ namespace hex::dp {
         attribute.getOutputData() = data;
     }
 
-    void Node::setIntegerOnOutput(u32 index, u64 integer) {
+    void Node::setIntegerOnOutput(u32 index, i64 integer) {
         if (index >= this->getAttributes().size())
             throw std::runtime_error("Attribute index out of bounds!");
 

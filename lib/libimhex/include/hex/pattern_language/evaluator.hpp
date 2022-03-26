@@ -64,13 +64,14 @@ namespace hex::pl {
             std::vector<std::shared_ptr<Pattern>> *scope;
             std::optional<ParameterPack> parameterPack;
         };
+
         void pushScope(Pattern *parent, std::vector<std::shared_ptr<Pattern>> &scope) {
             if (this->m_scopes.size() > this->getEvaluationDepth())
                 LogConsole::abortEvaluation(hex::format("evaluation depth exceeded set limit of {}", this->getEvaluationDepth()));
 
             this->handleAbort();
 
-            this->m_scopes.push_back({ parent, &scope });
+            this->m_scopes.push_back({ parent, &scope, { } });
         }
 
         void popScope() {
@@ -85,19 +86,19 @@ namespace hex::pl {
             return this->m_scopes[this->m_scopes.size() - 1 + index];
         }
 
-        Scope &getGlobalScope() {
+        [[nodiscard]] Scope &getGlobalScope() {
             return this->m_scopes.front();
         }
 
-        const Scope &getGlobalScope() const {
+        [[nodiscard]] const Scope &getGlobalScope() const {
             return this->m_scopes.front();
         }
 
-        size_t getScopeCount() {
+        [[nodiscard]] size_t getScopeCount() {
             return this->m_scopes.size();
         }
 
-        bool isGlobalScope() {
+        [[nodiscard]] bool isGlobalScope() {
             return this->m_scopes.size() == 1;
         }
 
@@ -179,7 +180,7 @@ namespace hex::pl {
 
         bool addCustomFunction(const std::string &name, ContentRegistry::PatternLanguage::ParameterCount numParams, std::vector<Token::Literal> defaultParameters, const ContentRegistry::PatternLanguage::Callback &function) {
             const auto [iter, inserted] = this->m_customFunctions.insert({
-                name, {numParams, std::move(defaultParameters), function}
+                name, {numParams, std::move(defaultParameters), function, false}
             });
 
             return inserted;

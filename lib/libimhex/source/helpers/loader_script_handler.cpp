@@ -5,6 +5,7 @@
 #include <hex/helpers/file.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/intrinsics.hpp>
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -18,10 +19,14 @@ using namespace std::literals::string_literals;
 namespace hex {
 
     PyObject *LoaderScript::Py_getFilePath(PyObject *self, PyObject *args) {
+        hex::unused(self, args);
+
         return PyUnicode_FromString(LoaderScript::s_filePath.string().c_str());
     }
 
     PyObject *LoaderScript::Py_addPatch(PyObject *self, PyObject *args) {
+        hex::unused(self);
+
         u64 address;
         u8 *patches;
         Py_ssize_t count;
@@ -47,6 +52,8 @@ namespace hex {
     }
 
     PyObject *LoaderScript::Py_addBookmark(PyObject *self, PyObject *args) {
+        hex::unused(self);
+
         u64 address;
         size_t size;
 
@@ -171,10 +178,14 @@ namespace hex {
     }
 
     PyObject *LoaderScript::Py_addStruct(PyObject *self, PyObject *args) {
+        hex::unused(self);
+
         return createStructureType("struct", args);
     }
 
     PyObject *LoaderScript::Py_addUnion(PyObject *self, PyObject *args) {
+        hex::unused(self);
+
         return createStructureType("union", args);
     }
 

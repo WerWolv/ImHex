@@ -39,8 +39,7 @@ namespace hex::pl {
 
     std::optional<Token::Literal> lexIntegerLiteral(std::string_view string) {
         bool hasFloatSuffix = string.ends_with('D') || string.ends_with('F') || string.ends_with('d') || string.ends_with('f');
-        bool isFloat        = std::count(string.begin(), string.end(), '.') == 1 ||
-                       !string.starts_with("0x") && hasFloatSuffix;
+        bool isFloat        = std::count(string.begin(), string.end(), '.') == 1 || (!string.starts_with("0x") && hasFloatSuffix);
 
         if (isFloat) {
             // Parse double

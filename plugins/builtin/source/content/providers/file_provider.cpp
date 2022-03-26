@@ -111,7 +111,7 @@ namespace hex::plugin::builtin::prv {
             this->m_fileSize = file.getSize();
         }
 
-        this->open();
+        (void)this->open();
     }
 
     void FileProvider::insert(u64 offset, size_t size) {
@@ -171,7 +171,7 @@ namespace hex::plugin::builtin::prv {
 
         this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
 
-        LARGE_INTEGER fileSize = { 0 };
+        LARGE_INTEGER fileSize = { };
         this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
         GetFileSizeEx(this->m_file, &fileSize);

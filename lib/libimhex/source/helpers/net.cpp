@@ -38,19 +38,15 @@ namespace hex {
         return size * nmemb;
     }
 
-    static size_t readFromFile(void *contents, size_t size, size_t nmemb, void *userdata) {
-        FILE *file = static_cast<FILE *>(userdata);
-
-        return fread(contents, size, nmemb, file);
-    }
-
     static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata) {
         FILE *file = static_cast<FILE *>(userdata);
 
         return fwrite(contents, size, nmemb, file);
     }
 
-    static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userdata) {
+    static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
+        hex::unused(ctx, userData);
+
         auto *cfg = static_cast<mbedtls_ssl_config *>(sslctx);
 
         static mbedtls_x509_crt crt;

@@ -40,7 +40,7 @@ namespace hex::pl {
 
             return std::visit(overloaded {
                                   [condition]<typename T>(const T &second, const T &third) -> std::unique_ptr<ASTNode> { return std::unique_ptr<ASTNode>(new ASTNodeLiteral(condition ? second : third)); },
-                                  [this](auto &&second, auto &&third) -> std::unique_ptr<ASTNode> { LogConsole::abortEvaluation("operands to ternary expression have different types", this); } },
+                                  [this](auto &&, auto &&) -> std::unique_ptr<ASTNode> { LogConsole::abortEvaluation("operands to ternary expression have different types", this); } },
                 second->getValue(),
                 third->getValue());
         }

@@ -142,6 +142,8 @@ namespace hex::plugin::builtin {
 
                 evaluator.setFunction(
                     "clear", [&](auto args) -> std::optional<long double> {
+                        hex::unused(args);
+
                         mathHistory.clear();
                         lastMathError.clear();
                         mathEvaluator.getVariables().clear();
@@ -185,7 +187,7 @@ namespace hex::plugin::builtin {
                     2,
                     2);
 
-                return std::move(evaluator);
+                return evaluator;
             }();
 
             enum class MathDisplayType
@@ -339,7 +341,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableHeadersRow();
                     while (clipper.Step()) {
-                        for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             if (i == 0)
                                 ImGui::PushStyleColor(ImGuiCol_Text, ImU32(ImColor(0xA5, 0x45, 0x45)));
 
@@ -579,7 +581,7 @@ namespace hex::plugin::builtin {
         ImGui::Header("hex.builtin.tools.file_uploader.control"_lang, true);
         if (!uploading) {
             if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
-                fs::openFileBrowser("hex.builtin.tools.file_uploader.done"_lang, fs::DialogMode::Open, {}, [&](auto path) {
+                fs::openFileBrowser(fs::DialogMode::Open, {}, [&](auto path) {
                     uploadProcess = net.uploadFile("https://api.anonfiles.com/upload", path);
                     currFile      = path;
                 });
@@ -678,7 +680,7 @@ namespace hex::plugin::builtin {
         startSearch = ImGui::InputText("##search", searchString, ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::SameLine();
 
-        ImGui::BeginDisabled(searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready || searchString.empty());
+        ImGui::BeginDisabled((searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready) || searchString.empty());
         startSearch = ImGui::Button("hex.builtin.tools.wiki_explain.search"_lang) || startSearch;
         ImGui::EndDisabled();
 
@@ -744,7 +746,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##path", selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...")) {
-                    fs::openFileBrowser("hex.builtin.tools.file_tools.shredder.picker"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         selectedFile = path.string();
                     });
                 }
@@ -886,7 +888,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##path", selectedFile);
                 ImGui::SameLine();
                 if (ImGui::Button("...##input")) {
-                    fs::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.input"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         selectedFile = path.string();
                     });
                 }
@@ -896,7 +898,7 @@ namespace hex::plugin::builtin {
                 ImGui::InputText("##base_path", baseOutputPath);
                 ImGui::SameLine();
                 if (ImGui::Button("...##output")) {
-                    fs::openFileBrowser("hex.builtin.tools.file_tools.splitter.picker.output"_lang, fs::DialogMode::Save, {}, [](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
                         baseOutputPath = path.string();
                     });
                 }
@@ -979,7 +981,7 @@ namespace hex::plugin::builtin {
         static bool combining = false;
         static std::vector<std::string> files;
         static auto outputPath = [] { std::string s; s.reserve(0x1000); return s; }();
-        static i32 selectedIndex;
+        static u32 selectedIndex;
 
         if (ImGui::BeginTable("files_table", 2, ImGuiTableFlags_SizingStretchProp)) {
             ImGui::TableSetupColumn("file list", ImGuiTableColumnFlags_NoHeaderLabel, 10);
@@ -989,7 +991,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
 
-                i32 index = 0;
+                u32 index = 0;
                 for (auto &file : files) {
                     if (ImGui::Selectable(std::fs::path(file).filename().string().c_str(), index == selectedIndex))
                         selectedIndex = index;
@@ -1025,7 +1027,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(combining);
             {
                 if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
-                    fs::openFileBrowser("hex.builtin.tools.file_tools.combiner.add.picker"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         files.push_back(path.string());
                     });
                 }
@@ -1049,7 +1051,7 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##output_path", outputPath);
             ImGui::SameLine();
             if (ImGui::Button("...")) {
-                fs::openFileBrowser("hex.builtin.tools.file_tools.combiner.output.picker"_lang, fs::DialogMode::Save, {}, [](const auto &path) {
+                fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
                     outputPath = path.string();
                 });
             }

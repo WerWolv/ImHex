@@ -42,6 +42,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
+            hex::unused(path);
+
             for (auto &node : this->m_nodes) {
                 node->setCurrentOverlay(nullptr);
             }
@@ -56,7 +58,7 @@ namespace hex::plugin::builtin {
             bool providerValid = ImHexApi::Provider::isValid();
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.load_processor"_lang, fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
+                fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
                     [this](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Read);
                         if (file.isValid())
@@ -65,7 +67,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty() && providerValid)) {
-                fs::openFileBrowser("hex.builtin.view.data_processor.menu.file.save_processor"_lang, fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
+                fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
                     [this](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Create);
                         if (file.isValid())
@@ -114,7 +116,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
-        for (const int id : ids) {
+        for (u32 id : ids) {
             auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getId() == id; });
 
             for (auto &attr : (*node)->getAttributes()) {
@@ -127,7 +129,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        for (const int id : ids) {
+        for (u32 id : ids) {
             auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getId() == id; });
 
             std::erase_if(this->m_endNodes, [&id](auto node) { return node->getId() == id; });
@@ -275,7 +277,7 @@ namespace hex::plugin::builtin {
 
             {
                 int nodeId;
-                if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getId() == nodeId) {
+                if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getId() == static_cast<u32>(nodeId)) {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted("hex.builtin.common.error"_lang);
                     ImGui::Separator();
@@ -366,9 +368,9 @@ namespace hex::plugin::builtin {
                         dp::Attribute *fromAttr, *toAttr;
                         for (auto &node : this->m_nodes) {
                             for (auto &attribute : node->getAttributes()) {
-                                if (attribute.getId() == from)
+                                if (attribute.getId() == static_cast<u32>(from))
                                     fromAttr = &attribute;
-                                else if (attribute.getId() == to)
+                                else if (attribute.getId() == static_cast<u32>(to))
                                     toAttr = &attribute;
                             }
                         }

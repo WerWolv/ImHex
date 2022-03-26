@@ -200,7 +200,7 @@ namespace hex::plugin::builtin {
                         clipper.Begin(plugins.size());
 
                         while (clipper.Step()) {
-                            for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                                 const auto &plugin = plugins[i];
 
                                 ImGui::TableNextRow();
@@ -420,7 +420,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.open_file"_lang, "CTRL + O")) {
 
-                fs::openFileBrowser("hex.builtin.view.hex_editor.open_file"_lang, fs::DialogMode::Open, {}, [](const auto &path) {
+                fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                 });
             }

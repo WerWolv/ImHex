@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
 
     template<size_t Size>
     static void formatBigHexInt(std::array<u8, Size> dataArray, char *buffer, size_t bufferSize) {
-        for (int i = 0; i < dataArray.size(); i++)
+        for (size_t i = 0; i < dataArray.size(); i++)
             snprintf(buffer + 2 * i, bufferSize - 2 * i, "%02X", dataArray[i]);
     }
 
@@ -64,8 +64,8 @@ namespace hex::plugin::builtin {
                     ImGui::Separator();
 
                     if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, hashFunctionNames[this->m_currHashFunction].second, 0)) {
-                        for (int i = 0; i < hashFunctionNames.size(); i++) {
-                            bool is_selected = (this->m_currHashFunction == i);
+                        for (size_t i = 0; i < hashFunctionNames.size(); i++) {
+                            bool is_selected = (static_cast<size_t>(this->m_currHashFunction) == i);
                             if (ImGui::Selectable(hashFunctionNames[i].second, is_selected))
                                 this->m_currHashFunction = i;
                             if (is_selected)

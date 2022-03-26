@@ -58,7 +58,7 @@ namespace hex {
             if (currToken.type == TokenType::Number || currToken.type == TokenType::Variable || currToken.type == TokenType::Function)
                 outputQueue.push(currToken);
             else if (currToken.type == TokenType::Operator) {
-                while ((!operatorStack.empty()) && (operatorStack.top().type == TokenType::Operator && currToken.type == TokenType::Operator && (comparePrecedence(operatorStack.top().op, currToken.op) > 0) || (comparePrecedence(operatorStack.top().op, currToken.op) == 0 && isLeftAssociative(currToken.op))) && operatorStack.top().type != TokenType::Bracket) {
+                while ((!operatorStack.empty()) && ((operatorStack.top().type == TokenType::Operator && currToken.type == TokenType::Operator && (comparePrecedence(operatorStack.top().op, currToken.op) > 0)) || (comparePrecedence(operatorStack.top().op, currToken.op) == 0 && isLeftAssociative(currToken.op))) && operatorStack.top().type != TokenType::Bracket) {
                     outputQueue.push(operatorStack.top());
                     operatorStack.pop();
                 }
@@ -109,12 +109,12 @@ namespace hex {
                     number = std::strtoull(pos, &pos, 0);
                 }
 
-                inputQueue.push(Token { .type = TokenType::Number, .number = number });
+                inputQueue.push(Token { .type = TokenType::Number, .number = number, .name = "", .arguments = { } });
             } else if (*pos == '(') {
-                inputQueue.push(Token { .type = TokenType::Bracket, .bracketType = BracketType::Left });
+                inputQueue.push(Token { .type = TokenType::Bracket, .bracketType = BracketType::Left, .name = "", .arguments = { } });
                 pos++;
             } else if (*pos == ')') {
-                inputQueue.push(Token { .type = TokenType::Bracket, .bracketType = BracketType::Right });
+                inputQueue.push(Token { .type = TokenType::Bracket, .bracketType = BracketType::Right, .name = "", .arguments = { } });
                 pos++;
             } else if (std::isspace(*pos)) {
                 pos++;
@@ -122,7 +122,7 @@ namespace hex {
                 auto [op, width] = toOperator(pos);
 
                 if (op != Operator::Invalid) {
-                    inputQueue.push(Token { .type = TokenType::Operator, .op = op });
+                    inputQueue.push(Token { .type = TokenType::Operator, .op = op, .name = "", .arguments = { } });
                     pos += width;
                 } else {
                     Token token;

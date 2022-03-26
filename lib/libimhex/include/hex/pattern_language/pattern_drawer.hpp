@@ -138,7 +138,7 @@ namespace hex::pl {
             for (auto &[entryValueLiteral, entryName] : pattern.getEnumValues()) {
                 auto visitor = overloaded {
                     [&, name = entryName](auto &entryValue) {
-                        if (value == entryValue) {
+                        if (static_cast<decltype(entryValue)>(value) == entryValue) {
                             valueString += name;
                             foundValue = true;
                             return true;
@@ -186,6 +186,7 @@ namespace hex::pl {
 
         void visit(PatternPadding& pattern) override {
             // Do nothing
+            hex::unused(pattern);
         }
 
         void visit(PatternPointer& pattern) override {

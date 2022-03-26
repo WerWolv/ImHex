@@ -2,17 +2,13 @@
 
 #include <hex/api/content_registry.hpp>
 
-#include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/logger.hpp>
 
 #include <yara.h>
 #include <filesystem>
 #include <thread>
-
-#include <hex/helpers/fs.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -94,7 +90,7 @@ namespace hex::plugin::builtin {
                     clipper.Begin(this->m_matches.size());
 
                     while (clipper.Step()) {
-                        for (u32 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             auto &[identifier, variableName, address, size, wholeDataMatch, highlightId] = this->m_matches[i];
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
@@ -133,7 +129,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
                 ImGuiListClipper clipper(this->m_consoleMessages.size());
                 while (clipper.Step())
-                    for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         const auto &message = this->m_consoleMessages[i];
 
                         if (ImGui::Selectable(message.c_str()))
@@ -189,7 +185,7 @@ namespace hex::plugin::builtin {
 
             yr_compiler_set_include_callback(
                 compiler,
-                [](const char *includeName, const char *callingRuleFileName, const char *callingRuleNamespace, void *userData) -> const char * {
+                [](const char *includeName, const char *, const char *, void *userData) -> const char * {
                     auto currFilePath = static_cast<const char *>(userData);
 
                     fs::File file((std::fs::path(currFilePath).parent_path() / includeName).string(), fs::File::Mode::Read);
@@ -204,6 +200,8 @@ namespace hex::plugin::builtin {
                     return buffer;
                 },
                 [](const char *ptr, void *userData) {
+                    hex::unused(userData);
+
                     delete[] ptr;
                 },
                 this->m_rules[this->m_selectedRule].second.data());
@@ -257,6 +255,8 @@ namespace hex::plugin::builtin {
                 return context.buffer.data();
             };
             iterator.file_size = [](auto *iterator) -> u64 {
+                hex::unused(iterator);
+
                 return ImHexApi::Provider::get()->getActualSize();
             };
 
@@ -310,11 +310,11 @@ namespace hex::plugin::builtin {
                                 if (rule->strings != nullptr) {
                                     yr_rule_strings_foreach(rule, string) {
                                         yr_string_matches_foreach(context, string, match) {
-                                            results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false });
+                                            results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0 });
                                         }
                                     }
                                 } else {
-                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true });
+                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0 });
                                 }
                             }
                             break;

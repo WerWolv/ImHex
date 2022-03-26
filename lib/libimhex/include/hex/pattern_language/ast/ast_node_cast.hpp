@@ -24,8 +24,6 @@ namespace hex::pl {
             auto literal = dynamic_cast<ASTNodeLiteral *>(evaluatedValue.get());
             auto type    = dynamic_cast<ASTNodeBuiltinType *>(evaluatedType.get())->getType();
 
-            auto startOffset = evaluator->dataOffset();
-
             auto typePatterns = this->m_type->createPatterns(evaluator);
             auto &typePattern = typePatterns.front();
 

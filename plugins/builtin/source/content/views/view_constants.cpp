@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
                 clipper.Begin(this->m_filterIndices.size());
 
                 while (clipper.Step()) {
-                    for (u64 i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         auto &constant = this->m_constants[this->m_filterIndices[i]];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
