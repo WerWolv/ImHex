@@ -299,9 +299,7 @@ namespace hex::plugin::builtin {
             ImGui::InputText("##nolabel", this->m_loaderScriptScriptPath.data(), this->m_loaderScriptScriptPath.length(), ImGuiInputTextFlags_ReadOnly);
             ImGui::SameLine();
             if (ImGui::Button("hex.builtin.view.hex_editor.script.script"_lang)) {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.script.script.title"_lang, fs::DialogMode::Open, {
-                                                                                                                      {"Python Script", "py"}
-                },
+                fs::openFileBrowser("hex.builtin.view.hex_editor.script.script.title"_lang, fs::DialogMode::Open, { {"Python Script", "py"} },
                     [this](const auto &path) {
                         this->m_loaderScriptScriptPath = path.string();
                     });
@@ -919,9 +917,7 @@ namespace hex::plugin::builtin {
                     this->getWindowOpenState() = true;
                 });
             } else if (name == "Open Project") {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.open_project"_lang, fs::DialogMode::Open, {
-                                                                                                               {"Project File", "hexproj"}
-                },
+                fs::openFileBrowser("hex.builtin.view.hex_editor.open_project"_lang, fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [this](const auto &path) {
                         ProjectFile::load(path);
                         this->getWindowOpenState() = true;
@@ -1096,8 +1092,7 @@ namespace hex::plugin::builtin {
             bool providerValid = ImHexApi::Provider::isValid();
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.open_project"_lang, "")) {
-                fs::openFileBrowser("hex.builtin.view.hex_editor.menu.file.open_project"_lang, fs::DialogMode::Open, {
-                                                                                                                         {"Project File", "hexproj"}
+                fs::openFileBrowser("hex.builtin.view.hex_editor.menu.file.open_project"_lang, fs::DialogMode::Open, { {"Project File", "hexproj"}
                 },
                     [](const auto &path) {
                         ProjectFile::load(path);
@@ -1106,8 +1101,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
                 if (ProjectFile::getProjectFilePath() == "") {
-                    fs::openFileBrowser("hex.builtin.view.hex_editor.save_project"_lang, fs::DialogMode::Save, {
-                                                                                                                   {"Project File", "hexproj"}
+                    fs::openFileBrowser("hex.builtin.view.hex_editor.save_project"_lang, fs::DialogMode::Save, { {"Project File", "hexproj"}
                     },
                         [](std::fs::path path) {
                             if (path.extension() != ".hexproj") {

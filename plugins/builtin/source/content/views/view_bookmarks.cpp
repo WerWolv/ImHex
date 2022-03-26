@@ -73,7 +73,9 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleColor(ImGuiCol_Header, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
-                    if (ImGui::CollapsingHeader((name + "###bookmark").c_str())) {
+
+                    bool open = true;
+                    if (ImGui::CollapsingHeader(name.c_str(), &open)) {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
                         ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
@@ -127,10 +129,6 @@ namespace hex::plugin::builtin {
                             ImHexApi::HexEditor::setSelection(region);
                         ImGui::SameLine(0, 15);
 
-                        if (ImGui::Button("hex.builtin.view.bookmarks.button.remove"_lang))
-                            bookmarkToRemove = iter;
-                        ImGui::SameLine(0, 15);
-
                         if (locked) {
                             if (ImGui::Button(ICON_FA_LOCK)) locked = false;
                         } else {
@@ -161,6 +159,10 @@ namespace hex::plugin::builtin {
 
                         ImGui::NewLine();
                     }
+
+                    if (!open)
+                        bookmarkToRemove = iter;
+
                     ImGui::PopID();
                     ImGui::PopStyleColor(3);
                     id++;

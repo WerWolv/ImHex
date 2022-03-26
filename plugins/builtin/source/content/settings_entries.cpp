@@ -238,9 +238,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    return fs::openFileBrowser("hex.builtin.setting.font.font_path", fs::DialogMode::Open, {
-                                                                                                               {"TTF Font", "ttf"}
-                    },
+                    return fs::openFileBrowser("hex.builtin.setting.font.font_path", fs::DialogMode::Open, { {"TTF Font", "ttf"} },
                         [&](const std::fs::path &path) {
                             fontPath = path.string();
                             setting  = fontPath;
