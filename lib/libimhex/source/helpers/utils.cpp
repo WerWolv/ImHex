@@ -399,7 +399,7 @@ namespace hex {
         u32 exponent = (float16 >> 10) & 0x1F;
         u32 mantissa = float16 & 0x3FF;
 
-        u32 result;
+        u32 result = 0x00;
 
         if (exponent == 0) {
             if (mantissa == 0) {
@@ -425,7 +425,10 @@ namespace hex {
             result = (sign << 31) | ((exponent + (0x7F - 15)) << 23) | (mantissa << 13);
         }
 
-        return reinterpret_cast<float &>(result);
+        float floatResult = 0;
+        std::memcpy(&floatResult, &result, sizeof(float));
+
+        return floatResult;
     }
 
     bool isProcessElevated() {
@@ -447,7 +450,7 @@ namespace hex {
         return elevated;
 
 #elif defined(OS_LINUX) || defined(OS_MACOS)
-        return getuid() < 0 || getuid() != geteuid();
+        return getuid() == 0 || getuid() != geteuid();
 #endif
     }
 

@@ -376,6 +376,8 @@ namespace hex::plugin::builtin {
 #else
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time", sizeof(time_t), [](auto buffer, auto endian, auto style) {
+            hex::unused(style);
+
             auto endianAdjustedTime = hex::changeEndianess(*reinterpret_cast<time_t *>(buffer.data()), endian);
 
             std::string value;

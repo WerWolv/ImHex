@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
 
                     if (this->m_dataValid) {
 
-                        ImGui::LabelText("hex.builtin.view.information.region"_lang, "0x%llx - 0x%llx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
+                        ImGui::LabelText("hex.builtin.view.information.region"_lang, "0x%lx - 0x%lx", this->m_analyzedRegion.first, this->m_analyzedRegion.second);
 
                         ImGui::NewLine();
 

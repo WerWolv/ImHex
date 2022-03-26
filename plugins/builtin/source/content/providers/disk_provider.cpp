@@ -4,6 +4,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <bitset>
 #include <filesystem>
@@ -112,8 +113,11 @@ namespace hex::plugin::builtin::prv {
 
         struct stat driveStat;
 
-        ::stat(path.c_str(), &driveStat) == 0;
-        this->m_diskSize   = driveStat.st_size;
+        if (::stat(path.c_str(), &driveStat) == 0)
+            this->m_diskSize   = driveStat.st_size;
+        else
+            this->m_diskSize = 0;
+
         this->m_sectorSize = 0;
 
         this->m_diskHandle = ::open(path.c_str(), O_RDWR);
@@ -313,7 +317,7 @@ namespace hex::plugin::builtin::prv {
 
 #else
 
-        if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer))
+        if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer))
             this->m_path = this->m_pathBuffer;
 
 #endif

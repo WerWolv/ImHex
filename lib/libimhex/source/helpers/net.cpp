@@ -44,6 +44,7 @@ namespace hex {
         return fwrite(contents, size, nmemb, file);
     }
 
+    [[maybe_unused]]
     static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
         hex::unused(ctx, userData);
 
