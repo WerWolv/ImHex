@@ -150,9 +150,9 @@ namespace hex::plugin::builtin::prv {
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStatsValid) {
-            result.emplace_back("hex.builtin.provider.file.creation"_lang, hex::format("{}", fmt::localtime(this->m_fileStats.st_ctime)));
-            result.emplace_back("hex.builtin.provider.file.access"_lang, hex::format("{}", fmt::localtime(this->m_fileStats.st_atime)));
-            result.emplace_back("hex.builtin.provider.file.modification"_lang, hex::format("{}", fmt::localtime(this->m_fileStats.st_mtime)));
+            result.emplace_back("hex.builtin.provider.file.creation"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats.st_ctime)));
+            result.emplace_back("hex.builtin.provider.file.access"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats.st_atime)));
+            result.emplace_back("hex.builtin.provider.file.modification"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats.st_mtime)));
         }
 
         return result;
@@ -163,13 +163,13 @@ namespace hex::plugin::builtin::prv {
     }
 
     bool FileProvider::open() {
-        this->m_fileStatsValid = stat(this->m_path.string().c_str(), &this->m_fileStats) == 0;
-
         this->m_readable = true;
         this->m_writable = true;
 
 #if defined(OS_WINDOWS)
         const auto &path = this->m_path.native();
+
+        this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
 
         LARGE_INTEGER fileSize = { 0 };
         this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
@@ -237,6 +237,8 @@ namespace hex::plugin::builtin::prv {
 
 #else
         const auto &path = this->m_path.native();
+        this->m_fileStatsValid = stat(path.c_str(), &this->m_fileStats) == 0;
+
         int mmapprot     = PROT_READ | PROT_WRITE;
 
         this->m_file = ::open(path.c_str(), O_RDWR);
