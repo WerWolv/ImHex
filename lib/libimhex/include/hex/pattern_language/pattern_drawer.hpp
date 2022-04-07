@@ -20,8 +20,8 @@
 #include <nlohmann/json.hpp>
 
 namespace {
-    constexpr static auto DisplayEndDefault = 50u;
-    constexpr static auto DisplayEndStep = 50u;
+    constexpr auto DisplayEndDefault = 50u;
+    constexpr auto DisplayEndStep = 50u;
 
     template<typename T>
     concept ArrayPattern = requires(T pattern, std::function<void(int, hex::pl::Pattern&)> fn) {
@@ -53,9 +53,9 @@ namespace hex::pl {
         void visit(PatternBitfieldField& pattern) override {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            this->drawNameColumn(pattern);
-            this->makeSelectable(pattern);
-            this->drawColorColumn(pattern);
+            drawNameColumn(pattern);
+            makeSelectable(pattern);
+            drawColorColumn(pattern);
 
             auto byteAddr = pattern.getOffset() + pattern.getBitOffset() / 8;
             auto firstBitIdx = pattern.getBitOffset() % 8;
@@ -84,14 +84,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = this->createTreeNode(pattern);
+                open = createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                this->makeSelectable(pattern);
-                this->drawCommentTooltip(pattern);
+                makeSelectable(pattern);
+                drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                this->drawOffsetColumn(pattern);
-                this->drawSizeColumn(pattern);
-                this->drawTypenameColumn(pattern, "bitfield");
+                drawOffsetColumn(pattern);
+                drawSizeColumn(pattern);
+                drawTypenameColumn(pattern, "bitfield");
 
                 std::string valueString = "{ ";
                 for (auto i : value)
@@ -159,22 +159,22 @@ namespace hex::pl {
                 valueString += "???";
 
             ImGui::TableNextRow();
-            this->createLeafNode(pattern);
-            this->drawCommentTooltip(pattern);
+            createLeafNode(pattern);
+            drawCommentTooltip(pattern);
             ImGui::TableNextColumn();
-            this->makeSelectable(pattern);
+            makeSelectable(pattern);
             ImGui::SameLine();
-            this->drawNameColumn(pattern);
-            this->drawColorColumn(pattern);
-            this->drawOffsetColumn(pattern);
-            this->drawSizeColumn(pattern);
-            this->drawTypenameColumn(pattern, "enum");
+            drawNameColumn(pattern);
+            drawColorColumn(pattern);
+            drawOffsetColumn(pattern);
+            drawSizeColumn(pattern);
+            drawTypenameColumn(pattern, "enum");
             ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, pattern.getSize() * 2), &pattern));
         }
 
         void visit(PatternFloat& pattern) override {
             if (pattern.getSize() == 4) {
-                float f32 = pattern.getValue(m_provider);
+                float f32 = static_cast<float>(pattern.getValue(m_provider));
                 u32 integerResult = 0;
                 std::memcpy(&integerResult, &f32, sizeof(float));
                 this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f32, integerResult, pattern.getSize() * 2), f32);
@@ -199,14 +199,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = this->createTreeNode(pattern);
+                open = createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                this->makeSelectable(pattern);
-                this->drawCommentTooltip(pattern);
+                makeSelectable(pattern);
+                drawCommentTooltip(pattern);
                 ImGui::SameLine(0, 0);
-                this->drawColorColumn(pattern);
-                this->drawOffsetColumn(pattern);
-                this->drawSizeColumn(pattern);
+                drawColorColumn(pattern);
+                drawOffsetColumn(pattern);
+                drawSizeColumn(pattern);
                 ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
                 ImGui::TableNextColumn();
                 ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
@@ -243,14 +243,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = this->createTreeNode(pattern);
+                open = createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                this->makeSelectable(pattern);
-                this->drawCommentTooltip(pattern);
+                makeSelectable(pattern);
+                drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                this->drawOffsetColumn(pattern);
-                this->drawSizeColumn(pattern);
-                this->drawTypenameColumn(pattern, "struct");
+                drawOffsetColumn(pattern);
+                drawSizeColumn(pattern);
+                drawTypenameColumn(pattern, "struct");
                 ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
             } else {
                 ImGui::SameLine();
@@ -272,14 +272,14 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = this->createTreeNode(pattern);
+                open = createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                this->makeSelectable(pattern);
-                this->drawCommentTooltip(pattern);
+                makeSelectable(pattern);
+                drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                this->drawOffsetColumn(pattern);
-                this->drawSizeColumn(pattern);
-                this->drawTypenameColumn(pattern, "union");
+                drawOffsetColumn(pattern);
+                drawSizeColumn(pattern);
+                drawTypenameColumn(pattern, "union");
                 ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
             } else {
                 ImGui::SameLine();
@@ -321,33 +321,36 @@ namespace hex::pl {
     private:
         void createDefaultEntry(const Pattern &pattern, const std::string &value, Token::Literal &&literal) const {
             ImGui::TableNextRow();
-            this->createLeafNode(pattern);
+            createLeafNode(pattern);
             ImGui::TableNextColumn();
 
-            ImGui::PushID(pattern.getOffset());
-            ImGui::PushID(pattern.getVariableName().c_str());
-            this->makeSelectable(pattern);
-            ImGui::PopID();
-            ImGui::PopID();
+            makeSelectable(pattern);
 
-            this->drawCommentTooltip(pattern);
+            drawCommentTooltip(pattern);
             ImGui::SameLine();
-            this->drawNameColumn(pattern);
-            this->drawColorColumn(pattern);
-            this->drawOffsetColumn(pattern);
-            this->drawSizeColumn(pattern);
+            drawNameColumn(pattern);
+            drawColorColumn(pattern);
+            drawOffsetColumn(pattern);
+            drawSizeColumn(pattern);
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getTypeName().empty() ? pattern.getFormattedName() : pattern.getTypeName());
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", pattern.formatDisplayValue(value, literal));
         }
 
-        void makeSelectable(const Pattern &pattern) const {
-            if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+        static void makeSelectable(const Pattern &pattern) {
+            ImGui::PushID(&pattern);
+            ImGui::PushID(static_cast<int>(pattern.getOffset()));
+            ImGui::PushID(pattern.getVariableName().c_str());
+            if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
             }
+            ImGui::SameLine();
+            ImGui::PopID();
+            ImGui::PopID();
+            ImGui::PopID();
         }
 
-        void drawCommentTooltip(const Pattern &pattern) const {
+        static void drawCommentTooltip(const Pattern &pattern) {
             if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && pattern.getComment().has_value()) {
                 ImGui::BeginTooltip();
                 ImGui::TextUnformatted(pattern.getComment()->c_str());
@@ -371,15 +374,15 @@ namespace hex::pl {
             if (!pattern.isInlined()) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                open = this->createTreeNode(pattern);
+                open = createTreeNode(pattern);
                 ImGui::TableNextColumn();
                 if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                     ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
                 }
-                this->drawCommentTooltip(pattern);
+                drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
-                this->drawOffsetColumn(pattern);
-                this->drawSizeColumn(pattern);
+                drawOffsetColumn(pattern);
+                drawSizeColumn(pattern);
                 ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);
 
@@ -418,40 +421,40 @@ namespace hex::pl {
             }
         }
 
-        void createLeafNode(const Pattern& pattern) const {
+        static void createLeafNode(const Pattern& pattern) {
             ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
                                                                 ImGuiTreeNodeFlags_NoTreePushOnOpen |
                                                                 ImGuiTreeNodeFlags_SpanFullWidth |
                                                                 ImGuiTreeNodeFlags_AllowItemOverlap);
         }
 
-        bool createTreeNode(const Pattern& pattern) const {
+        static bool createTreeNode(const Pattern& pattern) {
             return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
         }
 
-        void drawTypenameColumn(const Pattern& pattern, const std::string& pattern_name) const {
+        static void drawTypenameColumn(const Pattern& pattern, const std::string& pattern_name) {
             ImGui::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
             ImGui::TableNextColumn();
         }
 
-        void drawNameColumn(const Pattern& pattern) const {
+        static void drawNameColumn(const Pattern& pattern) {
             ImGui::TextUnformatted(pattern.getDisplayName().c_str());
             ImGui::TableNextColumn();
         }
 
-        void drawColorColumn(const Pattern& pattern) const {
+        static void drawColorColumn(const Pattern& pattern) {
             ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             ImGui::TableNextColumn();
         }
 
-        void drawOffsetColumn(const Pattern& pattern) const {
+        static void drawOffsetColumn(const Pattern& pattern) {
             ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
             ImGui::TableNextColumn();
         }
 
-        void drawSizeColumn(const Pattern& pattern) const {
+        static void drawSizeColumn(const Pattern& pattern) {
             ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
             ImGui::TableNextColumn();
         }

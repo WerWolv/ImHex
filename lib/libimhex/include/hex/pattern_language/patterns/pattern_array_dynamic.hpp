@@ -39,7 +39,7 @@ namespace hex::pl {
             return this->m_entries[0]->getTypeName() + "[" + std::to_string(this->m_entries.size()) + "]";
         }
 
-        [[nodiscard]] std::string getTypeName() const {
+        [[nodiscard]] std::string getTypeName() const override {
             return this->m_entries[0]->getTypeName();
         }
 
@@ -58,7 +58,7 @@ namespace hex::pl {
             return this->m_entries;
         }
 
-        void forEachArrayEntry(const std::function<void(int, Pattern&)>& fn) {
+        void forEachArrayEntry(const std::function<void(u64, Pattern&)>& fn) {
             for (u64 i = 0; i < this->m_entries.size(); i++)
                 fn(i, *this->m_entries[i]);
         }

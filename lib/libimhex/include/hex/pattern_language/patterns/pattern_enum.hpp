@@ -24,7 +24,7 @@ namespace hex::pl {
             return "enum " + Pattern::getTypeName();
         }
 
-        [[nodiscard]] std::string getTypeName() const {
+        [[nodiscard]] std::string getTypeName() const override {
             return Pattern::getTypeName();
         }
 

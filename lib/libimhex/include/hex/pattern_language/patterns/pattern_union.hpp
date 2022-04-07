@@ -67,10 +67,6 @@ namespace hex::pl {
             return "union " + Pattern::getTypeName();
         }
 
-        [[nodiscard]] std::string getTypeName() const {
-            return Pattern::getTypeName();
-        }
-
         [[nodiscard]] const auto &getMembers() const {
             return this->m_members;
         }

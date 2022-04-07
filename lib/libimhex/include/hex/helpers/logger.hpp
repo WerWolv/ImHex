@@ -41,26 +41,26 @@ namespace hex::log {
 
     [[maybe_unused]] void debug(const std::string &fmt, auto &&...args) {
 #if defined(DEBUG)
-        print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+        hex::log::print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
 #else
         hex::unused(fmt, args...);
 #endif
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto &&...args) {
-        print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
+        hex::log::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
     }
 
     [[maybe_unused]] void warn(const std::string &fmt, auto &&...args) {
-        print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
+        hex::log::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
     }
 
     [[maybe_unused]] void error(const std::string &fmt, auto &&...args) {
-        print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
+        hex::log::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
     }
 
     [[maybe_unused]] void fatal(const std::string &fmt, auto &&...args) {
-        print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+        hex::log::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
 
     [[maybe_unused]] void redirectToFile();

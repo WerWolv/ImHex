@@ -77,7 +77,7 @@ namespace hex::pl {
         [[nodiscard]] const std::optional<std::string> &getComment() const { return this->m_comment; }
         void setComment(std::string comment) { this->m_comment = std::move(comment); }
 
-        [[nodiscard]] const std::string &getTypeName() const { return this->m_typeName; }
+        [[nodiscard]] virtual std::string getTypeName() const { return this->m_typeName; }
         void setTypeName(std::string name) { this->m_typeName = std::move(name); }
 
         [[nodiscard]] u32 getColor() const { return this->m_color; }

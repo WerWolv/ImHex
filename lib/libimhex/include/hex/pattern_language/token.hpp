@@ -241,6 +241,8 @@ namespace hex::pl {
                     return "padding";
                 case ValueType::String:
                     return "str";
+                case ValueType::Boolean:
+                    return "bool";
                 default:
                     return "< ??? >";
             }
