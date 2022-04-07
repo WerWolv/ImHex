@@ -53,7 +53,7 @@ namespace hex::pl {
             return this->m_template->getTypeName() + "[" + std::to_string(this->m_entryCount) + "]";
         }
 
-        [[nodiscard]] std::string getTypeName() const {
+        [[nodiscard]] std::string getTypeName() const override {
             return this->m_template->getTypeName();
         }
 
