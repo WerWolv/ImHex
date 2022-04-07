@@ -338,14 +338,12 @@ namespace hex::pl {
         }
 
         static void makeSelectable(const Pattern &pattern) {
-            ImGui::PushID(&pattern);
             ImGui::PushID(static_cast<int>(pattern.getOffset()));
             ImGui::PushID(pattern.getVariableName().c_str());
             if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
                 ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
             }
             ImGui::SameLine();
-            ImGui::PopID();
             ImGui::PopID();
             ImGui::PopID();
         }
@@ -376,9 +374,7 @@ namespace hex::pl {
                 ImGui::TableNextColumn();
                 open = createTreeNode(pattern);
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(("##PatternLine"s + std::to_string(u64(&pattern))).c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                    ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-                }
+                makeSelectable(pattern);
                 drawCommentTooltip(pattern);
                 ImGui::TableNextColumn();
                 drawOffsetColumn(pattern);
@@ -403,6 +399,9 @@ namespace hex::pl {
             if (open) {
                 pattern.forEachArrayEntry([&] (u64 idx, auto &entry){
                     u64 lastVisible = displayEnd - 1;
+
+                    ImGui::PushID(entry.getOffset());
+
                     if (idx < lastVisible) {
                         this->draw(entry);
                     } else if (idx == lastVisible) {
@@ -413,6 +412,8 @@ namespace hex::pl {
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                             displayEnd += DisplayEndStep;
                     }
+
+                    ImGui::PopID();
                 });
 
                 ImGui::TreePop();
