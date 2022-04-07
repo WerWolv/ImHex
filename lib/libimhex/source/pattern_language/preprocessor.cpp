@@ -8,7 +8,7 @@
 
 namespace hex::pl {
 
-    std::optional<std::string> Preprocessor::preprocess(const std::string &code, bool initialRun) {
+    std::optional<std::string> Preprocessor::preprocess(std::string code, bool initialRun) {
         u32 offset      = 0;
         u32 lineNumber  = 1;
         bool isInString = false;
@@ -22,6 +22,34 @@ namespace hex::pl {
         output.reserve(code.length());
 
         try {
+            while (offset < code.length()) {
+                if (code.substr(offset, 2) == "//") {
+                    while (code[offset] != '\n' && offset < code.length())
+                        offset += 1;
+                } else if (code.substr(offset, 2) == "/*") {
+                    while (code.substr(offset, 2) != "*/" && offset < code.length()) {
+                        if (code[offset] == '\n') {
+                            output += '\n';
+                            lineNumber++;
+                        }
+
+                        offset += 1;
+                    }
+
+                    offset += 2;
+                    if (offset >= code.length())
+                        throwPreprocessorError("unterminated comment", lineNumber - 1);
+                } else {
+                    output += code[offset];
+                    offset++;
+                }
+            }
+
+            offset = 0;
+            code = output;
+            output.clear();
+            output.reserve(code.size());
+
             bool startOfLine = true;
             while (offset < code.length()) {
                 if (offset > 0 && code[offset - 1] != '\\' && code[offset] == '\"')
@@ -179,22 +207,6 @@ namespace hex::pl {
                         this->m_pragmas.emplace(pragmaKey, pragmaValue, lineNumber);
                     } else
                         throwPreprocessorError("unknown preprocessor directive", lineNumber);
-                } else if (code.substr(offset, 2) == "//") {
-                    while (code[offset] != '\n' && offset < code.length())
-                        offset += 1;
-                } else if (code.substr(offset, 2) == "/*") {
-                    while (code.substr(offset, 2) != "*/" && offset < code.length()) {
-                        if (code[offset] == '\n') {
-                            output += '\n';
-                            lineNumber++;
-                        }
-
-                        offset += 1;
-                    }
-
-                    offset += 2;
-                    if (offset >= code.length())
-                        throwPreprocessorError("unterminated comment", lineNumber - 1);
                 }
 
                 if (code[offset] == '\n') {

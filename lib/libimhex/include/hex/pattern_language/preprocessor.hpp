@@ -19,7 +19,7 @@ namespace hex::pl {
     public:
         Preprocessor() = default;
 
-        std::optional<std::string> preprocess(const std::string &code, bool initialRun = true);
+        std::optional<std::string> preprocess(std::string code, bool initialRun = true);
 
         void addPragmaHandler(const std::string &pragmaType, const std::function<bool(const std::string &)> &function);
         void removePragmaHandler(const std::string &pragmaType);
