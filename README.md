@@ -106,15 +106,16 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 The custom C-like Pattern Language developed and used by ImHex is easy to read, understand and learn. A guide with all features of the language can be found [on the docs page](http://imhex.werwolv.net/docs).
 
+## Database
+
+For format patterns, includable libraries magic and constant files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. Feel free to PR your own files there as well!
+
 ## Plugin development
 
 To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
 - [C++ Plugin Template](https://github.com/WerWolv/ImHex-Cpp-Plugin-Template)
 - [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
 
-## Additional Files
-
-For format patterns, includable libraries and magic files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. Feel free to PR your own files there as well!
 
 ## Nightly builds
 
