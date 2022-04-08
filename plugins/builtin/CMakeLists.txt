@@ -47,6 +47,7 @@ add_library(${PROJECT_NAME} SHARED
 
 
         source/math_evaluator.cpp
+        source/pattern_drawer.cpp
 
         source/lang/en_US.cpp
         source/lang/de_DE.cpp
