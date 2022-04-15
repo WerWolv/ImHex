@@ -87,7 +87,7 @@ namespace hex {
         static void post(auto &&...args) noexcept {
             for (const auto &[id, event] : s_events) {
                 if (id == E::id)
-                    (*reinterpret_cast<E *>(event))(std::forward<decltype(args)>(args)...);
+                    (*static_cast<E *const>(event))(std::forward<decltype(args)>(args)...);
             }
         }
 
