@@ -18,7 +18,7 @@ namespace hex::test {
             auto array    = create<PatternArrayStatic>("u8", "array", 0x100 + sizeof(i32), sizeof(u8[0x10]));
             array->setEntries(create<PatternUnsigned>("u8", "", 0x100 + sizeof(i32), sizeof(u8)), 0x10);
 
-            std::vector<std::shared_ptr<hex::pl::Pattern>> structMembers;
+            std::vector<std::shared_ptr<pl::Pattern>> structMembers;
             {
                 structMembers.push_back(std::move(variable));
                 structMembers.push_back(std::move(array));

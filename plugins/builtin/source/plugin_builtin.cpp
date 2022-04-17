@@ -1,13 +1,12 @@
 #include <hex/plugin.hpp>
 
-#include <hex/api/imhex_api.hpp>
-
 namespace hex::plugin::builtin {
 
     void registerViews();
     void registerDataInspectorEntries();
     void registerToolEntries();
     void registerPatternLanguageFunctions();
+    void registerPatternLanguagePragmas();
     void registerCommandPaletteCommands();
     void registerSettings();
     void registerDataProcessorNodes();
@@ -42,6 +41,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerDataInspectorEntries();
     registerToolEntries();
     registerPatternLanguageFunctions();
+    registerPatternLanguagePragmas();
     registerCommandPaletteCommands();
     registerSettings();
     registerDataProcessorNodes();

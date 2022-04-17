@@ -18,6 +18,10 @@
 
 struct GLFWwindow;
 
+namespace pl {
+    class Pattern;
+}
+
 namespace hex {
 
     class EventId {
@@ -95,10 +99,6 @@ namespace hex {
         static std::map<void *, EventList::iterator> s_tokenStore;
         static EventList s_events;
     };
-
-    namespace pl {
-        class Pattern;
-    }
 
     /* Default Events */
     EVENT_DEF(EventFileLoaded, std::fs::path);

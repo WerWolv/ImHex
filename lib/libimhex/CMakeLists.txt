@@ -79,7 +79,8 @@ else()
     pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
 endif()
 
-
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/pattern_language ${CMAKE_CURRENT_BINARY_DIR}/external/pattern_language EXCLUDE_FROM_ALL)
+set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 find_package(mbedTLS 2.26.0 REQUIRED)
 configurePython()
@@ -125,14 +126,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/loader_script_handler.cpp
     source/helpers/logger.cpp
 
-    source/pattern_language/pattern_language.cpp
-    source/pattern_language/preprocessor.cpp
-    source/pattern_language/lexer.cpp
-    source/pattern_language/parser.cpp
-    source/pattern_language/validator.cpp
-    source/pattern_language/evaluator.cpp
-    source/pattern_language/log_console.cpp
-
     source/providers/provider.cpp
 
     source/ui/imgui_imhex_extensions.cpp
@@ -166,4 +159,4 @@ if (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs)
+target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs libpl)

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
-#include <hex/pattern_language/pattern_language.hpp>
-#include <hex/pattern_language/log_console.hpp>
+#include <pl/pattern_language.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <cstring>
@@ -78,6 +77,15 @@ namespace hex::plugin::builtin {
 
         u64 m_envVarIdCounter;
         std::list<EnvVar> m_envVarEntries;
+
+        enum class DangerousFunctionPerms : u8 {
+            Ask,
+            Allow,
+            Deny
+        };
+
+        std::atomic<bool> m_dangerousFunctionCalled = false;
+        std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
 
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size);

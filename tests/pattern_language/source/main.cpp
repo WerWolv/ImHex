@@ -18,8 +18,8 @@
 
 using namespace hex::test;
 
-static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
-    auto format = hex::pl::Token::literalToString(params[0], true);
+static std::string format(pl::Evaluator *ctx, const auto &params) {
+    auto format = pl::Token::literalToString(params[0], true);
     std::string message;
 
     fmt::dynamic_format_arg_store<fmt::format_context> formatArgs;
@@ -28,7 +28,7 @@ static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
         auto &param = params[i];
 
         std::visit(hex::overloaded {
-                       [&](hex::pl::Pattern *value) {
+                       [&](pl::Pattern *value) {
                            formatArgs.push_back(value->toString(ctx->getProvider()));
                        },
                        [&](auto &&value) {
@@ -40,7 +40,7 @@ static std::string format(hex::pl::Evaluator *ctx, const auto &params) {
     try {
         return fmt::vformat(format, formatArgs);
     } catch (fmt::format_error &error) {
-        hex::pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
+        pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
     }
 }
 
@@ -91,7 +91,7 @@ int test(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
-    hex::pl::PatternLanguage language;
+    pl::PatternLanguage language;
 
     // Check if compilation succeeded
     auto result = language.executeString(provider, testPatterns[testName]->getSourceCode());

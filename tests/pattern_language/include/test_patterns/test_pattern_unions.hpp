@@ -18,7 +18,7 @@ namespace hex::test {
             array->setEntries(create<PatternSigned>("s32", "", 0x200, sizeof(i32)), 2);
             auto variable = create<PatternUnsigned>("u128", "variable", 0x200, sizeof(u128));
 
-            std::vector<std::shared_ptr<hex::pl::Pattern>> unionMembers;
+            std::vector<std::shared_ptr<pl::Pattern>> unionMembers;
             {
                 unionMembers.push_back(std::move(array));
                 unionMembers.push_back(std::move(variable));

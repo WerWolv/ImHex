@@ -11,7 +11,7 @@
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
 
-namespace hex::pl {
+namespace pl {
     class PatternLanguage;
 }
 

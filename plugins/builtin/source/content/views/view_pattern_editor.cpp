@@ -1,12 +1,12 @@
 #include "content/views/view_pattern_editor.hpp"
 
+#include <pl/preprocessor.hpp>
+#include <pl/patterns/pattern.hpp>
+#include <pl/ast/ast_node_variable_decl.hpp>
+#include <pl/ast/ast_node_type_decl.hpp>
+#include <pl/ast/ast_node_builtin_type.hpp>
 
-#include <hex/pattern_language/preprocessor.hpp>
-#include <hex/pattern_language/patterns/pattern.hpp>
-#include <hex/pattern_language/ast/ast_node_variable_decl.hpp>
-#include <hex/pattern_language/ast/ast_node_type_decl.hpp>
-#include <hex/pattern_language/ast/ast_node_builtin_type.hpp>
-
+#include <hex/api/content_registry.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
@@ -105,16 +105,18 @@ namespace hex::plugin::builtin {
             if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
                 return;
 
-            pl::Preprocessor preprocessor;
-            preprocessor.addDefaultPragmaHandlers();
-
             if (!ImHexApi::Provider::isValid())
                 return;
 
-            std::string mimeType = magic::getMIMEType(ImHexApi::Provider::get());
+            auto provider = ImHexApi::Provider::get();
+            auto runtime = provider->getPatternLanguageRuntime();
+
+            auto mimeType = magic::getMIMEType(ImHexApi::Provider::get());
 
             bool foundCorrectType = false;
-            preprocessor.addPragmaHandler("MIME", [&mimeType, &foundCorrectType](std::string value) {
+            runtime.addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
+                hex::unused(runtime);
+
                 if (value == mimeType) {
                     foundCorrectType = true;
                     return true;
@@ -135,13 +137,14 @@ namespace hex::plugin::builtin {
                     if (!file.isValid())
                         continue;
 
-                    preprocessor.preprocess(file.readString());
+                    runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
 
                     if (foundCorrectType)
                         this->m_possiblePatternFiles.push_back(entry.path());
                 }
             }
 
+            runtime.removePragma("MIME");
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;
@@ -329,7 +332,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (provider->getPatternLanguageRuntime().hasDangerousFunctionBeenCalled() && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
+            if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
                 ImGui::OpenPopup(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str());
             }
 
@@ -339,11 +342,14 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 View::confirmButtons(
-                    "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] {
-                        ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(true);
-                        ImGui::CloseCurrentPopup(); }, [] {
-                        ImHexApi::Provider::get()->getPatternLanguageRuntime().allowDangerousFunctions(false);
-                        ImGui::CloseCurrentPopup(); });
+                    "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                    [this] {
+                        this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
+                        ImGui::CloseCurrentPopup();
+                    }, [this] {
+                        this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
+                        ImGui::CloseCurrentPopup();
+                    });
 
                 ImGui::EndPopup();
             }
@@ -616,7 +622,6 @@ namespace hex::plugin::builtin {
         if (!ImHexApi::Provider::isValid()) return;
 
         ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
-        ContentRegistry::PatternLanguage::resetPalette();
     }
 
 
@@ -679,7 +684,17 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             auto &runtime = provider->getPatternLanguageRuntime();
 
-            this->m_lastEvaluationResult = runtime.executeString(provider, code, envVars, inVariables);
+            runtime.setDangerousFunctionCallHandler([this]{
+                this->m_dangerousFunctionCalled = true;
+
+                while (this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Ask) {
+                    std::this_thread::yield();
+                }
+
+                return this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
+            });
+
+            this->m_lastEvaluationResult = runtime.executeString(code, envVars, inVariables);
             if (!this->m_lastEvaluationResult) {
                 this->m_lastEvaluationError = runtime.getError();
             }

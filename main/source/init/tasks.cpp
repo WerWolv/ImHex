@@ -4,7 +4,6 @@
 #include <imgui_freetype.h>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/pattern_language/patterns/pattern.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/fs.hpp>
@@ -185,7 +184,6 @@ namespace hex::init {
 
         ContentRegistry::CommandPaletteCommands::getEntries().clear();
         ContentRegistry::PatternLanguage::getFunctions().clear();
-        ContentRegistry::PatternLanguage::getPalettes().clear();
 
         for (auto &[name, view] : ContentRegistry::Views::getEntries())
             delete view;

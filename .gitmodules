@@ -26,3 +26,6 @@
 	path = lib/external/libromfs
 	url = https://github.com/WerWolv/libromfs
 	ignore = dirty
+[submodule "lib/external/pattern_language"]
+	path = lib/external/pattern_language
+	url = https://github.com/WerWolv/PatternLanguage

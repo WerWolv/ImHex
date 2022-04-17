@@ -1,10 +1,8 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/api/event.hpp>
-#include <hex/pattern_language/patterns/pattern.hpp>
-#include <hex/pattern_language/pattern_language.hpp>
-
 #include <hex/ui/view.hpp>
 
 #include <cmath>
@@ -13,11 +11,13 @@
 #include <optional>
 #include <string>
 
+#include <pl/pattern_language.hpp>
+
 namespace hex::prv {
 
     Provider::Provider() {
         this->m_patches.emplace_back();
-        this->m_patternLanguageRuntime = std::make_unique<pl::PatternLanguage>();
+        this->m_patternLanguageRuntime = ContentRegistry::PatternLanguage::createDefaultRuntime(this);
 
         if (this->hasLoadInterface())
             EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
@@ -44,7 +44,7 @@ namespace hex::prv {
     }
 
     void Provider::resize(size_t newSize) {
-        hex::unused(newSize);
+        this->m_patternLanguageRuntime->setDataSize(newSize);
     }
 
     void Provider::insert(u64 offset, size_t size) {
@@ -129,6 +129,7 @@ namespace hex::prv {
 
     void Provider::setBaseAddress(u64 address) {
         this->m_baseAddress = address;
+        this->m_patternLanguageRuntime->setDataBaseAddress(address);
     }
 
     u64 Provider::getBaseAddress() const {

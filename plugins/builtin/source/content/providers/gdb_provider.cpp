@@ -278,6 +278,8 @@ namespace hex::plugin::builtin::prv {
                 }
             });
 
+            Provider::resize(this->getActualSize());
+
             return true;
         } else {
             return false;

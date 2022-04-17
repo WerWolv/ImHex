@@ -220,7 +220,7 @@ namespace hex {
 
     namespace ContentRegistry::PatternLanguage {
 
-        static std::string getFunctionName(const Namespace &ns, const std::string &name) {
+        static std::string getFunctionName(const pl::api::Namespace &ns, const std::string &name) {
             std::string functionName;
             for (auto &scope : ns)
                 functionName += scope + "::";
@@ -230,61 +230,65 @@ namespace hex {
             return functionName;
         }
 
-        void addFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func) {
+        std::unique_ptr<pl::PatternLanguage> createDefaultRuntime(prv::Provider *provider) {
+            auto runtime = std::make_unique<pl::PatternLanguage>();
+
+            runtime->setDataSource([provider](u64 offset, u8 *buffer, size_t size) {
+                provider->read(offset, buffer, size);
+            }, 0, 0);
+
+            runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude));
+
+            for (const auto &func : getFunctions()) {
+                if (func.dangerous)
+                    runtime->addDangerousFunction(func.ns, func.name, func.parameterCount, func.callback);
+                else
+                    runtime->addFunction(func.ns, func.name, func.parameterCount, func.callback);
+            }
+
+            for (const auto &[name, callback] : getPragmas()) {
+                runtime->addPragma(name, callback);
+            }
+
+            return runtime;
+        }
+
+        void addPragma(const std::string &name, const pl::api::PragmaHandler &handler) {
+            log::info("Registered new pattern language pragma: {}", name);
+
+            getPragmas()[name] = handler;
+        }
+
+        void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
             log::info("Registered new pattern language function: {}", getFunctionName(ns, name));
 
-            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, { }, func, false };
+            getFunctions().push_back({
+                ns, name,
+                parameterCount, func,
+                false
+            });
         }
 
-        void addDangerousFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func) {
+        void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
             log::info("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
 
-            getFunctions()[getFunctionName(ns, name)] = Function { parameterCount, { }, func, true };
+            getFunctions().push_back({
+                ns, name,
+                parameterCount, func,
+                true
+            });
         }
 
-        std::map<std::string, Function> &getFunctions() {
-            static std::map<std::string, Function> functions;
+        std::map<std::string, pl::api::PragmaHandler> &getPragmas() {
+            static std::map<std::string, pl::api::PragmaHandler> pragmas;
+
+            return pragmas;
+        }
+
+        std::vector<impl::FunctionDefinition> &getFunctions() {
+            static std::vector<impl::FunctionDefinition> functions;
 
             return functions;
-        }
-
-
-        static std::vector<impl::ColorPalette> s_colorPalettes;
-        static u32 s_colorIndex;
-        static u32 s_selectedColorPalette;
-
-        std::vector<impl::ColorPalette> &getPalettes() {
-            return s_colorPalettes;
-        }
-
-        void addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors) {
-            s_colorPalettes.push_back({ unlocalizedName,
-                colors });
-        }
-
-        void setSelectedPalette(u32 index) {
-            if (index < s_colorPalettes.size())
-                s_selectedColorPalette = index;
-
-            resetPalette();
-        }
-
-        u32 getNextColor() {
-            if (s_colorPalettes.empty())
-                return 0x00;
-
-            auto &currColors = s_colorPalettes[s_selectedColorPalette].colors;
-
-            u32 color = currColors[s_colorIndex];
-
-            s_colorIndex++;
-            s_colorIndex %= currColors.size();
-
-            return color;
-        }
-
-        void resetPalette() {
-            s_colorIndex = 0;
         }
 
     }

@@ -3,11 +3,12 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/utils.hpp>
 
-#include <hex/pattern_language/token.hpp>
-#include <hex/pattern_language/log_console.hpp>
-#include <hex/pattern_language/evaluator.hpp>
-#include <hex/pattern_language/patterns/pattern.hpp>
+#include <pl/token.hpp>
+#include <pl/log_console.hpp>
+#include <pl/evaluator.hpp>
+#include <pl/patterns/pattern.hpp>
 
 #include <vector>
 
@@ -15,7 +16,7 @@
 
 namespace hex::plugin::builtin {
 
-    std::string format(pl::Evaluator *ctx, const auto &params) {
+    std::string format(const auto &params) {
         auto format = pl::Token::literalToString(params[0], true);
         std::string message;
 
@@ -26,7 +27,7 @@ namespace hex::plugin::builtin {
 
             std::visit(overloaded {
                            [&](pl::Pattern *value) {
-                               formatArgs.push_back(value->toString(ctx->getProvider()));
+                               formatArgs.push_back(value->toString());
                            },
                            [&](auto &&value) {
                                formatArgs.push_back(value);
@@ -37,32 +38,30 @@ namespace hex::plugin::builtin {
         try {
             return fmt::vformat(format, formatArgs);
         } catch (fmt::format_error &error) {
-            hex::pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
+            pl::LogConsole::abortEvaluation(hex::format("format error: {}", error.what()));
         }
     }
 
     void registerPatternLanguageFunctions() {
-        using namespace hex::pl;
-        using ParameterCount = ContentRegistry::PatternLanguage::ParameterCount;
+        using namespace pl;
+        using FunctionParameterCount = pl::api::FunctionParameterCount;
 
-        ContentRegistry::PatternLanguage::addColorPalette("hex.builtin.palette.pastel", { 0x70B4771F, 0x700E7FFF, 0x702CA02C, 0x702827D6, 0x70BD6794, 0x704B568C, 0x70C277E3, 0x707F7F7F, 0x7022BDBC, 0x70CFBE17 });
-
-        ContentRegistry::PatternLanguage::Namespace nsStd = { "builtin", "std" };
+        pl::api::Namespace nsStd = { "builtin", "std" };
         {
             /* print(format, args...) */
-            ContentRegistry::PatternLanguage::addFunction(nsStd, "print", ParameterCount::moreThan(0), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                ctx->getConsole().log(LogConsole::Level::Info, format(ctx, params));
+            ContentRegistry::PatternLanguage::addFunction(nsStd, "print", FunctionParameterCount::moreThan(0), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+                ctx->getConsole().log(LogConsole::Level::Info, format(params));
 
                 return std::nullopt;
             });
 
             /* format(format, args...) */
-            ContentRegistry::PatternLanguage::addFunction(nsStd, "format", ParameterCount::moreThan(0), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
-                return format(ctx, params);
+            ContentRegistry::PatternLanguage::addFunction(nsStd, "format", FunctionParameterCount::moreThan(0), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                return format(params);
             });
 
             /* env(name) */
-            ContentRegistry::PatternLanguage::addFunction(nsStd, "env", ParameterCount::exactly(1), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStd, "env", FunctionParameterCount::exactly(1), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto name = Token::literalToString(params[0], false);
 
                 auto env = ctx->getEnvVariable(name);
@@ -75,44 +74,44 @@ namespace hex::plugin::builtin {
             });
 
             /* pack_size(...) */
-            ContentRegistry::PatternLanguage::addFunction(nsStd, "sizeof_pack", ParameterCount::atLeast(0), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStd, "sizeof_pack", FunctionParameterCount::atLeast(0), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return u128(params.size());
             });
 
             /* error(message) */
-            ContentRegistry::PatternLanguage::addFunction(nsStd, "error", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStd, "error", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 LogConsole::abortEvaluation(Token::literalToString(params[0], true));
 
                 return std::nullopt;
             });
 
             /* warning(message) */
-            ContentRegistry::PatternLanguage::addFunction(nsStd, "warning", ParameterCount::exactly(1), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStd, "warning", FunctionParameterCount::exactly(1), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 ctx->getConsole().log(LogConsole::Level::Warning, Token::literalToString(params[0], true));
 
                 return std::nullopt;
             });
         }
 
-        ContentRegistry::PatternLanguage::Namespace nsStdMem = { "builtin", "std", "mem" };
+        api::Namespace nsStdMem = { "builtin", "std", "mem" };
         {
 
             /* base_address() */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "base_address", ParameterCount::none(), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "base_address", FunctionParameterCount::none(), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 hex::unused(params);
 
-                return u128(ctx->getProvider()->getBaseAddress());
+                return u128(ctx->getDataBaseAddress());
             });
 
             /* size() */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "size", ParameterCount::none(), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "size", FunctionParameterCount::none(), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 hex::unused(params);
 
-                return u128(ctx->getProvider()->getActualSize());
+                return u128(ctx->getDataSize());
             });
 
             /* find_sequence_in_range(occurrence_index, start_offset, end_offset, bytes...) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "find_sequence_in_range", ParameterCount::moreThan(3), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "find_sequence_in_range", FunctionParameterCount::moreThan(3), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto occurrenceIndex = Token::literalToUnsigned(params[0]);
                 auto offsetFrom      = Token::literalToUnsigned(params[1]);
                 auto offsetTo        = Token::literalToUnsigned(params[2]);
@@ -129,10 +128,10 @@ namespace hex::plugin::builtin {
 
                 std::vector<u8> bytes(sequence.size(), 0x00);
                 u32 occurrences      = 0;
-                const u64 bufferSize = ctx->getProvider()->getSize();
+                const u64 bufferSize = ctx->getDataSize();
                 const u64 endOffset  = offsetTo <= offsetFrom ? bufferSize : std::min(bufferSize, u64(offsetTo));
                 for (u64 offset = offsetFrom; offset < endOffset - sequence.size(); offset++) {
-                    ctx->getProvider()->read(offset, bytes.data(), bytes.size());
+                    ctx->readData(offset, bytes.data(), bytes.size());
 
                     if (bytes == sequence) {
                         if (occurrences < occurrenceIndex) {
@@ -148,7 +147,7 @@ namespace hex::plugin::builtin {
             });
 
             /* read_unsigned(address, size) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_unsigned", ParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_unsigned", FunctionParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address = Token::literalToUnsigned(params[0]);
                 auto size    = Token::literalToUnsigned(params[1]);
 
@@ -156,13 +155,13 @@ namespace hex::plugin::builtin {
                     LogConsole::abortEvaluation("read size out of range");
 
                 u128 result = 0;
-                ctx->getProvider()->read(address, &result, size);
+                ctx->readData(address, &result, size);
 
                 return result;
             });
 
             /* read_signed(address, size) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_signed", ParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_signed", FunctionParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address = Token::literalToUnsigned(params[0]);
                 auto size    = Token::literalToUnsigned(params[1]);
 
@@ -170,33 +169,33 @@ namespace hex::plugin::builtin {
                     LogConsole::abortEvaluation("read size out of range");
 
                 i128 value;
-                ctx->getProvider()->read(address, &value, size);
+                ctx->readData(address, &value, size);
                 return hex::signExtend(size * 8, value);
             });
 
             /* read_string(address, size) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_string", ParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMem, "read_string", FunctionParameterCount::exactly(2), [](Evaluator *ctx, auto params) -> std::optional<Token::Literal> {
                 auto address = Token::literalToUnsigned(params[0]);
                 auto size    = Token::literalToUnsigned(params[1]);
 
                 std::string result(size, '\x00');
-                ctx->getProvider()->read(address, result.data(), size);
+                ctx->readData(address, result.data(), size);
 
                 return result;
             });
         }
 
-        ContentRegistry::PatternLanguage::Namespace nsStdString = { "builtin", "std", "string" };
+        api::Namespace nsStdString = { "builtin", "std", "string" };
         {
             /* length(string) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdString, "length", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdString, "length", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
 
                 return u128(string.length());
             });
 
             /* at(string, index) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdString, "at", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdString, "at", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
                 auto index  = Token::literalToSigned(params[1]);
 
@@ -217,7 +216,7 @@ namespace hex::plugin::builtin {
             });
 
             /* substr(string, pos, count) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdString, "substr", ParameterCount::exactly(3), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdString, "substr", FunctionParameterCount::exactly(3), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
                 auto pos    = Token::literalToUnsigned(params[1]);
                 auto size   = Token::literalToUnsigned(params[2]);
@@ -229,7 +228,7 @@ namespace hex::plugin::builtin {
             });
 
             /* parse_int(string, base) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdString, "parse_int", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdString, "parse_int", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
                 auto base   = Token::literalToUnsigned(params[1]);
 
@@ -237,17 +236,17 @@ namespace hex::plugin::builtin {
             });
 
             /* parse_float(string) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdString, "parse_float", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdString, "parse_float", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 auto string = Token::literalToString(params[0], false);
 
                 return double(std::strtod(string.c_str(), nullptr));
             });
         }
 
-        ContentRegistry::PatternLanguage::Namespace nsStdHttp = { "builtin", "std", "http" };
+        api::Namespace nsStdHttp = { "builtin", "std", "http" };
         {
             /* get(url) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdHttp, "get", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdHttp, "get", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto url = Token::literalToString(params[0], false);
 
                 hex::Net net;
@@ -256,13 +255,13 @@ namespace hex::plugin::builtin {
         }
 
 
-        ContentRegistry::PatternLanguage::Namespace nsStdFile = { "builtin", "std", "file" };
+        api::Namespace nsStdFile = { "builtin", "std", "file" };
         {
             static u32 fileCounter = 0;
             static std::map<u32, fs::File> openFiles;
 
             /* open(path, mode) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "open", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "open", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto path     = Token::literalToString(params[0], false);
                 const auto modeEnum = Token::literalToUnsigned(params[1]);
 
@@ -293,7 +292,7 @@ namespace hex::plugin::builtin {
             });
 
             /* close(file) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "close", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "close", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
 
                 if (!openFiles.contains(file))
@@ -305,7 +304,7 @@ namespace hex::plugin::builtin {
             });
 
             /* read(file, size) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "read", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "read", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
                 const auto size = Token::literalToUnsigned(params[1]);
 
@@ -316,7 +315,7 @@ namespace hex::plugin::builtin {
             });
 
             /* write(file, data) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "write", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "write", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
                 const auto data = Token::literalToString(params[1], true);
 
@@ -329,7 +328,7 @@ namespace hex::plugin::builtin {
             });
 
             /* seek(file, offset) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "seek", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "seek", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file   = Token::literalToUnsigned(params[0]);
                 const auto offset = Token::literalToUnsigned(params[1]);
 
@@ -342,7 +341,7 @@ namespace hex::plugin::builtin {
             });
 
             /* size(file) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "size", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "size", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
 
                 if (!openFiles.contains(file))
@@ -352,7 +351,7 @@ namespace hex::plugin::builtin {
             });
 
             /* resize(file, size) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "resize", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "resize", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
                 const auto size = Token::literalToUnsigned(params[1]);
 
@@ -365,7 +364,7 @@ namespace hex::plugin::builtin {
             });
 
             /* flush(file) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "flush", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "flush", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
 
                 if (!openFiles.contains(file))
@@ -377,7 +376,7 @@ namespace hex::plugin::builtin {
             });
 
             /* remove(file) */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "remove", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addDangerousFunction(nsStdFile, "remove", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto file = Token::literalToUnsigned(params[0]);
 
                 if (!openFiles.contains(file))
@@ -390,129 +389,129 @@ namespace hex::plugin::builtin {
         }
 
 
-        ContentRegistry::PatternLanguage::Namespace nsStdMath = { "builtin", "std", "math" };
+        api::Namespace nsStdMath = { "builtin", "std", "math" };
         {
             /* floor(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "floor", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "floor", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::floor(Token::literalToFloatingPoint(params[0]));
             });
 
             /* ceil(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "ceil", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "ceil", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::ceil(Token::literalToFloatingPoint(params[0]));
             });
 
             /* round(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "round", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "round", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::round(Token::literalToFloatingPoint(params[0]));
             });
 
             /* trunc(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "trunc", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "trunc", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::trunc(Token::literalToFloatingPoint(params[0]));
             });
 
 
             /* log10(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "log10", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "log10", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::log10(Token::literalToFloatingPoint(params[0]));
             });
 
             /* log2(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "log2", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "log2", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::log2(Token::literalToFloatingPoint(params[0]));
             });
 
             /* ln(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "ln", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "ln", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::log(Token::literalToFloatingPoint(params[0]));
             });
 
 
             /* fmod(x, y) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "fmod", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "fmod", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::fmod(Token::literalToFloatingPoint(params[0]), Token::literalToFloatingPoint(params[1]));
             });
 
             /* pow(base, exp) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "pow", ParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "pow", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::pow(Token::literalToFloatingPoint(params[0]), Token::literalToFloatingPoint(params[1]));
             });
 
             /* sqrt(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "sqrt", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "sqrt", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::sqrt(Token::literalToFloatingPoint(params[0]));
             });
 
             /* cbrt(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "cbrt", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "cbrt", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::cbrt(Token::literalToFloatingPoint(params[0]));
             });
 
 
             /* sin(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "sin", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "sin", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::sin(Token::literalToFloatingPoint(params[0]));
             });
 
             /* cos(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "cos", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "cos", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::cos(Token::literalToFloatingPoint(params[0]));
             });
 
             /* tan(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "tan", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "tan", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::tan(Token::literalToFloatingPoint(params[0]));
             });
 
             /* asin(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "asin", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "asin", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::asin(Token::literalToFloatingPoint(params[0]));
             });
 
             /* acos(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "acos", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "acos", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::acos(Token::literalToFloatingPoint(params[0]));
             });
 
             /* atan(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atan", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atan", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::atan(Token::literalToFloatingPoint(params[0]));
             });
 
             /* atan2(y, x) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atan", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atan", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::atan2(Token::literalToFloatingPoint(params[0]), Token::literalToFloatingPoint(params[1]));
             });
 
 
             /* sinh(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "sinh", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "sinh", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::sinh(Token::literalToFloatingPoint(params[0]));
             });
 
             /* cosh(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "cosh", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "cosh", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::cosh(Token::literalToFloatingPoint(params[0]));
             });
 
             /* tanh(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "tanh", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "tanh", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::tanh(Token::literalToFloatingPoint(params[0]));
             });
 
             /* asinh(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "asinh", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "asinh", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::asinh(Token::literalToFloatingPoint(params[0]));
             });
 
             /* acosh(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "acosh", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "acosh", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::acosh(Token::literalToFloatingPoint(params[0]));
             });
 
             /* atanh(value) */
-            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atanh", ParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsStdMath, "atanh", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 return std::atanh(Token::literalToFloatingPoint(params[0]));
             });
         }

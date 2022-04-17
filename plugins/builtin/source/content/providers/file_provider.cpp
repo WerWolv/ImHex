@@ -264,6 +264,8 @@ namespace hex::plugin::builtin::prv {
         }
 #endif
 
+        Provider::resize(this->getActualSize());
+
         return true;
     }
 

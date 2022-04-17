@@ -20,7 +20,7 @@ namespace hex::test {
             second->setEntries(create<PatternUnsigned>("u8", "", 0x4, sizeof(u8)), 4);
 
             auto testStruct = create<PatternStruct>("Signature", "sign", 0x0, sizeof(u8[8]));
-            std::vector<std::shared_ptr<hex::pl::Pattern>> structMembers;
+            std::vector<std::shared_ptr<pl::Pattern>> structMembers;
             {
                 structMembers.push_back(std::move(first));
                 structMembers.push_back(std::move(second));

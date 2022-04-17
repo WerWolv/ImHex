@@ -1,22 +1,19 @@
 #pragma once
 
-#include <hex/pattern_language/patterns/pattern.hpp>
-#include <hex/pattern_language/pattern_visitor.hpp>
+#include <pl/patterns/pattern.hpp>
+#include <pl/pattern_visitor.hpp>
 #include <hex/providers/provider.hpp>
 
 namespace hex {
 
     template<typename T>
     concept ArrayPattern = requires(T pattern, std::function<void(int, pl::Pattern&)> fn) {
-      { pattern.forEachArrayEntry(fn) } -> std::same_as<void>;
+        { pattern.forEachArrayEntry(fn) } -> std::same_as<void>;
     };
 
-    class PatternDrawer : public pl::PatternVisitor
-    {
+    class PatternDrawer : public pl::PatternVisitor {
     public:
-        PatternDrawer();
-
-        void setProvider(prv::Provider *provider);
+        PatternDrawer() = default;
 
         void visit(pl::PatternArrayDynamic& pattern) override;
         void visit(pl::PatternArrayStatic& pattern) override;
@@ -73,7 +70,6 @@ namespace hex {
         u64& getDisplayEnd(const pl::Pattern& pattern);
 
     private:
-        prv::Provider *m_provider;
         std::map<const pl::Pattern*, u64> m_displayEnd;
     };
 };

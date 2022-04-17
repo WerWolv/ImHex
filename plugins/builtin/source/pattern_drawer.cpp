@@ -1,23 +1,29 @@
 #include "pattern_drawer.hpp"
 
-#include <hex/pattern_language/patterns/pattern_array_dynamic.hpp>
-#include <hex/pattern_language/patterns/pattern_array_static.hpp>
-#include <hex/pattern_language/patterns/pattern_bitfield.hpp>
-#include <hex/pattern_language/patterns/pattern_boolean.hpp>
-#include <hex/pattern_language/patterns/pattern_character.hpp>
-#include <hex/pattern_language/patterns/pattern_enum.hpp>
-#include <hex/pattern_language/patterns/pattern_float.hpp>
-#include <hex/pattern_language/patterns/pattern_padding.hpp>
-#include <hex/pattern_language/patterns/pattern_pointer.hpp>
-#include <hex/pattern_language/patterns/pattern_signed.hpp>
-#include <hex/pattern_language/patterns/pattern_string.hpp>
-#include <hex/pattern_language/patterns/pattern_struct.hpp>
-#include <hex/pattern_language/patterns/pattern_union.hpp>
-#include <hex/pattern_language/patterns/pattern_unsigned.hpp>
-#include <hex/pattern_language/patterns/pattern_wide_character.hpp>
-#include <hex/pattern_language/patterns/pattern_wide_string.hpp>
+#include <pl/patterns/pattern_array_dynamic.hpp>
+#include <pl/patterns/pattern_array_static.hpp>
+#include <pl/patterns/pattern_bitfield.hpp>
+#include <pl/patterns/pattern_boolean.hpp>
+#include <pl/patterns/pattern_character.hpp>
+#include <pl/patterns/pattern_enum.hpp>
+#include <pl/patterns/pattern_float.hpp>
+#include <pl/patterns/pattern_padding.hpp>
+#include <pl/patterns/pattern_pointer.hpp>
+#include <pl/patterns/pattern_signed.hpp>
+#include <pl/patterns/pattern_string.hpp>
+#include <pl/patterns/pattern_struct.hpp>
+#include <pl/patterns/pattern_union.hpp>
+#include <pl/patterns/pattern_unsigned.hpp>
+#include <pl/patterns/pattern_wide_character.hpp>
+#include <pl/patterns/pattern_wide_string.hpp>
 
 #include <string>
+
+#include <hex/api/imhex_api.hpp>
+#include <hex/helpers/utils.hpp>
+
+#include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace {
     constexpr static auto DisplayEndDefault = 50u;
@@ -27,14 +33,6 @@ namespace {
 };
 
 namespace hex {
-
-    PatternDrawer::PatternDrawer()
-        : m_provider{nullptr}
-    { }
-
-    void PatternDrawer::setProvider(prv::Provider *provider) {
-        m_provider = provider;
-    }
 
     void PatternDrawer::visit(pl::PatternArrayDynamic& pattern) {
         this->drawArray(pattern);
@@ -67,12 +65,12 @@ namespace hex {
         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
         ImGui::TableNextColumn();
 
-        u64 extractedValue = pattern.getValue(m_provider);
+        u64 extractedValue = pattern.getValue();
         ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), &pattern));
     }
 
     void PatternDrawer::visit(pl::PatternBitfield& pattern) {
-        std::vector<u8> value = pattern.getValue(m_provider);
+        std::vector<u8> value = pattern.getValue();
 
         bool open = true;
         if (!pattern.isInlined()) {
@@ -108,7 +106,7 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternBoolean& pattern) {
-        u8 boolean = pattern.getValue(m_provider);
+        u8 boolean = pattern.getValue();
 
         if (boolean == 0)
             this->createDefaultEntry(pattern, "false", false);
@@ -119,12 +117,12 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternCharacter& pattern) {
-        char character = pattern.getValue(m_provider);
+        char character = pattern.getValue();
         this->createDefaultEntry(pattern, hex::format("'{0}'", character), character);
     }
 
     void PatternDrawer::visit(pl::PatternEnum& pattern) {
-        u64 value = pattern.getValue(m_provider);
+        u64 value = pattern.getValue();
 
         std::string valueString = pattern.getTypeName() + "::";
 
@@ -168,12 +166,12 @@ namespace hex {
 
     void PatternDrawer::visit(pl::PatternFloat& pattern) {
         if (pattern.getSize() == 4) {
-            float f32 = static_cast<float>(pattern.getValue(m_provider));
+            float f32 = static_cast<float>(pattern.getValue());
             u32 integerResult = 0;
             std::memcpy(&integerResult, &f32, sizeof(float));
             this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f32, integerResult, pattern.getSize() * 2), f32);
         } else if (pattern.getSize() == 8) {
-            double f64 = pattern.getValue(m_provider);
+            double f64 = pattern.getValue();
             u64 integerResult = 0;
             std::memcpy(&integerResult, &f64, sizeof(double));
             this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f64, integerResult, pattern.getSize() * 2), f64);
@@ -186,7 +184,7 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternPointer& pattern) {
-        u64 data = pattern.getValue(m_provider);
+        u64 data = pattern.getValue();
 
         bool open = true;
 
@@ -217,7 +215,7 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternSigned& pattern) {
-        i128 data = pattern.getValue(m_provider);
+        i128 data = pattern.getValue();
         this->createDefaultEntry(pattern, hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
     }
 
@@ -227,7 +225,7 @@ namespace hex {
         if (size == 0)
             return;
 
-        std::string displayString = pattern.getValue(m_provider, size);
+        std::string displayString = pattern.getValue(size);
         this->createDefaultEntry(pattern, hex::format("\"{0}\" {1}", displayString, size > pattern.getSize() ? "(truncated)" : ""), displayString);
     }
 
@@ -290,12 +288,12 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternUnsigned& pattern) {
-        u128 data = pattern.getValue(m_provider);
+        u128 data = pattern.getValue();
         this->createDefaultEntry(pattern, hex::format("{:d} (0x{:0{}X})", data, data, pattern.getSize() * 2), data);
     }
 
     void PatternDrawer::visit(pl::PatternWideCharacter& pattern) {
-        char16_t character = pattern.getValue(m_provider);
+        char16_t character = pattern.getValue();
         u128 literal = character;
         auto str = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(character);
         this->createDefaultEntry(pattern, hex::format("'{0}'", str), literal);
@@ -307,7 +305,7 @@ namespace hex {
         if (size == 0)
             return;
 
-        std::string utf8String = pattern.getValue(m_provider, size);
+        std::string utf8String = pattern.getValue(size);
 
         this->createDefaultEntry(pattern, hex::format("\"{0}\" {1}", utf8String, size > pattern.getSize() ? "(truncated)" : ""), utf8String);
     }

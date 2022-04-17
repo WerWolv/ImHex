@@ -12,7 +12,7 @@ namespace hex::test {
             auto testBitfield = create<PatternBitfield>("TestBitfield", "testBitfield", 0x12, (4 * 4) / 8);
             testBitfield->setEndian(std::endian::big);
 
-            std::vector<std::shared_ptr<hex::pl::Pattern>> bitfieldFields;
+            std::vector<std::shared_ptr<pl::Pattern>> bitfieldFields;
             {
                 bitfieldFields.push_back(create<PatternBitfieldField>("", "a", 0x12, 0, 4, testBitfield.get()));
                 bitfieldFields.push_back(create<PatternBitfieldField>("", "b", 0x12, 4, 4, testBitfield.get()));

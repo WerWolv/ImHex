@@ -4,7 +4,7 @@
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include <hex/pattern_language/token.hpp>
+#include <pl/pattern_language.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
 
@@ -16,13 +16,15 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+namespace pl {
+    class Evaluator;
+}
+
 namespace hex {
 
     class View;
     class LanguageDefinition;
-    namespace pl {
-        class Evaluator;
-    }
+
     namespace dp {
         class Node;
     }
@@ -117,72 +119,28 @@ namespace hex {
 
             namespace impl {
 
-                struct ColorPalette {
+                struct FunctionDefinition {
+                    pl::api::Namespace ns;
                     std::string name;
-                    std::vector<u32> colors;
+
+                    pl::api::FunctionParameterCount parameterCount;
+                    pl::api::FunctionCallback callback;
+
+                    bool dangerous;
                 };
 
             }
 
-            struct ParameterCount {
-                ParameterCount() = default;
+            std::unique_ptr<pl::PatternLanguage> createDefaultRuntime(prv::Provider *provider);
 
-                constexpr bool operator==(const ParameterCount &other) const {
-                    return this->min == other.min && this->max == other.max;
-                }
+            void addPragma(const std::string &name, const pl::api::PragmaHandler &handler);
 
-                [[nodiscard]] static ParameterCount unlimited() {
-                    return ParameterCount { 0, 0xFFFF'FFFF };
-                }
+            void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
+            void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
 
-                [[nodiscard]] static ParameterCount none() {
-                    return ParameterCount { 0, 0 };
-                }
+            std::map<std::string, pl::api::PragmaHandler> &getPragmas();
+            std::vector<impl::FunctionDefinition> &getFunctions();
 
-                [[nodiscard]] static ParameterCount exactly(u32 value) {
-                    return ParameterCount { value, value };
-                }
-
-                [[nodiscard]] static ParameterCount moreThan(u32 value) {
-                    return ParameterCount { value + 1, 0xFFFF'FFFF };
-                }
-
-                [[nodiscard]] static ParameterCount lessThan(u32 value) {
-                    return ParameterCount { 0, u32(std::max<i64>(i64(value) - 1, 0)) };
-                }
-
-                [[nodiscard]] static ParameterCount atLeast(u32 value) {
-                    return ParameterCount { value, 0xFFFF'FFFF };
-                }
-
-                [[nodiscard]] static ParameterCount between(u32 min, u32 max) {
-                    return ParameterCount { min, max };
-                }
-
-                u32 min = 0, max = 0;
-            private:
-                ParameterCount(u32 min, u32 max) : min(min), max(max) { }
-            };
-
-            using Namespace = std::vector<std::string>;
-            using Callback  = std::function<std::optional<hex::pl::Token::Literal>(hex::pl::Evaluator *, const std::vector<hex::pl::Token::Literal> &)>;
-
-            struct Function {
-                ParameterCount parameterCount;
-                std::vector<pl::Token::Literal> defaultParameters;
-                Callback func;
-                bool dangerous;
-            };
-
-            void addFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func);
-            void addDangerousFunction(const Namespace &ns, const std::string &name, ParameterCount parameterCount, const Callback &func);
-            std::map<std::string, ContentRegistry::PatternLanguage::Function> &getFunctions();
-
-            std::vector<impl::ColorPalette> &getPalettes();
-            void addColorPalette(const std::string &unlocalizedName, const std::vector<u32> &colors);
-            void setSelectedPalette(u32 index);
-            u32 getNextColor();
-            void resetPalette();
         }
 
         /* View Registry. Allows adding of new windows */
