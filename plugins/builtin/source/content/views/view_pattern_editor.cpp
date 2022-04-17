@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
                 return;
 
             auto provider = ImHexApi::Provider::get();
-            auto runtime = provider->getPatternLanguageRuntime();
+            auto &runtime = provider->getPatternLanguageRuntime();
 
             auto mimeType = magic::getMIMEType(ImHexApi::Provider::get());
 
