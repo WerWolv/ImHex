@@ -36,6 +36,7 @@ namespace hex::plugin::builtin::prv {
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override;
+        [[nodiscard]] size_t getRealTimeSize();
 
         void save() override;
         void saveAs(const std::fs::path &path) override;

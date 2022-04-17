@@ -65,7 +65,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
+        if ((offset + size) > this->getRealTimeSize() || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, reinterpret_cast<u8 *>(this->m_mappedFile) + offset, size);
@@ -135,6 +135,20 @@ namespace hex::plugin::builtin::prv {
         Provider::insert(offset, size);
     }
 
+    size_t FileProvider::getRealTimeSize() {
+#if defined(OS_LINUX)
+        if (struct stat newStats; (this->m_fileStatsValid = fstat(this->m_file, &newStats) == 0)) {
+            if (static_cast<off_t>(this->m_fileSize) != newStats.st_size ||
+                std::memcmp(&newStats.st_mtim, &this->m_fileStats.st_mtim, sizeof(newStats.st_mtim))) {
+                this->m_fileStats = newStats;
+                this->m_fileSize  = this->m_fileStats.st_size;
+                msync(this->m_mappedFile, this->m_fileStats.st_size, MS_INVALIDATE);
+            }
+        }
+#endif
+        return getActualSize();
+    }
+
     size_t FileProvider::getActualSize() const {
         return this->m_fileSize;
     }
@@ -171,7 +185,7 @@ namespace hex::plugin::builtin::prv {
 
         this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
 
-        LARGE_INTEGER fileSize = { };
+        LARGE_INTEGER fileSize = {};
         this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
         GetFileSizeEx(this->m_file, &fileSize);
@@ -236,10 +250,10 @@ namespace hex::plugin::builtin::prv {
         fileCleanup.release();
 
 #else
-        const auto &path = this->m_path.native();
+        const auto &path       = this->m_path.native();
         this->m_fileStatsValid = stat(path.c_str(), &this->m_fileStats) == 0;
 
-        int mmapprot     = PROT_READ | PROT_WRITE;
+        int mmapprot = PROT_READ | PROT_WRITE;
 
         this->m_file = ::open(path.c_str(), O_RDWR);
         if (this->m_file == -1) {
