@@ -281,6 +281,8 @@ namespace hex::plugin::builtin {
             static std::vector<std::string> folders = setting;
             static size_t currentItemIndex             = 0;
 
+            bool result = false;
+
             if (!ImGui::BeginListBox("", ImVec2(-38, -FLT_MIN))) {
                 return false;
             } else {
@@ -301,6 +303,7 @@ namespace hex::plugin::builtin {
                     if (std::find(folders.begin(), folders.end(), pathStr) == folders.end()) {
                         folders.emplace_back(pathStr);
                         ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+                        result = true;
                     }
                 });
             }
@@ -310,13 +313,14 @@ namespace hex::plugin::builtin {
                 if (!folders.empty()) {
                     folders.erase(std::next(folders.begin(), currentItemIndex));
                     ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+                    result = true;
                 }
             }
             ImGui::InfoTooltip("hex.builtin.setting.folders.remove_folder"_lang);
 
             ImGui::EndGroup();
 
-            return true;
+            return result;
         });
     }
 
