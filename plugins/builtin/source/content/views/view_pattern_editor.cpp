@@ -144,7 +144,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            runtime.removePragma("MIME");
+            runtime.addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;

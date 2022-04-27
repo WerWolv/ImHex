@@ -80,6 +80,8 @@ namespace hex::plugin::builtin {
                 return false;
             }
         });
+
+        ContentRegistry::PatternLanguage::addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
     }
 
 }
