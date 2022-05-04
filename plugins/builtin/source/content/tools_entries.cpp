@@ -663,6 +663,27 @@ namespace hex::plugin::builtin {
         }
     }
 
+    std::string getWikipediaApiUrl() {
+        auto setting = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language");
+        int langMode;
+        std::string lang;
+        if (setting.is_number()) {
+            langMode = static_cast<int>(setting);
+        } else if (setting.is_string()) {
+            langMode = 2;
+            lang = std::string(setting);
+        } else {
+            langMode = 0;
+        }
+        if (langMode == 0) { // Interface language
+            lang = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
+            lang.resize(lang.find_first_of('-'));
+        } else if (langMode == 1) { // English
+            lang = "en";
+        }
+        return "https://" + lang + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
+    }
+
     void drawWikiExplainer() {
         static hex::Net net;
 
@@ -678,8 +699,6 @@ namespace hex::plugin::builtin {
             return s;
         }();
 
-        constexpr static auto WikipediaApiUrl = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
-
         ImGui::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
 
         bool startSearch;
@@ -692,7 +711,7 @@ namespace hex::plugin::builtin {
         ImGui::EndDisabled();
 
         if (startSearch && !searchString.empty()) {
-            searchProcess = net.getString(WikipediaApiUrl + "&exintro"s + "&titles="s + net.encode(searchString));
+            searchProcess = net.getString(getWikipediaApiUrl() + "&exintro"s + "&titles="s + net.encode(searchString));
         }
 
         ImGui::Header("hex.builtin.tools.wiki_explain.results"_lang);
@@ -717,7 +736,7 @@ namespace hex::plugin::builtin {
 
                 if (!extendedSearch && resultExtract.ends_with(':')) {
                     extendedSearch = true;
-                    searchProcess  = net.getString(WikipediaApiUrl + "&titles="s + net.encode(searchString));
+                    searchProcess  = net.getString(getWikipediaApiUrl() + "&titles="s + net.encode(searchString));
                     resultTitle.clear();
                     resultExtract.clear();
                 } else {
