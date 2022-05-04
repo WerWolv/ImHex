@@ -54,7 +54,7 @@ namespace hex {
             return found;
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart, bool typeless) {
             log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
@@ -63,11 +63,11 @@ namespace hex {
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number())
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !(json[unlocalizedCategory][unlocalizedName].is_number() | typeless))
                 json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart, bool typeless) {
             log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
@@ -76,11 +76,11 @@ namespace hex {
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_string())
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !(json[unlocalizedCategory][unlocalizedName].is_string() | typeless))
                 json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart, bool typeless) {
             log::info("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
@@ -89,7 +89,7 @@ namespace hex {
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_array())
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !(json[unlocalizedCategory][unlocalizedName].is_array() | typeless))
                 json[unlocalizedCategory][unlocalizedName] = defaultValue;
         }
 
