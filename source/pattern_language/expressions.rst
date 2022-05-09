@@ -1,7 +1,7 @@
-Mathematical Expressions
+Expressions
 ========================
 
-Numeric Operators
+Operators
 ^^^^^^^^^^^^^^^^^
 
 .. table::
@@ -77,6 +77,7 @@ String operators are any operators acting on strings directly.
     ``a < b``         Lexical less-than
     ``a <= b``        Lexical less than-or-equals
     ================= ===================================
+
 
 Member Access
 ^^^^^^^^^^^^^

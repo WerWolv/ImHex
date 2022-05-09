@@ -12,18 +12,14 @@ The Pattern Language is ImHex' custom C-like language for defining patterns and 
    :hidden:
 
    data_types
-   math_expressions
+   expressions
    placement
-   arrays
    pointers
-   structs
-   unions
-   enums
-   bitfields
    conditionals
    namespaces
    functions
    attributes
+   control_flow
    in_out
    preprocessor
    standard_library/standard_library
