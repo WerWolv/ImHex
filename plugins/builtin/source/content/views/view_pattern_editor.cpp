@@ -231,16 +231,34 @@ namespace hex::plugin::builtin {
         });
 
 
-        ImHexApi::HexEditor::addHighlightingProvider([](u64 address) -> std::optional<ImHexApi::HexEditor::Highlighting> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+            hex::unused(data, size);
+
             const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
             for (const auto &pattern : patterns) {
                 auto child = pattern->getPattern(address);
                 if (child != nullptr) {
-                    return ImHexApi::HexEditor::Highlighting(Region { address, 1 }, child->getColor(), child->getDisplayName());
+                    return child->getColor();
                 }
             }
 
             return std::nullopt;
+        });
+
+        ImHexApi::HexEditor::addTooltipProvider([](u64 address, const u8 *data, size_t size) {
+            hex::unused(data, size);
+
+            const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
+            for (const auto &pattern : patterns) {
+                auto child = pattern->getPattern(address);
+                if (child != nullptr) {
+                    ImGui::BeginTooltip();
+                    ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
+                    ImGui::SameLine(0, 10);
+                    ImGui::TextUnformatted(pattern->getVariableName().c_str());
+                    ImGui::EndTooltip();
+                }
+            }
         });
     }
 

@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
 
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId] = this->m_matches[i];
+                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = this->m_matches[i];
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::PushID(i);
@@ -142,8 +142,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::clearResult() {
-        for (const auto &match : this->m_matches)
-            ImHexApi::HexEditor::removeHighlight(match.highlightId);
+        for (const auto &match : this->m_matches) {
+            ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
+            ImHexApi::HexEditor::removeTooltip(match.tooltipId);
+        }
 
         this->m_matches.clear();
         this->m_consoleMessages.clear();
@@ -310,11 +312,11 @@ namespace hex::plugin::builtin {
                                 if (rule->strings != nullptr) {
                                     yr_rule_strings_foreach(rule, string) {
                                         yr_string_matches_foreach(context, string, match) {
-                                            results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0 });
+                                            results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
                                         }
                                     }
                                 } else {
-                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0 });
+                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0, 0 });
                                 }
                             }
                             break;
@@ -337,8 +339,10 @@ namespace hex::plugin::builtin {
                 this->m_matches         = resultContext.newMatches;
                 this->m_consoleMessages = resultContext.consoleMessages;
 
+                constexpr static color_t YaraColor = 0x70B4771F;
                 for (auto &match : this->m_matches) {
-                    match.highlightId = ImHexApi::HexEditor::addHighlight({ match.address, match.size }, 0x70B4771F, hex::format("{0} [{1}]", match.identifier, match.variable));
+                    match.highlightId = ImHexApi::HexEditor::addBackgroundHighlight({ match.address, match.size }, YaraColor);
+                    match.tooltipId = ImHexApi::HexEditor::addTooltip({ match. address, match.size }, hex::format("{0} [{1}]", match.identifier, match.variable), YaraColor);
                 }
             });
         }).detach();

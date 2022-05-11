@@ -25,7 +25,9 @@ namespace hex::plugin::builtin {
                 color,
                 false,
 
-                ImHexApi::HexEditor::addHighlight(region, color, name) });
+                ImHexApi::HexEditor::addBackgroundHighlight(region, color),
+                ImHexApi::HexEditor::addTooltip(region, name, color)
+            });
 
             ProjectFile::markDirty();
         });
@@ -63,7 +65,7 @@ namespace hex::plugin::builtin {
                 u32 id                = 1;
                 auto bookmarkToRemove = this->m_bookmarks.end();
                 for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
-                    auto &[region, name, comment, color, locked, highlight] = *iter;
+                    auto &[region, name, comment, color, locked, highlightId, tooltipId] = *iter;
 
                     auto headerColor = ImColor(color);
                     auto hoverColor  = ImColor(color);
@@ -169,7 +171,8 @@ namespace hex::plugin::builtin {
                 }
 
                 if (bookmarkToRemove != this->m_bookmarks.end()) {
-                    ImHexApi::HexEditor::removeHighlight(bookmarkToRemove->highlightId);
+                    ImHexApi::HexEditor::removeBackgroundHighlight(bookmarkToRemove->highlightId);
+                    ImHexApi::HexEditor::removeTooltip(bookmarkToRemove->tooltipId);
                     this->m_bookmarks.erase(bookmarkToRemove);
                     ProjectFile::markDirty();
                 }

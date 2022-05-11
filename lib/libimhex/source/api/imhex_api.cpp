@@ -29,32 +29,55 @@ namespace hex {
 
     namespace ImHexApi::HexEditor {
 
-        Highlighting::Highlighting(Region region, color_t color, std::string tooltip)
-            : m_region(region), m_color(color), m_tooltip(std::move(tooltip)) {
+        Highlighting::Highlighting(Region region, color_t color)
+            : m_region(region), m_color(color) {
+        }
+
+        Tooltip::Tooltip(Region region, std::string value, color_t color) : m_region(region), m_value(std::move(value)), m_color(color) {
+
         }
 
         namespace impl {
 
-            static std::map<u32, Highlighting> s_highlights;
-            std::map<u32, Highlighting> &getHighlights() {
-                return s_highlights;
+            static std::map<u32, Highlighting> s_backgroundHighlights;
+            std::map<u32, Highlighting> &getBackgroundHighlights() {
+                return s_backgroundHighlights;
             }
 
-            static std::map<u32, HighlightingFunction> s_highlightingFunctions;
-            std::map<u32, HighlightingFunction> &getHighlightingFunctions() {
-                return s_highlightingFunctions;
+            static std::map<u32, HighlightingFunction> s_backgroundHighlightingFunctions;
+            std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions() {
+                return s_backgroundHighlightingFunctions;
+            }
+
+            static std::map<u32, Highlighting> s_foregroundHighlights;
+            std::map<u32, Highlighting> &getForegroundHighlights() {
+                return s_foregroundHighlights;
+            }
+
+            static std::map<u32, HighlightingFunction> s_foregroundHighlightingFunctions;
+            std::map<u32, HighlightingFunction> &getForegroundHighlightingFunctions() {
+                return s_foregroundHighlightingFunctions;
+            }
+
+            static std::map<u32, Tooltip> s_tooltips;
+            std::map<u32, Tooltip> &getTooltips() {
+                return s_tooltips;
+            }
+
+            static std::map<u32, TooltipFunction> s_tooltipFunctions;
+            std::map<u32, TooltipFunction> &getTooltipFunctions() {
+                return s_tooltipFunctions;
             }
 
         }
 
-        u32 addHighlight(const Region &region, color_t color, const std::string &tooltip) {
-            auto &highlights = impl::getHighlights();
-            static u64 id = 0;
+        u32 addBackgroundHighlight(const Region &region, color_t color) {
+            static u32 id = 0;
 
             id++;
 
-            highlights.insert({
-                id, Highlighting {region, color, tooltip}
+            impl::getBackgroundHighlights().insert({
+                id, Highlighting {region, color}
             });
 
             EventManager::post<EventHighlightingChanged>();
@@ -62,28 +85,94 @@ namespace hex {
             return id;
         }
 
-        void removeHighlight(u32 id) {
-            impl::getHighlights().erase(id);
+        void removeBackgroundHighlight(u32 id) {
+            impl::getBackgroundHighlights().erase(id);
 
             EventManager::post<EventHighlightingChanged>();
         }
 
-        u32 addHighlightingProvider(const impl::HighlightingFunction &function) {
-            auto &highlightFuncs = impl::getHighlightingFunctions();
+        u32 addBackgroundHighlightingProvider(const impl::HighlightingFunction &function) {
+            static u32 id = 0;
 
-            auto id = highlightFuncs.size();
+            id++;
 
-            highlightFuncs.insert({ id, function });
+            impl::getBackgroundHighlightingFunctions().insert({ id, function });
 
             EventManager::post<EventHighlightingChanged>();
 
             return id;
         }
 
-        void removeHighlightingProvider(u32 id) {
-            impl::getHighlightingFunctions().erase(id);
+        void removeBackgroundHighlightingProvider(u32 id) {
+            impl::getBackgroundHighlightingFunctions().erase(id);
 
             EventManager::post<EventHighlightingChanged>();
+        }
+
+        u32 addForegroundHighlight(const Region &region, color_t color) {
+            static u32 id = 0;
+
+            id++;
+
+            impl::getForegroundHighlights().insert({
+                id, Highlighting {region, color}
+            });
+
+            EventManager::post<EventHighlightingChanged>();
+
+            return id;
+        }
+
+        void removeForegroundHighlight(u32 id) {
+            impl::getForegroundHighlights().erase(id);
+
+            EventManager::post<EventHighlightingChanged>();
+        }
+
+        u32 addForegroundHighlightingProvider(const impl::HighlightingFunction &function) {
+            static u32 id = 0;
+
+            id++;
+
+            impl::getForegroundHighlightingFunctions().insert({ id, function });
+
+            EventManager::post<EventHighlightingChanged>();
+
+            return id;
+        }
+
+        void removeForegroundHighlightingProvider(u32 id) {
+            impl::getForegroundHighlightingFunctions().erase(id);
+
+            EventManager::post<EventHighlightingChanged>();
+        }
+
+        u32 addTooltip(Region region, std::string value, color_t color) {
+            static u32 id = 0;
+
+            id++;
+
+            impl::getTooltips().insert({ id, { region, std::move(value), color } });
+
+            return id;
+        }
+
+        void removeTooltip(u32 id) {
+            impl::getTooltips().erase(id);
+        }
+
+        u32 addTooltipProvider(impl::TooltipFunction function) {
+            static u32 id = 0;
+
+            id++;
+
+            impl::getTooltipFunctions().insert({ id, std::move(function) });
+
+            return id;
+        }
+
+        void removeTooltipProvider(u32 id) {
+            impl::getTooltipFunctions().erase(id);
         }
 
         Region getSelection() {

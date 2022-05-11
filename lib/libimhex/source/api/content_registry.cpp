@@ -536,4 +536,19 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::HexEditor {
+
+        void impl::addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {
+            getVisualizers().insert({ unlocalizedName, visualizer });
+
+        }
+
+        std::map<std::string, DataVisualizer*> &impl::getVisualizers() {
+            static std::map<std::string, DataVisualizer*> visualizers;
+
+            return visualizers;
+        }
+
+    }
+
 }

@@ -574,17 +574,15 @@ namespace hex {
                 key = std::toupper(keyName[0]);
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            auto &io = ImGui::GetIO();
 
-            if (action == GLFW_PRESS) {
-                auto &io = ImGui::GetIO();
-
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                 win->m_pressedKeys.push_back(key);
                 io.KeysDown[key] = true;
                 io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;
                 io.KeyAlt        = (mods & GLFW_MOD_ALT) != 0;
             } else if (action == GLFW_RELEASE) {
-                auto &io         = ImGui::GetIO();
                 io.KeysDown[key] = false;
                 io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;

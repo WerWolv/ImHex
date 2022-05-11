@@ -172,8 +172,12 @@ namespace hex::init {
     bool deleteSharedData() {
         ImHexApi::System::getInitArguments().clear();
         ImHexApi::Tasks::getDeferredCalls().clear();
-        ImHexApi::HexEditor::impl::getHighlights().clear();
-        ImHexApi::HexEditor::impl::getHighlightingFunctions().clear();
+        ImHexApi::HexEditor::impl::getBackgroundHighlights().clear();
+        ImHexApi::HexEditor::impl::getForegroundHighlights().clear();
+        ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions().clear();
+        ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions().clear();
+        ImHexApi::HexEditor::impl::getTooltips().clear();
+        ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());

@@ -27,6 +27,14 @@ namespace hex {
     struct Region {
         u64 address;
         size_t size;
+
+        [[nodiscard]] constexpr bool isWithin(const Region &other) const {
+            return (this->address >= other.address) && ((this->address + this->size) <= (other.address + other.size));
+        }
+
+        [[nodiscard]] constexpr bool overlaps(const Region &other) const {
+            return ((this->address + this->size) >= other.address) && (this->address < (other.address + other.size));
+        }
     };
 
 }
