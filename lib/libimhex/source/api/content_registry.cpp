@@ -538,6 +538,8 @@ namespace hex {
 
     namespace ContentRegistry::HexEditor {
 
+        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode;
+
         void impl::addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {
             getVisualizers().insert({ unlocalizedName, visualizer });
 

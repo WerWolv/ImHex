@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         constexpr static auto InvalidSelection = std::numeric_limits<u64>::max();
 
         void openFile(const std::fs::path &path);
-        void drawCell(u64 address, const u8 *data, size_t size);
+        void drawCell(u64 address, u8 *data, size_t size);
 
         void setSelection(hex::integral auto start, hex::integral auto end) {
             if (!ImHexApi::Provider::isValid()) return;
@@ -44,6 +44,8 @@ namespace hex::plugin::builtin {
         bool m_selectionChanged = false;
         u64 m_selectionStart = InvalidSelection;
         u64 m_selectionEnd = InvalidSelection;
+
+        std::optional<u64> m_editingAddress;
 
         u8 m_highlightAlpha = 0x80;
         bool m_upperCaseHex = true;

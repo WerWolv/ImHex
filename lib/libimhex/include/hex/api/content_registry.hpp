@@ -388,11 +388,13 @@ namespace hex {
 
                 virtual ~DataVisualizer() = default;
 
-                virtual void draw(u64 address, const u8 *data, size_t size) = 0;
+                virtual void draw(u64 address, const u8 *data, size_t size, bool upperCase) = 0;
+                virtual bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) = 0;
 
                 [[nodiscard]] u16 getBytesPerCell() const { return this->m_bytesPerCell; }
                 [[nodiscard]] u16 getMaxCharsPerCell() const { return this->m_maxCharsPerCell; }
 
+                const static int TextInputFlags;
             private:
                 u16 m_bytesPerCell;
                 u16 m_maxCharsPerCell;

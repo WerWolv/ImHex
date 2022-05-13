@@ -299,7 +299,7 @@ namespace hex {
             }
 
 
-            static float s_globalScale;
+            static float s_globalScale = 1.0;
             void setGlobalScale(float scale) {
                 s_globalScale = scale;
             }

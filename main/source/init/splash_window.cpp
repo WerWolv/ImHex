@@ -180,7 +180,7 @@ namespace hex::init {
             meanScale /= 2;
 #endif
 
-            if (meanScale <= 0) {
+            if (meanScale <= 0.0) {
                 meanScale = 1.0;
             }
 

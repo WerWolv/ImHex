@@ -121,8 +121,31 @@ namespace hex::plugin::builtin {
         return currColumn > 0 && (currColumn) < columnCount && ((currColumn) % 8) == 0;
     }
 
-    void ViewHexEditorNew::drawCell(u64 address, const u8 *data, size_t size) {
-        this->m_currDataVisualizer->draw(address, data, size);
+    void ViewHexEditorNew::drawCell(u64 address, u8 *data, size_t size) {
+        if (this->m_editingAddress != address)
+            this->m_currDataVisualizer->draw(address, data, size, this->m_upperCaseHex);
+        else {
+            ImGui::SetKeyboardFocusHere();
+            ImGui::CaptureKeyboardFromApp(true);
+
+            if (this->m_currDataVisualizer->drawEditing(address, data, size, this->m_upperCaseHex)) {
+                ImHexApi::Provider::get()->write(this->m_editingAddress.value(), data, size);
+                (*this->m_editingAddress)++;
+                this->setSelection(this->m_selectionStart + 1, this->m_selectionStart + 1);
+
+                if (this->m_editingAddress > ImHexApi::Provider::get()->getSize())
+                    this->m_editingAddress = std::nullopt;
+            }
+        }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+            this->m_editingAddress = address;
+        }
+
+        if (this->m_editingAddress.has_value() && this->m_editingAddress != address && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            ImHexApi::Provider::get()->write(this->m_editingAddress.value(), data, size);
+            this->m_editingAddress = std::nullopt;
+        }
     }
 
     static std::optional<color_t> queryBackgroundColor(u64 address, const u8 *data, size_t size) {
@@ -305,7 +328,11 @@ namespace hex::plugin::builtin {
                                         ImGui::PushStyleColor(ImGuiCol_Text, *foregroundColor);
 
                                     // Draw cell content
+                                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                    ImGui::PushItemWidth((CharacterSize * this->m_currDataVisualizer->getMaxCharsPerCell()).x);
                                     this->drawCell(byteAddress, &bytes[x], this->m_currDataVisualizer->getBytesPerCell());
+                                    ImGui::PopItemWidth();
+                                    ImGui::PopStyleVar();
 
                                     if (foregroundColor.has_value())
                                         ImGui::PopStyleColor();
