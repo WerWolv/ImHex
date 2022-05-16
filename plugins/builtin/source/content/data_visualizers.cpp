@@ -3,34 +3,203 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/logger.hpp>
 
 namespace hex::plugin::builtin {
 
-    class DataVisualizerDefault : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    template<typename T>
+    constexpr ImGuiDataType getImGuiDataType() {
+        if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;
+        else if constexpr (std::same_as<T, u16>)    return ImGuiDataType_U16;
+        else if constexpr (std::same_as<T, u32>)    return ImGuiDataType_U32;
+        else if constexpr (std::same_as<T, u64>)    return ImGuiDataType_U64;
+        else if constexpr (std::same_as<T, i8>)     return ImGuiDataType_S8;
+        else if constexpr (std::same_as<T, i16>)    return ImGuiDataType_S16;
+        else if constexpr (std::same_as<T, i32>)    return ImGuiDataType_S32;
+        else if constexpr (std::same_as<T, i64>)    return ImGuiDataType_S64;
+        else if constexpr (std::same_as<T, float>)  return ImGuiDataType_Float;
+        else if constexpr (std::same_as<T, double>) return ImGuiDataType_Double;
+        else static_assert(hex::always_false<T>::value, "Invalid data type!");
+    }
+
+    template<hex::integral T>
+    class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerDefault() : DataVisualizer(1, 2) { }
+        DataVisualizerHexadecimal() : DataVisualizer(ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
 
-            if (size == 1)
-                ImGui::TextFormatted(upperCase ? "{:02X}" : "{:02x}", data[0]);
+            if (size == ByteCount)
+                ImGui::Text(getFormatString(upperCase), *reinterpret_cast<const T*>(data));
             else
-                ImGui::TextFormatted("  ");
+                ImGui::TextFormatted("{: {}s}", CharCount);
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
 
-            if (size == 1)
-                return ImGui::InputScalar("##hex_input", ImGuiDataType_U8, data, nullptr, nullptr, upperCase ? "%02X" : "%02x", DataVisualizer::TextInputFlags);
+            if (size == ByteCount) {
+                return ImGui::InputScalar(
+                           "##hex_input",
+                           getImGuiDataType<T>(),
+                           data,
+                           nullptr,
+                           nullptr,
+                           getFormatString(upperCase),
+                           DataVisualizer::TextInputFlags | ImGuiInputTextFlags_CharsHexadecimal);
+            }
             else
                 return false;
+        }
+
+    private:
+        constexpr static inline auto ByteCount = sizeof(T);
+        constexpr static inline auto CharCount = ByteCount * 2;
+
+        const static inline auto FormattingUpperCase = hex::format("%0{}X", CharCount);
+        const static inline auto FormattingLowerCase = hex::format("%0{}x", CharCount);
+
+        const char *getFormatString(bool upperCase) {
+            if (upperCase)
+                return FormattingUpperCase.c_str();
+            else
+                return FormattingLowerCase.c_str();
+        }
+    };
+
+    template<hex::integral T>
+    class DataVisualizerDecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerDecimal() : DataVisualizer(ByteCount, CharCount) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address, upperCase);
+
+            if (size == ByteCount) {
+                if (hex::is_signed<T>::value)
+                    ImGui::Text(getFormatString(), static_cast<i64>(*reinterpret_cast<const T*>(data)));
+                else
+                    ImGui::Text(getFormatString(), static_cast<u64>(*reinterpret_cast<const T*>(data)));
+            }
+            else
+                ImGui::TextFormatted("{: {}s}", CharCount);
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address, upperCase);
+
+            if (size == ByteCount) {
+                return ImGui::InputScalar(
+                           "##hex_input",
+                           getImGuiDataType<T>(),
+                           data,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           DataVisualizer::TextInputFlags);
+            }
+            else
+                return false;
+        }
+
+    private:
+        constexpr static inline auto ByteCount = sizeof(T);
+        constexpr static inline auto CharCount = std::numeric_limits<T>::digits10 + 2;
+
+        const static inline auto FormatString = hex::format("%{}{}", CharCount, hex::is_signed<T>::value ? "lld" : "llu");
+
+        const char *getFormatString() {
+            return FormatString.c_str();
+        }
+    };
+
+    template<hex::floating_point T>
+    class DataVisualizerFloatingPoint : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerFloatingPoint() : DataVisualizer(ByteCount, CharCount) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address);
+
+            if (size == ByteCount)
+                ImGui::Text(getFormatString(upperCase), *reinterpret_cast<const T*>(data));
+            else
+                ImGui::TextFormatted("{: {}s}", CharCount);
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address, upperCase);
+
+            if (size == ByteCount) {
+                return ImGui::InputScalar(
+                           "##hex_input",
+                           getImGuiDataType<T>(),
+                           data,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           DataVisualizer::TextInputFlags | ImGuiInputTextFlags_CharsScientific);
+            }
+            else
+                return false;
+        }
+
+    private:
+        constexpr static inline auto ByteCount = sizeof(T);
+        constexpr static inline auto CharCount = 14;
+
+        const static inline auto FormatStringUpperCase = hex::format("%{}E", CharCount);
+        const static inline auto FormatStringLowerCase = hex::format("%{}e", CharCount);
+
+        const char *getFormatString(bool upperCase) {
+            if (upperCase)
+                return FormatStringUpperCase.c_str();
+            else
+                return FormatStringLowerCase.c_str();
+        }
+    };
+
+    class DataVisualizerRGBA8 : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerRGBA8() : DataVisualizer(4, 2) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address, upperCase);
+
+            if (size == 4)
+                ImGui::ColorButton("##color", ImColor(data[0], data[1], data[2], data[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            else
+                ImGui::ColorButton("##color", ImColor(0, 0, 0, 0xFF), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address, data, size, upperCase);
+
+            return true;
         }
     };
 
     void registerDataVisualizers() {
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDefault>("Byte Visualizer");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u8>>("hex.builtin.visualizer.hexadecimal.8bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u16>>("hex.builtin.visualizer.hexadecimal.16bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u32>>("hex.builtin.visualizer.hexadecimal.32bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u64>>("hex.builtin.visualizer.hexadecimal.64bit");
+
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u8>>("hex.builtin.visualizer.decimal.unsigned.8bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u16>>("hex.builtin.visualizer.decimal.unsigned.16bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u32>>("hex.builtin.visualizer.decimal.unsigned.32bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<u64>>("hex.builtin.visualizer.decimal.unsigned.64bit");
+
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i8>>("hex.builtin.visualizer.decimal.signed.8bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i16>>("hex.builtin.visualizer.decimal.signed.16bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i32>>("hex.builtin.visualizer.decimal.signed.32bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i64>>("hex.builtin.visualizer.decimal.signed.64bit");
+
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<float>>("hex.builtin.visualizer.floating_point.32bit");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<double>>("hex.builtin.visualizer.floating_point.64bit");
+
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerRGBA8>("hex.builtin.visualizer.rgba8");
     }
 
 }

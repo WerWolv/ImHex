@@ -563,4 +563,32 @@ namespace ImGui {
         return ImGui::InputTextMultiline(label, buffer.data(), buffer.size() + 1, size, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
     }
 
+    bool InputScalarCallback(const char* label, ImGuiDataType data_type, void* p_data, const char* format, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+
+        if (format == NULL)
+            format = DataTypeGetInfo(data_type)->PrintFmt;
+
+        char buf[64];
+        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), data_type, p_data, format);
+
+        bool value_changed = false;
+        if ((flags & (ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0)
+            flags |= ImGuiInputTextFlags_CharsDecimal;
+        flags |= ImGuiInputTextFlags_AutoSelectAll;
+        flags |= ImGuiInputTextFlags_NoMarkEdited;  // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
+
+        if (InputText(label, buf, IM_ARRAYSIZE(buf), flags, callback, user_data))
+            value_changed = DataTypeApplyOpFromText(buf, g.InputTextState.InitialTextA.Data, data_type, p_data, format);
+
+        if (value_changed)
+            MarkItemEdited(g.LastItemData.ID);
+
+        return value_changed;
+    }
+
 }

@@ -236,6 +236,29 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer", "hex.builtin.visualizer.hexadecimal.8bit", [](auto name, nlohmann::json &setting) {
+            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
+
+            auto selectedVisualizer = setting;
+
+            bool result = false;
+            if (ImGui::BeginCombo(name.data(), LangEntry(selectedVisualizer))) {
+
+                for (const auto &[unlocalizedName, visualizer] : visualizers) {
+                    if (ImGui::Selectable(LangEntry(unlocalizedName))) {
+                        setting = unlocalizedName;
+                        result = true;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            return result;
+        });
+
+
+        /* Fonts */
 
         static std::string fontPath;
         ContentRegistry::Settings::add(
@@ -281,6 +304,8 @@ namespace hex::plugin::builtin {
             },
             true);
 
+
+        /* Folders */
 
         static const std::string dirsSetting { "hex.builtin.setting.folders" };
 

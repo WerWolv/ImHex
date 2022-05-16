@@ -177,9 +177,10 @@ namespace hex {
                 glfwWaitEvents();
 
             } else {
-                double timeout = (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime);
-                timeout        = timeout > 0 ? timeout : 0;
-                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 ? 0 : timeout);
+                const bool frameRateThrottled = !(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 || this->m_mouseButtonDown);
+                const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
+
+                glfwWaitEventsTimeout(frameRateThrottled ? timeout : 0);
             }
 
 
@@ -566,6 +567,17 @@ namespace hex {
             win->frameBegin();
             win->frame();
             win->frameEnd();
+        });
+
+        glfwSetMouseButtonCallback(this->m_window, [](GLFWwindow *window, int button, int action, int mods) {
+            hex::unused(button, mods);
+
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+
+            if (action == GLFW_PRESS)
+                win->m_mouseButtonDown = true;
+            else if (action == GLFW_RELEASE)
+                win->m_mouseButtonDown = false;
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
