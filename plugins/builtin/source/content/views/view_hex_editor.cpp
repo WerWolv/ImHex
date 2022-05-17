@@ -26,8 +26,8 @@ namespace hex::plugin::builtin {
 
     ViewHexEditor::ViewHexEditor() : View("hex.builtin.view.hex_editor.name"_lang) {
 
-        this->m_searchStringBuffer.resize(0xFFF, 0x00);
-        this->m_searchHexBuffer.resize(0xFFF, 0x00);
+        this->m_searchStringBuffer = std::vector<char>(0xFFF, 0x00);
+        this->m_searchHexBuffer = std::vector<char>(0xFFF, 0x00);
 
         ContentRegistry::FileHandler::add({ ".hexproj" }, [](const auto &path) {
             return ProjectFile::load(path);

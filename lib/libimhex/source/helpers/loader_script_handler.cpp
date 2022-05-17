@@ -76,6 +76,11 @@ namespace hex {
     }
 
     static PyObject *createStructureType(const std::string &keyword, PyObject *args) {
+        if (args == nullptr) {
+            PyErr_BadArgument();
+            return nullptr;
+        }
+
         auto type = PyTuple_GetItem(args, 0);
         if (type == nullptr) {
             PyErr_BadArgument();
@@ -119,10 +124,19 @@ namespace hex {
 
         for (Py_ssize_t i = 0; i < PyList_Size(list); i++) {
             auto item = PyList_GetItem(list, i);
+            if (item == nullptr) {
+                PyErr_SetString(PyExc_TypeError, "failed to get item from list");
+                return nullptr;
+            }
 
             auto memberName = PyUnicode_AsUTF8(PyTuple_GetItem(item, 0));
+            if (memberName == nullptr) {
+                PyErr_SetString(PyExc_TypeError, "invalid member name");
+                return nullptr;
+            }
+
             auto memberType = PyTuple_GetItem(item, 1);
-            if (memberType == nullptr) {
+            if (!PyTuple_Check(memberType) || memberType == nullptr) {
                 PyErr_SetString(PyExc_TypeError, "member needs to have a annotation extending from ImHexType");
                 return nullptr;
             }
@@ -148,12 +162,6 @@ namespace hex {
                     code += "["s + PyUnicode_AsUTF8(arraySize) + "];\n";
                 else if (PyLong_Check(arraySize))
                     code += "["s + std::to_string(PyLong_AsLong(arraySize)) + "];\n";
-                else {
-                    PyErr_SetString(PyExc_TypeError, "invalid array size type. Expected string or int");
-                    return nullptr;
-                }
-
-
             } else {
                 auto memberTypeInstance = PyObject_CallObject(memberType, nullptr);
                 if (memberTypeInstance == nullptr || memberTypeInstance->ob_type->tp_base == nullptr || memberTypeInstance->ob_type->tp_base->tp_name != "ImHexType"s) {

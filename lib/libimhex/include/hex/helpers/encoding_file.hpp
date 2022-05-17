@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/file.hpp>
 
 namespace hex {
 
@@ -26,7 +27,7 @@ namespace hex {
         [[nodiscard]] bool valid() const { return this->m_valid; }
 
     private:
-        void parseThingyFile(std::ifstream &content);
+        void parseThingyFile(fs::File &file);
 
         bool m_valid = false;
 

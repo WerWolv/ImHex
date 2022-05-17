@@ -226,12 +226,10 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string GDBProvider::getName() const {
-        std::string address, port;
+        std::string address = "-";
+        std::string port = "-";
 
-        if (!this->isConnected()) {
-            address = "-";
-            port    = "-";
-        } else {
+        if (this->isConnected()) {
             address = this->m_ipAddress;
             port    = std::to_string(this->m_port);
         }

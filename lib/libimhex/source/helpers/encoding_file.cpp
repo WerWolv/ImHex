@@ -2,16 +2,13 @@
 
 #include <hex/helpers/utils.hpp>
 
-#include <fstream>
-
 namespace hex {
 
     EncodingFile::EncodingFile(Type type, const std::fs::path &path) {
-        std::ifstream encodingFile(path.c_str());
-
+        auto file = fs::File(path, fs::File::Mode::Read);
         switch (type) {
             case Type::Thingy:
-                parseThingyFile(encodingFile);
+                parseThingyFile(file);
                 break;
             default:
                 return;
@@ -34,21 +31,22 @@ namespace hex {
         return { ".", 1 };
     }
 
-    void EncodingFile::parseThingyFile(std::ifstream &content) {
-        for (std::string line; std::getline(content, line);) {
+    void EncodingFile::parseThingyFile(fs::File &file) {
+        for (const auto &line : splitString(file.readString(), "\n")) {
 
             std::string from, to;
             {
-                auto delimiterPos = line.find('=', 0);
+                auto delimiterPos = line.find('=');
 
                 if (delimiterPos == std::string::npos)
+                    continue;
+                if (delimiterPos >= from.length())
+                    continue;
+                if (delimiterPos >= to.length())
                     continue;
 
                 from = line.substr(0, delimiterPos);
                 to   = line.substr(delimiterPos + 1);
-
-                hex::trim(from);
-                hex::trim(to);
 
                 if (from.empty()) continue;
                 if (to.empty()) to = " ";

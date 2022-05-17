@@ -92,14 +92,16 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted(binary.c_str());
                     return binary;
                 };
-            }, [](std::string value, std::endian endian) -> std::vector<u8> {
+            }, [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
-                if (value.starts_with("0b"))
-                    value = value.substr(2);
+
+                std::string copy = value;
+                if (copy.starts_with("0b"))
+                    copy = copy.substr(2);
 
                 if (value.size() > 8) return { };
                 u8 byte = 0x00;
-                for (char c : value) {
+                for (char c : copy) {
                     byte <<= 1;
 
                     if (c == '1')
