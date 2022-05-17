@@ -30,7 +30,7 @@ namespace hex {
 
         bool m_valid = false;
 
-        std::map<u32, std::map<std::vector<u8>, std::string>> m_mapping;
+        std::map<size_t, std::map<std::vector<u8>, std::string>> m_mapping;
         size_t m_longestSequence = 0;
     };
 
