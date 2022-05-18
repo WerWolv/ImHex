@@ -28,7 +28,8 @@ namespace hex::plugin::builtin {
 
             const size_t maxAddress = ImHexApi::Provider::get()->getSize() - 1;
 
-            this->m_selectionChanged = true;
+            if (this->m_selectionStart != start || this->m_selectionEnd != end)
+                this->m_selectionChanged = true;
 
             this->m_selectionStart = std::clamp<decltype(start)>(start, 0, maxAddress);
             this->m_selectionEnd = std::clamp<decltype(end)>(end, 0, maxAddress);
