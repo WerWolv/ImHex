@@ -103,6 +103,6 @@ Type Attributes
 
 
 ``[[left_to_right]]`` / ``[[right_to_left]]`` :version:`1.15.0`
--------------------------------------------
+---------------------------------------------------------------
 
 These attributes can be applied to bitfields to set if bits should be ordered from left to right or from right to left
