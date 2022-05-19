@@ -16,19 +16,17 @@ namespace hex::plugin::builtin {
             "#",
             "hex.builtin.command.calc.desc",
             [](auto input) {
-                hex::MathEvaluator evaluator;
+                hex::MathEvaluator<long double> evaluator;
                 evaluator.registerStandardVariables();
                 evaluator.registerStandardFunctions();
 
                 std::optional<long double> result;
 
-                try {
-                    result = evaluator.evaluate(input);
-                } catch (std::exception &e) { }
-
-
+                result = evaluator.evaluate(input);
                 if (result.has_value())
                     return hex::format("#{0} = {1}", input.data(), result.value());
+                else if (evaluator.hasError())
+                    return hex::format("Error: {}", *evaluator.getLastError());
                 else
                     return std::string("???");
             });

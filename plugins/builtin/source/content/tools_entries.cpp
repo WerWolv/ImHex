@@ -134,8 +134,8 @@ namespace hex::plugin::builtin {
             static std::string mathInput;
             bool evaluate = false;
 
-            static MathEvaluator mathEvaluator = [&] {
-                MathEvaluator evaluator;
+            static MathEvaluator<long double> mathEvaluator = [&] {
+                MathEvaluator<long double> evaluator;
 
                 evaluator.registerStandardVariables();
                 evaluator.registerStandardFunctions();
