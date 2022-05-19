@@ -65,13 +65,10 @@ namespace hex {
         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
         ImGui::TableNextColumn();
 
-        u64 extractedValue = pattern.getValue();
-        ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("{0} (0x{1:X})", extractedValue, extractedValue), &pattern));
+        ImGui::TextFormatted("{}", pattern.getFormattedValue());
     }
 
     void PatternDrawer::visit(pl::PatternBitfield& pattern) {
-        std::vector<u8> value = pattern.getValue();
-
         bool open = true;
         if (!pattern.isInlined()) {
             ImGui::TableNextRow();
@@ -85,12 +82,7 @@ namespace hex {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "bitfield");
 
-            std::string valueString = "{ ";
-            for (auto i : value)
-                valueString += hex::format("{0:02X} ", i);
-            valueString += "}";
-
-            ImGui::TextFormatted("{}", pattern.formatDisplayValue(valueString, &pattern));
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         } else {
             ImGui::SameLine();
             ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
@@ -106,50 +98,14 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternBoolean& pattern) {
-        u8 boolean = pattern.getValue();
-
-        if (boolean == 0)
-            this->createDefaultEntry(pattern, "false", false);
-        else if (boolean == 1)
-            this->createDefaultEntry(pattern, "true", true);
-        else
-            this->createDefaultEntry(pattern, "true*", true);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<bool>(pattern.getValue()));
     }
 
     void PatternDrawer::visit(pl::PatternCharacter& pattern) {
-        char character = pattern.getValue();
-        this->createDefaultEntry(pattern, hex::format("'{0}'", character), character);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
     void PatternDrawer::visit(pl::PatternEnum& pattern) {
-        u64 value = pattern.getValue();
-
-        std::string valueString = pattern.getTypeName() + "::";
-
-        bool foundValue = false;
-        for (auto &[entryValueLiteral, entryName] : pattern.getEnumValues()) {
-            auto visitor = overloaded {
-                [&, name = entryName](auto &entryValue) {
-                    if (static_cast<decltype(entryValue)>(value) == entryValue) {
-                        valueString += name;
-                        foundValue = true;
-                        return true;
-                    }
-
-                    return false;
-                },
-                [](const std::string &) { return false; },
-                [](pl::Pattern *) { return false; },
-            };
-
-            bool matches = std::visit(visitor, entryValueLiteral);
-            if (matches)
-                break;
-        }
-
-        if (!foundValue)
-            valueString += "???";
-
         ImGui::TableNextRow();
         createLeafNode(pattern);
         drawCommentTooltip(pattern);
@@ -161,20 +117,14 @@ namespace hex {
         drawOffsetColumn(pattern);
         drawSizeColumn(pattern);
         drawTypenameColumn(pattern, "enum");
-        ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("{} (0x{:0{}X})", valueString.c_str(), value, pattern.getSize() * 2), &pattern));
+        ImGui::TextFormatted("{}", pattern.getFormattedValue());
     }
 
     void PatternDrawer::visit(pl::PatternFloat& pattern) {
         if (pattern.getSize() == 4) {
-            float f32 = static_cast<float>(pattern.getValue());
-            u32 integerResult = 0;
-            std::memcpy(&integerResult, &f32, sizeof(float));
-            this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f32, integerResult, pattern.getSize() * 2), f32);
+            this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<float>(pattern.getValue()));
         } else if (pattern.getSize() == 8) {
-            double f64 = pattern.getValue();
-            u64 integerResult = 0;
-            std::memcpy(&integerResult, &f64, sizeof(double));
-            this->createDefaultEntry(pattern, hex::format("{:e} (0x{:0{}X})", f64, integerResult, pattern.getSize() * 2), f64);
+            this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<double>(pattern.getValue()));
         }
     }
 
@@ -184,8 +134,6 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternPointer& pattern) {
-        u64 data = pattern.getValue();
-
         bool open = true;
 
         if (!pattern.isInlined()) {
@@ -201,7 +149,7 @@ namespace hex {
             drawSizeColumn(pattern);
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", pattern.formatDisplayValue(hex::format("*(0x{0:X})", data), u128(data)));
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         } else {
             ImGui::SameLine();
             ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
@@ -215,18 +163,11 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternSigned& pattern) {
-        i128 data = pattern.getValue();
-        this->createDefaultEntry(pattern, hex::format("{:d} (0x{:0{}X})", data, data, 1 * 2), data);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
     void PatternDrawer::visit(pl::PatternString& pattern) {
-        auto size = std::min<size_t>(pattern.getSize(), 0x7F);
-
-        if (size == 0)
-            return;
-
-        std::string displayString = pattern.getValue(size);
-        this->createDefaultEntry(pattern, hex::format("\"{0}\" {1}", displayString, size > pattern.getSize() ? "(truncated)" : ""), displayString);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
     void PatternDrawer::visit(pl::PatternStruct& pattern) {
@@ -243,7 +184,7 @@ namespace hex {
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
-            ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         } else {
             ImGui::SameLine();
             ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
@@ -272,7 +213,7 @@ namespace hex {
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
-            ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         } else {
             ImGui::SameLine();
             ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
@@ -288,26 +229,17 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternUnsigned& pattern) {
-        u128 data = pattern.getValue();
-        this->createDefaultEntry(pattern, hex::format("{:d} (0x{:0{}X})", data, data, pattern.getSize() * 2), data);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
     void PatternDrawer::visit(pl::PatternWideCharacter& pattern) {
-        char16_t character = pattern.getValue();
-        u128 literal = character;
-        auto str = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(character);
-        this->createDefaultEntry(pattern, hex::format("'{0}'", str), literal);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), u128(pattern.getValue()));
     }
 
     void PatternDrawer::visit(pl::PatternWideString& pattern) {
-        auto size = std::min<size_t>(pattern.getSize(), 0x100);
+        std::string utf8String = pattern.getValue();
 
-        if (size == 0)
-            return;
-
-        std::string utf8String = pattern.getValue(size);
-
-        this->createDefaultEntry(pattern, hex::format("\"{0}\" {1}", utf8String, size > pattern.getSize() ? "(truncated)" : ""), utf8String);
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), utf8String);
     }
 
     void PatternDrawer::createDefaultEntry(const pl::Pattern &pattern, const std::string &value, pl::Token::Literal &&literal) const {
@@ -323,7 +255,7 @@ namespace hex {
         drawColorColumn(pattern);
         drawOffsetColumn(pattern);
         drawSizeColumn(pattern);
-        ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getTypeName().empty() ? pattern.getFormattedName() : pattern.getTypeName());
+        ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
         ImGui::TableNextColumn();
         ImGui::TextFormatted("{}", pattern.formatDisplayValue(value, literal));
     }
@@ -380,7 +312,7 @@ namespace hex {
             ImGui::TextUnformatted("]");
 
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", pattern.formatDisplayValue("{ ... }", &pattern));
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         } else {
             ImGui::SameLine();
             ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
