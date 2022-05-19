@@ -252,11 +252,23 @@ namespace hex::plugin::builtin {
             for (const auto &pattern : patterns) {
                 auto child = pattern->getPattern(address);
                 if (child != nullptr) {
+                    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImAlphaBlendColors(ImGui::GetColorU32(ImGuiCol_PopupBg), pattern->getColor()));
+
                     ImGui::BeginTooltip();
                     ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
                     ImGui::SameLine(0, 10);
-                    ImGui::TextUnformatted(pattern->getVariableName().c_str());
+                    ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern->getTypeName());
+                    ImGui::SameLine();
+                    ImGui::TextFormatted("{}", pattern->getDisplayName());
+                    ImGui::Separator();
+                    ImGui::TextFormatted("Address: 0x{:08X}", pattern->getOffset());
+                    ImGui::TextFormatted("Size: {} {}", pattern->getSize(), pattern->getSize() > 1 ? "Bytes" : "Byte");
+                    ImGui::TextFormatted("Type: {}", pattern->getTypeName());
+                    ImGui::TextFormatted("Value: {}", pattern->getFormattedValue());
+                    ImGui::TextFormatted("Endian: {}", pattern->getEndian() == std::endian::little ? "Little" : "Big");
                     ImGui::EndTooltip();
+
+                    ImGui::PopStyleColor();
                 }
             }
         });

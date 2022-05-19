@@ -35,6 +35,14 @@ namespace hex {
         [[nodiscard]] constexpr bool overlaps(const Region &other) const {
             return ((this->address + this->size) >= other.address) && (this->address < (other.address + other.size));
         }
+
+        [[nodiscard]] constexpr u64 getStartAddress() const {
+            return this->address;
+        }
+
+        [[nodiscard]] constexpr u64 getEndAddress() const {
+            return this->address + this->size - 1;
+        }
     };
 
 }
