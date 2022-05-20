@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/file.hpp>
 
 namespace hex {
 
@@ -26,11 +27,11 @@ namespace hex {
         [[nodiscard]] bool valid() const { return this->m_valid; }
 
     private:
-        void parseThingyFile(std::ifstream &content);
+        void parseThingyFile(fs::File &file);
 
         bool m_valid = false;
 
-        std::map<u32, std::map<std::vector<u8>, std::string>> m_mapping;
+        std::map<size_t, std::map<std::vector<u8>, std::string>> m_mapping;
         size_t m_longestSequence = 0;
     };
 

@@ -366,7 +366,7 @@ namespace hex::plugin::builtin {
                 if (ImNodes::IsLinkCreated(&from, &to)) {
 
                     do {
-                        dp::Attribute *fromAttr, *toAttr;
+                        dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
                         for (auto &node : this->m_nodes) {
                             for (auto &attribute : node->getAttributes()) {
                                 if (attribute.getId() == static_cast<u32>(from))
@@ -535,7 +535,7 @@ namespace hex::plugin::builtin {
             newLink.setID(linkId);
             this->m_links.push_back(newLink);
 
-            dp::Attribute *fromAttr, *toAttr;
+            dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
             for (auto &node : this->m_nodes) {
                 for (auto &attribute : node->getAttributes()) {
                     if (attribute.getId() == newLink.getFromId())

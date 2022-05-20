@@ -425,18 +425,17 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
             if (evaluate) {
-                std::optional<long double> result;
-
                 try {
-                    result = mathEvaluator.evaluate(mathInput);
+                    auto result = mathEvaluator.evaluate(mathInput);
+
+                    if (result.has_value()) {
+                        mathHistory.push_back(result.value());
+                        mathInput.clear();
+                        lastMathError.clear();
+                    }
+
                 } catch (std::invalid_argument &e) {
                     lastMathError = e.what();
-                }
-
-                if (result.has_value()) {
-                    mathHistory.push_back(result.value());
-                    mathInput.clear();
-                    lastMathError.clear();
                 }
             }
         }
