@@ -665,23 +665,7 @@ namespace hex::plugin::builtin {
 
     std::string getWikipediaApiUrl() {
         auto setting = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language");
-        int langMode;
-        std::string lang;
-        if (setting.is_number()) {
-            langMode = static_cast<int>(setting);
-        } else if (setting.is_string()) {
-            langMode = 2;
-            lang = std::string(setting);
-        } else {
-            langMode = 0;
-        }
-        if (langMode == 0) { // Interface language
-            lang = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
-            lang.resize(lang.find_first_of('-'));
-        } else if (langMode == 1) { // English
-            lang = "en";
-        }
-        return "https://" + lang + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
+        return "https://" + std::string(setting) + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
     }
 
     void drawWikiExplainer() {

@@ -124,32 +124,16 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", 0, [](auto name, nlohmann::json &setting) {
-            static int mode_selection = setting.is_string() ? 2 : static_cast<int>(setting);
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en", [](auto name, nlohmann::json &setting) {
+            static auto lang = std::string(setting);
 
-            const char *modes[] = {
-                "hex.builtin.setting.interface.wiki_explain_language.interface"_lang,
-                "hex.builtin.setting.interface.wiki_explain_language.english"_lang,
-                "hex.builtin.setting.interface.wiki_explain_language.custom"_lang
-            };
-
-            if (ImGui::Combo(name.data(), &mode_selection, modes, IM_ARRAYSIZE(modes)) && mode_selection != 2) {
-                setting = mode_selection;
+            if (ImGui::InputText(name.data(), lang, ImGuiInputTextFlags_CharsNoBlank)) {
+                setting = std::string(lang.c_str()); // remove following zero bytes
                 return true;
             }
 
-            if (mode_selection == 2) {
-                // Custom language
-                if (!setting.is_string()) setting = "";
-                static auto customLang = std::string(setting);
-                if (ImGui::InputText("###wiki_explain_language_custom", customLang, ImGuiInputTextFlags_CharsNoBlank)) {
-                    setting = std::string(customLang.c_str()); // remove following zero bytes
-                    return true;
-                }
-            }
-
             return false;
-        }, false, true);
+        });
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60, [](auto name, nlohmann::json &setting) {
             static int fps = static_cast<int>(setting);
