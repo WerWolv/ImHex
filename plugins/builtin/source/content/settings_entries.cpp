@@ -124,6 +124,17 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en", [](auto name, nlohmann::json &setting) {
+            static auto lang = std::string(setting);
+
+            if (ImGui::InputText(name.data(), lang, ImGuiInputTextFlags_CharsNoBlank)) {
+                setting = std::string(lang.c_str()); // remove following zero bytes
+                return true;
+            }
+
+            return false;
+        });
+
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60, [](auto name, nlohmann::json &setting) {
             static int fps = static_cast<int>(setting);
 

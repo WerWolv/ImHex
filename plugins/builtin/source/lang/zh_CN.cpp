@@ -662,6 +662,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
                     { "hex.builtin.setting.interface.language", "语言" },
+                    { "hex.builtin.setting.interface.wiki_explain_language", "维基百科语种" },
                     { "hex.builtin.setting.interface.fps", "FPS限制" },
                     { "hex.builtin.setting.interface.fps.unlocked", "无限制" },
                     { "hex.builtin.setting.interface.highlight_alpha", "高亮不透明度" },
