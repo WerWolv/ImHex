@@ -184,7 +184,7 @@ jobs:
           sudo apt install -y python3-pip python3-setuptools patchelf desktop-file-utils libgdk-pixbuf2.0-dev fakeroot strace fuse
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
-          sudo pip3 install appimage-builder
+          sudo pip3 install appimage-builder==1.0.0
 
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
           sh rustup-init.sh -y --default-toolchain none
