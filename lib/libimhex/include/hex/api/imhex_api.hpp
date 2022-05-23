@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <variant>
 #include <map>
 
 #include <hex/helpers/concepts.hpp>
@@ -31,6 +32,8 @@ namespace hex {
         }
 
         namespace HexEditor {
+
+            using TooltipFunction = std::function<void(u64, const u8*, size_t)>;
 
             class Highlighting {
             public:
@@ -63,7 +66,6 @@ namespace hex {
             namespace impl {
 
                 using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t)>;
-                using TooltipFunction = std::function<void(u64, const u8*, size_t)>;
 
                 std::map<u32, Highlighting> &getBackgroundHighlights();
                 std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions();
@@ -83,7 +85,7 @@ namespace hex {
             u32 addTooltip(Region region, std::string value, color_t color);
             void removeTooltip(u32 id);
 
-            u32 addTooltipProvider(impl::TooltipFunction function);
+            u32 addTooltipProvider(TooltipFunction function);
             void removeTooltipProvider(u32 id);
 
             u32 addBackgroundHighlightingProvider(const impl::HighlightingFunction &function);
@@ -107,9 +109,6 @@ namespace hex {
                 std::string comment;
                 u32 color;
                 bool locked;
-
-                u32 highlightId;
-                u32 tooltipId;
             };
 
             void add(u64 address, size_t size, const std::string &name, const std::string &comment, color_t color = 0x00000000);

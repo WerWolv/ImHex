@@ -82,10 +82,12 @@ namespace hex::plugin::builtin {
     class PopupFind : public ViewHexEditorNew::Popup {
     public:
         void draw(ViewHexEditorNew *editor) override {
-            const auto ButtonSize = ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeightWithSpacing());
+            const auto ButtonSize = ImVec2(ImGui::CalcTextSize(ICON_VS_SEARCH).x, ImGui::GetTextLineHeight()) + ImGui::GetStyle().CellPadding * 2;
             const auto ButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
             std::vector<u8> searchSequence;
+            bool shouldSearch = false;
+            bool backwards = false;
 
             ImGui::TextUnformatted("Find...");
             if (ImGui::BeginTabBar("##find_tabs")) {
@@ -94,14 +96,29 @@ namespace hex::plugin::builtin {
                     ImGui::CaptureKeyboardFromApp(true);
 
                     if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
-                        searchSequence = decodeByteString(this->m_input);
+                        shouldSearch = true;
+                        backwards = false;
                     }
 
                     ImGui::SameLine();
                     if (ImGui::IconButton(ICON_VS_SEARCH, ButtonColor, ButtonSize)) {
-                        this->m_shouldSearch = true;
-                        this->m_backwards = false;
+                        shouldSearch = true;
+                        backwards = false;
                         this->m_lastFind.reset();
+                    }
+
+                    if (ImGui::IconButton(ICON_VS_ARROW_UP, ButtonColor, ButtonSize)) {
+                        shouldSearch = true;
+                        backwards = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::IconButton(ICON_VS_ARROW_DOWN, ButtonColor, ButtonSize)) {
+                        shouldSearch = true;
+                        backwards = false;
+                    }
+
+                    if (shouldSearch) {
+                        searchSequence = decodeByteString(this->m_input);
                     }
 
                     ImGui::EndTabItem();
@@ -112,6 +129,27 @@ namespace hex::plugin::builtin {
                     ImGui::CaptureKeyboardFromApp(true);
 
                     if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                        shouldSearch = false;
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::IconButton(ICON_VS_SEARCH, ButtonColor, ButtonSize)) {
+                        shouldSearch = true;
+                        backwards = false;
+                        this->m_lastFind.reset();
+                    }
+
+                    if (ImGui::IconButton(ICON_VS_ARROW_UP, ButtonColor, ButtonSize)) {
+                        shouldSearch = true;
+                        backwards = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::IconButton(ICON_VS_ARROW_DOWN, ButtonColor, ButtonSize)) {
+                        shouldSearch = true;
+                        backwards = false;
+                    }
+
+                    if (shouldSearch) {
                         searchSequence.clear();
                         std::copy(this->m_input.begin(), this->m_input.end(), std::back_inserter(searchSequence));
 
@@ -119,33 +157,15 @@ namespace hex::plugin::builtin {
                         searchSequence.pop_back();
                     }
 
-                    ImGui::SameLine();
-                    if (ImGui::IconButton(ICON_VS_SEARCH, ButtonColor, ButtonSize)) {
-                        this->m_shouldSearch = true;
-                        this->m_backwards = false;
-                    }
-
                     ImGui::EndTabItem();
-                }
-
-                ImGui::NewLine();
-                if (ImGui::IconButton(ICON_VS_ARROW_UP, ButtonColor, ButtonSize)) {
-                    this->m_shouldSearch = true;
-                    this->m_backwards = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::IconButton(ICON_VS_ARROW_UP, ButtonColor, ButtonSize)) {
-                    this->m_shouldSearch = true;
-                    this->m_backwards = false;
                 }
 
                 ImGui::EndTabBar();
             }
 
 
-
-            if (!searchSequence.empty()) {
-                if (auto region = this->findSequence(searchSequence, this->m_backwards); region.has_value()) {
+            if (!searchSequence.empty() && shouldSearch) {
+                if (auto region = this->findSequence(searchSequence, backwards); region.has_value()) {
                     editor->setSelection(region->getStartAddress(), region->getEndAddress());
                     editor->jumpToSelection();
                 }
@@ -174,9 +194,6 @@ namespace hex::plugin::builtin {
 
             return std::nullopt;
         }
-
-        bool m_shouldSearch = false;
-        bool m_backwards = false;
 
         std::string m_input;
         std::optional<u64> m_lastFind;
@@ -219,6 +236,8 @@ namespace hex::plugin::builtin {
                 // Enter editing mode when double-clicking a cell
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                     this->m_editingAddress = address;
+                    this->m_shouldModifyValue = false;
+                    this->m_enteredEditingMode = true;
 
                     this->m_editingBytes.resize(size);
                     std::memcpy(this->m_editingBytes.data(), data, size);
@@ -229,26 +248,28 @@ namespace hex::plugin::builtin {
             ImGui::SetKeyboardFocusHere();
             ImGui::CaptureKeyboardFromApp(true);
 
-            this->m_shouldModifyValue = this->m_currDataVisualizer->drawEditing(address, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex);
-            this->m_shouldModifyValue = this->m_shouldModifyValue || this->m_selectionChanged;
-        }
+            if (this->m_currDataVisualizer->drawEditing(address, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode) || this->m_shouldModifyValue) {
 
-        if (this->m_shouldModifyValue) {
-            this->m_shouldModifyValue = false;
+                auto provider = ImHexApi::Provider::get();
 
-            log::info("Changes written");
+                provider->write(address, this->m_editingBytes.data(), this->m_editingBytes.size());
 
-            if (!this->m_selectionChanged) {
-                auto nextEditingAddress = *this->m_editingAddress + this->m_currDataVisualizer->getBytesPerCell();
-                this->setSelection(nextEditingAddress, nextEditingAddress);
+                if (!this->m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    auto nextEditingAddress = *this->m_editingAddress + this->m_currDataVisualizer->getBytesPerCell();
+                    this->setSelection(nextEditingAddress, nextEditingAddress);
 
-                if (nextEditingAddress >= ImHexApi::Provider::get()->getSize())
+                    if (nextEditingAddress >= provider->getSize())
+                        this->m_editingAddress = std::nullopt;
+                    else
+                        this->m_editingAddress = nextEditingAddress;
+                } else {
                     this->m_editingAddress = std::nullopt;
-                else
-                    this->m_editingAddress = nextEditingAddress;
-            } else {
-                this->m_editingAddress = std::nullopt;
+                }
+
+                this->m_shouldModifyValue = false;
             }
+
+            this->m_enteredEditingMode = false;
         }
     }
 
@@ -281,26 +302,48 @@ namespace hex::plugin::builtin {
     }
 
     static void drawTooltip(u64 address, const u8 *data, size_t size) {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled(ImVec2(5, 5)));
+
         for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getTooltipFunctions()) {
             callback(address, data, size);
         }
 
-        for (const auto &[id, tooltip] : ImHexApi::HexEditor::impl::getTooltips()) {
-            if (tooltip.getRegion().overlaps({ address, size })) {
-                ImGui::BeginTooltip();
-                ImGui::ColorButton(tooltip.getValue().c_str(), ImColor(tooltip.getColor()));
-                ImGui::SameLine(0, 10);
-                ImGui::TextUnformatted(tooltip.getValue().c_str());
-                ImGui::EndTooltip();
+        const auto &tooltips = ImHexApi::HexEditor::impl::getTooltips();
+        if (!tooltips.empty()) {
+            ImGui::BeginTooltip();
+
+            for (const auto &[id, tooltip] : tooltips) {
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    if (tooltip.getRegion().overlaps({ address, size })) {
+                        ImGui::ColorButton(tooltip.getValue().c_str(), ImColor(tooltip.getColor()));
+                        ImGui::SameLine(0, 10);
+                        ImGui::TextUnformatted(tooltip.getValue().c_str());
+                    }
+
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltip.getColor());
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltip.getColor());
+                    ImGui::EndTable();
+                    ImGui::PopStyleColor(2);
+                }
             }
+
+            ImGui::EndTooltip();
         }
+
+        ImGui::PopStyleVar();
     }
 
-    void ViewHexEditorNew::drawSelectionFrame(u32 x, u32 y, u64 byteAddress, const ImVec2 &cellPos, const ImVec2 &cellSize) {
+    void ViewHexEditorNew::drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) {
         if (!this->isSelectionValid()) return;
 
-        const color_t SelectionFrameColor = ImGui::GetColorU32(ImGuiCol_Text);
         const auto selection = this->getSelection();
+        if (!Region { byteAddress, 1 }.isWithin(selection))
+            return;
+
+        const color_t SelectionFrameColor = ImGui::GetColorU32(ImGuiCol_Text);
 
         auto drawList = ImGui::GetWindowDrawList();
 
@@ -309,7 +352,7 @@ namespace hex::plugin::builtin {
             drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1.0F);
 
         // Draw vertical line at the right of the last byte and the end of the line
-        if (x == u16((this->m_bytesPerRow / this->m_currDataVisualizer->getBytesPerCell()) - 1) || byteAddress == selection.getEndAddress())
+        if (x == u16((this->m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + this->m_currDataVisualizer->getBytesPerCell()) > selection.getEndAddress())
             drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1.0F);
 
         // Draw horizontal line at the top of the bytes
@@ -349,11 +392,11 @@ namespace hex::plugin::builtin {
 
             const color_t SelectionColor = (ImAlphaBlendColors(0x32FFFFFF, 0x60C08080) & 0x00FFFFFF) | (this->m_highlightAlpha << 24);
 
-
             const auto FooterSize = ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetTextLineHeightWithSpacing() * 3);
             const auto TableSize = ImGui::GetContentRegionAvail() - ImVec2(0, FooterSize.y);
 
-            const u16 columnCount = this->m_bytesPerRow / this->m_currDataVisualizer->getBytesPerCell();
+            const auto bytesPerCell = this->m_currDataVisualizer->getBytesPerCell();
+            const u16 columnCount = this->m_bytesPerRow / bytesPerCell;
             const auto byteColumnCount = columnCount + getByteColumnSeparatorCount(columnCount);
 
             const auto selectionMin = std::min(this->m_selectionStart, this->m_selectionEnd);
@@ -375,7 +418,7 @@ namespace hex::plugin::builtin {
                     if (isColumnSeparatorColumn(i, columnCount))
                         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
-                    ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * this->m_currDataVisualizer->getBytesPerCell(), this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6);
+                    ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6);
                 }
                 ImGui::TableSetupColumn("");
 
@@ -417,9 +460,9 @@ namespace hex::plugin::builtin {
                             std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
                             {
                                 for (u64 x = 0; x < columnCount; x++) {
-                                    const u64 byteAddress = y * this->m_bytesPerRow + x;
+                                    const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + provider->getBaseAddress() + provider->getCurrentPageAddress();
 
-                                    const auto cellBytes = std::min<u64>(validBytes, this->m_currDataVisualizer->getBytesPerCell());
+                                    const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
 
                                     // Query cell colors
                                     const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x], cellBytes);
@@ -445,8 +488,10 @@ namespace hex::plugin::builtin {
 
                             // Draw byte columns
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(3, 0));
+
+                            bool shouldScroll = false;
                             for (u64 x = 0; x < columnCount; x++) {
-                                const u64 byteAddress = y * this->m_bytesPerRow + x;
+                                const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + provider->getBaseAddress() + provider->getCurrentPageAddress();
 
                                 ImGui::TableNextColumn();
                                 if (isColumnSeparatorColumn(x, columnCount))
@@ -472,7 +517,7 @@ namespace hex::plugin::builtin {
                                         drawList->AddRectFilled(cellStartPos, cellStartPos + adjustedCellSize, backgroundColor.value());
 
                                         // Draw frame around mouse selection
-                                        this->drawSelectionFrame(x, y, byteAddress, cellStartPos, adjustedCellSize);
+                                        this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize);
                                     }
 
 
@@ -481,17 +526,23 @@ namespace hex::plugin::builtin {
                                     // Handle selection
                                     {
                                         if (ImGui::IsWindowHovered() && cellHovered && ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + TableSize)) {
-                                            drawTooltip(byteAddress, &bytes[x], this->m_currDataVisualizer->getBytesPerCell());
+                                            drawTooltip(byteAddress, &bytes[x], bytesPerCell);
+
+                                            auto endAddress = byteAddress + bytesPerCell - 1;
                                             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                                                this->setSelection(this->m_selectionStart, byteAddress);
+                                                this->setSelection(this->m_selectionStart, endAddress);
+                                                shouldScroll = true;
                                             }
                                             else if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
                                                 if (ImGui::GetIO().KeyShift)
-                                                    this->setSelection(this->m_selectionStart, byteAddress);
+                                                    this->setSelection(this->m_selectionStart, endAddress);
                                                 else
-                                                    this->setSelection(byteAddress, byteAddress);
+                                                    this->setSelection(byteAddress, endAddress);
+
+                                                shouldScroll = true;
                                             }
                                         }
+
                                     }
 
                                     // Get byte foreground color
@@ -501,7 +552,7 @@ namespace hex::plugin::builtin {
                                     // Draw cell content
                                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                     ImGui::PushItemWidth((CharacterSize * this->m_currDataVisualizer->getMaxCharsPerCell()).x);
-                                    this->drawCell(byteAddress, &bytes[x], this->m_currDataVisualizer->getBytesPerCell(), cellHovered);
+                                    this->drawCell(byteAddress, &bytes[x], bytesPerCell, cellHovered);
                                     ImGui::PopItemWidth();
                                     ImGui::PopStyleVar();
 
@@ -512,12 +563,12 @@ namespace hex::plugin::builtin {
                             ImGui::PopStyleVar();
 
                             // Scroll to the cursor if it's either at the top or bottom edge of the screen
-                            if (this->m_selectionChanged && this->m_selectionEnd != InvalidSelection && this->m_selectionStart != this->m_selectionEnd) {
-                                if (y == clipper.DisplayStart) {
-                                    if (i128(this->m_selectionEnd) <= (i64(clipper.DisplayStart + 2) * this->m_bytesPerRow))
+                            if (shouldScroll && this->m_selectionEnd != InvalidSelection && this->m_selectionStart != this->m_selectionEnd) {
+                                if (y == (clipper.DisplayStart + 2)) {
+                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 4) * this->m_bytesPerRow))
                                         ImGui::SetScrollHereY(0.1);
                                 } else if (y == (clipper.DisplayEnd - 1)) {
-                                    if (i128(this->m_selectionEnd) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow))
+                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow))
                                         ImGui::SetScrollHereY(0.95);
                                 }
                             }
@@ -534,7 +585,7 @@ namespace hex::plugin::builtin {
                                     for (u64 x = 0; x < this->m_bytesPerRow; x++) {
                                         ImGui::TableNextColumn();
 
-                                        const u64 byteAddress = y * this->m_bytesPerRow + x;
+                                        const u64 byteAddress = y * this->m_bytesPerRow + x + provider->getBaseAddress() + provider->getCurrentPageAddress();
 
                                         const auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
                                         const auto cellSize = CharacterSize;
@@ -544,7 +595,7 @@ namespace hex::plugin::builtin {
                                         // Handle selection
                                         {
                                             if (ImGui::IsWindowHovered() && cellHovered && ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + TableSize)) {
-                                                drawTooltip(byteAddress, &bytes[x], this->m_currDataVisualizer->getBytesPerCell());
+                                                drawTooltip(byteAddress, &bytes[x], bytesPerCell);
                                                 if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
                                                     this->setSelection(this->m_selectionStart, byteAddress);
                                                 }
@@ -557,7 +608,7 @@ namespace hex::plugin::builtin {
                                             }
                                         }
 
-                                        auto [foregroundColor, backgroundColor] = cellColors[x];
+                                        auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
@@ -566,7 +617,7 @@ namespace hex::plugin::builtin {
                                             // Draw background color
                                             drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
 
-                                            this->drawSelectionFrame(x, y, byteAddress, cellStartPos, cellSize);
+                                            this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
 
                                         if (x < validBytes) {
@@ -600,7 +651,7 @@ namespace hex::plugin::builtin {
                 ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, FooterSize.y - 1_scaled), windowEndPos - FooterSize + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
 
                 if (ImGui::BeginChild("##footer", FooterSize, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                    if (ImGui::BeginTable("##footer_table", 3)) {
+                    if (ImGui::BeginTable("##footer_table", 2)) {
                         ImGui::TableNextRow();
 
                         // Page slider
@@ -634,19 +685,11 @@ namespace hex::plugin::builtin {
                         // Loaded data size
                         ImGui::TableNextColumn();
                         {
-                            ImGui::TextFormatted("Base Address: 0x{0:08X}", provider->getBaseAddress());
-                        }
-
-                        // Loaded data size
-                        ImGui::TableNextColumn();
-                        {
                             ImGui::TextFormatted("Data size: 0x{0:08X} ({1})", provider->getActualSize(), hex::toByteString(provider->getActualSize()));
                         }
 
                         ImGui::EndTable();
                     }
-
-
 
                     ImGui::EndChild();
                 }
@@ -707,7 +750,9 @@ namespace hex::plugin::builtin {
 
     void ViewHexEditorNew::registerShortcuts() {
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
-            this->setSelection(InvalidSelection, InvalidSelection);
+            this->m_selectionStart = InvalidSelection;
+            this->m_selectionEnd = InvalidSelection;
+            EventManager::post<EventRegionSelected>(this->getSelection());
         });
 
         ShortcutManager::addShortcut(this, Keys::Up, [this] {
@@ -775,6 +820,10 @@ namespace hex::plugin::builtin {
     void ViewHexEditorNew::registerEvents() {
         EventManager::subscribe<RequestOpenFile>(this, [this](const auto &path) { this->openFile(path); });
 
+        EventManager::subscribe<EventRegionSelected>(this, [this](auto) {
+            this->m_shouldModifyValue = true;
+        });
+
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
             auto provider = ImHexApi::Provider::get();
             auto page     = provider->getPageOfAddress(region.getStartAddress());
@@ -787,6 +836,10 @@ namespace hex::plugin::builtin {
                 region.address -= provider->getBaseAddress() + provider->getCurrentPageAddress();
                 this->setSelection(region);
             }
+        });
+
+        EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
+            region = this->getSelection();
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {

@@ -231,7 +231,7 @@ namespace hex::plugin::builtin {
         });
 
 
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
             hex::unused(data, size);
 
             const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
@@ -245,30 +245,27 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         });
 
-        ImHexApi::HexEditor::addTooltipProvider([](u64 address, const u8 *data, size_t size) {
+        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
-            for (const auto &pattern : patterns) {
+            auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
+            for (auto &pattern : patterns) {
                 auto child = pattern->getPattern(address);
                 if (child != nullptr) {
-                    ImGui::PushStyleColor(ImGuiCol_PopupBg, ImAlphaBlendColors(ImGui::GetColorU32(ImGuiCol_PopupBg), pattern->getColor()));
-
                     ImGui::BeginTooltip();
-                    ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
-                    ImGui::SameLine(0, 10);
-                    ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern->getTypeName());
-                    ImGui::SameLine();
-                    ImGui::TextFormatted("{}", pattern->getDisplayName());
-                    ImGui::Separator();
-                    ImGui::TextFormatted("Address: 0x{:08X}", pattern->getOffset());
-                    ImGui::TextFormatted("Size: {} {}", pattern->getSize(), pattern->getSize() > 1 ? "Bytes" : "Byte");
-                    ImGui::TextFormatted("Type: {}", pattern->getTypeName());
-                    ImGui::TextFormatted("Value: {}", pattern->getFormattedValue());
-                    ImGui::TextFormatted("Endian: {}", pattern->getEndian() == std::endian::little ? "Little" : "Big");
-                    ImGui::EndTooltip();
 
-                    ImGui::PopStyleColor();
+                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        this->drawPatternTooltip(child);
+
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, pattern->getColor());
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, pattern->getColor());
+                        ImGui::EndTable();
+                        ImGui::PopStyleColor(2);
+                    }
+                    ImGui::EndTooltip();
                 }
             }
         });
@@ -635,6 +632,68 @@ namespace hex::plugin::builtin {
 
             ImGui::EndPopup();
         }
+    }
+
+
+    void ViewPatternEditor::drawPatternTooltip(pl::Pattern *pattern) {
+        ImGui::PushID(pattern);
+        {
+            ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
+            ImGui::SameLine(0, 10);
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern->getFormattedName());
+            ImGui::SameLine(0, 5);
+            ImGui::TextFormatted("{}", pattern->getDisplayName());
+            ImGui::SameLine();
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ImGui::SameLine();
+            ImGui::TextFormatted("{}", pattern->getFormattedValue());
+
+            if (ImGui::GetIO().KeyShift) {
+                ImGui::Indent();
+                if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("Type: ");
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("{}", pattern->getTypeName());
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("Address: ");
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("0x{:08X}", pattern->getOffset());
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("Size: ");
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("{} {}", pattern->getSize(), pattern->getSize() > 1 ? "Bytes" : "Byte");
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("Endian: ");
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("{}", pattern->getEndian() == std::endian::little ? "Little" : "Big");
+
+                    if (auto comment = pattern->getComment(); comment.has_value()) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::TextFormatted("Comment: ");
+                        ImGui::TableNextColumn();
+                        ImGui::TextWrapped("\"%s\"", pattern->getComment()->c_str());
+                    }
+
+                    ImGui::EndTable();
+                }
+                ImGui::Unindent();
+            }
+        }
+
+        ImGui::PopID();
     }
 
 

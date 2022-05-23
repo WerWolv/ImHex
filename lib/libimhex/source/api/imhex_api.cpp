@@ -147,28 +147,24 @@ namespace hex {
             EventManager::post<EventHighlightingChanged>();
         }
 
+        static u32 tooltipId = 0;
         u32 addTooltip(Region region, std::string value, color_t color) {
-            static u32 id = 0;
+            tooltipId++;
+            impl::getTooltips().insert({ tooltipId, { region, std::move(value), color } });
 
-            id++;
-
-            impl::getTooltips().insert({ id, { region, std::move(value), color } });
-
-            return id;
+            return tooltipId;
         }
 
         void removeTooltip(u32 id) {
             impl::getTooltips().erase(id);
         }
 
-        u32 addTooltipProvider(impl::TooltipFunction function) {
-            static u32 id = 0;
+        static u32 tooltipFunctionId;
+        u32 addTooltipProvider(TooltipFunction function) {
+            tooltipFunctionId++;
+            impl::getTooltipFunctions().insert({ tooltipFunctionId, std::move(function) });
 
-            id++;
-
-            impl::getTooltipFunctions().insert({ id, std::move(function) });
-
-            return id;
+            return tooltipFunctionId;
         }
 
         void removeTooltipProvider(u32 id) {

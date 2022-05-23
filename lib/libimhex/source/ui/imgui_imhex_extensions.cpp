@@ -591,4 +591,13 @@ namespace ImGui {
         return value_changed;
     }
 
+    void HideTooltip() {
+        char window_name[16];
+        ImFormatString(window_name, IM_ARRAYSIZE(window_name), "##Tooltip_%02d", GImGui->TooltipOverrideCount);
+        if (ImGuiWindow* window = FindWindowByName(window_name); window != nullptr) {
+            if (window->Active)
+                window->Hidden = true;
+        }
+    }
+
 }

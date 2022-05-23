@@ -177,7 +177,6 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions().clear();
         ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions().clear();
         ImHexApi::HexEditor::impl::getTooltips().clear();
-        ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());

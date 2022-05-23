@@ -17,6 +17,9 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+using ImGuiDataType = int;
+using ImGuiInputTextFlags = int;
+
 namespace pl {
     class Evaluator;
 }
@@ -390,12 +393,15 @@ namespace hex {
                 virtual ~DataVisualizer() = default;
 
                 virtual void draw(u64 address, const u8 *data, size_t size, bool upperCase) = 0;
-                virtual bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) = 0;
+                virtual bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) = 0;
 
                 [[nodiscard]] u16 getBytesPerCell() const { return this->m_bytesPerCell; }
                 [[nodiscard]] u16 getMaxCharsPerCell() const { return this->m_maxCharsPerCell; }
 
+            protected:
                 const static int TextInputFlags;
+
+                bool drawDefaultEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
             private:
                 u16 m_bytesPerCell;
                 u16 m_maxCharsPerCell;

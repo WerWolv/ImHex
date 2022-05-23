@@ -12,6 +12,8 @@
 
 #include <TextEditor.h>
 
+namespace pl { class Pattern; }
+
 namespace hex::plugin::builtin {
 
     class ViewPatternEditor : public View {
@@ -90,6 +92,8 @@ namespace hex::plugin::builtin {
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size);
         void drawVariableSettings(ImVec2 size);
+
+        void drawPatternTooltip(pl::Pattern *pattern);
 
         void loadPatternFile(const std::fs::path &path);
         void clearPatterns();

@@ -26,24 +26,23 @@ namespace hex::plugin::builtin {
 
         void drawCell(u64 address, u8 *data, size_t size, bool hovered);
         void drawPopup();
-        void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, const ImVec2 &cellPos, const ImVec2 &cellSize);
-
-        void handleMouseSelection();
+        void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize);
 
     public:
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
         void setSelection(hex::integral auto start, hex::integral auto end) {
             if (!ImHexApi::Provider::isValid()) return;
 
-            const size_t maxAddress = ImHexApi::Provider::get()->getSize() - 1;
+            const size_t maxAddress = ImHexApi::Provider::get()->getActualSize() - 1;
 
-            if (this->m_selectionStart != start || this->m_selectionEnd != end)
-                this->m_selectionChanged = true;
+            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
 
             this->m_selectionStart = std::clamp<decltype(start)>(start, 0, maxAddress);
             this->m_selectionEnd = std::clamp<decltype(end)>(end, 0, maxAddress);
 
-            EventManager::post<EventRegionSelected>(this->getSelection());
+            if (this->m_selectionChanged) {
+                EventManager::post<EventRegionSelected>(this->getSelection());
+            }
         }
 
         [[nodiscard]] Region getSelection() const {
@@ -102,6 +101,7 @@ namespace hex::plugin::builtin {
 
         std::optional<u64> m_editingAddress;
         bool m_shouldModifyValue = false;
+        bool m_enteredEditingMode = false;
         std::vector<u8> m_editingBytes;
 
         u8 m_highlightAlpha = 0x80;

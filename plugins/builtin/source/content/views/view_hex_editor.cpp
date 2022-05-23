@@ -936,7 +936,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count");
+                auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row");
 
                 if (columnCount.is_number())
                     this->m_memoryEditor.Cols = static_cast<int>(columnCount);

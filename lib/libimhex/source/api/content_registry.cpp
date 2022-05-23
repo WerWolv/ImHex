@@ -538,7 +538,36 @@ namespace hex {
 
     namespace ContentRegistry::HexEditor {
 
-        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysInsertMode | ImGuiInputTextFlags_EnterReturnsTrue;
+        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_EnterReturnsTrue;
+
+        bool DataVisualizer::drawDefaultEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
+            struct UserData {
+                u8 *data;
+                i32 maxChars;
+
+                bool editingDone;
+            };
+
+            UserData userData = {
+                .data = data,
+                .maxChars = this->getMaxCharsPerCell(),
+
+                .editingDone = false
+            };
+
+            ImGui::PushID(reinterpret_cast<void*>(address));
+            ImGui::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+                auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+
+                if (data->BufTextLen >= userData.maxChars)
+                    userData.editingDone = true;
+
+                return 0;
+            }, &userData);
+            ImGui::PopID();
+
+            return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter);
+        }
 
         void impl::addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {
             getVisualizers().insert({ unlocalizedName, visualizer });

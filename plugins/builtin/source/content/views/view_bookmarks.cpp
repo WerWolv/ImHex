@@ -23,10 +23,7 @@ namespace hex::plugin::builtin {
                 name,
                 std::move(comment),
                 color,
-                false,
-
-                ImHexApi::HexEditor::addBackgroundHighlight(region, color),
-                ImHexApi::HexEditor::addTooltip(region, name, color)
+                false
             });
 
             ProjectFile::markDirty();
@@ -42,6 +39,75 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventFileUnloaded>(this, [this] {
             this->m_bookmarks.clear();
+        });
+
+
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+            hex::unused(data);
+
+            for (const auto &bookmark : this->m_bookmarks) {
+                if (Region { address, size }.overlaps(bookmark.region))
+                    return bookmark.color;
+            }
+
+            return std::nullopt;
+        });
+
+        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
+            hex::unused(data);
+            for (const auto &bookmark : this->m_bookmarks) {
+                if (!Region { address, size }.overlaps(bookmark.region))
+                    continue;
+
+                ImGui::BeginTooltip();
+
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    ImGui::PushID(&bookmark);
+                    {
+                        ImGui::ColorButton("##color", ImColor(bookmark.color));
+                        ImGui::SameLine(0, 10);
+                        ImGui::TextUnformatted(bookmark.name.c_str());
+
+                        if (ImGui::GetIO().KeyShift) {
+                            ImGui::Indent();
+                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormatted("Region: ");
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+
+                                if (!bookmark.comment.empty()) {
+                                    ImGui::TableNextRow();
+                                    ImGui::TableNextColumn();
+                                    ImGui::TextFormatted("Comment: ");
+                                    ImGui::TableNextColumn();
+                                    ImGui::TextFormattedWrapped("\"{}\"", bookmark.comment);
+                                }
+
+                                ImGui::EndTable();
+                            }
+                            ImGui::Unindent();
+                        }
+                    }
+
+                    ImGui::PopID();
+
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, bookmark.color);
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, bookmark.color);
+                    ImGui::EndTable();
+                    ImGui::PopStyleColor(2);
+                }
+
+                ImGui::EndTooltip();
+            }
         });
     }
 
@@ -65,7 +131,7 @@ namespace hex::plugin::builtin {
                 u32 id                = 1;
                 auto bookmarkToRemove = this->m_bookmarks.end();
                 for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
-                    auto &[region, name, comment, color, locked, highlightId, tooltipId] = *iter;
+                    auto &[region, name, comment, color, locked] = *iter;
 
                     auto headerColor = ImColor(color);
                     auto hoverColor  = ImColor(color);
@@ -171,8 +237,6 @@ namespace hex::plugin::builtin {
                 }
 
                 if (bookmarkToRemove != this->m_bookmarks.end()) {
-                    ImHexApi::HexEditor::removeBackgroundHighlight(bookmarkToRemove->highlightId);
-                    ImHexApi::HexEditor::removeTooltip(bookmarkToRemove->tooltipId);
                     this->m_bookmarks.erase(bookmarkToRemove);
                     ProjectFile::markDirty();
                 }

@@ -287,6 +287,13 @@ namespace hex {
             return *value;
     }
 
+    template<hex::integral T>
+    T alignTo(T value, T alignment) {
+        T remainder = value % alignment;
+
+        return remainder != 0 ? value + (alignment - remainder) : value;
+    }
+
     bool isProcessElevated();
 
     std::optional<std::string> getEnvironmentVariable(const std::string &env);

@@ -36,18 +36,11 @@ namespace hex::plugin::builtin {
                 ImGui::TextFormatted("{: {}s}", CharCount);
         }
 
-        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address);
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
+            hex::unused(address, startedEditing);
 
             if (size == ByteCount) {
-                return ImGui::InputScalar(
-                           "##hex_input",
-                           getImGuiDataType<T>(),
-                           data,
-                           nullptr,
-                           nullptr,
-                           getFormatString(upperCase),
-                           DataVisualizer::TextInputFlags | ImGuiInputTextFlags_CharsHexadecimal);
+                return drawDefaultEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
             }
             else
                 return false;
@@ -86,8 +79,8 @@ namespace hex::plugin::builtin {
                 ImGui::TextFormatted("{: {}s}", CharCount);
         }
 
-        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address, upperCase);
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
+            hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
                 return ImGui::InputScalar(
@@ -128,8 +121,8 @@ namespace hex::plugin::builtin {
                 ImGui::TextFormatted("{: {}s}", CharCount);
         }
 
-        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
-            hex::unused(address, upperCase);
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
+            hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
                 return ImGui::InputScalar(
@@ -168,16 +161,36 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase);
 
             if (size == 4)
-                ImGui::ColorButton("##color", ImColor(data[0], data[1], data[2], data[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::ColorButton("##color", ImColor(data[0], data[1], data[2], data[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
             else
-                ImGui::ColorButton("##color", ImColor(0, 0, 0, 0xFF), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+                ImGui::ColorButton("##color", ImColor(0, 0, 0, 0xFF), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
         }
 
-        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase) override {
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
             hex::unused(address, data, size, upperCase);
 
-            return true;
+            if (startedEditing) {
+                this->m_currColor = { float(data[0]) / 0xFF, float(data[1]) / 0xFF, float(data[2]) / 0xFF, float(data[3]) / 0xFF };
+                ImGui::OpenPopup("##color_popup");
+            }
+
+            ImGui::ColorButton("##color", ImColor(this->m_currColor[0], this->m_currColor[1], this->m_currColor[2], this->m_currColor[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+
+            if (ImGui::BeginPopup("##color_popup")) {
+                if (ImGui::ColorPicker4("##picker", this->m_currColor.data(), ImGuiColorEditFlags_AlphaBar)) {
+                    for (u8 i = 0; i < 4; i++)
+                        data[i] = this->m_currColor[i] * 0xFF;
+                }
+                ImGui::EndPopup();
+            } else {
+                return true;
+            }
+
+            return false;
         }
+
+        std::array<float, 4> m_currColor;
+
     };
 
     void registerDataVisualizers() {
