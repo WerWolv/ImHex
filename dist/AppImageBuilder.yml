@@ -98,8 +98,8 @@ AppDir:
     - /lib/x86_64-linux-gnu/libgraphite2.so.3
     - /lib/x86_64-linux-gnu/libgtk-3.so.0
     - /lib/x86_64-linux-gnu/libharfbuzz.so.0
-    - /lib/x86_64-linux-gnu/libicudata.so.67
-    - /lib/x86_64-linux-gnu/libicuuc.so.67
+    - /lib/x86_64-linux-gnu/libicudata.so.66
+    - /lib/x86_64-linux-gnu/libicuuc.so.66
     - /lib/x86_64-linux-gnu/libjpeg.so.8
     - /lib/x86_64-linux-gnu/liblz4.so.1
     - /lib/x86_64-linux-gnu/libmagic.so.1
