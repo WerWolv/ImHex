@@ -3,7 +3,6 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/project_file_handler.hpp>
-#include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>
 #include "math_evaluator.hpp"
@@ -177,14 +176,22 @@ namespace hex::plugin::builtin {
 
             reader.seek(this->m_lastFind.value_or(0x00));
 
+            static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
+                #if defined(OS_MACOS)
+                    return std::search(haystackBegin, haystackEnd, needleBegin, needleEnd);
+                #else
+                    return std::search(haystackBegin, haystackEnd, std::boyer_moore_horspool_searcher(needleBegin, needleEnd));
+                #endif
+            };
+
             if (!backwards) {
-                auto occurrence = std::search(reader.begin(), reader.end(), std::boyer_moore_horspool_searcher(sequence.begin(), sequence.end()));
+                auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
                 if (occurrence != reader.end()) {
                     this->m_lastFind = occurrence.getAddress();
                     return Region { *this->m_lastFind, *this->m_lastFind + sequence.size() - 1 };
                 }
             } else {
-                auto occurrence = std::search(reader.rbegin(), reader.rend(), std::boyer_moore_horspool_searcher(sequence.begin(), sequence.end()));
+                auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.begin(), sequence.end());
                 if (occurrence != reader.rend()) {
                     this->m_lastFind = occurrence.getAddress();
                     return Region { *this->m_lastFind, *this->m_lastFind + sequence.size() - 1 };
