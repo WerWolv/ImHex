@@ -49,7 +49,6 @@ AppDir:
     - libpcre3:amd64
     - libselinux1:amd64
     - libtinfo6:amd64
-    - yaru-theme-icon
   files:
     include:
     - /lib/x86_64-linux-gnu/libGLX.so.0
