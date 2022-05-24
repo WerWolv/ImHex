@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
 
     public:
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
-        void setSelection(hex::integral auto start, hex::integral auto end) {
+        void setSelection(i128 start, i128 end) {
             if (!ImHexApi::Provider::isValid()) return;
 
             const size_t maxAddress = ImHexApi::Provider::get()->getActualSize() - 1;

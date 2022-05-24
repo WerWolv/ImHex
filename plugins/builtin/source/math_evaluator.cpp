@@ -460,4 +460,7 @@ namespace hex {
         }
     }
 
+    template class MathEvaluator<long double>;
+    template class MathEvaluator<i128>;
+
 }

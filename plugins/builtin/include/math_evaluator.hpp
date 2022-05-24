@@ -112,7 +112,7 @@ namespace hex {
         std::optional<std::string> m_lastError;
     };
 
-    template class MathEvaluator<long double>;
-    template class MathEvaluator<i128>;
+    extern template class MathEvaluator<long double>;
+    extern template class MathEvaluator<i128>;
 
 }

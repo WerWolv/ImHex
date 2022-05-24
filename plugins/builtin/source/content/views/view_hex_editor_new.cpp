@@ -247,18 +247,18 @@ namespace hex::plugin::builtin {
 
     class PopupResize : public ViewHexEditorNew::Popup {
     public:
-        explicit PopupResize(size_t currSize) : m_size(currSize) {}
+        explicit PopupResize(u64 currSize) : m_size(currSize) {}
 
         void draw(ViewHexEditorNew *editor) override {
             ImGui::TextUnformatted("Resize");
 
             if (ImGui::InputHexadecimal("##resize", &this->m_size, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                this->resize(this->m_size);
+                this->resize(static_cast<size_t>(this->m_size));
             }
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
-                    this->resize(this->m_size);
+                    this->resize(static_cast<size_t>(this->m_size));
                     editor->closePopup();
                 },
                 [&]{
@@ -273,7 +273,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        size_t m_size;
+        u64 m_size;
     };
 
     class PopupInsert : public ViewHexEditorNew::Popup {
@@ -923,7 +923,7 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, CTRL + Keys::A, [this] {
             if (ImHexApi::Provider::isValid())
-                this->setSelection(u64(0), ImHexApi::Provider::get()->getActualSize());
+                this->setSelection(size_t(0), ImHexApi::Provider::get()->getActualSize());
         });
 
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
