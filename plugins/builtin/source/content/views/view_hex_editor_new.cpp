@@ -1112,6 +1112,7 @@ namespace hex::plugin::builtin {
                 provider->setCurrentPage(page.value());
                 region.address -= provider->getBaseAddress() + provider->getCurrentPageAddress();
                 this->setSelection(region);
+                this->jumpToSelection();
             }
         });
 
