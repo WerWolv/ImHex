@@ -414,6 +414,36 @@ namespace hex::plugin::builtin {
         return std::nullopt;
     }
 
+    struct CustomEncodingData {
+        std::string displayValue;
+        size_t advance;
+        ImColor color;
+    };
+
+    static CustomEncodingData queryCustomEncodingData(const EncodingFile &encodingFile, u64 address) {
+        const auto longestSequence = encodingFile.getLongestSequence();
+
+        if (longestSequence == 0)
+            return { ".", 1, 0xFFFF8000 };
+
+        auto provider = ImHexApi::Provider::get();
+        size_t size   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
+
+        std::vector<u8> buffer(size);
+        provider->read(address + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), size);
+
+        auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
+
+        ImColor color;
+        if (decoded.length() == 1 && std::isalnum(decoded[0])) color = 0xFFFF8000;
+        else if (decoded.length() == 1 && advance == 1) color = 0xFF0000FF;
+        else if (decoded.length() > 1 && advance == 1) color = 0xFF00FFFF;
+        else if (advance > 1) color = 0xFFFFFFFF;
+        else color = 0xFFFF8000;
+
+        return { std::string(decoded), advance, color };
+    }
+
     static void drawTooltip(u64 address, const u8 *data, size_t size) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled(ImVec2(5, 5)));
 
@@ -528,7 +558,7 @@ namespace hex::plugin::builtin {
             this->drawPopup();
 
             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
-            if (ImGui::BeginTable("##hex", 1 + 1 + byteColumnCount + 1 + 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, TableSize)) {
+            if (ImGui::BeginTable("##hex", 2 + byteColumnCount + 2 + 2 , ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, TableSize)) {
                 View::discardNavigationRequests();
                 ImGui::TableSetupScrollFreeze(0, 2);
 
@@ -543,10 +573,14 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6);
                 }
-                ImGui::TableSetupColumn("");
 
-                // ASCII columns
+                // ASCII column
+                ImGui::TableSetupColumn("");
                 ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_bytesPerRow);
+
+                // Custom encoding column
+                ImGui::TableSetupColumn("");
+                ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
 
                 ImGui::TableNextRow();
                 for (i32 i = 0; i < ImGui::TableGetColumnCount(); i++) {
@@ -623,30 +657,33 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
 
                                 if (x < validBytes) {
-                                    const auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
-                                    const auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
+                                    auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+                                    auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
 
                                     auto [foregroundColor, backgroundColor] = cellColors[x];
 
-                                    auto adjustedCellSize = cellSize;
-                                    if (isColumnSeparatorColumn(x + 1, columnCount) && selectionMax != x + y * columnCount)
-                                        adjustedCellSize.x += SeparatorColumWidth + 1;
+                                    if (isColumnSeparatorColumn(x + 1, columnCount) && selectionMax != x + y * columnCount) {
+                                        cellSize.x += SeparatorColumWidth + 1;
+
+                                        if (y == 0)
+                                            cellStartPos.y -= 1_scaled;
+                                    }
                                     if (y == clipper.DisplayStart)
-                                        adjustedCellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
+                                        cellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
 
                                     // Draw highlights and selection
                                     if (backgroundColor.has_value()) {
                                         auto drawList = ImGui::GetWindowDrawList();
 
                                         // Draw background color
-                                        drawList->AddRectFilled(cellStartPos, cellStartPos + adjustedCellSize, backgroundColor.value());
+                                        drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
 
                                         // Draw frame around mouse selection
-                                        this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, adjustedCellSize);
+                                        this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, cellSize);
                                     }
 
 
-                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + adjustedCellSize, false);
+                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
 
                                     // Handle selection
                                     {
@@ -756,6 +793,71 @@ namespace hex::plugin::builtin {
                                     ImGui::EndTable();
                                 }
                                 ImGui::PopStyleVar();
+                            }
+
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+
+                            // Draw Custom encoding column
+                            if (this->m_currCustomEncoding.has_value()) {
+                                std::vector<std::pair<u64, CustomEncodingData>> encodingData;
+                                u32 offset = 0;
+                                do {
+                                    const u64 address = y * this->m_bytesPerRow + offset + provider->getBaseAddress() + provider->getCurrentPageAddress();
+
+                                    auto result = queryCustomEncodingData(*this->m_currCustomEncoding, address);
+                                    offset += std::max<size_t>(1, result.advance);
+
+                                    encodingData.emplace_back(address, result);
+                                } while (offset < this->m_bytesPerRow);
+
+                                ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
+                                if (ImGui::BeginTable("##encoding_cell", encodingData.size(), ImGuiTableFlags_SizingFixedFit)) {
+                                    ImGui::TableNextRow();
+
+                                    for (const auto &[address, data] : encodingData) {
+                                        ImGui::TableNextColumn();
+
+                                        const auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+                                        const auto cellSize = CharacterSize * data.advance;
+                                        const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
+
+                                        auto [foregroundColor, backgroundColor] = cellColors[address % this->m_bytesPerRow];
+
+                                        // Draw highlights and selection
+                                        if (backgroundColor.has_value()) {
+                                            auto drawList = ImGui::GetWindowDrawList();
+
+                                            // Draw background color
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+
+                                            this->drawSelectionFrame(address % this->m_bytesPerRow, y, address, 1, cellStartPos, cellSize);
+                                        }
+
+                                        ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
+
+                                        // Handle selection
+                                        {
+                                            if (ImGui::IsWindowHovered() && cellHovered && ImGui::IsMouseHoveringRect(ImGui::GetWindowPos(), ImGui::GetWindowPos() + TableSize)) {
+                                                auto endAddress = address + data.advance - 1;
+
+                                                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+                                                    this->setSelection(this->m_selectionStart, endAddress);
+                                                }
+                                                else if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                                                    if (ImGui::GetIO().KeyShift)
+                                                        this->setSelection(this->m_selectionStart, endAddress);
+                                                    else
+                                                        this->setSelection(address, endAddress);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    ImGui::EndTable();
+                                }
+                                ImGui::PopStyleVar();
+
                             }
                         }
                     }

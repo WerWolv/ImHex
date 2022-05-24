@@ -40,9 +40,7 @@ namespace hex {
 
                 if (delimiterPos == std::string::npos)
                     continue;
-                if (delimiterPos >= from.length())
-                    continue;
-                if (delimiterPos >= to.length())
+                if (delimiterPos >= line.length())
                     continue;
 
                 from = line.substr(0, delimiterPos);
