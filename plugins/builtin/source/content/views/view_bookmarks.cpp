@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
             hex::unused(data);
 
             for (const auto &bookmark : this->m_bookmarks) {
-                if (Region { address, size }.overlaps(bookmark.region))
+                if (Region { address, size }.isWithin(bookmark.region))
                     return bookmark.color;
             }
 
@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data);
             for (const auto &bookmark : this->m_bookmarks) {
-                if (!Region { address, size }.overlaps(bookmark.region))
+                if (!Region { address, size }.isWithin(bookmark.region))
                     continue;
 
                 ImGui::BeginTooltip();
