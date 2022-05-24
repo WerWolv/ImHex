@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
+#include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/api/localization.hpp>
@@ -14,6 +15,28 @@
 #include <atomic>
 
 namespace hex::plugin::builtin {
+
+    static void drawGlobalPopups() {
+
+        // "Are you sure you want to exit?" Popup
+        if (ImGui::BeginPopupModal("hex.builtin.view.hex_editor.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::NewLine();
+            ImGui::TextUnformatted("hex.builtin.view.hex_editor.exit_application.desc"_lang);
+            ImGui::NewLine();
+
+            View::confirmButtons(
+                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] { ImHexApi::Common::closeImHex(true); }, [] { ImGui::CloseCurrentPopup(); });
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+    }
+
+    void addGlobalUIItems() {
+        EventManager::subscribe<EventFrameEnd>(drawGlobalPopups);
+    }
 
     void addFooterItems() {
 

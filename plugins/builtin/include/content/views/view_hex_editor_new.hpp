@@ -4,6 +4,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/concepts.hpp>
+#include <hex/helpers/encoding_file.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -23,6 +24,7 @@ namespace hex::plugin::builtin {
         void openFile(const std::fs::path &path);
         void registerShortcuts();
         void registerEvents();
+        void registerMenuItems();
 
         void drawCell(u64 address, u8 *data, size_t size, bool hovered);
         void drawPopup();
@@ -88,6 +90,9 @@ namespace hex::plugin::builtin {
         }
 
     private:
+        void drawEditMenu();
+
+    private:
         u16 m_bytesPerRow = 16;
 
         ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
@@ -111,6 +116,8 @@ namespace hex::plugin::builtin {
 
         bool m_shouldOpenPopup = false;
         std::unique_ptr<Popup> m_currPopup;
+
+        std::optional<EncodingFile> m_currCustomEncoding;
     };
 
 }

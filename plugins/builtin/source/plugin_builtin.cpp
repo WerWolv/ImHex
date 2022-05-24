@@ -20,6 +20,7 @@ namespace hex::plugin::builtin {
 
     void addFooterItems();
     void addToolbarItems();
+    void addGlobalUIItems();
 
     void registerLanguageEnUS();
     void registerLanguageDeDE();
@@ -55,6 +56,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     addFooterItems();
     addToolbarItems();
+    addGlobalUIItems();
+
     registerLayouts();
     registerMainMenuEntries();
 }
