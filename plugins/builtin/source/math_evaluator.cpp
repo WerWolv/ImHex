@@ -326,10 +326,20 @@ namespace hex {
                         result = leftOperand / rightOperand;
                         break;
                     case Operator::Modulus:
-                        result = std::fmod(leftOperand, rightOperand);
+                        if constexpr (std::floating_point<T>)
+                            result = std::fmod(leftOperand, rightOperand);
+                        else
+                            result = leftOperand % rightOperand;
                         break;
                     case Operator::Exponentiation:
-                        result = std::pow(leftOperand, rightOperand);
+                        if constexpr (std::floating_point<T>)
+                            result = std::pow(leftOperand, rightOperand);
+                        else
+                            #if defined(OS_MACOS)
+                                result = std::pow<long double>(leftOperand, rightOperand)
+                            #else
+                                result = std::pow<i128>(leftOperand, rightOperand)
+                            #endif
                         break;
                     case Operator::Combine:
                         result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
