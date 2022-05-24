@@ -1,5 +1,6 @@
 #include "math_evaluator.hpp"
 
+#include <hex/helpers/utils.hpp>
 #include <hex/helpers/concepts.hpp>
 
 #include <string>
@@ -335,11 +336,7 @@ namespace hex {
                         if constexpr (std::floating_point<T>)
                             result = std::pow(leftOperand, rightOperand);
                         else
-                            #if defined(OS_MACOS)
-                                result = std::pow<long double>(leftOperand, rightOperand);
-                            #else
-                                result = std::pow<i128>(leftOperand, rightOperand);
-                            #endif
+                            result = hex::powi(leftOperand, rightOperand);
                         break;
                     case Operator::Combine:
                         result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
