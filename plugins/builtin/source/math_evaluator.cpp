@@ -336,9 +336,9 @@ namespace hex {
                             result = std::pow(leftOperand, rightOperand);
                         else
                             #if defined(OS_MACOS)
-                                result = std::pow<long double>(leftOperand, rightOperand)
+                                result = std::pow<long double>(leftOperand, rightOperand);
                             #else
-                                result = std::pow<i128>(leftOperand, rightOperand)
+                                result = std::pow<i128>(leftOperand, rightOperand);
                             #endif
                         break;
                     case Operator::Combine:
