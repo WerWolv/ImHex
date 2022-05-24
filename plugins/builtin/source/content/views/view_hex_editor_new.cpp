@@ -284,15 +284,15 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("Insert Bytes");
 
             if (ImGui::InputHexadecimal("Address", &this->m_address, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                this->insert(this->m_address, this->m_size);
+                this->insert(this->m_address, static_cast<size_t>(this->m_size));
             }
             if (ImGui::InputHexadecimal("Size", &this->m_size, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                this->insert(this->m_address, this->m_size);
+                this->insert(this->m_address, static_cast<size_t>(this->m_size));
             }
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
-                    this->insert(this->m_address, this->m_size);
+                    this->insert(this->m_address, static_cast<size_t>(this->m_size));
                     editor->closePopup();
                 },
                 [&]{
@@ -308,7 +308,7 @@ namespace hex::plugin::builtin {
 
     private:
         u64 m_address;
-        size_t m_size;
+        u64 m_size;
     };
 
     ViewHexEditorNew::ViewHexEditorNew() : View("Hex Editor New") {
