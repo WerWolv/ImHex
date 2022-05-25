@@ -664,9 +664,6 @@ namespace hex::plugin::builtin {
 
                                     if (isColumnSeparatorColumn(x + 1, columnCount) && selectionMax != x + y * columnCount) {
                                         cellSize.x += SeparatorColumWidth + 1;
-
-                                        if (y == 0)
-                                            cellStartPos.y -= 1_scaled;
                                     }
                                     if (y == clipper.DisplayStart)
                                         cellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
@@ -1093,6 +1090,37 @@ namespace hex::plugin::builtin {
             if (!ImHexApi::Provider::isValid()) return;
 
             this->openPopup<PopupFind>();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::C, [this] {
+            const auto selection = this->getSelection();
+            copyBytes(selection);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C, [this] {
+            const auto selection = this->getSelection();
+            copyString(selection);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::V, [this] {
+            const auto selection = this->getSelection();
+            pasteBytes(selection);
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
+            fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
+                EventManager::post<RequestOpenFile>(path);
+            });
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Z, [] {
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->undo();
+        });
+
+        ShortcutManager::addShortcut(this, CTRL + Keys::Y, [] {
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->redo();
         });
     }
 
