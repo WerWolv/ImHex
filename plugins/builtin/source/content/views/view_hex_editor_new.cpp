@@ -726,7 +726,7 @@ namespace hex::plugin::builtin {
 
                             // Scroll to the cursor if it's either at the top or bottom edge of the screen
                             if (shouldScroll && this->m_selectionEnd != InvalidSelection && this->m_selectionStart != this->m_selectionEnd) {
-                                if (y == (clipper.DisplayStart + 2)) {
+                                if (y == clipper.DisplayStart) {
                                     if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 4) * this->m_bytesPerRow))
                                         ImGui::SetScrollHereY(0.1);
                                 } else if (y == (clipper.DisplayEnd - 1)) {

@@ -61,6 +61,59 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class DataVisualizerHexii : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerHexii() : DataVisualizer(ByteCount, CharCount) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address);
+
+            if (size == ByteCount) {
+                const u8 c = data[0];
+                switch (c) {
+                    case 0x00:
+                        ImGui::Text("  ");
+                        break;
+                    case 0xFF:
+                        ImGui::TextDisabled("##");
+                        break;
+                    case ' ' ... '~':
+                        ImGui::Text(".%c", c);
+                        break;
+                    default:
+                        ImGui::Text(getFormatString(upperCase), c);
+                        break;
+                }
+            }
+            else
+                ImGui::TextFormatted("{: {}s}", CharCount);
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
+            hex::unused(address, startedEditing);
+
+            if (size == ByteCount) {
+                return drawDefaultEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsHexadecimal);
+            }
+            else
+                return false;
+        }
+
+    private:
+        constexpr static inline auto ByteCount = 1;
+        constexpr static inline auto CharCount = ByteCount * 2;
+
+        const static inline auto FormattingUpperCase = hex::format("%0{}X", CharCount);
+        const static inline auto FormattingLowerCase = hex::format("%0{}x", CharCount);
+
+        const char *getFormatString(bool upperCase) {
+            if (upperCase)
+                return FormattingUpperCase.c_str();
+            else
+                return FormattingLowerCase.c_str();
+        }
+    };
+
     template<hex::integral T>
     class DataVisualizerDecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
@@ -213,6 +266,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<double>>("hex.builtin.visualizer.floating_point.64bit");
 
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerRGBA8>("hex.builtin.visualizer.rgba8");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexii>("hex.builtin.visualizer.hexii");
     }
 
 }

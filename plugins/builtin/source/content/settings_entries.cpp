@@ -170,17 +170,6 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii", 0, [](auto name, nlohmann::json &setting) {
-            static bool hexii = static_cast<int>(setting);
-
-            if (ImGui::Checkbox(name.data(), &hexii)) {
-                setting = static_cast<int>(hexii);
-                return true;
-            }
-
-            return false;
-        });
-
         ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1, [](auto name, nlohmann::json &setting) {
             static bool ascii = static_cast<int>(setting);
 
