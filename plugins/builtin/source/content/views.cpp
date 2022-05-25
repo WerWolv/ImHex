@@ -1,5 +1,4 @@
-//#include "content/views/view_hex_editor.hpp"
-#include "content/views/view_hex_editor_new.hpp"
+#include "content/views/view_hex_editor.hpp"
 #include "content/views/view_pattern_editor.hpp"
 #include "content/views/view_pattern_data.hpp"
 #include "content/views/view_hashes.hpp"
@@ -23,8 +22,7 @@
 namespace hex::plugin::builtin {
 
     void registerViews() {
-        //ContentRegistry::Views::add<ViewHexEditor>();
-        ContentRegistry::Views::add<ViewHexEditorNew>();
+        ContentRegistry::Views::add<ViewHexEditor>();
         ContentRegistry::Views::add<ViewPatternEditor>();
         ContentRegistry::Views::add<ViewPatternData>();
         ContentRegistry::Views::add<ViewDataInspector>();
