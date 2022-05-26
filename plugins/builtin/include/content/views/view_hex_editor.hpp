@@ -60,6 +60,10 @@ namespace hex::plugin::builtin {
         }
 
         void jumpToSelection() {
+            this->m_shouldJumpToSelection = true;
+        }
+
+        void scrollToSelection() {
             this->m_shouldScrollToSelection = true;
         }
 
@@ -97,7 +101,9 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
 
+        bool m_shouldJumpToSelection = false;
         bool m_shouldScrollToSelection = false;
+
         bool m_selectionChanged = false;
         u64 m_selectionStart = InvalidSelection;
         u64 m_selectionEnd = InvalidSelection;
