@@ -19,9 +19,9 @@ namespace hex::plugin::builtin {
     static void drawGlobalPopups() {
 
         // "Are you sure you want to exit?" Popup
-        if (ImGui::BeginPopupModal("hex.builtin.view.hex_editor.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (ImGui::BeginPopupModal("hex.builtin.popup.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.exit_application.desc"_lang);
+            ImGui::TextUnformatted("hex.builtin.popup.exit_application.desc"_lang);
             ImGui::NewLine();
 
             View::confirmButtons(
@@ -141,13 +141,13 @@ namespace hex::plugin::builtin {
             // Create bookmark
             ImGui::Disabled([] {
                 if (ImGui::ToolBarButton(ICON_VS_BOOKMARK, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
-                    Region region = { };
-                    EventManager::post<QuerySelection>(region);
+                    auto region = ImHexApi::HexEditor::getSelection();
 
-                    ImHexApi::Bookmarks::add(region.address, region.size, {}, {});
+                    if (region.has_value())
+                        ImHexApi::Bookmarks::add(region->address, region->size, {}, {});
                 }
             },
-                !providerValid || !provider->isReadable() || ImHexApi::HexEditor::getSelection().size == 0);
+                !providerValid || !provider->isReadable() || ImHexApi::HexEditor::isSelectionValid());
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);

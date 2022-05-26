@@ -417,15 +417,8 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.open_file"_lang, "CTRL + O")) {
-
-                fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                    EventManager::post<RequestOpenFile>(path);
-                });
-            }
-
-            if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
+            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
                 // Copy to avoid changing list while iteration
                 std::list<std::fs::path> recentFilePaths = s_recentFilePaths;
                 for (auto &path : recentFilePaths) {
@@ -436,23 +429,12 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::Separator();
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.clear_recent"_lang)) {
+                if (ImGui::MenuItem("hex.builtin.menu.file.clear_recent"_lang)) {
                     s_recentFilePaths.clear();
                     ContentRegistry::Settings::write(
                         "hex.builtin.setting.imhex",
                         "hex.builtin.setting.imhex.recent_files",
                         std::vector<std::string> {});
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.file.open_other"_lang)) {
-
-                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
-                    if (ImGui::MenuItem(LangEntry(unlocalizedProviderName))) {
-                        EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);
-                    }
                 }
 
                 ImGui::EndMenu();

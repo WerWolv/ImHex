@@ -171,13 +171,15 @@ namespace hex {
             impl::getTooltipFunctions().erase(id);
         }
 
-        Region getSelection() {
-            static Region selectedRegion;
-            EventManager::subscribe<EventRegionSelected>([](const Region &region) {
-                selectedRegion = region;
-            });
+        bool isSelectionValid() {
+            return getSelection().has_value();
+        }
 
-            return selectedRegion;
+        std::optional<Region> getSelection() {
+            std::optional<Region> selection;
+            EventManager::post<QuerySelection>(selection);
+
+            return selection;
         }
 
         void setSelection(const Region &region) {

@@ -94,7 +94,8 @@ namespace hex {
             u32 addForegroundHighlightingProvider(const impl::HighlightingFunction &function);
             void removeForegroundHighlightingProvider(u32 id);
 
-            Region getSelection();
+            bool isSelectionValid();
+            std::optional<Region> getSelection();
             void setSelection(const Region &region);
             void setSelection(u64 address, size_t size);
 

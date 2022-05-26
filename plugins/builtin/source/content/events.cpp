@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
         if (auto fileProvider = dynamic_cast<prv::FileProvider *>(provider)) {
             fileProvider->setPath(path);
             if (!fileProvider->open()) {
-                View::showErrorPopup("hex.builtin.view.hex_editor.error.open"_lang);
+                View::showErrorPopup("hex.builtin.popup.error.open"_lang);
                 ImHexApi::Provider::remove(provider);
 
                 return;
@@ -26,11 +26,11 @@ namespace hex::plugin::builtin {
         }
 
         if (!provider->isWritable()) {
-            View::showErrorPopup("hex.builtin.view.hex_editor.error.read_only"_lang);
+            View::showErrorPopup("hex.builtin.popup.error.read_only"_lang);
         }
 
         if (!provider->isAvailable()) {
-            View::showErrorPopup("hex.builtin.view.hex_editor.error.open"_lang);
+            View::showErrorPopup("hex.builtin.popup.error.open"_lang);
             ImHexApi::Provider::remove(provider);
 
             return;
@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventWindowClosing>([](GLFWwindow *window) {
             if (ProjectFile::hasUnsavedChanges()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.view.hex_editor.exit_application.title"_lang); });
+                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.popup.exit_application.title"_lang); });
             }
         });
 
@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
                     fs::File file(path, fs::File::Mode::Create);
 
                     if (!file.isValid()) {
-                        View::showErrorPopup("hex.builtin.view.hex_editor.error.create"_lang);
+                        View::showErrorPopup("hex.builtin.popup.error.create"_lang);
                         return;
                     }
 
