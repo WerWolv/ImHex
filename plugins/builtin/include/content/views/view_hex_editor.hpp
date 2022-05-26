@@ -94,7 +94,10 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        void drawEditMenu();
+        void drawEditor(const ImVec2 &size);
+        void drawFooter(const ImVec2 &size);
+
+        void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
 
     private:
         u16 m_bytesPerRow = 16;
