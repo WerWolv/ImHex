@@ -664,15 +664,15 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.setting.interface.wiki_explain_language", "Wikipedia Language" },
                     { "hex.builtin.setting.interface.fps", "FPS制限" },
                     { "hex.builtin.setting.interface.fps.unlocked", "無制限" },
-                    { "hex.builtin.setting.interface.highlight_alpha", "ハイライトの不透明度" },
                 { "hex.builtin.setting.hex_editor", "Hexエディタ" },
-                    { "hex.builtin.setting.hex_editor.column_count", "バイトのカラム数" },
-                    { "hex.builtin.setting.hex_editor.hexii", "Bytesの代わりにHexIIを表示する" },
+                    //{ "hex.builtin.setting.hex_editor.highlight_color", "Selection highlight color" },
+                    //{ "hex.builtin.setting.hex_editor.bytes_per_row", "Bytes per row" },
                     { "hex.builtin.setting.hex_editor.ascii", "ASCIIカラムを表示" },
                     { "hex.builtin.setting.hex_editor.advanced_decoding", "高度なデコードカラムを表示" },
                     { "hex.builtin.setting.hex_editor.grey_zeros", "ゼロをグレーアウト" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "16進数を大文字表記" },
-                    { "hex.builtin.setting.hex_editor.extra_info", "追加情報を表示" },
+                    //{ "hex.builtin.setting.hex_editor.visualizer", "Data visualizer" },
+
                 //{ "hex.builtin.setting.folders", "Folders" },
                     //{ "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
                     // { "hex.builtin.setting.folders.add_folder", "Add new folder" },
@@ -699,7 +699,24 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.sector_size", "セクタサイズ" },
                     { "hex.builtin.provider.disk.reload", "リロード" },
 
-                { "hex.builtin.layouts.default", "標準" }
+                { "hex.builtin.layouts.default", "標準" },
+
+                //{ "hex.builtin.visualizer.hexadecimal.8bit", "Hexadecimal (8 bits)" },
+                //{ "hex.builtin.visualizer.hexadecimal.16bit", "Hexadecimal (16 bits)" },
+                //{ "hex.builtin.visualizer.hexadecimal.32bit", "Hexadecimal (32 bits)" },
+                //{ "hex.builtin.visualizer.hexadecimal.64bit", "Hexadecimal (64 bits)" },
+                //{ "hex.builtin.visualizer.decimal.signed.8bit", "Decimal Signed (8 bits)" },
+                //{ "hex.builtin.visualizer.decimal.signed.16bit", "Decimal Signed (16 bits)" },
+                //{ "hex.builtin.visualizer.decimal.signed.32bit", "Decimal Signed (32 bits)" },
+                //{ "hex.builtin.visualizer.decimal.signed.64bit", "Decimal Signed (64 bits)" },
+                //{ "hex.builtin.visualizer.decimal.unsigned.8bit", "Decimal Unsigned (8 bits)" },
+                //{ "hex.builtin.visualizer.decimal.unsigned.16bit", "Decimal Unsigned (16 bits)" },
+                //{ "hex.builtin.visualizer.decimal.unsigned.32bit", "Decimal Unsigned (32 bits)" },
+                //{ "hex.builtin.visualizer.decimal.unsigned.64bit", "Decimal Unsigned (64 bits)" },
+                //{ "hex.builtin.visualizer.floating_point.32bit", "Floating Point (32 bits)" },
+                //{ "hex.builtin.visualizer.floating_point.64bit", "Floating Point (64 bits)" },
+                //{ "hex.builtin.visualizer.hexii", "HexII" },
+                //{ "hex.builtin.visualizer.rgba8", "RGBA8 Color" },
         });
     }
 

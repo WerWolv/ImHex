@@ -16,7 +16,6 @@ namespace hex::plugin::builtin {
         ViewHexEditor();
 
         void drawContent() override;
-        void drawAlwaysVisible() override;
 
     private:
         constexpr static auto InvalidSelection = std::numeric_limits<u64>::max();
@@ -118,7 +117,7 @@ namespace hex::plugin::builtin {
         bool m_enteredEditingMode = false;
         std::vector<u8> m_editingBytes;
 
-        u8 m_highlightAlpha = 0x80;
+        color_t m_selectionColor = 0x00;
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;

@@ -385,8 +385,8 @@ namespace hex::plugin::builtin {
         std::vector<u8> buffer(size);
         provider->read(address + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), size);
 
-        auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
-        ImColor color = [&decoded = decoded, &advance = advance]{
+        const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
+        const ImColor color = [&decoded = decoded, &advance = advance]{
             if (decoded.length() == 1 && std::isalnum(decoded[0]))
                 return 0xFFFF8000;
             else if (decoded.length() == 1 && advance == 1)
@@ -555,16 +555,13 @@ namespace hex::plugin::builtin {
         const float SeparatorColumWidth   = 6_scaled;
         const auto CharacterSize          = ImGui::CalcTextSize("0");
 
-        const color_t SelectionColor = 0x60C08080;
-
-        const auto bytesPerCell = this->m_currDataVisualizer->getBytesPerCell();
-        const u16 columnCount = this->m_bytesPerRow / bytesPerCell;
+        const auto bytesPerCell    = this->m_currDataVisualizer->getBytesPerCell();
+        const u16 columnCount      = this->m_bytesPerRow / bytesPerCell;
         const auto byteColumnCount = columnCount + getByteColumnSeparatorCount(columnCount);
 
-        const auto selectionMin = std::min(this->m_selectionStart, this->m_selectionEnd);
-        const auto selectionMax = std::max(this->m_selectionStart, this->m_selectionEnd);
-
-        this->drawPopup();
+        const auto selection    = this->getSelection();
+        const auto selectionMin = selection.getStartAddress();
+        const auto selectionMax = selection.getEndAddress();
 
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
         if (ImGui::BeginTable("##hex", 2 + byteColumnCount + 2 + 2 , ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
@@ -637,11 +634,9 @@ namespace hex::plugin::builtin {
 
                                     if ((byteAddress >= selectionMin && byteAddress <= selectionMax)) {
                                         if (color.has_value())
-                                            color = ImAlphaBlendColors(color.value(), SelectionColor);
+                                            color = ((ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
                                         else
-                                            color = SelectionColor;
-
-                                        *color = (*color & 0x00FFFFFF) | (this->m_highlightAlpha << 24);
+                                            color = this->m_selectionColor;
                                     }
 
                                     return color;
@@ -823,19 +818,27 @@ namespace hex::plugin::builtin {
                                     }
                                 }
                             }
-                        }
 
-                        // Handle jumping to selection
-                        if (this->m_shouldJumpToSelection) {
-                            this->m_shouldJumpToSelection = false;
-                            ImGui::BeginChild("##hex");
-                            ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (float(this->m_selectionStart) / this->m_bytesPerRow) * CharacterSize.y, 0.0);
-                            ImGui::EndChild();
+                            // If the cursor is off-screen, directly jump to the byte
+                            {
+                                const auto newSelection = this->getSelection();
+                                if (newSelection.getStartAddress() < u64(clipper.DisplayStart * this->m_bytesPerRow))
+                                    this->jumpToSelection();
+                                if (newSelection.getEndAddress() > u64(clipper.DisplayEnd * this->m_bytesPerRow))
+                                    this->jumpToSelection();
+
+                            }
                         }
                     }
                 }
             } else {
                 ImGui::TextFormattedCentered("hex.builtin.view.hex_editor.no_bytes"_lang);
+            }
+
+            // Handle jumping to selection
+            if (this->m_shouldJumpToSelection) {
+                this->m_shouldJumpToSelection = false;
+                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (float(this->m_selectionStart) / this->m_bytesPerRow) * CharacterSize.y, 0.0);
             }
 
             ImGui::EndTable();
@@ -860,10 +863,15 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     {
                         u32 page = provider->getCurrentPage() + 1;
-                        ImGui::BeginDisabled(pageCount <= 1);
-                        if (ImGui::SliderScalar("hex.builtin.view.hex_editor.page"_lang, ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("%d / {}", pageCount).c_str()))
-                            provider->setCurrentPage(page - 1);
 
+                        ImGui::TextFormatted("{}: ", "hex.builtin.view.hex_editor.page"_lang);
+                        ImGui::SameLine();
+
+                        ImGui::BeginDisabled(pageCount <= 1);
+                        {
+                            if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("%d / {}", pageCount).c_str()))
+                                provider->setCurrentPage(page - 1);
+                        }
                         ImGui::EndDisabled();
                     }
 
@@ -881,9 +889,9 @@ namespace hex::plugin::builtin {
                         auto selection = this->getSelection();
                         std::string value;
                         if (this->isSelectionValid())
-                            value = std::string("hex.builtin.view.hex_editor.selection.none"_lang);
-                        else
                             value = hex::format("0x{0:08X} - 0x{1:08X} ({0} - {1})", selection.getStartAddress(), selection.getEndAddress());
+                        else
+                            value = std::string("hex.builtin.view.hex_editor.selection.none"_lang);
 
                         ImGui::TextFormatted("{0}: {1}", "hex.builtin.view.hex_editor.selection"_lang, value);
                     }
@@ -903,7 +911,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered) {
-
         if (ImGui::IsWindowHovered() && cellHovered) {
             drawTooltip(address, data, bytesPerCell);
 
@@ -930,18 +937,13 @@ namespace hex::plugin::builtin {
             const auto FooterSize = ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetTextLineHeightWithSpacing() * 3);
             const auto TableSize = ImGui::GetContentRegionAvail() - ImVec2(0, FooterSize.y);
 
+            this->drawPopup();
             this->drawEditor(TableSize);
             this->drawFooter(FooterSize);
         }
         ImGui::End();
 
-
-
         this->m_selectionChanged = false;
-    }
-
-    void ViewHexEditor::drawAlwaysVisible() {
-
     }
 
     static void save() {
@@ -987,21 +989,7 @@ namespace hex::plugin::builtin {
         if (clipboard.length() % 2 != 0) return;
 
         // Convert hex string to bytes
-        std::vector<u8> buffer(clipboard.length() / 2, 0x00);
-        u32 stringIndex = 0;
-        for (u8 &byte : buffer) {
-            for (u8 i = 0; i < 2; i++) {
-                byte <<= 4;
-
-                char c = clipboard[stringIndex];
-
-                if (c >= '0' && c <= '9') byte |= (c - '0');
-                else if (c >= 'a' && c <= 'f') byte |= (c - 'a') + 0xA;
-                else if (c >= 'A' && c <= 'F') byte |= (c - 'A') + 0xA;
-
-                stringIndex++;
-            }
-        }
+        std::vector<u8> buffer = hex::decodeByteString(clipboard);
 
         // Write bytes
         provider->write(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(selection.size, buffer.size()));
@@ -1019,6 +1007,7 @@ namespace hex::plugin::builtin {
 
     void ViewHexEditor::registerShortcuts() {
 
+        // Save operations
         ShortcutManager::addShortcut(this, CTRL + Keys::S, [] {
             save();
         });
@@ -1026,72 +1015,76 @@ namespace hex::plugin::builtin {
             saveAs();
         });
 
+        // Select All
         ShortcutManager::addShortcut(this, CTRL + Keys::A, [this] {
             if (ImHexApi::Provider::isValid())
                 this->setSelection(size_t(0), ImHexApi::Provider::get()->getActualSize());
         });
 
+        // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
             this->m_selectionStart = InvalidSelection;
             this->m_selectionEnd = InvalidSelection;
             EventManager::post<EventRegionSelected>(this->getSelection());
         });
 
+        // Move cursor around
         ShortcutManager::addShortcut(this, Keys::Up, [this] {
-            if (this->m_selectionStart >= this->m_bytesPerRow) {
-                auto pos = this->m_selectionStart - this->m_bytesPerRow;
+            if (this->m_selectionEnd >= this->m_bytesPerRow) {
+                auto pos = this->m_selectionEnd - this->m_bytesPerRow;
                 this->setSelection(pos, pos);
                 this->scrollToSelection();
             }
         });
         ShortcutManager::addShortcut(this, Keys::Down, [this] {
-            auto pos = this->m_selectionStart + this->m_bytesPerRow;
+            auto pos = this->m_selectionEnd + this->m_bytesPerRow;
             this->setSelection(pos, pos);
             this->scrollToSelection();
         });
         ShortcutManager::addShortcut(this, Keys::Left, [this] {
-            if (this->m_selectionStart > 0) {
-                auto pos = this->m_selectionStart - 1;
+            if (this->m_selectionEnd > 0) {
+                auto pos = this->m_selectionEnd - 1;
                 this->setSelection(pos, pos);
                 this->scrollToSelection();
             }
         });
         ShortcutManager::addShortcut(this, Keys::Right, [this] {
-            auto pos = this->m_selectionStart + 1;
+            auto pos = this->m_selectionEnd + 1;
             this->setSelection(pos, pos);
             this->scrollToSelection();
         });
 
         ShortcutManager::addShortcut(this, Keys::PageUp, [this] {
             u64 visibleByteCount = this->m_bytesPerRow * this->m_visibleRowCount;
-            if (this->m_selectionStart >= visibleByteCount) {
-                auto pos = this->m_selectionStart - visibleByteCount;
+            if (this->m_selectionEnd >= visibleByteCount) {
+                auto pos = this->m_selectionEnd - visibleByteCount;
                 this->setSelection(pos, pos);
                 this->scrollToSelection();
             }
         });
         ShortcutManager::addShortcut(this, Keys::PageDown, [this] {
-            auto pos = this->m_selectionStart + (this->m_bytesPerRow * this->m_visibleRowCount);
+            auto pos = this->m_selectionEnd + (this->m_bytesPerRow * this->m_visibleRowCount);
             this->setSelection(pos, pos);
             this->scrollToSelection();
         });
 
+        // Move selection around
         ShortcutManager::addShortcut(this, SHIFT + Keys::Up, [this] {
-            this->setSelection(this->m_selectionStart - this->m_bytesPerRow, this->m_selectionEnd);
+            this->setSelection(this->m_selectionEnd - this->m_bytesPerRow, this->m_selectionEnd);
             this->scrollToSelection();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Down, [this] {
-            this->setSelection(this->m_selectionStart + this->m_bytesPerRow, this->m_selectionEnd);
+            this->setSelection(this->m_selectionEnd + this->m_bytesPerRow, this->m_selectionEnd);
             this->scrollToSelection();
 
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Left, [this] {
-            this->setSelection(this->m_selectionStart - 1, this->m_selectionEnd);
+            this->setSelection(this->m_selectionEnd - 1, this->m_selectionEnd);
             this->scrollToSelection();
 
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Right, [this] {
-            this->setSelection(this->m_selectionStart + 1, this->m_selectionEnd);
+            this->setSelection(this->m_selectionEnd + 1, this->m_selectionEnd);
             this->scrollToSelection();
         });
 
@@ -1106,32 +1099,34 @@ namespace hex::plugin::builtin {
             this->openPopup<PopupFind>();
         });
 
+        // Copy
         ShortcutManager::addShortcut(this, CTRL + Keys::C, [this] {
             const auto selection = this->getSelection();
             copyBytes(selection);
         });
-
         ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::C, [this] {
             const auto selection = this->getSelection();
             copyString(selection);
         });
 
+        // Paste
         ShortcutManager::addShortcut(this, CTRL + Keys::V, [this] {
             const auto selection = this->getSelection();
             pasteBytes(selection);
         });
 
+        // Open file
         ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 EventManager::post<RequestOpenFile>(path);
             });
         });
 
+        // Undo / Redo
         ShortcutManager::addShortcut(this, CTRL + Keys::Z, [] {
             if (ImHexApi::Provider::isValid())
                 ImHexApi::Provider::get()->undo();
         });
-
         ShortcutManager::addShortcut(this, CTRL + Keys::Y, [] {
             if (ImHexApi::Provider::isValid())
                 ImHexApi::Provider::get()->redo();
@@ -1165,13 +1160,6 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
-                auto alpha = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha");
-
-                if (alpha.is_number())
-                    this->m_highlightAlpha = alpha;
-            }
-
-            {
                 auto bytesPerRow = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row");
 
                 if (bytesPerRow.is_number())
@@ -1200,6 +1188,13 @@ namespace hex::plugin::builtin {
             }
 
             {
+                auto selectionColor = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color");
+
+                if (selectionColor.is_number())
+                    this->m_selectionColor = static_cast<color_t>(selectionColor);
+            }
+
+            {
                 auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
                 auto selectedVisualizer = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer");
 
@@ -1213,8 +1208,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerMenuItems() {
-        /* Basic operations */
-
+        // Basic operations
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1100, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
@@ -1229,7 +1223,7 @@ namespace hex::plugin::builtin {
         });
 
 
-        /* Metadata save/load */
+        // Metadata save/load
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1200, [&, this] {
             bool providerValid = ImHexApi::Provider::isValid();
 
@@ -1252,7 +1246,7 @@ namespace hex::plugin::builtin {
         });
 
 
-        /* Search / Goto */
+        // Search / Goto
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1400, [&, this] {
             bool providerValid = ImHexApi::Provider::isValid();
 
@@ -1266,7 +1260,7 @@ namespace hex::plugin::builtin {
         });
 
 
-        /* Copy / Paste */
+        // Copy / Paste
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1100, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
@@ -1303,7 +1297,7 @@ namespace hex::plugin::builtin {
                 ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
         });
 
-        /* Popups */
+        // Popups
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1200, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
