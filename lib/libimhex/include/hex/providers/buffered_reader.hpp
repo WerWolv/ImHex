@@ -16,20 +16,35 @@ namespace hex::prv {
         }
 
         [[nodiscard]] std::vector<u8> read(u64 address, size_t size) {
-            if (size > this->m_buffer.size())
-                return { };
+            if (size > this->m_buffer.size()) {
+                std::vector<u8> result;
+                result.resize(size);
 
-            if (!this->m_bufferValid || address < this->m_baseAddress || address + size > (this->m_baseAddress + this->m_buffer.size())) {
-                const auto remainingBytes = this->m_provider->getActualSize() - address;
-                if (remainingBytes < this->m_maxBufferSize)
-                    this->m_buffer.resize(remainingBytes);
+                this->m_provider->read(address, result.data(), result.size());
 
-                this->m_provider->read(address, this->m_buffer.data(), this->m_buffer.size());
-                this->m_baseAddress = address;
-                this->m_bufferValid = true;
+                return result;
             }
 
+            this->updateBuffer(address, size);
+
             auto result = &this->m_buffer[address -  this->m_baseAddress];
+
+            return { result, result + std::min(size, this->m_buffer.size()) };
+        }
+
+        [[nodiscard]] std::vector<u8> readReverse(u64 address, size_t size) {
+            if (size > this->m_buffer.size()) {
+                std::vector<u8> result;
+                result.resize(size);
+
+                this->m_provider->read(address, result.data(), result.size());
+
+                return result;
+            }
+
+            this->updateBuffer(address - std::min(address, this->m_buffer.size()), size);
+
+            auto result = &this->m_buffer[address - this->m_baseAddress];
 
             return { result, result + std::min(size, this->m_buffer.size()) };
         }
@@ -152,7 +167,7 @@ namespace hex::prv {
             }
 
             value_type operator[](i64 offset) const {
-                auto result = this->m_reader->read(this->m_address + offset, 1);
+                auto result = this->m_reader->readReverse(this->m_address + offset, 1);
                 if (result.empty())
                     return 0x00;
 
@@ -161,6 +176,7 @@ namespace hex::prv {
 
             friend bool operator== (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address == right.m_address; };
             friend bool operator!= (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address != right.m_address; };
+
         private:
             BufferedReader *m_reader;
             u64 m_address;
@@ -175,11 +191,24 @@ namespace hex::prv {
         }
 
         ReverseIterator rbegin() {
-            return { this, this->m_baseAddress + this->m_provider->getActualSize() - 1 };
+            return { this, this->m_baseAddress };
         }
 
         ReverseIterator rend() {
             return { this, std::numeric_limits<u64>::max() };
+        }
+
+    private:
+        void updateBuffer(u64 address, size_t size) {
+            if (!this->m_bufferValid || address < this->m_baseAddress || address + size > (this->m_baseAddress + this->m_buffer.size())) {
+                const auto remainingBytes = this->m_provider->getActualSize() - address;
+                if (remainingBytes < this->m_maxBufferSize)
+                    this->m_buffer.resize(remainingBytes);
+
+                this->m_provider->read(address, this->m_buffer.data(), this->m_buffer.size());
+                this->m_baseAddress = address;
+                this->m_bufferValid = true;
+            }
         }
 
     private:

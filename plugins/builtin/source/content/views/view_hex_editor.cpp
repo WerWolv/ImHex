@@ -97,34 +97,34 @@ namespace hex::plugin::builtin {
 
     class PopupFind : public ViewHexEditor::Popup {
     public:
-        bool m_shouldSearch = false;
-        bool m_backwards = false;
-
         void draw(ViewHexEditor *editor) override {
-            const auto ButtonSize = ImVec2(ImGui::CalcTextSize(ICON_VS_SEARCH).x, ImGui::GetTextLineHeight()) + ImGui::GetStyle().CellPadding * 2;
-            const auto ButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-
             std::vector<u8> searchSequence;
 
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
             if (ImGui::BeginTabBar("##find_tabs")) {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
-                    if (this->m_shouldSearch) {
-                        searchSequence = decodeByteString(this->m_input);
-                    }
-
-                    ImGui::SetKeyboardFocusHere();
-                    ImGui::CaptureKeyboardFromApp(true);
-
                     if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
                         this->m_shouldSearch = true;
                         this->m_backwards = false;
+                    }
+
+                    this->drawButtons();
+
+                    if (this->m_shouldSearch) {
+                        searchSequence = crypt::decode16(this->m_input);
                     }
 
                     ImGui::EndTabItem();
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
+                    if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                        this->m_shouldSearch = true;
+                        this->m_backwards = false;
+                    }
+
+                    this->drawButtons();
+
                     if (this->m_shouldSearch) {
                         searchSequence.clear();
                         std::copy(this->m_input.begin(), this->m_input.end(), std::back_inserter(searchSequence));
@@ -133,51 +133,70 @@ namespace hex::plugin::builtin {
                         searchSequence.pop_back();
                     }
 
-                    ImGui::SetKeyboardFocusHere();
-                    ImGui::CaptureKeyboardFromApp(true);
-
-                    if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-                        this->m_shouldSearch = true;
-                        this->m_backwards = false;
-                    }
-
                     ImGui::EndTabItem();
                 }
 
                 ImGui::EndTabBar();
             }
 
-            ImGui::SameLine();
-            if (ImGui::IconButton(ICON_VS_SEARCH, ButtonColor, ButtonSize)) {
-                this->m_shouldSearch = true;
-                this->m_backwards = false;
-                this->m_lastFind.reset();
-            }
+            if (!this->m_searchRunning && !searchSequence.empty() && this->m_shouldSearch) {
+                std::thread([this, searchSequence, editor]{
+                    this->m_searchTask = ImHexApi::Tasks::createTask("Searching", ImHexApi::Provider::get()->getSize());
+                    this->m_searchRunning = true;
 
-            if (ImGui::IconButton(ICON_VS_ARROW_UP, ButtonColor, ButtonSize)) {
-                this->m_shouldSearch = true;
-                this->m_backwards = true;
-            }
-            ImGui::SameLine();
-            if (ImGui::IconButton(ICON_VS_ARROW_DOWN, ButtonColor, ButtonSize)) {
-                this->m_shouldSearch = true;
-                this->m_backwards = false;
-            }
+                    if (auto region = this->findSequence(editor, searchSequence, this->m_backwards); region.has_value()) {
+                        ImHexApi::Tasks::doLater([editor, region]{
+                            editor->setSelection(region->getStartAddress(), region->getEndAddress());
+                            editor->jumpToSelection();
+                        });
+                    }
 
-            if (!searchSequence.empty() && this->m_shouldSearch) {
-                if (auto region = this->findSequence(searchSequence, this->m_backwards); region.has_value()) {
-                    editor->setSelection(region->getStartAddress(), region->getEndAddress());
-                    editor->jumpToSelection();
-                }
-
-                this->m_shouldSearch = false;
+                    this->m_shouldSearch = false;
+                    this->m_requestFocus = true;
+                    this->m_searchRunning = false;
+                }).detach();
             }
         }
 
-        std::optional<Region> findSequence(const std::vector<u8> &sequence, bool backwards) {
+    private:
+        void drawButtons() {
+            const auto ButtonSize = ImVec2(ImGui::CalcTextSize(ICON_VS_SEARCH).x, ImGui::GetTextLineHeight()) + ImGui::GetStyle().CellPadding * 2;
+            const auto ButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+
+            if (this->m_requestFocus) {
+                ImGui::SetKeyboardFocusHere(-1);
+                this->m_requestFocus = false;
+            }
+
+            ImGui::BeginDisabled(this->m_searchRunning);
+            {
+                ImGui::SameLine();
+                if (ImGui::IconButton(ICON_VS_SEARCH "##search", ButtonColor, ButtonSize)) {
+                    this->m_shouldSearch = true;
+                    this->m_backwards = false;
+                    this->m_searchPosition.reset();
+                }
+
+                if (ImGui::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
+                    this->m_shouldSearch = true;
+                    this->m_backwards = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
+                    this->m_shouldSearch = true;
+                    this->m_backwards = false;
+                }
+            }
+            ImGui::EndDisabled();
+        }
+
+        std::optional<Region> findSequence(ViewHexEditor *editor, const std::vector<u8> &sequence, bool backwards) {
             hex::prv::BufferedReader reader(ImHexApi::Provider::get());
 
-            reader.seek(this->m_lastFind.value_or(0x00));
+            if (!editor->isSelectionValid())
+                reader.seek(this->m_searchPosition.value_or(0x00));
+            else
+                reader.seek(this->m_searchPosition.value_or(editor->getSelection().getEndAddress()));
 
             constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
                 #if defined(OS_MACOS)
@@ -190,23 +209,29 @@ namespace hex::plugin::builtin {
             if (!backwards) {
                 auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
                 if (occurrence != reader.end()) {
-                    this->m_lastFind = occurrence.getAddress();
-                    return Region { *this->m_lastFind, *this->m_lastFind + sequence.size() - 1 };
+                    this->m_searchPosition = occurrence.getAddress() + 1;
+                    return Region { occurrence.getAddress(), sequence.size() };
                 }
             } else {
                 auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.begin(), sequence.end());
                 if (occurrence != reader.rend()) {
-                    this->m_lastFind = occurrence.getAddress();
-                    return Region { *this->m_lastFind, *this->m_lastFind + sequence.size() - 1 };
+                    this->m_searchPosition = occurrence.getAddress() - 1;
+                    return Region { occurrence.getAddress(), sequence.size() };
                 }
             }
-
 
             return std::nullopt;
         }
 
         std::string m_input;
-        std::optional<u64> m_lastFind;
+        std::optional<u64> m_searchPosition;
+
+        bool m_requestFocus = true;
+        std::atomic<bool> m_shouldSearch = false;
+        std::atomic<bool> m_backwards    = false;
+
+        std::optional<Task> m_searchTask;
+        std::atomic<bool> m_searchRunning = false;
     };
 
     class PopupBaseAddress : public ViewHexEditor::Popup {
@@ -516,8 +541,8 @@ namespace hex::plugin::builtin {
             ImGui::OpenPopup("##hex_editor_popup");
         }
 
-        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding);
-        if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoTitleBar)) {
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
+        if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoTitleBar)) {
 
             if (this->m_currPopup != nullptr)
                 this->m_currPopup->draw(this);
@@ -838,7 +863,7 @@ namespace hex::plugin::builtin {
             // Handle jumping to selection
             if (this->m_shouldJumpToSelection) {
                 this->m_shouldJumpToSelection = false;
-                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (float(this->m_selectionStart) / this->m_bytesPerRow) * CharacterSize.y, 0.0);
+                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (float(this->m_selectionStart) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
             }
 
             ImGui::EndTable();
