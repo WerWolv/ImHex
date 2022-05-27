@@ -139,6 +139,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.table.name", "名前" },
                     { "hex.builtin.view.data_inspector.table.value", "値" },
                     { "hex.builtin.view.data_inspector.no_data", "範囲が選択されていません"},
+                    //{ "hex.builtin.view.data_inspector.invert", "Invert" },
 
                 { "hex.builtin.view.data_processor.name", "データプロセッサ" },
                     //{ "hex.builtin.view.data_processor.help_text", "Right click to add a new node" },

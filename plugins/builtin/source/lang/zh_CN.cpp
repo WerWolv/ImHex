@@ -138,6 +138,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.table.name", "名称" },
                     { "hex.builtin.view.data_inspector.table.value", "值" },
                     { "hex.builtin.view.data_inspector.no_data", "没有选中字节"},
+                    //{ "hex.builtin.view.data_inspector.invert", "Invert" },
 
                 { "hex.builtin.view.data_processor.name", "数据处理器" },
                     { "hex.builtin.view.data_processor.help_text", "右键以添加新的节点" },

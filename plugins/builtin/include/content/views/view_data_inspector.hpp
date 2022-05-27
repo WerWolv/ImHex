@@ -29,6 +29,7 @@ namespace hex::plugin::builtin {
 
         std::endian m_endian                                                    = std::endian::native;
         ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
+        bool m_invert = false;
 
         u64 m_startAddress  = 0;
         size_t m_validBytes = 0;

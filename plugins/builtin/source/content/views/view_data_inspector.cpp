@@ -42,6 +42,11 @@ namespace hex::plugin::builtin {
                 std::vector<u8> buffer(entry.requiredSize);
                 provider->read(this->m_startAddress, buffer.data(), buffer.size());
 
+                if (this->m_invert) {
+                    for (auto &byte : buffer)
+                        byte ^= 0xFF;
+                }
+
                 this->m_cachedData.push_back({ entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle), entry.editingFunction, false });
             }
         }
@@ -152,6 +157,17 @@ namespace hex::plugin::builtin {
                             case 1: this->m_numberDisplayStyle =  NumberDisplayStyle::Hexadecimal; break;
                             case 2: this->m_numberDisplayStyle =  NumberDisplayStyle::Octal;       break;
                         }
+                    }
+                }
+
+                {
+                    int selection = this->m_invert ? 1 : 0;
+                    std::array options = { "hex.builtin.common.no"_lang, "hex.builtin.common.yes"_lang };
+
+                    if (ImGui::SliderInt("hex.builtin.view.data_inspector.invert"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                        this->m_shouldInvalidate = true;
+
+                        this->m_invert = selection == 1;
                     }
                 }
             } else {

@@ -137,6 +137,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.data_inspector.table.name", "Name" },
                     { "hex.builtin.view.data_inspector.table.value", "Wert" },
                     { "hex.builtin.view.data_inspector.no_data", "Keine bytes angewählt"},
+                    { "hex.builtin.view.data_inspector.invert", "Invertieren" },
 
                 { "hex.builtin.view.data_processor.name", "Datenprozessor" },
                     { "hex.builtin.view.data_processor.help_text", "Rechtsklicken um neuen Knoten zu erstellen" },
