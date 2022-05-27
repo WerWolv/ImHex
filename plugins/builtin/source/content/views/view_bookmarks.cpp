@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
 
                         if (ImGui::GetIO().KeyShift) {
                             ImGui::Indent();
-                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_NoClip)) {
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
-                                if (!bookmark.comment.empty()) {
+                                if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
                                     ImGui::TextFormatted("Comment: ");
