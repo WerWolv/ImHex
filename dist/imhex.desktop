@@ -2,7 +2,7 @@
 Name=ImHex
 Comment=ImHex Hex Editor
 GenericName=Hex Editor
-Exec=/usr/bin/imhex %U
+Exec=imhex %U
 Icon=imhex
 Type=Application
 StartupNotify=true
