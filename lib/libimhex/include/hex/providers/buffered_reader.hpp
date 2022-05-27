@@ -42,7 +42,7 @@ namespace hex::prv {
                 return result;
             }
 
-            this->updateBuffer(address - std::min(address, this->m_buffer.size()), size);
+            this->updateBuffer(address - std::min<u64>(address, this->m_buffer.size()), size);
 
             auto result = &this->m_buffer[address - this->m_baseAddress];
 
