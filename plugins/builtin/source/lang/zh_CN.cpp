@@ -404,6 +404,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.float", "float(32位单精度浮点)" },
                 { "hex.builtin.inspector.double", "double(64位双精度浮点)" },
                 { "hex.builtin.inspector.long_double", "long double(128位双精度浮点)" },
+                { "hex.builtin.inspector.bool", "bool" },
                 { "hex.builtin.inspector.ascii", "ASCII字符" },
                 { "hex.builtin.inspector.wide", "宽字符" },
                 { "hex.builtin.inspector.utf8", "UTF-8代码点" },
@@ -411,6 +412,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.time32", "time32_t" },
                 { "hex.builtin.inspector.time64", "time64_t" },
                 { "hex.builtin.inspector.time", "time_t" },
+                //{ "hex.builtin.inspector.dos_date", "DOS Date" },
+                //{ "hex.builtin.inspector.dos_time", "DOS Time" },
                 { "hex.builtin.inspector.guid", "GUID" },
                 { "hex.builtin.inspector.rgba8", "RGBA8颜色" },
 

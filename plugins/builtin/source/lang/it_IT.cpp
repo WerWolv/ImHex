@@ -404,6 +404,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.float", "float (32 bit)" },
                 { "hex.builtin.inspector.double", "double (64 bit)" },
                 { "hex.builtin.inspector.long_double", "long double (128 bit)" },
+                { "hex.builtin.inspector.bool", "bool" },
                 { "hex.builtin.inspector.ascii", "ASCII Character" },
                 { "hex.builtin.inspector.wide", "Wide Character" },
                 { "hex.builtin.inspector.utf8", "UTF-8 code point" },
@@ -411,6 +412,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.time32", "time32_t" },
                 { "hex.builtin.inspector.time64", "time64_t" },
                 { "hex.builtin.inspector.time", "time_t" },
+                //{ "hex.builtin.inspector.dos_date", "DOS Date" },
+                //{ "hex.builtin.inspector.dos_time", "DOS Time" },
                 { "hex.builtin.inspector.guid", "GUID" },
                 { "hex.builtin.inspector.rgba8", "Colori RGBA8" },
 

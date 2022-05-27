@@ -84,9 +84,7 @@ namespace hex::plugin::builtin {
             [](auto buffer, auto endian, auto style) {
                 hex::unused(endian, style);
 
-                std::string binary = "0b";
-                for (u8 i = 0; i < 8; i++)
-                    binary += ((buffer[0] << i) & 0x80) == 0 ? '0' : '1';
+                std::string binary = hex::format("0b{:b}", buffer[0]);
 
                 return [binary] {
                     ImGui::TextUnformatted(binary.c_str());
@@ -216,17 +214,25 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.float16", sizeof(u16),
             [](auto buffer, auto endian, auto style) {
-                hex::unused(style);
-                auto value = hex::format("{0:G}", hex::changeEndianess(float16ToFloat32(*reinterpret_cast<u16 *>(buffer.data())), endian));
+                u16 result = 0;
+                std::memcpy(&result, buffer.data(), sizeof(u16));
+
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+
+                auto value = hex::format(formatString, float16ToFloat32(hex::changeEndianess(result, endian)));
+
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             }
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.float", sizeof(float),
             [](auto buffer, auto endian, auto style) {
-                hex::unused(style);
+                float result = 0;
+                std::memcpy(&result, buffer.data(), sizeof(float));
 
-                auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<float *>(buffer.data()), endian));
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+
+                auto value = hex::format(formatString, hex::changeEndianess(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<float>
@@ -234,12 +240,12 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.double", sizeof(double),
             [](auto buffer, auto endian, auto style) {
-                hex::unused(style);
-
                 double result = 0;
                 std::memcpy(&result, buffer.data(), sizeof(double));
 
-                auto value = hex::format("{0:G}", hex::changeEndianess(result, endian));
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+
+                auto value = hex::format(formatString, hex::changeEndianess(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<double>
@@ -247,12 +253,34 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.long_double", sizeof(long double),
             [](auto buffer, auto endian, auto style) {
-                hex::unused(style);
+                long double result = 0;
+                std::memcpy(&result, buffer.data(), sizeof(long double));
 
-                auto value = hex::format("{0:G}", hex::changeEndianess(*reinterpret_cast<long double *>(buffer.data()), endian));
+                const auto formatString = style == Style::Hexadecimal ? "{0:a}" : "{0:G}";
+
+                auto value = hex::format(formatString, hex::changeEndianess(result, endian));
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             stringToFloat<long double>
+        );
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.bool", sizeof(bool),
+            [](auto buffer, auto endian, auto style) {
+                hex::unused(endian, style);
+
+                std::string value = [buffer] {
+                    switch (buffer[0]) {
+                        case false:
+                            return "false";
+                        case true:
+                            return "true";
+                        default:
+                            return "Invalid";
+                    }
+                }();
+
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
         );
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.ascii", sizeof(char8_t),
@@ -402,6 +430,42 @@ namespace hex::plugin::builtin {
         });
 
 #endif
+
+        struct DOSDate {
+            unsigned day   : 5;
+            unsigned month : 4;
+            unsigned year  : 7;
+        };
+
+        struct DOSTime {
+            unsigned seconds : 5;
+            unsigned minutes : 6;
+            unsigned hours   : 5;
+        };
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.dos_date", sizeof(DOSDate), [](auto buffer, auto endian, auto style) {
+            hex::unused(style);
+
+            DOSDate date = { };
+            std::memcpy(&date, buffer.data(), sizeof(DOSDate));
+            date = hex::changeEndianess(date, endian);
+
+            auto value = hex::format("{}/{}/{}", date.day, date.month, date.year + 1980);
+
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+        });
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.dos_time", sizeof(DOSTime), [](auto buffer, auto endian, auto style) {
+            hex::unused(style);
+
+            DOSTime time = { };
+            std::memcpy(&time, buffer.data(), sizeof(DOSTime));
+            time = hex::changeEndianess(time, endian);
+
+            auto value = hex::format("{:02}:{:02}:{:02}", time.hours, time.minutes, time.seconds * 2);
+
+            return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+        });
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.guid", sizeof(GUID), [](auto buffer, auto endian, auto style) {
             hex::unused(style);
