@@ -91,19 +91,20 @@ namespace hex::plugin::builtin {
             bool providerValid = provider != nullptr;
 
             // Undo
-            ImGui::Disabled([&provider] {
+            ImGui::BeginDisabled(!providerValid || !provider->canUndo());
+            {
                 if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->undo();
-            },
-                !providerValid || !provider->canUndo());
+            }
+            ImGui::EndDisabled();
 
             // Redo
-            ImGui::Disabled([&provider] {
+            ImGui::BeginDisabled(!providerValid || !provider->canRedo());
+            {
                 if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->redo();
-            },
-                !providerValid || !provider->canRedo());
-
+            }
+            ImGui::EndDisabled();
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
@@ -119,42 +120,45 @@ namespace hex::plugin::builtin {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
             // Save file
-            ImGui::Disabled([&provider] {
+            ImGui::BeginDisabled(!providerValid || !provider->isWritable() || !provider->isSavable());
+            {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->save();
-            },
-                !providerValid || !provider->isWritable() || !provider->isSavable());
+            }
+            ImGui::EndDisabled();
 
             // Save file as
-            ImGui::Disabled([&provider] {
+            ImGui::BeginDisabled(!providerValid || !provider->isSavable());
+            {
                 if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&provider](auto path) {
                         provider->saveAs(path);
                     });
-            },
-                !providerValid || !provider->isSavable());
+            }
+            ImGui::EndDisabled();
 
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
 
             // Create bookmark
-            ImGui::Disabled([] {
+            ImGui::BeginDisabled(!providerValid || !provider->isReadable() || !ImHexApi::HexEditor::isSelectionValid());
+            {
                 if (ImGui::ToolBarButton(ICON_VS_BOOKMARK, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                     auto region = ImHexApi::HexEditor::getSelection();
 
                     if (region.has_value())
                         ImHexApi::Bookmarks::add(region->address, region->size, {}, {});
                 }
-            },
-                !providerValid || !provider->isReadable() || ImHexApi::HexEditor::isSelectionValid());
-
+            }
+            ImGui::EndDisabled();
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::Spacing();
 
             // Provider switcher
-            ImGui::Disabled([] {
+            ImGui::BeginDisabled(!providerValid);
+            {
                 auto &providers = ImHexApi::Provider::getProviders();
 
                 std::string preview;
@@ -172,9 +176,10 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndCombo();
                 }
-            },
-                !providerValid);
+            }
+            ImGui::EndDisabled();
         });
+
     }
 
 }

@@ -44,7 +44,8 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
             } else {
-                ImGui::Disabled([this] {
+                ImGui::BeginDisabled(this->m_matching);
+                {
                     if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
                             const bool selected = (this->m_selectedRule == i);
@@ -59,8 +60,8 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
                     if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
-                },
-                    this->m_matching);
+                }
+                ImGui::EndDisabled();
 
                 if (this->m_matching) {
                     ImGui::SameLine();

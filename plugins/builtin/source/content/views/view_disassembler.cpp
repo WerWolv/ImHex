@@ -322,11 +322,12 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::EndChild();
 
-                ImGui::Disabled([this] {
+                ImGui::BeginDisabled(this->m_disassembling);
+                {
                     if (ImGui::Button("hex.builtin.view.disassembler.disassemble"_lang))
                         this->disassemble();
-                },
-                    this->m_disassembling);
+                }
+                ImGui::EndDisabled();
 
                 if (this->m_disassembling) {
                     ImGui::SameLine();

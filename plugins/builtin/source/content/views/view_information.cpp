@@ -135,11 +135,12 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted("hex.builtin.view.information.control"_lang);
                     ImGui::Separator();
 
-                    ImGui::Disabled([this] {
+                    ImGui::BeginDisabled(this->m_analyzing);
+                    {
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang))
                             this->analyze();
-                    },
-                        this->m_analyzing);
+                    }
+                    ImGui::EndDisabled();
 
                     if (this->m_analyzing) {
                         ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);

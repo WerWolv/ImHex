@@ -191,16 +191,6 @@ namespace ImGui {
         PopStyleColor();
     }
 
-    void Disabled(const std::function<void()> &widgets, bool disabled) {
-        if (disabled) {
-            BeginDisabled();
-            widgets();
-            EndDisabled();
-        } else {
-            widgets();
-        }
-    }
-
     void TextSpinner(const char *label) {
         ImGui::Text("[%c] %s", "|/-\\"[ImU32(ImGui::GetTime() * 20) % 4], label);
     }
