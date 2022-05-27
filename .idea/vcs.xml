@@ -2,9 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/imhex_patterns-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/imhex_patterns-src/yara/official_rules" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/imhex_patterns-src/yara/official_rules/utils/yara-forensics" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/external/capstone" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/external/curl" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/external/fmt" vcs="Git" />

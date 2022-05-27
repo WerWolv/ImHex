@@ -148,33 +148,36 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.highlight_alpha", 0x80, [](auto name, nlohmann::json &setting) {
-            static int alpha = static_cast<int>(setting);
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080, [](auto name, nlohmann::json &setting) {
+            static auto color = static_cast<color_t>(setting);
 
-            if (ImGui::SliderInt(name.data(), &alpha, 0x00, 0xFF)) {
-                setting = alpha;
+            std::array<float, 4> colorArray = {
+                ((color >>  0) & 0x000000FF) / float(0xFF),
+                ((color >>  8) & 0x000000FF) / float(0xFF),
+                ((color >> 16) & 0x000000FF) / float(0xFF),
+                ((color >> 24) & 0x000000FF) / float(0xFF)
+            };
+
+            if (ImGui::ColorEdit4(name.data(), colorArray.data(), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_NoInputs)) {
+                color =
+                    (color_t(colorArray[0] * 0xFF) <<  0) |
+                    (color_t(colorArray[1] * 0xFF) <<  8) |
+                    (color_t(colorArray[2] * 0xFF) << 16) |
+                    (color_t(colorArray[3] * 0xFF) << 24);
+
+                setting = color;
+
                 return true;
             }
 
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.column_count", 16, [](auto name, nlohmann::json &setting) {
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16, [](auto name, nlohmann::json &setting) {
             static int columns = static_cast<int>(setting);
 
             if (ImGui::SliderInt(name.data(), &columns, 1, 32)) {
                 setting = columns;
-                return true;
-            }
-
-            return false;
-        });
-
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.hexii", 0, [](auto name, nlohmann::json &setting) {
-            static bool hexii = static_cast<int>(setting);
-
-            if (ImGui::Checkbox(name.data(), &hexii)) {
-                setting = static_cast<int>(hexii);
                 return true;
             }
 
@@ -225,17 +228,29 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.extra_info", 1, [](auto name, nlohmann::json &setting) {
-            static bool extraInfos = static_cast<int>(setting);
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer", "hex.builtin.visualizer.hexadecimal.8bit", [](auto name, nlohmann::json &setting) {
+            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
 
-            if (ImGui::Checkbox(name.data(), &extraInfos)) {
-                setting = static_cast<int>(extraInfos);
-                return true;
+            auto selectedVisualizer = setting;
+
+            bool result = false;
+            if (ImGui::BeginCombo(name.data(), LangEntry(selectedVisualizer))) {
+
+                for (const auto &[unlocalizedName, visualizer] : visualizers) {
+                    if (ImGui::Selectable(LangEntry(unlocalizedName))) {
+                        setting = unlocalizedName;
+                        result = true;
+                    }
+                }
+
+                ImGui::EndCombo();
             }
 
-            return false;
+            return result;
         });
 
+
+        /* Fonts */
 
         static std::string fontPath;
         ContentRegistry::Settings::add(
@@ -281,6 +296,8 @@ namespace hex::plugin::builtin {
             },
             true);
 
+
+        /* Folders */
 
         static const std::string dirsSetting { "hex.builtin.setting.folders" };
 

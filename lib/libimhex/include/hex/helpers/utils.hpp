@@ -188,6 +188,24 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
+    template<hex::integral T, hex::integral U>
+    auto powi(T base, U exp) {
+        using ResultType = decltype(T{} * U{});
+
+        if (exp < 0)
+            return ResultType(0);
+
+        ResultType result = 1;
+
+        while (exp != 0) {
+            if ((exp & 0b1) == 0b1)
+                result *= base;
+            exp >>= 1;
+            base *= base;
+        }
+        return result;
+    }
+
     template<typename T, typename... Args>
     void moveToVector(std::vector<T> &buffer, T &&first, Args &&...rest) {
         buffer.push_back(std::move(first));
@@ -285,6 +303,13 @@ namespace hex {
             return alt;
         else
             return *value;
+    }
+
+    template<hex::integral T>
+    T alignTo(T value, T alignment) {
+        T remainder = value % alignment;
+
+        return remainder != 0 ? value + (alignment - remainder) : value;
     }
 
     bool isProcessElevated();

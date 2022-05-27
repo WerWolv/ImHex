@@ -6,6 +6,8 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <variant>
+#include <map>
 
 #include <hex/helpers/concepts.hpp>
 #include <hex/api/task.hpp>
@@ -31,37 +33,69 @@ namespace hex {
 
         namespace HexEditor {
 
+            using TooltipFunction = std::function<void(u64, const u8*, size_t)>;
+
             class Highlighting {
             public:
                 Highlighting() = default;
-                Highlighting(Region region, color_t color, std::string tooltip = "");
+                Highlighting(Region region, color_t color);
 
                 [[nodiscard]] const Region &getRegion() const { return this->m_region; }
                 [[nodiscard]] const color_t &getColor() const { return this->m_color; }
-                [[nodiscard]] const std::string &getTooltip() const { return this->m_tooltip; }
 
             private:
                 Region m_region = {};
                 color_t m_color = 0x00;
-                std::string m_tooltip;
+            };
+
+            class Tooltip {
+            public:
+                Tooltip() = default;
+                Tooltip(Region region, std::string value, color_t color);
+
+                [[nodiscard]] const Region &getRegion() const { return this->m_region; }
+                [[nodiscard]] const color_t &getColor() const { return this->m_color; }
+                [[nodiscard]] const std::string &getValue() const { return this->m_value; }
+
+            private:
+                Region m_region = {};
+                std::string m_value;
+                color_t m_color = 0x00;
             };
 
             namespace impl {
 
-                using HighlightingFunction = std::function<std::optional<Highlighting>(u64)>;
+                using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t)>;
 
-                std::map<u32, Highlighting> &getHighlights();
-                std::map<u32, HighlightingFunction> &getHighlightingFunctions();
+                std::map<u32, Highlighting> &getBackgroundHighlights();
+                std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions();
+                std::map<u32, Highlighting> &getForegroundHighlights();
+                std::map<u32, HighlightingFunction> &getForegroundHighlightingFunctions();
+                std::map<u32, Tooltip> &getTooltips();
+                std::map<u32, TooltipFunction> &getTooltipFunctions();
 
             }
 
-            u32 addHighlight(const Region &region, color_t color, const std::string &tooltip = "");
-            void removeHighlight(u32 id);
+            u32 addBackgroundHighlight(const Region &region, color_t color);
+            void removeBackgroundHighlight(u32 id);
 
-            u32 addHighlightingProvider(const impl::HighlightingFunction &function);
-            void removeHighlightingProvider(u32 id);
+            u32 addForegroundHighlight(const Region &region, color_t color);
+            void removeForegroundHighlight(u32 id);
 
-            Region getSelection();
+            u32 addTooltip(Region region, std::string value, color_t color);
+            void removeTooltip(u32 id);
+
+            u32 addTooltipProvider(TooltipFunction function);
+            void removeTooltipProvider(u32 id);
+
+            u32 addBackgroundHighlightingProvider(const impl::HighlightingFunction &function);
+            void removeBackgroundHighlightingProvider(u32 id);
+
+            u32 addForegroundHighlightingProvider(const impl::HighlightingFunction &function);
+            void removeForegroundHighlightingProvider(u32 id);
+
+            bool isSelectionValid();
+            std::optional<Region> getSelection();
             void setSelection(const Region &region);
             void setSelection(u64 address, size_t size);
 
@@ -76,8 +110,6 @@ namespace hex {
                 std::string comment;
                 u32 color;
                 bool locked;
-
-                u32 highlightId;
             };
 
             void add(u64 address, size_t size, const std::string &name, const std::string &comment, color_t color = 0x00000000);

@@ -323,19 +323,25 @@ namespace hex::plugin::builtin {
             [](auto buffer, auto endian, auto style) {
                 hex::unused(endian, style);
 
-                Region currSelection = { 0, 0 };
-                EventManager::post<QuerySelection>(currSelection);
+                auto currSelection = ImHexApi::HexEditor::getSelection();
 
                 constexpr static auto MaxStringLength = 32;
 
-                std::vector<u8> stringBuffer(std::min<size_t>(MaxStringLength, currSelection.size), 0x00);
-                ImHexApi::Provider::get()->read(currSelection.address, stringBuffer.data(), stringBuffer.size());
+                std::string value, copyValue;
 
-                auto value = hex::encodeByteString(stringBuffer);
-                auto copyValue = hex::encodeByteString(buffer);
+                if (currSelection.has_value()) {
+                    std::vector<u8> stringBuffer(std::min<size_t>(MaxStringLength, currSelection->size), 0x00);
+                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
-                if (currSelection.size > MaxStringLength)
-                    value += "...";
+                    value = hex::encodeByteString(stringBuffer);
+                    copyValue = hex::encodeByteString(buffer);
+
+                    if (currSelection->size > MaxStringLength)
+                        value += "...";
+                } else {
+                    value = "";
+                    copyValue = "";
+                }
 
                 return [value, copyValue] { ImGui::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
             },

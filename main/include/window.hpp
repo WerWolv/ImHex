@@ -54,6 +54,8 @@ namespace hex {
         std::vector<int> m_pressedKeys;
 
         std::fs::path m_imguiSettingsPath;
+
+        bool m_mouseButtonDown = false;
     };
 
 }

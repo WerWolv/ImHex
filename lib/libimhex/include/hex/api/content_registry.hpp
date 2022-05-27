@@ -10,11 +10,15 @@
 
 #include <functional>
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include <nlohmann/json_fwd.hpp>
+
+using ImGuiDataType = int;
+using ImGuiInputTextFlags = int;
 
 namespace pl {
     class Evaluator;
@@ -376,6 +380,45 @@ namespace hex {
             void add(const std::vector<std::string> &extensions, const impl::Callback &callback);
 
             std::vector<impl::Entry> &getEntries();
+
+        }
+
+        namespace HexEditor {
+
+            class DataVisualizer {
+            public:
+                DataVisualizer(u16 bytesPerCell, u16 maxCharsPerCell)
+                    : m_bytesPerCell(bytesPerCell), m_maxCharsPerCell(maxCharsPerCell) {}
+
+                virtual ~DataVisualizer() = default;
+
+                virtual void draw(u64 address, const u8 *data, size_t size, bool upperCase) = 0;
+                virtual bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) = 0;
+
+                [[nodiscard]] u16 getBytesPerCell() const { return this->m_bytesPerCell; }
+                [[nodiscard]] u16 getMaxCharsPerCell() const { return this->m_maxCharsPerCell; }
+
+            protected:
+                const static int TextInputFlags;
+
+                bool drawDefaultEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
+            private:
+                u16 m_bytesPerCell;
+                u16 m_maxCharsPerCell;
+            };
+
+            namespace impl {
+
+                void addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer);
+
+                std::map<std::string, DataVisualizer*> &getVisualizers();
+
+            }
+
+            template<hex::derived_from<DataVisualizer> T, typename... Args>
+            void addDataVisualizer(const std::string &unlocalizedName, Args &&...args) {
+                return impl::addDataVisualizer(unlocalizedName, new T(std::forward<Args>(args)...));
+            }
 
         }
     };

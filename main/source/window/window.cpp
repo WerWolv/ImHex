@@ -177,9 +177,10 @@ namespace hex {
                 glfwWaitEvents();
 
             } else {
-                double timeout = (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime);
-                timeout        = timeout > 0 ? timeout : 0;
-                glfwWaitEventsTimeout(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 ? 0 : timeout);
+                const bool frameRateThrottled = !(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 || this->m_mouseButtonDown);
+                const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
+
+                glfwWaitEventsTimeout(frameRateThrottled ? timeout : 0);
             }
 
 
@@ -568,23 +569,32 @@ namespace hex {
             win->frameEnd();
         });
 
+        glfwSetMouseButtonCallback(this->m_window, [](GLFWwindow *window, int button, int action, int mods) {
+            hex::unused(button, mods);
+
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+
+            if (action == GLFW_PRESS)
+                win->m_mouseButtonDown = true;
+            else if (action == GLFW_RELEASE)
+                win->m_mouseButtonDown = false;
+        });
+
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             auto keyName = glfwGetKeyName(key, scancode);
             if (keyName != nullptr)
                 key = std::toupper(keyName[0]);
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            auto &io = ImGui::GetIO();
 
-            if (action == GLFW_PRESS) {
-                auto &io = ImGui::GetIO();
-
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                 win->m_pressedKeys.push_back(key);
                 io.KeysDown[key] = true;
                 io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;
                 io.KeyAlt        = (mods & GLFW_MOD_ALT) != 0;
             } else if (action == GLFW_RELEASE) {
-                auto &io         = ImGui::GetIO();
                 io.KeysDown[key] = false;
                 io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
                 io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;

@@ -2,7 +2,8 @@
 
 namespace hex::plugin::builtin {
 
-    void registerViews();
+    void registerEventHandlers();
+    void registerDataVisualizers();
     void registerDataInspectorEntries();
     void registerToolEntries();
     void registerPatternLanguageFunctions();
@@ -15,9 +16,11 @@ namespace hex::plugin::builtin {
     void registerLayouts();
     void registerMainMenuEntries();
     void createWelcomeScreen();
+    void registerViews();
 
     void addFooterItems();
     void addToolbarItems();
+    void addGlobalUIItems();
 
     void registerLanguageEnUS();
     void registerLanguageDeDE();
@@ -37,7 +40,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerLanguageJaJP();
     registerLanguageZhCN();
 
-    registerViews();
+    registerEventHandlers();
+    registerDataVisualizers();
     registerDataInspectorEntries();
     registerToolEntries();
     registerPatternLanguageFunctions();
@@ -48,9 +52,12 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerProviders();
     registerDataFormatters();
     createWelcomeScreen();
+    registerViews();
 
     addFooterItems();
     addToolbarItems();
+    addGlobalUIItems();
+
     registerLayouts();
     registerMainMenuEntries();
 }

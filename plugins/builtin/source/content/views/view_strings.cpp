@@ -105,7 +105,8 @@ namespace hex::plugin::builtin {
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.strings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-                ImGui::Disabled([this] {
+                ImGui::BeginDisabled(this->m_searching);
+                {
                     if (ImGui::InputInt("hex.builtin.view.strings.min_length"_lang, &this->m_minimumLength, 1, 0))
                         this->m_foundStrings.clear();
 
@@ -158,8 +159,8 @@ namespace hex::plugin::builtin {
 
                     if (ImGui::Button("hex.builtin.view.strings.extract"_lang))
                         this->searchStrings();
-                },
-                    this->m_searching);
+                }
+                ImGui::EndDisabled();
 
                 if (this->m_searching) {
                     ImGui::SameLine();

@@ -63,7 +63,6 @@ namespace ImGui {
 
     void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
 
-    void Disabled(const std::function<void()> &widgets, bool disabled);
     void TextSpinner(const char *label);
 
     void Header(const char *label, bool firstEntry = false);
@@ -131,4 +130,8 @@ namespace ImGui {
 
     bool InputText(const char* label, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputTextMultiline(const char* label, std::string &buffer, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+
+    bool InputScalarCallback(const char* label, ImGuiDataType data_type, void* p_data, const char* format, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data);
+
+    void HideTooltip();
 }

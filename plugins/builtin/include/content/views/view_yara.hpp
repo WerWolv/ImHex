@@ -21,7 +21,9 @@ namespace hex::plugin::builtin {
             u64 address;
             size_t size;
             bool wholeDataMatch;
+
             u32 highlightId;
+            u32 tooltipId;
         };
 
         std::vector<std::pair<std::string, std::string>> m_rules;

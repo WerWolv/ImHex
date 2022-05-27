@@ -20,6 +20,8 @@ add_library(${PROJECT_NAME} SHARED
         source/content/layouts.cpp
         source/content/main_menu_items.cpp
         source/content/welcome_screen.cpp
+        source/content/data_visualizers.cpp
+        source/content/events.cpp
 
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp

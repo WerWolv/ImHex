@@ -129,6 +129,6 @@ namespace hex {
     EVENT_DEF(RequestOpenPopup, std::string);
     EVENT_DEF(RequestCreateProvider, std::string, hex::prv::Provider **);
 
-    EVENT_DEF(QuerySelection, Region &);
+    EVENT_DEF(QuerySelection, std::optional<Region> &);
 
 }
