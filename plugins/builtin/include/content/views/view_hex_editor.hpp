@@ -66,6 +66,10 @@ namespace hex::plugin::builtin {
             this->m_shouldScrollToSelection = true;
         }
 
+        void jumpIfOffScreen() {
+            this->m_shouldJumpWhenOffScreen = true;
+        }
+
     public:
         class Popup {
         public:
@@ -105,6 +109,7 @@ namespace hex::plugin::builtin {
 
         bool m_shouldJumpToSelection = false;
         bool m_shouldScrollToSelection = false;
+        bool m_shouldJumpWhenOffScreen = false;
 
         bool m_selectionChanged = false;
         u64 m_selectionStart = InvalidSelection;
