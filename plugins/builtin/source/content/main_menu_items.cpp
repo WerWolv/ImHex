@@ -257,7 +257,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.menu.edit.bookmark"_lang, nullptr, false, selection.has_value() && providerValid)) {
                 auto base = provider->getBaseAddress();
 
-                ImHexApi::Bookmarks::add(base + selection->getStartAddress(), selection->getEndAddress(), {}, {});
+                ImHexApi::Bookmarks::add(base + selection->getStartAddress(), selection->size, {}, {});
             }
         });
 
