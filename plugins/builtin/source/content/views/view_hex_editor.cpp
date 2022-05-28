@@ -845,7 +845,7 @@ namespace hex::plugin::builtin {
                             }
 
                             // If the cursor is off-screen, directly jump to the byte
-                            {
+                            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
                                 const auto newSelection = this->getSelection();
                                 if (newSelection.getStartAddress() < u64(clipper.DisplayStart * this->m_bytesPerRow))
                                     this->jumpToSelection();
