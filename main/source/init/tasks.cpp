@@ -178,10 +178,6 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions().clear();
         ImHexApi::HexEditor::impl::getTooltips().clear();
 
-        while (ImHexApi::Provider::isValid())
-            ImHexApi::Provider::remove(ImHexApi::Provider::get());
-        ContentRegistry::Provider::getEntries().clear();
-
         ContentRegistry::Settings::getEntries().clear();
         ContentRegistry::Settings::getSettingsData().clear();
 
@@ -216,6 +212,10 @@ namespace hex::init {
 
         ContentRegistry::DataFormatter::getEntries().clear();
         ContentRegistry::FileHandler::getEntries().clear();
+
+        while (ImHexApi::Provider::isValid())
+            ImHexApi::Provider::remove(ImHexApi::Provider::get());
+        ContentRegistry::Provider::getEntries().clear();
 
         return true;
     }
