@@ -42,10 +42,6 @@ namespace hex {
                     continue;
                 if (delimiterPos >= line.length())
                     continue;
-                if (delimiterPos >= from.length())
-                    continue;
-                if (delimiterPos >= to.length())
-                    continue;
 
                 from = line.substr(0, delimiterPos);
                 to   = line.substr(delimiterPos + 1);

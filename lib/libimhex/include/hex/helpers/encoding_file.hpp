@@ -2,9 +2,14 @@
 
 #include <hex.hpp>
 
+// TODO: Workaround for weird issue picked up by GCC 12.1.0 and later. This seems like a compiler bug mentioned in https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98465
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wrestrict"
+#pragma GCC diagnostic ignored "-Wstringop-overread"
 #include <map>
 #include <string_view>
 #include <vector>
+#pragma GCC diagnostic pop
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/file.hpp>

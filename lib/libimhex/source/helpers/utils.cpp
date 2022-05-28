@@ -204,11 +204,15 @@ namespace hex {
     }
 
     std::vector<std::string> splitString(const std::string &string, const std::string &delimiter) {
-        size_t start = 0, end;
+        size_t start = 0, end = 0;
         std::string token;
         std::vector<std::string> res;
 
         while ((end = string.find(delimiter, start)) != std::string::npos) {
+            size_t size = end - start;
+            if (start + size > string.length())
+                break;
+
             token = string.substr(start, end - start);
             start = end + delimiter.length();
             res.push_back(token);
