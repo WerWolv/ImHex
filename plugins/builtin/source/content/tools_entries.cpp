@@ -1220,7 +1220,7 @@ namespace hex::plugin::builtin {
                 const auto exponentBias = (u128(1) << (exponentBitCount - 1)) - 1;
 
                 const long double signValue = signBits == 0 ? 1 : -1;
-                const long double exponentValue = exponentBits == 0 ? 0 : std::pow<long double>(2, i128(exponentBits) - i128(exponentBias));
+                const long double exponentValue = exponentBits == 0 ? 0 : std::pow<long double>(2, i64(i128(exponentBits) - i128(exponentBias)));
                 const long double mantissaValue = [mantissaBitPosition] {
                     long double mantissa = 1.0;
                     for (i32 bit = 0; bit < mantissaBitCount; bit++) {
