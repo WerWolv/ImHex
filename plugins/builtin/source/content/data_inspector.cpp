@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
             [](auto buffer, auto endian, auto style) {
                 hex::unused(endian, style);
 
-                std::string binary = hex::format("0b{:b}", buffer[0]);
+                std::string binary = hex::format("0b{:08b}", buffer[0]);
 
                 return [binary] {
                     ImGui::TextUnformatted(binary.c_str());

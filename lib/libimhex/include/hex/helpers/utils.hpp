@@ -72,6 +72,18 @@ namespace hex {
         return (value ^ mask) - mask;
     }
 
+    template<hex::integral T>
+    constexpr inline T swapBitOrder(size_t numBits, T value) {
+        T result = 0x00;
+
+        for (size_t bit = 0; bit < numBits; bit++) {
+            result <<= 1;
+            result |= (value & (1 << bit)) != 0;
+        }
+
+        return result;
+    }
+
     template<class... Ts>
     struct overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts>

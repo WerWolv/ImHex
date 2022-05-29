@@ -134,4 +134,6 @@ namespace ImGui {
     bool InputScalarCallback(const char* label, ImGuiDataType data_type, void* p_data, const char* format, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data);
 
     void HideTooltip();
+
+    bool BitCheckbox(const char* label, bool* v);
 }
