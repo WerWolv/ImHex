@@ -1016,7 +1016,7 @@ namespace hex::plugin::builtin {
         if (clipboard.length() % 2 != 0) return;
 
         // Convert hex string to bytes
-        std::vector<u8> buffer = hex::decodeByteString(clipboard);
+        std::vector<u8> buffer = crypt::decode16(clipboard);
 
         // Write bytes
         provider->write(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(selection.size, buffer.size()));
