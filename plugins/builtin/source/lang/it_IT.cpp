@@ -216,11 +216,15 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.disassembler.disassembly.bytes", "Byte" },
 
                 { "hex.builtin.view.hashes.name", "Hash" },
-                    { "hex.builtin.view.hashes.settings", "Impostazioni" },
+                    { "hex.builtin.view.hashes.hash", "Hash" },
+                    //{ "hex.builtin.view.hashes.no_settings", "No settings available" },
                     { "hex.builtin.view.hashes.function", "Funzioni di Hash" },
-                    { "hex.builtin.view.hashes.iv", "Valore Iniziale" },
-                    { "hex.builtin.view.hashes.poly", "Polinomio" },
+                    //{ "hex.builtin.view.hashes.name", "Name" },
+                    //{ "hex.builtin.view.hashes.type", "Type" },
                     { "hex.builtin.view.hashes.result", "Risultato" },
+                    //{ "hex.builtin.view.hashes.remove", "Remove hash" },
+                    //{ "hex.builtin.view.hashes.hover_info", "Hover over the Hex Editor selection and hold down SHIFT to view the hashes of that region." },
+
 
                 { "hex.builtin.view.help.name", "Aiuto" },
                     { "hex.builtin.view.help.about.name", "Riguardo ImHex" },
@@ -734,6 +738,21 @@ namespace hex::plugin::builtin {
                 //{ "hex.builtin.visualizer.floating_point.64bit", "Floating Point (64 bits)" },
                 //{ "hex.builtin.visualizer.hexii", "HexII" },
                 //{ "hex.builtin.visualizer.rgba8", "RGBA8 Color" },
+
+                { "hex.builtin.hash.md5", "MD5" },
+                { "hex.builtin.hash.sha1", "SHA1" },
+                { "hex.builtin.hash.sha224", "SHA224" },
+                { "hex.builtin.hash.sha256", "SHA256" },
+                { "hex.builtin.hash.sha384", "SHA384" },
+                { "hex.builtin.hash.sha512", "SHA512" },
+                { "hex.builtin.hash.crc8", "CRC8" },
+                { "hex.builtin.hash.crc16", "CRC16" },
+                { "hex.builtin.hash.crc32", "CRC32" },
+                    { "hex.builtin.hash.crc.poly", "Polinomio" },
+                    { "hex.builtin.hash.crc.iv", "Valore Iniziale" },
+                    //{ "hex.builtin.hash.crc.xor_out", "XOR Out" },
+                    //{ "hex.builtin.hash.crc.refl_in", "Reflect In" },
+                    //{ "hex.builtin.hash.crc.refl_out", "Reflect Out" },
         });
     }
 
