@@ -582,4 +582,18 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::Hashes {
+
+        std::vector<Hash *> &impl::getHashes() {
+            static std::vector<Hash *> hashes;
+
+            return hashes;
+        }
+
+        void impl::add(Hash *hash) {
+            getHashes().push_back(hash);
+        }
+
+    }
+
 }

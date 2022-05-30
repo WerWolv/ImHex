@@ -421,6 +421,74 @@ namespace hex {
             }
 
         }
+
+        namespace Hashes {
+
+            class Hash {
+            public:
+                Hash(std::string name) : m_name(std::move(name)) {}
+
+                class Function {
+                public:
+                    using Callback = std::function<std::vector<u8>(const Region&, prv::Provider *)>;
+
+                    Function(const Hash *type, std::string name, Callback callback)
+                        : m_type(type), m_name(std::move(name)), m_callback(std::move(callback)) {
+
+                    }
+
+                    [[nodiscard]] const Hash *getType() const { return this->m_type; }
+                    [[nodiscard]] const std::string &getName() const { return this->m_name; }
+
+                    const std::vector<u8>& get(const Region& region, prv::Provider *provider) {
+                        if (this->m_cache.empty()) {
+                            this->m_cache = this->m_callback(region, provider);
+                        }
+
+                        return this->m_cache;
+                    }
+
+                    void reset() {
+                        this->m_cache.clear();
+                    }
+
+                private:
+                    const Hash *m_type;
+                    std::string m_name;
+                    Callback m_callback;
+
+                    std::vector<u8> m_cache;
+                };
+
+                virtual void draw() { }
+                [[nodiscard]] virtual Function create(std::string name) = 0;
+
+                [[nodiscard]] const std::string &getName() const {
+                    return this->m_name;
+                }
+
+            protected:
+                [[nodiscard]] Function create(const std::string &name, const Function::Callback &callback) const {
+                    return { this, name, callback };
+                }
+
+            private:
+                std::string m_name;
+            };
+
+            namespace impl {
+
+                std::vector<Hash*> &getHashes();
+
+                void add(Hash* hash);
+            }
+
+            template<typename T, typename ... Args>
+            void add(Args && ... args) {
+                impl::add(new T(std::forward<Args>(args)...));
+            }
+
+        }
     };
 
 }

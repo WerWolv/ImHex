@@ -439,7 +439,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginTooltip();
 
             for (const auto &[id, tooltip] : tooltips) {
-                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 

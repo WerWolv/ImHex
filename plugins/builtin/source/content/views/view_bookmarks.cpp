@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::BeginTooltip();
 
-                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 

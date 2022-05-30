@@ -19,7 +19,7 @@ namespace ImGui {
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
             auto &string = *static_cast<std::string *>(data->UserData);
 
-            string.resize(data->BufSize);
+            string.resize(data->BufTextLen);
             data->Buf = string.data();
         }
 
@@ -487,7 +487,7 @@ namespace ImGui {
         return pressed;
     }
 
-    bool InputIntegerPrefix(const char *label, const char *prefix, u64 *value, ImGuiInputTextFlags flags) {
+    bool InputIntegerPrefix(const char *label, const char *prefix, void *value, ImGuiDataType type, ImGuiInputTextFlags flags) {
         auto window             = ImGui::GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
@@ -500,7 +500,7 @@ namespace ImGui {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
 
         char buf[64];
-        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), ImGuiDataType_U64, value, "%llX");
+        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, "%llX");
 
         bool value_changed = false;
         if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), flags))
@@ -519,8 +519,12 @@ namespace ImGui {
         return value_changed;
     }
 
+    bool InputHexadecimal(const char *label, u32 *value, ImGuiInputTextFlags flags) {
+        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U32, flags | ImGuiInputTextFlags_CharsHexadecimal);
+    }
+
     bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
-        return InputIntegerPrefix(label, "0x", value, flags | ImGuiInputTextFlags_CharsHexadecimal);
+        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
     void SmallProgressBar(float fraction, float yOffset) {
