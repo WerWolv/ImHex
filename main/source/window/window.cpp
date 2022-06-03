@@ -653,8 +653,9 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
 
-        {
+        if (glfwGetPrimaryMonitor() != nullptr) {
             auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
+
             if (!sessionType || !hex::containsIgnoreCase(*sessionType, "wayland"))
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         }
