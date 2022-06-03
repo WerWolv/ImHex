@@ -275,9 +275,7 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.resize"_lang);
 
-            if (ImGui::InputHexadecimal("##resize", &this->m_size, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                resize(static_cast<size_t>(this->m_size));
-            }
+            ImGui::InputHexadecimal("##resize", &this->m_size);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
@@ -306,12 +304,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.insert"_lang);
 
-            if (ImGui::InputHexadecimal("hex.common.address"_lang, &this->m_address, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                insert(this->m_address, static_cast<size_t>(this->m_size));
-            }
-            if (ImGui::InputHexadecimal("hex.common.size"_lang, &this->m_size, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                insert(this->m_address, static_cast<size_t>(this->m_size));
-            }
+            ImGui::InputHexadecimal("hex.common.address"_lang, &this->m_address);
+            ImGui::InputHexadecimal("hex.common.size"_lang, &this->m_size);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
