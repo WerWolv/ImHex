@@ -143,7 +143,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
 
                     bool open = true;
-                    if (ImGui::CollapsingHeader(name.c_str(), &open)) {
+                    if (ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &open)) {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
                         ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
