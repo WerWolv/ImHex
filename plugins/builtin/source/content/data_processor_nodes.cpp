@@ -777,7 +777,16 @@ namespace hex::plugin::builtin {
         NodeVisualizerDigram() : Node("hex.builtin.nodes.visualizer.digram.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            const auto viewSize = scaled({ 200, 200 });
+            drawDigram(scaled({ 200, 200 }));
+
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                drawDigram(scaled({ 600, 600 }));
+                ImGui::EndTooltip();
+            }
+        }
+
+        void drawDigram(const ImVec2 &viewSize) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
             if (ImGui::BeginChild("##visualizer", viewSize, true)) {
                 auto drawList = ImGui::GetWindowDrawList();
@@ -860,7 +869,15 @@ namespace hex::plugin::builtin {
         NodeVisualizerLayeredDistribution() : Node("hex.builtin.nodes.visualizer.layered_dist.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            const auto viewSize = scaled({ 200, 200 });
+            drawLayeredDistribution(scaled({ 200, 200 }));
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                drawLayeredDistribution(scaled({ 600, 600 }));
+                ImGui::EndTooltip();
+            }
+        }
+
+        void drawLayeredDistribution(const ImVec2 &viewSize) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
             if (ImGui::BeginChild("##visualizer", viewSize, true)) {
                 auto drawList = ImGui::GetWindowDrawList();
@@ -944,6 +961,11 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.aspectRatio() * 200, 200)));
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.aspectRatio() * 600, 600)));
+                ImGui::EndTooltip();
+            }
         }
 
         void process() override {
@@ -964,8 +986,18 @@ namespace hex::plugin::builtin {
         NodeVisualizerByteDistribution() : Node("hex.builtin.nodes.visualizer.byte_distribution.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
+            drawPlot(scaled({ 400, 300 }));
+
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                drawPlot(scaled({ 700, 550 }));
+                ImGui::EndTooltip();
+            }
+        }
+
+        void drawPlot(const ImVec2 &viewSize) {
             ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_counts.begin(), this->m_counts.end())) * 1.1F, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##distribution", "Address", "Count", scaled(ImVec2(400, 300)), ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels)) {
+            if (ImPlot::BeginPlot("##distribution", "Address", "Count", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels)) {
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
                     std::iota(result.begin(), result.end(), 0);
