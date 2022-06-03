@@ -314,7 +314,7 @@ namespace hex::plugin::builtin {
                 return [value] { ImGui::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
-                std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("");
+                std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
 
                 std::vector<u8> bytes;
                 auto wideString = converter.from_bytes(value.c_str());
