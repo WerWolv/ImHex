@@ -538,7 +538,7 @@ namespace hex {
 
     namespace ContentRegistry::HexEditor {
 
-        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_EnterReturnsTrue;
+        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll;
 
         bool DataVisualizer::drawDefaultEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
             struct UserData {

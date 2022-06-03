@@ -484,8 +484,9 @@ namespace hex::plugin::builtin {
             ImGui::SetKeyboardFocusHere();
             ImGui::CaptureKeyboardFromApp(true);
 
-            if (this->m_currDataVisualizer->drawEditing(address, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode) || this->m_shouldModifyValue) {
-                provider->write(address, this->m_editingBytes.data(), this->m_editingBytes.size());
+            if (this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode) || this->m_shouldModifyValue) {
+
+                provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
 
                 if (!this->m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                     auto nextEditingAddress = *this->m_editingAddress + this->m_currDataVisualizer->getBytesPerCell();
@@ -498,6 +499,9 @@ namespace hex::plugin::builtin {
                 } else {
                     this->m_editingAddress = std::nullopt;
                 }
+
+                this->m_editingBytes.resize(size);
+                std::memcpy(this->m_editingBytes.data(), data, size);
 
                 this->m_shouldModifyValue = false;
             }
