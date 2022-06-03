@@ -4,7 +4,7 @@
 namespace hex::plugin::builtin {
 
     void registerLanguagePtBR() {
-        ContentRegistry::Language::registerLanguage("Portuguese (PT-BR)", "pt-BR");
+        ContentRegistry::Language::registerLanguage("Portuguese (Brazilian)", "pt-BR");
         LangEntry::setFallbackLanguage("pt-BR");
 
         ContentRegistry::Language::addLocalizations("pt-BR", {
