@@ -5,7 +5,6 @@ namespace hex::plugin::builtin {
 
     void registerLanguagePtBR() {
         ContentRegistry::Language::registerLanguage("Portuguese (Brazilian)", "pt-BR");
-        LangEntry::setFallbackLanguage("pt-BR");
 
         ContentRegistry::Language::addLocalizations("pt-BR", {
                 { "hex.builtin.welcome.header.main", "Bem-vindo ao ImHex" },
