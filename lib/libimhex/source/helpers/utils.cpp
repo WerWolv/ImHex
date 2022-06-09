@@ -13,7 +13,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_MACOS)
     #include <unistd.h>
 #endif
 
