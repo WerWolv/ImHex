@@ -2,6 +2,8 @@
     #include <CoreFoundation/CFBundle.h>
     #include <ApplicationServices/ApplicationServices.h>
 
+    #include <string>
+
     namespace hex {
 
         void openWebpageMacos(const std::string &url) {
