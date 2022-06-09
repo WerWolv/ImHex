@@ -1,7 +1,7 @@
 #include <hex/helpers/fs.hpp>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/fs_macos.h>
+#include <hex/helpers/fs_macos.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/intrinsics.hpp>
 

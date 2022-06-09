@@ -1,5 +1,5 @@
 #if defined(OS_MACOS)
-    #include <hex/helpers/fs_macos.h>
+    #include <hex/helpers/fs_macos.hpp>
 
     #include <Foundation/Foundation.h>
 

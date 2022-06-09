@@ -16,7 +16,7 @@
 #elif defined(OS_LINUX)
     #include <unistd.h>
 #elif defined(OS_MACOS)
-    #include <hex/helpers/utils_macos.h>
+    #include <hex/helpers/utils_macos.hpp>
     #include <unistd.h>
 #endif
 
@@ -267,7 +267,7 @@ namespace hex {
             ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
             openWebpageMacos(url);
-        #<<<<<<elif>>>>>> defined(OS_LINUX)
+        #elif defined(OS_LINUX)
             auto result = system(hex::format("xdg-open {0}", url).c_str());
             hex::unused(result);
         #else
