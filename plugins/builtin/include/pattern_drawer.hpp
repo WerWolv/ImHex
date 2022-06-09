@@ -57,7 +57,7 @@ namespace hex {
         }
 
         bool drawArrayRoot(pl::Pattern& pattern, size_t entryCount, bool isInlined);
-        void drawArrayNode(u64 idx, u64 displayEnd, pl::Pattern& pattern);
+        void drawArrayNode(u64 idx, u64& displayEnd, pl::Pattern& pattern);
         void drawArrayEnd(pl::Pattern& pattern, bool opened);
 
         void drawCommentTooltip(const pl::Pattern &pattern) const;
