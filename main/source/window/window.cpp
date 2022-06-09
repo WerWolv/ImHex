@@ -348,11 +348,12 @@ namespace hex {
                     ImGui::TableHeadersRow();
 
                     for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Plugins, true)) {
+                        const auto filePath = path / "builtin.hexplug";
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(path.string().c_str());
+                        ImGui::TextUnformatted(filePath.string().c_str());
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(fs::exists(path) ? ICON_VS_CHECK : ICON_VS_CLOSE);
+                        ImGui::TextUnformatted(fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
                     }
                     ImGui::EndTable();
                 }
