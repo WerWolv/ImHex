@@ -421,6 +421,10 @@ namespace hex::plugin::builtin {
         return { std::string(decoded), advance, color };
     }
 
+    static auto getCellPosition() {
+        return ImGui::GetCursorScreenPos() - ImGui::GetStyle().CellPadding;
+    }
+
     static void drawTooltip(u64 address, const u8 *data, size_t size) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled(ImVec2(5, 5)));
 
@@ -683,7 +687,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
 
                             if (x < validBytes) {
-                                auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+                                auto cellStartPos = getCellPosition();
                                 auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
@@ -740,7 +744,7 @@ namespace hex::plugin::builtin {
 
                                     const u64 byteAddress = y * this->m_bytesPerRow + x + provider->getBaseAddress() + provider->getCurrentPageAddress();
 
-                                    const auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+                                    const auto cellStartPos = getCellPosition();
                                     const auto cellSize = CharacterSize;
 
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
@@ -795,7 +799,7 @@ namespace hex::plugin::builtin {
                                 for (const auto &[address, data] : encodingData) {
                                     ImGui::TableNextColumn();
 
-                                    const auto cellStartPos  = (ImGui::GetWindowPos() + ImGui::GetCursorPos()) - ImGui::GetStyle().CellPadding - ImVec2(ImGui::GetScrollX(), ImGui::GetScrollY());
+                                    const auto cellStartPos = getCellPosition();
                                     const auto cellSize = CharacterSize * data.advance;
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
 
