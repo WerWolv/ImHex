@@ -3,13 +3,13 @@
 
     #include <Foundation/Foundation.h>
 
-    extern "C" std::string getMacExecutableDirectoryPath() {
+    extern "C" void getMacExecutableDirectoryPath(std::string &result) {
         @autoreleasepool {
-            return {[[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String]};
+            result = {[[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String]};
         }
     }
 
-    extern "C" std::string getMacApplicationSupportDirectoryPath() {
+    extern "C" void getMacApplicationSupportDirectoryPath(std::string &result) {
         @autoreleasepool {
             NSError* error = nil;
             NSURL* dirUrl = [[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
@@ -22,7 +22,7 @@
                 __builtin_unreachable();
             }
 
-            return {[[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String]};
+            result = {[[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String]};
         }
     }
 #endif
