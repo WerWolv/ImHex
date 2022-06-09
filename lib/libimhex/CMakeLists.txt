@@ -158,6 +158,7 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRAR
 if (APPLE)
     find_library(FOUNDATION NAMES Foundation)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
+    target_compile_options(libimhex PRIVATE -lobjc)
 endif ()
 
 target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs libpl)
