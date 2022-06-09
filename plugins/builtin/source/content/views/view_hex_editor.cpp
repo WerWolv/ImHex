@@ -709,7 +709,7 @@ namespace hex::plugin::builtin {
                                     this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, cellSize);
                                 }
 
-                                const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
+                                const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
                                 this->handleSelection(byteAddress, bytesPerCell, &bytes[x], cellHovered);
 
@@ -747,7 +747,7 @@ namespace hex::plugin::builtin {
                                     const auto cellStartPos = getCellPosition();
                                     const auto cellSize = CharacterSize;
 
-                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
+                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
                                     this->handleSelection(byteAddress, bytesPerCell, &bytes[x], cellHovered);
 
@@ -801,7 +801,7 @@ namespace hex::plugin::builtin {
 
                                     const auto cellStartPos = getCellPosition();
                                     const auto cellSize = CharacterSize * data.advance;
-                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
+                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
                                     auto [foregroundColor, backgroundColor] = cellColors[address % this->m_bytesPerRow];
 
@@ -829,8 +829,8 @@ namespace hex::plugin::builtin {
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
                         if (this->m_shouldScrollToSelection && (this->m_selectionEnd != InvalidSelection) && (this->m_selectionStart != InvalidSelection)) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
-                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && this->m_selectionStart != this->m_selectionEnd) || (!ImGui::IsMouseDown(ImGuiMouseButton_Left))) {
-                                auto fractionPerLine = 1.0 / this->m_visibleRowCount;
+                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && this->m_selectionStart != this->m_selectionEnd)) {
+                                auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
                                 if (y == clipper.DisplayStart + 2) {
                                     if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 2) * this->m_bytesPerRow)) {
@@ -850,24 +850,33 @@ namespace hex::plugin::builtin {
                             if (this->m_shouldJumpWhenOffScreen) {
                                 this->m_shouldJumpWhenOffScreen = false;
 
-                                const auto newSelection = this->getSelection();
-                                if (newSelection.getStartAddress() < u64(clipper.DisplayStart * this->m_bytesPerRow))
+                                const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
+                                auto newSelection = this->getSelection();
+                                newSelection.address -= pageAddress;
+
+                                if ((newSelection.getStartAddress()) < u64(clipper.DisplayStart * this->m_bytesPerRow))
                                     this->jumpToSelection();
-                                if (newSelection.getEndAddress() > u64(clipper.DisplayEnd * this->m_bytesPerRow))
+                                if ((newSelection.getEndAddress()) > u64(clipper.DisplayEnd * this->m_bytesPerRow))
                                     this->jumpToSelection();
 
                             }
                         }
                     }
                 }
+
+                // Handle jumping to selection
+                if (this->m_shouldJumpToSelection) {
+                    this->m_shouldJumpToSelection = false;
+
+                    const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
+                    auto newSelection = this->getSelection();
+                    newSelection.address -= pageAddress;
+
+                    ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (static_cast<long double>(newSelection.getStartAddress()) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
+                }
+
             } else {
                 ImGui::TextFormattedCentered("hex.builtin.view.hex_editor.no_bytes"_lang);
-            }
-
-            // Handle jumping to selection
-            if (this->m_shouldJumpToSelection) {
-                this->m_shouldJumpToSelection = false;
-                ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (float(this->m_selectionStart) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
             }
 
             ImGui::EndTable();
