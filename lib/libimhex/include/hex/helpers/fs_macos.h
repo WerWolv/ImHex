@@ -3,8 +3,6 @@
 #if defined(OS_MACOS)
     #include <hex/helpers/fs.hpp>
 
-namespace hex {
-    std::string getMacExecutableDirectoryPath();
-    std::string getMacApplicationSupportDirectoryPath();
-}
+    extern "C" std::string getMacExecutableDirectoryPath();
+    extern "C" std::string getMacApplicationSupportDirectoryPath();
 #endif

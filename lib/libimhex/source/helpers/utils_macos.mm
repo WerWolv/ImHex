@@ -6,13 +6,10 @@
 
     #include <string>
 
-    namespace hex {
-
-        void openWebpageMacos(std::string url) {
-            CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<u8 *>(url.data()), url.length(), kCFStringEncodingASCII, nullptr);
-            LSOpenCFURLRef(urlRef, nullptr);
-            CFRelease(urlRef);
-        }
-
+    extern "C" void openWebpageMacos(std::string url) {
+        CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<u8 *>(url.data()), url.length(), kCFStringEncodingASCII, nullptr);
+        LSOpenCFURLRef(urlRef, nullptr);
+        CFRelease(urlRef);
     }
+
 #endif

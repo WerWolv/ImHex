@@ -262,7 +262,7 @@ namespace hex {
 #if defined(OS_WINDOWS)
         ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #elif defined(OS_MACOS)
-        void openWebpageMacos(std::string url);
+        extern "C" void openWebpageMacos(std::string url);
 
         openWebpageMacos(url);
 #elif defined(OS_LINUX)
