@@ -321,7 +321,7 @@ namespace hex {
         return open;
     }
 
-    void PatternDrawer::drawArrayNode(u64 idx, u64 displayEnd, pl::Pattern& pattern) {
+    void PatternDrawer::drawArrayNode(u64 idx, u64& displayEnd, pl::Pattern& pattern) {
         u64 lastVisible = displayEnd - 1;
 
         ImGui::PushID(pattern.getOffset());
