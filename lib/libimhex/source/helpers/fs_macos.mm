@@ -4,6 +4,7 @@
     #include <Foundation/Foundation.h>
 
     namespace hex {
+
         std::string getMacExecutableDirectoryPath() {
             @autoreleasepool {
                 return {[[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String]};
@@ -26,5 +27,6 @@
                 return {[[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String]};
             }
         }
+
     }
 #endif

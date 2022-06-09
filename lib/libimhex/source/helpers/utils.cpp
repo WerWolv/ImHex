@@ -2,8 +2,6 @@
 
 #include <cstdio>
 #include <codecvt>
-#include <locale>
-#include <filesystem>
 
 #include <hex/api/imhex_api.hpp>
 
@@ -18,9 +16,6 @@
 #elif defined(OS_LINUX)
     #include <unistd.h>
 #endif
-
-#include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 namespace hex {
 
@@ -267,9 +262,9 @@ namespace hex {
 #if defined(OS_WINDOWS)
         ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #elif defined(OS_MACOS)
-        CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<u8 *>(url.data()), url.length(), kCFStringEncodingASCII, nullptr);
-        LSOpenCFURLRef(urlRef, nullptr);
-        CFRelease(urlRef);
+        void openWebpageMacos(const std::string &url);
+
+        openWebpageMacos(url);
 #elif defined(OS_LINUX)
         auto result = system(hex::format("xdg-open {0}", url).c_str());
         hex::unused(result);
