@@ -131,8 +131,8 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=$(brew --prefix llvm)/bin/clang \
-        CXX=$(brew --prefix llvm)/bin/clang++ \
+        CC=$(brew --prefix gcc)/bin/gcc \
+        CXX=$(brew --prefix gcc)/bin/g++ \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
         MACOSX_DEPLOYMENT_TARGET="10.15" \
         cmake                                   \
