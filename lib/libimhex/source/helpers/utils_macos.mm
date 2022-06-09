@@ -1,4 +1,6 @@
 #if defined(OS_MACOS)
+    #include <hex.hpp>
+
     #include <CoreFoundation/CFBundle.h>
     #include <ApplicationServices/ApplicationServices.h>
 
