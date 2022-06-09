@@ -17,9 +17,6 @@
     #include <windows.h>
 #elif defined(OS_LINUX)
     #include <unistd.h>
-#elif defined(OS_MACOS)
-    #include <CoreFoundation/CFBundle.h>
-    #include <ApplicationServices/ApplicationServices.h>
 #endif
 
 #include <hex/helpers/logger.hpp>
