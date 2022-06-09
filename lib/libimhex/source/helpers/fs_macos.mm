@@ -5,7 +5,7 @@
 
     extern "C" void getMacExecutableDirectoryPath(std::string &result) {
         @autoreleasepool {
-            result = {[[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String]};
+            result = [[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String];
         }
     }
 
@@ -22,7 +22,7 @@
                 __builtin_unreachable();
             }
 
-            result = {[[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String]};
+            result = [[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String];
         }
     }
 
