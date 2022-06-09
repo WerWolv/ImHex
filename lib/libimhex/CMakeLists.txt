@@ -123,7 +123,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/patches.cpp
     source/helpers/project_file_handler.cpp
     source/helpers/encoding_file.cpp
-    source/helpers/loader_script_handler.cpp
     source/helpers/logger.cpp
     source/helpers/tar.cpp
 
