@@ -133,6 +133,8 @@ jobs:
         cd build
         CC=$(brew --prefix gcc@12)/bin/gcc-12 \
         CXX=$(brew --prefix gcc@12)/bin/g++-12 \
+        OBJC=$(brew --prefix llvm)/bin/clang \
+        OBJCXX=$(brew --prefix llvm)/bin/clang++ \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
         MACOSX_DEPLOYMENT_TARGET="10.15" \
         cmake                                   \
