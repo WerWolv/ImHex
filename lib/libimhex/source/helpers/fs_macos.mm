@@ -1,6 +1,6 @@
 #if defined(OS_MACOS)
-    #include <hex/helpers/fs_macos.hpp>
 
+    #include <hex/helpers/fs_macos.hpp>
     #include <Foundation/Foundation.h>
 
     extern "C" void getMacExecutableDirectoryPath(std::string &result) {
@@ -25,4 +25,5 @@
             result = {[[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String]};
         }
     }
+
 #endif
