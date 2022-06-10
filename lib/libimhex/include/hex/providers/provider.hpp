@@ -35,6 +35,7 @@ namespace hex::prv {
 
         virtual void resize(size_t newSize);
         virtual void insert(u64 offset, size_t size);
+        virtual void remove(u64 offset, size_t size);
 
         virtual void save();
         virtual void saveAs(const std::fs::path &path);

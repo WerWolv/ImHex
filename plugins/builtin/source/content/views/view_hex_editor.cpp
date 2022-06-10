@@ -328,6 +328,37 @@ namespace hex::plugin::builtin {
         u64 m_size;
     };
 
+    class PopupRemove : public ViewHexEditor::Popup {
+    public:
+        PopupRemove(u64 address, size_t size) : m_address(address), m_size(size) {}
+
+        void draw(ViewHexEditor *editor) override {
+            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.remove"_lang);
+
+            ImGui::InputHexadecimal("hex.common.address"_lang, &this->m_address);
+            ImGui::InputHexadecimal("hex.common.size"_lang, &this->m_size);
+
+            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+                [&, this]{
+                    remove(this->m_address, static_cast<size_t>(this->m_size));
+                    editor->closePopup();
+                },
+                [&]{
+                    editor->closePopup();
+                });
+        }
+
+    private:
+        static void remove(u64 address, size_t size) {
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->remove(address, size);
+        }
+
+    private:
+        u64 m_address;
+        u64 m_size;
+    };
+
     ViewHexEditor::ViewHexEditor() : View("hex.builtin.view.hex_editor.name") {
         this->m_currDataVisualizer = ContentRegistry::HexEditor::impl::getVisualizers()["hex.builtin.visualizer.hexadecimal.8bit"];
 
@@ -1370,6 +1401,10 @@ namespace hex::plugin::builtin {
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable())) {
                 this->openPopup<PopupInsert>(this->getSelection().getStartAddress(), 0x00);
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.remove"_lang, nullptr, false, providerValid && provider->isResizable())) {
+                this->openPopup<PopupRemove>(this->getSelection().getStartAddress(), 0x00);
             }
         });
     }

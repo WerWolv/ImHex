@@ -278,6 +278,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.set_base", "Set base address" },
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "Resize..." },
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "Insert..." },
+                    { "hex.builtin.view.hex_editor.menu.edit.remove", "Remove..." },
 
                 { "hex.builtin.view.information.name", "Data Information" },
                     { "hex.builtin.view.information.control", "Control" },
