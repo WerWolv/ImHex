@@ -662,10 +662,13 @@ namespace hex::plugin::builtin {
 
                                         if ((byteAddress >= selectionMin && byteAddress <= selectionMax)) {
                                             if (color.has_value())
-                                                color = ((ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
+                                                color = (ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF;
                                             else
                                                 color = this->m_selectionColor;
                                         }
+
+                                        if (color.has_value())
+                                            color = *color | (this->m_selectionColor & 0xFF000000);
 
                                         return color;
                                     }();

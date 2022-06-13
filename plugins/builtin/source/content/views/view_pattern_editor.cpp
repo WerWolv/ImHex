@@ -260,8 +260,9 @@ namespace hex::plugin::builtin {
 
                         this->drawPatternTooltip(child);
 
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, pattern->getColor());
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, pattern->getColor());
+                        auto tooltipColor = (child->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
                         ImGui::EndTable();
                         ImGui::PopStyleColor(2);
                     }
