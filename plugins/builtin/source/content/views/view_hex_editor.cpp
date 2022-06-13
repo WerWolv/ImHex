@@ -655,24 +655,26 @@ namespace hex::plugin::builtin {
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
 
                                 // Query cell colors
-                                const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x], cellBytes);
-                                const auto backgroundColor = [&]{
-                                    auto color = queryBackgroundColor(byteAddress, &bytes[x], cellBytes);
+                                if (x < validBytes) {
+                                    const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x], cellBytes);
+                                    const auto backgroundColor = [&]{
+                                        auto color = queryBackgroundColor(byteAddress, &bytes[x], cellBytes);
 
-                                    if ((byteAddress >= selectionMin && byteAddress <= selectionMax)) {
-                                        if (color.has_value())
-                                            color = ((ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
-                                        else
-                                            color = this->m_selectionColor;
-                                    }
+                                        if ((byteAddress >= selectionMin && byteAddress <= selectionMax)) {
+                                            if (color.has_value())
+                                                color = ((ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
+                                            else
+                                                color = this->m_selectionColor;
+                                        }
 
-                                    return color;
-                                }();
+                                        return color;
+                                    }();
 
-                                cellColors.emplace_back(
-                                    foregroundColor,
-                                    backgroundColor
-                                );
+                                    cellColors.emplace_back(
+                                        foregroundColor,
+                                        backgroundColor
+                                    );
+                                }
                             }
                         }
 
