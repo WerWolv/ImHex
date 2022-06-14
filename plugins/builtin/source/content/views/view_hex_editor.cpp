@@ -951,8 +951,8 @@ namespace hex::plugin::builtin {
                     ImGui::EndTable();
                 }
 
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
         }
     }
 

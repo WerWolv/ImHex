@@ -20,7 +20,6 @@ namespace hex::plugin::builtin {
     private:
         constexpr static auto InvalidSelection = std::numeric_limits<u64>::max();
 
-        void openFile(const std::fs::path &path);
         void registerShortcuts();
         void registerEvents();
         void registerMenuItems();
