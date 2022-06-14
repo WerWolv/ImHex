@@ -754,21 +754,21 @@ namespace hex::plugin::builtin {
 
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
-                                    this->handleSelection(byteAddress, bytesPerCell, &bytes[x], cellHovered);
-
-                                    auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
-
-                                    // Draw highlights and selection
-                                    if (backgroundColor.has_value()) {
-                                        auto drawList = ImGui::GetWindowDrawList();
-
-                                        // Draw background color
-                                        drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
-
-                                        this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
-                                    }
-
                                     if (x < validBytes) {
+                                        this->handleSelection(byteAddress, bytesPerCell, &bytes[x], cellHovered);
+
+                                        auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
+
+                                        // Draw highlights and selection
+                                        if (backgroundColor.has_value()) {
+                                            auto drawList = ImGui::GetWindowDrawList();
+
+                                            // Draw background color
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+
+                                            this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
+                                        }
+
                                         if (std::isprint(bytes[x]))
                                             ImGui::TextFormatted("{:c}", bytes[x]);
                                         else
@@ -808,21 +808,24 @@ namespace hex::plugin::builtin {
                                     const auto cellSize = CharacterSize * data.advance;
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
-                                    auto [foregroundColor, backgroundColor] = cellColors[address % this->m_bytesPerRow];
+                                    const auto x = address % this->m_bytesPerRow;
+                                    if (x < validBytes) {
+                                        auto [foregroundColor, backgroundColor] = cellColors[x];
 
-                                    // Draw highlights and selection
-                                    if (backgroundColor.has_value()) {
-                                        auto drawList = ImGui::GetWindowDrawList();
+                                        // Draw highlights and selection
+                                        if (backgroundColor.has_value()) {
+                                            auto drawList = ImGui::GetWindowDrawList();
 
-                                        // Draw background color
-                                        drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+                                            // Draw background color
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
 
-                                        this->drawSelectionFrame(address % this->m_bytesPerRow, y, address, 1, cellStartPos, cellSize);
+                                            this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
+                                        }
+
+                                        ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
+
+                                        this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
                                     }
-
-                                    ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
-
-                                    this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
                                 }
 
                                 ImGui::EndTable();
