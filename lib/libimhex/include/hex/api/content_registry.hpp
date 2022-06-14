@@ -426,7 +426,7 @@ namespace hex {
 
             class Hash {
             public:
-                Hash(std::string name) : m_name(std::move(name)) {}
+                Hash(std::string unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
 
                 class Function {
                 public:
@@ -463,8 +463,8 @@ namespace hex {
                 virtual void draw() { }
                 [[nodiscard]] virtual Function create(std::string name) = 0;
 
-                [[nodiscard]] const std::string &getName() const {
-                    return this->m_name;
+                [[nodiscard]] const std::string &getUnlocalizedName() const {
+                    return this->m_unlocalizedName;
                 }
 
             protected:
@@ -473,7 +473,7 @@ namespace hex {
                 }
 
             private:
-                std::string m_name;
+                std::string m_unlocalizedName;
             };
 
             namespace impl {

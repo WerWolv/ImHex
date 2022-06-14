@@ -70,10 +70,10 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.hashes.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? this->m_selectedHash->getName().c_str() : "")) {
+            if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? LangEntry(this->m_selectedHash->getUnlocalizedName()) : "")) {
 
                 for (const auto hash : hashes) {
-                    if (ImGui::Selectable(hash->getName().c_str(), this->m_selectedHash == hash)) {
+                    if (ImGui::Selectable(LangEntry(hash->getUnlocalizedName()), this->m_selectedHash == hash)) {
                         this->m_selectedHash = hash;
                         this->m_newHashName.clear();
                     }
@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
             }
 
             if (this->m_newHashName.empty() && this->m_selectedHash != nullptr)
-                this->m_newHashName = hex::format("{} {}", this->m_selectedHash->getName(), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
+                this->m_newHashName = hex::format("{} {}", LangEntry(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
 
             if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvailWidth(), 200_scaled), true)) {
                 if (this->m_selectedHash != nullptr) {
@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}", function.getType()->getName());
+                    ImGui::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
 
                     ImGui::TableNextColumn();
                     std::string result;

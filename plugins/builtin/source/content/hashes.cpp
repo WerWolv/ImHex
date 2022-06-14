@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
 
     class HashMD5 : public ContentRegistry::Hashes::Hash {
     public:
-        HashMD5() : Hash("hex.builtin.hash.md5"_lang) {}
+        HashMD5() : Hash("hex.builtin.hash.md5") {}
 
         Function create(std::string name) override {
             return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
 
     class HashSHA1 : public ContentRegistry::Hashes::Hash {
     public:
-        HashSHA1() : Hash("hex.builtin.hash.sha1"_lang) {}
+        HashSHA1() : Hash("hex.builtin.hash.sha1") {}
 
         Function create(std::string name) override {
             return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
 
     class HashSHA224 : public ContentRegistry::Hashes::Hash {
     public:
-        HashSHA224() : Hash("hex.builtin.hash.sha224"_lang) {}
+        HashSHA224() : Hash("hex.builtin.hash.sha224") {}
 
         Function create(std::string name) override {
             return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
 
     class HashSHA256 : public ContentRegistry::Hashes::Hash {
     public:
-        HashSHA256() : Hash("hex.builtin.hash.sha256"_lang) {}
+        HashSHA256() : Hash("hex.builtin.hash.sha256") {}
 
         Function create(std::string name) override {
             return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
 
     class HashSHA384 : public ContentRegistry::Hashes::Hash {
     public:
-        HashSHA384() : Hash("hex.builtin.hash.sha384"_lang) {}
+        HashSHA384() : Hash("hex.builtin.hash.sha384") {}
 
         Function create(std::string name) override {
             return Hash::create(name, [](const Region& region, prv::Provider *provider) -> std::vector<u8> {
@@ -131,9 +131,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Hashes::add<HashSHA384>();
         ContentRegistry::Hashes::add<HashSHA512>();
 
-        ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc8"_lang,  crypt::crc8,  0x07,        0x0000,      0x0000);
-        ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc16"_lang, crypt::crc16, 0x8005,      0x0000,      0x0000);
-        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32"_lang, crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0xFFFF'FFFF);
+        ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc8",  crypt::crc8,  0x07,        0x0000,      0x0000);
+        ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc16", crypt::crc16, 0x8005,      0x0000,      0x0000);
+        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32", crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0xFFFF'FFFF);
 
     }
 
