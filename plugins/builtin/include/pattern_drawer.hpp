@@ -7,8 +7,8 @@
 namespace hex {
 
     template<typename T>
-    concept ArrayPattern = requires(T pattern, std::function<void(int, pl::Pattern&)> fn) {
-        { pattern.forEachArrayEntry(fn) } -> std::same_as<void>;
+    concept ArrayPattern = requires(u64 displayEnd, T pattern, std::function<void(int, pl::Pattern&)> fn) {
+        { pattern.forEachArrayEntry(displayEnd, fn) } -> std::same_as<void>;
     };
 
     class PatternDrawer : public pl::PatternVisitor {
@@ -48,7 +48,7 @@ namespace hex {
 
             if (opened) {
                 auto& displayEnd = this->getDisplayEnd(pattern);
-                pattern.forEachArrayEntry([&] (u64 idx, auto &entry){
+                pattern.forEachArrayEntry(displayEnd, [&] (u64 idx, auto &entry){
                     this->drawArrayNode(idx, displayEnd, entry);
                 });
             }
