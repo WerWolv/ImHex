@@ -153,6 +153,9 @@ macro(createPackage)
         if (TARGET ${plugin})
             get_target_property(IS_RUST_PROJECT ${plugin} RUST_PROJECT)
 
+            set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+            set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+
             if (IS_RUST_PROJECT)
                 set_target_properties(${plugin} PROPERTIES CARGO_BUILD_TARGET_DIR  ${CMAKE_BINARY_DIR}/plugins)
 
@@ -160,7 +163,6 @@ macro(createPackage)
 
                 install(FILES "${PLUGIN_LOCATION}/../${plugin}.hexplug" DESTINATION "${PLUGINS_INSTALL_LOCATION}")
             else ()
-                set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
                 if (WIN32)
                     install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
                 elseif (APPLE)
