@@ -51,6 +51,12 @@ namespace hex::fs {
     }
 
     [[maybe_unused]]
+    static inline bool removeAll(const std::fs::path &path) {
+        std::error_code error;
+        return std::filesystem::remove_all(path, error) && !error;
+    }
+
+    [[maybe_unused]]
     static inline uintmax_t getFileSize(const std::fs::path &path) {
         std::error_code error;
         auto size = std::filesystem::file_size(path, error);

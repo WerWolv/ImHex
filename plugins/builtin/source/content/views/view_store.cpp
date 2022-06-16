@@ -12,12 +12,12 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/tar.hpp>
 
 #include <fstream>
 #include <filesystem>
 #include <functional>
 #include <nlohmann/json.hpp>
-#include <microtar.h>
 
 namespace hex::plugin::builtin {
 
@@ -76,34 +76,8 @@ namespace hex::plugin::builtin {
                                         entry.hasUpdate = false;
 
                                         if (entry.isFolder) {
-                                            mtar_t ctx;
-                                            mtar_open(&ctx, this->m_downloadPath.string().c_str(), "r");
-
-                                            mtar_header_t header;
-                                            auto extractBasePath = this->m_downloadPath.parent_path() / this->m_downloadPath.stem();
-                                            while (mtar_read_header(&ctx, &header) != MTAR_ENULLRECORD) {
-                                                auto filePath = extractBasePath / std::fs::path(header.name);
-                                                if (filePath.filename() == "@PaxHeader") {
-                                                    mtar_next(&ctx);
-                                                    continue;
-                                                }
-
-                                                fs::createDirectories(filePath.parent_path());
-                                                fs::File outputFile(filePath.string(), fs::File::Mode::Create);
-
-                                                std::vector<u8> buffer(0x10000);
-                                                for (u64 offset = 0; offset < header.size; offset += buffer.size()) {
-                                                    auto readSize = std::min<u64>(buffer.size(), header.size - offset);
-                                                    mtar_read_data(&ctx, buffer.data(), readSize);
-
-                                                    buffer.resize(readSize);
-                                                    outputFile.write(buffer);
-                                                }
-                                                mtar_next(&ctx);
-                                            }
-
-                                            mtar_finalize(&ctx);
-                                            mtar_close(&ctx);
+                                            Tar tar(this->m_downloadPath, Tar::Mode::Read);
+                                            tar.extractAll(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
                                         }
 
                                         downloadDoneCallback(entry);
@@ -257,12 +231,15 @@ namespace hex::plugin::builtin {
     }
 
     bool ViewStore::remove(fs::ImHexPath pathType, const std::string &fileName) {
-        bool removed = false;
+        bool removed = true;
         for (const auto &path : fs::getDefaultPaths(pathType)) {
-            bool removedFile   = fs::remove(path / std::fs::path(fileName));
-            bool removedFolder = fs::remove(path / std::fs::path(fileName).stem());
+            const auto filePath = path / fileName;
+            const auto folderPath = (path / std::fs::path(fileName).stem());
 
-            removed = removed || removedFile || removedFolder;
+            fs::remove(filePath);
+            fs::removeAll(folderPath);
+
+            removed = removed && !fs::exists(filePath) && !fs::exists(folderPath);
         }
 
         return removed;

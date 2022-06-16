@@ -125,12 +125,13 @@ set(LIBIMHEX_SOURCES
     source/helpers/encoding_file.cpp
     source/helpers/loader_script_handler.cpp
     source/helpers/logger.cpp
+    source/helpers/tar.cpp
 
     source/providers/provider.cpp
 
     source/ui/imgui_imhex_extensions.cpp
     source/ui/view.cpp
-)
+    )
 
 if (APPLE)
     set(OSX_11_0_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk)
