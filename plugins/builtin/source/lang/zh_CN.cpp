@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.open", "打开" },
                 { "hex.builtin.common.browse", "浏览..." },
                 { "hex.builtin.common.choose_file", "选择文件" },
-                //{ "hex.common.processing", "Processing" },
+                //{ "hex.builtin.common.processing", "Processing" },
 
                 { "hex.builtin.popup.exit_application.title", "退出？" },
                 { "hex.builtin.popup.exit_application.desc", "工程还有为保存的更改。\n确定要退出吗？" },

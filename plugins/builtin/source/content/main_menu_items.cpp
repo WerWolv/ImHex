@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
 
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         std::thread([path] {
-                            auto task = ImHexApi::Tasks::createTask("hex.common.processing", 0);
+                            auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
 
                             auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
                             auto patch     = hex::loadIPSPatch(patchData);
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.ips32"_lang, nullptr, false)) {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         std::thread([path] {
-                            auto task = ImHexApi::Tasks::createTask("hex.common.processing", 0);
+                            auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
 
                             auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
                             auto patch     = hex::loadIPS32Patch(patchData);
@@ -185,7 +185,7 @@ namespace hex::plugin::builtin {
                     }
 
                     std::thread([patches] {
-                        auto task = ImHexApi::Tasks::createTask("hex.common.processing", 0);
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
 
                         auto data = generateIPSPatch(patches);
 
@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
                     }
 
                     std::thread([patches] {
-                        auto task = ImHexApi::Tasks::createTask("hex.common.processing", 0);
+                        auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
 
                         auto data = generateIPS32Patch(patches);
 

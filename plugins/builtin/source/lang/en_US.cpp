@@ -81,7 +81,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.open", "Open" },
                 { "hex.builtin.common.browse", "Browse..." },
                 { "hex.builtin.common.choose_file", "Choose file" },
-                { "hex.common.processing", "Processing" },
+                { "hex.builtin.common.processing", "Processing" },
 
                 { "hex.builtin.popup.exit_application.title", "Exit Application?" },
                 { "hex.builtin.popup.exit_application.desc", "You have unsaved changes made to your Project.\nAre you sure you want to exit?" },

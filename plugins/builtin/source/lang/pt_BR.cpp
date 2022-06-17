@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.open", "Abrir" },
                 { "hex.builtin.common.browse", "Navegar..." },
                 { "hex.builtin.common.choose_file", "Escolher arquivo" },
-                { "hex.common.processing", "Processando" },
+                { "hex.builtin.common.processing", "Processando" },
 
                 { "hex.builtin.popup.exit_application.title", "Sair da aplicação?" },
                 { "hex.builtin.popup.exit_application.desc", "Você tem alterações não salvas feitas em seu projeto.\nVocê tem certeza que quer sair?" },

@@ -304,8 +304,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.insert"_lang);
 
-            ImGui::InputHexadecimal("hex.common.address"_lang, &this->m_address);
-            ImGui::InputHexadecimal("hex.common.size"_lang, &this->m_size);
+            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
+            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
@@ -335,8 +335,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.remove"_lang);
 
-            ImGui::InputHexadecimal("hex.common.address"_lang, &this->m_address);
-            ImGui::InputHexadecimal("hex.common.size"_lang, &this->m_size);
+            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
+            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
