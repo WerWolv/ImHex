@@ -479,7 +479,9 @@ namespace hex::plugin::builtin {
                     this->m_editingAddress = address;
                     this->m_shouldModifyValue = false;
                     this->m_enteredEditingMode = true;
-                    this->m_shouldUpdateEditingValue = true;
+
+                    this->m_editingBytes.resize(size);
+                    std::memcpy(this->m_editingBytes.data(), data, size);
                 }
             }
         }
