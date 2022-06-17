@@ -187,8 +187,8 @@ namespace hex::fs {
 
         std::vector<std::fs::path> paths = { applicationSupportDir };
 
-        if (exePath)
-            paths.push_back(exePath);
+        if (exePath.has_value()
+            paths.push_back(exePath.value());
 
         switch (path) {
             case ImHexPath::Patterns:
