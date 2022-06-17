@@ -32,6 +32,7 @@ namespace hex::plugin::builtin::prv {
 
         void resize(size_t newSize) override;
         void insert(u64 offset, size_t size) override;
+        void remove(u64 offset, size_t size) override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;

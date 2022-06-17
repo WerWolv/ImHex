@@ -63,6 +63,22 @@ namespace hex::prv {
             patches.insert({ address + size, value });
     }
 
+    void Provider::remove(u64 offset, size_t size) {
+        auto &patches = getPatches();
+
+        std::vector<std::pair<u64, u8>> patchesToMove;
+
+        for (auto &[address, value] : patches) {
+            if (address > offset)
+                patchesToMove.emplace_back(address, value);
+        }
+
+        for (const auto &[address, value] : patchesToMove)
+            patches.erase(address);
+        for (const auto &[address, value] : patchesToMove)
+            patches.insert({ address - size, value });
+    }
+
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
         for (auto &overlay : this->m_overlays) {
             auto overlayOffset = overlay->getAddress();

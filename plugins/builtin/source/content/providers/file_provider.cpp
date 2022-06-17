@@ -123,7 +123,7 @@ namespace hex::plugin::builtin::prv {
 
         auto position = oldSize;
         while (position > offset) {
-            size_t readSize = (position >= (offset + buffer.size())) ? buffer.size() : (position - offset);
+            const auto readSize = std::min<size_t>(position - offset, buffer.size());
 
             position -= readSize;
 
@@ -131,6 +131,28 @@ namespace hex::plugin::builtin::prv {
             this->writeRaw(position, zeroBuffer.data(), readSize);
             this->writeRaw(position + size, buffer.data(), readSize);
         }
+
+        Provider::insert(offset, size);
+    }
+
+    void FileProvider::remove(u64 offset, size_t size) {
+        auto oldSize = this->getActualSize();
+        this->resize(oldSize + size);
+
+        std::vector<u8> buffer(0x1000);
+
+        const auto newSize = oldSize - size;
+        auto position = offset;
+        while (position < newSize) {
+            const auto readSize = std::min<size_t>(newSize - position, buffer.size());
+
+            this->readRaw(position + size, buffer.data(), readSize);
+            this->writeRaw(position, buffer.data(), readSize);
+
+            position += readSize;
+        }
+
+        this->resize(newSize);
 
         Provider::insert(offset, size);
     }
