@@ -127,6 +127,7 @@ namespace hex::plugin::builtin {
         std::optional<u64> m_editingAddress;
         bool m_shouldModifyValue = false;
         bool m_enteredEditingMode = false;
+        bool m_shouldUpdateEditingValue = false;
         std::vector<u8> m_editingBytes;
 
         color_t m_selectionColor = 0x00;

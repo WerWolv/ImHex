@@ -463,6 +463,13 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered) {
         auto provider = ImHexApi::Provider::get();
 
+        if (this->m_shouldUpdateEditingValue) {
+            this->m_shouldUpdateEditingValue = false;
+
+            this->m_editingBytes.resize(size);
+            std::memcpy(this->m_editingBytes.data(), data, size);
+        }
+
         if (this->m_editingAddress != address) {
             this->m_currDataVisualizer->draw(address, data, size, this->m_upperCaseHex);
 
@@ -472,9 +479,7 @@ namespace hex::plugin::builtin {
                     this->m_editingAddress = address;
                     this->m_shouldModifyValue = false;
                     this->m_enteredEditingMode = true;
-
-                    this->m_editingBytes.resize(size);
-                    std::memcpy(this->m_editingBytes.data(), data, size);
+                    this->m_shouldUpdateEditingValue = true;
                 }
             }
         }
@@ -498,10 +503,8 @@ namespace hex::plugin::builtin {
                     this->m_editingAddress = std::nullopt;
                 }
 
-                this->m_editingBytes.resize(size);
-                std::memcpy(this->m_editingBytes.data(), data, size);
-
                 this->m_shouldModifyValue = false;
+                this->m_shouldUpdateEditingValue = true;
             }
 
             this->m_enteredEditingMode = false;
