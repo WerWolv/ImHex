@@ -187,7 +187,7 @@ namespace hex::fs {
 
         std::vector<std::fs::path> paths = { applicationSupportDir };
 
-        if (exePath.has_value()
+        if (exePath.has_value())
             paths.push_back(exePath.value());
 
         switch (path) {
