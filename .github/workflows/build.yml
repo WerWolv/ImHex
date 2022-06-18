@@ -2,6 +2,7 @@ name: Build
 
 on:
   push:
+    branches: ["*"]
   pull_request:
 
 env:
