@@ -1,0 +1,37 @@
+permissions:
+  contents: write
+
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:    
+      - name: Get sources
+        uses: actions/checkout@v3
+        with:
+          path: ImHex
+          submodules: recursive
+
+      - name: Create tarball from sources with dependencies
+        run: tar -cvf Full.Sources.tar.gz ImHex
+        
+      - name: Download artifacts from latest workflow
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build.yml
+          workflow_conclusion: success
+          skip_unpack: true
+      
+      - name: Upload everything to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            *.zip
+            *.tar.gz
