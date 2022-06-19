@@ -1158,23 +1158,42 @@ namespace hex::plugin::builtin {
 
         // Move selection around
         ShortcutManager::addShortcut(this, SHIFT + Keys::Up, [this] {
-            this->setSelection(this->m_selectionEnd - this->m_bytesPerRow, this->m_selectionEnd);
+            this->m_selectionStart = std::max<u64>(this->m_selectionStart, this->m_bytesPerRow);
+
+            this->setSelection(this->m_selectionStart - this->m_bytesPerRow, this->m_selectionEnd);
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Down, [this] {
-            this->setSelection(this->m_selectionEnd + this->m_bytesPerRow, this->m_selectionEnd);
+            this->setSelection(this->m_selectionStart + this->m_bytesPerRow, this->m_selectionEnd);
             this->scrollToSelection();
             this->jumpIfOffScreen();
 
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Left, [this] {
-            this->setSelection(this->m_selectionEnd - 1, this->m_selectionEnd);
+            this->m_selectionStart = std::max<u64>(this->m_selectionStart, 1);
+
+            this->setSelection(this->m_selectionStart - 1, this->m_selectionEnd);
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Right, [this] {
-            this->setSelection(this->m_selectionEnd + 1, this->m_selectionEnd);
+            this->setSelection(this->m_selectionStart + 1, this->m_selectionEnd);
+            this->scrollToSelection();
+            this->jumpIfOffScreen();
+        });
+        ShortcutManager::addShortcut(this, Keys::PageUp, [this] {
+            u64 visibleByteCount = this->m_bytesPerRow * this->m_visibleRowCount;
+            if (this->m_selectionEnd >= visibleByteCount) {
+                auto pos = this->m_selectionEnd - visibleByteCount;
+                this->setSelection(pos, this->m_selectionEnd);
+                this->scrollToSelection();
+                this->jumpIfOffScreen();
+            }
+        });
+        ShortcutManager::addShortcut(this, Keys::PageDown, [this] {
+            auto pos = this->m_selectionEnd + (this->m_bytesPerRow * this->m_visibleRowCount);
+            this->setSelection(pos, this->m_selectionEnd);
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });

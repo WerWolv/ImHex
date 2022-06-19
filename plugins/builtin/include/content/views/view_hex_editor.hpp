@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
 
     public:
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
-        void setSelection(i128 start, i128 end) {
+        void setSelection(u128 start, u128 end) {
             if (!ImHexApi::Provider::isValid())
                 return;
             if (start == InvalidSelection && end == InvalidSelection)
@@ -45,8 +45,8 @@ namespace hex::plugin::builtin {
 
             this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
 
-            this->m_selectionStart = std::clamp<decltype(start)>(start, 0, maxAddress);
-            this->m_selectionEnd = std::clamp<decltype(end)>(end, 0, maxAddress);
+            this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
+            this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
 
             if (this->m_selectionChanged) {
                 EventManager::post<EventRegionSelected>(this->getSelection());
