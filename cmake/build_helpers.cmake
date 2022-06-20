@@ -245,8 +245,8 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        install(TARGETS main DESTINATION ${bundle_path})
         install(TARGETS main BUNDLE DESTINATION ".")
+        install(FILES "$<TARGET_FILE:main>" DESTINATION "${bundle_path}")
         downloadImHexPatternsFiles("${bundle_path}/Contents/MacOS")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
