@@ -221,7 +221,7 @@ jobs:
       - name: ⬆️ Upload ELF
         uses: actions/upload-artifact@v2
         with:
-          name: Linux ELF
+          name: Linux ELF (Ubuntu 20.04)
           path: |
             build/AppDir/*
 
