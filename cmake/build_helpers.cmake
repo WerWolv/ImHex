@@ -238,20 +238,18 @@ macro(createPackage)
         add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/Resources")
 
         install(FILES ${IMHEX_ICON} DESTINATION "${bundle_path}/Contents/Resources")
+        install(TARGETS main BUNDLE DESTINATION ".")
+        install(FILES $<TARGET_FILE:main> DESTINATION "${bundle_path}")
+        downloadImHexPatternsFiles("${bundle_path}/Contents/MacOS")
 
         # Update library references to make the bundle portable
         postprocess_bundle(imhex_all main)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
-
-        install(TARGETS main BUNDLE DESTINATION ".")
-        install(FILES "$<TARGET_FILE:main>" DESTINATION "${bundle_path}")
-        downloadImHexPatternsFiles("${bundle_path}/Contents/MacOS")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
-
 
     if (CREATE_PACKAGE)
         include(apple)
