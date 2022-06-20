@@ -180,7 +180,6 @@ macro(createPackage)
         endif ()
     endforeach()
 
-    install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
     if (WIN32)
@@ -217,10 +216,13 @@ macro(createPackage)
                 )
         endforeach()
         ]])
+
+        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     elseif(UNIX AND NOT APPLE)
         configure_file(${CMAKE_SOURCE_DIR}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
         install(FILES ${CMAKE_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
+        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     endif()
 
     if (CREATE_BUNDLE)
@@ -241,7 +243,8 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        install(TARGETS main BUNDLE DESTINATION .)
+        install(TARGETS main BUNDLE DESTINATION ${bundle_path})
+        downloadImHexPatternsFiles(${bundle_path})
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
@@ -282,7 +285,7 @@ macro(detectBadClone)
 endmacro()
 
 
-function(downloadImHexPatternsFiles)
+function(downloadImHexPatternsFiles dest)
     FetchContent_Declare(
         imhex_patterns
         GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
@@ -293,7 +296,7 @@ function(downloadImHexPatternsFiles)
 
     set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic)
     foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
-        install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "./")
+        install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION ${dest})
     endforeach()
 
 endfunction()
