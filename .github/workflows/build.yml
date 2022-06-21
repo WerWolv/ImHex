@@ -26,7 +26,6 @@ jobs:
     - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
         submodules: recursive
 
     - name: 🟦 Install msys2
@@ -114,7 +113,6 @@ jobs:
     - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
         submodules: recursive
 
     - name: ⬇️ Install dependencies
@@ -161,7 +159,6 @@ jobs:
       - name: 🧰 Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           submodules: recursive
 
       - name: 📜 Restore cache

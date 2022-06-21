@@ -19,7 +19,6 @@ jobs:
     - name: 🧰 Checkout
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
         submodules: recursive
 
     - name: 📜 Restore cache
