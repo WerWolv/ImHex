@@ -237,10 +237,11 @@ macro(createPackage)
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
         add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/Resources")
 
+        downloadImHexPatternsFiles("${bundle_path}/Contents/MacOS")
+        
         install(FILES ${IMHEX_ICON} DESTINATION "${bundle_path}/Contents/Resources")
         install(TARGETS main BUNDLE DESTINATION ".")
         install(FILES $<TARGET_FILE:main> DESTINATION "${bundle_path}")
-        downloadImHexPatternsFiles("${bundle_path}/Contents/MacOS")
 
         # Update library references to make the bundle portable
         postprocess_bundle(imhex_all main)
