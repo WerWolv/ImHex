@@ -152,8 +152,8 @@ jobs:
 
   # Linux build
   linux:
-    runs-on: ubuntu-20.04
-    name: 🐧 Ubuntu 20.04
+    runs-on: ubuntu-22.04
+    name: 🐧 Ubuntu 22.04
     steps:
 
       - name: 🧰 Checkout
@@ -219,7 +219,7 @@ jobs:
       - name: ⬆️ Upload ELF
         uses: actions/upload-artifact@v2
         with:
-          name: Linux ELF (Ubuntu 20.04)
+          name: Linux ELF (Ubuntu 22.04)
           path: |
             build/AppDir/*
 
@@ -247,7 +247,7 @@ jobs:
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v2
         with:
-          name: Linux DEB (Ubuntu 20.04)
+          name: Linux DEB (Ubuntu 22.04)
           path: |
             imhex.deb
 
