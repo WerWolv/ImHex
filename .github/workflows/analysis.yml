@@ -15,18 +15,17 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
-        fetch-depth: 0
         submodules: recursive
 
     - name: ✋ Initialize CodeQL
-      uses: github/codeql-action/init@v1
+      uses: github/codeql-action/init@v2
       with:
         languages: 'cpp'
 
     - name: 📜 Restore cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.ccache
@@ -42,7 +41,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=gcc-10 CXX=g++-10 cmake              \
+        CC=gcc-11 CXX=g++-11 cmake              \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
@@ -53,4 +52,4 @@ jobs:
         make -j 4 install
 
     - name: 🗯️ Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
+      uses: github/codeql-action/analyze@v2

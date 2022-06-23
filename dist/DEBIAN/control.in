@@ -4,7 +4,7 @@ Section: editors
 Priority: optional
 Architecture: amd64
 License: GNU GPL-2
-Depends: libglfw3-dev, libmagic-dev, libmbedtls-dev, libcapstone-dev, python3-dev, libfreetype-dev, libgtk-3-dev, libldap2-dev
+Depends: libglfw3, libmagic1, libmbedtls14, libpython3.10, libfreetype6, libopengl0, libgtk-3-0
 Maintainer: WerWolv <hey@werwolv.net>
 Description: ImHex Hex Editor
  A Hex Editor for Reverse Engineers, Programmers and
