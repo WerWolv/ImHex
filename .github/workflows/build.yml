@@ -4,6 +4,7 @@ on:
   push:
     branches: ["*"]
   pull_request:
+  workflow_dispatch:
 
 env:
   BUILD_TYPE: Release
@@ -23,9 +24,8 @@ jobs:
       CCACHE_COMPRESS: "true"
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
-        fetch-depth: 0
         submodules: recursive
 
     - name: 🟦 Install msys2
@@ -61,7 +61,7 @@ jobs:
         echo "::set-output name=dir::$CCACHE_DIR"
 
     - name: 📜 Restore Cache
-      uses:  actions/cache@v1
+      uses:  actions/cache@v3
       id:    cache-ccache
       with:
         path: ${{ steps.prep-ccache.outputs.dir }}
@@ -91,14 +91,14 @@ jobs:
         cpack
 
     - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Windows Portable ZIP
         path: |
           build/install/*
 
     - name: ⬆️ Upload Windows Installer
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Windows Installer
         path: |
@@ -111,9 +111,8 @@ jobs:
     steps:
 
     - name: 🧰 Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
-        fetch-depth: 0
         submodules: recursive
 
     - name: ⬇️ Install dependencies
@@ -121,7 +120,7 @@ jobs:
         brew bundle --no-lock --file dist/Brewfile
 
     - name: 📜 Restore cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.ccache
@@ -146,25 +145,24 @@ jobs:
         make -j4 package
 
     - name: ⬆️ Upload DMG
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: macOS DMG
         path: build/*.dmg
 
   # Linux build
   linux:
-    runs-on: ubuntu-20.04
-    name: 🐧 Ubuntu 20.04
+    runs-on: ubuntu-22.04
+    name: 🐧 Ubuntu 22.04
     steps:
 
       - name: 🧰 Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
           submodules: recursive
 
       - name: 📜 Restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.ccache
@@ -218,13 +216,6 @@ jobs:
       #    flatpak-builder --jobs=4 --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
       #    flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
 
-      - name: ⬆️ Upload ELF
-        uses: actions/upload-artifact@v2
-        with:
-          name: Linux ELF
-          path: |
-            build/AppDir/*
-
       - name: 📦 Bundle DEB
         run: |
           cp -r build/DEBIAN build/AppDir
@@ -240,21 +231,21 @@ jobs:
           cd ..
 
       #- name: ⬆️ Upload Flatpak
-      #  uses: actions/upload-artifact@v2
+      #  uses: actions/upload-artifact@v3
       #  with:
       #    name: Linux Flatpak
       #    path: |
       #      imhex.flatpak
 
       - name: ⬆️ Upload DEB
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: Linux DEB
+          name: Linux DEB (Ubuntu 22.04)
           path: |
             imhex.deb
 
       - name: ⬆️ Upload AppImage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Linux AppImage
           path: |

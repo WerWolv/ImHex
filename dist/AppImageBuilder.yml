@@ -1,21 +1,7 @@
 # appimage-builder recipe see https://appimage-builder.readthedocs.io for details
 version: 1
-script:
-  - rm -rf AppDir | true
-  - CC=gcc-11 CXX=g++11 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
-  - make -j3 install DESTDIR=AppDir
-  - mv AppDir/usr/share/imhex/plugins AppDir/usr/bin/plugins
-  - mv AppDir/usr/constants AppDir/usr/bin/constants
-  - mv AppDir/usr/encodings AppDir/usr/bin/encodings
-  - mv AppDir/usr/includes AppDir/usr/bin/includes
-  - mv AppDir/usr/magic AppDir/usr/bin/magic
-  - mv AppDir/usr/patterns AppDir/usr/bin/patterns
-  - mkdir -p AppDir/usr/share/icons/hicolor/512x512
-  - cp AppDir/usr/share/pixmaps/imhex.png AppDir/usr/share/icons/hicolor/512x512/imhex.png
-  
-
 AppDir:
-  path: ./AppDir
+  path: .AppDir
   app_info:
     id: imhex
     name: ImHex
@@ -28,18 +14,19 @@ AppDir:
     - amd64
     allow_unauthenticated: true
     sources:
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish main restricted
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish-updates main restricted
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish universe
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish-updates universe
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish multiverse
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish-updates multiverse
-    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ impish-backports main restricted
+    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ jammy main restricted
+    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ jammy-updates main restricted
+    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ jammy universe
+    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ jammy-updates universe
+    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ jammy multiverse
+    - sourceline: deb http://us.archive.ubuntu.com/ubuntu/ jammy-updates multiverse
+    - sourceline: deb http://.archive.ubuntu.com/ubuntu/ jammy-backports main restricted
         universe multiverse
-    - sourceline: deb http://security.ubuntu.com/ubuntu impish-security main restricted
-    - sourceline: deb http://security.ubuntu.com/ubuntu impish-security universe
-    - sourceline: deb http://security.ubuntu.com/ubuntu impish-security multiverse
+    - sourceline: deb http://security.ubuntu.com/ubuntu jammy-security main restricted
+    - sourceline: deb http://security.ubuntu.com/ubuntu jammy-security universe
+    - sourceline: deb http://security.ubuntu.com/ubuntu jammy-security multiverse
     include:
+    - adwaita-icon-theme-full # wtf ?
     - libbz2-1.0:amd64
     - libcap2:amd64
     - libdbus-1-3:amd64
@@ -53,7 +40,7 @@ AppDir:
     include:
     - /lib/x86_64-linux-gnu/libGLX.so.0
     - /lib/x86_64-linux-gnu/libGLdispatch.so.0
-    - /lib/x86_64-linux-gnu/libLLVM-12.so.1
+    - /lib/x86_64-linux-gnu/libLLVM-13.so.1
     - /lib/x86_64-linux-gnu/libOpenGL.so.0
     - /lib/x86_64-linux-gnu/libX11.so.6
     - /lib/x86_64-linux-gnu/libXau.so.6
@@ -81,7 +68,7 @@ AppDir:
     - /lib/x86_64-linux-gnu/libedit.so.2
     - /lib/x86_64-linux-gnu/libelf.so.1
     - /lib/x86_64-linux-gnu/libepoxy.so.0
-    - /lib/x86_64-linux-gnu/libffi.so.7
+    - /lib/x86_64-linux-gnu/libffi.so.8
     - /lib/x86_64-linux-gnu/libfontconfig.so.1
     - /lib/x86_64-linux-gnu/libfreetype.so.6
     - /lib/x86_64-linux-gnu/libfribidi.so.0
@@ -93,31 +80,42 @@ AppDir:
     - /lib/x86_64-linux-gnu/libglfw.so.3
     - /lib/x86_64-linux-gnu/libglib-2.0.so.0
     - /lib/x86_64-linux-gnu/libgmodule-2.0.so.0
+    - /lib/x86_64-linux-gnu/libgmp.so.10
+    - /lib/x86_64-linux-gnu/libgnutls.so.30
     - /lib/x86_64-linux-gnu/libgobject-2.0.so.0
     - /lib/x86_64-linux-gnu/libgraphite2.so.3
     - /lib/x86_64-linux-gnu/libgtk-3.so.0
     - /lib/x86_64-linux-gnu/libharfbuzz.so.0
-    - /lib/x86_64-linux-gnu/libicudata.so.66
-    - /lib/x86_64-linux-gnu/libicuuc.so.66
+    - /lib/x86_64-linux-gnu/libhogweed.so.6
+    - /lib/x86_64-linux-gnu/libicudata.so.70
+    - /lib/x86_64-linux-gnu/libicuuc.so.70
+    - /lib/x86_64-linux-gnu/libidn2.so.0
     - /lib/x86_64-linux-gnu/libjpeg.so.8
+    - /lib/x86_64-linux-gnu/liblber-2.5.so.0
+    - /lib/x86_64-linux-gnu/libldap-2.5.so.0
     - /lib/x86_64-linux-gnu/liblz4.so.1
     - /lib/x86_64-linux-gnu/libmagic.so.1
-    - /lib/x86_64-linux-gnu/libmbedcrypto.so.3
-    - /lib/x86_64-linux-gnu/libmbedtls.so.12
-    - /lib/x86_64-linux-gnu/libmbedx509.so.0
+    - /lib/x86_64-linux-gnu/libmbedcrypto.so.7
+    - /lib/x86_64-linux-gnu/libmbedtls.so.14
+    - /lib/x86_64-linux-gnu/libmbedx509.so.1
     - /lib/x86_64-linux-gnu/libmd.so.0
     - /lib/x86_64-linux-gnu/libmount.so.1
+    - /lib/x86_64-linux-gnu/libnettle.so.8
+    - /lib/x86_64-linux-gnu/libp11-kit.so.0
     - /lib/x86_64-linux-gnu/libpango-1.0.so.0
     - /lib/x86_64-linux-gnu/libpangocairo-1.0.so.0
     - /lib/x86_64-linux-gnu/libpangoft2-1.0.so.0
     - /lib/x86_64-linux-gnu/libpcre2-8.so.0
     - /lib/x86_64-linux-gnu/libpixman-1.so.0
     - /lib/x86_64-linux-gnu/libpng16.so.16
-    - /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+    - /lib/x86_64-linux-gnu/libpython3.10.so.1.0
+    - /lib/x86_64-linux-gnu/libsasl2.so.2
     - /lib/x86_64-linux-gnu/libsensors.so.5
     - /lib/x86_64-linux-gnu/libstdc++.so.6
     - /lib/x86_64-linux-gnu/libsystemd.so.0
+    - /lib/x86_64-linux-gnu/libtasn1.so.6
     - /lib/x86_64-linux-gnu/libthai.so.0
+    - /lib/x86_64-linux-gnu/libunistring.so.2
     - /lib/x86_64-linux-gnu/libuuid.so.1
     - /lib/x86_64-linux-gnu/libvulkan.so.1
     - /lib/x86_64-linux-gnu/libwayland-client.so.0
