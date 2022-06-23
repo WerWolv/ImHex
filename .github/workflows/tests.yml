@@ -17,12 +17,12 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 
     - name: 📜 Restore cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.ccache

@@ -24,7 +24,7 @@ jobs:
       CCACHE_COMPRESS: "true"
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -61,7 +61,7 @@ jobs:
         echo "::set-output name=dir::$CCACHE_DIR"
 
     - name: 📜 Restore Cache
-      uses:  actions/cache@v1
+      uses:  actions/cache@v3
       id:    cache-ccache
       with:
         path: ${{ steps.prep-ccache.outputs.dir }}
@@ -91,14 +91,14 @@ jobs:
         cpack
 
     - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Windows Portable ZIP
         path: |
           build/install/*
 
     - name: ⬆️ Upload Windows Installer
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Windows Installer
         path: |
@@ -111,7 +111,7 @@ jobs:
     steps:
 
     - name: 🧰 Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -120,7 +120,7 @@ jobs:
         brew bundle --no-lock --file dist/Brewfile
 
     - name: 📜 Restore cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.ccache
@@ -145,7 +145,7 @@ jobs:
         make -j4 package
 
     - name: ⬆️ Upload DMG
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: macOS DMG
         path: build/*.dmg
@@ -157,12 +157,12 @@ jobs:
     steps:
 
       - name: 🧰 Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: 📜 Restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.ccache
@@ -231,21 +231,21 @@ jobs:
           cd ..
 
       #- name: ⬆️ Upload Flatpak
-      #  uses: actions/upload-artifact@v2
+      #  uses: actions/upload-artifact@v3
       #  with:
       #    name: Linux Flatpak
       #    path: |
       #      imhex.flatpak
 
       - name: ⬆️ Upload DEB
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Linux DEB (Ubuntu 22.04)
           path: |
             imhex.deb
 
       - name: ⬆️ Upload AppImage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Linux AppImage
           path: |
