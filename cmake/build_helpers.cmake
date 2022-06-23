@@ -133,14 +133,14 @@ macro(configurePackingResources)
             set(MACOSX_BUNDLE_INFO_STRING "WerWolv")
             set(MACOSX_BUNDLE_BUNDLE_NAME "ImHex")
             set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-            set(MACOSX_BUNDLE_GUI_IDENTIFIER "WerWolv.ImHex")
+            set(MACOSX_BUNDLE_GUI_IDENTIFIER "net.WerWolv.ImHex")
             set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}-${GIT_COMMIT_HASH}")
             set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
             set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 WerWolv and Thog. All rights reserved." )
             if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
-                set ( bundle_path "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/imhex.app" )
+                set ( bundle_path "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ImHex.app" )
             else ()
-                set ( bundle_path "${CMAKE_BINARY_DIR}/imhex.app" )
+                set ( bundle_path "${CMAKE_BINARY_DIR}/ImHex.app" )
             endif()
         endif()
     endif()
@@ -180,7 +180,6 @@ macro(createPackage)
         endif ()
     endforeach()
 
-    install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     set_target_properties(libimhex PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
     if (WIN32)
@@ -217,10 +216,15 @@ macro(createPackage)
                 )
         endforeach()
         ]])
+
+        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        downloadImHexPatternsFiles("./")
     elseif(UNIX AND NOT APPLE)
         configure_file(${CMAKE_SOURCE_DIR}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
         install(FILES ${CMAKE_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
+        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        downloadImHexPatternsFiles("./")
     endif()
 
     if (CREATE_BUNDLE)
@@ -233,19 +237,20 @@ macro(createPackage)
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/MacOS/plugins")
         add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${bundle_path}/Contents/Resources")
 
+        downloadImHexPatternsFiles("${bundle_path}/Contents/MacOS")
+        
         install(FILES ${IMHEX_ICON} DESTINATION "${bundle_path}/Contents/Resources")
+        install(TARGETS main BUNDLE DESTINATION ".")
+        install(FILES $<TARGET_FILE:main> DESTINATION "${bundle_path}")
 
         # Update library references to make the bundle portable
         postprocess_bundle(imhex_all main)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
-
-        install(TARGETS main BUNDLE DESTINATION .)
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
-
 
     if (CREATE_PACKAGE)
         include(apple)
@@ -282,7 +287,7 @@ macro(detectBadClone)
 endmacro()
 
 
-function(downloadImHexPatternsFiles)
+function(downloadImHexPatternsFiles dest)
     FetchContent_Declare(
         imhex_patterns
         GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
@@ -293,7 +298,7 @@ function(downloadImHexPatternsFiles)
 
     set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic)
     foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
-        install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION "./")
+        install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION ${dest})
     endforeach()
 
 endfunction()

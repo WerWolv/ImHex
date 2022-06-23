@@ -36,6 +36,3 @@ add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 # Configure packaging
 createPackage()
-
-# Download and install all current files from the ImHex-Patterns repo
-downloadImHexPatternsFiles()
