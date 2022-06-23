@@ -41,7 +41,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=gcc-10 CXX=g++-10 cmake              \
+        CC=gcc-11 CXX=g++-11 cmake              \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install" \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
