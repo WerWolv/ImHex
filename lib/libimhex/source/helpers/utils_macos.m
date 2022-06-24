@@ -8,8 +8,8 @@
     #include <stdint.h>
 
     void openWebpageMacos(const char *url) {
-        CFURLRef urlRef = CFURLCreateWithBytes(NULL, (uint8_t*)(url), strlen(url), kCFStringEncodingASCII, nullptr);
-        LSOpenCFURLRef(urlRef, nullptr);
+        CFURLRef urlRef = CFURLCreateWithBytes(NULL, (uint8_t*)(url), strlen(url), kCFStringEncodingASCII, NULL);
+        LSOpenCFURLRef(urlRef, NULL);
         CFRelease(urlRef);
     }
 
