@@ -4,8 +4,8 @@
 
     #include <hex/helpers/fs.hpp>
 
-    extern "C" const char * getMacExecutableDirectoryPath();
-    extern "C" const char * getMacApplicationSupportDirectoryPath();
+    extern "C" char * getMacExecutableDirectoryPath();
+    extern "C" char * getMacApplicationSupportDirectoryPath();
 
     extern "C" void macFree(void *ptr);
 
