@@ -25,7 +25,7 @@
                                                                       error:&error];
 
             if (error != nil) {
-                __builtin_unreachable();
+                return NULL;
             }
 
             const char *pathString = [[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String];
@@ -40,6 +40,5 @@
     void macFree(void *ptr) {
         free(ptr);
     }
-}
 
 #endif
