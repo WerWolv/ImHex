@@ -1,15 +1,21 @@
 #if defined(OS_MACOS)
 
-    #include <hex/helpers/fs_macos.hpp>
+    #include <string.h>
+    #include <stdlib.h>
     #include <Foundation/Foundation.h>
 
-    extern "C" void getMacExecutableDirectoryPath(std::string &result) {
+    const char* getMacExecutableDirectoryPath() {
         @autoreleasepool {
-            result = [[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String];
+            const char *pathString = [[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String];
+
+            char *result = malloc(strlen(pathString) + 1);
+            strcpy(result, pathString);
+
+            return result;
         }
     }
 
-    extern "C" void getMacApplicationSupportDirectoryPath(std::string &result) {
+    const char* getMacApplicationSupportDirectoryPath() {
         @autoreleasepool {
             NSError* error = nil;
             NSURL* dirUrl = [[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
@@ -22,8 +28,18 @@
                 __builtin_unreachable();
             }
 
-            result = [[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String];
+            const char *pathString = [[[dirUrl URLByAppendingPathComponent:(@"imhex")] path] UTF8String];
+
+            char *result = malloc(strlen(pathString) + 1);
+            strcpy(result, pathString);
+
+            return result;
         }
     }
+
+    void macFree(void *ptr) {
+        free(ptr);
+    }
+}
 
 #endif

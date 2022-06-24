@@ -4,6 +4,6 @@
 
     #include <string>
 
-    extern "C" void openWebpageMacos(std::string url);
+    extern "C" void openWebpageMacos(const char *url);
 
 #endif

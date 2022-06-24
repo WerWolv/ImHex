@@ -3,9 +3,10 @@
 #if defined(OS_MACOS)
 
     #include <hex/helpers/fs.hpp>
-    #include <string>
 
-    extern "C" void getMacExecutableDirectoryPath(std::string &result);
-    extern "C" void getMacApplicationSupportDirectoryPath(std::string &result);
+    extern "C" const char * getMacExecutableDirectoryPath();
+    extern "C" const char * getMacApplicationSupportDirectoryPath();
+
+    extern "C" void macFree(void *ptr);
 
 #endif

@@ -35,7 +35,12 @@ namespace hex::fs {
         return exePath;
 #elif defined(OS_MACOS)
         std::string result;
-        getMacExecutableDirectoryPath(result);
+
+        {
+            auto string = getMacExecutableDirectoryPath();
+            result = string;
+            macFree(string);
+        }
 
         return result;
 #else
@@ -187,7 +192,11 @@ namespace hex::fs {
 #elif defined(OS_MACOS)
         // Get path to special directories
         std::string applicationSupportDir;
-        getMacApplicationSupportDirectoryPath(applicationSupportDir);
+        {
+            auto string = getMacApplicationSupportDirectoryPath();
+            applicationSupportDir = string;
+            macFree(string);
+        }
         const std::fs::path applicationSupportDirPath(applicationSupportDir);
 
         std::vector<std::fs::path> paths = { applicationSupportDirPath };

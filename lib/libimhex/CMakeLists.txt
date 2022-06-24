@@ -143,8 +143,8 @@ if (APPLE)
     endif ()
 
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
-            source/helpers/fs_macos.mm
-            source/helpers/utils_macos.mm)
+            source/helpers/fs_macos.m
+            source/helpers/utils_macos.m)
 endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
