@@ -7,6 +7,6 @@
     extern "C" const char * getMacExecutableDirectoryPath();
     extern "C" const char * getMacApplicationSupportDirectoryPath();
 
-    extern "C" void macFree(void *ptr);
+    extern "C" void macFree(const void *ptr);
 
 #endif

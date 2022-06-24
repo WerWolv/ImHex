@@ -37,7 +37,7 @@
         }
     }
 
-    void macFree(void *ptr) {
+    void macFree(const void *ptr) {
         free(ptr);
     }
 }

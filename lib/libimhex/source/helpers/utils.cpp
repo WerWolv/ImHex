@@ -266,7 +266,7 @@ namespace hex {
         #if defined(OS_WINDOWS)
             ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         #elif defined(OS_MACOS)
-            openWebpageMacos(url);
+            openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
             auto result = system(hex::format("xdg-open {0}", url).c_str());
             hex::unused(result);
