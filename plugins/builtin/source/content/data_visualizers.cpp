@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase);
 
             if (size == ByteCount) {
-                if (hex::is_signed<T>::value)
+                if (std::is_signed<T>::value)
                     ImGui::Text(getFormatString(), static_cast<i64>(*reinterpret_cast<const T*>(data)));
                 else
                     ImGui::Text(getFormatString(), static_cast<u64>(*reinterpret_cast<const T*>(data)));
@@ -153,7 +153,7 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = std::numeric_limits<T>::digits10 + 2;
 
-        const static inline auto FormatString = hex::format("%{}{}", CharCount, hex::is_signed<T>::value ? "lld" : "llu");
+        const static inline auto FormatString = hex::format("%{}{}", CharCount, std::is_signed<T>::value ? "lld" : "llu");
 
         const char *getFormatString() {
             return FormatString.c_str();
