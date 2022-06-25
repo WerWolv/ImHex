@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
         else static_assert(hex::always_false<T>::value, "Invalid data type!");
     }
 
-    template<hex::integral T>
+    template<std::integral T>
     class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
         DataVisualizerHexadecimal() : DataVisualizer(ByteCount, CharCount) { }
@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
         }
     };
 
-    template<hex::integral T>
+    template<std::integral T>
     class DataVisualizerDecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
         DataVisualizerDecimal() : DataVisualizer(ByteCount, CharCount) { }
@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
         }
     };
 
-    template<hex::floating_point T>
+    template<std::floating_point T>
     class DataVisualizerFloatingPoint : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
         DataVisualizerFloatingPoint() : DataVisualizer(ByteCount, CharCount) { }

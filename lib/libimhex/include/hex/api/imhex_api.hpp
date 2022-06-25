@@ -127,7 +127,7 @@ namespace hex {
 
             void add(prv::Provider *provider);
 
-            template<hex::derived_from<prv::Provider> T>
+            template<std::derived_from<prv::Provider> T>
             void add(auto &&...args) {
                 add(new T(std::forward<decltype(args)>(args)...));
             }
