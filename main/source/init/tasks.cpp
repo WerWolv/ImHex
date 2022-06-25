@@ -177,16 +177,23 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions().clear();
         ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions().clear();
         ImHexApi::HexEditor::impl::getTooltips().clear();
+        ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
 
         ContentRegistry::Settings::getEntries().clear();
         ContentRegistry::Settings::getSettingsData().clear();
 
         ContentRegistry::CommandPaletteCommands::getEntries().clear();
-        ContentRegistry::PatternLanguage::getFunctions().clear();
 
-        for (auto &[name, view] : ContentRegistry::Views::getEntries())
-            delete view;
-        ContentRegistry::Views::getEntries().clear();
+        ContentRegistry::PatternLanguage::getFunctions().clear();
+        ContentRegistry::PatternLanguage::getPragmas().clear();
+
+        {
+            auto &views = ContentRegistry::Views::getEntries();
+            for (auto &[name, view] : views)
+                delete view;
+            views.clear();
+        }
+
 
         ContentRegistry::Tools::getEntries().clear();
         ContentRegistry::DataInspector::getEntries().clear();
@@ -212,6 +219,13 @@ namespace hex::init {
 
         ContentRegistry::DataFormatter::getEntries().clear();
         ContentRegistry::FileHandler::getEntries().clear();
+
+        {
+            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
+            for (auto &[name, visualizer] : visualizers)
+                delete visualizer;
+            visualizers.clear();
+        }
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
