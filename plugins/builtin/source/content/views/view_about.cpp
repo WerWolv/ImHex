@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
                 this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(logo.data()), logo.size());
             }
 
-            ImGui::Image(this->m_logoTexture.textureId, scaled(this->m_logoTexture.size()));
+            ImGui::Image(this->m_logoTexture.textureId, scaled({ 64, 64 }));
             ImGui::TableNextColumn();
 
             ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
