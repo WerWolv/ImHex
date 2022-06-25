@@ -2,8 +2,6 @@
 
 #include <cstdio>
 #include <codecvt>
-#include <locale>
-#include <filesystem>
 
 #include <hex/api/imhex_api.hpp>
 
@@ -18,12 +16,9 @@
 #elif defined(OS_LINUX)
     #include <unistd.h>
 #elif defined(OS_MACOS)
-    #include <CoreFoundation/CFBundle.h>
-    #include <ApplicationServices/ApplicationServices.h>
+    #include <hex/helpers/utils_macos.hpp>
+    #include <unistd.h>
 #endif
-
-#include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 namespace hex {
 
@@ -252,13 +247,14 @@ namespace hex {
 
     void runCommand(const std::string &command) {
 
-#if defined(OS_WINDOWS)
-        auto result = system(hex::format("start {0}", command).c_str());
-#elif defined(OS_MACOS)
-        auto result = system(hex::format("open {0}", command).c_str());
-#elif defined(OS_LINUX)
-        auto result = system(hex::format("xdg-open {0}", command).c_str());
-#endif
+        #if defined(OS_WINDOWS)
+            auto result = system(hex::format("start {0}", command).c_str());
+        #elif defined(OS_MACOS)
+            auto result = system(hex::format("open {0}", command).c_str());
+        #elif defined(OS_LINUX)
+            auto result = system(hex::format("xdg-open {0}", command).c_str());
+        #endif
+
         hex::unused(result);
     }
 
@@ -267,18 +263,16 @@ namespace hex {
         if (url.find("://") == std::string::npos)
             url = "https://" + url;
 
-#if defined(OS_WINDOWS)
-        ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-#elif defined(OS_MACOS)
-        CFURLRef urlRef = CFURLCreateWithBytes(nullptr, reinterpret_cast<u8 *>(url.data()), url.length(), kCFStringEncodingASCII, nullptr);
-        LSOpenCFURLRef(urlRef, nullptr);
-        CFRelease(urlRef);
-#elif defined(OS_LINUX)
-        auto result = system(hex::format("xdg-open {0}", url).c_str());
-        hex::unused(result);
-#else
-    #warning "Unknown OS, can't open webpages"
-#endif
+        #if defined(OS_WINDOWS)
+            ShellExecute(nullptr, "open", url.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        #elif defined(OS_MACOS)
+            openWebpageMacos(url.c_str());
+        #elif defined(OS_LINUX)
+            auto result = system(hex::format("xdg-open {0}", url).c_str());
+            hex::unused(result);
+        #else
+            #warning "Unknown OS, can't open webpages"
+        #endif
     }
 
     std::string encodeByteString(const std::vector<u8> &bytes) {

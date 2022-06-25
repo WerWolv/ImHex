@@ -2,6 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/concepts.hpp>
 
 #include <mbedtls/version.h>
 #include <mbedtls/base64.h>
@@ -15,7 +16,6 @@
 
 #include <array>
 #include <span>
-#include <concepts>
 #include <functional>
 #include <algorithm>
 #include <cstddef>

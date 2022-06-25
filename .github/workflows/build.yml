@@ -106,8 +106,8 @@ jobs:
 
   # MacOS build
   macos:
-    runs-on: macos-11.0
-    name: 🍎 macOS 11.0
+    runs-on: macos-12
+    name: 🍎 macOS 12.0
     steps:
 
     - name: 🧰 Checkout
@@ -122,8 +122,7 @@ jobs:
     - name: 📜 Restore cache
       uses: actions/cache@v3
       with:
-        path: |
-          ~/.ccache
+        path: ~/Library/Caches/ccache
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
@@ -131,16 +130,20 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=$(brew --prefix llvm)/bin/clang \
-        CXX=$(brew --prefix llvm)/bin/clang++ \
+        CC=$(brew --prefix gcc@12)/bin/gcc-12     \
+        CXX=$(brew --prefix gcc@12)/bin/g++-12    \
+        OBJC=$(brew --prefix llvm)/bin/clang      \
+        OBJCXX=$(brew --prefix llvm)/bin/clang++  \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
-        MACOSX_DEPLOYMENT_TARGET="10.15" \
-        cmake                                   \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE        \
-          -DCREATE_BUNDLE=ON                    \
-          -DCREATE_PACKAGE=ON                   \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache    \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
+        MACOSX_DEPLOYMENT_TARGET="10.15"          \
+        cmake                                     \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
+          -DCREATE_BUNDLE=ON                      \
+          -DCREATE_PACKAGE=ON                     \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           ..
         make -j4 package
 
@@ -196,7 +199,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc-11 CXX=g++-11 cmake                  \
+          CC=gcc-12 CXX=g++-12 cmake                  \
             -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
             -DCMAKE_INSTALL_PREFIX="/usr" 	      \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \

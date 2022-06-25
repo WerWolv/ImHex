@@ -117,11 +117,11 @@ namespace hex {
         for (char *pos = prevPos; *pos != 0x00;) {
             if (std::isdigit(*pos) || *pos == '.') {
                 auto number = [&] {
-                   if constexpr (hex::floating_point<T>)
+                   if constexpr (std::floating_point<T>)
                        return std::strtold(pos, &pos);
-                   else if constexpr (hex::signed_integral<T>)
+                   else if constexpr (std::signed_integral<T>)
                        return std::strtoll(pos, &pos, 10);
-                   else if constexpr (hex::unsigned_integral<T>)
+                   else if constexpr (std::unsigned_integral<T>)
                        return std::strtoull(pos, &pos, 10);
                    else
                        static_assert(hex::always_false<T>::value, "Can't parse literal of this type");
@@ -440,7 +440,7 @@ namespace hex {
 
     template<typename T>
     void MathEvaluator<T>::registerStandardFunctions() {
-        if constexpr (hex::floating_point<T>) {
+        if constexpr (std::floating_point<T>) {
             this->setFunction(
                 "sin", [](auto args) { return std::sin(args[0]); }, 1, 1);
             this->setFunction(

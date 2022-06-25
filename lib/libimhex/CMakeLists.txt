@@ -123,7 +123,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/patches.cpp
     source/helpers/project_file_handler.cpp
     source/helpers/encoding_file.cpp
-    source/helpers/loader_script_handler.cpp
     source/helpers/logger.cpp
     source/helpers/tar.cpp
 
@@ -143,7 +142,9 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/fs_macos.mm)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
+            source/helpers/fs_macos.m
+            source/helpers/utils_macos.m)
 endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")

@@ -7,6 +7,5 @@ brew "python3"
 brew "freetype2"
 brew "libmagic"
 brew "pkg-config"
-
-# TODO: Remove this when XCode version of clang will support the same level as LLVM 10
 brew "llvm"
+brew "gcc@12"

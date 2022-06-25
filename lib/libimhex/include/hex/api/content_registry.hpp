@@ -156,7 +156,7 @@ namespace hex {
 
             }
 
-            template<hex::derived_from<View> T, typename... Args>
+            template<std::derived_from<View> T, typename... Args>
             void add(Args &&...args) {
                 return impl::add(new T(std::forward<Args>(args)...));
             }
@@ -234,7 +234,7 @@ namespace hex {
             }
 
 
-            template<hex::derived_from<dp::Node> T, typename... Args>
+            template<std::derived_from<dp::Node> T, typename... Args>
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args &&...args) {
                 add(impl::Entry { unlocalizedCategory.c_str(), unlocalizedName.c_str(), [=] {
                                      auto node = new T(std::forward<Args>(args)...);
@@ -326,7 +326,7 @@ namespace hex {
 
             }
 
-            template<hex::derived_from<hex::prv::Provider> T>
+            template<std::derived_from<hex::prv::Provider> T>
             void add(const std::string &unlocalizedName, bool addToList = true) {
                 (void)EventManager::subscribe<RequestCreateProvider>([expectedName = unlocalizedName](const std::string &name, hex::prv::Provider **provider) {
                     if (name != expectedName) return;
@@ -415,7 +415,7 @@ namespace hex {
 
             }
 
-            template<hex::derived_from<DataVisualizer> T, typename... Args>
+            template<std::derived_from<DataVisualizer> T, typename... Args>
             void addDataVisualizer(const std::string &unlocalizedName, Args &&...args) {
                 return impl::addDataVisualizer(unlocalizedName, new T(std::forward<Args>(args)...));
             }

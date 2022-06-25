@@ -1,7 +1,7 @@
 #include <hex/helpers/fs.hpp>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/fs_macos.h>
+#include <hex/helpers/fs_macos.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/intrinsics.hpp>
 
@@ -34,7 +34,15 @@ namespace hex::fs {
 
         return exePath;
 #elif defined(OS_MACOS)
-        return getMacExecutableDirectoryPath();
+        std::string result;
+
+        {
+            auto string = getMacExecutableDirectoryPath();
+            result = string;
+            macFree(string);
+        }
+
+        return result;
 #else
         return std::nullopt;
 #endif
@@ -183,25 +191,31 @@ namespace hex::fs {
         }
 #elif defined(OS_MACOS)
         // Get path to special directories
-        const std::fs::path applicationSupportDir(getMacApplicationSupportDirectoryPath());
+        std::string applicationSupportDir;
+        {
+            auto string = getMacApplicationSupportDirectoryPath();
+            applicationSupportDir = string;
+            macFree(string);
+        }
+        const std::fs::path applicationSupportDirPath(applicationSupportDir);
 
-        std::vector<std::fs::path> paths = { applicationSupportDir };
+        std::vector<std::fs::path> paths = { applicationSupportDirPath };
 
         if (exePath.has_value())
             paths.push_back(exePath.value());
 
         switch (path) {
             case ImHexPath::Patterns:
-                result.push_back((applicationSupportDir / "patterns").string());
+                result.push_back((applicationSupportDirPath / "patterns").string());
                 break;
             case ImHexPath::PatternsInclude:
-                result.push_back((applicationSupportDir / "includes").string());
+                result.push_back((applicationSupportDirPath / "includes").string());
                 break;
             case ImHexPath::Magic:
-                result.push_back((applicationSupportDir / "magic").string());
+                result.push_back((applicationSupportDirPath / "magic").string());
                 break;
             case ImHexPath::Python:
-                result.push_back((applicationSupportDir / "python").string());
+                result.push_back((applicationSupportDirPath / "python").string());
                 break;
             case ImHexPath::Plugins:
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
@@ -209,22 +223,22 @@ namespace hex::fs {
                 });
                 break;
             case ImHexPath::Yara:
-                result.push_back((applicationSupportDir / "yara").string());
+                result.push_back((applicationSupportDirPath / "yara").string());
                 break;
             case ImHexPath::Config:
-                result.push_back((applicationSupportDir / "config").string());
+                result.push_back((applicationSupportDirPath / "config").string());
                 break;
             case ImHexPath::Resources:
-                result.push_back((applicationSupportDir / "resources").string());
+                result.push_back((applicationSupportDirPath / "resources").string());
                 break;
             case ImHexPath::Constants:
-                result.push_back((applicationSupportDir / "constants").string());
+                result.push_back((applicationSupportDirPath / "constants").string());
                 break;
             case ImHexPath::Encodings:
-                result.push_back((applicationSupportDir / "encodings").string());
+                result.push_back((applicationSupportDirPath / "encodings").string());
                 break;
             case ImHexPath::Logs:
-                result.push_back((applicationSupportDir / "logs").string());
+                result.push_back((applicationSupportDirPath / "logs").string());
                 break;
             default:
                 hex::unreachable();

@@ -43,7 +43,7 @@ namespace hex {
     std::string encodeByteString(const std::vector<u8> &bytes);
     std::vector<u8> decodeByteString(const std::string &string);
 
-    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const hex::unsigned_integral auto &value) {
+    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);
 
         using ValueType = std::remove_cvref_t<decltype(value)>;
@@ -72,7 +72,7 @@ namespace hex {
         return (value ^ mask) - mask;
     }
 
-    template<hex::integral T>
+    template<std::integral T>
     constexpr inline T swapBitOrder(size_t numBits, T value) {
         T result = 0x00;
 
@@ -200,7 +200,7 @@ namespace hex {
         return T(1) << bit_width(T(x - 1));
     }
 
-    template<hex::integral T, hex::integral U>
+    template<std::integral T, std::integral U>
     auto powi(T base, U exp) {
         using ResultType = decltype(T{} * U{});
 
@@ -264,7 +264,7 @@ namespace hex {
         return result;
     }
 
-    inline std::string toBinaryString(hex::unsigned_integral auto number) {
+    inline std::string toBinaryString(std::unsigned_integral auto number) {
         if (number == 0) return "0";
 
         std::string result;
@@ -317,7 +317,7 @@ namespace hex {
             return *value;
     }
 
-    template<hex::integral T>
+    template<std::integral T>
     T alignTo(T value, T alignment) {
         T remainder = value % alignment;
 
