@@ -122,8 +122,7 @@ jobs:
     - name: 📜 Restore cache
       uses: actions/cache@v3
       with:
-        path: |
-          ~/.ccache
+        path: ~/Library/Caches/ccache
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
