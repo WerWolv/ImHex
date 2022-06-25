@@ -106,8 +106,8 @@ jobs:
 
   # MacOS build
   macos:
-    runs-on: macos-11.0
-    name: 🍎 macOS 11.0
+    runs-on: macos-12.0
+    name: 🍎 macOS 12.0
     steps:
 
     - name: 🧰 Checkout
@@ -200,7 +200,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc-11 CXX=g++-11 cmake                  \
+          CC=gcc-12 CXX=g++-12 cmake                  \
             -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
             -DCMAKE_INSTALL_PREFIX="/usr" 	      \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
