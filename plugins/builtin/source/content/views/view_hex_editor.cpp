@@ -967,7 +967,7 @@ namespace hex::plugin::builtin {
                         auto selection = this->getSelection();
                         std::string value;
                         if (this->isSelectionValid())
-                            value = hex::format("0x{0:08X} - 0x{1:08X} ({0} - {1})", selection.getStartAddress(), selection.getEndAddress());
+                            value = hex::format("0x{0:08X} - 0x{1:08X} ({0} - {1}) ({2} {3})", selection.getStartAddress(), selection.getEndAddress(), selection.getSize(), selection.getSize() == 1 ? "Byte" : "Bytes");
                         else
                             value = std::string("hex.builtin.view.hex_editor.selection.none"_lang);
 
