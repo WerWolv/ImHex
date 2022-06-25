@@ -106,7 +106,7 @@ jobs:
 
   # MacOS build
   macos:
-    runs-on: macos-12.0
+    runs-on: macos-12
     name: 🍎 macOS 12.0
     steps:
 
