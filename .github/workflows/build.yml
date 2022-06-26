@@ -166,7 +166,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.ccache
+            ~/.cache/ccache
             .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
