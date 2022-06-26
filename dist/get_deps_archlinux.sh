@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-pacman -S --needed \
+pacman -S $@ --needed \
   cmake     \
   gcc       \
   lld       \
