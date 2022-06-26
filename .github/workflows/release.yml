@@ -26,6 +26,7 @@ jobs:
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
+          branch: master
           workflow_conclusion: success
           skip_unpack: true
       
