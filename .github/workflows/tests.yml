@@ -25,7 +25,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: |
-          ~/.ccache
+          ~/.cache/ccache
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
