@@ -66,7 +66,6 @@ jobs:
       with:
         path: ${{ steps.prep-ccache.outputs.dir }}
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
       run: |
@@ -124,8 +123,7 @@ jobs:
       with:
         path: ~/Library/Caches/ccache
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-
+        
     - name: 🛠️ Build
       run: |
         mkdir -p build
@@ -171,8 +169,7 @@ jobs:
             ~/.ccache
             .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-
+          
       - name: ⬇️ Install dependencies
         run: |
           sudo rm -rf /usr/share/dotnet
