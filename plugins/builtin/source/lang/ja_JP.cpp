@@ -337,6 +337,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.strings.copy", "文字列をコピー" },
                     { "hex.builtin.view.strings.demangle", "デマングル" },
                     { "hex.builtin.view.strings.min_length", "最小の長さ" },
+                    //{ "hex.builtin.view.strings.regex", "Regex" },
                     { "hex.builtin.view.strings.filter", "フィルタ" },
                     { "hex.builtin.view.strings.extract", "抽出" },
                     { "hex.builtin.view.strings.regex_error", "無効な正規表現" },

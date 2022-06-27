@@ -279,8 +279,9 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<RequestChangeTheme>(this);
+        EventManager::unsubscribe<EventProviderChanged>(this);
     }
 
     void ViewPatternEditor::drawContent() {

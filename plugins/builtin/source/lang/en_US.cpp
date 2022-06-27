@@ -336,6 +336,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.strings.copy", "Copy string" },
                     { "hex.builtin.view.strings.demangle", "Demangle" },
                     { "hex.builtin.view.strings.min_length", "Minimum length" },
+                    { "hex.builtin.view.strings.regex", "Regex" },
                     { "hex.builtin.view.strings.filter", "Filter" },
                     { "hex.builtin.view.strings.extract", "Extract" },
                     { "hex.builtin.view.strings.regex_error", "Invalid regex" },
