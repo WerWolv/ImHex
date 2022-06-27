@@ -1,5 +1,7 @@
 #include <hex/helpers/file.hpp>
+
 #include <unistd.h>
+#include <cstring>
 
 namespace hex::fs {
 
@@ -77,7 +79,8 @@ namespace hex::fs {
         if (bytes.empty())
             return "";
 
-        return { reinterpret_cast<char *>(bytes.data()), bytes.size() };
+        const char *cString = reinterpret_cast<const char *>(bytes.data());
+        return { cString, std::strlen(cString) };
     }
 
     void File::write(const u8 *buffer, size_t size) {

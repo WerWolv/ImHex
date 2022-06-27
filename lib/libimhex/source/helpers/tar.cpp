@@ -59,24 +59,28 @@ namespace hex {
         mtar_write_data(&this->m_ctx, data.data(), data.size());
     }
 
-    void Tar::extract(const std::fs::path &path, const std::fs::path &outputPath) {
-        mtar_header_t header;
-        mtar_find(&this->m_ctx, path.string().c_str(), &header);
-
+    static void writeFile(mtar_t *ctx, mtar_header_t *header, const std::fs::path &path) {
         constexpr static u64 BufferSize = 1_MiB;
 
-        fs::File outputFile(outputPath, fs::File::Mode::Create);
+        fs::File outputFile(path, fs::File::Mode::Create);
 
-        std::vector<u8> buffer(BufferSize, 0x00);
-        for (u64 offset = 0; offset < header.size; offset += BufferSize) {
-            mtar_read_data(&this->m_ctx, buffer.data(), std::min(BufferSize, header.size - offset));
+        std::vector<u8> buffer;
+        for (u64 offset = 0; offset < header->size; offset += BufferSize) {
+            buffer.resize(std::min<u64>(BufferSize, header->size - offset));
+
+            mtar_read_data(ctx, buffer.data(), buffer.size());
             outputFile.write(buffer);
         }
     }
 
-    void Tar::extractAll(const std::fs::path &outputPath) {
-        constexpr static u64 BufferSize = 1_MiB;
+    void Tar::extract(const std::fs::path &path, const std::fs::path &outputPath) {
+        mtar_header_t header;
+        mtar_find(&this->m_ctx, path.string().c_str(), &header);
 
+        writeFile(&this->m_ctx, &header, outputPath);
+    }
+
+    void Tar::extractAll(const std::fs::path &outputPath) {
         mtar_header_t header;
         while (mtar_read_header(&this->m_ctx, &header) != MTAR_ENULLRECORD) {
             const auto filePath = std::fs::absolute(outputPath / std::fs::path(header.name));
@@ -84,13 +88,8 @@ namespace hex {
             if (filePath.filename() != "@PaxHeader") {
 
                 std::fs::create_directories(filePath.parent_path());
-                fs::File outputFile(filePath, fs::File::Mode::Create);
 
-                std::vector<u8> buffer(BufferSize, 0x00);
-                for (u64 offset = 0; offset < header.size; offset += BufferSize) {
-                    mtar_read_data(&this->m_ctx, buffer.data(), std::min(BufferSize, header.size - offset));
-                    outputFile.write(buffer);
-                }
+                writeFile(&this->m_ctx, &header, filePath);
             }
 
             mtar_next(&this->m_ctx);
