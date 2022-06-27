@@ -454,10 +454,10 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.display", "显示" },
                     { "hex.builtin.nodes.display.int", "整数" },
                         { "hex.builtin.nodes.display.int.header", "整数显示" },
-{ "hex.builtin.nodes.display.float.input", "值" },
+                        { "hex.builtin.nodes.display.float.input", "值" },
                     { "hex.builtin.nodes.display.float", "浮点数" },
                         { "hex.builtin.nodes.display.float.header", "浮点数显示" },
-{ "hex.builtin.nodes.display.float.input", "值" },
+                        { "hex.builtin.nodes.display.float.input", "值" },
 
                 { "hex.builtin.nodes.data_access", "数据访问" },
                     { "hex.builtin.nodes.data_access.read", "读取" },
