@@ -80,7 +80,7 @@ namespace hex::fs {
             return "";
 
         const char *cString = reinterpret_cast<const char *>(bytes.data());
-        return { cString, std::strlen(cString) };
+        return { cString, std::min(bytes.size(), std::strlen(cString)) };
     }
 
     void File::write(const u8 *buffer, size_t size) {
