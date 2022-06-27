@@ -29,8 +29,7 @@ jobs:
           ~/.cache/ccache
           build/CMakeCache.txt
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-
+        
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update
