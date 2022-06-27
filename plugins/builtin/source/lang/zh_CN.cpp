@@ -343,6 +343,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.strings.extract", "搜索" },
                     { "hex.builtin.view.strings.regex_error", "非法正则" },
                     { "hex.builtin.view.strings.results", "找到 {0} 个结果" },
+                    { "hex.builtin.view.strings.filter", "过滤" },
+                    { "hex.builtin.view.strings.extract", "提取" },
                     { "hex.builtin.view.strings.searching", "搜索中..." },
                     { "hex.builtin.view.strings.offset", "偏移" },
                     { "hex.builtin.view.strings.size", "大小" },
