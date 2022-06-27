@@ -127,102 +127,15 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
 - MacOS • __x86_64__
   - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
 - Linux • __x86_64__
-  - [ELF](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20ELF.zip)
   - [DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20DEB.zip)
-  - [Flatpak](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20Flatpak.zip)
   - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
 
 ## Compiling
 
-You need a C++20 compatible compiler such as GCC 10.2.0 to compile ImHex.
+To compile ImHex, a C++20 compiler is required. Releases are all mainly built using GCC, however on macOS, clang is also required to compile some ObjC code. 
 
 Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.
 All dependencies that aren't bundled, can be installed using the dependency installer scripts found in the `/dist` folder.
-
-For working examples 
-
-### Windows
-
-On Windows, ImHex is built through msys2 / mingw. To install all dependencies, open a mys2 window and run the PKGCONFIG script in the [dist/msys2](dist/msys2) folder.
-After all the dependencies are installed, run the following commands to build ImHex:
-
-```sh
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j
-```
-
----
-
-To create a standalone zipfile on Windows, get the Python standard library (e.g. from https://github.com/python/cpython/tree/master/Lib) and place the files and folders in `lib/python3.8` next to your built executable. Don't forget to also copy the `libpython3.8.dll` and `libwinpthread-1.dll` from your mingw setup next to the executable.
-
-- Copy the files inside the `/resources/lib/python` folder into the `lib` folder next to your built executable.
-- Place your magic databases in the `magic` folder next to your built executable
-- Place your patterns in the `pattern` folder next to your built executable
-- Place your include pattern files in the `include` folder next to your built executable
-
-### macOS
-
-To build ImHex on macOS, run the following commands:
-
-```sh
-brew bundle --no-lock --file dist/Brewfile
-mkdir build
-cd build
-CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j
-```
-
-Install the ImHex executable as well as libimhex.dylib to wherever ImHex should be installed.
-
-All other files belong in `~/Library/Application Support/imhex`:
-```
-Patterns: ~/Library/Application Support/imhex/patterns
-Pattern Includes: ~/Library/Application Support/imhex/includes
-Magic files: ~/Library/Application Support/imhex/magic
-Python: ~/Library/Application Support/imhex/lib/pythonX.X
-Plugins: ~/Library/Application Support/imhex/plugins
-Configuration: ~/Library/Application Support/imhex/config
-Resources: ~/Library/Application Support/imhex/resources
-```
-
-If the build fails while trying to find the macOS libraries, make sure you have
-XCode installed with `xcode-select --install`. Homebrew will also help get the
-most recent SDK installed and configured with `brew doctor`.
-
-### Linux
-
-Dependency installation scripts are available for many common Linux distributions in the [/dist](dist) folder.
-After all the dependencies are installed, run the following commands to build ImHex:
-
-```sh
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j
-```
-
----
-
-Put the ImHex executable into the `/usr/bin` folder.
-Put libimhex.so into the `/usr/lib` folder.
-Configuration files go to `/etc/xdg/imhex` or `~/.config/imhex`.
-All other files belong in `/usr/share/imhex` or `~/.local/share/imhex`:
-
-```
-Patterns: /usr/share/imhex/patterns
-Pattern Includes: /usr/share/imhex/includes
-Magic files: /usr/share/imhex/magic
-Python: /usr/share/imhex/lib/pythonX.X
-Plugins: /usr/share/imhex/plugins
-Configuration: /etc/xdg/imhex/config
-Resources: /usr/share/imhex/resources
-```
-
-All paths follow the XDG Base Directories standard, and can thus be modified
-with the environment variables `XDG_CONFIG_HOME`, `XDG_CONFIG_DIRS`,
-`XDG_DATA_HOME` and `XDG_DATA_DIRS`.
 
 ## Credits
 
@@ -231,6 +144,8 @@ with the environment variables `XDG_CONFIG_HOME`, `XDG_CONFIG_DIRS`,
 - [Mary](https://github.com/Thog) for her immense help porting ImHex to MacOS and help during development
 - [Roblabla](https://github.com/Roblabla) for adding MSI Installer support to ImHex
 - [jam1garner](https://github.com/jam1garner) and [raytwo](https://github.com/raytwo) for their help with adding Rust support to plugins
+- [Mailaender](https://github.com/Mailaender) for getting ImHex onto Flathub
+- [iTrooz](https://github.com/iTrooz) for many improvements related to release packaging and the GitHub Action runners.
 - Everybody else who has reported issues on Discord or GitHub that I had great conversations with :)
 
 ### Libraries
