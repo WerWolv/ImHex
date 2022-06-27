@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
                     if (this->m_minimumLength < 1)
                         this->m_minimumLength = 1;
 
-                    ImGui::Checkbox("Regex", &this->m_regex);
+                    ImGui::Checkbox("hex.builtin.view.strings.regex"_lang, &this->m_regex);
 
                     bool filterError = this->m_regex && !this->m_pattern_parsed;
                     if (filterError)

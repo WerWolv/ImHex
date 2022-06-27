@@ -334,6 +334,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.strings.copy", "Copiar string" },
                     { "hex.builtin.view.strings.demangle", "Demangle" },
                     { "hex.builtin.view.strings.min_length", "Comprimento mínimo" },
+                    //{ "hex.builtin.view.strings.regex", "Regex" },
                     { "hex.builtin.view.strings.filter", "Filtro" },
                     { "hex.builtin.view.strings.extract", "Extrair" },
                     { "hex.builtin.view.strings.regex_error", "Invalid regex" },

@@ -336,6 +336,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.strings.copy", "复制字符串" },
                     { "hex.builtin.view.strings.demangle", "还原" },
                     { "hex.builtin.view.strings.min_length", "最小长度" },
+                    //{ "hex.builtin.view.strings.regex", "Regex" },
                     { "hex.builtin.view.strings.filter", "过滤" },
                     { "hex.builtin.view.strings.extract", "提取" },
                     { "hex.builtin.view.strings.searching", "搜索中..." },
