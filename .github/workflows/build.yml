@@ -64,7 +64,9 @@ jobs:
       uses:  actions/cache@v3
       id:    cache-ccache
       with:
-        path: ${{ steps.prep-ccache.outputs.dir }}
+        path: |
+          ${{ steps.prep-ccache.outputs.dir }}
+          build/CMakeCache.txt
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
@@ -123,7 +125,9 @@ jobs:
     - name: 📜 Restore cache
       uses: actions/cache@v3
       with:
-        path: ~/Library/Caches/ccache
+        path: |
+          ~/Library/Caches/ccache
+          build/CMakeCache.txt
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
         
     - name: 🛠️ Build
@@ -169,6 +173,7 @@ jobs:
         with:
           path: |
             ~/.cache/ccache
+            build/CMakeCache.txt
             .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
