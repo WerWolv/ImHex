@@ -170,6 +170,10 @@ namespace hex::init {
     }
 
     bool deleteSharedData() {
+        while (ImHexApi::Provider::isValid())
+            ImHexApi::Provider::remove(ImHexApi::Provider::get());
+        ContentRegistry::Provider::getEntries().clear();
+
         ImHexApi::System::getInitArguments().clear();
         ImHexApi::Tasks::getDeferredCalls().clear();
         ImHexApi::HexEditor::impl::getBackgroundHighlights().clear();
@@ -226,10 +230,6 @@ namespace hex::init {
                 delete visualizer;
             visualizers.clear();
         }
-
-        while (ImHexApi::Provider::isValid())
-            ImHexApi::Provider::remove(ImHexApi::Provider::get());
-        ContentRegistry::Provider::getEntries().clear();
 
         return true;
     }

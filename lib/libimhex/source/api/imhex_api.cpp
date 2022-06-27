@@ -231,7 +231,7 @@ namespace hex {
         }
 
         bool isValid() {
-            return !s_providers.empty();
+            return !s_providers.empty() && s_currentProvider < s_providers.size();
         }
 
         void add(prv::Provider *provider) {
@@ -246,7 +246,7 @@ namespace hex {
 
             s_providers.erase(it);
 
-            if (it - s_providers.begin() == s_currentProvider)
+            if (it - s_providers.begin() == s_currentProvider && !s_providers.empty())
                 setCurrentProvider(0);
 
             delete provider;
