@@ -29,10 +29,22 @@ jobs:
           branch: master
           workflow_conclusion: success
           skip_unpack: true
-      
+             
+      - name: Unzip files when needed
+        run: |	
+          for zipfile in ./*.zip
+          do
+              if [ `zipinfo -1 "$zipfile" | wc -l` -eq 1 ];
+              then
+                echo "unzipping $zipfile"
+                unzip "$zipfile"
+                rm "$zipfile"
+              else
+                echo "keeping $zipfile zipped"
+              fi
+          done
+
       - name: Upload everything to release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            *.zip
-            *.tar.gz
+          files: '*'
