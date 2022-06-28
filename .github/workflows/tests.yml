@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   tests:
@@ -21,14 +22,22 @@ jobs:
       with:
         submodules: recursive
 
-    - name: 📜 Restore cache
+    - name: 📜 Restore ccache
       uses: actions/cache@v3
       with:
         path: |
           ~/.cache/ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        
 
+    - name: 📜 Restore CMakeCache
+      uses: actions/cache@v3
+      with:
+        path: |
+          build/CMakeCache.txt
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update
