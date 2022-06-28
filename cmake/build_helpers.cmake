@@ -222,7 +222,10 @@ macro(createPackage)
         install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
         downloadImHexPatternsFiles("./")
     elseif(UNIX AND NOT APPLE)
+        
         configure_file(${CMAKE_SOURCE_DIR}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
+        write_file(version ${PROJECT_VERSION})
+            
         install(FILES ${CMAKE_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
         install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
