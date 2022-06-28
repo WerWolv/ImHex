@@ -28,6 +28,29 @@ jobs:
       with:
         submodules: recursive
 
+    - name: 📜 Prepare Cache
+      id:    prep-ccache
+      shell: bash
+      run: |
+        mkdir -p "${CCACHE_DIR}"
+        echo "::set-output name=dir::$CCACHE_DIR"
+
+    - name: 📜 Restore ccache
+      uses:  actions/cache@v3
+      id:    cache-ccache
+      with:
+        path: |
+          ${{ steps.prep-ccache.outputs.dir }}
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+
+    - name: 📜 Restore CMakeCache
+      uses:  actions/cache@v3
+      with:
+        path: |
+          build/CMakeCache.txt
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
       with:
@@ -52,20 +75,6 @@ jobs:
         rm rustup-init.exe
         $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
         $USERPROFILE/.cargo/bin/rustup.exe default nightly
-
-    - name: 📜 Prepare Cache
-      id:    prep-ccache
-      shell: bash
-      run: |
-        mkdir -p "${CCACHE_DIR}"
-        echo "::set-output name=dir::$CCACHE_DIR"
-
-    - name: 📜 Restore Cache
-      uses:  actions/cache@v3
-      id:    cache-ccache
-      with:
-        path: ${{ steps.prep-ccache.outputs.dir }}
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🛠️ Build
       run: |
@@ -115,17 +124,27 @@ jobs:
       uses: actions/checkout@v3
       with:
         submodules: recursive
+        
+    - name: 📜 Restore ccache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/Library/Caches/ccache
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+
+        
+    - name: 📜 Restore CMakeCache
+      uses: actions/cache@v3
+      with:
+        path: |
+          build/CMakeCache.txt
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
         brew bundle --no-lock --file dist/Brewfile
 
-    - name: 📜 Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/Library/Caches/ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        
     - name: 🛠️ Build
       run: |
         mkdir -p build
@@ -169,6 +188,14 @@ jobs:
         with:
           path: |
             ~/.cache/ccache
+          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+          
+      - name: 📜 Restore other caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/CMakeCache.txt
             .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
