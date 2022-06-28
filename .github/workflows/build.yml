@@ -41,7 +41,8 @@ jobs:
       with:
         path: |
           ${{ steps.prep-ccache.outputs.dir }}
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
 
     - name: 📜 Restore CMakeCache
       uses:  actions/cache@v3
@@ -49,7 +50,6 @@ jobs:
         path: |
           build/CMakeCache.txt
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-
 
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
@@ -130,7 +130,8 @@ jobs:
       with:
         path: |
           ~/Library/Caches/ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
 
         
     - name: 📜 Restore CMakeCache
@@ -187,7 +188,8 @@ jobs:
         with:
           path: |
             ~/.cache/ccache
-          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
           
       - name: 📜 Restore other caches
         uses: actions/cache@v3

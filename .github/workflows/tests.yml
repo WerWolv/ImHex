@@ -27,7 +27,8 @@ jobs:
       with:
         path: |
           ~/.cache/ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
         
 
     - name: 📜 Restore CMakeCache
