@@ -10,6 +10,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    name: Release
 
     steps:    
       - name: Get sources
