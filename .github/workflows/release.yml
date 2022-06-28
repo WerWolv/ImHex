@@ -11,6 +11,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: Release
+    env:
+      version: ${{ github.event.release.tag_name }}
 
     steps:    
       - name: Get sources
@@ -44,6 +46,9 @@ jobs:
                 echo "keeping $zipfile zipped"
               fi
           done
+
+      - name: Rename Windows Portable Zip
+        run: mv "Windows Portable.zip" imhex-${{env.version}}-Windows-Portable.zip
 
       - name: Upload everything to release
         uses: softprops/action-gh-release@v1

@@ -94,7 +94,7 @@ jobs:
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
       with:
-        name: Windows Portable ZIP
+        name: Windows Portable
         path: |
           build/install/*
 
@@ -211,7 +211,7 @@ jobs:
             ..
           make -j 4 install DESTDIR=AppDir
 
-      - name: 📜 Prepare version variable
+      - name: 📜 Set version variable
         run: |
           echo "version=`cat build/version`" >> $GITHUB_ENV
 
