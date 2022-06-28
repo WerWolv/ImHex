@@ -215,8 +215,6 @@ jobs:
         run: |
           echo "version=`cat build/version`" >> $GITHUB_ENV
 
-      - run: echo "${{ env.version }}"
-
       #- name: 📦 Bundle Flatpak
       #  run: |
       #    sudo apt install flatpak flatpak-builder
@@ -230,14 +228,14 @@ jobs:
         run: |
           cp -r build/DEBIAN build/AppDir
           dpkg-deb --build build/AppDir
-          mv build/AppDir.deb imhex.deb
+          mv build/AppDir.deb imhex-${{env.version}}.deb
           rm -rf build/AppDir/DEBIAN
 
       - name: 📦 Bundle AppImage
         run: |
           cd build
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-          mv ImHex-AppImage-x86_64.AppImage ../imhex.AppImage
+          mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.version}}.AppImage
           cd ..
 
       #- name: ⬆️ Upload Flatpak
@@ -251,13 +249,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Linux DEB (Ubuntu 22.04)
-          path: |
-            imhex.deb
+          path: '*.deb'
 
       - name: ⬆️ Upload AppImage
         uses: actions/upload-artifact@v3
         with:
           name: Linux AppImage
-          path: |
-            imhex.AppImage
+          path: '*.AppImage'
 
