@@ -19,9 +19,17 @@ jobs:
           path: ImHex
           submodules: recursive
 
-      - name: 📜 Set version variable
+      - name: 📜 Verify version and set version variable
         run: |
-          echo "version=`cat version.txt`" >> $GITHUB_ENV
+          project_version=`cat ImHex/version.txt`
+          tag_version="${{github.event.release.tag_name}}"
+          tag_version="${tag_version:1}"
+          if [ "$project_version" != "$tag_version" ]; then
+            echo "::warning::$project_version and $tag_version are not the same ! Refusing to populate release"
+            exit 1
+          fi
+
+          echo "version=$project_version" >> $GITHUB_ENV
 
       - name: Create tarball from sources with dependencies
         run: tar -cvf Full.Sources.tar.gz ImHex
