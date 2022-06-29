@@ -244,6 +244,9 @@ namespace hex {
 
         return {};
     }
+
+    std::string Net::m_proxyUrl;
+
     void Net::setProxy(const std::string &url) {
         m_proxyUrl = url;
     }
