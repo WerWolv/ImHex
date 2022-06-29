@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Updating the version here will update it throughout ImHex as well
-set(IMHEX_VERSION "1.18.2")
+file(READ "version.txt" IMHEX_VERSION)
 project(imhex VERSION ${IMHEX_VERSION})
+message("Project version ${IMHEX_VERSION}")
 
 set(CMAKE_CXX_STANDARD 20)
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
