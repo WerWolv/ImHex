@@ -23,10 +23,13 @@ md5sums=(SKIP)
 validpgpkeys=()
 
 package() {
-    tar -xvf imhex-$pkgver-ArchLinux.pkg.tar.zst
-	cp -r $srcdir/usr $pkgdir
+    tar -xf imhex-$pkgver-ArchLinux.pkg.tar.zst
 
-    install -d $pkgdir/usr/bin/imhex
-    install -d $pkgdir/usr/lib/libimhex.so
+
+    install -DT $srcdir/usr/bin/imhex $pkgdir/usr/bin/imhex
+    install -DT $srcdir/usr/lib/libimhex.so $pkgdir/usr/lib/libimhex.so
+	install -DT $srcdir/usr/share/imhex/plugins/builtin.hexplug $pkgdir/usr/share/imhex/plugins/builtin.hexplug
+
+	cp -r $srcdir/usr/share/imhex/{constants,encodings,includes,magic,patterns} $pkgdir/usr/share/imhex
     install -d $pkgdir/usr/share/imhex
 }
