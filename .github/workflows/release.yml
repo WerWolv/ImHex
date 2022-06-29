@@ -11,15 +11,17 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: Release
-    env:
-      version: ${{ github.event.release.tag_name }}
 
-    steps:    
+    steps:
       - name: Get sources
         uses: actions/checkout@v3
         with:
           path: ImHex
           submodules: recursive
+
+      - name: 📜 Set version variable
+        run: |
+          echo "version=`cat version.txt`" >> $GITHUB_ENV
 
       - name: Create tarball from sources with dependencies
         run: tar -cvf Full.Sources.tar.gz ImHex
