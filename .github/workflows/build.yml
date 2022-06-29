@@ -304,12 +304,19 @@ jobs:
         run: |
           dist/get_deps_archlinux.sh --noconfirm
 
-      - name: Restore Cache
+      - name: Restore ccache
         uses: actions/cache@v3
-        id: cache-ccache
         with:
           path: |
             ~/.cache/ccache
+          key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
+        
+      - name: Restore CMakeCache
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/CMakeCache.txt
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
       - name: Build
