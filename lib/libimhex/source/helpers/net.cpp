@@ -116,9 +116,7 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
 #endif
 
-        std::string proxyUrl = ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "");
-
-        curl_easy_setopt(this->m_ctx, CURLOPT_PROXY, proxyUrl.c_str());
+        curl_easy_setopt(this->m_ctx, CURLOPT_PROXY, m_proxyUrl.c_str());
     }
 
     std::optional<i32> Net::execute() {
@@ -245,6 +243,9 @@ namespace hex {
         }
 
         return {};
+    }
+    void Net::setProxy(const std::string &url) {
+        m_proxyUrl = url;
     }
 
 }
