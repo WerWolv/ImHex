@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
 
 
     ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern_editor.name") {
-        this->m_parserRuntime = new pl::PatternLanguage();
+        this->m_parserRuntime = ContentRegistry::PatternLanguage::createDefaultRuntime(nullptr);
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
@@ -273,8 +273,6 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternEditor::~ViewPatternEditor() {
-        delete this->m_parserRuntime;
-
         EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);

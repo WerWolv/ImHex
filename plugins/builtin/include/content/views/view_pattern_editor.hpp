@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        pl::PatternLanguage *m_parserRuntime;
+        std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
         std::vector<std::fs::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
