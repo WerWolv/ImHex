@@ -350,6 +350,38 @@ namespace hex::plugin::builtin {
 
             return result;
         });
+
+        /* Proxy */
+
+        ContentRegistry::Settings::addCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
+
+        ContentRegistry::Settings::add(
+            "hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "", [](auto name, nlohmann::json &setting) {
+                static std::string proxyUrl = static_cast<std::string>(setting);
+                static bool enableProxy = !proxyUrl.empty();
+
+                bool result = false;
+
+                if (ImGui::Checkbox("hex.builtin.setting.proxy.enable"_lang, &enableProxy)) {
+                    setting = enableProxy ? proxyUrl : "";
+                    result = true;
+                }
+
+                ImGui::BeginDisabled(!enableProxy);
+                if (ImGui::InputText("##proxy_url", proxyUrl)) {
+                    setting = proxyUrl;
+                    result = true;
+                }
+                ImGui::EndDisabled();
+
+                ImGui::InfoTooltip("hex.builtin.setting.proxy.url.tooltip"_lang);
+
+                ImGui::SameLine();
+
+                ImGui::TextFormatted("{}", name);
+                return result;
+            },
+            false);
     }
 
 }

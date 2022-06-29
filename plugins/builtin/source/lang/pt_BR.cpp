@@ -696,6 +696,11 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.font", "Fonte" },
                     { "hex.builtin.setting.font.font_path", "Caminho da Fonte Customizada" },
                     { "hex.builtin.setting.font.font_size", "Tamanho da Fonte" },
+                //{ "hex.builtin.setting.proxy", "Proxy" },
+                    //{ "hex.builtin.setting.proxy.description", "Proxy will take effect on store, wikipedia or any other plugin immediately." },
+                    //{ "hex.builtin.setting.proxy.enable", "Enable Proxy" },
+                    //{ "hex.builtin.setting.proxy.url", "Proxy URL" },
+                    //{ "hex.builtin.setting.proxy.url.tooltip", "http(s):// or socks5:// (e.g., http://127.0.0.1:1080)" },
 
                 { "hex.builtin.provider.file.path", "Caminho do Arquivo" },
                 { "hex.builtin.provider.file.size", "Tamanho" },

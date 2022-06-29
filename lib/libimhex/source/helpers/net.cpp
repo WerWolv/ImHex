@@ -4,6 +4,8 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <hex/api/content_registry.hpp>
+
 #include <filesystem>
 #include <cstdio>
 
@@ -113,6 +115,10 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
 #endif
+
+        std::string proxyUrl = ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "");
+
+        curl_easy_setopt(this->m_ctx, CURLOPT_PROXY, proxyUrl.c_str());
     }
 
     std::optional<i32> Net::execute() {
