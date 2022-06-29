@@ -7,6 +7,12 @@
 
 #include <string>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#else
+    #include <dlfcn.h>
+#endif
+
 struct ImGuiContext;
 
 namespace hex {
@@ -39,7 +45,11 @@ namespace hex {
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
 
-        void *m_handle = nullptr;
+        #if defined(OS_WINDOWS)
+            HMODULE m_handle = nullptr;
+        #else
+            void *m_handle = nullptr;
+        #endif
         std::fs::path m_path;
 
         mutable bool m_initialized = false;

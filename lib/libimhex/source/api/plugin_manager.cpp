@@ -3,17 +3,26 @@
 #include <hex/helpers/logger.hpp>
 
 #include <filesystem>
-#include <dlfcn.h>
+#include <system_error>
 
 namespace hex {
 
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
-        this->m_handle = dlopen(path.string().c_str(), RTLD_LAZY);
+        #if defined(OS_WINDOWS)
+            this->m_handle = LoadLibraryW(path.c_str());
 
-        if (this->m_handle == nullptr) {
-            log::error("dlopen failed: {}", dlerror());
-            return;
-        }
+            if (this->m_handle == nullptr) {
+                log::error("LoadLibraryW failed: {}!", std::system_category().message(::GetLastError()));
+                return;
+            }
+        #else
+            this->m_handle = dlopen(path.string().c_str(), RTLD_LAZY);
+
+            if (this->m_handle == nullptr) {
+                log::error("dlopen failed: {}!", dlerror());
+                return;
+            }
+        #endif
 
         auto pluginName = std::fs::path(path).stem().string();
 
@@ -49,8 +58,13 @@ namespace hex {
     }
 
     Plugin::~Plugin() {
-        if (this->m_handle != nullptr)
-            dlclose(this->m_handle);
+        #if defined(OS_WINDOWS)
+            if (this->m_handle != nullptr)
+                FreeLibrary(this->m_handle);
+        #else
+            if (this->m_handle != nullptr)
+                dlclose(this->m_handle);
+        #endif
     }
 
     bool Plugin::initializePlugin() const {
@@ -120,7 +134,11 @@ namespace hex {
 
 
     void *Plugin::getPluginFunction(const std::string &symbol) {
-        return dlsym(this->m_handle, symbol.c_str());
+        #if defined(OS_WINDOWS)
+            return reinterpret_cast<void *>(GetProcAddress(this->m_handle, symbol.c_str()));
+        #else
+            return dlsym(this->m_handle, symbol.c_str());
+        #endif
     }
 
 
@@ -135,7 +153,7 @@ namespace hex {
 
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                PluginManager::s_plugins.emplace_back(pluginPath.path().string());
+                PluginManager::s_plugins.emplace_back(pluginPath.path());
         }
 
         if (PluginManager::s_plugins.empty())
