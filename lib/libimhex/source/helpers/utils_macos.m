@@ -2,6 +2,8 @@
 
     #include <CoreFoundation/CFBundle.h>
     #include <ApplicationServices/ApplicationServices.h>
+    #include <CoreFoundation/NSUserDefaults.h>
+    #include <Foundation/Foundation.h>
 
     #include <string.h>
     #include <stdlib.h>
