@@ -6,13 +6,23 @@
 namespace hex::fs {
 
     File::File(const std::fs::path &path, Mode mode) noexcept : m_path(path) {
-        if (mode == File::Mode::Read)
-            this->m_file = fopen64(path.string().c_str(), "rb");
-        else if (mode == File::Mode::Write)
-            this->m_file = fopen64(path.string().c_str(), "r+b");
+        #if defined(OS_WINDOWS)
+            if (mode == File::Mode::Read)
+                this->m_file = _wfopen(path.c_str(), L"rb");
+            else if (mode == File::Mode::Write)
+                this->m_file = _wfopen(path.c_str(), L"r+b");
 
-        if (mode == File::Mode::Create || (mode == File::Mode::Write && this->m_file == nullptr))
-            this->m_file = fopen64(path.string().c_str(), "w+b");
+            if (mode == File::Mode::Create || (mode == File::Mode::Write && this->m_file == nullptr))
+                this->m_file = _wfopen(path.c_str(), L"w+b");
+        #else
+            if (mode == File::Mode::Read)
+                this->m_file = fopen64(path.string().c_str(), "rb");
+            else if (mode == File::Mode::Write)
+                this->m_file = fopen64(path.string().c_str(), "r+b");
+
+            if (mode == File::Mode::Create || (mode == File::Mode::Write && this->m_file == nullptr))
+                this->m_file = fopen64(path.string().c_str(), "w+b");
+        #endif
     }
 
     File::File() noexcept {
