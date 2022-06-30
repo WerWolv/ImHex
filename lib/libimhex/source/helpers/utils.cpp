@@ -78,11 +78,16 @@ namespace hex {
                 break;
         }
 
-        std::string result = hex::format("{0:.2f}", value);
+        std::string result;
+
+        if (unitIndex == 0)
+            result = hex::format("{0:}", value);
+        else
+            result = hex::format("{0:.2f}", value);
 
         switch (unitIndex) {
             case 0:
-                result += " Bytes";
+                result += ((value == 1) ? " Byte" : " Bytes");
                 break;
             case 1:
                 result += " kB";
