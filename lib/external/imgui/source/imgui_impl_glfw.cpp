@@ -137,48 +137,50 @@ static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
     glfwSetClipboardString((GLFWwindow*)user_data, text);
 }
 
-static const char* ImGui_ImplWin_GetClipboardText(void*)
-{
-    ImGuiContext& g = *GImGui;
-    g.ClipboardHandlerData.clear();
-    if (!::OpenClipboard(NULL))
-        return NULL;
-    HANDLE wbuf_handle = ::GetClipboardData(CF_UNICODETEXT);
-    if (wbuf_handle == NULL)
+#if defined(OS_WINDOWS)
+    static const char* ImGui_ImplWin_GetClipboardText(void*)
     {
+        ImGuiContext& g = *GImGui;
+        g.ClipboardHandlerData.clear();
+        if (!::OpenClipboard(NULL))
+            return NULL;
+        HANDLE wbuf_handle = ::GetClipboardData(CF_UNICODETEXT);
+        if (wbuf_handle == NULL)
+        {
+            ::CloseClipboard();
+            return NULL;
+        }
+        if (const WCHAR* wbuf_global = (const WCHAR*)::GlobalLock(wbuf_handle))
+        {
+            int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, NULL, 0, NULL, NULL);
+            g.ClipboardHandlerData.resize(buf_len);
+            ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, NULL, NULL);
+        }
+        ::GlobalUnlock(wbuf_handle);
         ::CloseClipboard();
-        return NULL;
+        return g.ClipboardHandlerData.Data;
     }
-    if (const WCHAR* wbuf_global = (const WCHAR*)::GlobalLock(wbuf_handle))
-    {
-        int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, NULL, 0, NULL, NULL);
-        g.ClipboardHandlerData.resize(buf_len);
-        ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, NULL, NULL);
-    }
-    ::GlobalUnlock(wbuf_handle);
-    ::CloseClipboard();
-    return g.ClipboardHandlerData.Data;
-}
 
-static void ImGui_ImplWin_SetClipboardText(void*, const char* text)
-{
-    if (!::OpenClipboard(NULL))
-        return;
-    const int wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
-    HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbuf_length * sizeof(WCHAR));
-    if (wbuf_handle == NULL)
+    static void ImGui_ImplWin_SetClipboardText(void*, const char* text)
     {
+        if (!::OpenClipboard(NULL))
+            return;
+        const int wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
+        HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbuf_length * sizeof(WCHAR));
+        if (wbuf_handle == NULL)
+        {
+            ::CloseClipboard();
+            return;
+        }
+        WCHAR* wbuf_global = (WCHAR*)::GlobalLock(wbuf_handle);
+        ::MultiByteToWideChar(CP_UTF8, 0, text, -1, wbuf_global, wbuf_length);
+        ::GlobalUnlock(wbuf_handle);
+        ::EmptyClipboard();
+        if (::SetClipboardData(CF_UNICODETEXT, wbuf_handle) == NULL)
+            ::GlobalFree(wbuf_handle);
         ::CloseClipboard();
-        return;
     }
-    WCHAR* wbuf_global = (WCHAR*)::GlobalLock(wbuf_handle);
-    ::MultiByteToWideChar(CP_UTF8, 0, text, -1, wbuf_global, wbuf_length);
-    ::GlobalUnlock(wbuf_handle);
-    ::EmptyClipboard();
-    if (::SetClipboardData(CF_UNICODETEXT, wbuf_handle) == NULL)
-        ::GlobalFree(wbuf_handle);
-    ::CloseClipboard();
-}
+#endif
 
 void ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
