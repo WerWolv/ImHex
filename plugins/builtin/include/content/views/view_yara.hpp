@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
             u32 tooltipId;
         };
 
-        std::vector<std::pair<std::string, std::string>> m_rules;
+        std::vector<std::pair<std::fs::path, std::fs::path>> m_rules;
         std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
         bool m_matching    = false;

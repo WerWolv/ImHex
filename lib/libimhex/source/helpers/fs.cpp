@@ -313,4 +313,20 @@ namespace hex::fs {
         return result;
     }
 
+    std::fs::path toShortPath(const std::fs::path &path) {
+        #if defined(OS_WINDOWS)
+            size_t size = GetShortPathNameW(path.c_str(), nullptr, 0) * sizeof(TCHAR);
+            if (size == 0)
+                return path;
+
+            std::wstring newPath(size, 0x00);
+            GetShortPathNameW(path.c_str(), newPath.data(), newPath.size());
+
+            return newPath;
+        #else
+            return path;
+        #endif
+    }
+
+
 }

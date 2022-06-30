@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
                     if (!entry.is_regular_file())
                         continue;
 
-                    fs::File file(entry.path().string(), fs::File::Mode::Read);
+                    fs::File file(entry.path(), fs::File::Mode::Read);
                     if (!file.isValid())
                         continue;
 

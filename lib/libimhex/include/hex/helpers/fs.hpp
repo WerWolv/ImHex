@@ -67,6 +67,8 @@ namespace hex::fs {
 
     bool isPathWritable(const std::fs::path &path);
 
+    std::fs::path toShortPath(const std::fs::path &path);
+
     enum class DialogMode
     {
         Open,
