@@ -5,6 +5,7 @@
     #include <hex/api/content_registry.hpp>
     #include <hex/api/event.hpp>
 
+    #include <hex/helpers/utils_macos.hpp>
     #include <hex/helpers/logger.hpp>
 
     #include <nlohmann/json.hpp>
@@ -23,8 +24,10 @@ namespace hex {
         EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
 
-            // TODO: Implement this when MacOS build is working again
-            EventManager::post<RequestChangeTheme>(1);
+            if (!isMacosSystemDarkModeEnabled())
+                EventManager::post<RequestChangeTheme>(2);
+            else
+                EventManager::post<RequestChangeTheme>(1);
         });
 
         if (themeFollowSystem)

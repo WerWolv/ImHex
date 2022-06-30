@@ -5,5 +5,6 @@
     #include <string>
 
     extern "C" void openWebpageMacos(const char *url);
+    extern "C" bool isMacosSystemDarkModeEnabled();
 
 #endif

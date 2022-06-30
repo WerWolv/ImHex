@@ -34,6 +34,8 @@ static void detectSystemTheme() {
             auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
             if (error == ERROR_SUCCESS) {
                 EventManager::post<RequestChangeTheme>(value == 0 ? 1 : 2);
+            } else {
+                EventManager::post<RequestChangeTheme>(1);
             }
         }
     });
