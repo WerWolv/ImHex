@@ -22,8 +22,8 @@ namespace hex::fs {
 
     std::optional<std::fs::path> getExecutablePath() {
 #if defined(OS_WINDOWS)
-        std::string exePath(MAX_PATH, '\0');
-        if (GetModuleFileName(nullptr, exePath.data(), exePath.length()) == 0)
+        std::wstring exePath(MAX_PATH, '\0');
+        if (GetModuleFileNameW(nullptr, exePath.data(), exePath.length()) == 0)
             return std::nullopt;
 
         return exePath;
@@ -113,11 +113,11 @@ namespace hex::fs {
 #if defined(OS_WINDOWS)
         std::fs::path appDataDir;
         {
-            LPWSTR wAppDataPath = nullptr;
+            PWSTR wAppDataPath = nullptr;
             if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath)))
                 throw std::runtime_error("Failed to get APPDATA folder path");
 
-            appDataDir = wAppDataPath;
+            appDataDir = std::wstring(wAppDataPath);
             CoTaskMemFree(wAppDataPath);
         }
 
@@ -130,60 +130,60 @@ namespace hex::fs {
             case ImHexPath::Patterns:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "patterns").string();
+                    return path / "patterns";
                 });
                 break;
             case ImHexPath::PatternsInclude:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "includes").string();
+                    return path / "includes";
                 });
                 break;
             case ImHexPath::Magic:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "magic").string();
+                    return path / "magic";
                 });
                 break;
             case ImHexPath::Python:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "python").string();
+                    return path / "python";
                 });
                 break;
             case ImHexPath::Plugins:
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "plugins").string();
+                    return path / "plugins";
                 });
                 break;
             case ImHexPath::Yara:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "yara").string();
+                    return path / "yara";
                 });
                 break;
             case ImHexPath::Config:
-                return { (appDataDir / "imhex" / "config").string() };
+                return { appDataDir / "imhex" / "config" };
             case ImHexPath::Resources:
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "resources").string();
+                    return path / "resources";
                 });
                 break;
             case ImHexPath::Constants:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "constants").string();
+                    return path / "constants";
                 });
                 break;
             case ImHexPath::Encodings:
                 addUserDirs(paths);
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "encodings").string();
+                    return path / "encodings";
                 });
                 break;
             case ImHexPath::Logs:
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
-                    return (path / "logs").string();
+                    return path / "logs";
                 });
                 break;
             default:

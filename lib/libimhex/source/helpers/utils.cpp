@@ -78,29 +78,34 @@ namespace hex {
                 break;
         }
 
-        std::string result = hex::format("{0:.2f}", value);
+        std::string result;
+
+        if (unitIndex == 0)
+            result = hex::format("{0:}", value);
+        else
+            result = hex::format("{0:.2f}", value);
 
         switch (unitIndex) {
             case 0:
-                result += " Bytes";
+                result += ((value == 1) ? " Byte" : " Bytes");
                 break;
             case 1:
-                result += " kB";
+                result += " kiB";
                 break;
             case 2:
-                result += " MB";
+                result += " MiB";
                 break;
             case 3:
-                result += " GB";
+                result += " GiB";
                 break;
             case 4:
-                result += " TB";
+                result += " TiB";
                 break;
             case 5:
-                result += " PB";
+                result += " PiB";
                 break;
             case 6:
-                result += " EB";
+                result += " EiB";
                 break;
             default:
                 result = "A lot!";

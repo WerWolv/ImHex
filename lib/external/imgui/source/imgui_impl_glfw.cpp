@@ -47,6 +47,7 @@
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "imgui_impl_glfw.h"
 
 // GLFW
@@ -135,6 +136,51 @@ static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
 {
     glfwSetClipboardString((GLFWwindow*)user_data, text);
 }
+
+#if defined(OS_WINDOWS)
+    static const char* ImGui_ImplWin_GetClipboardText(void*)
+    {
+        ImGuiContext& g = *GImGui;
+        g.ClipboardHandlerData.clear();
+        if (!::OpenClipboard(NULL))
+            return NULL;
+        HANDLE wbuf_handle = ::GetClipboardData(CF_UNICODETEXT);
+        if (wbuf_handle == NULL)
+        {
+            ::CloseClipboard();
+            return NULL;
+        }
+        if (const WCHAR* wbuf_global = (const WCHAR*)::GlobalLock(wbuf_handle))
+        {
+            int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, NULL, 0, NULL, NULL);
+            g.ClipboardHandlerData.resize(buf_len);
+            ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, NULL, NULL);
+        }
+        ::GlobalUnlock(wbuf_handle);
+        ::CloseClipboard();
+        return g.ClipboardHandlerData.Data;
+    }
+
+    static void ImGui_ImplWin_SetClipboardText(void*, const char* text)
+    {
+        if (!::OpenClipboard(NULL))
+            return;
+        const int wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
+        HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbuf_length * sizeof(WCHAR));
+        if (wbuf_handle == NULL)
+        {
+            ::CloseClipboard();
+            return;
+        }
+        WCHAR* wbuf_global = (WCHAR*)::GlobalLock(wbuf_handle);
+        ::MultiByteToWideChar(CP_UTF8, 0, text, -1, wbuf_global, wbuf_length);
+        ::GlobalUnlock(wbuf_handle);
+        ::EmptyClipboard();
+        if (::SetClipboardData(CF_UNICODETEXT, wbuf_handle) == NULL)
+            ::GlobalFree(wbuf_handle);
+        ::CloseClipboard();
+    }
+#endif
 
 void ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -271,9 +317,15 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     io.KeyMap[ImGuiKey_Y] = GLFW_KEY_Y;
     io.KeyMap[ImGuiKey_Z] = GLFW_KEY_Z;
 
-    io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
-    io.ClipboardUserData = bd->Window;
+    #if defined(OS_WINDOWS)
+        io.SetClipboardTextFn = ImGui_ImplWin_SetClipboardText;
+        io.GetClipboardTextFn = ImGui_ImplWin_GetClipboardText;
+        io.ClipboardUserData = bd->Window;
+    #else
+        io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
+        io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
+        io.ClipboardUserData = bd->Window;
+    #endif
 
     // Create mouse cursors
     // (By design, on X11 cursors are user configurable and some cursors may be missing. When a cursor doesn't exist,
