@@ -65,7 +65,7 @@ namespace hex {
         float m_progress    = 0.0F;
         bool m_shouldCancel = false;
 
-        static std::string m_proxyUrl;
+        static std::string s_proxyUrl;
     };
 
 }
