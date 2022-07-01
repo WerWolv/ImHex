@@ -699,6 +699,7 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code);
             this->m_textEditor.SetText(code);
+            this->parsePattern(code);
         }
     }
 
@@ -706,6 +707,7 @@ namespace hex::plugin::builtin {
         if (!ImHexApi::Provider::isValid()) return;
 
         ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
+        this->parsePattern("");
     }
 
 
