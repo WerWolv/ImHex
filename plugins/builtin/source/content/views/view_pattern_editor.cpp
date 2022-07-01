@@ -236,7 +236,7 @@ namespace hex::plugin::builtin {
             if (this->m_runningEvaluators != 0)
                 return std::nullopt;
 
-            const auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address, size);
+            const auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address);
             if (pattern != nullptr)
                 return pattern->getColor();
             else
