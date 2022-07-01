@@ -230,43 +230,39 @@ namespace hex::plugin::builtin {
         });
 
 
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
             hex::unused(data, size);
 
-            const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
-            for (const auto &pattern : patterns) {
-                auto child = pattern->getPattern(address);
-                if (child != nullptr) {
-                    return child->getColor();
-                }
-            }
+            if (this->m_runningEvaluators != 0)
+                return std::nullopt;
 
-            return std::nullopt;
+            const auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address, size);
+            if (pattern != nullptr)
+                return pattern->getColor();
+            else
+                return std::nullopt;
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
-            for (auto &pattern : patterns) {
-                auto child = pattern->getPattern(address);
-                if (child != nullptr) {
-                    ImGui::BeginTooltip();
+            auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address);
+            if (pattern != nullptr) {
+                ImGui::BeginTooltip();
 
-                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
 
-                        this->drawPatternTooltip(child);
+                    this->drawPatternTooltip(pattern);
 
-                        auto tooltipColor = (child->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-                        ImGui::EndTable();
-                        ImGui::PopStyleColor(2);
-                    }
-                    ImGui::EndTooltip();
+                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                    ImGui::EndTable();
+                    ImGui::PopStyleColor(2);
                 }
+                ImGui::EndTooltip();
             }
         });
     }
@@ -786,6 +782,8 @@ namespace hex::plugin::builtin {
             if (!this->m_lastEvaluationResult) {
                 this->m_lastEvaluationError = runtime.getError();
             }
+
+            runtime.flattenPatterns();
 
             this->m_lastEvaluationLog     = runtime.getConsoleLog();
             this->m_lastEvaluationOutVars = runtime.getOutVariables();
