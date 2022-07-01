@@ -64,3 +64,20 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: '*'
+
+      - name: Prepare PKGBUILD
+        run: |
+          cp ImHex/dist/Arch/PKGBUILD .
+          sed -i 's/%version%/${{env.version}}/g' build/PKGBUILD
+      
+      - name: Publish AUR package
+        if: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        uses: KSXGitHub/github-actions-deploy-aur@v2
+        with:
+          pkgname: imhex-bin
+          pkgbuild: ./PKGBUILD
+          commit_username: iTrooz
+          commit_email: itrooz@protonmail.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Bump to version ${{env.version}}
+          ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
