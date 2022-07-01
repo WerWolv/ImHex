@@ -21,16 +21,15 @@ namespace hex::plugin::builtin {
         static bool initialized = false;
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            static const char *const keywords[] = {
+            static constexpr std::array keywords = {
                 "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
 
-            static const char *const builtInTypes[] = {
+            static constexpr std::array builtInTypes = {
                 "u8", "u16", "u32", "u64", "u128", "s8", "s16", "s32", "s64", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
             };
-
             for (const auto name : builtInTypes) {
                 TextEditor::Identifier id;
                 id.mDeclaration = "";
