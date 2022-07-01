@@ -4,6 +4,8 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <hex/api/content_registry.hpp>
+
 #include <filesystem>
 #include <cstdio>
 
@@ -113,6 +115,8 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
 #endif
+
+        curl_easy_setopt(this->m_ctx, CURLOPT_PROXY, Net::s_proxyUrl.c_str());
     }
 
     std::optional<i32> Net::execute() {
@@ -239,6 +243,12 @@ namespace hex {
         }
 
         return {};
+    }
+
+    std::string Net::s_proxyUrl;
+
+    void Net::setProxy(const std::string &url) {
+        Net::s_proxyUrl = url;
     }
 
 }

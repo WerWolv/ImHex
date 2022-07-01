@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
+#include <hex/helpers/net.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <nlohmann/json.hpp>
@@ -350,6 +351,45 @@ namespace hex::plugin::builtin {
 
             return result;
         });
+
+        /* Proxy */
+
+        static const std::string proxySetting { "hex.builtin.setting.proxy" };
+
+        // init hex::Net proxy url
+        hex::Net::setProxy(ContentRegistry::Settings::read(proxySetting, "hex.builtin.setting.proxy.url", ""));
+
+        ContentRegistry::Settings::addCategoryDescription(proxySetting, "hex.builtin.setting.proxy.description");
+
+        ContentRegistry::Settings::add(
+            proxySetting, "hex.builtin.setting.proxy.url", "", [](auto name, nlohmann::json &setting) {
+                static std::string proxyUrl = static_cast<std::string>(setting);
+                static bool enableProxy     = !proxyUrl.empty();
+
+                bool result = false;
+
+                if (ImGui::Checkbox("hex.builtin.setting.proxy.enable"_lang, &enableProxy)) {
+                    setting = enableProxy ? proxyUrl : "";
+                    hex::Net::setProxy(enableProxy ? proxyUrl : "");
+                    result = true;
+                }
+
+                ImGui::BeginDisabled(!enableProxy);
+                if (ImGui::InputText("##proxy_url", proxyUrl)) {
+                    setting = proxyUrl;
+                    hex::Net::setProxy(proxyUrl);
+                    result = true;
+                }
+                ImGui::EndDisabled();
+
+                ImGui::InfoTooltip("hex.builtin.setting.proxy.url.tooltip"_lang);
+
+                ImGui::SameLine();
+
+                ImGui::TextFormatted("{}", name);
+                return result;
+            },
+            false);
     }
 
 }
