@@ -421,8 +421,6 @@ namespace hex {
             calls.clear();
         }
 
-        View::drawCommonInterfaces();
-
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 

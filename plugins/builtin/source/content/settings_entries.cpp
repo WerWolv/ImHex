@@ -1,13 +1,15 @@
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
-
 #include <hex/api/localization.hpp>
+
+#include <hex/helpers/net.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
-#include <hex/helpers/net.hpp>
-#include <hex/helpers/utils.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -53,6 +55,11 @@ namespace hex::plugin::builtin {
 
             if (ImGui::Combo(name.data(), &selection, themes, IM_ARRAYSIZE(themes))) {
                 setting = selection;
+
+                ImHexApi::System::enableSystemThemeDetection(selection == 0);
+                if (selection != 0)
+                    ImHexApi::System::setTheme(static_cast<ImHexApi::System::Theme>(selection));
+
                 return true;
             }
 
@@ -307,17 +314,34 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add(dirsSetting, dirsSetting, std::vector<std::string> {}, [](auto name, nlohmann::json &setting) {
             hex::unused(name);
 
-            static std::vector<std::string> folders = setting;
-            static size_t currentItemIndex             = 0;
+            static size_t currentItemIndex = 0;
+            static std::vector<std::fs::path> folders = [&setting]{
+                std::vector<std::fs::path> result;
+
+                std::vector<std::u8string> paths = setting;
+                for (const auto &path : paths)
+                    result.emplace_back(path);
+
+                return result;
+            }();
 
             bool result = false;
+
+            auto writeSetting = [&setting]{
+                std::vector<std::u8string> folderStrings;
+                for (const auto &folder : folders)
+                    folderStrings.push_back(folder.u8string());
+                setting = folderStrings;
+
+                ImHexApi::System::setAdditionalFolderPaths(folders);
+            };
 
             if (!ImGui::BeginListBox("", ImVec2(-38, -FLT_MIN))) {
                 return false;
             } else {
                 for (size_t n = 0; n < folders.size(); n++) {
                     const bool isSelected = (currentItemIndex == n);
-                    if (ImGui::Selectable(folders.at(n).c_str(), isSelected)) { currentItemIndex = n; }
+                    if (ImGui::Selectable(folders.at(n).string().c_str(), isSelected)) { currentItemIndex = n; }
                     if (isSelected) { ImGui::SetItemDefaultFocus(); }
                 }
                 ImGui::EndListBox();
@@ -327,11 +351,12 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
                 fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
-                    auto pathStr = path.string();
 
-                    if (std::find(folders.begin(), folders.end(), pathStr) == folders.end()) {
-                        folders.emplace_back(pathStr);
-                        ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+                    if (std::find(folders.begin(), folders.end(), path) == folders.end()) {
+                        folders.emplace_back(path);
+
+                        writeSetting();
+
                         result = true;
                     }
                 });
@@ -341,7 +366,9 @@ namespace hex::plugin::builtin {
             if (ImGui::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
                 if (!folders.empty()) {
                     folders.erase(std::next(folders.begin(), currentItemIndex));
-                    ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+
+                    writeSetting();
+
                     result = true;
                 }
             }
@@ -390,6 +417,73 @@ namespace hex::plugin::builtin {
                 return result;
             },
             false);
+    }
+
+
+    static void loadInterfaceScalingSetting() {
+        float interfaceScaling = 1.0F;
+        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
+            default:
+            case 0:
+                // Native scaling
+                break;
+            case 1:
+                interfaceScaling = 0.5F;
+                break;
+            case 2:
+                interfaceScaling = 1.0F;
+                break;
+            case 3:
+                interfaceScaling = 1.5F;
+                break;
+            case 4:
+                interfaceScaling = 2.0F;
+                break;
+        }
+
+        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
+    }
+
+    static void loadFontSettings() {
+        std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
+        if (!fs::exists(fontFile))
+            fontFile.clear();
+
+        // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
+        if (fontFile.empty()) {
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
+                auto path = dir / "font.ttf";
+                if (fs::exists(path)) {
+                    log::info("Loading custom front from {}", path.string());
+
+                    fontFile = path;
+                    break;
+                }
+            }
+        }
+
+        // If a custom font has been loaded now, also load the font size
+        float fontSize = 13.0F * ImHexApi::System::getGlobalScale();
+        if (!fontFile.empty()) {
+            ImHexApi::System::impl::setCustomFontPath(fontFile);
+
+            fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
+        }
+
+        ImHexApi::System::impl::setFontSize(fontSize);
+    }
+
+    static void loadThemeSettings() {
+        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", static_cast<i64>(ImHexApi::System::Theme::Dark));
+
+        ImHexApi::System::enableSystemThemeDetection(theme == 0);
+        ImHexApi::System::setTheme(static_cast<ImHexApi::System::Theme>(theme));
+    }
+
+    void loadSettings() {
+        loadInterfaceScalingSetting();
+        loadFontSettings();
+        loadThemeSettings();
     }
 
 }

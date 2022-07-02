@@ -93,23 +93,6 @@ namespace hex::init {
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
 
-        std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-        if (!fs::exists(fontFile))
-            fontFile.clear();
-
-        // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
-        if (fontFile.empty()) {
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
-                auto path = dir / "font.ttf";
-                if (fs::exists(path)) {
-                    log::info("Loading custom front from {}", path.string());
-
-                    fontFile = path;
-                    break;
-                }
-            }
-        }
-
         ImVector<ImWchar> ranges;
         {
             ImFontGlyphRangesBuilder glyphRangesBuilder;
@@ -135,7 +118,8 @@ namespace hex::init {
             0x0100, 0xFFF0, 0
         };
 
-        float fontSize = 13.0F * ImHexApi::System::getGlobalScale();
+        auto fontFile = ImHexApi::System::getCustomFontPath();
+        float fontSize = ImHexApi::System::getFontSize();
         if (fontFile.empty()) {
             // Load default font if no custom one has been specified
 
@@ -146,8 +130,6 @@ namespace hex::init {
             fonts->AddFontDefault(&cfg);
         } else {
             // Load custom font
-
-            fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
 
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = fontSize;
@@ -302,28 +284,6 @@ namespace hex::init {
             log::error("Failed to load configuration! {}", e.what());
             return false;
         }
-
-        float interfaceScaling = 1.0F;
-        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                // Native scaling
-                break;
-            case 1:
-                interfaceScaling = 0.5F;
-                break;
-            case 2:
-                interfaceScaling = 1.0F;
-                break;
-            case 3:
-                interfaceScaling = 1.5F;
-                break;
-            case 4:
-                interfaceScaling = 2.0F;
-                break;
-        }
-
-        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
 
         return true;
     }

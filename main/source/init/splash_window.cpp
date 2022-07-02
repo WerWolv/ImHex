@@ -30,7 +30,7 @@ namespace hex::init {
         this->initGLFW();
         this->initImGui();
 
-        this->m_gpuVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+        ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
     }
 
     WindowSplash::~WindowSplash() {
@@ -185,6 +185,8 @@ namespace hex::init {
             }
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
+        } else {
+            ImHexApi::System::impl::setGlobalScale(1.0);
         }
 
         this->m_window = glfwCreateWindow(640_scaled, 400_scaled, "Starting ImHex...", nullptr, nullptr);

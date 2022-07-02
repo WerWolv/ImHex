@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    View::showMessagePopup("hex.builtin.view.yara.rule_added"_lang);
+                    View::showInfoPopup("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
             }

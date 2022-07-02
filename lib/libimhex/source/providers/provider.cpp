@@ -2,25 +2,17 @@
 
 #include <hex.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/api/event.hpp>
-#include <hex/ui/view.hpp>
 
 #include <cmath>
 #include <cstring>
 #include <map>
 #include <optional>
-#include <string>
-
-#include <pl/pattern_language.hpp>
 
 namespace hex::prv {
 
     Provider::Provider() {
         this->m_patches.emplace_back();
         this->m_patternLanguageRuntime = ContentRegistry::PatternLanguage::createDefaultRuntime(this);
-
-        if (this->hasLoadInterface())
-            EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
     }
 
     Provider::~Provider() {

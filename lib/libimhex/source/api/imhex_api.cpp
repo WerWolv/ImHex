@@ -1,12 +1,15 @@
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
-#include <utility>
 
+#include <utility>
 #include <unistd.h>
 
 #include <imgui.h>
+
+#include <nlohmann/json.hpp>
 
 namespace hex {
 
@@ -315,6 +318,21 @@ namespace hex {
                 s_borderlessWindowMode = enabled;
             }
 
+            static std::fs::path s_customFontPath;
+            void setCustomFontPath(const std::fs::path &path) {
+                s_customFontPath = path;
+            }
+
+            static float s_fontSize;
+            void setFontSize(float size) {
+                s_fontSize = size;
+            }
+
+            static std::string s_gpuVendor;
+            void setGPUVendor(const std::string &vendor) {
+                s_gpuVendor = vendor;
+            }
+
         }
 
 
@@ -359,6 +377,54 @@ namespace hex {
             static std::map<std::string, std::string> initArgs;
 
             return initArgs;
+        }
+
+        const std::fs::path &getCustomFontPath() {
+            return impl::s_customFontPath;
+        }
+
+        float getFontSize() {
+            return impl::s_fontSize;
+        }
+
+
+        static Theme s_theme;
+        static bool s_systemThemeDetection;
+
+        void setTheme(Theme theme) {
+            s_theme = theme;
+
+            EventManager::post<EventSettingsChanged>();
+        }
+
+        Theme getTheme() {
+            return s_theme;
+        }
+
+
+        void enableSystemThemeDetection(bool enabled) {
+            s_systemThemeDetection = enabled;
+
+            EventManager::post<EventSettingsChanged>();
+        }
+
+        bool usesSystemThemeDetection() {
+            return s_systemThemeDetection;
+        }
+
+
+        static std::vector<std::fs::path> s_additionalFolderPaths;
+        const std::vector<std::fs::path> &getAdditionalFolderPaths() {
+            return s_additionalFolderPaths;
+        }
+
+        void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths) {
+            s_additionalFolderPaths = paths;
+        }
+
+
+        const std::string &getGPUVendor() {
+            return impl::s_gpuVendor;
         }
     }
 
