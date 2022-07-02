@@ -240,7 +240,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "version=`cat build/version`" >> $GITHUB_ENV
+          echo "version=`cat version.txt`" >> $GITHUB_ENV
 
       #- name: 📦 Bundle Flatpak
       #  run: |

@@ -228,8 +228,6 @@ macro(createPackage)
         downloadImHexPatternsFiles("./share/imhex")
     endif()
     
-    write_file(version ${PROJECT_VERSION})
-
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
 
