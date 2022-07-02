@@ -28,15 +28,24 @@ namespace hex::plugin::builtin {
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
-            ImGui::PushItemWidth(-1);
-            if (ImGui::InputText(
-                    "##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue, [](ImGuiInputTextCallbackData *callbackData) -> int {
-                        auto _this           = static_cast<ViewCommandPalette *>(callbackData->UserData);
-                        _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
+            if (this->m_focusInputTextBox) {
+                auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
+                if (textState != nullptr) {
+                    textState->Stb.cursor = strlen(this->m_commandBuffer.data());
+                }
 
-                        return 0;
-                    },
-                    this)) {
+                ImGui::SetKeyboardFocusHere(0);
+                this->m_focusInputTextBox = false;
+            }
+
+            ImGui::PushItemWidth(-1);
+            if (ImGui::InputText("##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue,
+                 [](ImGuiInputTextCallbackData *callbackData) -> int {
+                     auto _this           = static_cast<ViewCommandPalette *>(callbackData->UserData);
+                     _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
+
+                     return 0;
+                 }, this)) {
                 if (!this->m_lastResults.empty()) {
                     auto &[displayResult, matchedCommand, callback] = this->m_lastResults.front();
                     callback(matchedCommand);
@@ -50,16 +59,6 @@ namespace hex::plugin::builtin {
                 this->m_lastResults = this->getCommandResults("");
                 std::memset(this->m_commandBuffer.data(), 0x00, this->m_commandBuffer.size());
                 this->m_justOpened = false;
-            }
-
-            if (this->m_focusInputTextBox) {
-                auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
-                if (textState != nullptr) {
-                    textState->Stb.cursor = strlen(this->m_commandBuffer.data());
-                }
-
-                ImGui::SetKeyboardFocusHere(0);
-                this->m_focusInputTextBox = false;
             }
 
             ImGui::Separator();
