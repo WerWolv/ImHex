@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Updating the version here will update it throughout ImHex as well
-file(READ "version.txt" IMHEX_VERSION)
+file(READ "VERSION" IMHEX_VERSION)
 project(imhex VERSION ${IMHEX_VERSION})
 message("Project version ${IMHEX_VERSION}")
 

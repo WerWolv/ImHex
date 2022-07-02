@@ -240,7 +240,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "version=`cat version.txt`" >> $GITHUB_ENV
+          echo "version=`cat VERSION`" >> $GITHUB_ENV
 
       #- name: 📦 Bundle Flatpak
       #  run: |
@@ -336,7 +336,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "version=`cat version.txt`" >> $GITHUB_ENV
+          echo "version=`cat VERSION`" >> $GITHUB_ENV
       
       - name: Prepare PKGBUILD
         run: |
