@@ -292,9 +292,13 @@ jobs:
       image: archlinux:base-devel
 
     steps:
-      - name: ⬇️ Update all packages and install necessary packages
+      - name: ⬇️ Update all packages
         run: |
-          pacman -Syyu git ccache --noconfirm
+          pacman -Syyu --noconfirm
+
+      - name: ⬇️ Install setup dependencies
+        run: |
+          pacman -Syu git ccache --noconfirm
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
