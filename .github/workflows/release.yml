@@ -68,10 +68,15 @@ jobs:
       - name: ✒️ Prepare PKGBUILD
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
-          sed -i 's/%version%/${{env.version}}/g' build/PKGBUILD
+          sed -i 's/%version%/${{env.version}}/g' PKGBUILD
       
       - name: ⬆️ Publish AUR package
-        if: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        
+        # I couldn't make the condition in the env directly for some reason
+        env:
+          MY_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        if: "${{ env.MY_KEY != '' }}"
+
         uses: KSXGitHub/github-actions-deploy-aur@v2
         with:
           pkgname: imhex-bin
