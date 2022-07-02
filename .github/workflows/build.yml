@@ -285,26 +285,27 @@ jobs:
           path: '*.AppImage'
 
   archlinux-build:
-    name: ArchLinux Build
+    name: 🐧 ArchLinux
     runs-on: ubuntu-latest
     
     container:
       image: archlinux:base-devel
 
     steps:
-      - name: Update all packages and install necessary packages
+      - name: ⬇️ Update all packages and install necessary packages
         run: |
           pacman -Syyu git ccache --noconfirm
           
-      - uses: actions/checkout@v3
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
         with:
           submodules: recursive
 
-      - name: Install ImHex dependencies
+      - name: ⬇️ Install ImHex dependencies
         run: |
           dist/get_deps_archlinux.sh --noconfirm
 
-      - name: Restore ccache
+      - name: 📜 Restore ccache
         uses: actions/cache@v3
         with:
           path: |
@@ -312,14 +313,14 @@ jobs:
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
         
-      - name: Restore CMakeCache
+      - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
-      - name: Build
+      - name: 🛠️ Build
         run: |
           mkdir -p build
           cd build
@@ -338,13 +339,13 @@ jobs:
         run: |
           echo "version=`cat VERSION`" >> $GITHUB_ENV
       
-      - name: Prepare PKGBUILD
+      - name: ✒️ Prepare PKGBUILD
         run: |
           cp dist/Arch/PKGBUILD build
           sed -i 's/%version%/${{env.version}}/g' build/PKGBUILD
 
     # makepkg doesn't want to run as root, so I had to chmod 777 all over
-      - name: Package imhex-archlinux.pkg.tar.zst
+      - name: 📦 Package ArchLinux .pkg.tar.zst
         run: |
           cd build
           
@@ -360,7 +361,7 @@ jobs:
           rm imhex-${{env.version}}-ArchLinux.pkg.tar.zst
           mv *.pkg.tar.zst imhex-${{env.version}}-ArchLinux.pkg.tar.zst
       
-      - name: Upload imhex-archlinux.pkg.tar.zst
+      - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v3
         with:
           name: ArchLinux .pkg.tar.zst
