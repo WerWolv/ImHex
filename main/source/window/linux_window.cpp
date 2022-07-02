@@ -21,7 +21,7 @@ namespace hex {
     }
 
     void Window::setupNativeWindow() {
-        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
+        bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
 

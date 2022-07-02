@@ -12,6 +12,7 @@
 #include <hex/helpers/concepts.hpp>
 #include <hex/api/task.hpp>
 #include <hex/api/keybinding.hpp>
+#include <hex/helpers/fs.hpp>
 
 using ImGuiID = unsigned int;
 struct ImVec2;
@@ -158,12 +159,21 @@ namespace hex {
                 void setProgramArguments(int argc, char **argv, char **envp);
 
                 void setBorderlessWindowMode(bool enabled);
+
+                void setCustomFontPath(const std::fs::path &path);
+                void setFontSize(float size);
             }
 
             struct ProgramArguments {
                 int argc;
                 char **argv;
                 char **envp;
+            };
+
+            enum class Theme {
+                Dark    = 1,
+                Light   = 2,
+                Classic = 3
             };
 
             const ProgramArguments &getProgramArguments();
@@ -181,6 +191,14 @@ namespace hex {
 
             std::map<std::string, std::string> &getInitArguments();
 
+            const std::fs::path &getCustomFontPath();
+            float getFontSize();
+
+            void setTheme(Theme theme);
+            Theme getTheme();
+
+            void enableSystemThemeDetection(bool enabled);
+            bool usesSystemThemeDetection();
         }
 
     }

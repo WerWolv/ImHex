@@ -1,18 +1,14 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/localization.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/api/localization.hpp>
-
-#include <hex/providers/provider.hpp>
 
 #include <codicons_font.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-
-#include <atomic>
 
 namespace hex::plugin::builtin {
 

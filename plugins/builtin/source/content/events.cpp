@@ -1,9 +1,11 @@
 #include <hex/api/event.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/project_file_handler.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <imgui.h>
 

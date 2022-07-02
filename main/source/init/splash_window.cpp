@@ -185,6 +185,8 @@ namespace hex::init {
             }
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
+        } else {
+            ImHexApi::System::impl::setGlobalScale(1.0);
         }
 
         this->m_window = glfwCreateWindow(640_scaled, 400_scaled, "Starting ImHex...", nullptr, nullptr);
