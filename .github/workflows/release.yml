@@ -13,7 +13,7 @@ jobs:
     name: Release
 
     steps:
-      - name: Get sources
+      - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           path: ImHex
@@ -31,10 +31,10 @@ jobs:
 
           echo "version=$project_version" >> $GITHUB_ENV
 
-      - name: Create tarball from sources with dependencies
+      - name: 🗜️ Create tarball from sources with dependencies
         run: tar -cvf Full.Sources.tar.gz ImHex
         
-      - name: Download artifacts from latest workflow
+      - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -43,7 +43,7 @@ jobs:
           workflow_conclusion: success
           skip_unpack: true
              
-      - name: Unzip files when needed
+      - name: 🗜️ Unzip files when needed
         run: |	
           for zipfile in ./*.zip
           do
@@ -57,20 +57,20 @@ jobs:
               fi
           done
 
-      - name: Rename Windows Portable Zip
+      - name: 🟩 Rename Windows Portable Zip
         run: mv "Windows Portable.zip" imhex-${{env.version}}-Windows-Portable.zip
 
-      - name: Upload everything to release
+      - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
         with:
           files: '*'
 
-      - name: Prepare PKGBUILD
+      - name: ✒️ Prepare PKGBUILD
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
           sed -i 's/%version%/${{env.version}}/g' build/PKGBUILD
       
-      - name: Publish AUR package
+      - name: ⬆️ Publish AUR package
         if: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         uses: KSXGitHub/github-actions-deploy-aur@v2
         with:
