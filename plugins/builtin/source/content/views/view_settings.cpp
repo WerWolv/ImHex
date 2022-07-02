@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginTabItem(LangEntry(category))) {
                         const std::string &categoryDesc = descriptions.count(category) ? descriptions.at(category) : category.name;
                         LangEntry descriptionEntry{categoryDesc};
-                        ImGui::TextUnformatted(descriptionEntry);
+                        ImGui::TextWrapped("%s", static_cast<const char*>(descriptionEntry));
                         ImGui::InfoTooltip(descriptionEntry);
                         ImGui::Separator();
 

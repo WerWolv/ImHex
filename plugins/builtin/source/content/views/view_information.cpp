@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
                 if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    View::showMessagePopup("hex.builtin.view.information.magic_db_added"_lang);
+                    View::showInfoPopup("hex.builtin.view.information.magic_db_added"_lang);
                     return true;
                 }
             }

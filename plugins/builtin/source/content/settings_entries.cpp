@@ -314,17 +314,34 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add(dirsSetting, dirsSetting, std::vector<std::string> {}, [](auto name, nlohmann::json &setting) {
             hex::unused(name);
 
-            static std::vector<std::string> folders = setting;
-            static size_t currentItemIndex             = 0;
+            static size_t currentItemIndex = 0;
+            static std::vector<std::fs::path> folders = [&setting]{
+                std::vector<std::fs::path> result;
+
+                std::vector<std::u8string> paths = setting;
+                for (const auto &path : paths)
+                    result.emplace_back(path);
+
+                return result;
+            }();
 
             bool result = false;
+
+            auto writeSetting = [&setting]{
+                std::vector<std::u8string> folderStrings;
+                for (const auto &folder : folders)
+                    folderStrings.push_back(folder.u8string());
+                setting = folderStrings;
+
+                ImHexApi::System::setAdditionalFolderPaths(folders);
+            };
 
             if (!ImGui::BeginListBox("", ImVec2(-38, -FLT_MIN))) {
                 return false;
             } else {
                 for (size_t n = 0; n < folders.size(); n++) {
                     const bool isSelected = (currentItemIndex == n);
-                    if (ImGui::Selectable(folders.at(n).c_str(), isSelected)) { currentItemIndex = n; }
+                    if (ImGui::Selectable(folders.at(n).string().c_str(), isSelected)) { currentItemIndex = n; }
                     if (isSelected) { ImGui::SetItemDefaultFocus(); }
                 }
                 ImGui::EndListBox();
@@ -334,11 +351,12 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
                 fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
-                    auto pathStr = path.string();
 
-                    if (std::find(folders.begin(), folders.end(), pathStr) == folders.end()) {
-                        folders.emplace_back(pathStr);
-                        ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+                    if (std::find(folders.begin(), folders.end(), path) == folders.end()) {
+                        folders.emplace_back(path);
+
+                        writeSetting();
+
                         result = true;
                     }
                 });
@@ -348,7 +366,9 @@ namespace hex::plugin::builtin {
             if (ImGui::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
                 if (!folders.empty()) {
                     folders.erase(std::next(folders.begin(), currentItemIndex));
-                    ContentRegistry::Settings::write(dirsSetting, dirsSetting, folders);
+
+                    writeSetting();
+
                     result = true;
                 }
             }

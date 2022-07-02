@@ -30,7 +30,7 @@ namespace hex::init {
         this->initGLFW();
         this->initImGui();
 
-        this->m_gpuVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+        ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
     }
 
     WindowSplash::~WindowSplash() {

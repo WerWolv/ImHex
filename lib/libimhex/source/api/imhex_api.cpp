@@ -328,6 +328,11 @@ namespace hex {
                 s_fontSize = size;
             }
 
+            static std::string s_gpuVendor;
+            void setGPUVendor(const std::string &vendor) {
+                s_gpuVendor = vendor;
+            }
+
         }
 
 
@@ -405,6 +410,21 @@ namespace hex {
 
         bool usesSystemThemeDetection() {
             return s_systemThemeDetection;
+        }
+
+
+        static std::vector<std::fs::path> s_additionalFolderPaths;
+        const std::vector<std::fs::path> &getAdditionalFolderPaths() {
+            return s_additionalFolderPaths;
+        }
+
+        void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths) {
+            s_additionalFolderPaths = paths;
+        }
+
+
+        const std::string &getGPUVendor() {
+            return impl::s_gpuVendor;
         }
     }
 

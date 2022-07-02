@@ -162,6 +162,8 @@ namespace hex {
 
                 void setCustomFontPath(const std::fs::path &path);
                 void setFontSize(float size);
+
+                void setGPUVendor(const std::string &vendor);
             }
 
             struct ProgramArguments {
@@ -199,6 +201,11 @@ namespace hex {
 
             void enableSystemThemeDetection(bool enabled);
             bool usesSystemThemeDetection();
+
+            const std::vector<std::fs::path> &getAdditionalFolderPaths();
+            void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths);
+
+            const std::string &getGPUVendor();
         }
 
     }

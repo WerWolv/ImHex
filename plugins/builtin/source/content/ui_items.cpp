@@ -4,6 +4,7 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <codicons_font.h>
 #include <imgui.h>
@@ -11,6 +12,13 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin {
+
+    static std::string s_popupMessage;
+    static std::function<void()> s_yesCallback, s_noCallback;
+    static u32 s_selectableFileIndex;
+    static std::vector<std::fs::path> s_selectableFiles;
+    static std::function<void(std::fs::path)> s_selectableFileOpenCallback;
+    static std::vector<nfdfilteritem_t> s_selectableFilesValidExtensions;
 
     static void drawGlobalPopups() {
 
@@ -28,10 +36,141 @@ namespace hex::plugin::builtin {
 
             ImGui::EndPopup();
         }
+
+        auto windowSize = ImHexApi::System::getMainWindowSize();
+
+        // Info popup
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
+        if (ImGui::BeginPopupModal("hex.builtin.common.info"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+            if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::EndPopup();
+        }
+
+        // Error popup
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
+        if (ImGui::BeginPopupModal("hex.builtin.common.error"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+            if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::EndPopup();
+        }
+
+        // Fatal error popup
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
+        if (ImGui::BeginPopupModal("hex.builtin.common.fatal"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+            if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
+                ImHexApi::Common::closeImHex();
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::EndPopup();
+        }
+
+        // Yes/No question popup
+        ImGui::SetNextWindowSizeConstraints(scaled(ImVec2(400, 100)), scaled(ImVec2(600, 300)));
+        if (ImGui::BeginPopupModal("hex.builtin.common.question"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::TextFormattedWrapped("{}", s_popupMessage.c_str());
+            ImGui::NewLine();
+            ImGui::Separator();
+
+            View::confirmButtons(
+                    "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] {
+                        s_yesCallback();
+                        ImGui::CloseCurrentPopup(); }, [] {
+                        s_noCallback();
+                        ImGui::CloseCurrentPopup(); });
+
+            ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+            ImGui::EndPopup();
+        }
+
+        // File chooser popup
+        bool opened = true;
+        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+        if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+            if (ImGui::BeginListBox("##files", ImVec2(300_scaled, 0))) {
+
+                u32 index = 0;
+                for (auto &path : s_selectableFiles) {
+                    if (ImGui::Selectable(path.filename().string().c_str(), index == s_selectableFileIndex))
+                        s_selectableFileIndex = index;
+                    index++;
+                }
+
+                ImGui::EndListBox();
+            }
+
+            if (ImGui::Button("hex.builtin.common.open"_lang)) {
+                s_selectableFileOpenCallback(s_selectableFiles[s_selectableFileIndex]);
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("hex.builtin.common.browse"_lang)) {
+                fs::openFileBrowser(fs::DialogMode::Open, s_selectableFilesValidExtensions, [](const auto &path) {
+                    s_selectableFileOpenCallback(path);
+                    ImGui::CloseCurrentPopup();
+                });
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
     void addGlobalUIItems() {
         EventManager::subscribe<EventFrameEnd>(drawGlobalPopups);
+
+        EventManager::subscribe<RequestShowInfoPopup>([](const std::string &message) {
+            s_popupMessage = message;
+
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.info"_lang); });
+        });
+
+        EventManager::subscribe<RequestShowErrorPopup>([](const std::string &message) {
+            s_popupMessage = message;
+
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.error"_lang); });
+        });
+
+        EventManager::subscribe<RequestShowFatalErrorPopup>([](const std::string &message) {
+            s_popupMessage = message;
+
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.fatal"_lang); });
+        });
+
+        EventManager::subscribe<RequestShowYesNoQuestionPopup>([](const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback) {
+            s_popupMessage = message;
+
+            s_yesCallback = yesCallback;
+            s_noCallback  = noCallback;
+
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
+        });
+
+        EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
+            s_selectableFileIndex            = 0;
+            s_selectableFiles                = paths;
+            s_selectableFilesValidExtensions = validExtensions;
+            s_selectableFileOpenCallback     = callback;
+
+            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
+        });
     }
 
     void addFooterItems() {
@@ -176,6 +315,19 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
         });
 
+    }
+
+    void handleBorderlessWindowMode() {
+        // Intel's OpenGL driver has weird bugs that cause the drawn window to be offset to the bottom right.
+        // This can be fixed by either using Mesa3D's OpenGL Software renderer or by simply disabling it.
+        // If you want to try if it works anyways on your GPU, set the hex.builtin.setting.interface.force_borderless_window_mode setting to 1
+        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+            bool isIntelGPU = hex::containsIgnoreCase(ImHexApi::System::getGPUVendor(), "Intel");
+            ImHexApi::System::impl::setBorderlessWindowMode(!isIntelGPU);
+
+            if (isIntelGPU)
+                log::warn("Intel GPU detected! Intel's OpenGL driver has bugs that can cause issues when using ImHex. If you experience any rendering bugs, please try the Mesa3D Software Renderer");
+        }
     }
 
 }
