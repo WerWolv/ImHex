@@ -180,7 +180,7 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            fs::File file(filePath.string(), fs::File::Mode::Read);
+            fs::File file(filePath, fs::File::Mode::Read);
             if (!file.isValid())
                 return Response<std::string> { 400, {} };
 
@@ -218,7 +218,7 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            fs::File file(filePath.string(), fs::File::Mode::Create);
+            fs::File file(filePath, fs::File::Mode::Create);
             if (!file.isValid())
                 return Response<void> { 400 };
 

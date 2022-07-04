@@ -191,7 +191,7 @@ namespace hex::plugin::builtin {
                 [](const char *includeName, const char *, const char *, void *userData) -> const char * {
                     auto currFilePath = static_cast<const char *>(userData);
 
-                    fs::File file((std::fs::path(currFilePath).parent_path() / includeName).string(), fs::File::Mode::Read);
+                    fs::File file(std::fs::path(currFilePath).parent_path() / includeName, fs::File::Mode::Read);
                     if (!file.isValid())
                         return nullptr;
 

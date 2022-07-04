@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                ProjectFile::load(s_safetyBackupPath.string());
+                ProjectFile::load(s_safetyBackupPath);
                 ProjectFile::markDirty();
 
                 ProjectFile::clearProjectFilePath();
@@ -403,9 +403,9 @@ namespace hex::plugin::builtin {
             }
 
             {
-                std::vector<std::string> recentFilesVector;
+                std::vector<std::u8string> recentFilesVector;
                 for (const auto &recentPath : s_recentFilePaths)
-                    recentFilesVector.push_back(recentPath.string());
+                    recentFilesVector.push_back(recentPath.u8string());
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }
@@ -450,7 +450,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        for (const auto &pathString : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files")) {
+        for (const auto &pathString : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", std::vector<std::u8string>{ })) {
             std::fs::path path = std::u8string(pathString.begin(), pathString.end());
             if (fs::exists(path))
                 s_recentFilePaths.emplace_back(path);

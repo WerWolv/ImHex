@@ -118,7 +118,7 @@ namespace hex {
                 return;
 
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store((std::fs::path(path) / CrashBackupFileName).string()))
+                if (ProjectFile::store(std::fs::path(path) / CrashBackupFileName))
                     break;
             }
         });

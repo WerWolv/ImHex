@@ -80,8 +80,34 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
         }
 
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::u8string &defaultValue, const Callback &callback, bool requiresRestart) {
+            log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+
+            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
+
+            auto &json = getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_string())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+        }
+
         void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart) {
             log::info("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+
+            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
+
+            auto &json = getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_array())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+        }
+
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::u8string> &defaultValue, const Callback &callback, bool requiresRestart) {
+            log::info("Registered new u8string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
@@ -116,6 +142,15 @@ namespace hex {
         }
 
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value) {
+            auto &json = getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+
+            json[unlocalizedCategory][unlocalizedName] = value;
+        }
+
+        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::u8string> &value) {
             auto &json = getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
@@ -168,6 +203,23 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
             return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
+        }
+
+        std::vector<std::u8string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::u8string> &defaultValue) {
+            auto &json = getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                return defaultValue;
+            if (!json[unlocalizedCategory].contains(unlocalizedName))
+                return defaultValue;
+
+            if (!json[unlocalizedCategory][unlocalizedName].is_array())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+
+            if (!json[unlocalizedCategory][unlocalizedName].array().empty() && !json[unlocalizedCategory][unlocalizedName][0].is_string())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+
+            return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::u8string>>();
         }
 
 

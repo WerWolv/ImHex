@@ -52,10 +52,10 @@ namespace hex {
         json projectFileData;
 
         try {
-            std::ifstream projectFile(filePath.c_str());
+            std::ifstream projectFile(filePath);
             projectFile >> projectFileData;
 
-            ProjectFile::s_filePath             = std::fs::path(projectFileData["filePath"].get<std::string>());
+            ProjectFile::s_filePath             = std::fs::path(projectFileData["filePath"].get<std::u8string>());
             ProjectFile::s_pattern              = projectFileData["pattern"];
             ProjectFile::s_patches              = projectFileData["patches"].get<Patches>();
             ProjectFile::s_dataProcessorContent = projectFileData["dataProcessor"];
@@ -89,7 +89,7 @@ namespace hex {
             filePath = ProjectFile::s_currProjectFilePath;
 
         try {
-            projectFileData["filePath"]      = ProjectFile::s_filePath.string();
+            projectFileData["filePath"]      = ProjectFile::s_filePath.u8string();
             projectFileData["pattern"]       = ProjectFile::s_pattern;
             projectFileData["patches"]       = ProjectFile::s_patches;
             projectFileData["dataProcessor"] = ProjectFile::s_dataProcessorContent;
