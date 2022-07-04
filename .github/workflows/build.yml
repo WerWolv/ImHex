@@ -240,7 +240,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "version=`cat build/version`" >> $GITHUB_ENV
+          echo "version=`cat VERSION`" >> $GITHUB_ENV
 
       #- name: 📦 Bundle Flatpak
       #  run: |
@@ -284,3 +284,91 @@ jobs:
           name: Linux AppImage
           path: '*.AppImage'
 
+  archlinux-build:
+    name: 🐧 ArchLinux
+    runs-on: ubuntu-latest
+    
+    container:
+      image: archlinux:base-devel
+
+    steps:
+      - name: ⬇️ Update all packages
+        run: |
+          pacman -Syyu --noconfirm
+
+      - name: ⬇️ Install setup dependencies
+        run: |
+          pacman -Syu git ccache --noconfirm
+          
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: ⬇️ Install ImHex dependencies
+        run: |
+          dist/get_deps_archlinux.sh --noconfirm
+
+      - name: 📜 Restore ccache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/ccache
+          key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
+        
+      - name: 📜 Restore CMakeCache
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/CMakeCache.txt
+          key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+      
+      - name: 🛠️ Build
+        run: |
+          mkdir -p build
+          cd build
+          CC=gcc CXX=g++ cmake                  \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
+          -DCMAKE_INSTALL_PREFIX="/usr" 	      \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
+          -DRUST_PATH="$HOME/.cargo/bin/"           \
+          ..
+          make -j 4 install DESTDIR=installDir
+
+      - name: 📜 Set version variable
+        run: |
+          echo "version=`cat VERSION`" >> $GITHUB_ENV
+      
+      - name: ✒️ Prepare PKGBUILD
+        run: |
+          cp dist/Arch/PKGBUILD build
+          sed -i 's/%version%/${{env.version}}/g' build/PKGBUILD
+
+    # makepkg doesn't want to run as root, so I had to chmod 777 all over
+      - name: 📦 Package ArchLinux .pkg.tar.zst
+        run: |
+          cd build
+          
+          # the name is a small trick to make makepkg recognize it as the source
+          # else, it would try to download the file from the release
+          tar -cvf imhex-${{env.version}}-ArchLinux.pkg.tar.zst -C installDir .
+          
+          chmod -R 777 .
+          
+          sudo -u nobody makepkg
+
+          # Remplace the old file
+          rm imhex-${{env.version}}-ArchLinux.pkg.tar.zst
+          mv *.pkg.tar.zst imhex-${{env.version}}-ArchLinux.pkg.tar.zst
+      
+      - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
+        uses: actions/upload-artifact@v3
+        with:
+          name: ArchLinux .pkg.tar.zst
+          path: |
+            build/imhex-${{env.version}}-ArchLinux.pkg.tar.zst
+            

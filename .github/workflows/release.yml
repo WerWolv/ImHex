@@ -11,20 +11,30 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: Release
-    env:
-      version: ${{ github.event.release.tag_name }}
 
-    steps:    
-      - name: Get sources
+    steps:
+      - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           path: ImHex
           submodules: recursive
 
-      - name: Create tarball from sources with dependencies
+      - name: 📜 Verify version and set version variable
+        run: |
+          project_version=`cat ImHex/VERSION`
+          tag_version="${{github.event.release.tag_name}}"
+          tag_version="${tag_version:1}"
+          if [ "$project_version" != "$tag_version" ]; then
+            echo "::warning::$project_version and $tag_version are not the same ! Refusing to populate release"
+            exit 1
+          fi
+
+          echo "version=$project_version" >> $GITHUB_ENV
+
+      - name: 🗜️ Create tarball from sources with dependencies
         run: tar -cvf Full.Sources.tar.gz ImHex
         
-      - name: Download artifacts from latest workflow
+      - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -33,7 +43,7 @@ jobs:
           workflow_conclusion: success
           skip_unpack: true
              
-      - name: Unzip files when needed
+      - name: 🗜️ Unzip files when needed
         run: |	
           for zipfile in ./*.zip
           do
@@ -47,10 +57,36 @@ jobs:
               fi
           done
 
-      - name: Rename Windows Portable Zip
+      - name: 🟩 Rename Windows Portable Zip
         run: mv "Windows Portable.zip" imhex-${{env.version}}-Windows-Portable.zip
 
-      - name: Upload everything to release
+      - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
         with:
           files: '*'
+
+      - name: ✒️ Prepare PKGBUILD
+        run: |
+          cp ImHex/dist/Arch/PKGBUILD .
+          
+          hash=`md5sum imhex-${{env.version}}-ArchLinux.pkg.tar.zst | cut -d ' ' -f 1`
+
+          sed -i 's/%version%/${{env.version}}/g' PKGBUILD
+          sed -i "s/(SKIP)/($hash)/g" PKGBUILD
+
+      - name: ⬆️ Publish AUR package
+        
+        # I couldn't make the condition in the env directly for some reason
+        env:
+          MY_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        if: "${{ env.MY_KEY != '' }}"
+
+        uses: KSXGitHub/github-actions-deploy-aur@v2
+        with:
+          pkgname: imhex-bin
+          pkgbuild: ./PKGBUILD
+          commit_username: iTrooz
+          commit_email: itrooz@protonmail.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Bump to version ${{env.version}}
+          ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
