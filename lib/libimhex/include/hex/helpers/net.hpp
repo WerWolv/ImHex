@@ -49,6 +49,8 @@ namespace hex {
 
         void cancel() { this->m_shouldCancel = true; }
 
+        static void setProxy(const std::string &url);
+
     private:
         void setCommonSettings(std::string &response, const std::string &url, u32 timeout = 2000, const std::map<std::string, std::string> &extraHeaders = {}, const std::string &body = {});
         std::optional<i32> execute();
@@ -62,6 +64,8 @@ namespace hex {
         std::mutex m_transmissionActive;
         float m_progress    = 0.0F;
         bool m_shouldCancel = false;
+
+        static std::string s_proxyUrl;
     };
 
 }

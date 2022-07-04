@@ -30,7 +30,7 @@ namespace hex::init {
         this->initGLFW();
         this->initImGui();
 
-        this->m_gpuVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+        ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
     }
 
     WindowSplash::~WindowSplash() {
@@ -173,18 +173,20 @@ namespace hex::init {
 
             auto meanScale = std::midpoint(xScale, yScale);
 
-// On Macs with a retina display (basically all modern ones we care about), the OS reports twice
-// the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
-// extremely huge with native scaling on macOS.
-#if defined(OS_MACOS)
-            meanScale /= 2;
-#endif
+            // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
+            // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
+            // extremely huge with native scaling on macOS.
+            #if defined(OS_MACOS)
+                meanScale /= 2;
+            #endif
 
             if (meanScale <= 0.0) {
                 meanScale = 1.0;
             }
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
+        } else {
+            ImHexApi::System::impl::setGlobalScale(1.0);
         }
 
         this->m_window = glfwCreateWindow(640_scaled, 400_scaled, "Starting ImHex...", nullptr, nullptr);

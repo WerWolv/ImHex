@@ -853,7 +853,7 @@ namespace hex::plugin::builtin {
 
                             file.remove();
 
-                            View::showMessagePopup("hex.builtin.tools.file_tools.shredder.success"_lang);
+                            View::showInfoPopup("hex.builtin.tools.file_tools.shredder.success"_lang);
                         }).detach();
                     }
                 }
@@ -976,7 +976,7 @@ namespace hex::plugin::builtin {
                                 index++;
                             }
 
-                            View::showMessagePopup("hex.builtin.tools.file_tools.splitter.success"_lang);
+                            View::showInfoPopup("hex.builtin.tools.file_tools.splitter.success"_lang);
                         }).detach();
                     }
                 }
@@ -1110,7 +1110,7 @@ namespace hex::plugin::builtin {
                             selectedIndex = 0;
                             outputPath.clear();
 
-                            View::showMessagePopup("hex.builtin.tools.file_tools.combiner.success"_lang);
+                            View::showInfoPopup("hex.builtin.tools.file_tools.combiner.success"_lang);
                         }).detach();
                     }
                 }

@@ -100,8 +100,7 @@ namespace hex::fs {
     std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting) {
         std::vector<std::fs::path> result;
         const auto exePath = getExecutablePath();
-        const std::string settingName { "hex.builtin.setting.folders" };
-        auto userDirs = ContentRegistry::Settings::read(settingName, settingName, std::vector<std::string> {});
+        auto userDirs = ImHexApi::System::getAdditionalFolderPaths();
 
         [[maybe_unused]]
         auto addUserDirs = [&userDirs](auto &paths) {
@@ -312,5 +311,21 @@ namespace hex::fs {
 
         return result;
     }
+
+    std::fs::path toShortPath(const std::fs::path &path) {
+        #if defined(OS_WINDOWS)
+            size_t size = GetShortPathNameW(path.c_str(), nullptr, 0) * sizeof(TCHAR);
+            if (size == 0)
+                return path;
+
+            std::wstring newPath(size, 0x00);
+            GetShortPathNameW(path.c_str(), newPath.data(), newPath.size());
+
+            return newPath;
+        #else
+            return path;
+        #endif
+    }
+
 
 }

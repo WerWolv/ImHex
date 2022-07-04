@@ -34,11 +34,9 @@ namespace hex {
         [[nodiscard]] virtual bool isAvailable() const;
         [[nodiscard]] virtual bool shouldProcess() const { return this->isAvailable() && this->getWindowOpenState(); }
 
-        static void drawCommonInterfaces();
-
-        static void showMessagePopup(const std::string &message);
-        static void showErrorPopup(const std::string &errorMessage);
-        static void showFatalPopup(const std::string &errorMessage);
+        static void showInfoPopup(const std::string &message);
+        static void showErrorPopup(const std::string &message);
+        static void showFatalPopup(const std::string &message);
         static void showYesNoQuestionPopup(const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback);
 
         static void showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback);
@@ -70,15 +68,6 @@ namespace hex {
         std::string m_unlocalizedViewName;
         bool m_windowOpen = false;
         std::map<Shortcut, std::function<void()>> m_shortcuts;
-
-        static std::string s_popupMessage;
-
-        static std::function<void()> s_yesCallback, s_noCallback;
-
-        static u32 s_selectableFileIndex;
-        static std::vector<std::fs::path> s_selectableFiles;
-        static std::function<void(std::fs::path)> s_selectableFileOpenCallback;
-        static std::vector<nfdfilteritem_t> s_selectableFilesValidExtensions;
 
         static ImFontAtlas *s_fontAtlas;
         static ImFontConfig s_fontConfig;

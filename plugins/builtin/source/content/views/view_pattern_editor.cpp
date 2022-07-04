@@ -21,16 +21,15 @@ namespace hex::plugin::builtin {
         static bool initialized = false;
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            static const char *const keywords[] = {
+            static constexpr std::array keywords = {
                 "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
 
-            static const char *const builtInTypes[] = {
+            static constexpr std::array builtInTypes = {
                 "u8", "u16", "u32", "u64", "u128", "s8", "s16", "s32", "s64", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
             };
-
             for (const auto name : builtInTypes) {
                 TextEditor::Identifier id;
                 id.mDeclaration = "";
@@ -133,7 +132,7 @@ namespace hex::plugin::builtin {
                     if (!entry.is_regular_file())
                         continue;
 
-                    fs::File file(entry.path().string(), fs::File::Mode::Read);
+                    fs::File file(entry.path(), fs::File::Mode::Read);
                     if (!file.isValid())
                         continue;
 
@@ -231,43 +230,39 @@ namespace hex::plugin::builtin {
         });
 
 
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
             hex::unused(data, size);
 
-            const auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
-            for (const auto &pattern : patterns) {
-                auto child = pattern->getPattern(address);
-                if (child != nullptr) {
-                    return child->getColor();
-                }
-            }
+            if (this->m_runningEvaluators != 0)
+                return std::nullopt;
 
-            return std::nullopt;
+            const auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address);
+            if (pattern != nullptr)
+                return pattern->getColor();
+            else
+                return std::nullopt;
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            auto &patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns();
-            for (auto &pattern : patterns) {
-                auto child = pattern->getPattern(address);
-                if (child != nullptr) {
-                    ImGui::BeginTooltip();
+            auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address);
+            if (pattern != nullptr) {
+                ImGui::BeginTooltip();
 
-                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
 
-                        this->drawPatternTooltip(child);
+                    this->drawPatternTooltip(pattern);
 
-                        auto tooltipColor = (child->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-                        ImGui::EndTable();
-                        ImGui::PopStyleColor(2);
-                    }
-                    ImGui::EndTooltip();
+                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                    ImGui::EndTable();
+                    ImGui::PopStyleColor(2);
                 }
+                ImGui::EndTooltip();
             }
         });
     }
@@ -704,6 +699,7 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code);
             this->m_textEditor.SetText(code);
+            this->parsePattern(code);
         }
     }
 
@@ -711,6 +707,7 @@ namespace hex::plugin::builtin {
         if (!ImHexApi::Provider::isValid()) return;
 
         ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
+        this->parsePattern("");
     }
 
 
@@ -787,6 +784,8 @@ namespace hex::plugin::builtin {
             if (!this->m_lastEvaluationResult) {
                 this->m_lastEvaluationError = runtime.getError();
             }
+
+            runtime.flattenPatterns();
 
             this->m_lastEvaluationLog     = runtime.getConsoleLog();
             this->m_lastEvaluationOutVars = runtime.getOutVariables();

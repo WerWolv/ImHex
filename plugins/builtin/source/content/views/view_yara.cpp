@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    View::showMessagePopup("hex.builtin.view.yara.rule_added"_lang);
+                    View::showInfoPopup("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
             }
@@ -46,10 +46,10 @@ namespace hex::plugin::builtin {
             } else {
                 ImGui::BeginDisabled(this->m_matching);
                 {
-                    if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.c_str())) {
+                    if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.string().c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
                             const bool selected = (this->m_selectedRule == i);
-                            if (ImGui::Selectable(this->m_rules[i].first.c_str(), selected))
+                            if (ImGui::Selectable(this->m_rules[i].first.string().c_str(), selected))
                                 this->m_selectedRule = i;
 
                             if (selected)
@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
             std::error_code error;
             for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
                 if (entry.is_regular_file() && entry.path().extension() == ".yar") {
-                    this->m_rules.emplace_back(std::fs::relative(entry.path(), std::fs::path(path)).string(), entry.path().string());
+                    this->m_rules.emplace_back(std::fs::relative(entry.path(), path), entry.path());
                 }
             }
         }
@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
 
                     delete[] ptr;
                 },
-                this->m_rules[this->m_selectedRule].second.data());
+                fs::toShortPath(this->m_rules[this->m_selectedRule].second).string().data());
 
 
             fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
