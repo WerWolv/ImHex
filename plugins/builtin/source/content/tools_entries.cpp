@@ -739,7 +739,7 @@ namespace hex::plugin::builtin {
 
         void drawFileToolShredder() {
             static bool shredding    = false;
-            static auto selectedFile = [] { std::string s; s.reserve(0x1000); return s; }();
+            static std::u8string selectedFile;
             static bool fastMode     = false;
 
             ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.warning"_lang);
@@ -754,7 +754,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     if (ImGui::Button("...")) {
                         fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                            selectedFile = path.string();
+                            selectedFile = path.u8string();
                         });
                     }
 
@@ -883,11 +883,11 @@ namespace hex::plugin::builtin {
                 1
             };
 
-            static bool splitting      = false;
-            static auto selectedFile   = [] { std::string s; s.reserve(0x1000); return s; }();
-            static auto baseOutputPath = [] { std::string s; s.reserve(0x1000); return s; }();
-            static u64 splitSize       = sizes[0];
-            static int selectedItem    = 0;
+            static bool splitting = false;
+            static std::u8string selectedFile;
+            static std::u8string baseOutputPath;
+            static u64 splitSize = sizes[0];
+            static int selectedItem = 0;
 
             if (ImGui::BeginChild("split_settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 7 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 ImGui::BeginDisabled(splitting);
@@ -896,7 +896,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     if (ImGui::Button("...##input")) {
                         fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                            selectedFile = path.string();
+                            selectedFile = path.u8string();
                         });
                     }
                     ImGui::SameLine();
@@ -906,7 +906,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     if (ImGui::Button("...##output")) {
                         fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-                            baseOutputPath = path.string();
+                            baseOutputPath = path.u8string();
                         });
                     }
                     ImGui::SameLine();
@@ -960,7 +960,10 @@ namespace hex::plugin::builtin {
                             for (u64 offset = 0; offset < file.getSize(); offset += splitSize) {
                                 task.update(offset);
 
-                                fs::File partFile(baseOutputPath + hex::format(".{:05}", index), fs::File::Mode::Create);
+                                std::fs::path path = baseOutputPath;
+                                path += hex::format(".{:05}", index);
+
+                                fs::File partFile(path, fs::File::Mode::Create);
 
                                 if (!partFile.isValid()) {
                                     View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.error.create"_lang, index));
@@ -986,8 +989,8 @@ namespace hex::plugin::builtin {
 
         void drawFileToolCombiner() {
             static bool combining = false;
-            static std::vector<std::string> files;
-            static auto outputPath = [] { std::string s; s.reserve(0x1000); return s; }();
+            static std::vector<std::fs::path> files;
+            static std::u8string outputPath;
             static u32 selectedIndex;
 
             if (ImGui::BeginTable("files_table", 2, ImGuiTableFlags_SizingStretchProp)) {
@@ -1035,7 +1038,7 @@ namespace hex::plugin::builtin {
                 {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
                         fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                            files.push_back(path.string());
+                            files.push_back(path);
                         });
                     }
                     ImGui::SameLine();
@@ -1059,7 +1062,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
                 if (ImGui::Button("...")) {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-                        outputPath = path.string();
+                        outputPath = path.u8string();
                     });
                 }
                 ImGui::SameLine();

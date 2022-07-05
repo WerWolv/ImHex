@@ -185,7 +185,7 @@ namespace hex::plugin::builtin {
         }
 
         ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
-            fs::File file(path.string(), fs::File::Mode::Read);
+            fs::File file(path, fs::File::Mode::Read);
 
             if (file.isValid()) {
                 EventManager::post<RequestSetPatternLanguageCode>(file.readString());
@@ -619,7 +619,7 @@ namespace hex::plugin::builtin {
 
             confirmButtons(
                 "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this] {
-                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile].string());
+                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile]);
                 ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))

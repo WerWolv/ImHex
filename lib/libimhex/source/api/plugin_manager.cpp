@@ -24,8 +24,6 @@ namespace hex {
             }
         #endif
 
-        auto pluginName = std::fs::path(path).stem().string();
-
         this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
         this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
         this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");

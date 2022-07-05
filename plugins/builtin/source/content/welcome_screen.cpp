@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                ProjectFile::load(s_safetyBackupPath.string());
+                ProjectFile::load(s_safetyBackupPath);
                 ProjectFile::markDirty();
 
                 ProjectFile::clearProjectFilePath();
