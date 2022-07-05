@@ -32,7 +32,7 @@ jobs:
           echo "version=$project_version" >> $GITHUB_ENV
 
       - name: 🗜️ Create tarball from sources with dependencies
-        run: tar --exclude-vcs -cvf Full.Sources.tar.gz ImHex
+        run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
         
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v2
