@@ -25,7 +25,6 @@
 
 namespace hex::plugin::builtin {
 
-    static bool s_layoutConfigured = false;
     static ImGui::Texture s_bannerTexture;
     static std::string s_bannerTextureName;
     static std::list<std::fs::path> s_recentFilePaths;
@@ -37,7 +36,6 @@ namespace hex::plugin::builtin {
     static void initDefaultLayout() {
         auto layouts = ContentRegistry::Interface::getLayouts();
         if (!layouts.empty()) {
-            s_layoutConfigured = true;
 
             for (auto &[viewName, view] : ContentRegistry::Views::getEntries()) {
                 view->getWindowOpenState() = false;
@@ -316,13 +314,6 @@ namespace hex::plugin::builtin {
                 if (targetFps.is_number())
                     ImHexApi::System::setTargetFPS(targetFps);
             }
-
-            {
-                if (ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 0) == 1)
-                    s_layoutConfigured = true;
-                else
-                    ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.launched", 1);
-            }
         });
 
         (void)EventManager::subscribe<RequestChangeTheme>([](u32 theme) {
@@ -409,12 +400,17 @@ namespace hex::plugin::builtin {
 
                 ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
             }
+        });
 
-            {
-                if (!s_layoutConfigured) {
-                    initDefaultLayout();
-                }
-            }
+        EventManager::subscribe<EventProviderCreated>([](auto) {
+            const auto &views = ContentRegistry::Views::getEntries();
+            bool anyViewOpen = std::any_of(views.begin(), views.end(),
+               [](const std::pair<std::string, View*> &entry) {
+                   return entry.second->getWindowOpenState();
+               });
+
+            if (!anyViewOpen)
+                initDefaultLayout();
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
