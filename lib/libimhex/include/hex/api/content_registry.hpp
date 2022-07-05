@@ -71,23 +71,17 @@ namespace hex {
 
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart = false);
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart = false);
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::u8string &defaultValue, const Callback &callback, bool requiresRestart = false);
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart = false);
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::u8string> &defaultValue, const Callback &callback, bool requiresRestart = false);
 
             void addCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription);
 
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::u8string &value);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value);
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::u8string> &value);
 
             i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue);
             std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
-            std::u8string read(const std::string &unlocalizedCategory, const std::u8string &unlocalizedName, const std::string &defaultValue);
             std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue = {});
-            std::vector<std::u8string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::u8string> &defaultValue = {});
 
             std::map<Category, std::vector<Entry>> &getEntries();
             std::map<std::string, std::string> &getCategoryDescriptions();
