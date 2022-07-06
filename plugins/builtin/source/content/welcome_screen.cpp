@@ -25,15 +25,14 @@
 
 namespace hex::plugin::builtin {
 
-    static ImGui::Texture s_bannerTexture;
-    static std::string s_bannerTextureName;
+    static ImGui::Texture s_bannerTexture, s_backdropTexture;
     static std::list<std::fs::path> s_recentFilePaths;
 
     static std::fs::path s_safetyBackupPath;
 
     static std::string s_tipOfTheDay;
 
-    static void initDefaultLayout() {
+    [[maybe_unused]] static void loadDefaultLayout() {
         auto layouts = ContentRegistry::Interface::getLayouts();
         if (!layouts.empty()) {
 
@@ -48,6 +47,14 @@ namespace hex::plugin::builtin {
             layouts.front().callback(dockId);
             ImGui::DockBuilderFinish(dockId);
         }
+    }
+
+    static bool isAnyViewOpen() {
+        const auto &views = ContentRegistry::Views::getEntries();
+        return std::any_of(views.begin(), views.end(),
+            [](const std::pair<std::string, View*> &entry) {
+                return entry.second->getWindowOpenState();
+            });
     }
 
     static void drawPopups() {
@@ -280,8 +287,32 @@ namespace hex::plugin::builtin {
         drawPopups();
     }
 
+    static void drawNoViewsBackground() {
+        if (isAnyViewOpen() && ImHexApi::Provider::isValid()) return;
+
+        if (ImGui::Begin("ImHexDockSpace")) {
+            static char title[256];
+            ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
+            if (ImGui::Begin(title)) {
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
+                if (ImGui::BeginChild("NoViewsBackground", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
+                    auto imageSize = scaled(ImVec2(350, 350));
+                    auto pos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
+
+                    ImGui::SetCursorPos(pos);
+                    ImGui::Image(s_backdropTexture, imageSize);
+                }
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
+            }
+            ImGui::End();
+        }
+        ImGui::End();
+    }
+
     void createWelcomeScreen() {
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
+        (void)EventManager::subscribe<EventFrameBegin>(drawNoViewsBackground);
 
         (void)EventManager::subscribe<EventSettingsChanged>([]() {
             {
@@ -317,17 +348,14 @@ namespace hex::plugin::builtin {
         });
 
         (void)EventManager::subscribe<RequestChangeTheme>([](u32 theme) {
-            auto changeBannerTexture = [&](const char newTexture[]) {
-                if (s_bannerTextureName == newTexture) {
-                    return;
-                }
+            auto changeTexture = [&](const std::string &path, const ImGui::Texture &texture) {
+                auto textureData = romfs::get(path);
+                auto oldTexture  = texture;
+                auto newTexture  = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(textureData.data()), textureData.size());
 
-                s_bannerTextureName   = newTexture;
-                auto banner           = romfs::get(newTexture);
-                auto oldBannerTexture = s_bannerTexture;
-                s_bannerTexture       = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(banner.data()), banner.size());
+                if (oldTexture.valid()) { ImGui::UnloadImage(oldTexture); }
 
-                if (oldBannerTexture.valid()) { ImGui::UnloadImage(oldBannerTexture); }
+                return newTexture;
             };
 
             switch (theme) {
@@ -337,7 +365,8 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsDark();
                         ImGui::StyleCustomColorsDark();
                         ImPlot::StyleColorsDark();
-                        changeBannerTexture("banner_dark.png");
+                        s_bannerTexture = changeTexture("banner_dark.png", s_bannerTexture);
+                        s_backdropTexture = changeTexture("backdrop_dark.png", s_backdropTexture);
 
                         break;
                     }
@@ -346,7 +375,8 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsLight();
                         ImGui::StyleCustomColorsLight();
                         ImPlot::StyleColorsLight();
-                        changeBannerTexture("banner_light.png");
+                        s_bannerTexture = changeTexture("banner_light.png", s_bannerTexture);
+                        s_backdropTexture = changeTexture("backdrop_light.png", s_backdropTexture);
 
                         break;
                     }
@@ -355,7 +385,8 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsClassic();
                         ImGui::StyleCustomColorsClassic();
                         ImPlot::StyleColorsClassic();
-                        changeBannerTexture("banner_dark.png");
+                        s_bannerTexture = changeTexture("banner_dark.png", s_bannerTexture);
+                        s_backdropTexture = changeTexture("backdrop_dark.png", s_backdropTexture);
 
                         break;
                     }
@@ -403,14 +434,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderCreated>([](auto) {
-            const auto &views = ContentRegistry::Views::getEntries();
-            bool anyViewOpen = std::any_of(views.begin(), views.end(),
-               [](const std::pair<std::string, View*> &entry) {
-                   return entry.second->getWindowOpenState();
-               });
-
-            if (!anyViewOpen)
-                initDefaultLayout();
+            //if (!isAnyViewOpen())
+                //loadDefaultLayout();
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
