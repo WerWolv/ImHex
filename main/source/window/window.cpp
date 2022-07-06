@@ -197,7 +197,7 @@ namespace hex {
         ImGui::NewFrame();
 
         ImGuiViewport *viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
+        ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
         ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
