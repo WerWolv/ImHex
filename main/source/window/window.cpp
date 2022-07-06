@@ -197,8 +197,8 @@ namespace hex {
         ImGui::NewFrame();
 
         ImGuiViewport *viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
+        ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -558,7 +558,8 @@ namespace hex {
         });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
-            ImHexApi::System::impl::setMainWindowSize(width, height);
+            if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+                ImHexApi::System::impl::setMainWindowSize(width, height);
 
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
