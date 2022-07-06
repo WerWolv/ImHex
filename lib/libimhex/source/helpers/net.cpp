@@ -245,6 +245,19 @@ namespace hex {
         return {};
     }
 
+    std::string Net::decode(const std::string &input) {
+        auto unescapedString = curl_easy_unescape(this->m_ctx, input.c_str(), std::strlen(input.c_str()), nullptr);
+
+        if (unescapedString != nullptr) {
+            std::string output = unescapedString;
+            curl_free(unescapedString);
+
+            return output;
+        }
+
+        return {};
+    }
+
     std::string Net::s_proxyUrl;
 
     void Net::setProxy(const std::string &url) {

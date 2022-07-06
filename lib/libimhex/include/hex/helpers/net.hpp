@@ -44,6 +44,7 @@ namespace hex {
         std::future<Response<void>> downloadFile(const std::string &url, const std::fs::path &filePath, u32 timeout = DefaultTimeout);
 
         [[nodiscard]] std::string encode(const std::string &input);
+        [[nodiscard]] std::string decode(const std::string &input);
 
         [[nodiscard]] float getProgress() const { return this->m_progress; }
 

@@ -4,6 +4,7 @@
 #include <hex/helpers/fs_macos.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/intrinsics.hpp>
+#include <hex/helpers/net.hpp>
 
 #include <xdg.hpp>
 
@@ -86,8 +87,18 @@ namespace hex::fs {
                 hex::unreachable();
         }
 
+        std::fs::path path;
+        #if defined(OS_LINUX)
+            // xdg-desktop-portal, which is the file picker backend used on Linux, returns all paths with URI encoding.
+            // This is a bit ugly and will most likely be fixed sometime in the future but until then, we'll just use
+            // curl to decode the URI string into a valid file path string
+            path = Net().decode(outPath);
+        #else
+            path = reinterpret_cast<char8_t*>(outPath);
+        #endif
+
         if (result == NFD_OKAY) {
-            callback(reinterpret_cast<const char8_t *>(outPath));
+            callback(path);
             NFD::FreePath(outPath);
         }
 
