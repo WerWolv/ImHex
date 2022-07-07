@@ -107,8 +107,11 @@ namespace hex::plugin::builtin {
 
                 u32 index = 0;
                 for (auto &path : s_selectableFiles) {
+                    ImGui::PushID(index);
                     if (ImGui::Selectable(path.filename().string().c_str(), index == s_selectableFileIndex))
                         s_selectableFileIndex = index;
+                    ImGui::PopID();
+
                     index++;
                 }
 
