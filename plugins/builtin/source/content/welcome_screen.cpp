@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
 
     static std::string s_tipOfTheDay;
 
-    [[maybe_unused]] static void loadDefaultLayout() {
+    static void loadDefaultLayout() {
         auto layouts = ContentRegistry::Interface::getLayouts();
         if (!layouts.empty()) {
 
@@ -434,8 +434,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderCreated>([](auto) {
-            //if (!isAnyViewOpen())
-                //loadDefaultLayout();
+            if (!isAnyViewOpen())
+                loadDefaultLayout();
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
