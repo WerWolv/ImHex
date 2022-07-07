@@ -34,5 +34,6 @@ package() {
     done
 
 	cp -r $srcdir/usr/share/imhex/{constants,encodings,includes,magic,patterns} $pkgdir/usr/share/imhex
-    install -d $pkgdir/usr/share/imhex
+	cp -r $srcdir/usr/share/{applications,licenses} $pkgdir/usr/share
+    install -d $pkgdir/usr/share
 }
