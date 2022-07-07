@@ -122,13 +122,14 @@ To develop plugins for ImHex, use one of the following two templates projects to
 Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild).
 
 - Windows • __x86_64__
-  - [MSI](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Installer.zip)
-  - [EXE](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Portable%20ZIP.zip)
+  - [Installer](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Installer.zip)
+  - [Portable](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Portable%20ZIP.zip)
 - MacOS • __x86_64__
   - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
 - Linux • __x86_64__
   - [DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20DEB.zip)
   - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
+  - [Arch Package](https://nightly.link/WerWolv/ImHex/workflows/build/master/ArchLinux%20.pkg.tar.zst.zip)
 
 ## Compiling
 
