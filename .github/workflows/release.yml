@@ -90,3 +90,12 @@ jobs:
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_message: Bump to version ${{env.version}}
           ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
+
+      - uses: ncipollo/release-action@v1
+        env:
+          MY_KEY: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.MY_KEY != '' }}"
+        with:
+          tag: ImHex-v${{env.version}}
+          repo: PatternLanguage
+          token: ${{ secrets.RELEASE_TOKEN }}
