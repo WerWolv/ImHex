@@ -14,7 +14,8 @@ RUN pacman -S --needed --noconfirm      \
     file                                \
     mbedtls                             \
     python3                             \
-    freetype2                           
+    freetype2                           \
+    xdg-desktop-portal
 
 # Clone ImHex
 RUN git clone https://github.com/WerWolv/ImHex --recurse-submodules /root/ImHex

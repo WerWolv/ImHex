@@ -20,4 +20,5 @@ apt install -y \
   libmagic-dev          \
   libmbedtls-dev        \
   python3-dev           \
-  libfreetype-dev
+  libfreetype-dev       \
+  xdg-desktop-portal

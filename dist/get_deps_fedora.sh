@@ -9,4 +9,5 @@ dnf install         \
   mesa-libGL-devel  \
   mbedtls-devel     \
   python-devel      \
-  freetype-devel
+  freetype-devel    \
+  xdg-desktop-portal
