@@ -71,7 +71,7 @@ namespace hex::fs {
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 
-        nfdchar_t *outPath;
+        nfdchar_t *outPath = nullptr;
         nfdresult_t result;
         switch (mode) {
             case DialogMode::Open:
@@ -87,17 +87,17 @@ namespace hex::fs {
                 hex::unreachable();
         }
 
-        std::fs::path path;
-        #if defined(OS_LINUX)
-            // xdg-desktop-portal, which is the file picker backend used on Linux, returns all paths with URI encoding.
-            // This is a bit ugly and will most likely be fixed sometime in the future but until then, we'll just use
-            // curl to decode the URI string into a valid file path string
-            path = Net().decode(outPath);
-        #else
-            path = reinterpret_cast<char8_t*>(outPath);
-        #endif
+        if (result == NFD_OKAY && outPath != nullptr) {
+            std::fs::path path;
+            #if defined(OS_LINUX)
+                // xdg-desktop-portal, which is the file picker backend used on Linux, returns all paths with URI encoding.
+                // This is a bit ugly and will most likely be fixed sometime in the future but until then, we'll just use
+                // curl to decode the URI string into a valid file path string
+                path = Net().decode(outPath);
+            #else
+                path = reinterpret_cast<char8_t*>(outPath);
+            #endif
 
-        if (result == NFD_OKAY) {
             callback(path);
             NFD::FreePath(outPath);
         }
