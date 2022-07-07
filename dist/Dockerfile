@@ -15,6 +15,7 @@ RUN pacman -S --needed --noconfirm      \
     mbedtls                             \
     python3                             \
     freetype2                           \
+    dbus                                \
     xdg-desktop-portal
 
 # Clone ImHex

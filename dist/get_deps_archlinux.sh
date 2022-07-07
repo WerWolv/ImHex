@@ -9,4 +9,5 @@ pacman -S $@ --needed \
   mbedtls   \
   python3   \
   freetype2 \
+  dbus      \
   xdg-desktop-portal

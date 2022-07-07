@@ -27,6 +27,7 @@ RDEPEND="${DEPEND}
 		sys-apps/file
 		dev-libs/mbedtls
 		dev-cpp/nlohmann_json
+		dbus
 		xdg-desktop-portal
 		"
 BDEPEND="${DEPEND}"

@@ -10,4 +10,5 @@ dnf install         \
   mbedtls-devel     \
   python-devel      \
   freetype-devel    \
+  dbus              \
   xdg-desktop-portal

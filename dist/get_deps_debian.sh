@@ -21,4 +21,5 @@ apt install -y \
   libmbedtls-dev        \
   python3-dev           \
   libfreetype-dev       \
+  libdbus-1-dev         \
   xdg-desktop-portal
