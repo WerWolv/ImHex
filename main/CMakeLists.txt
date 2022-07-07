@@ -26,7 +26,7 @@ set_target_properties(main PROPERTIES
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
 if (WIN32)
-    target_link_libraries(main PUBLIC libimhex wsock32 ws2_32 Dwmapi.lib)
+    target_link_libraries(main PUBLIC usp10 libimhex wsock32 ws2_32 Dwmapi.lib)
 else ()
     target_link_libraries(main PUBLIC libimhex pthread)
 endif ()
