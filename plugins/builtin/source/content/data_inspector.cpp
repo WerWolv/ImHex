@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
 
     template<std::floating_point T>
     static std::vector<u8> stringToFloat(const std::string &value, std::endian endian) requires(sizeof(T) <= sizeof(long double)) {
-        auto result = std::strtold(value.c_str(), nullptr);
+        T result = std::strtold(value.c_str(), nullptr);
 
         std::vector<u8> bytes(sizeof(T), 0x00);
         std::memcpy(bytes.data(), &result, bytes.size());
