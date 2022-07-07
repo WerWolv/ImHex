@@ -20,5 +20,4 @@ apt install -y \
   libmagic-dev          \
   libmbedtls-dev        \
   python3-dev           \
-  libfreetype-dev       \
-  libgtk-3-dev
+  libfreetype-dev

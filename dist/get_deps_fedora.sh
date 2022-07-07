@@ -9,5 +9,4 @@ dnf install         \
   mesa-libGL-devel  \
   mbedtls-devel     \
   python-devel      \
-  freetype-devel    \
-  gtk3-devel
+  freetype-devel

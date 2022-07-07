@@ -27,6 +27,5 @@ RDEPEND="${DEPEND}
 		sys-apps/file
 		dev-libs/mbedtls
 		dev-cpp/nlohmann_json
-		x11-libs/gtk+
 		"
 BDEPEND="${DEPEND}"

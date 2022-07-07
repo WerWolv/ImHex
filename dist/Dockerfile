@@ -14,8 +14,7 @@ RUN pacman -S --needed --noconfirm      \
     file                                \
     mbedtls                             \
     python3                             \
-    freetype2                           \
-    gtk3
+    freetype2                           
 
 # Clone ImHex
 RUN git clone https://github.com/WerWolv/ImHex --recurse-submodules /root/ImHex
