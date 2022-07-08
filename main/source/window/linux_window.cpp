@@ -30,6 +30,7 @@ namespace hex {
             std::string result;
 
             // TODO: Make a cleaner implementation
+            // Implementation taken from https://github.com/pbek/QOwnNotes/issues/2525
             FILE *pipe = popen("dbus-send --session --print-reply=literal --reply-timeout=1000 --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:'org.freedesktop.appearance' string:'color-scheme' 2>&1", "r");
             if (pipe == nullptr) return;
 
