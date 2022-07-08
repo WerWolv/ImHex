@@ -29,8 +29,8 @@ namespace hex {
             std::array<char, 128> buffer = { 0 };
             std::string result;
 
-            // TODO: In the future maybe support more DEs instead of just GNOME
-            FILE *pipe = popen("gsettings get org.gnome.desktop.interface gtk-theme 2>&1", "r");
+            // TODO: Make a cleaner implementation
+            FILE *pipe = popen("dbus-send --session --print-reply=literal --reply-timeout=1000 --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:'org.freedesktop.appearance' string:'color-scheme' 2>&1", "r");
             if (pipe == nullptr) return;
 
             while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
@@ -39,7 +39,16 @@ namespace hex {
             auto exitCode = WEXITSTATUS(pclose(pipe));
             if (exitCode != 0) return;
 
-            EventManager::post<RequestChangeTheme>(hex::containsIgnoreCase(result, "light") ? 2 : 1);
+            result.erase(0, result.size()-2);
+            int themeId;
+            try{
+                themeId = std::stoi(result);
+            }catch(std::invalid_argument& e){
+                log::error("Invalid theme id : {}", result);
+                return;
+            }
+            EventManager::post<RequestChangeTheme>(themeId);
+
         });
 
         if (themeFollowSystem)
