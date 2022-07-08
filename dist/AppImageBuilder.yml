@@ -26,7 +26,6 @@ AppDir:
     - sourceline: deb http://security.ubuntu.com/ubuntu jammy-security universe
     - sourceline: deb http://security.ubuntu.com/ubuntu jammy-security multiverse
     include:
-    - adwaita-icon-theme-full
     - librsvg2-common
     - libbz2-1.0:amd64
     - libcap2:amd64
@@ -85,7 +84,6 @@ AppDir:
     - /lib/x86_64-linux-gnu/libgnutls.so.30
     - /lib/x86_64-linux-gnu/libgobject-2.0.so.0
     - /lib/x86_64-linux-gnu/libgraphite2.so.3
-    - /lib/x86_64-linux-gnu/libgtk-3.so.0
     - /lib/x86_64-linux-gnu/libharfbuzz.so.0
     - /lib/x86_64-linux-gnu/libhogweed.so.6
     - /lib/x86_64-linux-gnu/libicudata.so.70
