@@ -10,6 +10,8 @@ set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
+option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
+
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
 detectBadClone()
