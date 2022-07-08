@@ -1222,7 +1222,7 @@ namespace hex::plugin::builtin {
         });
 
         // Open file
-        ShortcutManager::addShortcut(this, CTRL + Keys::O, [] {
+        ShortcutManager::addGlobalShortcut(CTRL + Keys::O, [] {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 EventManager::post<RequestOpenFile>(path);
             });
