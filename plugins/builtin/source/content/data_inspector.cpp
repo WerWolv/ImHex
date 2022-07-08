@@ -349,7 +349,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1,
             [](auto buffer, auto endian, auto style) {
-                hex::unused(endian, style);
+                hex::unused(buffer, endian, style);
 
                 auto currSelection = ImHexApi::HexEditor::getSelection();
 
@@ -358,14 +358,15 @@ namespace hex::plugin::builtin {
                 std::string value, copyValue;
 
                 if (currSelection.has_value()) {
-                    std::vector<u8> stringBuffer(std::min<size_t>(MaxStringLength, currSelection->size), 0x00);
+                    std::vector<u8> stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
                     ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
 
-                    value = hex::encodeByteString(stringBuffer);
-                    copyValue = hex::encodeByteString(buffer);
+                    value = copyValue = hex::encodeByteString(stringBuffer);
 
-                    if (currSelection->size > MaxStringLength)
+                    if (currSelection->size > MaxStringLength) {
+                        value.resize(MaxStringLength);
                         value += "...";
+                    }
                 } else {
                     value = "";
                     copyValue = "";
