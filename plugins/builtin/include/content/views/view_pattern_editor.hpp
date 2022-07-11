@@ -56,7 +56,6 @@ namespace hex::plugin::builtin {
         };
 
         std::map<std::string, PatternVariable> m_patternVariables;
-        std::vector<std::string> m_patternTypes;
 
         enum class EnvVarType
         {

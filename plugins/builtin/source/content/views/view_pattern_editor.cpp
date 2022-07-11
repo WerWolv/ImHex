@@ -93,9 +93,7 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
-            this->m_textEditor.SelectAll();
-            this->m_textEditor.Delete();
-            this->m_textEditor.InsertText(code);
+            this->m_textEditor.SetText(code);
         });
 
         EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
@@ -127,7 +125,7 @@ namespace hex::plugin::builtin {
 
             std::error_code errorCode;
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                for (auto &entry : std::fs::directory_iterator(dir, errorCode)) {
+                for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
                     foundCorrectType = false;
                     if (!entry.is_regular_file())
                         continue;
@@ -558,25 +556,27 @@ namespace hex::plugin::builtin {
                         if (variable.outVariable) {
                             ImGui::TextUnformatted(pl::Token::literalToString(variable.value, true).c_str());
                         } else if (variable.inVariable) {
+                            const std::string label { "##" + name };
+
                             if (pl::Token::isSigned(variable.type)) {
                                 i64 value = hex::get_or<i128>(variable.value, 0);
-                                ImGui::InputScalar("", ImGuiDataType_S64, &value);
+                                ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value);
                                 variable.value = i128(value);
                             } else if (pl::Token::isUnsigned(variable.type)) {
                                 u64 value = hex::get_or<u128>(variable.value, 0);
-                                ImGui::InputScalar("", ImGuiDataType_U64, &value);
+                                ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value);
                                 variable.value = u128(value);
                             } else if (pl::Token::isFloatingPoint(variable.type)) {
                                 double value = hex::get_or<double>(variable.value, 0.0);
-                                ImGui::InputScalar("", ImGuiDataType_Double, &value);
+                                ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value);
                                 variable.value = value;
                             } else if (variable.type == pl::Token::ValueType::Boolean) {
                                 bool value = hex::get_or<bool>(variable.value, false);
-                                ImGui::Checkbox("", &value);
+                                ImGui::Checkbox(label.c_str(), &value);
                                 variable.value = value;
                             } else if (variable.type == pl::Token::ValueType::Character) {
                                 char buffer[2];
-                                ImGui::InputText("", buffer, 2);
+                                ImGui::InputText(label.c_str(), buffer, 2);
                                 variable.value = buffer[0];
                             }
                         }
@@ -717,7 +717,6 @@ namespace hex::plugin::builtin {
             auto ast = this->m_parserRuntime->parseString(code);
 
             this->m_patternVariables.clear();
-            this->m_patternTypes.clear();
 
             if (ast) {
                 for (auto &node : *ast) {
@@ -752,7 +751,7 @@ namespace hex::plugin::builtin {
 
         this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
-        this->clearPatterns();
+        ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
 
         EventManager::post<EventHighlightingChanged>();
 
