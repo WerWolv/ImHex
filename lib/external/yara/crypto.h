@@ -155,6 +155,26 @@ typedef mbedtls_sha256_context yr_sha256_ctx;
 #endif
 
 #define HAVE_COMMONCRYPTO_COMMONCRYPTO_H
+
+#elif defined(HAVE_GNUTLS)
+#include <gnutls/crypto.h>
+
+typedef gnutls_hash_hd_t yr_md5_ctx;
+typedef gnutls_hash_hd_t yr_sha1_ctx;
+typedef gnutls_hash_hd_t yr_sha256_ctx;
+
+#define yr_md5_init(ctx)                    gnutls_hash_init(ctx, GNUTLS_DIG_MD5)
+#define yr_md5_update(ctx, data, len)       gnutls_hash(ctx, data, len)
+#define yr_md5_final(digest, ctx)           { gnutls_hash_output(ctx, digest); gnutls_hash_deinit(ctx, 0); }
+
+#define yr_sha1_init(ctx)                   gnutls_hash_init(ctx, GNUTLS_DIG_SHA1)
+#define yr_sha1_update(ctx, data, len)      gnutls_hash(ctx, data, len)
+#define yr_sha1_final(digest, ctx)          { gnutls_hash_output(ctx, digest); gnutls_hash_deinit(ctx, 0); }
+
+#define yr_sha256_init(ctx)                 gnutls_hash_init(ctx, GNUTLS_DIG_SHA256)
+#define yr_sha256_update(ctx, data, len)    gnutls_hash(ctx, data, len)
+#define yr_sha256_final(digest, ctx)        { gnutls_hash_output(ctx, digest); gnutls_hash_deinit(ctx, 0); }
+
 #endif
 
 #endif
