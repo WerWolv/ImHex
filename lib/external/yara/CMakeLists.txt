@@ -95,8 +95,8 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
 
-# Add mbedtls crypto wrappers
-add_compile_definitions("HAVE_MBEDTLS")
+# Add gnutls crypto wrappers
+add_compile_definitions("HAVE_GNUTLS")
 
 add_compile_definitions("USE_NO_PROC")
 
@@ -106,7 +106,7 @@ add_compile_definitions("MAGIC_MODULE")
 add_compile_definitions("MACHO_MODULE")
 add_compile_definitions("DEX_MODULE")
 
-find_package(mbedTLS 2.26.0 REQUIRED)
+find_package(GnuTLS REQUIRED)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-count-overflow")
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
@@ -115,15 +115,13 @@ set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(
         libyara
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include> $<INSTALL_INTERFACE:include>
-        PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
+        PRIVATE ${LIBYARA_SOURCE_PATH} ${GNUTLS_INCLUDE_DIR}
 )
 
-target_link_directories(libyara PRIVATE ${MBEDTLS_LIBRARY_DIR})
-
 if (UNIX)
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES} pthread)
+    target_link_libraries(libyara PRIVATE magic ${GNUTLS_LIBRARIES} pthread)
 else ()
-    target_link_libraries(libyara PRIVATE magic ${MBEDTLS_LIBRARIES})
+    target_link_libraries(libyara PRIVATE magic ${GNUTLS_LIBRARIES})
 endif ()
 
 include(GNUInstallDirs)
