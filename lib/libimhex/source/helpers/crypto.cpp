@@ -4,15 +4,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/concepts.hpp>
 
-#include <mbedtls/version.h>
-#include <mbedtls/base64.h>
-#include <mbedtls/bignum.h>
-#include <mbedtls/md5.h>
-#include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
-#include <mbedtls/sha512.h>
-#include <mbedtls/aes.h>
-#include <mbedtls/cipher.h>
+#include <gnutls/crypto.h>
 
 #include <array>
 #include <span>
@@ -21,26 +13,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <bit>
-
-#if MBEDTLS_VERSION_MAJOR <= 2
-
-    #define mbedtls_md5_starts mbedtls_md5_starts_ret
-    #define mbedtls_md5_update mbedtls_md5_update_ret
-    #define mbedtls_md5_finish mbedtls_md5_finish_ret
-
-    #define mbedtls_sha1_starts mbedtls_sha1_starts_ret
-    #define mbedtls_sha1_update mbedtls_sha1_update_ret
-    #define mbedtls_sha1_finish mbedtls_sha1_finish_ret
-
-    #define mbedtls_sha256_starts mbedtls_sha256_starts_ret
-    #define mbedtls_sha256_update mbedtls_sha256_update_ret
-    #define mbedtls_sha256_finish mbedtls_sha256_finish_ret
-
-    #define mbedtls_sha512_starts mbedtls_sha512_starts_ret
-    #define mbedtls_sha512_update mbedtls_sha512_update_ret
-    #define mbedtls_sha512_finish mbedtls_sha512_finish_ret
-
-#endif
 
 namespace hex::crypt {
     using namespace std::placeholders;
@@ -173,16 +145,13 @@ namespace hex::crypt {
     std::array<u8, 16> md5(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 16> result = { 0 };
 
-        mbedtls_md5_context ctx;
-        mbedtls_md5_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_MD5);
 
-        mbedtls_md5_starts(&ctx);
-
-        processDataByChunks(data, offset, size, std::bind(mbedtls_md5_update, &ctx, _1, _2));
-
-        mbedtls_md5_finish(&ctx, result.data());
-
-        mbedtls_md5_free(&ctx);
+        processDataByChunks(data, offset, size, std::bind(gnutls_hash, ctx, _1, _2));
+        gnutls_hash_output(ctx, result.data());
+        
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -190,14 +159,13 @@ namespace hex::crypt {
     std::array<u8, 16> md5(const std::vector<u8> &data) {
         std::array<u8, 16> result = { 0 };
 
-        mbedtls_md5_context ctx;
-        mbedtls_md5_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_MD5);
 
-        mbedtls_md5_starts(&ctx);
-        mbedtls_md5_update(&ctx, data.data(), data.size());
-        mbedtls_md5_finish(&ctx, result.data());
-
-        mbedtls_md5_free(&ctx);
+        gnutls_hash(ctx, data.data(), data.size());
+        gnutls_hash_output(ctx, result.data());
+        
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -205,16 +173,13 @@ namespace hex::crypt {
     std::array<u8, 20> sha1(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 20> result = { 0 };
 
-        mbedtls_sha1_context ctx;
-        mbedtls_sha1_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA1);
+        
+        processDataByChunks(data, offset, size, std::bind(gnutls_hash, ctx, _1, _2));
+        gnutls_hash_output(ctx, result.data());
 
-        mbedtls_sha1_starts(&ctx);
-
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha1_update, &ctx, _1, _2));
-
-        mbedtls_sha1_finish(&ctx, result.data());
-
-        mbedtls_sha1_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -222,14 +187,13 @@ namespace hex::crypt {
     std::array<u8, 20> sha1(const std::vector<u8> &data) {
         std::array<u8, 20> result = { 0 };
 
-        mbedtls_sha1_context ctx;
-        mbedtls_sha1_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA1);
 
-        mbedtls_sha1_starts(&ctx);
-        mbedtls_sha1_update(&ctx, data.data(), data.size());
-        mbedtls_sha1_finish(&ctx, result.data());
+        gnutls_hash(ctx, data.data(), data.size());
+        gnutls_hash_output(ctx, result.data());
 
-        mbedtls_sha1_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -237,16 +201,13 @@ namespace hex::crypt {
     std::array<u8, 28> sha224(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 28> result = { 0 };
 
-        mbedtls_sha256_context ctx;
-        mbedtls_sha256_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA224);
 
-        mbedtls_sha256_starts(&ctx, true);
+        processDataByChunks(data, offset, size, std::bind(gnutls_hash, ctx, _1, _2));
+        gnutls_hash_output(ctx, result.data());
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha256_update, &ctx, _1, _2));
-
-        mbedtls_sha256_finish(&ctx, result.data());
-
-        mbedtls_sha256_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -254,14 +215,13 @@ namespace hex::crypt {
     std::array<u8, 28> sha224(const std::vector<u8> &data) {
         std::array<u8, 28> result = { 0 };
 
-        mbedtls_sha256_context ctx;
-        mbedtls_sha256_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA224);
 
-        mbedtls_sha256_starts(&ctx, true);
-        mbedtls_sha256_update(&ctx, data.data(), data.size());
-        mbedtls_sha256_finish(&ctx, result.data());
+        gnutls_hash(ctx, data.data(), data.size());
+        gnutls_hash_output(ctx, result.data());
 
-        mbedtls_sha256_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -269,16 +229,13 @@ namespace hex::crypt {
     std::array<u8, 32> sha256(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 32> result = { 0 };
 
-        mbedtls_sha256_context ctx;
-        mbedtls_sha256_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA256);
 
-        mbedtls_sha256_starts(&ctx, false);
+        processDataByChunks(data, offset, size, std::bind(gnutls_hash, ctx, _1, _2));
+        gnutls_hash_output(ctx, result.data());
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha256_update, &ctx, _1, _2));
-
-        mbedtls_sha256_finish(&ctx, result.data());
-
-        mbedtls_sha256_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -286,14 +243,13 @@ namespace hex::crypt {
     std::array<u8, 32> sha256(const std::vector<u8> &data) {
         std::array<u8, 32> result = { 0 };
 
-        mbedtls_sha256_context ctx;
-        mbedtls_sha256_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA256);
 
-        mbedtls_sha256_starts(&ctx, false);
-        mbedtls_sha256_update(&ctx, data.data(), data.size());
-        mbedtls_sha256_finish(&ctx, result.data());
+        gnutls_hash(ctx, data.data(), data.size());
+        gnutls_hash_output(ctx, result.data());
 
-        mbedtls_sha256_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -301,16 +257,13 @@ namespace hex::crypt {
     std::array<u8, 48> sha384(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 48> result = { 0 };
 
-        mbedtls_sha512_context ctx;
-        mbedtls_sha512_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA384);
 
-        mbedtls_sha512_starts(&ctx, true);
+        processDataByChunks(data, offset, size, std::bind(gnutls_hash, ctx, _1, _2));
+        gnutls_hash_output(ctx, result.data());
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha512_update, &ctx, _1, _2));
-
-        mbedtls_sha512_finish(&ctx, result.data());
-
-        mbedtls_sha512_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -318,14 +271,14 @@ namespace hex::crypt {
     std::array<u8, 48> sha384(const std::vector<u8> &data) {
         std::array<u8, 48> result = { 0 };
 
-        mbedtls_sha512_context ctx;
-        mbedtls_sha512_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA384);
 
-        mbedtls_sha512_starts(&ctx, true);
-        mbedtls_sha512_update(&ctx, data.data(), data.size());
-        mbedtls_sha512_finish(&ctx, result.data());
+        gnutls_hash(ctx, data.data(), data.size());
 
-        mbedtls_sha512_free(&ctx);
+        gnutls_hash_output(ctx, result.data());
+
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -333,16 +286,13 @@ namespace hex::crypt {
     std::array<u8, 64> sha512(prv::Provider *&data, u64 offset, size_t size) {
         std::array<u8, 64> result = { 0 };
 
-        mbedtls_sha512_context ctx;
-        mbedtls_sha512_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA512);
 
-        mbedtls_sha512_starts(&ctx, false);
+        processDataByChunks(data, offset, size, std::bind(gnutls_hash, ctx, _1, _2));
+        gnutls_hash_output(ctx, result.data());
 
-        processDataByChunks(data, offset, size, std::bind(mbedtls_sha512_update, &ctx, _1, _2));
-
-        mbedtls_sha512_finish(&ctx, result.data());
-
-        mbedtls_sha512_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -350,14 +300,13 @@ namespace hex::crypt {
     std::array<u8, 64> sha512(const std::vector<u8> &data) {
         std::array<u8, 64> result = { 0 };
 
-        mbedtls_sha512_context ctx;
-        mbedtls_sha512_init(&ctx);
+        gnutls_hash_hd_t ctx;
+        gnutls_hash_init(&ctx, GNUTLS_DIG_SHA512);
 
-        mbedtls_sha512_starts(&ctx, false);
-        mbedtls_sha512_update(&ctx, data.data(), data.size());
-        mbedtls_sha512_finish(&ctx, result.data());
+        gnutls_hash(ctx, data.data(), data.size());
+        gnutls_hash_output(ctx, result.data());
 
-        mbedtls_sha512_free(&ctx);
+        gnutls_hash_deinit(ctx, nullptr);
 
         return result;
     }
@@ -365,46 +314,38 @@ namespace hex::crypt {
 
     std::vector<u8> decode64(const std::vector<u8> &input) {
 
-        size_t written = 0;
-        mbedtls_base64_decode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
-        std::vector<u8> output(written, 0x00);
-        if (mbedtls_base64_decode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
-            return {};
+        const gnutls_datum_t gnutls_input{
+            .data = (unsigned char*) input.data(), // gnutls shouldn't modify the input
+            .size = (unsigned int) input.size()
+        };
+        gnutls_datum_t gnutls_output;
+        gnutls_base64_decode2(&gnutls_input, &gnutls_output);
 
-        output.resize(written);
+        return {gnutls_output.data, gnutls_output.data+gnutls_output.size };
 
-        return output;
     }
 
     std::vector<u8> encode64(const std::vector<u8> &input) {
+        const gnutls_datum_t gnutls_input{
+            .data = (unsigned char*) input.data(),
+            .size = (unsigned int) input.size()
+        };
+        gnutls_datum_t gnutls_output;
+        gnutls_base64_encode2(&gnutls_input, &gnutls_output);
 
-        size_t written = 0;
-        mbedtls_base64_encode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
-
-        std::vector<u8> output(written, 0x00);
-        if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
-            return {};
-
-        output.resize(written);
-
-        return output;
+        return {gnutls_output.data, gnutls_output.data+gnutls_output.size };
     }
 
     std::vector<u8> decode16(const std::string &input) {
-        std::vector<u8> output(input.length() / 2, 0x00);
+        const gnutls_datum_t gnutls_input{
+            .data = (unsigned char*) input.c_str(),
+            .size = (unsigned int) input.size()
+        };
 
-        mbedtls_mpi ctx;
-        mbedtls_mpi_init(&ctx);
+        gnutls_datum_t gnutls_output;
+        gnutls_hex_decode2(&gnutls_input, &gnutls_output);
 
-        ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
-
-        if (mbedtls_mpi_read_string(&ctx, 16, input.c_str()))
-            return {};
-
-        if (mbedtls_mpi_write_binary(&ctx, output.data(), output.size()))
-            return {};
-
-        return output;
+        return { gnutls_output.data, gnutls_output.data+gnutls_output.size };
     }
 
     std::string encode16(const std::vector<u8> &input) {
@@ -422,7 +363,7 @@ namespace hex::crypt {
         return output;
     }
 
-    static std::vector<u8> aes(mbedtls_cipher_type_t type, mbedtls_operation_t operation, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
+    static std::vector<u8> _aesDecrypt(gnutls_cipher_algorithm_t type, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
         std::vector<u8> output;
 
         if (input.empty())
@@ -430,22 +371,27 @@ namespace hex::crypt {
         if (key.size() > 256)
             return {};
 
-        mbedtls_cipher_context_t ctx;
-        auto cipherInfo = mbedtls_cipher_info_from_type(type);
 
+        u8 nonceCounter[16] = {0};
+        std::copy(nonce.begin(), nonce.end(), nonceCounter);
+        std::copy(iv.begin(), iv.end(), nonceCounter + 8);
 
-        mbedtls_cipher_setup(&ctx, cipherInfo);
-        mbedtls_cipher_setkey(&ctx, key.data(), static_cast<int>(key.size() * 8), operation);
+        gnutls_datum_t gnutls_key;
+        gnutls_key.data = (unsigned char*) key.data();
+        gnutls_key.size = key.size();
 
-        std::array<u8, 16> nonceCounter = { 0 };
-        std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());
-        std::copy(iv.begin(), iv.end(), nonceCounter.begin() + 8);
+        gnutls_datum_t gnutls_iv;
+        gnutls_iv.data = nonceCounter;
+        gnutls_iv.size = 16;
 
-        size_t outputSize = input.size() + mbedtls_cipher_get_block_size(&ctx);
+        gnutls_cipher_hd_t ctx;
+        gnutls_cipher_init(&ctx, type, &gnutls_key, &gnutls_iv);
+
+        // Why do you add a block size ?
+        size_t outputSize = input.size() + gnutls_cipher_get_block_size(type);
         output.resize(outputSize, 0x00);
-        mbedtls_cipher_crypt(&ctx, nonceCounter.data(), nonceCounter.size(), input.data(), input.size(), output.data(), &outputSize);
 
-        mbedtls_cipher_free(&ctx);
+        gnutls_cipher_decrypt2(ctx, input.data(), input.size(), output.data(), outputSize);
 
         output.resize(input.size());
 
@@ -467,39 +413,33 @@ namespace hex::crypt {
                 return {};
         }
 
-        mbedtls_cipher_type_t type;
+        gnutls_cipher_algorithm_t type;
         switch (mode) {
-            case AESMode::ECB:
-                type = MBEDTLS_CIPHER_AES_128_ECB;
-                break;
             case AESMode::CBC:
-                type = MBEDTLS_CIPHER_AES_128_CBC;
-                break;
-            case AESMode::CFB128:
-                type = MBEDTLS_CIPHER_AES_128_CFB128;
-                break;
-            case AESMode::CTR:
-                type = MBEDTLS_CIPHER_AES_128_CTR;
+                type = GNUTLS_CIPHER_AES_128_CBC;
                 break;
             case AESMode::GCM:
-                type = MBEDTLS_CIPHER_AES_128_GCM;
+                type = GNUTLS_CIPHER_AES_128_GCM;
                 break;
             case AESMode::CCM:
-                type = MBEDTLS_CIPHER_AES_128_CCM;
-                break;
-            case AESMode::OFB:
-                type = MBEDTLS_CIPHER_AES_128_OFB;
+                type = GNUTLS_CIPHER_AES_128_CCM;
                 break;
             case AESMode::XTS:
-                type = MBEDTLS_CIPHER_AES_128_XTS;
+                type = GNUTLS_CIPHER_AES_128_XTS;
+                break;
+            case AESMode::CFB8:
+                type = GNUTLS_CIPHER_AES_128_CFB8;
+                break;
+            case AESMode::CCM_8:
+                type = GNUTLS_CIPHER_AES_128_CCM_8;
+                break;
+            case AESMode::SIV:
+                type = GNUTLS_CIPHER_AES_128_SIV;
                 break;
             default:
                 return {};
         }
 
-        type = mbedtls_cipher_type_t(type + u8(keyLength));
-
-        return aes(type, MBEDTLS_DECRYPT, key, nonce, iv, input);
+        return _aesDecrypt(type, key, nonce, iv, input);
     }
-
 }
