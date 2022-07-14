@@ -13,6 +13,19 @@
 
 #include <nlohmann/json.hpp>
 
+namespace {
+    static std::vector<std::fs::path> userFolders;
+    static void loadUserFoldersFromSetting(nlohmann::json &setting) {
+        userFolders.clear();
+        std::vector<std::string> paths = setting;
+        for (const auto &path : paths) {
+            // JSON reads char8_t as array, char8_t is not supported as of now
+            std::u8string_view uString(reinterpret_cast<const char8_t *>(&path.front()), reinterpret_cast<const char8_t *>(std::next(&path.back())));
+            userFolders.emplace_back(uString);
+        }
+    }
+};
+
 namespace hex::plugin::builtin {
 
     void registerSettings() {
@@ -247,7 +260,7 @@ namespace hex::plugin::builtin {
                 for (const auto &[unlocalizedName, visualizer] : visualizers) {
                     if (ImGui::Selectable(LangEntry(unlocalizedName))) {
                         setting = unlocalizedName;
-                        result = true;
+                        result  = true;
                     }
                 }
 
@@ -314,34 +327,27 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add(dirsSetting, dirsSetting, std::vector<std::string> {}, [](auto name, nlohmann::json &setting) {
             hex::unused(name);
 
-            static size_t currentItemIndex = 0;
-            static std::vector<std::fs::path> folders = [&setting]{
-                std::vector<std::fs::path> result;
+            static size_t currentItemIndex = [&setting] {loadUserFoldersFromSetting(setting); return 0; }();
 
-                std::vector<std::u8string> paths = setting;
-                for (const auto &path : paths)
-                    result.emplace_back(path);
-
-                return result;
-            }();
+            auto saveToSetting = [&setting] {
+                std::vector<std::string> folderStrings;
+                for (const auto &folder : userFolders) {
+                    auto utfString = folder.u8string();
+                    // JSON stores char8_t as array, char8_t is not supported as of now
+                    folderStrings.emplace_back(reinterpret_cast<const char *>(&utfString.front()), reinterpret_cast<const char *>(std::next(&utfString.back())));
+                }
+                setting = folderStrings;
+                ImHexApi::System::setAdditionalFolderPaths(userFolders);
+            };
 
             bool result = false;
-
-            auto writeSetting = [&setting]{
-                std::vector<std::u8string> folderStrings;
-                for (const auto &folder : folders)
-                    folderStrings.push_back(folder.u8string());
-                setting = folderStrings;
-
-                ImHexApi::System::setAdditionalFolderPaths(folders);
-            };
 
             if (!ImGui::BeginListBox("", ImVec2(-38, -FLT_MIN))) {
                 return false;
             } else {
-                for (size_t n = 0; n < folders.size(); n++) {
+                for (size_t n = 0; n < userFolders.size(); n++) {
                     const bool isSelected = (currentItemIndex == n);
-                    if (ImGui::Selectable(folders.at(n).string().c_str(), isSelected)) { currentItemIndex = n; }
+                    if (ImGui::Selectable(userFolders.at(n).string().c_str(), isSelected)) { currentItemIndex = n; }
                     if (isSelected) { ImGui::SetItemDefaultFocus(); }
                 }
                 ImGui::EndListBox();
@@ -351,12 +357,9 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
                 fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
-
-                    if (std::find(folders.begin(), folders.end(), path) == folders.end()) {
-                        folders.emplace_back(path);
-
-                        writeSetting();
-
+                    if (std::find(userFolders.begin(), userFolders.end(), path) == userFolders.end()) {
+                        userFolders.emplace_back(path);
+                        saveToSetting();
                         result = true;
                     }
                 });
@@ -364,10 +367,9 @@ namespace hex::plugin::builtin {
             ImGui::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
             if (ImGui::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton), ImVec2(30, 30))) {
-                if (!folders.empty()) {
-                    folders.erase(std::next(folders.begin(), currentItemIndex));
-
-                    writeSetting();
+                if (!userFolders.empty()) {
+                    userFolders.erase(std::next(userFolders.begin(), currentItemIndex));
+                    saveToSetting();
 
                     result = true;
                 }
@@ -480,10 +482,18 @@ namespace hex::plugin::builtin {
         ImHexApi::System::setTheme(static_cast<ImHexApi::System::Theme>(theme));
     }
 
+    static void loadFoldersSettings() {
+        static const std::string dirsSetting { "hex.builtin.setting.folders" };
+        auto dirs = ContentRegistry::Settings::getSetting(dirsSetting, dirsSetting);
+        loadUserFoldersFromSetting(dirs);
+        ImHexApi::System::setAdditionalFolderPaths(userFolders);
+    }
+
     void loadSettings() {
         loadInterfaceScalingSetting();
         loadFontSettings();
         loadThemeSettings();
+        loadFoldersSettings();
     }
 
 }
