@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                 langDef.mKeywords.insert(k);
 
             static constexpr std::array builtInTypes = {
-                "u8", "u16", "u32", "u64", "u128", "s8", "s16", "s32", "s64", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
+                "u8", "u16", "u24", "u32", "u48", "u64", "u96", "u128", "s8", "s16", "s24", "s32", "s48", "s64", "s96", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
             };
             for (const auto name : builtInTypes) {
                 TextEditor::Identifier id;
@@ -234,31 +234,42 @@ namespace hex::plugin::builtin {
             if (this->m_runningEvaluators != 0)
                 return std::nullopt;
 
-            const auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address);
-            if (pattern != nullptr)
-                return pattern->getColor();
-            else
+            bool foundColor = false;
+            ImColor color = ImColor(0xFF, 0xFF, 0xFF, 0x70);
+            for (const auto &pattern : ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address)) {
+                color = ImAlphaBlendColors(color, pattern->getColor());
+
+                foundColor = true;
+            }
+
+            if (!foundColor)
                 return std::nullopt;
+            else {
+                color.Value.w = 0x70;
+                return color;
+            }
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            auto pattern = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPattern(address);
-            if (pattern != nullptr) {
+            auto patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address);
+            if (!patterns.empty()) {
                 ImGui::BeginTooltip();
-
                 if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
+                    for (const auto &pattern : patterns) {
+                        auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
 
-                    this->drawPatternTooltip(pattern);
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
 
-                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                        ImGui::PopStyleColor(2);
+
+                        this->drawPatternTooltip(pattern);
+                    }
                     ImGui::EndTable();
-                    ImGui::PopStyleColor(2);
                 }
                 ImGui::EndTooltip();
             }
