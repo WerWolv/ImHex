@@ -34,11 +34,11 @@ namespace hex::plugin::builtin {
 
                     for (auto value : content["values"]) {
                         Constant constant;
-                        constant.category = content["name"];
-                        constant.name     = value["name"];
+                        constant.category = content["name"].get<std::string>();
+                        constant.name     = value["name"].get<std::string>();
                         if (value.contains("desc"))
-                            constant.description = value["desc"];
-                        constant.value = value["value"];
+                            constant.description = value["desc"].get<std::string>();
+                        constant.value = value["value"].get<std::string>();
 
                         auto type = value["type"];
                         if (type == "int10")

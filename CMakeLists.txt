@@ -5,7 +5,7 @@ file(READ "VERSION" IMHEX_VERSION)
 project(imhex VERSION ${IMHEX_VERSION})
 message("Project version ${IMHEX_VERSION}")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")

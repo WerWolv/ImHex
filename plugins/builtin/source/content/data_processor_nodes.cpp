@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
         }
 
         void load(nlohmann::json &j) override {
-            this->m_value = j["data"];
+            this->m_value = j["data"].get<std::string>();
         }
 
     private:
@@ -213,7 +213,7 @@ namespace hex::plugin::builtin {
         }
 
         void load(nlohmann::json &j) override {
-            this->m_comment = j["comment"];
+            this->m_comment = j["comment"].get<std::string>();
         }
 
     private:

@@ -712,8 +712,8 @@ namespace hex::plugin::builtin {
 
                     auto json = nlohmann::json::parse(response.body);
 
-                    resultTitle   = json["query"]["pages"][0]["title"];
-                    resultExtract = json["query"]["pages"][0]["extract"];
+                    resultTitle   = json["query"]["pages"][0]["title"].get<std::string>();
+                    resultExtract = json["query"]["pages"][0]["extract"].get<std::string>();
 
                     if (!extendedSearch && resultExtract.ends_with(':')) {
                         extendedSearch = true;
