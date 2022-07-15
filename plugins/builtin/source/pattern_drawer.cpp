@@ -44,9 +44,13 @@ namespace hex {
 
     void PatternDrawer::visit(pl::PatternBitfieldField& pattern) {
         ImGui::TableNextRow();
+        createLeafNode(pattern);
         ImGui::TableNextColumn();
-        drawNameColumn(pattern);
+
         makeSelectable(pattern);
+        drawCommentTooltip(pattern);
+        ImGui::SameLine();
+        drawNameColumn(pattern);
         drawColorColumn(pattern);
 
         auto byteAddr = pattern.getOffset() + pattern.getBitOffset() / 8;
