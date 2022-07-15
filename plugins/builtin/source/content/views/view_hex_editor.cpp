@@ -1158,26 +1158,38 @@ namespace hex::plugin::builtin {
         ImGui::SetClipboardText(str.c_str());
     }
 
+    static std::optional<std::vector<u8>> parseWholeHexBytesWithoutPrefix(const std::string &input) {
+        std::string str = input;
+        // Check for non-hex characters
+        bool isValidHexString = std::find_if(str.begin(), str.end(), [](char c) {
+            return !std::isxdigit(c) && !std::isspace(c);
+        }) == str.end();
+
+        if (!isValidHexString)
+            return std::nullopt;
+
+        // Remove all whitespace
+        str.erase(std::remove_if(str.begin(), str.end(), [](char c) { return std::isspace(c); }), str.end());
+
+        // Only paste whole bytes
+        if (str.length() % 2 != 0)
+            return std::nullopt;
+
+        // Convert hex string to bytes
+        std::vector<u8> buffer = crypt::decode16(str);
+        return std::optional<std::vector<u8> > {buffer};
+    }
+
     static void pasteBytes(const Region &selection) {
         auto provider = ImHexApi::Provider::get();
 
         std::string clipboard = ImGui::GetClipboardText();
 
-        // Check for non-hex characters
-        bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {
-            return !std::isxdigit(c) && !std::isspace(c);
-        }) == clipboard.end();
+        auto parseRes = parseWholeHexBytesWithoutPrefix(clipboard);
+        if (!parseRes.has_value())
+            return;
 
-        if (!isValidHexString) return;
-
-        // Remove all whitespace
-        clipboard.erase(std::remove_if(clipboard.begin(), clipboard.end(), [](char c) { return std::isspace(c); }), clipboard.end());
-
-        // Only paste whole bytes
-        if (clipboard.length() % 2 != 0) return;
-
-        // Convert hex string to bytes
-        std::vector<u8> buffer = crypt::decode16(clipboard);
+        auto buffer = parseRes.value();
 
         // Write bytes
         provider->write(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(selection.size, buffer.size()));
