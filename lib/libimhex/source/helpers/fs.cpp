@@ -88,17 +88,7 @@ namespace hex::fs {
         }
 
         if (result == NFD_OKAY && outPath != nullptr) {
-            std::fs::path path;
-            #if defined(OS_LINUX)
-                // xdg-desktop-portal, which is the file picker backend used on Linux, returns all paths with URI encoding.
-                // This is a bit ugly and will most likely be fixed sometime in the future but until then, we'll just use
-                // curl to decode the URI string into a valid file path string
-                path = Net().decode(outPath);
-            #else
-                path = reinterpret_cast<char8_t*>(outPath);
-            #endif
-
-            callback(path);
+            callback(reinterpret_cast<char8_t*>(outPath));
             NFD::FreePath(outPath);
         }
 
