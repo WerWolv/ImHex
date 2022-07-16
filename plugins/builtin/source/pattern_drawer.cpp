@@ -167,8 +167,9 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternString& pattern) {
-        this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
-    }
+        if (pattern.getSize() > 0)
+            this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
+        }
 
     void PatternDrawer::visit(pl::PatternStruct& pattern) {
         bool open = true;
@@ -237,9 +238,8 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::PatternWideString& pattern) {
-        std::string utf8String = pattern.getValue();
-
-        this->createDefaultEntry(pattern, pattern.getFormattedValue(), utf8String);
+        if (pattern.getSize() > 0)
+            this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
     void PatternDrawer::createDefaultEntry(const pl::Pattern &pattern, const std::string &value, pl::Token::Literal &&literal) const {
