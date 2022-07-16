@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    static bool beginPatternTable(prv::Provider *&provider, const std::vector<std::shared_ptr<pl::Pattern>> &patterns, std::vector<std::shared_ptr<pl::Pattern>> &sortedPatterns) {
+    static bool beginPatternTable(prv::Provider *&provider, const std::vector<std::shared_ptr<pl::Pattern>> &patterns, std::vector<pl::Pattern*> &sortedPatterns) {
         if (ImGui::BeginTable("##Patterntable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.builtin.view.pattern_data.var_name"_lang, 0, 0, ImGui::GetID("name"));
@@ -80,10 +80,12 @@ namespace hex::plugin::builtin {
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
             if (sortSpecs->SpecsDirty || sortedPatterns.empty()) {
-                sortedPatterns = patterns;
+                std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::Pattern> &pattern) {
+                    return pattern.get();
+                });
 
-                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs, &provider](const std::shared_ptr<pl::Pattern> &left, const std::shared_ptr<pl::Pattern> &right) -> bool {
-                    return sortPatterns(provider, sortSpecs, left.get(), right.get());
+                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs, &provider](pl::Pattern *left, pl::Pattern *right) -> bool {
+                    return sortPatterns(provider, sortSpecs, left, right);
                 });
 
                 for (auto &pattern : sortedPatterns)
