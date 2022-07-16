@@ -5,6 +5,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include "math_evaluator.hpp"
 
@@ -434,15 +435,15 @@ namespace hex::plugin::builtin {
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
         const ImColor color = [&decoded = decoded, &advance = advance]{
             if (decoded.length() == 1 && std::isalnum(decoded[0]))
-                return 0xFFFF8000;
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
             else if (decoded.length() == 1 && advance == 1)
-                return 0xFF0000FF;
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed);
             else if (decoded.length() > 1 && advance == 1)
-                return 0xFF00FFFF;
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow);
             else if (advance > 1)
-                return 0xFFFFFFFF;
+                return ImGui::GetColorU32(ImGuiCol_Text);
             else
-                return 0xFFFF8000;
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
         }();
 
         return { std::string(decoded), advance, color };
@@ -830,15 +831,17 @@ namespace hex::plugin::builtin {
                             } while (offset < this->m_bytesPerRow);
 
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
-                            if (ImGui::BeginTable("##encoding_cell", encodingData.size(), ImGuiTableFlags_SizingFixedFit)) {
+                            ImGui::PushID(y);
+                            if (ImGui::BeginTable("##encoding_cell", encodingData.size(), ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible)) {
                                 ImGui::TableNextRow();
 
                                 for (const auto &[address, data] : encodingData) {
                                     ImGui::TableNextColumn();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = CharacterSize * data.advance;
+                                    const auto cellSize = CharacterSize * ImVec2(std::max<float>(1, data.displayValue.length()), 1);
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
+
 
                                     const auto x = address % this->m_bytesPerRow;
                                     if (x < validBytes) {
@@ -854,7 +857,9 @@ namespace hex::plugin::builtin {
                                             this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
                                         }
 
+                                        ImGui::PushItemWidth(cellSize.x);
                                         ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
+                                        ImGui::PopItemWidth();
 
                                         this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
                                     }
@@ -863,6 +868,7 @@ namespace hex::plugin::builtin {
                                 ImGui::EndTable();
                             }
                             ImGui::PopStyleVar();
+                            ImGui::PopID();
 
                         }
 

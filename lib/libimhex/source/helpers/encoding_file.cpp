@@ -38,8 +38,6 @@ namespace hex {
             {
                 auto delimiterPos = line.find('=');
 
-                if (delimiterPos == std::string::npos)
-                    continue;
                 if (delimiterPos >= line.length())
                     continue;
 
@@ -47,11 +45,15 @@ namespace hex {
                 to   = line.substr(delimiterPos + 1);
 
                 if (from.empty()) continue;
-                if (to.empty()) to = " ";
             }
 
             auto fromBytes = hex::parseByteString(from);
             if (fromBytes.empty()) continue;
+
+            if (to.length() > 1)
+                hex::trim(to);
+            if (to.empty())
+                to = " ";
 
             if (!this->m_mapping.contains(fromBytes.size()))
                 this->m_mapping.insert({ fromBytes.size(), {} });
