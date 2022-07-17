@@ -234,20 +234,15 @@ namespace hex::plugin::builtin {
             if (this->m_runningEvaluators != 0)
                 return std::nullopt;
 
-            bool foundColor = false;
-            ImColor color = ImColor(0xFF, 0xFF, 0xFF, 0x70);
+            std::optional<ImColor> color;
             for (const auto &pattern : ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address)) {
-                color = ImAlphaBlendColors(color, pattern->getColor());
-
-                foundColor = true;
+                if (color.has_value())
+                    color = ImAlphaBlendColors(*color, pattern->getColor());
+                else
+                    color = pattern->getColor();
             }
 
-            if (!foundColor)
-                return std::nullopt;
-            else {
-                color.Value.w = 0x70;
-                return color;
-            }
+            return color;
         });
 
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
@@ -256,20 +251,21 @@ namespace hex::plugin::builtin {
             auto patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address);
             if (!patterns.empty()) {
                 ImGui::BeginTooltip();
-                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                    for (const auto &pattern : patterns) {
-                        auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-
+                for (const auto &pattern : patterns) {
+                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                    ImGui::PushID(pattern);
+                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::PopStyleColor(2);
-
                         this->drawPatternTooltip(pattern);
+
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                        ImGui::EndTable();
+                        ImGui::PopStyleColor(2);
                     }
-                    ImGui::EndTable();
+                    ImGui::PopID();
                 }
                 ImGui::EndTooltip();
             }
@@ -685,7 +681,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("{}", pattern->getEndian() == std::endian::little ? "Little" : "Big");
 
-                    if (auto comment = pattern->getComment(); comment.has_value()) {
+                    if (const auto &comment = pattern->getComment(); comment.has_value()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextFormatted("Comment: ");

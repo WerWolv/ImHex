@@ -61,11 +61,11 @@ namespace hex::plugin::builtin {
 
                 ImGui::BeginTooltip();
 
-                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                ImGui::PushID(&bookmark);
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    ImGui::PushID(&bookmark);
                     {
                         ImGui::ColorButton("##color", ImColor(bookmark.color));
                         ImGui::SameLine(0, 10);
@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
 
                         if (ImGui::GetIO().KeyShift) {
                             ImGui::Indent();
-                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_NoClip)) {
+                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
@@ -98,13 +98,13 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    ImGui::PopID();
 
                     ImGui::PushStyleColor(ImGuiCol_TableRowBg, bookmark.color);
                     ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, bookmark.color);
                     ImGui::EndTable();
                     ImGui::PopStyleColor(2);
                 }
+                ImGui::PopID();
 
                 ImGui::EndTooltip();
             }
