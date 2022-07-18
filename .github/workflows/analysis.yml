@@ -56,6 +56,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"        \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"      \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON       \
           ..
         make -j 4 install
 
