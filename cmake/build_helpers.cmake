@@ -295,6 +295,7 @@ function(downloadImHexPatternsFiles dest)
             set(PATTERNS_BRANCH master)
         else ()
             set(PATTERNS_BRANCH ImHex-v${IMHEX_VERSION})
+        endif ()
 
         FetchContent_Declare(
             imhex_patterns

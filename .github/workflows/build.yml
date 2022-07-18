@@ -164,7 +164,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
-          -DIMHEX_PATTERNS_PULL_MASTER            \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           ..
         make -j4 package
 
@@ -243,7 +243,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "version=`cat VERSION`" >> $GITHUB_ENV
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
       #- name: 📦 Bundle Flatpak
       #  run: |
@@ -258,14 +258,14 @@ jobs:
         run: |
           cp -r build/DEBIAN build/AppDir
           dpkg-deb --build build/AppDir
-          mv build/AppDir.deb imhex-${{env.version}}.deb
+          mv build/AppDir.deb imhex-${{env.IMHEX_VERSION}}.deb
           rm -rf build/AppDir/DEBIAN
 
       - name: 📦 Bundle AppImage
         run: |
           cd build
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-          mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.version}}.AppImage
+          mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.IMHEX_VERSION}}.AppImage
           cd ..
 
       #- name: ⬆️ Upload Flatpak
@@ -339,7 +339,7 @@ jobs:
           -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
           -DRUST_PATH="$HOME/.cargo/bin/"           \
-          -DIMHEX_PATTERNS_PULL_MASTER              \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
           ..
           make -j 4 install DESTDIR=installDir
 
@@ -350,7 +350,7 @@ jobs:
       - name: ✒️ Prepare PKGBUILD
         run: |
           cp dist/Arch/PKGBUILD build
-          sed -i 's/%version%/${{env.version}}/g' build/PKGBUILD
+          sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' build/PKGBUILD
 
     # makepkg doesn't want to run as root, so I had to chmod 777 all over
       - name: 📦 Package ArchLinux .pkg.tar.zst
@@ -359,20 +359,20 @@ jobs:
           
           # the name is a small trick to make makepkg recognize it as the source
           # else, it would try to download the file from the release
-          tar -cvf imhex-${{env.version}}-ArchLinux.pkg.tar.zst -C installDir .
+          tar -cvf imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst -C installDir .
           
           chmod -R 777 .
           
           sudo -u nobody makepkg
 
           # Remplace the old file
-          rm imhex-${{env.version}}-ArchLinux.pkg.tar.zst
-          mv *.pkg.tar.zst imhex-${{env.version}}-ArchLinux.pkg.tar.zst
+          rm imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
+          mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
       
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v3
         with:
           name: ArchLinux .pkg.tar.zst
           path: |
-            build/imhex-${{env.version}}-ArchLinux.pkg.tar.zst
+            build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
             
