@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
 option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
+option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of the ImHex-Patterns repo" OFF)
 
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()

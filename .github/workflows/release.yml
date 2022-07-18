@@ -29,7 +29,7 @@ jobs:
             exit 1
           fi
 
-          echo "version=$project_version" >> $GITHUB_ENV
+          echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
 
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
@@ -58,7 +58,7 @@ jobs:
           done
 
       - name: 🟩 Rename Windows Portable Zip
-        run: mv "Windows Portable.zip" imhex-${{env.version}}-Windows-Portable.zip
+        run: mv "Windows Portable.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable.zip
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
@@ -69,17 +69,17 @@ jobs:
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
           
-          hash=`md5sum imhex-${{env.version}}-ArchLinux.pkg.tar.zst | cut -d ' ' -f 1`
+          hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst | cut -d ' ' -f 1`
 
-          sed -i 's/%version%/${{env.version}}/g' PKGBUILD
+          sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' PKGBUILD
           sed -i "s/(SKIP)/($hash)/g" PKGBUILD
 
       - name: ⬆️ Publish AUR package
         
         # I couldn't make the condition in the env directly for some reason
         env:
-          MY_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-        if: "${{ env.MY_KEY != '' }}"
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        if: "${{ env.AUR_SSH_PRIVATE_KEY != '' }}"
 
         uses: KSXGitHub/github-actions-deploy-aur@v2
         with:
@@ -88,14 +88,25 @@ jobs:
           commit_username: iTrooz
           commit_email: itrooz@protonmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: Bump to version ${{env.version}}
+          commit_message: Bump to version ${{env.IMHEX_VERSION}}
           ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
 
-      - uses: ncipollo/release-action@v1
+      - name: 🎫 Create PatternLanguage release
+        uses: ncipollo/release-action@v1
         env:
-          MY_KEY: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.MY_KEY != '' }}"
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
         with:
-          tag: ImHex-v${{env.version}}
+          tag: ImHex-v${{env.IMHEX_VERSION}}
           repo: PatternLanguage
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: 🎫 Create ImHex-Patterns release
+        uses: ncipollo/release-action@v1
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
+        with:
+          tag: ImHex-v${{env.IMHEX_VERSION}}
+          repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}

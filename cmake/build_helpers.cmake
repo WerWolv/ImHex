@@ -291,6 +291,11 @@ endmacro()
 
 function(downloadImHexPatternsFiles dest)
     if (NOT IMHEX_OFFLINE_BUILD)
+        if (IMHEX_PATTERNS_PULL_MASTER)
+            set(PATTERNS_BRANCH master)
+        else ()
+            set(PATTERNS_BRANCH ImHex-v${IMHEX_VERSION})
+
         FetchContent_Declare(
             imhex_patterns
             GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
