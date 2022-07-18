@@ -80,6 +80,7 @@ namespace hex::plugin::builtin {
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
             if (sortSpecs->SpecsDirty || sortedPatterns.empty()) {
+                sortedPatterns.clear();
                 std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::Pattern> &pattern) {
                     return pattern.get();
                 });
