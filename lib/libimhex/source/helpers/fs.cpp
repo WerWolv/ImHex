@@ -247,8 +247,8 @@ namespace hex::fs {
         std::vector<std::fs::path> configDirs = xdg::ConfigDirs();
         std::vector<std::fs::path> dataDirs   = xdg::DataDirs();
 
-        configDirs.push_back(xdg::ConfigHomeDir());
-        dataDirs.push_back(xdg::DataHomeDir());
+        configDirs.insert(configDirs.begin(), xdg::ConfigHomeDir());
+        dataDirs.insert(dataDirs.begin(), xdg::DataHomeDir());
 
         for (auto &dir : dataDirs)
             dir = dir / "imhex";
