@@ -12,7 +12,6 @@ RUN pacman -S --needed --noconfirm      \
     pkg-config                          \
     glfw-x11                            \
     file                                \
-    mbedtls                             \
     python3                             \
     freetype2                           \
     dbus                                \

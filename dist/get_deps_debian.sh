@@ -18,7 +18,6 @@ apt install -y \
   libglfw3-dev          \
   libglm-dev            \
   libmagic-dev          \
-  libmbedtls-dev        \
   python3-dev           \
   libfreetype-dev       \
   libdbus-1-dev         \

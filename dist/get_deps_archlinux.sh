@@ -6,7 +6,6 @@ pacman -S $@ --needed \
   lld       \
   glfw      \
   file      \
-  mbedtls   \
   python3   \
   freetype2 \
   dbus      \

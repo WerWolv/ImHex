@@ -25,7 +25,6 @@ RDEPEND="${DEPEND}
 		${PYTHON_DEPS}
 		media-libs/glfw
 		sys-apps/file
-		dev-libs/mbedtls
 		dev-cpp/nlohmann_json
 		dbus
 		xdg-desktop-portal

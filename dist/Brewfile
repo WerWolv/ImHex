@@ -1,5 +1,4 @@
 brew "glfw"
-brew "mbedtls"
 brew "nlohmann-json"
 brew "cmake"
 brew "ccache"

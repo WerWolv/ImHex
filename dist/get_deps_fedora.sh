@@ -7,7 +7,6 @@ dnf install         \
   file-devel        \
   glfw-devel        \
   mesa-libGL-devel  \
-  mbedtls-devel     \
   python-devel      \
   freetype-devel    \
   dbus              \
