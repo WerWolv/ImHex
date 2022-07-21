@@ -112,10 +112,17 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-count-overflow")
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+pkg_search_module(MAGIC libmagic>=5.39)
+if(NOT MAGIC_FOUND)
+    find_library(MAGIC 5.39 magic REQUIRED)
+else()
+    set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
+endif()
+
 target_include_directories(
         libyara
         PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include> $<INSTALL_INTERFACE:include>
-        PRIVATE ${LIBYARA_SOURCE_PATH} ${GNUTLS_INCLUDE_DIR}
+        PRIVATE ${LIBYARA_SOURCE_PATH} ${GNUTLS_INCLUDE_DIR} ${MAGIC_INCLUDE_DIRS}
 )
 
 if (UNIX)
