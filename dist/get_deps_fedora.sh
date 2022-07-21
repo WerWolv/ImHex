@@ -11,4 +11,5 @@ dnf install         \
   python-devel      \
   freetype-devel    \
   dbus              \
-  xdg-desktop-portal
+  xdg-desktop-portal \
+  gnutls

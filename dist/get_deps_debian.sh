@@ -22,4 +22,6 @@ apt install -y \
   python3-dev           \
   libfreetype-dev       \
   libdbus-1-dev         \
-  xdg-desktop-portal
+  xdg-desktop-portal    \
+  libcurl4-gnutls-dev   \
+  libgnutls28-dev

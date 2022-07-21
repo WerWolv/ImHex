@@ -67,6 +67,7 @@ jobs:
           python:p
           freetype:p
           dlfcn:p
+          gnutls
 
     - name: ⬇️ Install dependencies
       run: |

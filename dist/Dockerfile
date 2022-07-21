@@ -16,7 +16,8 @@ RUN pacman -S --needed --noconfirm      \
     python3                             \
     freetype2                           \
     dbus                                \
-    xdg-desktop-portal
+    xdg-desktop-portal                  \
+    gnutls
 
 # Clone ImHex
 RUN git clone https://github.com/WerWolv/ImHex --recurse-submodules /root/ImHex
