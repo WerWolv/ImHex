@@ -126,7 +126,7 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
             ImGui::InputTextWithHint("##filter", "Filter", this->m_currFilter);
             ImGui::PopItemWidth();
-            
+
             ImGui::NewLine();
 
             if (ImGui::BeginChild("##bookmarks")) {

@@ -41,7 +41,9 @@ namespace hex::plugin::builtin {
             if (end == InvalidSelection)
                 end = start;
 
-            const size_t maxAddress = ImHexApi::Provider::get()->getActualSize() - 1;
+            auto provider = ImHexApi::Provider::get();
+
+            const size_t maxAddress = provider->getActualSize() + provider->getBaseAddress() - 1;
 
             this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
 
