@@ -761,7 +761,7 @@ namespace hex::plugin::builtin {
                                 // Draw cell content
                                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                 ImGui::PushItemWidth((CharacterSize * this->m_currDataVisualizer->getMaxCharsPerCell()).x);
-                                this->drawCell(byteAddress, &bytes[x], bytesPerCell, cellHovered);
+                                this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered);
                                 ImGui::PopItemWidth();
                                 ImGui::PopStyleVar();
 
