@@ -1267,7 +1267,6 @@ namespace hex::plugin::builtin {
 
             if (region.size != 0) {
                 provider->setCurrentPage(page.value());
-                region.address -= provider->getBaseAddress() + provider->getCurrentPageAddress();
                 this->setSelection(region);
                 this->jumpToSelection();
             }
