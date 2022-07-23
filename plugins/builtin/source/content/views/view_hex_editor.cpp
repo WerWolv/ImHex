@@ -243,7 +243,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_base"_lang);
 
-            if (ImGui::InputHexadecimal("##base_address", &this->m_baseAddress, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            ImGui::InputHexadecimal("##base_address", &this->m_baseAddress);
+            if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
                 setBaseAddress(this->m_baseAddress);
                 editor->closePopup();
             }
@@ -276,6 +277,10 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.resize"_lang);
 
             ImGui::InputHexadecimal("##resize", &this->m_size);
+            if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+                resize(static_cast<size_t>(this->m_size));
+                editor->closePopup();
+            }
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
@@ -681,7 +686,7 @@ namespace hex::plugin::builtin {
                         const u8 validBytes = std::min<u64>(this->m_bytesPerRow, provider->getSize() - y * this->m_bytesPerRow);
 
                         std::vector<u8> bytes(validBytes);
-                        provider->read(y * this->m_bytesPerRow + provider->getCurrentPageAddress(), bytes.data(), validBytes);
+                        provider->read(y * this->m_bytesPerRow + provider->getBaseAddress() + provider->getCurrentPageAddress(), bytes.data(), validBytes);
 
                         std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
                         {
