@@ -345,7 +345,7 @@ jobs:
 
       - name: 📜 Set version variable
         run: |
-          echo "version=`cat VERSION`" >> $GITHUB_ENV
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
       
       - name: ✒️ Prepare PKGBUILD
         run: |
