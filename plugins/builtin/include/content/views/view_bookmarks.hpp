@@ -16,6 +16,7 @@ namespace hex::plugin::builtin {
 
     private:
         std::list<ImHexApi::Bookmarks::Entry> m_bookmarks;
+        std::string m_currFilter;
     };
 
 }

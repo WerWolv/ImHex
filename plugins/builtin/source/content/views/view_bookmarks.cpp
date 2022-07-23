@@ -122,16 +122,28 @@ namespace hex::plugin::builtin {
 
     void ViewBookmarks::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
-            if (ImGui::BeginChild("##scrolling")) {
+
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            ImGui::InputTextWithHint("##filter", "Filter", this->m_currFilter);
+            ImGui::PopItemWidth();
+            
+            ImGui::NewLine();
+
+            if (ImGui::BeginChild("##bookmarks")) {
 
                 if (this->m_bookmarks.empty()) {
                     ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
-                u32 id                = 1;
+                u32 id = 1;
                 auto bookmarkToRemove = this->m_bookmarks.end();
                 for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
                     auto &[region, name, comment, color, locked] = *iter;
+
+                    if (!this->m_currFilter.empty()) {
+                        if (!name.contains(this->m_currFilter) && !comment.contains(this->m_currFilter))
+                            continue;
+                    }
 
                     auto headerColor = ImColor(color);
                     auto hoverColor  = ImColor(color);
