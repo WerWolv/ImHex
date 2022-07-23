@@ -250,14 +250,11 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1050, [&] {
-            auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
             auto selection     = ImHexApi::HexEditor::getSelection();
 
             if (ImGui::MenuItem("hex.builtin.menu.edit.bookmark"_lang, nullptr, false, selection.has_value() && providerValid)) {
-                auto base = provider->getBaseAddress();
-
-                ImHexApi::Bookmarks::add(base + selection->getStartAddress(), selection->size, {}, {});
+                ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
             }
         });
 

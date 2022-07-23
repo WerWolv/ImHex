@@ -286,7 +286,7 @@ namespace hex::plugin::builtin {
                     auto region = ImHexApi::HexEditor::getSelection();
 
                     if (region.has_value())
-                        ImHexApi::Bookmarks::add(region->address, region->size, {}, {});
+                        ImHexApi::Bookmarks::add(region->getStartAddress(), region->getSize(), {}, {});
                 }
             }
             ImGui::EndDisabled();
