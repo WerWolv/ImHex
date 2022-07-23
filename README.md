@@ -22,6 +22,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 ![Hex editor, patterns and data information](https://user-images.githubusercontent.com/10835354/139717326-8044769d-527b-4d88-8adf-2d4ecafdca1f.png)
 ![Bookmarks, disassembler and data processor](https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FWerWolv%2FImHex.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FWerWolv%2FImHex?ref=badge_shield)
 
 ## Features
 
@@ -158,3 +159,7 @@ All dependencies that aren't bundled, can be installed using the dependency inst
 - Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
 - Thanks to vitaut for their [libfmt](https://github.com/fmtlib/fmt) library which makes formatting and logging so much better
 - Thanks to rxi for [microtar](https://github.com/rxi/microtar) used for extracting downloaded store assets 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FWerWolv%2FImHex.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FWerWolv%2FImHex?ref=badge_large)
