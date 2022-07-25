@@ -565,7 +565,7 @@ namespace hex::plugin::builtin {
             drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1.0F);
 
         // Draw vertical line at the right of the last byte and the end of the line
-        if (x == u16((this->m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + this->m_currDataVisualizer->getBytesPerCell()) > selection.getEndAddress())
+        if (x == u16((this->m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
             drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1.0F);
 
         // Draw horizontal line at the top of the bytes
@@ -697,9 +697,9 @@ namespace hex::plugin::builtin {
 
                                 // Query cell colors
                                 if (x < validBytes) {
-                                    const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x], cellBytes);
+                                    const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
                                     const auto backgroundColor = [&]{
-                                        auto color = queryBackgroundColor(byteAddress, &bytes[x], cellBytes);
+                                        auto color = queryBackgroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
 
                                         if ((byteAddress >= selectionMin && byteAddress <= selectionMax)) {
                                             if (color.has_value())
@@ -757,7 +757,7 @@ namespace hex::plugin::builtin {
 
                                 const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
-                                this->handleSelection(byteAddress, bytesPerCell, &bytes[x], cellHovered);
+                                this->handleSelection(byteAddress, bytesPerCell, &bytes[x * bytesPerCell], cellHovered);
 
                                 // Get byte foreground color
                                 if (foregroundColor.has_value())
