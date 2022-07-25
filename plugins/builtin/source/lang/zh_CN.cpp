@@ -224,7 +224,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hashes.type", "类型" },
                     { "hex.builtin.view.hashes.result", "结果" },
                     { "hex.builtin.view.hashes.remove", "移除哈希" },
-                    { "hex.builtin.view.hashes.hover_info", "将鼠标放在 Hex 编辑器的选区上，按住 SHIFT来查看其哈希。" },
+                    { "hex.builtin.view.hashes.hover_info", "将鼠标放在 Hex 编辑器的选区上，按住 SHIFT 来查看其哈希。" },
 
 
                 { "hex.builtin.view.help.name", "帮助" },
