@@ -847,13 +847,13 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = CharacterSize * ImVec2(std::max<float>(1, data.displayValue.length()), 1);
+                                    const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(0, CharacterSize.y);
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
 
                                     const auto x = address % this->m_bytesPerRow;
                                     if (x < validBytes) {
-                                        auto [foregroundColor, backgroundColor] = cellColors[x];
+                                        auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
