@@ -236,6 +236,9 @@ namespace hex::plugin::builtin {
 
             std::optional<ImColor> color;
             for (const auto &pattern : ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address)) {
+                if (pattern->isHidden())
+                    continue;
+
                 if (color.has_value())
                     color = ImAlphaBlendColors(*color, pattern->getColor());
                 else
@@ -249,9 +252,12 @@ namespace hex::plugin::builtin {
             hex::unused(data, size);
 
             auto patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address);
-            if (!patterns.empty()) {
+            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
                 ImGui::BeginTooltip();
                 for (const auto &pattern : patterns) {
+                    if (pattern->isHidden())
+                        continue;
+
                     auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
                     ImGui::PushID(pattern);
                     if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
