@@ -8,8 +8,8 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <fontawesome_font.h>
-#include <codicons_font.h>
+#include <fonts/fontawesome_font.h>
+#include <fonts/codicons_font.h>
 
 namespace hex::plugin::windows {
 

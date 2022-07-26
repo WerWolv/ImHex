@@ -18,8 +18,8 @@
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
 
-#include <fontawesome_font.h>
-#include <codicons_font.h>
+#include <fonts/fontawesome_font.h>
+#include <fonts/codicons_font.h>
 
 #include <list>
 

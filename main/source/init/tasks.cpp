@@ -9,9 +9,9 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
-#include <fontawesome_font.h>
-#include <codicons_font.h>
-#include <unifont_font.h>
+#include <fonts/fontawesome_font.h>
+#include <fonts/codicons_font.h>
+#include <fonts/unifont_font.h>
 
 #include <hex/api/plugin_manager.hpp>
 
