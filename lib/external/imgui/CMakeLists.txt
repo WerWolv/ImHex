@@ -43,12 +43,6 @@ target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_
 
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
 
-message(STATUS "GLFW_INCLUDES: ${GLFW_INCLUDE_DIRS}")
-file(GLOB GLFW_FILES
-        "${GLFW_INCLUDE_DIRS}/*"
-        )
-message(STATUS "GLFW_FILES: ${GLFW_FILES}")
-
 if (WIN32)
     target_link_libraries(imgui PUBLIC Freetype::Freetype glfw3 opengl32.lib)
 elseif (UNIX)
