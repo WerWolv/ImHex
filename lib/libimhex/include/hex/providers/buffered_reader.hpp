@@ -110,6 +110,11 @@ namespace hex::prv {
 
             friend bool operator== (const Iterator& left, const Iterator& right) { return left.m_address == right.m_address; };
             friend bool operator!= (const Iterator& left, const Iterator& right) { return left.m_address != right.m_address; };
+            friend bool operator>  (const Iterator& left, const Iterator& right) { return left.m_address >  right.m_address; };
+            friend bool operator<  (const Iterator& left, const Iterator& right) { return left.m_address <  right.m_address; };
+            friend bool operator>= (const Iterator& left, const Iterator& right) { return left.m_address >= right.m_address; };
+            friend bool operator<= (const Iterator& left, const Iterator& right) { return left.m_address <= right.m_address; };
+
         private:
             BufferedReader *m_reader;
             u64 m_address;
@@ -176,10 +181,14 @@ namespace hex::prv {
 
             friend bool operator== (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address == right.m_address; };
             friend bool operator!= (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address != right.m_address; };
+            friend bool operator>  (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address >  right.m_address; };
+            friend bool operator<  (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address <  right.m_address; };
+            friend bool operator>= (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address >= right.m_address; };
+            friend bool operator<= (const ReverseIterator& left, const ReverseIterator& right) { return left.m_address <= right.m_address; };
 
         private:
             BufferedReader *m_reader;
-            u64 m_address;
+            u64 m_address = 0x00;
         };
 
         Iterator begin() {
@@ -187,7 +196,7 @@ namespace hex::prv {
         }
 
         Iterator end() {
-            return { this, this->m_baseAddress + this->m_provider->getActualSize() };
+            return { this, this->m_provider->getActualSize() };
         }
 
         ReverseIterator rbegin() {
