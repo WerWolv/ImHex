@@ -30,7 +30,7 @@
 #include <imnodes.h>
 #include <imnodes_internal.h>
 
-#include <codicons_font.h>
+#include <fonts/codicons_font.h>
 
 #include <hex/helpers/project_file_handler.hpp>
 

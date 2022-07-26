@@ -9,7 +9,7 @@
 
     #include <imgui.h>
     #include <imgui_internal.h>
-    #include <codicons_font.h>
+    #include <fonts/codicons_font.h>
 
     #include <nlohmann/json.hpp>
 
