@@ -930,12 +930,11 @@ namespace hex::plugin::builtin {
                 if (this->m_shouldJumpToSelection) {
                     this->m_shouldJumpToSelection = false;
 
-                    const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
                     auto newSelection = this->getSelection();
-                    newSelection.address -= pageAddress;
+                    provider->setCurrentPage(provider->getPageOfAddress(newSelection.address).value_or(0));
 
-                    provider->setCurrentPage(provider->getPageOfAddress(pageAddress).value_or(0));
-                    ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (static_cast<long double>(newSelection.getStartAddress()) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
+                    const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
+                    ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
                 }
 
             } else {
