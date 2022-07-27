@@ -4,16 +4,16 @@ cmake_minimum_required(VERSION 3.16)
 option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
 option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of the ImHex-Patterns repo" OFF)
 
-# Setup project
-loadVersion(IMHEX_VERSION)
-set(IMHEX_VERSION ${IMHEX_VERSION} PARENT_SCOPE)
-project(imhex VERSION ${IMHEX_VERSION})
-
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
+
+# Setup project
+loadVersion(IMHEX_VERSION)
+setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
+project(imhex VERSION ${IMHEX_VERSION})
 
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()

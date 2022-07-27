@@ -293,6 +293,15 @@ macro(detectBadClone)
     endforeach ()
 endmacro()
 
+macro(setVariableInParent variable value)
+    get_directory_property(hasParent PARENT_DIRECTORY)
+
+    if (hasParent)
+        set(${variable} "${${value}}" PARENT_SCOPE)
+    else ()
+        set(${variable} "${value}")
+    endif ()
+endmacro()
 
 function(downloadImHexPatternsFiles dest)
     if (NOT IMHEX_OFFLINE_BUILD)
