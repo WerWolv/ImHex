@@ -5,7 +5,6 @@ namespace hex::plugin::builtin {
 
     void registerLanguageZhTW() {
         ContentRegistry::Language::registerLanguage("Chinese (Traditional)", "zh-TW");
-        LangEntry::setFallbackLanguage("en-US");
 
         ContentRegistry::Language::addLocalizations("zh-TW", {
                 { "hex.builtin.welcome.header.main", "歡迎使用 ImHex" },
@@ -229,7 +228,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.help.name", "幫助" },
                     { "hex.builtin.view.help.about.name", "關於" },
-                        { "hex.builtin.view.help.about.translator", "由 WerWolv 翻譯" },
+                        { "hex.builtin.view.help.about.translator", "由 5idereal 翻譯" },
                         { "hex.builtin.view.help.about.source", "原始碼存放於 GitHub：" },
                         { "hex.builtin.view.help.about.donations", "贊助" },
                         { "hex.builtin.view.help.about.thanks", "如果您喜歡 ImHex，請考慮贊助使專案能夠永續運營。感謝您 <3" },
