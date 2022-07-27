@@ -14,6 +14,7 @@ namespace hex::plugin::windows {
     void registerLanguageDeDE();
     void registerLanguageZhCN();
     void registerLanguagePtBR();
+    void registerLanguageZhTW();
 
     void addFooterItems();
     void addTitleBarButtons();
@@ -60,7 +61,8 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     registerLanguageDeDE();
     registerLanguageZhCN();
     registerLanguagePtBR();
-
+    registerLanguageZhTW();
+    
     hex::ContentRegistry::Views::add<ViewTTYConsole>();
 
     addFooterItems();
