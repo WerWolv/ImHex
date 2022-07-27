@@ -59,6 +59,7 @@ add_library(${PROJECT_NAME} SHARED
         source/lang/zh_CN.cpp
         source/lang/ja_JP.cpp
         source/lang/pt_BR.cpp
+        source/lang/zh_TW.cpp
 )
 
 # Add additional include directories here #

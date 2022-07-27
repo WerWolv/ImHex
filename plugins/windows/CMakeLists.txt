@@ -15,6 +15,7 @@ if (WIN32)
             source/lang/de_DE.cpp
             source/lang/zh_CN.cpp
             source/lang/pt_BR.cpp
+            source/lang/zh_TW.cpp
 
             source/content/ui_items.cpp
             source/content/settings_entries.cpp
