@@ -277,6 +277,11 @@ macro(setDefaultBuiltTypeIfUnset)
     endif()
 endmacro()
 
+function(loadVersion version)
+    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" read_version)
+    set(${version} ${read_version} PARENT_SCOPE)
+endfunction()
+
 macro(detectBadClone)
     file (GLOB EXTERNAL_DIRS "lib/external/*")
     foreach (EXTERNAL_DIR ${EXTERNAL_DIRS})
