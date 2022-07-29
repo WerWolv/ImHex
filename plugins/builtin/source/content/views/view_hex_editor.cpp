@@ -763,7 +763,7 @@ namespace hex::plugin::builtin {
                                     this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, cellSize);
                                 }
 
-                                const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
+                                const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
 
                                 this->handleSelection(byteAddress, bytesPerCell, &bytes[x * bytesPerCell], cellHovered);
 
