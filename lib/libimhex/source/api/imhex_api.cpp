@@ -314,6 +314,11 @@ namespace hex {
                 s_globalScale = scale;
             }
 
+            static float s_nativeScale = 1.0;
+            void setNativeScale(float scale) {
+                s_nativeScale = scale;
+            }
+
 
             static ProgramArguments s_programArguments;
             void setProgramArguments(int argc, char **argv, char **envp) {
@@ -362,6 +367,10 @@ namespace hex {
 
         float getGlobalScale() {
             return impl::s_globalScale;
+        }
+
+        float getNativeScale() {
+            return impl::s_nativeScale;
         }
 
 

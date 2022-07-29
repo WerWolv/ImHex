@@ -155,6 +155,7 @@ namespace hex {
                 void setMainDockSpaceId(ImGuiID id);
 
                 void setGlobalScale(float scale);
+                void setNativeScale(float scale);
 
                 void setProgramArguments(int argc, char **argv, char **envp);
 
@@ -184,6 +185,7 @@ namespace hex {
             void setTargetFPS(float fps);
 
             float getGlobalScale();
+            float getNativeScale();
 
             ImVec2 getMainWindowPosition();
             ImVec2 getMainWindowSize();

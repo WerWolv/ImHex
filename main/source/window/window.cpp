@@ -697,7 +697,9 @@ namespace hex {
 
         io.UserData = new ImGui::ImHexCustomData();
 
-        style.ScaleAllSizes(ImHexApi::System::getGlobalScale());
+        auto scale = ImHexApi::System::getGlobalScale();
+        style.ScaleAllSizes(scale);
+        io.DisplayFramebufferScale = ImVec2(scale, scale);
 
         {
             GLsizei width, height;

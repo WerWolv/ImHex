@@ -427,7 +427,7 @@ namespace hex::plugin::builtin {
         switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
             default:
             case 0:
-                // Native scaling
+                interfaceScaling = ImHexApi::System::getNativeScale();
                 break;
             case 1:
                 interfaceScaling = 0.5F;

@@ -167,9 +167,16 @@ namespace hex::init {
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
 
-        if (GLFWmonitor *monitor = glfwGetPrimaryMonitor(); monitor != nullptr) {
+        this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
+        if (this->m_window == nullptr) {
+            log::fatal("Failed to create GLFW window!");
+            exit(EXIT_FAILURE);
+        }
+
+        // Calculate native scale factor for hidpi displays
+        {
             float xScale = 0, yScale = 0;
-            glfwGetMonitorContentScale(monitor, &xScale, &yScale);
+            glfwGetWindowContentScale(this->m_window, &xScale, &yScale);
 
             auto meanScale = std::midpoint(xScale, yScale);
 
@@ -185,16 +192,12 @@ namespace hex::init {
             }
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
-        } else {
-            ImHexApi::System::impl::setGlobalScale(1.0);
+            ImHexApi::System::impl::setNativeScale(meanScale);
+
+            log::info("Native scaling set to: {}", meanScale);
         }
 
-        this->m_window = glfwCreateWindow(640_scaled, 400_scaled, "Starting ImHex...", nullptr, nullptr);
-        if (this->m_window == nullptr) {
-            log::fatal("Failed to create GLFW window!");
-            exit(EXIT_FAILURE);
-        }
-
+        glfwSetWindowSize(this->m_window, 640_scaled, 400_scaled);
         centerWindow(this->m_window);
 
         glfwMakeContextCurrent(this->m_window);
