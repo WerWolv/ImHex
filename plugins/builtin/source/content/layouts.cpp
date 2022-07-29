@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
             openViewAndDockTo("hex.builtin.view.pattern_editor.name", utils);
             openViewAndDockTo("hex.builtin.view.hashes.name", utils);
             openViewAndDockTo("hex.builtin.view.data_information.name", utils);
-            openViewAndDockTo("hex.builtin.view.strings.name", utils);
+            openViewAndDockTo("hex.builtin.view.find.name", utils);
             openViewAndDockTo("hex.builtin.view.bookmarks.name", utils);
         });
     }

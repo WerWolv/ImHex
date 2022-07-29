@@ -5,7 +5,6 @@
 #include "content/views/view_information.hpp"
 #include "content/views/view_about.hpp"
 #include "content/views/view_tools.hpp"
-#include "content/views/view_strings.hpp"
 #include "content/views/view_data_inspector.hpp"
 #include "content/views/view_disassembler.hpp"
 #include "content/views/view_bookmarks.hpp"
@@ -18,6 +17,7 @@
 #include "content/views/view_store.hpp"
 #include "content/views/view_diff.hpp"
 #include "content/views/view_provider_settings.hpp"
+#include "content/views/view_find.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -28,7 +28,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewDataInspector>();
         ContentRegistry::Views::add<ViewHashes>();
         ContentRegistry::Views::add<ViewInformation>();
-        ContentRegistry::Views::add<ViewStrings>();
         ContentRegistry::Views::add<ViewDisassembler>();
         ContentRegistry::Views::add<ViewBookmarks>();
         ContentRegistry::Views::add<ViewPatches>();
@@ -42,6 +41,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewStore>();
         ContentRegistry::Views::add<ViewDiff>();
         ContentRegistry::Views::add<ViewProviderSettings>();
+        ContentRegistry::Views::add<ViewFind>();
     }
 
 }

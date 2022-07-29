@@ -80,14 +80,14 @@ namespace hex::plugin::builtin {
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("Region: ");
+                                ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                                 if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormatted("Comment: ");
+                                    ImGui::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
                                     ImGui::TableNextColumn();
                                     ImGui::TextFormattedWrapped("\"{}\"", bookmark.comment);
                                 }
@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-            ImGui::InputTextWithHint("##filter", "Filter", this->m_currFilter);
+            ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter);
             ImGui::PopItemWidth();
 
             ImGui::NewLine();

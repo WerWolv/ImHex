@@ -9,10 +9,19 @@ namespace hex::prv {
 
     class BufferedReader {
     public:
-        explicit BufferedReader(Provider *provider, size_t bufferSize = 0xFF'FFFF) : m_provider(provider), m_maxBufferSize(bufferSize), m_buffer(bufferSize) { }
+        explicit BufferedReader(Provider *provider, size_t bufferSize = 0xFF'FFFF)
+        : m_provider(provider), m_bufferAddress(provider->getBaseAddress()), m_maxBufferSize(bufferSize),
+          m_startAddress(0x00), m_endAddress(provider->getActualSize()),
+          m_buffer(bufferSize) {
+
+        }
 
         void seek(u64 address) {
-            this->m_baseAddress = address;
+            this->m_startAddress = address;
+        }
+
+        void setEndAddress(u64 address) {
+            this->m_endAddress = address;
         }
 
         [[nodiscard]] std::vector<u8> read(u64 address, size_t size) {
@@ -27,7 +36,7 @@ namespace hex::prv {
 
             this->updateBuffer(address, size);
 
-            auto result = &this->m_buffer[address -  this->m_baseAddress];
+            auto result = &this->m_buffer[address -  this->m_bufferAddress];
 
             return { result, result + std::min(size, this->m_buffer.size()) };
         }
@@ -44,7 +53,7 @@ namespace hex::prv {
 
             this->updateBuffer(address - std::min<u64>(address, this->m_buffer.size()), size);
 
-            auto result = &this->m_buffer[address - this->m_baseAddress];
+            auto result = &this->m_buffer[address - this->m_startAddress];
 
             return { result, result + std::min(size, this->m_buffer.size()) };
         }
@@ -192,15 +201,15 @@ namespace hex::prv {
         };
 
         Iterator begin() {
-            return { this, this->m_baseAddress };
+            return { this, this->m_startAddress };
         }
 
         Iterator end() {
-            return { this, this->m_provider->getActualSize() };
+            return { this, this->m_endAddress };
         }
 
         ReverseIterator rbegin() {
-            return { this, this->m_baseAddress };
+            return { this, this->m_startAddress };
         }
 
         ReverseIterator rend() {
@@ -209,13 +218,13 @@ namespace hex::prv {
 
     private:
         void updateBuffer(u64 address, size_t size) {
-            if (!this->m_bufferValid || address < this->m_baseAddress || address + size > (this->m_baseAddress + this->m_buffer.size())) {
-                const auto remainingBytes = this->m_provider->getActualSize() - address;
+            if (!this->m_bufferValid || address < this->m_bufferAddress || address + size > (this->m_bufferAddress + this->m_buffer.size())) {
+                const auto remainingBytes = this->m_endAddress - address;
                 if (remainingBytes < this->m_maxBufferSize)
                     this->m_buffer.resize(remainingBytes);
 
                 this->m_provider->read(address, this->m_buffer.data(), this->m_buffer.size());
-                this->m_baseAddress = address;
+                this->m_bufferAddress = address;
                 this->m_bufferValid = true;
             }
         }
@@ -223,9 +232,10 @@ namespace hex::prv {
     private:
         Provider *m_provider;
 
+        u64 m_bufferAddress = 0x00;
         size_t m_maxBufferSize;
         bool m_bufferValid = false;
-        u64 m_baseAddress = 0x00;
+        u64 m_startAddress = 0x00, m_endAddress;
         std::vector<u8> m_buffer;
     };
 
