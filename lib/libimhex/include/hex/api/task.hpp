@@ -10,8 +10,11 @@ namespace hex {
 
     class Task {
     public:
+        Task() = default;
         Task(const std::string &unlocalizedName, u64 maxValue);
         ~Task();
+
+        Task(Task &&other) noexcept;
 
         void setMaxValue(u64 maxValue);
         void update(u64 currValue);
@@ -29,7 +32,7 @@ namespace hex {
 
     private:
         std::string m_name;
-        u64 m_maxValue, m_currValue;
+        u64 m_maxValue = 0, m_currValue = 0;
 
         static std::list<Task *> s_runningTasks;
         static std::mutex s_taskMutex;

@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
         });
     }
 
-    std::vector<Region> ViewFind::searchStrings(prv::Provider *provider, hex::Region searchRegion, SearchSettings::Strings settings) {
+    std::vector<Region> ViewFind::searchStrings(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Strings settings) {
         std::vector<Region> results;
 
         auto reader = prv::BufferedReader(provider);
@@ -140,13 +140,14 @@ namespace hex::plugin::builtin {
 
                 startAddress += countedCharacters + 1;
                 countedCharacters = 0;
+                task.update(startAddress - searchRegion.getStartAddress());
             }
         }
 
         return results;
     }
 
-    std::vector<Region> ViewFind::searchSequence(prv::Provider *provider, hex::Region searchRegion, SearchSettings::Bytes settings) {
+    std::vector<Region> ViewFind::searchSequence(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Bytes settings) {
         std::vector<Region> results;
 
         auto reader = prv::BufferedReader(provider);
@@ -160,15 +161,17 @@ namespace hex::plugin::builtin {
             if (occurrence == reader.end())
                 break;
 
-            reader.seek(occurrence.getAddress() + sequence.size());
-            results.push_back(Region { occurrence.getAddress(), sequence.size() });
+            auto address = occurrence.getAddress();
+            reader.seek(address + sequence.size());
+            results.push_back(Region { address, sequence.size() });
+            task.update(address - searchRegion.getStartAddress());
         }
 
         return results;
     }
 
-    std::vector<Region> ViewFind::searchRegex(prv::Provider *provider, hex::Region searchRegion, SearchSettings::Regex settings) {
-        auto stringRegions = searchStrings(provider, searchRegion, SearchSettings::Strings {
+    std::vector<Region> ViewFind::searchRegex(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Regex settings) {
+        auto stringRegions = searchStrings(std::move(task), provider, searchRegion, SearchSettings::Strings {
             .minLength          = 1,
             .type               = SearchSettings::Strings::Type::ASCII,
             .m_lowerCaseLetters = true,
@@ -205,19 +208,19 @@ namespace hex::plugin::builtin {
 
         this->m_searchRunning = true;
         std::thread([this, settings = this->m_searchSettings, searchRegion]{
-            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.find.searching", 0);
+            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.find.searching", searchRegion.getSize());
             auto provider = ImHexApi::Provider::get();
 
             switch (settings.mode) {
                 using enum SearchSettings::Mode;
                 case Strings:
-                    this->m_foundRegions[provider] = searchStrings(provider, searchRegion, settings.strings);
+                    this->m_foundRegions[provider] = searchStrings(std::move(task), provider, searchRegion, settings.strings);
                     break;
                 case Sequence:
-                    this->m_foundRegions[provider] = searchSequence(provider, searchRegion, settings.bytes);
+                    this->m_foundRegions[provider] = searchSequence(std::move(task), provider, searchRegion, settings.bytes);
                     break;
                 case Regex:
-                    this->m_foundRegions[provider] = searchRegex(provider, searchRegion, settings.regex);
+                    this->m_foundRegions[provider] = searchRegex(std::move(task), provider, searchRegion, settings.regex);
                     break;
             }
 
@@ -280,6 +283,7 @@ namespace hex::plugin::builtin {
 
     void ViewFind::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.find.name").c_str(), &this->getWindowOpenState())) {
+            auto provider = ImHexApi::Provider::get();
 
             ImGui::BeginDisabled(this->m_searchRunning);
             {
@@ -373,6 +377,8 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::EndDisabled();
 
+                ImGui::SameLine();
+                ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundRegions[provider].size());
             }
             ImGui::EndDisabled();
 
@@ -380,19 +386,28 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
             ImGui::NewLine();
 
+            auto &currRegion = this->m_sortedRegions[provider];
+
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter)) {
+                this->m_sortedRegions = this->m_foundRegions;
+
+                currRegion.erase(std::remove_if(currRegion.begin(), currRegion.end(), [this, provider](const auto &region) {
+                    return !this->decodeValue(provider, region).contains(this->m_currFilter);
+                }), currRegion.end());
+            }
+            ImGui::PopItemWidth();
+
             if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
                 ImGui::TableSetupColumn("hex.builtin.common.size"_lang, 0, -1, ImGui::GetID("size"));
                 ImGui::TableSetupColumn("hex.builtin.common.value"_lang, 0, -1, ImGui::GetID("value"));
 
-                auto provider = ImHexApi::Provider::get();
-                auto &regions = this->m_sortedRegions[provider];
-
                 auto sortSpecs = ImGui::TableGetSortSpecs();
 
                 if (sortSpecs->SpecsDirty) {
-                    std::sort(regions.begin(), regions.end(), [this, &sortSpecs, provider](Region &left, Region &right) -> bool {
+                    std::sort(currRegion.begin(), currRegion.end(), [this, &sortSpecs, provider](Region &left, Region &right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                 return left.getStartAddress() > right.getStartAddress();
@@ -419,11 +434,11 @@ namespace hex::plugin::builtin {
                 ImGui::TableHeadersRow();
 
                 ImGuiListClipper clipper;
-                clipper.Begin(regions.size());
+                clipper.Begin(currRegion.size(), ImGui::GetTextLineHeightWithSpacing());
 
                 while (clipper.Step()) {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &foundItem = regions[i];
+                    for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd, currRegion.size()); i++) {
+                        auto &foundItem = currRegion[i];
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();

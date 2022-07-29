@@ -55,10 +55,11 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_searchRunning;
         bool m_settingsValid = false;
 
+        std::string m_currFilter;
     private:
-        static std::vector<Region> searchStrings(prv::Provider *provider, Region searchRegion, SearchSettings::Strings settings);
-        static std::vector<Region> searchSequence(prv::Provider *provider, Region searchRegion, SearchSettings::Bytes settings);
-        static std::vector<Region> searchRegex(prv::Provider *provider, Region searchRegion, SearchSettings::Regex settings);
+        static std::vector<Region> searchStrings(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::Strings settings);
+        static std::vector<Region> searchSequence(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::Bytes settings);
+        static std::vector<Region> searchRegex(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::Regex settings);
 
         void runSearch();
         std::string decodeValue(prv::Provider *provider, Region region);

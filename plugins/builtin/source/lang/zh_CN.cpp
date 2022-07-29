@@ -408,6 +408,7 @@ namespace hex::plugin::builtin {
                 //    { "hex.builtin.view.find.search", "Search" },
                 //    { "hex.builtin.view.find.context.copy", "Copy Value" },
                 //    { "hex.builtin.view.find.context.copy_demangle", "Copy Demangled Value" },
+                //    { "hex.builtin.view.find.search.entries", "{} entries found" },
 
                 { "hex.builtin.command.calc.desc", "计算器" },
                 { "hex.builtin.command.cmd.desc", "指令" },

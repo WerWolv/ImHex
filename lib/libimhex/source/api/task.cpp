@@ -2,6 +2,8 @@
 
 #include <hex/api/localization.hpp>
 
+#include <algorithm>
+
 namespace hex {
 
     std::list<Task *> Task::s_runningTasks;
@@ -15,6 +17,19 @@ namespace hex {
 
     Task::~Task() {
         this->finish();
+    }
+
+    Task::Task(hex::Task &&other) noexcept {
+        std::scoped_lock lock(Task::s_taskMutex);
+
+        this->m_name = other.m_name;
+        this->m_maxValue = other.m_maxValue;
+        this->m_currValue = other.m_currValue;
+
+        auto it = std::find(Task::s_runningTasks.begin(), Task::s_runningTasks.end(), &other);
+        if (it != Task::s_runningTasks.end()) {
+            *it = this;
+        }
     }
 
     void Task::finish() {
