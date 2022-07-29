@@ -53,7 +53,7 @@ namespace hex::prv {
 
             this->updateBuffer(address - std::min<u64>(address, this->m_buffer.size()), size);
 
-            auto result = &this->m_buffer[address - this->m_startAddress];
+            auto result = &this->m_buffer[address - this->m_bufferAddress];
 
             return { result, result + std::min(size, this->m_buffer.size()) };
         }
