@@ -24,6 +24,8 @@ namespace hex::plugin::builtin {
     void addToolbarItems();
     void addGlobalUIItems();
 
+    void handleBorderlessWindowMode();
+
     void registerLanguageEnUS();
     void registerLanguageDeDE();
     void registerLanguageItIT();
@@ -67,6 +69,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     registerLayouts();
     registerMainMenuEntries();
+
+    handleBorderlessWindowMode();
 }
 
 // This is the default plugin
