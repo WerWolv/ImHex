@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::BeginPopup("FindContextMenu")) {
-            if (ImGui::MenuItem("hex.builtin.view.find.context.copy"_lang)) {
+            if (ImGui::MenuItem("hex.builtin.view.find.context.copy"_lang))
                 ImGui::SetClipboardText(value.c_str());
             if (ImGui::MenuItem("hex.builtin.view.find.context.copy_demangle"_lang))
                 ImGui::SetClipboardText(llvm::demangle(value).c_str());
