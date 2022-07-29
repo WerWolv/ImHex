@@ -226,6 +226,9 @@ namespace hex {
         }
 
         void setCurrentProvider(u32 index) {
+            if (Task::getRunningTaskCount() > 0)
+                return;
+
             if (index < s_providers.size()) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
@@ -238,6 +241,9 @@ namespace hex {
         }
 
         void add(prv::Provider *provider) {
+            if (Task::getRunningTaskCount() > 0)
+                return;
+
             s_providers.push_back(provider);
             setCurrentProvider(s_providers.size() - 1);
 
@@ -245,6 +251,9 @@ namespace hex {
         }
 
         void remove(prv::Provider *provider) {
+            if (Task::getRunningTaskCount() > 0)
+                return;
+            
             auto it = std::find(s_providers.begin(), s_providers.end(), provider);
 
             s_providers.erase(it);

@@ -15,17 +15,20 @@ namespace hex::plugin::builtin {
     static bool g_demoWindowOpen = false;
 
     static void createFileMenu() {
+
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.file", 1000);
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
-            if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O")) {
+            bool taskRunning = Task::getRunningTaskCount() > 0;
+
+            if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O", false, !taskRunning)) {
 
                 fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                     EventManager::post<RequestOpenFile>(path);
                 });
             }
 
-            if (ImGui::BeginMenu("hex.builtin.menu.file.open_other"_lang)) {
+            if (ImGui::BeginMenu("hex.builtin.menu.file.open_other"_lang, !taskRunning)) {
 
                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
                     if (ImGui::MenuItem(LangEntry(unlocalizedProviderName))) {
@@ -40,13 +43,14 @@ namespace hex::plugin::builtin {
         /* File open, quit imhex */
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1150, [&] {
             bool providerValid = ImHexApi::Provider::isValid();
+            bool taskRunning = Task::getRunningTaskCount() > 0;
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.close"_lang, "", false, providerValid)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.close"_lang, "", false, providerValid && !taskRunning)) {
                 EventManager::post<EventFileUnloaded>();
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.quit"_lang, "", false)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.quit"_lang)) {
                 ImHexApi::Common::closeImHex();
             }
         });
@@ -55,8 +59,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1250, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
+            bool taskRunning = Task::getRunningTaskCount() > 0;
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.open_project"_lang, "")) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.open_project"_lang, "", false, !taskRunning)) {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"}
                 },
                     [](const auto &path) {
@@ -84,9 +89,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1300, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
+            bool taskRunning = Task::getRunningTaskCount() > 0;
 
             /* Import */
-            if (ImGui::BeginMenu("hex.builtin.menu.file.import"_lang)) {
+            if (ImGui::BeginMenu("hex.builtin.menu.file.import"_lang, !taskRunning)) {
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.base64"_lang)) {
 
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
@@ -300,9 +306,7 @@ namespace hex::plugin::builtin {
 
     static void createHelpMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.help", 5000);
-
     }
-
 
     void registerMainMenuEntries() {
         createFileMenu();

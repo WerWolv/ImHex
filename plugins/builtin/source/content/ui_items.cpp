@@ -227,6 +227,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = provider != nullptr;
+            bool tasksRunning  = Task::getRunningTaskCount() > 0;
 
             // Undo
             ImGui::BeginDisabled(!providerValid || !provider->canUndo());
@@ -246,14 +247,17 @@ namespace hex::plugin::builtin {
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
-            // Create new file
-            if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray)))
-                EventManager::post<RequestOpenWindow>("Create File");
+            ImGui::BeginDisabled(tasksRunning);
+            {
+                // Create new file
+                if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray)))
+                    EventManager::post<RequestOpenWindow>("Create File");
 
-            // Open file
-            if (ImGui::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
-                EventManager::post<RequestOpenWindow>("Open File");
-
+                // Open file
+                if (ImGui::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
+                    EventManager::post<RequestOpenWindow>("Open File");
+            }
+            ImGui::EndDisabled();
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
 
@@ -295,7 +299,7 @@ namespace hex::plugin::builtin {
             ImGui::Spacing();
 
             // Provider switcher
-            ImGui::BeginDisabled(!providerValid);
+            ImGui::BeginDisabled(!providerValid || tasksRunning);
             {
                 auto &providers = ImHexApi::Provider::getProviders();
 
