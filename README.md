@@ -123,7 +123,7 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
 
 - Windows • __x86_64__
   - [Installer](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Installer.zip)
-  - [Portable](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Portable%20ZIP.zip)
+  - [Portable](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Portable.zip)
 - MacOS • __x86_64__
   - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
 - Linux • __x86_64__
