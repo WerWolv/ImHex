@@ -63,7 +63,7 @@ namespace hex {
         }
 
         void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart) {
-            log::info("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+            log::debug("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
@@ -76,7 +76,7 @@ namespace hex {
         }
 
         void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart) {
-            log::info("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+            log::debug("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
@@ -89,7 +89,7 @@ namespace hex {
         }
 
         void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart) {
-            log::info("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+            log::debug("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
             getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
 
@@ -212,7 +212,7 @@ namespace hex {
     namespace ContentRegistry::CommandPaletteCommands {
 
         void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback) {
-            log::info("Registered new command palette command: {}", command);
+            log::debug("Registered new command palette command: {}", command);
 
             getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
         }
@@ -262,13 +262,13 @@ namespace hex {
         }
 
         void addPragma(const std::string &name, const pl::api::PragmaHandler &handler) {
-            log::info("Registered new pattern language pragma: {}", name);
+            log::debug("Registered new pattern language pragma: {}", name);
 
             getPragmas()[name] = handler;
         }
 
         void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
-            log::info("Registered new pattern language function: {}", getFunctionName(ns, name));
+            log::debug("Registered new pattern language function: {}", getFunctionName(ns, name));
 
             getFunctions().push_back({
                 ns, name,
@@ -278,7 +278,7 @@ namespace hex {
         }
 
         void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
-            log::info("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
+            log::debug("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
 
             getFunctions().push_back({
                 ns, name,
@@ -305,7 +305,7 @@ namespace hex {
     namespace ContentRegistry::Views {
 
         void impl::add(View *view) {
-            log::info("Registered new view: {}", view->getUnlocalizedName());
+            log::debug("Registered new view: {}", view->getUnlocalizedName());
 
             getEntries().insert({ view->getUnlocalizedName(), view });
         }
@@ -330,7 +330,7 @@ namespace hex {
     namespace ContentRegistry::Tools {
 
         void add(const std::string &unlocalizedName, const impl::Callback &function) {
-            log::info("Registered new tool: {}", unlocalizedName);
+            log::debug("Registered new tool: {}", unlocalizedName);
 
             getEntries().emplace_back(impl::Entry { unlocalizedName, function });
         }
@@ -346,7 +346,7 @@ namespace hex {
     namespace ContentRegistry::DataInspector {
 
         void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
-            log::info("Registered new data inspector format: {}", unlocalizedName);
+            log::debug("Registered new data inspector format: {}", unlocalizedName);
 
             getEntries().push_back({ unlocalizedName, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
@@ -362,7 +362,7 @@ namespace hex {
     namespace ContentRegistry::DataProcessorNode {
 
         void impl::add(const impl::Entry &entry) {
-            log::info("Registered new data processor node type: [{}]: {}", entry.category, entry.name);
+            log::debug("Registered new data processor node type: [{}]: {}", entry.category, entry.name);
 
             getEntries().push_back(entry);
         }
@@ -382,13 +382,13 @@ namespace hex {
     namespace ContentRegistry::Language {
 
         void registerLanguage(const std::string &name, const std::string &languageCode) {
-            log::info("Registered new language: {} ({})", name, languageCode);
+            log::debug("Registered new language: {} ({})", name, languageCode);
 
             getLanguages().insert({ languageCode, name });
         }
 
         void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition) {
-            log::info("Registered new localization for language {} with {} entries", languageCode, definition.getEntries().size());
+            log::debug("Registered new localization for language {} with {} entries", languageCode, definition.getEntries().size());
 
             getLanguageDefinitions()[languageCode].push_back(definition);
         }
@@ -410,13 +410,13 @@ namespace hex {
     namespace ContentRegistry::Interface {
 
         void registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
-            log::info("Registered new main menu item: {}", unlocalizedName);
+            log::debug("Registered new main menu item: {}", unlocalizedName);
 
             getMainMenuItems().insert({ priority, { unlocalizedName } });
         }
 
         void addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
-            log::info("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
+            log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
 
             getMenuItems().insert({
                 priority, {unlocalizedMainMenuName, function}
@@ -444,7 +444,7 @@ namespace hex {
         }
 
         void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
-            log::info("Added new layout: {}", unlocalizedName);
+            log::debug("Added new layout: {}", unlocalizedName);
 
             getLayouts().push_back({ unlocalizedName, function });
         }
@@ -498,7 +498,7 @@ namespace hex {
     namespace ContentRegistry::Provider {
 
         void impl::addProviderName(const std::string &unlocalizedName) {
-            log::info("Registered new provider: {}", unlocalizedName);
+            log::debug("Registered new provider: {}", unlocalizedName);
 
             getEntries().push_back(unlocalizedName);
         }
@@ -514,7 +514,7 @@ namespace hex {
     namespace ContentRegistry::DataFormatter {
 
         void add(const std::string &unlocalizedName, const impl::Callback &callback) {
-            log::info("Registered new data formatter: {}", unlocalizedName);
+            log::debug("Registered new data formatter: {}", unlocalizedName);
 
             getEntries().push_back({ unlocalizedName, callback });
         }
@@ -531,7 +531,7 @@ namespace hex {
 
         void add(const std::vector<std::string> &extensions, const impl::Callback &callback) {
             for (const auto &extension : extensions)
-                log::info("Registered new data handler for extensions: {}", extension);
+                log::debug("Registered new data handler for extensions: {}", extension);
 
             getEntries().push_back({ extensions, callback });
         }

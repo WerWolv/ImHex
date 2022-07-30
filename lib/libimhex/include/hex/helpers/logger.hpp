@@ -41,7 +41,7 @@ namespace hex::log {
 
     [[maybe_unused]] void debug(const std::string &fmt, auto &&...args) {
 #if defined(DEBUG)
-        hex::log::print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+        hex::log::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
 #else
         hex::unused(fmt, args...);
 #endif

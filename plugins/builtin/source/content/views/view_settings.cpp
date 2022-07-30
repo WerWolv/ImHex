@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
 
                         for (auto &[name, requiresRestart, callback] : settings) {
                             if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category.name][name])) {
-                                log::info("Setting [{}]: {} was changed", category.name, name);
+                                log::debug("Setting [{}]: {} was changed", category.name, name);
                                 EventManager::post<EventSettingsChanged>();
 
                                 if (requiresRestart)
