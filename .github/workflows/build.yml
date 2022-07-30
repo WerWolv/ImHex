@@ -394,6 +394,7 @@ jobs:
           ccache \
           fmt-devel \
           git \
+          json-devel \
           libcurl-devel \
           llvm-devel \
           mbedtls-devel \
@@ -438,8 +439,7 @@ jobs:
           -D USE_SYSTEM_FMT=ON \
           -D USE_SYSTEM_CURL=ON \
           -D USE_SYSTEM_LLVM=ON \
-          -D USE_SYSTEM_YARA=ON \
-          ..
+          -D USE_SYSTEM_YARA=ON
           cmake --build build -j 4
           cmake --install build
 
@@ -465,6 +465,7 @@ jobs:
           ccache \
           fmt-devel \
           git \
+          json-devel \
           libcurl-devel \
           llvm-devel \
           mbedtls-devel \
@@ -509,8 +510,7 @@ jobs:
           -D USE_SYSTEM_FMT=ON \
           -D USE_SYSTEM_CURL=ON \
           -D USE_SYSTEM_LLVM=ON \
-          -D USE_SYSTEM_YARA=OFF \
-          ..
+          -D USE_SYSTEM_YARA=OFF
           cmake --build build -j 4
           cmake --install build
 
