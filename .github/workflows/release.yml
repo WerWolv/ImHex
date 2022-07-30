@@ -59,14 +59,13 @@ jobs:
 
       - name: 🟩 Rename Windows Portable Zip
         run: mv "Windows Portable.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable.zip
-        
-      - name: 🟩 Move Fedora RPMs to main cwd
-        run: mv */*.rpm .
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
         with:
-          files: '*'
+          files:  |
+            '*'
+            '*/*.rpm'
 
       - name: ✒️ Prepare PKGBUILD
         run: |
