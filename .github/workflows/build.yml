@@ -390,17 +390,19 @@ jobs:
 
       - name: ⬇️ Install setup dependencies
         run: |
-          dnf install -y \
-          ccache         \
-          fmt-devel      \
-          git            \
-          json-devel     \
-          libcurl-devel  \
-          llvm-devel     \
-          mbedtls-devel  \
-          mock           \
-          python3-devel  \
-          rpm-build      \
+          dnf install -y     \
+          capstone-devel     \
+          ccache             \
+          desktop-file-utils \
+          fmt-devel          \
+          git                \
+          json-devel         \
+          libcurl-devel      \
+          llvm-devel         \
+          mbedtls-devel      \
+          mock               \
+          python3-devel      \
+          rpm-build          \
           yara-devel
           
       - name: 🧰 Checkout
