@@ -6,7 +6,7 @@ then
     PKGCONF="pkgconf"
 fi
 
-apt install -y \
+sudo apt install -y \
   build-essential       \
   gcc-12                \
   g++-12                \
