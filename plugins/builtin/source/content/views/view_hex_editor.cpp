@@ -533,6 +533,11 @@ namespace hex::plugin::builtin {
             ImGui::SetKeyboardFocusHere();
             ImGui::CaptureKeyboardFromApp(true);
 
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                this->m_editingAddress = std::nullopt;
+                this->m_shouldModifyValue = false;
+            }
+
             if (this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode) || this->m_shouldModifyValue) {
 
                 provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
