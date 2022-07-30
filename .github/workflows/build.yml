@@ -391,6 +391,7 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           dnf install -y \
+          ccache \
           cmake \
           dbus-devel \
           file-devel \
