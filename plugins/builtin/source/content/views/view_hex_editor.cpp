@@ -704,7 +704,7 @@ namespace hex::plugin::builtin {
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
 
                                 // Query cell colors
-                                if (x < validBytes) {
+                                if (x < validBytes / bytesPerCell) {
                                     const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
                                     const auto backgroundColor = [&]{
                                         auto color = queryBackgroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
@@ -740,7 +740,7 @@ namespace hex::plugin::builtin {
                             if (isColumnSeparatorColumn(x, columnCount))
                                 ImGui::TableNextColumn();
 
-                            if (x < validBytes) {
+                            if (x < validBytes / bytesPerCell) {
                                 auto cellStartPos = getCellPosition();
                                 auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
 
@@ -860,7 +860,7 @@ namespace hex::plugin::builtin {
 
 
                                     const auto x = address % this->m_bytesPerRow;
-                                    if (x < validBytes) {
+                                    if (x < validBytes / bytesPerCell) {
                                         auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
                                         // Draw highlights and selection
