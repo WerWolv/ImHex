@@ -487,32 +487,18 @@ jobs:
           key: fedora-stable-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: fedora-stable-${{ secrets.CACHE_VERSION }}-build
         
-      - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
-        with:
-          path: |
-            build/CMakeCache.txt
-          key: fedora-stable-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-      
-      - name: 🛠️ Build
-        run: |
-          CC=gcc CXX=g++ cmake -S . -B build        \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="/usr" 	          \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-          -DRUST_PATH="$HOME/.cargo/bin/"           \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-          -D USE_SYSTEM_NLOHMANN_JSON=ON \
-          -D USE_SYSTEM_FMT=ON \
-          -D USE_SYSTEM_CURL=ON \
-          -D USE_SYSTEM_LLVM=ON \
-          -D USE_SYSTEM_YARA=OFF
-          cmake --build build -j 4
-          cmake --install build
-
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+      
+      - name: 📦 Build RPM
+        run: |
+          ls -l $GITHUB_WORKSPACE
+          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          
+      - name: ⬆️ Upload RPM
+        uses: actions/upload-artifact@v3
+        with:
+          name: Fedora Stable RPM
+          path: |
+            ~/rpmbuild/RPMS/*/*.rpm
