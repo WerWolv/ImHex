@@ -415,15 +415,15 @@ jobs:
         with:
           path: |
             ~/.cache/ccache
-          key: fedora-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: fedora-${{ secrets.CACHE_VERSION }}-build
+          key: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build
         
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
-          key: fedora-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          key: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
       - name: 🛠️ Build
         run: |
@@ -486,15 +486,15 @@ jobs:
         with:
           path: |
             ~/.cache/ccache
-          key: fedora-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: fedora-${{ secrets.CACHE_VERSION }}-build
+          key: fedora-stable-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: fedora-stable-${{ secrets.CACHE_VERSION }}-build
         
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
-          key: fedora-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          key: fedora-stable-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
       - name: 🛠️ Build
         run: |
