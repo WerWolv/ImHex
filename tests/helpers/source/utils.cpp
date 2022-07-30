@@ -62,3 +62,19 @@ TEST_SEQUENCE("DecodeLEB128") {
 
     TEST_SUCCESS();
 };
+
+TEST_SEQUENCE("EncodeLEB128") {
+    TEST_ASSERT(hex::encodeUleb128(0) == (std::vector<u8>{ 0 }));
+    TEST_ASSERT(hex::encodeUleb128(0x7F) == (std::vector<u8>{ 0x7F }));
+    TEST_ASSERT(hex::encodeUleb128(0xFF) == (std::vector<u8>{ 0xFF, 0x01 }));
+    TEST_ASSERT(hex::encodeUleb128(0xF0F0) == (std::vector<u8>{ 0xF0, 0xE1, 0x03 }));
+
+    TEST_ASSERT(hex::encodeSleb128(0) == (std::vector<u8>{ 0 }));
+    TEST_ASSERT(hex::encodeSleb128(0x7F) == (std::vector<u8>{ 0xFF, 0x00 }));
+    TEST_ASSERT(hex::encodeSleb128(0xFF) == (std::vector<u8>{ 0xFF, 0x01 }));
+    TEST_ASSERT(hex::encodeSleb128(0xF0F0) == (std::vector<u8>{ 0xF0, 0xE1, 0x03 }));
+    TEST_ASSERT(hex::encodeSleb128(-1) == (std::vector<u8>{ 0x7F }));
+    TEST_ASSERT(hex::encodeSleb128(-128) == (std::vector<u8>{ 0x80, 0x7F }));
+
+    TEST_SUCCESS();
+};

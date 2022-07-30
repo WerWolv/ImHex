@@ -264,29 +264,39 @@ namespace hex::plugin::builtin {
             stringToFloat<long double>
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.sleb128", 1, sizeof(i128),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.sleb128", 1, (sizeof(i128) * 8 / 7) + 1,
             [](auto buffer, auto endian, auto style) {
                 hex::unused(endian);
 
-                auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:016X}" : "{0}0o{1:022o}");
+                auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:X}" : "{0}0o{1:o}");
 
                 auto number   = hex::decodeSleb128(buffer);
                 bool negative = number < 0;
                 auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            },
+            [](const std::string &value, std::endian endian) -> std::vector<u8> {
+                hex::unused(endian);
+
+                return hex::encodeSleb128(std::strtoll(value.c_str(), nullptr, 0));
             }
         );
 
-        ContentRegistry::DataInspector::add("hex.builtin.inspector.uleb128", 1, sizeof(u128),
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.uleb128", 1, (sizeof(u128) * 8 / 7) + 1,
             [](auto buffer, auto endian, auto style) {
                 hex::unused(endian);
 
-                auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:016X}" : "0o{0:022o}");
+                auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:X}" : "0o{0:o}");
 
                 auto value = hex::format(format, hex::decodeUleb128(buffer));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            },
+            [](const std::string &value, std::endian endian) -> std::vector<u8> {
+                hex::unused(endian);
+
+                return hex::encodeUleb128(std::strtoull(value.c_str(), nullptr, 0));
             }
         );
 
