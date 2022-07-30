@@ -435,7 +435,7 @@ jobs:
           key: fedora-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
       - name: 🛠️ Build
-        run: 
+        run: |
           CC=gcc CXX=g++ cmake -S . -B build \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
           -DCMAKE_INSTALL_PREFIX="/usr" 	          \
