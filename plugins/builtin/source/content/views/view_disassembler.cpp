@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this] {
+        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
             this->m_disassembly.clear();
         });
     }
@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
     ViewDisassembler::~ViewDisassembler() {
         EventManager::unsubscribe<EventDataChanged>(this);
         EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<EventProviderDeleted>(this);
     }
 
     void ViewDisassembler::disassemble() {

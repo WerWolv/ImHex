@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
                 this->m_entropyHandlePosition = region.address / this->m_blockSize;
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this] {
+        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
             this->m_dataValid = false;
         });
 
@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
     ViewInformation::~ViewInformation() {
         EventManager::unsubscribe<EventDataChanged>(this);
         EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<EventProviderDeleted>(this);
     }
 
     static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {

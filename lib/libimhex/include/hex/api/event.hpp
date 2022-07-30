@@ -102,7 +102,6 @@ namespace hex {
 
     /* Default Events */
     EVENT_DEF(EventFileLoaded, std::fs::path);
-    EVENT_DEF(EventFileUnloaded);
     EVENT_DEF(EventDataChanged);
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
@@ -114,6 +113,7 @@ namespace hex {
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
+    EVENT_DEF(EventProviderDeleted, prv::Provider *);
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
     EVENT_DEF(EventWindowInitialized);

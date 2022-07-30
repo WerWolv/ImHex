@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
             ProjectFile::setBookmarks(this->m_bookmarks);
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this] {
+        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
             this->m_bookmarks.clear();
         });
 
@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<RequestAddBookmark>(this);
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<EventProjectFileStore>(this);
-        EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<EventProviderDeleted>(this);
 
         this->m_bookmarks.clear();
     }

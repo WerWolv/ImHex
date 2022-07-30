@@ -251,10 +251,17 @@ namespace hex {
         }
 
         void remove(prv::Provider *provider) {
+            if (provider == nullptr)
+                 return;
+
             if (Task::getRunningTaskCount() > 0)
                 return;
-            
+
             auto it = std::find(s_providers.begin(), s_providers.end(), provider);
+            if (it == s_providers.end())
+                return;
+
+            EventManager::post<EventProviderDeleted>(provider);
 
             s_providers.erase(it);
 

@@ -46,7 +46,6 @@ namespace hex::plugin::builtin {
             bool taskRunning = Task::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.close"_lang, "CTRL + W", false, providerValid && !taskRunning)) {
-                EventManager::post<EventFileUnloaded>();
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
             }
 
