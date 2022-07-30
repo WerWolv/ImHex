@@ -282,6 +282,10 @@ namespace hex::init {
             ContentRegistry::Settings::load();
         } catch (std::exception &e) {
             log::error("Failed to load configuration! {}", e.what());
+
+            ContentRegistry::Settings::clear();
+            ContentRegistry::Settings::store();
+
             return false;
         }
 

@@ -14,10 +14,12 @@ namespace hex {
 
     namespace ContentRegistry::Settings {
 
+        constexpr auto SettingsFile = "settings.json";
+
         void load() {
             bool loaded = false;
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                std::ifstream settingsFile(dir / "settings.json");
+                std::ifstream settingsFile(dir / SettingsFile);
 
                 if (settingsFile.good()) {
                     settingsFile >> getSettingsData();
@@ -32,12 +34,18 @@ namespace hex {
 
         void store() {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                std::ofstream settingsFile(dir / "settings.json", std::ios::trunc);
+                std::ofstream settingsFile(dir / SettingsFile, std::ios::trunc);
 
                 if (settingsFile.good()) {
                     settingsFile << getSettingsData();
                     break;
                 }
+            }
+        }
+
+        void clear() {
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                hex::fs::remove(dir / SettingsFile);
             }
         }
 

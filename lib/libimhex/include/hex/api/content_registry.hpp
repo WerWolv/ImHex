@@ -68,6 +68,7 @@ namespace hex {
 
             void load();
             void store();
+            void clear();
 
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart = false);
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart = false);
