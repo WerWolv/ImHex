@@ -377,7 +377,7 @@ jobs:
             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
             
   fedora-build:
-    name: 🐧 Fedora
+    name: 🐧 Fedora Rawhide (next/dev branch)
     runs-on: ubuntu-latest
     
     container:
@@ -440,46 +440,24 @@ jobs:
           cd build
           CC=gcc CXX=g++ cmake                      \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="/usr" 	        \
+          -DCMAKE_INSTALL_PREFIX="/usr" 	          \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
           -DRUST_PATH="$HOME/.cargo/bin/"           \
           -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+          # use the flags used to build the official fedora packages
+          # so issues can be caught ahead of time
+          -D IMHEX_OFFLINE_BUILD=ON \
+          -D USE_SYSTEM_NLOHMANN_JSON=ON \
+          -D USE_SYSTEM_FMT=ON \
+          -D USE_SYSTEM_CURL=ON \
+          -D USE_SYSTEM_LLVM=ON \
+          -D USE_SYSTEM_YARA=ON \
           ..
           make -j 4 install DESTDIR=installDir
 
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-      
-#       - name: ✒️ Prepare PKGBUILD
-#         run: |
-#           cp dist/Arch/PKGBUILD build
-#           sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' build/PKGBUILD
-
-#     # makepkg doesn't want to run as root, so I had to chmod 777 all over
-#       - name: 📦 Package ArchLinux .pkg.tar.zst
-#         run: |
-#           cd build
-          
-#           # the name is a small trick to make makepkg recognize it as the source
-#           # else, it would try to download the file from the release
-#           tar -cvf imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst -C installDir .
-          
-#           chmod -R 777 .
-          
-#           sudo -u nobody makepkg
-
-#           # Remplace the old file
-#           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
-#           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
-      
-#       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
-#         uses: actions/upload-artifact@v3
-#         with:
-#           name: ArchLinux .pkg.tar.zst
-#           path: |
-#             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
-            
