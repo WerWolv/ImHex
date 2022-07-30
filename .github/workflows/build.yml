@@ -404,14 +404,14 @@ jobs:
           rpm-build          \
           yara-devel
           
+      - name: ⬇️ Install ImHex dependencies
+        run: |
+          dist/get_deps_fedora.sh
+          
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
-
-      - name: ⬇️ Install ImHex dependencies
-        run: |
-          dist/get_deps_fedora.sh
 
       - name: 📜 Restore ccache
         uses: actions/cache@v3
@@ -469,14 +469,14 @@ jobs:
           python3-devel      \
           rpm-build
           
+      - name: ⬇️ Install ImHex dependencies
+        run: |
+          dist/get_deps_fedora.sh
+          
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
-
-      - name: ⬇️ Install ImHex dependencies
-        run: |
-          dist/get_deps_fedora.sh
 
       - name: 📜 Restore ccache
         uses: actions/cache@v3
