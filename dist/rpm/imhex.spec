@@ -3,7 +3,7 @@
 
 Name:           ImHex
 Version:        %{_version}
-Release:        1%{?dist}
+Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
 
 License:        GPL-2.0-only
