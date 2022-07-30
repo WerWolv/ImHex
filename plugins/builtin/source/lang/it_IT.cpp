@@ -704,6 +704,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x1_0", "x1.0" },
                         { "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
+                        { "hex.builtin.setting.interface.scaling.x2_0", "x3.0" },
+                        { "hex.builtin.setting.interface.scaling.x2_0", "x4.0" },
                     { "hex.builtin.setting.interface.fps", "Limite FPS" },
                     { "hex.builtin.setting.interface.fps.unlocked", "Unblocca" },
                 { "hex.builtin.setting.hex_editor", "Hex Editor" },

@@ -694,6 +694,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x1_0", "x1.0" },
                         { "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
+                        { "hex.builtin.setting.interface.scaling.x3_0", "x3.0" },
+                        { "hex.builtin.setting.interface.scaling.x4_0", "x4.0" },
                     { "hex.builtin.setting.interface.language", "Idioma" },
                     { "hex.builtin.setting.interface.wiki_explain_language", "Idioma do Wikipedia" },
                     { "hex.builtin.setting.interface.fps", "FPS Limit" },
