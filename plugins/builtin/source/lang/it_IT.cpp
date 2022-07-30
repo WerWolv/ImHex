@@ -383,6 +383,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.provider_settings.name", "Impostazioni Provider" },
                     { "hex.builtin.view.provider_settings.load_popup", "Apri Provider" },
+                    // { "hex.builtin.view.provider_settings.load_error", "An error occurred while trying to open this provider!"},
 
                 //{ "hex.builtin.view.find.name", "Find" },
                 //    { "hex.builtin.view.find.searching", "Searching..." },

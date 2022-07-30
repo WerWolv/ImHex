@@ -384,6 +384,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.provider_settings.name", "提供器设置" },
                     { "hex.builtin.view.provider_settings.load_popup", "打开提供器" },
+                    // { "hex.builtin.view.provider_settings.load_error", "An error occurred while trying to open this provider!"},
 
                 //{ "hex.builtin.view.find.name", "Find" },
                 //    { "hex.builtin.view.find.searching", "Searching..." },

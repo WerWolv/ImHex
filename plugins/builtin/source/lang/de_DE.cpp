@@ -380,6 +380,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.provider_settings.name", "Provider Einstellungen" },
                     { "hex.builtin.view.provider_settings.load_popup", "Provider öffnen" },
+                    { "hex.builtin.view.provider_settings.load_error", "Ein Fehler beim öffnen dieses Providers is aufgetreten!"},
 
                 { "hex.builtin.view.find.name", "Finden" },
                     { "hex.builtin.view.find.searching", "Suchen..." },

@@ -384,6 +384,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.provider_settings.name", "プロバイダ設定" },
                     { "hex.builtin.view.provider_settings.load_popup", "プロバイダを開く" },
+                    // { "hex.builtin.view.provider_settings.load_error", "An error occurred while trying to open this provider!"},
 
                 //{ "hex.builtin.view.find.name", "Find" },
                 //    { "hex.builtin.view.find.searching", "Searching..." },
