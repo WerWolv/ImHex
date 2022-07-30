@@ -7,7 +7,7 @@ dnf install         \
   freetype-devel    \
   gcc-c++           \
   git               \
-  ghc-OpenGL-devel  \
+  mesa-libGL-devel  \
   glfw-devel        \
   lld               \
   mbedtls-devel     \
