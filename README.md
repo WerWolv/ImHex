@@ -41,6 +41,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Automatic loading based on MIME type
   - arrays, pointers, structs, unions, enums, bitfields, namespaces, little and big endian support, conditionals and much more!
   - Useful error messages, syntax highlighting and error marking
+- Doesn't burn out your retinas when used in late-night sessions
+  - Dark mode by default, but a light mode is available as well
 - Data importing
   - Base64 files
   - IPS and IPS32 patches
@@ -99,8 +101,6 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - File splitter
     - File combiner
     - File shredder
-- Built-in cheat sheet for pattern language and Math evaluator
-- Doesn't burn out your retinas when used in late-night sessions
 
 ## Pattern Language
 

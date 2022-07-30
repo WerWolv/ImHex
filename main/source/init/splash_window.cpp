@@ -185,7 +185,7 @@ namespace hex::init {
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);
 
-            log::info("Native scaling set to: {}", meanScale);
+            log::info("Native scaling set to: {:.1}", meanScale);
         }
 
         glfwSetWindowSize(this->m_window, 640_scaled, 400_scaled);
