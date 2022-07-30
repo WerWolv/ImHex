@@ -9,7 +9,6 @@ Summary:        A hex editor for reverse engineers and programmers
 License:        GPL-2.0-or-later
 URL:            https://imhex.werwolv.net/
 
-BuildRequires:  capstone-devel
 BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
 BuildRequires:  dbus-devel
