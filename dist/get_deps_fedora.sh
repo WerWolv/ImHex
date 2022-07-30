@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-dnf install         \
+dnf install -y      \
   cmake             \
   dbus-devel        \
   file-devel        \
