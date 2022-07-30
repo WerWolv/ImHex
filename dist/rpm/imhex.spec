@@ -52,6 +52,8 @@ cp -r %{_src_path}/* %{_builddir}/
  -D USE_SYSTEM_FMT=ON \
  -D USE_SYSTEM_CURL=ON \
  -D USE_SYSTEM_LLVM=ON \
+ -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
 %if 0%{?fedora} >= 37
  -D USE_SYSTEM_YARA=ON \
 # if fedora <= 36 get updated to yara 4.2.x then they should \
