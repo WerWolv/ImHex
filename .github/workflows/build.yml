@@ -460,15 +460,17 @@ jobs:
 
       - name: ⬇️ Install setup dependencies
         run: |
-          dnf install -y \
-          ccache \
-          fmt-devel \
-          git \
-          json-devel \
-          libcurl-devel \
-          llvm-devel \
-          mbedtls-devel \
-          python3-devel
+          dnf install -y     \
+          ccache             \
+          desktop-file-utils \
+          fmt-devel          \
+          git                \
+          json-devel         \
+          libcurl-devel      \
+          llvm-devel         \
+          mbedtls-devel      \
+          python3-devel      \
+          rpm-build
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
