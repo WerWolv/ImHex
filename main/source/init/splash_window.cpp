@@ -179,17 +179,8 @@ namespace hex::init {
             glfwGetWindowContentScale(this->m_window, &xScale, &yScale);
 
             auto meanScale = std::midpoint(xScale, yScale);
-
-            // On Macs with a retina display (basically all modern ones we care about), the OS reports twice
-            // the actual monitor scale for some obscure reason. Get rid of this here so ImHex doesn't look
-            // extremely huge with native scaling on macOS.
-            #if defined(OS_MACOS)
-                meanScale /= 2;
-            #endif
-
-            if (meanScale <= 0.0) {
+            if (meanScale <= 0.0)
                 meanScale = 1.0;
-            }
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);
