@@ -392,32 +392,21 @@ jobs:
         run: |
           dnf install -y \
           ccache \
-          cmake \
-          dbus-devel \
-          file-devel \
-          freetype-devel \
           fmt-devel \
-          gcc \
-          gcc-c++ \
           git \
-          ghc-OpenGL-devel \
-          glfw-devel \
-          json-devel \
-          lld \
           libcurl-devel \
           llvm-devel \
           mbedtls-devel \
-          python3-devel \
-          yara-devel
+          python3-devel
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
 
-#       - name: ⬇️ Install ImHex dependencies
-#         run: |
-#           dist/get_deps_archlinux.sh --noconfirm
+      - name: ⬇️ Install ImHex dependencies
+        run: |
+          dist/get_deps_archlinux.sh --noconfirm
 
       - name: 📜 Restore ccache
         uses: actions/cache@v3
@@ -474,32 +463,21 @@ jobs:
         run: |
           dnf install -y \
           ccache \
-          cmake \
-          dbus-devel \
-          file-devel \
-          freetype-devel \
           fmt-devel \
-          gcc \
-          gcc-c++ \
           git \
-          ghc-OpenGL-devel \
-          glfw-devel \
-          json-devel \
-          lld \
           libcurl-devel \
           llvm-devel \
           mbedtls-devel \
-          python3-devel \
-          yara-devel
+          python3-devel
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
 
-#       - name: ⬇️ Install ImHex dependencies
-#         run: |
-#           dist/get_deps_archlinux.sh --noconfirm
+      - name: ⬇️ Install ImHex dependencies
+        run: |
+          dist/get_deps_archlinux.sh --noconfirm
 
       - name: 📜 Restore ccache
         uses: actions/cache@v3
