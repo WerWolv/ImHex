@@ -435,7 +435,6 @@ jobs:
       
       - name: 📦 Build RPM
         run: |
-          ls -l $GITHUB_WORKSPACE
           rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
           
       - name: ⬆️ Upload RPM
@@ -495,7 +494,6 @@ jobs:
       
       - name: 📦 Build RPM
         run: |
-          ls -l $GITHUB_WORKSPACE
           rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
           
       - name: ⬆️ Upload RPM
