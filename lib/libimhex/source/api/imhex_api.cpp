@@ -229,7 +229,7 @@ namespace hex {
             if (Task::getRunningTaskCount() > 0)
                 return;
 
-            if (index < s_providers.size()) {
+            if (index < s_providers.size() && s_currentProvider != index) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
                 EventManager::post<EventProviderChanged>(oldProvider, get());

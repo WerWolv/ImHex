@@ -1250,6 +1250,12 @@ namespace hex::plugin::builtin {
             });
         });
 
+        // Close file
+        ShortcutManager::addGlobalShortcut(CTRL + Keys::W, [] {
+            EventManager::post<EventFileUnloaded>();
+            ImHexApi::Provider::remove(ImHexApi::Provider::get());
+        });
+
         // Undo / Redo
         ShortcutManager::addShortcut(this, CTRL + Keys::Z, [] {
             if (ImHexApi::Provider::isValid())
