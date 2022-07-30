@@ -391,7 +391,6 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           dnf install -y \
-          git \
           cmake \
           dbus-devel \
           file-devel \
@@ -399,9 +398,11 @@ jobs:
           fmt-devel \
           gcc \
           gcc-c++ \
+          git \
           ghc-OpenGL-devel \
           glfw-devel \
           json-devel \
+          lld \
           libcurl-devel \
           llvm-devel \
           mbedtls-devel \
