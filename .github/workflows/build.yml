@@ -391,14 +391,16 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           dnf install -y \
-          ccache \
-          fmt-devel \
-          git \
-          json-devel \
-          libcurl-devel \
-          llvm-devel \
-          mbedtls-devel \
-          python3-devel \
+          ccache         \
+          fmt-devel      \
+          git            \
+          json-devel     \
+          libcurl-devel  \
+          llvm-devel     \
+          mbedtls-devel  \
+          mock           \
+          python3-devel  \
+          rpm-build      \
           yara-devel
           
       - name: 🧰 Checkout
@@ -425,28 +427,22 @@ jobs:
             build/CMakeCache.txt
           key: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
-      - name: 🛠️ Build
-        run: |
-          CC=gcc CXX=g++ cmake -S . -B build \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="/usr" 	          \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-          -DRUST_PATH="$HOME/.cargo/bin/"           \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-          -D USE_SYSTEM_NLOHMANN_JSON=ON \
-          -D USE_SYSTEM_FMT=ON \
-          -D USE_SYSTEM_CURL=ON \
-          -D USE_SYSTEM_LLVM=ON \
-          -D USE_SYSTEM_YARA=ON
-          cmake --build build -j 4
-          cmake --install build
-
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+      
+      - name: 📦 Build RPM
+        run: |
+          ls -l $GITHUB_WORKSPACE
+          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/imhex.spec
+          
+      - name: ⬆️ Upload RPM
+        uses: actions/upload-artifact@v3
+        with:
+          name: Fedora Rawhide RPM
+          path: |
+            ~/rpmbuild/RPMS/*/*.rpm
+          
 
   fedora-build-stable:
     name: 🐧 Fedora Stable
