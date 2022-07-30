@@ -39,7 +39,9 @@ namespace hex::plugin::builtin {
                 if (this->m_validBytes < entry.requiredSize)
                     continue;
 
-                std::vector<u8> buffer(entry.requiredSize);
+                std::vector<u8> buffer(entry.maxSize == 0
+                    ? entry.requiredSize
+                    : (this->m_validBytes > entry.maxSize ? entry.maxSize : this->m_validBytes));
                 provider->read(this->m_startAddress, buffer.data(), buffer.size());
 
                 if (this->m_invert) {

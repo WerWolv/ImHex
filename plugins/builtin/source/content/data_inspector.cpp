@@ -264,6 +264,32 @@ namespace hex::plugin::builtin {
             stringToFloat<long double>
         );
 
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.sleb128", 1, sizeof(i128),
+            [](auto buffer, auto endian, auto style) {
+                hex::unused(endian);
+
+                auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:016X}" : "{0}0o{1:022o}");
+
+                auto number   = hex::decodeSleb128(buffer);
+                bool negative = number < 0;
+                auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
+
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
+        );
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.uleb128", 1, sizeof(u128),
+            [](auto buffer, auto endian, auto style) {
+                hex::unused(endian);
+
+                auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:016X}" : "0o{0:022o}");
+
+                auto value = hex::format(format, hex::decodeUleb128(buffer));
+
+                return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
+            }
+        );
+
         ContentRegistry::DataInspector::add("hex.builtin.inspector.bool", sizeof(bool),
             [](auto buffer, auto endian, auto style) {
                 hex::unused(endian, style);

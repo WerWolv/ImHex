@@ -208,11 +208,13 @@ namespace hex {
                     size_t requiredSize;
                     impl::GeneratorFunction generatorFunction;
                     std::optional<impl::EditingFunction> editingFunction;
+                    size_t maxSize = 0;
                 };
 
             }
 
             void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
+            void add(const std::string &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
 
             std::vector<impl::Entry> &getEntries();
         }

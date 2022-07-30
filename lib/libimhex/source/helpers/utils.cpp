@@ -34,6 +34,32 @@ namespace hex {
         return vector * ImHexApi::System::getGlobalScale();
     }
 
+    static u128 decodeLeb128(const std::vector<u8> &bytes, bool sign) {
+        u128 value = 0;
+        u32 shift = 0;
+        u8 b = 0;
+        for (u8 byte : bytes) {
+            b = byte;
+            value |= static_cast<u128>(byte & 0x7F) << shift;
+            shift += 7;
+            if ((byte & 0x80) == 0) {
+                break;
+            }
+        }
+        if (sign && (b & 0x40) != 0) {
+            value |= (~static_cast<u128>(0)) << shift;
+        }
+        return value;
+    }
+
+    u128 decodeUleb128(const std::vector<u8> &bytes) {
+        return decodeLeb128(bytes, false);
+    }
+
+    i128 decodeSleb128(const std::vector<u8> &bytes) {
+        return static_cast<i128>(decodeLeb128(bytes, true));
+    }
+
     std::string to_string(u128 value) {
         char data[45] = { 0 };
 

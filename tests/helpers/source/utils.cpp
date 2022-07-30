@@ -30,3 +30,35 @@ TEST_SEQUENCE("ExtractBits") {
 
     TEST_SUCCESS();
 };
+
+TEST_SEQUENCE("DecodeLEB128") {
+    TEST_ASSERT(hex::decodeUleb128({}) == 0);
+    TEST_ASSERT(hex::decodeUleb128({ 1 }) == 0x01);
+    TEST_ASSERT(hex::decodeUleb128({ 0x7F }) == 0x7F);
+    TEST_ASSERT(hex::decodeUleb128({ 0xFF }) == 0x7F);
+    TEST_ASSERT(hex::decodeUleb128({ 0xFF, 0x7F }) == 0x3FFF);
+    TEST_ASSERT(hex::decodeUleb128({
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0x7F,
+    }) == ((static_cast<u128>(0xFFFF'FFFF'FFFF) << 64) | 0xFFFF'FFFF'FFFF'FFFF));
+    TEST_ASSERT(hex::decodeUleb128({ 0xAA, 0xBB, 0xCC, 0x00, 0xFF }) == 0x131DAA);
+
+    TEST_ASSERT(hex::decodeSleb128({}) == 0);
+    TEST_ASSERT(hex::decodeSleb128({ 1 }) == 0x01);
+    TEST_ASSERT(hex::decodeSleb128({ 0x3F }) == 0x3F);
+    TEST_ASSERT(hex::decodeSleb128({ 0x7F }) == -1);
+    TEST_ASSERT(hex::decodeSleb128({ 0xFF }) == -1);
+    TEST_ASSERT(hex::decodeSleb128({ 0xFF, 0x7F }) == -1);
+    TEST_ASSERT(hex::decodeSleb128({
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0x7F,
+    }) == -1);
+    TEST_ASSERT(hex::decodeSleb128({ 0xAA, 0xBB, 0xCC, 0x00, 0xFF }) == 0x131DAA);
+    TEST_ASSERT(hex::decodeSleb128({ 0xAA, 0xBB, 0x4C }) == -0xCE256);
+
+    TEST_SUCCESS();
+};

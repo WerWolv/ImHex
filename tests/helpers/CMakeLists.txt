@@ -23,6 +23,7 @@ set(AVAILABLE_TESTS
         SplitStringAtChar
         SplitStringAtString
         ExtractBits
+        DecodeLEB128
 )
 
 

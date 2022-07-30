@@ -351,6 +351,12 @@ namespace hex {
             getEntries().push_back({ unlocalizedName, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
 
+        void add(const std::string &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
+            log::info("Registered new data inspector format: {}", unlocalizedName);
+
+            getEntries().push_back({ unlocalizedName, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction), maxSize });
+        }
+
         std::vector<impl::Entry> &getEntries() {
             static std::vector<impl::Entry> entries;
 

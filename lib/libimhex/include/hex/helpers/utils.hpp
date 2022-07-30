@@ -43,6 +43,9 @@ namespace hex {
     std::string encodeByteString(const std::vector<u8> &bytes);
     std::vector<u8> decodeByteString(const std::string &string);
 
+    i128 decodeSleb128(const std::vector<u8> &bytes);
+    u128 decodeUleb128(const std::vector<u8> &bytes);
+
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);
 
