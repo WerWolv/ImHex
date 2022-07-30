@@ -2,13 +2,13 @@
 
 dnf install         \
   cmake             \
-  gcc-c++           \
-  lld               \
+  dbus-devel        \
   file-devel        \
-  glfw-devel        \
-  mesa-libGL-devel  \
-  mbedtls-devel     \
-  python-devel      \
   freetype-devel    \
-  dbus              \
-  xdg-desktop-portal
+  gcc-c++           \
+  git               \
+  ghc-OpenGL-devel  \
+  glfw-devel        \
+  lld               \
+  mbedtls-devel     \
+  python3-devel
