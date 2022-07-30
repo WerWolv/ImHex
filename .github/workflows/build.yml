@@ -538,7 +538,8 @@ jobs:
           -D USE_SYSTEM_FMT=ON \
           -D USE_SYSTEM_CURL=ON \
           -D USE_SYSTEM_LLVM=ON \
-          -D USE_SYSTEM_YARA=ON \
+          # once stable is 37 this can be set to ON
+          -D USE_SYSTEM_YARA=OFF \
           ..
           make -j 4 install DESTDIR=installDir
 
