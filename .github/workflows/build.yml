@@ -433,7 +433,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            build/CMakeCache.txt
+            ~/rpmbuild/BUILDROOT/CMakeCache.txt
           key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
       - name: 📜 Set version variable
