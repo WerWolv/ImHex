@@ -406,7 +406,7 @@ jobs:
 
       - name: ⬇️ Install ImHex dependencies
         run: |
-          dist/get_deps_archlinux.sh --noconfirm
+          dist/get_deps_fedora.sh --noconfirm
 
       - name: 📜 Restore ccache
         uses: actions/cache@v3
@@ -477,7 +477,7 @@ jobs:
 
       - name: ⬇️ Install ImHex dependencies
         run: |
-          dist/get_deps_archlinux.sh --noconfirm
+          dist/get_deps_fedora.sh --noconfirm
 
       - name: 📜 Restore ccache
         uses: actions/cache@v3
