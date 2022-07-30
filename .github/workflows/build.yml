@@ -398,7 +398,8 @@ jobs:
           libcurl-devel \
           llvm-devel \
           mbedtls-devel \
-          python3-devel
+          python3-devel \
+          yara-devel
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
