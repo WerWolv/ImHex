@@ -366,7 +366,7 @@ jobs:
           
           sudo -u nobody makepkg
 
-          # Remplace the old file
+          # Replace the old file
           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
       
@@ -377,12 +377,21 @@ jobs:
           path: |
             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
             
-  fedora-build-rawhide:
-    name: 🐧 Fedora Rawhide
+  fedora-build:
+    strategy:
+      matrix:
+        include:
+          - docker_image: fedora:latest
+            release: Latest
+          - docker_image: fedora:rawhide
+            release: Rawhide
+
+
+    name: 🐧 Fedora ${{ matrix.release }}
     runs-on: ubuntu-latest
     
     container:
-      image: fedora:rawhide
+      image: "${{ matrix.docker_image }}"
 
     steps:
       - name: ⬇️ Update all packages
@@ -392,7 +401,6 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           dnf install -y     \
-          capstone-devel     \
           ccache             \
           desktop-file-utils \
           fmt-devel          \
@@ -401,7 +409,6 @@ jobs:
           libcurl-devel      \
           llvm-devel         \
           mbedtls-devel      \
-          mock               \
           python3-devel      \
           rpm-build          \
           yara-devel
@@ -420,15 +427,15 @@ jobs:
         with:
           path: |
             ~/.cache/ccache
-          key: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build
+          key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build
         
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
-            build/CMakeCache.txt
-          key: fedora-rawhide-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+            ~/rpmbuild/BUILDROOT/CMakeCache.txt
+          key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
       - name: 📜 Set version variable
         run: |
@@ -436,70 +443,11 @@ jobs:
       
       - name: 📦 Build RPM
         run: |
-          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
           
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
-          name: Fedora Rawhide RPM
-          path: |
-            ~/rpmbuild/RPMS/*/*.rpm
-          
-
-  fedora-build-stable:
-    name: 🐧 Fedora Stable
-    runs-on: ubuntu-latest
-    
-    container:
-      image: fedora:latest
-
-    steps:
-      - name: ⬇️ Update all packages
-        run: |
-          dnf upgrade -y
-
-      - name: ⬇️ Install setup dependencies
-        run: |
-          dnf install -y     \
-          ccache             \
-          desktop-file-utils \
-          fmt-devel          \
-          git                \
-          json-devel         \
-          libcurl-devel      \
-          llvm-devel         \
-          mbedtls-devel      \
-          python3-devel      \
-          rpm-build
-          
-      - name: 🧰 Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          
-      - name: ⬇️ Install ImHex dependencies
-        run: |
-          dist/get_deps_fedora.sh
-
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/ccache
-          key: fedora-stable-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: fedora-stable-${{ secrets.CACHE_VERSION }}-build
-        
-      - name: 📜 Set version variable
-        run: |
-          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-      
-      - name: 📦 Build RPM
-        run: |
-          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
-          
-      - name: ⬆️ Upload RPM
-        uses: actions/upload-artifact@v3
-        with:
-          name: Fedora Stable RPM
+          name: Fedora ${{ matrix.release }} RPM
           path: |
             ~/rpmbuild/RPMS/*/*.rpm

@@ -26,7 +26,7 @@ package() {
     tar -xf imhex-$pkgver-ArchLinux.pkg.tar.zst
 
     install -DT $srcdir/usr/bin/imhex $pkgdir/usr/bin/imhex
-    install -DT $srcdir/usr/lib/libimhex.so $pkgdir/usr/lib/libimhex.so
+    install -DT $srcdir/usr/lib/libimhex.so.$pkgver $pkgdir/usr/lib/libimhex.so.$pkgver
 
     for plugin in $srcdir/usr/share/imhex/plugins/*.hexplug;
     do
