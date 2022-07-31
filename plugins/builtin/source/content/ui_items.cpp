@@ -297,26 +297,33 @@ namespace hex::plugin::builtin {
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::Spacing();
+            ImGui::Spacing();
+            ImGui::Spacing();
 
             // Provider switcher
             ImGui::BeginDisabled(!providerValid || tasksRunning);
             {
                 auto &providers = ImHexApi::Provider::getProviders();
 
-                std::string preview;
-                if (ImHexApi::Provider::isValid())
-                    preview = ImHexApi::Provider::get()->getName();
+                ImGui::PushStyleColor(ImGuiCol_TabActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                auto providerSelectorVisible = ImGui::BeginTabBar("provider_switcher", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_Reorderable);
+                ImGui::PopStyleColor(2);
 
-                ImGui::SetNextItemWidth(200_scaled);
-                if (ImGui::BeginCombo("", preview.c_str())) {
-
+                if (providerSelectorVisible) {
                     for (size_t i = 0; i < providers.size(); i++) {
-                        if (ImGui::Selectable(providers[i]->getName().c_str())) {
+                        bool open = true;
+                        if (ImGui::BeginTabItem(providers[i]->getName().c_str(), &open)) {
                             ImHexApi::Provider::setCurrentProvider(i);
+                            ImGui::EndTabItem();
+                        }
+
+                        if (!open) {
+                            ImHexApi::Provider::remove(providers[i]);
+                            break;
                         }
                     }
-
-                    ImGui::EndCombo();
+                    ImGui::EndTabBar();
                 }
             }
             ImGui::EndDisabled();

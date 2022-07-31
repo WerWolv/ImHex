@@ -11,10 +11,6 @@ using namespace std::literals::string_literals;
 namespace hex::plugin::builtin {
 
     ViewDisassembler::ViewDisassembler() : View("hex.builtin.view.disassembler.name") {
-        EventManager::subscribe<EventDataChanged>(this, [this]() {
-            this->disassemble();
-        });
-
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             if (this->m_shouldMatchSelection) {
                 if (region.address == size_t(-1)) {
@@ -26,7 +22,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [this] {
+        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
             this->m_disassembly.clear();
         });
     }
@@ -34,7 +30,7 @@ namespace hex::plugin::builtin {
     ViewDisassembler::~ViewDisassembler() {
         EventManager::unsubscribe<EventDataChanged>(this);
         EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<EventProviderDeleted>(this);
     }
 
     void ViewDisassembler::disassemble() {

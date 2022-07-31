@@ -150,8 +150,8 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [] {
-            ImHexApi::Provider::get()->getPatternLanguageRuntime().abort();
+        EventManager::subscribe<EventProviderDeleted>(this, [](auto *provider) {
+            provider->getPatternLanguageRuntime().abort();
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
@@ -283,7 +283,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<EventProviderDeleted>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
     }

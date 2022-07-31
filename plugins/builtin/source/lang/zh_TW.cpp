@@ -382,6 +382,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.provider_settings.name", "提供者設定" },
                     { "hex.builtin.view.provider_settings.load_popup", "開啟提供者" },
+                    // { "hex.builtin.view.provider_settings.load_error", "An error occurred while trying to open this provider!"},
 
                 //{ "hex.builtin.view.find.name", "Find" },
                 //    { "hex.builtin.view.find.searching", "Searching..." },
@@ -695,6 +696,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x1_0", "x1.0" },
                         { "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
+                        { "hex.builtin.setting.interface.scaling.x3_0", "x3.0" },
+                        { "hex.builtin.setting.interface.scaling.x4_0", "x4.0" },
                     { "hex.builtin.setting.interface.language", "語言" },
                     { "hex.builtin.setting.interface.wiki_explain_language", "維基百科語言" },
                     { "hex.builtin.setting.interface.fps", "FPS 限制" },

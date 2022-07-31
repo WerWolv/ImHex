@@ -229,7 +229,7 @@ namespace hex {
             if (Task::getRunningTaskCount() > 0)
                 return;
 
-            if (index < s_providers.size()) {
+            if (index < s_providers.size() && s_currentProvider != index) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
                 EventManager::post<EventProviderChanged>(oldProvider, get());
@@ -251,10 +251,17 @@ namespace hex {
         }
 
         void remove(prv::Provider *provider) {
+            if (provider == nullptr)
+                 return;
+
             if (Task::getRunningTaskCount() > 0)
                 return;
-            
+
             auto it = std::find(s_providers.begin(), s_providers.end(), provider);
+            if (it == s_providers.end())
+                return;
+
+            EventManager::post<EventProviderDeleted>(provider);
 
             s_providers.erase(it);
 

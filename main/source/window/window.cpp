@@ -87,7 +87,7 @@ namespace hex {
                 EventManager::post<EventWindowClosing>(this->m_window);
         });
 
-        EventManager::subscribe<EventFileUnloaded>(this, [] {
+        EventManager::subscribe<EventProviderDeleted>(this, [](const auto*) {
             EventManager::post<RequestChangeWindowTitle>("");
         });
 
@@ -163,7 +163,7 @@ namespace hex {
         this->exitImGui();
         this->exitGLFW();
 
-        EventManager::unsubscribe<EventFileUnloaded>(this);
+        EventManager::unsubscribe<EventProviderDeleted>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
         EventManager::unsubscribe<EventAbnormalTermination>(this);
@@ -227,16 +227,11 @@ namespace hex {
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
-                auto prevIdx = drawList->_VtxCurrentIdx;
                 callback();
-                auto currIdx = drawList->_VtxCurrentIdx;
 
-                // Only draw separator if something was actually drawn
-                if (prevIdx != currIdx) {
-                    ImGui::SameLine();
-                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-                    ImGui::SameLine();
-                }
+                ImGui::SameLine();
+                ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                ImGui::SameLine();
             }
 
             {
@@ -421,6 +416,7 @@ namespace hex {
             calls.clear();
         }
 
+        auto &io = ImGui::GetIO();
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
@@ -447,11 +443,14 @@ namespace hex {
                     ImGui::End();
                 }
 
-                auto &io = ImGui::GetIO();
                 for (const auto &key : this->m_pressedKeys) {
                     ShortcutManager::process(view, io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
                 }
             }
+        }
+
+        for (const auto &key : this->m_pressedKeys) {
+            ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
         }
 
         this->m_pressedKeys.clear();

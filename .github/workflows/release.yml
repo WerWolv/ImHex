@@ -63,7 +63,9 @@ jobs:
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
         with:
-          files: '*'
+          files:  |
+            '*'
+            '*/*.rpm'
 
       - name: ✒️ Prepare PKGBUILD
         run: |

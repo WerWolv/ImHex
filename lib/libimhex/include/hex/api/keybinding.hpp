@@ -188,7 +188,9 @@ namespace hex {
     public:
         static void addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback);
         static void addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback);
+
         static void process(View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode);
+        static void processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode);
 
         static void clearShortcuts();
 

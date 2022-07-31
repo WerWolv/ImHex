@@ -380,6 +380,7 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.provider_settings.name", "Provider Einstellungen" },
                     { "hex.builtin.view.provider_settings.load_popup", "Provider öffnen" },
+                    { "hex.builtin.view.provider_settings.load_error", "Ein Fehler beim öffnen dieses Providers is aufgetreten!"},
 
                 { "hex.builtin.view.find.name", "Finden" },
                     { "hex.builtin.view.find.searching", "Suchen..." },
@@ -694,6 +695,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x1_0", "x1.0" },
                         { "hex.builtin.setting.interface.scaling.x1_5", "x1.5" },
                         { "hex.builtin.setting.interface.scaling.x2_0", "x2.0" },
+                        { "hex.builtin.setting.interface.scaling.x3_0", "x3.0" },
+                        { "hex.builtin.setting.interface.scaling.x4_0", "x4.0" },
                     { "hex.builtin.setting.interface.language", "Sprache" },
                     { "hex.builtin.setting.interface.wiki_explain_language", "Wikipedia Sprache" },
                     { "hex.builtin.setting.interface.fps", "FPS Limite" },

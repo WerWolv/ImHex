@@ -15,7 +15,7 @@ namespace hex {
         view->m_shortcuts.insert({ shortcut, callback });
     }
 
-    void ShortcutManager::process(View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
+    static Shortcut getShortcut(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
         Shortcut pressedShortcut;
 
         if (ctrl)
@@ -29,9 +29,20 @@ namespace hex {
 
         pressedShortcut += static_cast<Keys>(keyCode);
 
+        return pressedShortcut;
+    }
+
+    void ShortcutManager::process(View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
+        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, keyCode);
+
         if (focused && currentView->m_shortcuts.contains(pressedShortcut))
             currentView->m_shortcuts[pressedShortcut]();
-        else if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut))
+    }
+
+    void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
+        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, keyCode);
+
+        if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut))
             ShortcutManager::s_globalShortcuts[pressedShortcut]();
     }
 
