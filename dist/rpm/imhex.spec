@@ -47,6 +47,7 @@ cp -r %{_src_path}/* %{_builddir}/
 
 %build
 %cmake \
+ -DCMAKE_BUILD_TYPE=%{_build_type} \
  -D IMHEX_OFFLINE_BUILD=ON \
  -D USE_SYSTEM_NLOHMANN_JSON=ON \
  -D USE_SYSTEM_FMT=ON \

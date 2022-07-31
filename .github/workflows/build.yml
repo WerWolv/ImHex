@@ -442,7 +442,7 @@ jobs:
       
       - name: 📦 Build RPM
         run: |
-          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
           
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
