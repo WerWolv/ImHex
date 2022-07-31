@@ -96,16 +96,15 @@ namespace hex::plugin::builtin {
             this->m_textEditor.SetText(code);
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
-            hex::unused(path);
-
+        EventManager::subscribe<EventProviderCreated>(this, [this](prv::Provider *provider) {
             if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
                 return;
 
-            if (!ImHexApi::Provider::isValid())
-                return;
+            // Copy over current pattern source code to the new provider
+            {
+                provider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
+            }
 
-            auto provider = ImHexApi::Provider::get();
             auto &runtime = provider->getPatternLanguageRuntime();
 
             auto mimeType = magic::getMIMEType(ImHexApi::Provider::get());
