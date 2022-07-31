@@ -383,7 +383,7 @@ jobs:
           - docker_image: fedora:latest
             release: Latest
           - docker_image: fedora:rawhide
-            release: RawHide
+            release: Rawhide
 
 
     name: 🐧 Fedora ${{ matrix.release }}
