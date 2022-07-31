@@ -422,6 +422,68 @@ namespace hex::crypt {
         return output;
     }
 
+    template<typename T>
+    static T decodeLeb128(const std::vector<u8> &bytes) {
+        T value = 0;
+        u32 shift = 0;
+        u8 b = 0;
+        for (u8 byte : bytes) {
+            b = byte;
+            value |= static_cast<T>(byte & 0x7F) << shift;
+            shift += 7;
+            if ((byte & 0x80) == 0) {
+                break;
+            }
+        }
+        if constexpr(std::is_signed<T>::value) {
+            if ((b & 0x40) != 0) {
+                value |= (~static_cast<T>(0)) << shift;
+            }
+        }
+        return value;
+    }
+
+    u128 decodeUleb128(const std::vector<u8> &bytes) {
+        return decodeLeb128<u128>(bytes);
+    }
+
+    i128 decodeSleb128(const std::vector<u8> &bytes) {
+        return decodeLeb128<i128>(bytes);
+    }
+
+    template<typename T>
+    static std::vector<u8> encodeLeb128(T value) {
+        std::vector<u8> bytes;
+        u8 byte;
+        while (true) {
+            byte = value & 0x7F;
+            value >>= 7;
+            if constexpr(std::is_signed<T>::value) {
+                if (value == 0 && (byte & 0x40) == 0) {
+                    break;
+                }
+                if (value == -1 && (byte & 0x40) != 0) {
+                    break;
+                }
+            } else {
+                if (value == 0) {
+                    break;
+                }
+            }
+            bytes.push_back(byte | 0x80);
+        }
+        bytes.push_back(byte);
+        return bytes;
+    }
+
+    std::vector<u8> encodeUleb128(u128 value) {
+        return encodeLeb128<u128>(value);
+    }
+
+    std::vector<u8> encodeSleb128(i128 value) {
+        return encodeLeb128<i128>(value);
+    }
+
     static std::vector<u8> aes(mbedtls_cipher_type_t type, mbedtls_operation_t operation, const std::vector<u8> &key, std::array<u8, 8> nonce, std::array<u8, 8> iv, const std::vector<u8> &input) {
         std::vector<u8> output;
 

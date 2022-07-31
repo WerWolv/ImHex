@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/crypto.hpp>
 #include <hex/api/event.hpp>
 
 #include <hex/providers/provider.hpp>
@@ -270,7 +271,7 @@ namespace hex::plugin::builtin {
 
                 auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:X}" : "{0}0o{1:o}");
 
-                auto number   = hex::decodeSleb128(buffer);
+                auto number   = hex::crypt::decodeSleb128(buffer);
                 bool negative = number < 0;
                 auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
 
@@ -279,7 +280,7 @@ namespace hex::plugin::builtin {
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
 
-                return hex::encodeSleb128(std::strtoll(value.c_str(), nullptr, 0));
+                return hex::crypt::encodeSleb128(std::strtoll(value.c_str(), nullptr, 0));
             }
         );
 
@@ -289,14 +290,14 @@ namespace hex::plugin::builtin {
 
                 auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? "0x{0:X}" : "0o{0:o}");
 
-                auto value = hex::format(format, hex::decodeUleb128(buffer));
+                auto value = hex::format(format, hex::crypt::decodeUleb128(buffer));
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
 
-                return hex::encodeUleb128(std::strtoull(value.c_str(), nullptr, 0));
+                return hex::crypt::encodeUleb128(std::strtoull(value.c_str(), nullptr, 0));
             }
         );
 
