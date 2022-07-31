@@ -444,7 +444,7 @@ impl SharedFontAtlas {
 }
 
 impl Drop for SharedFontAtlas {
-    #[doc(alias = "ImFontAtlas::Destory")]
+    #[doc(alias = "ImFontAtlas::Destroy")]
     fn drop(&mut self) {
         unsafe { sys::ImFontAtlas_destroy(self.0) };
     }
