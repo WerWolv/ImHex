@@ -365,7 +365,7 @@ jobs:
           
           sudo -u nobody makepkg
 
-          # Remplace the old file
+          # Replace the old file
           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
       
