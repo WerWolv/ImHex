@@ -54,6 +54,17 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", 0, [](auto name, nlohmann::json &setting) {
+            static bool enabled = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &enabled)) {
+                setting = static_cast<int>(enabled);
+                return true;
+            }
+
+            return false;
+        });
+
         /* Interface */
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
