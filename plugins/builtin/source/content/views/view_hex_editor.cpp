@@ -722,7 +722,7 @@ namespace hex::plugin::builtin {
                                         }
 
                                         if (color.has_value())
-                                            color = *color | (this->m_selectionColor & 0xFF000000);
+                                            color = (*color & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
 
                                         return color;
                                     }();
