@@ -82,6 +82,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/imhex.desktop
 %dir %{_datadir}/imhex
 %{_datadir}/imhex/*
 %{_datadir}/applications/imhex.desktop
-%{_prefix}/lib/libimhex.so
+%{_prefix}/lib/libimhex.so.%{_version}
 
 %changelog
