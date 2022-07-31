@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
                         searchSequence.clear();
                         std::copy(this->m_input.begin(), this->m_input.end(), std::back_inserter(searchSequence));
 
-                        if (searchSequence.back() == 0x00)
+                        if (!searchSequence.empty() && searchSequence.back() == 0x00)
                             searchSequence.pop_back();
                     }
 
