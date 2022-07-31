@@ -206,9 +206,9 @@ namespace hex {
                 struct Entry {
                     std::string unlocalizedName;
                     size_t requiredSize;
+                    size_t maxSize;
                     impl::GeneratorFunction generatorFunction;
                     std::optional<impl::EditingFunction> editingFunction;
-                    size_t maxSize = 0;
                 };
 
             }
