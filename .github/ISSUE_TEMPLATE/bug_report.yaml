@@ -44,6 +44,6 @@ body:
     label: Additional context?
     value: |
       - Additional information about your environment.
-      - If possible and useful, please upload the binary you've been editing when the bug occured.
+      - If possible and useful, please upload the binary you've been editing when the bug occurred.
   validations:
     required: false
