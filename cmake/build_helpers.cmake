@@ -1,5 +1,8 @@
 include(FetchContent)
 
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+
 macro(addVersionDefines)
     if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
         # Get the current working branch
