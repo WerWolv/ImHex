@@ -361,7 +361,12 @@ namespace hex {
     }
 
     bool PatternDrawer::createTreeNode(const pl::Pattern& pattern) const {
-        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+        if (pattern.isSealed()) {
+            ImGui::Selectable(pattern.getDisplayName().c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap);
+            return false;
+        }
+        else
+            return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
     }
 
     void PatternDrawer::drawTypenameColumn(const pl::Pattern& pattern, const std::string& pattern_name) const {

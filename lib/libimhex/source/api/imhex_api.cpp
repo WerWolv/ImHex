@@ -245,9 +245,9 @@ namespace hex {
                 return;
 
             s_providers.push_back(provider);
-            setCurrentProvider(s_providers.size() - 1);
-
             EventManager::post<EventProviderCreated>(provider);
+
+            setCurrentProvider(s_providers.size() - 1);
         }
 
         void remove(prv::Provider *provider) {
