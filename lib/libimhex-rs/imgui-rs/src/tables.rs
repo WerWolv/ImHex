@@ -250,7 +250,7 @@ pub enum TableSortDirection {
 }
 
 impl<'ui> Ui<'ui> {
-    /// Begins a table with no flags and with standard sizing contraints.
+    /// Begins a table with no flags and with standard sizing constraints.
     ///
     /// This does no work on styling the headers (the top row) -- see either
     /// [begin_table_header](Self::begin_table_header) or the more complex
@@ -267,7 +267,7 @@ impl<'ui> Ui<'ui> {
         self.begin_table_with_flags(str_id, column_count, TableFlags::empty())
     }
 
-    /// Begins a table with flags and standard sizing contraints.
+    /// Begins a table with flags and standard sizing constraints.
     ///
     /// This does no work on styling the headers (the top row) -- see either
     /// [begin_table_header](Self::begin_table_header) or the more complex
@@ -285,7 +285,7 @@ impl<'ui> Ui<'ui> {
         self.begin_table_with_sizing(str_id, column_count, flags, [0.0, 0.0], 0.0)
     }
 
-    /// Begins a table with all flags and sizing contraints. This is the base method,
+    /// Begins a table with all flags and sizing constraints. This is the base method,
     /// and gives users the most flexibility.
     ///
     /// This does no work on styling the headers (the top row) -- see either
@@ -321,7 +321,7 @@ impl<'ui> Ui<'ui> {
         }
     }
 
-    /// Begins a table with no flags and with standard sizing contraints.
+    /// Begins a table with no flags and with standard sizing constraints.
     ///
     /// Takes an array of table header information, the length of which determines
     /// how many columns will be created.
@@ -335,7 +335,7 @@ impl<'ui> Ui<'ui> {
         self.begin_table_header_with_flags(str_id, column_data, TableFlags::empty())
     }
 
-    /// Begins a table with flags and standard sizing contraints.
+    /// Begins a table with flags and standard sizing constraints.
     ///
     /// Takes an array of table header information, the length of which determines
     /// how many columns will be created.
@@ -350,7 +350,7 @@ impl<'ui> Ui<'ui> {
         self.begin_table_header_with_sizing(str_id, column_data, flags, [0.0, 0.0], 0.0)
     }
 
-    /// Begins a table with all flags and sizing contraints. This is the base method,
+    /// Begins a table with all flags and sizing constraints. This is the base method,
     /// and gives users the most flexibility.
     /// Takes an array of table header information, the length of which determines
     /// how many columns will be created.
@@ -485,7 +485,7 @@ impl<'ui> Ui<'ui> {
     /// though you can choose to not as an optimization.
     ///
     /// # Panics
-    /// If `column_index >= ui.table_columm_count`, this function will panic. In `debug` releases,
+    /// If `column_index >= ui.table_column_count`, this function will panic. In `debug` releases,
     /// we will panic on the Rust side, for a nicer error message, though in release, we will
     /// panic in C++, which will result in an ugly stack overflow.
     pub fn table_set_column_index(&self, column_index: usize) -> bool {
@@ -807,7 +807,7 @@ impl TableSortSpecsMut<'_> {
     /// told that the data has been sorted.
     ///
     /// If you need manual control over sorting, consider using [should_sort], [specs],
-    /// and [set_sorted] youself.
+    /// and [set_sorted] yourself.
     ///
     /// [should_sort]: Self::should_sort
     /// [specs]: Self::specs

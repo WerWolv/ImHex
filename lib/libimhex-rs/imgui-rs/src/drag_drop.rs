@@ -5,7 +5,7 @@
 //! some data from one [source](DragDropSource) to one [target](DragDropTarget).
 //! A source and a target must both have some `name` identifier, which is declared when they
 //! are created. If these names are equal, then a `payload` of some kind
-//! will be given to the target caller whne the user releases their mouse button over
+//! will be given to the target caller when the user releases their mouse button over
 //! the target (additionally, the UI will reflect that the payload *can* be deposited
 //! in the target).
 //!
@@ -282,7 +282,7 @@ impl<T: AsRef<str>> DragDropSource<T> {
     }
 }
 
-/// A helper struct for RAII drap-drop support.
+/// A helper struct for RAII drag-drop support.
 pub struct DragDropSourceToolTip<'ui>(PhantomData<Ui<'ui>>);
 
 impl DragDropSourceToolTip<'_> {
@@ -429,7 +429,7 @@ impl<'ui> DragDropTarget<'ui> {
     ///
     /// Moreover, if the `DragDropSource` has also used `Condition::Once` or similar when they sent the data,
     /// ImGui will assume its data is still valid even after your preview, so corrupting that data could
-    /// lead to all sorts of unsafe behvaior on ImGui's side. In summary, using this function for any data
+    /// lead to all sorts of unsafe behavior on ImGui's side. In summary, using this function for any data
     /// which isn't truly `Copy` or "plain old data" is difficult, and requires substantial knowledge
     /// of the various edge cases.
     pub unsafe fn accept_payload_unchecked(

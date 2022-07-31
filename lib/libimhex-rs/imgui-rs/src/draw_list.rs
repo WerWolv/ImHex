@@ -5,7 +5,7 @@
 //! list and draw custom primitives. You can interleave normal widget
 //! calls and adding primitives to the current draw list.
 //!
-//! Interaction is mostly through the mtehods [`DrawListMut`] struct,
+//! Interaction is mostly through the methods [`DrawListMut`] struct,
 //! such as [`DrawListMut::add_line`], however you can also construct
 //!  structs like [`Line`] directly, then call
 //!  `Line::build` with a reference to your draw list
@@ -396,7 +396,7 @@ impl<'ui> DrawListMut<'ui> {
         ImageQuad::new(self, texture_id, p1, p2, p3, p4)
     }
 
-    /// Draw the speciied image, with rounded corners
+    /// Draw the specified image, with rounded corners
     pub fn add_image_rounded(
         &'ui self,
         texture_id: TextureId,

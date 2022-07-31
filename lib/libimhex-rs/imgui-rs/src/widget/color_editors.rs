@@ -47,7 +47,7 @@ pub enum ColorEditInputMode {
 }
 
 impl ColorEditInputMode {
-    // Note: Probably no point in deprecating these since they're ~0 maintance burden.
+    // Note: Probably no point in deprecating these since they're ~0 maintenance burden.
     /// Edit as RGB(A). Alias for [`Self::Rgb`] for backwards-compatibility.
     pub const RGB: Self = Self::Rgb;
     /// Edit as HSV(A). Alias for [`Self::Hsv`] for backwards-compatibility.
@@ -66,7 +66,7 @@ pub enum ColorEditDisplayMode {
 }
 
 impl ColorEditDisplayMode {
-    // Note: Probably no point in deprecating these since they're ~0 maintance burden.
+    // Note: Probably no point in deprecating these since they're ~0 maintenance burden.
     /// Display as RGB(A). Alias for [`Self::Rgb`] for backwards-compatibility.
     pub const RGB: Self = Self::Rgb;
     /// Display as HSV(A). Alias for [`Self::Hsv`] for backwards-compatibility.

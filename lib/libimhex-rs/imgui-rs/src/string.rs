@@ -323,7 +323,7 @@ impl Deref for ImString {
     fn deref(&self) -> &ImStr {
         // as_ptr() is used, because we need to look at the bytes to figure out the length
         // self.0.len() is incorrect, because there might be more than one nul byte in the end, or
-        // some interior nuls in the data
+        // some interior nulls in the data
         unsafe {
             &*(CStr::from_ptr(self.0.as_ptr() as *const c_char) as *const CStr as *const ImStr)
         }

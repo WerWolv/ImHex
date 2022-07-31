@@ -15,7 +15,7 @@ bitflags!(
         const ALLOW_DOUBLE_CLICK = sys::ImGuiSelectableFlags_AllowDoubleClick;
         /// Cannot be selected, display greyed out text
         const DISABLED = sys::ImGuiSelectableFlags_Disabled;
-        /// (WIP) Hit testing to allow subsequent willdgets to overlap this one
+        /// (WIP) Hit testing to allow subsequent widgets to overlap this one
         const ALLOW_ITEM_OVERLAP = sys::ImGuiSelectableFlags_AllowItemOverlap;
     }
 );
