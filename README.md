@@ -133,6 +133,12 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
   - [Fedora Rawhide RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Rawhide%20RPM.zip)
   - [Fedora Stable RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Stable%20RPM.zip)
 
+## Third party repositories
+
+ImHex is available in various third party repositories.
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/imhex.svg)](https://repology.org/project/imhex/versions)
+
 ## Compiling
 
 To compile ImHex, a C++20 compiler is required. Releases are all mainly built using GCC, however on macOS, clang is also required to compile some ObjC code. 
