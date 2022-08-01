@@ -431,6 +431,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.float", "float(32位单精度)" },
                 { "hex.builtin.inspector.double", "double(64位双精度)" },
                 { "hex.builtin.inspector.long_double", "long double(128位四精度)" },
+                //{ "hex.builtin.inspector.sleb128", "Signed LEB128" },
+                //{ "hex.builtin.inspector.uleb128", "Unsigned LEB128" },
                 { "hex.builtin.inspector.bool", "bool" },
                 { "hex.builtin.inspector.ascii", "ASCII 字符" },
                 { "hex.builtin.inspector.wide", "宽字符" },

@@ -427,6 +427,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.float", "float (32 bit)" },
                 { "hex.builtin.inspector.double", "double (64 bit)" },
                 { "hex.builtin.inspector.long_double", "long double (128 bit)" },
+                //{ "hex.builtin.inspector.sleb128", "Signed LEB128" },
+                //{ "hex.builtin.inspector.uleb128", "Unsigned LEB128" },
                 { "hex.builtin.inspector.bool", "bool" },
                 { "hex.builtin.inspector.ascii", "ASCII Character" },
                 { "hex.builtin.inspector.wide", "Wide Character" },

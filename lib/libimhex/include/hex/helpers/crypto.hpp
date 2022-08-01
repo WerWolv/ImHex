@@ -39,6 +39,11 @@ namespace hex::crypt {
     std::vector<u8> decode16(const std::string &input);
     std::string encode16(const std::vector<u8> &input);
 
+    i128 decodeSleb128(const std::vector<u8> &bytes);
+    u128 decodeUleb128(const std::vector<u8> &bytes);
+    std::vector<u8> encodeSleb128(i128 value);
+    std::vector<u8> encodeUleb128(u128 value);
+
     enum class AESMode : u8 {
         ECB    = 0,
         CBC    = 1,
