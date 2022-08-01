@@ -155,7 +155,7 @@ jobs:
         OBJC=$(brew --prefix llvm)/bin/clang      \
         OBJCXX=$(brew --prefix llvm)/bin/clang++  \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
-        MACOSX_DEPLOYMENT_TARGET="10.15"          \
+        MACOSX_DEPLOYMENT_TARGET="10.4"           \
         cmake                                     \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
           -DCREATE_BUNDLE=ON                      \
