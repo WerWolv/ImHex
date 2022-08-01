@@ -36,6 +36,7 @@ endif()
 
 if(NOT USE_SYSTEM_FMT)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/fmt ${CMAKE_CURRENT_BINARY_DIR}/external/fmt EXCLUDE_FROM_ALL)
+  set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
   set(FMT_LIBRARIES fmt-header-only)
 else()
   find_package(fmt 8.0.0 REQUIRED)
