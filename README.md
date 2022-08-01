@@ -127,7 +127,7 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
 - MacOS • __x86_64__
   - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
 - Linux • __x86_64__
-  - [DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20DEB.zip)
+  - [Ubuntu DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20DEB%20%28Ubuntu%2022.04%29.zip)
   - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
   - [Arch Package](https://nightly.link/WerWolv/ImHex/workflows/build/master/ArchLinux%20.pkg.tar.zst.zip)
   - [Fedora Rawhide RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Rawhide%20RPM.zip)
