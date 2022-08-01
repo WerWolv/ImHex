@@ -167,7 +167,10 @@ namespace hex::fs {
                 });
                 break;
             case ImHexPath::Config:
-                return { appDataDir / "imhex" / "config" };
+                std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
+                    return path / "config";
+                });
+                break;
             case ImHexPath::Resources:
                 std::transform(paths.begin(), paths.end(), std::back_inserter(result), [](auto &path) {
                     return path / "resources";
