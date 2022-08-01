@@ -354,6 +354,11 @@ namespace hex {
                 s_gpuVendor = vendor;
             }
 
+            static bool s_portableVersion = false;
+            void setPortableVersion(bool enabled) {
+                s_portableVersion = enabled;
+            }
+
         }
 
 
@@ -450,6 +455,10 @@ namespace hex {
 
         const std::string &getGPUVendor() {
             return impl::s_gpuVendor;
+        }
+
+        bool isPortableVersion() {
+            return impl::s_portableVersion;
         }
     }
 

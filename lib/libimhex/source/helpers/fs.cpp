@@ -111,17 +111,21 @@ namespace hex::fs {
         };
 
 #if defined(OS_WINDOWS)
-        std::fs::path appDataDir;
-        {
-            PWSTR wAppDataPath = nullptr;
-            if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath)))
-                throw std::runtime_error("Failed to get APPDATA folder path");
+        std::vector<std::fs::path> paths;
 
-            appDataDir = std::wstring(wAppDataPath);
-            CoTaskMemFree(wAppDataPath);
+        if (!ImHexApi::System::isPortableVersion()) {
+            std::fs::path appDataDir;
+            {
+                PWSTR wAppDataPath = nullptr;
+                if (!SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &wAppDataPath)))
+                    throw std::runtime_error("Failed to get APPDATA folder path");
+
+                appDataDir = std::wstring(wAppDataPath);
+                CoTaskMemFree(wAppDataPath);
+            }
+
+            paths.push_back(appDataDir / "imhex");
         }
-
-        std::vector<std::fs::path> paths = { appDataDir / "imhex" };
 
         if (exePath)
             paths.push_back(exePath->parent_path());

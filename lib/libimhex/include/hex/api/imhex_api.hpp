@@ -165,6 +165,8 @@ namespace hex {
                 void setFontSize(float size);
 
                 void setGPUVendor(const std::string &vendor);
+
+                void setPortableVersion(bool enabled);
             }
 
             struct ProgramArguments {
@@ -208,6 +210,8 @@ namespace hex {
             void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths);
 
             const std::string &getGPUVendor();
+
+            bool isPortableVersion();
         }
 
     }
