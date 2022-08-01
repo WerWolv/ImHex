@@ -75,7 +75,7 @@ namespace hex::init {
         // Check if ImHex is installed in portable mode
         {
             if (const auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
-                const auto flagFile = executablePath.value() / "PORTABLE";
+                const auto flagFile = executablePath->parent_path() / "PORTABLE";
 
                 if (fs::exists(flagFile) && fs::isRegularFile(flagFile))
                     ImHexApi::System::impl::setPortableVersion(true);

@@ -274,20 +274,22 @@ namespace hex {
         return result;
     }
 
-    inline void trimLeft(std::string &s) {
+    template<typename T>
+    inline void trimLeft(std::basic_string<T> &s) {
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
             return !std::isspace(ch) && ch >= 0x20;
         }));
     }
 
-    inline void trimRight(std::string &s) {
+    template<typename T>
+    inline void trimRight(std::basic_string<T> &s) {
         s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
             return !std::isspace(ch) && ch >= 0x20;
-        }).base(),
-            s.end());
+        }).base(), s.end());
     }
 
-    inline void trim(std::string &s) {
+    template<typename T>
+    inline void trim(std::basic_string<T> &s) {
         trimLeft(s);
         trimRight(s);
     }

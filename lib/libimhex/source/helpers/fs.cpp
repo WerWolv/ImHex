@@ -5,6 +5,7 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/intrinsics.hpp>
 #include <hex/helpers/net.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <xdg.hpp>
 
@@ -27,23 +28,29 @@ namespace hex::fs {
         if (GetModuleFileNameW(nullptr, exePath.data(), exePath.length()) == 0)
             return std::nullopt;
 
+        hex::trim(exePath);
+
         return exePath;
 #elif defined(OS_LINUX)
         std::string exePath(PATH_MAX, '\0');
         if (readlink("/proc/self/exe", exePath.data(), PATH_MAX) < 0)
             return std::nullopt;
 
+        hex::trim(exePath);
+
         return exePath;
 #elif defined(OS_MACOS)
-        std::string result;
+        std::string exePath;
 
         {
             auto string = getMacExecutableDirectoryPath();
-            result = string;
+            exePath = string;
             macFree(string);
         }
 
-        return result;
+        hex::trim(exePath);
+
+        return exePath;
 #else
         return std::nullopt;
 #endif
