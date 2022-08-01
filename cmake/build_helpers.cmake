@@ -1,5 +1,12 @@
 include(FetchContent)
 
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CPACK_STRIP_FILES TRUE)
+endif()
+
 macro(addVersionDefines)
     if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
         # Get the current working branch
@@ -219,9 +226,11 @@ macro(createPackage)
         install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
         downloadImHexPatternsFiles("./")
     elseif(UNIX AND NOT APPLE)
-    
+
+        set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
+        
         configure_file(${CMAKE_SOURCE_DIR}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)    
-    
+        
         install(FILES ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${CMAKE_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
@@ -231,6 +240,9 @@ macro(createPackage)
     
     if (CREATE_BUNDLE)
         include(PostprocessBundle)
+        
+        set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
+    
 
         # Fix rpath
         add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)

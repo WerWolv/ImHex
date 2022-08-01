@@ -1,17 +1,20 @@
 #include "content/views/view_pattern_editor.hpp"
 
+#include <hex/api/content_registry.hpp>
+
 #include <pl/preprocessor.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <pl/ast/ast_node_variable_decl.hpp>
 #include <pl/ast/ast_node_type_decl.hpp>
 #include <pl/ast/ast_node_builtin_type.hpp>
 
-#include <hex/api/content_registry.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/project_file_handler.hpp>
 #include <hex/helpers/magic.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -96,16 +99,31 @@ namespace hex::plugin::builtin {
             this->m_textEditor.SetText(code);
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
-            hex::unused(path);
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+            {
+                auto syncPatternSource = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source");
 
-            if (!ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1))
+                if (syncPatternSource.is_number())
+                    this->m_syncPatternSourceCode = static_cast<int>(syncPatternSource);
+            }
+
+            {
+                auto autoLoadPatterns = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns");
+
+                if (autoLoadPatterns.is_number())
+                    this->m_autoLoadPatterns = static_cast<int>(autoLoadPatterns);
+            }
+        });
+
+        EventManager::subscribe<EventProviderCreated>(this, [this](prv::Provider *provider) {
+            if (!this->m_autoLoadPatterns)
                 return;
 
-            if (!ImHexApi::Provider::isValid())
-                return;
+            // Copy over current pattern source code to the new provider
+            if (!this->m_syncPatternSourceCode) {
+                provider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
+            }
 
-            auto provider = ImHexApi::Provider::get();
             auto &runtime = provider->getPatternLanguageRuntime();
 
             auto mimeType = magic::getMIMEType(ImHexApi::Provider::get());
@@ -155,12 +173,14 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
-            if (oldProvider != nullptr) oldProvider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
-            if (newProvider != nullptr) this->m_textEditor.SetText(newProvider->getPatternLanguageSourceCode());
+            if (!this->m_syncPatternSourceCode) {
+                if (oldProvider != nullptr) oldProvider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
+                if (newProvider != nullptr) this->m_textEditor.SetText(newProvider->getPatternLanguageSourceCode());
 
-            auto lines = this->m_textEditor.GetTextLines();
-            lines.pop_back();
-            this->m_textEditor.SetTextLines(lines);
+                auto lines = this->m_textEditor.GetTextLines();
+                lines.pop_back();
+                this->m_textEditor.SetTextLines(lines);
+            }
         });
 
         /* Settings */

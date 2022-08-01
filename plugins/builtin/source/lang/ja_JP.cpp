@@ -687,6 +687,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.general", "一般" },
                     { "hex.builtin.setting.general.show_tips", "起動時に豆知識を表示" },
                     { "hex.builtin.setting.general.auto_load_patterns", "対応するパターンを自動で読み込む" },
+                    // { "hex.builtin.setting.general.sync_pattern_source", "Sync pattern source code between providers" },
                 { "hex.builtin.setting.interface", "インタフェース" },
                     { "hex.builtin.setting.interface.color", "カラーテーマ" },
                         { "hex.builtin.setting.interface.color.system", "システム設定に従う" },

@@ -56,8 +56,16 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
 
                         for (auto &[name, requiresRestart, callback] : settings) {
-                            if (callback(LangEntry(name), ContentRegistry::Settings::getSettingsData()[category.name][name])) {
-                                log::debug("Setting [{}]: {} was changed", category.name, name);
+                            auto &setting = ContentRegistry::Settings::getSettingsData()[category.name][name];
+                            if (callback(LangEntry(name), setting)) {
+                                log::debug("Setting [{}]: {} was changed to {}", category.name, name, [&] -> std::string{
+                                   if (setting.is_number())
+                                       return std::to_string(setting.get<int>());
+                                   else if (setting.is_string())
+                                       return setting.get<std::string>();
+                                   else
+                                       return "";
+                                }());
                                 EventManager::post<EventSettingsChanged>();
 
                                 if (requiresRestart)

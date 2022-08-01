@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
                         searchSequence.clear();
                         std::copy(this->m_input.begin(), this->m_input.end(), std::back_inserter(searchSequence));
 
-                        if (searchSequence.back() == 0x00)
+                        if (!searchSequence.empty() && searchSequence.back() == 0x00)
                             searchSequence.pop_back();
                     }
 
@@ -722,7 +722,7 @@ namespace hex::plugin::builtin {
                                         }
 
                                         if (color.has_value())
-                                            color = *color | (this->m_selectionColor & 0xFF000000);
+                                            color = (*color & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
 
                                         return color;
                                     }();

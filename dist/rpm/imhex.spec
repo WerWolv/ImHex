@@ -47,11 +47,14 @@ cp -r %{_src_path}/* %{_builddir}/
 
 %build
 %cmake \
+ -DCMAKE_BUILD_TYPE=%{_build_type} \
  -D IMHEX_OFFLINE_BUILD=ON \
  -D USE_SYSTEM_NLOHMANN_JSON=ON \
  -D USE_SYSTEM_FMT=ON \
  -D USE_SYSTEM_CURL=ON \
  -D USE_SYSTEM_LLVM=ON \
+ -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+ -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
 %if 0%{?fedora} >= 37
  -D USE_SYSTEM_YARA=ON \
 # if fedora <= 36 get updated to yara 4.2.x then they should \
@@ -79,6 +82,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/imhex.desktop
 %dir %{_datadir}/imhex
 %{_datadir}/imhex/*
 %{_datadir}/applications/imhex.desktop
-%{_prefix}/lib/libimhex.so
+%{_prefix}/lib/libimhex.so.%{_version}
 
 %changelog

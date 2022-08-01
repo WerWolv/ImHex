@@ -25,6 +25,40 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
+        struct PatternVariable {
+            bool inVariable;
+            bool outVariable;
+
+            pl::Token::ValueType type;
+            pl::Token::Literal value;
+        };
+
+        enum class EnvVarType
+        {
+            Integer,
+            Float,
+            String,
+            Bool
+        };
+
+        struct EnvVar {
+            u64 id;
+            std::string name;
+            pl::Token::Literal value;
+            EnvVarType type;
+
+            bool operator==(const EnvVar &other) const {
+                return this->id == other.id;
+            }
+        };
+
+        enum class DangerousFunctionPerms : u8 {
+            Ask,
+            Allow,
+            Deny
+        };
+
+    private:
         std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
         std::vector<std::fs::path> m_possiblePatternFiles;
@@ -47,47 +81,18 @@ namespace hex::plugin::builtin {
         TextEditor m_textEditor;
         std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;
 
-        struct PatternVariable {
-            bool inVariable;
-            bool outVariable;
-
-            pl::Token::ValueType type;
-            pl::Token::Literal value;
-        };
-
         std::map<std::string, PatternVariable> m_patternVariables;
-
-        enum class EnvVarType
-        {
-            Integer,
-            Float,
-            String,
-            Bool
-        };
-
-        struct EnvVar {
-            u64 id;
-            std::string name;
-            pl::Token::Literal value;
-            EnvVarType type;
-
-            bool operator==(const EnvVar &other) const {
-                return this->id == other.id;
-            }
-        };
 
         u64 m_envVarIdCounter;
         std::list<EnvVar> m_envVarEntries;
 
-        enum class DangerousFunctionPerms : u8 {
-            Ask,
-            Allow,
-            Deny
-        };
-
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
 
+        bool m_syncPatternSourceCode = false;
+        bool m_autoLoadPatterns = true;
+
+    private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size);
         void drawVariableSettings(ImVec2 size);

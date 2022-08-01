@@ -686,6 +686,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.general", "一般" },
                     { "hex.builtin.setting.general.show_tips", "啟動時顯示提示" },
                     { "hex.builtin.setting.general.auto_load_patterns", "自動載入支援的模式" },
+                    // { "hex.builtin.setting.general.sync_pattern_source", "Sync pattern source code between providers" },
                 { "hex.builtin.setting.interface", "介面" },
                     { "hex.builtin.setting.interface.color", "顏色主題" },
                         { "hex.builtin.setting.interface.color.system", "系統" },

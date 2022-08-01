@@ -307,16 +307,20 @@ namespace hex::plugin::builtin {
 
                 ImGui::PushStyleColor(ImGuiCol_TabActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-                auto providerSelectorVisible = ImGui::BeginTabBar("provider_switcher", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_Reorderable);
+                auto providerSelectorVisible = ImGui::BeginTabBar("provider_switcher", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs);
                 ImGui::PopStyleColor(2);
 
                 if (providerSelectorVisible) {
                     for (size_t i = 0; i < providers.size(); i++) {
+                        auto &tabProvider = providers[i];
+
                         bool open = true;
-                        if (ImGui::BeginTabItem(providers[i]->getName().c_str(), &open)) {
+                        ImGui::PushID(tabProvider);
+                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open)) {
                             ImHexApi::Provider::setCurrentProvider(i);
                             ImGui::EndTabItem();
                         }
+                        ImGui::PopID();
 
                         if (!open) {
                             ImHexApi::Provider::remove(providers[i]);

@@ -29,10 +29,10 @@ namespace hex::plugin::builtin {
         std::array<ImU64, 256> m_valueCounts = { 0 };
         bool m_analyzing                     = false;
 
-        std::pair<u64, u64> m_analyzedRegion = { 0, 0 };
+        Region m_analyzedRegion = { 0, 0 };
 
-        std::string m_fileDescription;
-        std::string m_mimeType;
+        std::string m_dataDescription;
+        std::string m_dataMimeType;
 
         void analyze();
     };
