@@ -467,7 +467,7 @@ namespace hex::plugin::builtin {
 
     static void loadFontSettings() {
         std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-        if (!fs::exists(fontFile))
+        if (!fs::exists(fontFile) || !fs::isRegularFile(fontFile))
             fontFile.clear();
 
         // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
