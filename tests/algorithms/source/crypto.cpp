@@ -100,6 +100,67 @@ TEST_SEQUENCE("EncodeDecode64") {
     TEST_SUCCESS();
 };
 
+TEST_SEQUENCE("EncodeDecodeLEB128") {
+    TEST_ASSERT(hex::crypt::encodeUleb128(0) == (std::vector<u8>{ 0 }));
+    TEST_ASSERT(hex::crypt::encodeUleb128(0x7F) == (std::vector<u8>{ 0x7F }));
+    TEST_ASSERT(hex::crypt::encodeUleb128(0xFF) == (std::vector<u8>{ 0xFF, 0x01 }));
+    TEST_ASSERT(hex::crypt::encodeUleb128(0xF0F0) == (std::vector<u8>{ 0xF0, 0xE1, 0x03 }));
+
+    TEST_ASSERT(hex::crypt::encodeSleb128(0) == (std::vector<u8>{ 0 }));
+    TEST_ASSERT(hex::crypt::encodeSleb128(0x7F) == (std::vector<u8>{ 0xFF, 0x00 }));
+    TEST_ASSERT(hex::crypt::encodeSleb128(0xFF) == (std::vector<u8>{ 0xFF, 0x01 }));
+    TEST_ASSERT(hex::crypt::encodeSleb128(0xF0F0) == (std::vector<u8>{ 0xF0, 0xE1, 0x03 }));
+    TEST_ASSERT(hex::crypt::encodeSleb128(-1) == (std::vector<u8>{ 0x7F }));
+    TEST_ASSERT(hex::crypt::encodeSleb128(-128) == (std::vector<u8>{ 0x80, 0x7F }));
+
+    TEST_ASSERT(hex::crypt::decodeUleb128({}) == 0);
+    TEST_ASSERT(hex::crypt::decodeUleb128({ 1 }) == 0x01);
+    TEST_ASSERT(hex::crypt::decodeUleb128({ 0x7F }) == 0x7F);
+    TEST_ASSERT(hex::crypt::decodeUleb128({ 0xFF }) == 0x7F);
+    TEST_ASSERT(hex::crypt::decodeUleb128({ 0xFF, 0x7F }) == 0x3FFF);
+    TEST_ASSERT(hex::crypt::decodeUleb128({
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0x7F,
+    }) == ((static_cast<u128>(0xFFFF'FFFF'FFFF) << 64) | 0xFFFF'FFFF'FFFF'FFFF));
+    TEST_ASSERT(hex::crypt::decodeUleb128({ 0xAA, 0xBB, 0xCC, 0x00, 0xFF }) == 0x131DAA);
+
+    TEST_ASSERT(hex::crypt::decodeSleb128({}) == 0);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 1 }) == 0x01);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 0x3F }) == 0x3F);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 0x7F }) == -1);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 0xFF }) == -1);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 0xFF, 0x7F }) == -1);
+    TEST_ASSERT(hex::crypt::decodeSleb128({
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0x7F,
+    }) == -1);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 0xAA, 0xBB, 0xCC, 0x00, 0xFF }) == 0x131DAA);
+    TEST_ASSERT(hex::crypt::decodeSleb128({ 0xAA, 0xBB, 0x4C }) == -0xCE256);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<u8> data;
+
+    for (int i = 0; i < 1000; i++) {
+        std::vector<u8> original(sizeof(u128));
+        std::generate(std::begin(original), std::end(original), [&]() { return data(gen); });
+        u128 u = *reinterpret_cast<u128*>(original.data());
+        i128 s = *reinterpret_cast<i128*>(original.data());
+        auto encodedS = hex::crypt::encodeSleb128(s);
+        i128 decodedS = hex::crypt::decodeSleb128(encodedS);
+        auto encodedU = hex::crypt::encodeUleb128(u);
+        u128 decodedU = hex::crypt::decodeUleb128(encodedU);
+        TEST_ASSERT(decodedS == s, "encoded: {0} decoded: {1:X} original: {2:X}", encodedS, static_cast<u128>(decodedS), static_cast<u128>(s));
+        TEST_ASSERT(decodedU == u, "encoded: {0} decoded: {1:X} original: {2:X}", encodedU, decodedU, u);
+    }
+
+    TEST_SUCCESS();
+};
+
 struct CrcCheck {
     std::string name;
     int width;

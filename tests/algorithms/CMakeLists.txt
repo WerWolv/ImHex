@@ -12,6 +12,7 @@ set(AVAILABLE_TESTS
     # Crypto
         EncodeDecode16
         EncodeDecode64
+        EncodeDecodeLEB128
         CRC32
         CRC32Random
         CRC16

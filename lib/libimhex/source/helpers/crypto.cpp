@@ -423,13 +423,22 @@ namespace hex::crypt {
     }
 
     template<typename T>
+    static T safeLeftShift(T t, u32 shift) {
+        if (shift >= sizeof(t) * 8) {
+            return 0;
+        } else {
+            return t << shift;
+        }
+    }
+
+    template<typename T>
     static T decodeLeb128(const std::vector<u8> &bytes) {
         T value = 0;
         u32 shift = 0;
         u8 b = 0;
         for (u8 byte : bytes) {
             b = byte;
-            value |= static_cast<T>(byte & 0x7F) << shift;
+            value |= safeLeftShift(static_cast<T>(byte & 0x7F), shift);
             shift += 7;
             if ((byte & 0x80) == 0) {
                 break;
@@ -437,7 +446,7 @@ namespace hex::crypt {
         }
         if constexpr(std::is_signed<T>::value) {
             if ((b & 0x40) != 0) {
-                value |= (~static_cast<T>(0)) << shift;
+                value |= safeLeftShift(~static_cast<T>(0), shift);
             }
         }
         return value;
