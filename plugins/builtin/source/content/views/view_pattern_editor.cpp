@@ -459,7 +459,7 @@ namespace hex::plugin::builtin {
                             continue;
                     }
 
-                    if (ImGui::Selectable(message.c_str()))
+                    if (ImGui::Selectable(hex::format("{}##ConsoleLine", message).c_str()))
                         ImGui::SetClipboardText(message.c_str());
 
                     ImGui::PopStyleColor();
