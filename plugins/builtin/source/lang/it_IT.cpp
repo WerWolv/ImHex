@@ -443,6 +443,7 @@ namespace hex::plugin::builtin {
                 //{ "hex.builtin.inspector.dos_time", "DOS Time" },
                 { "hex.builtin.inspector.guid", "GUID" },
                 { "hex.builtin.inspector.rgba8", "Colori RGBA8" },
+                { "hex.builtin.inspector.rgb565", "Colori RGB565" },
 
                 { "hex.builtin.nodes.constants", "Costanti" },
                     { "hex.builtin.nodes.constants.int", "Intero" },

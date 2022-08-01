@@ -440,7 +440,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.dos_date", "DOS Date" },
                 { "hex.builtin.inspector.dos_time", "DOS Time" },
                 { "hex.builtin.inspector.guid", "GUID" },
-                { "hex.builtin.inspector.rgba8", "RGBA8 color" },
+                { "hex.builtin.inspector.rgba8", "RGBA8 Color" },
+                { "hex.builtin.inspector.rgb565", "RGB565 Color" },
 
                 { "hex.builtin.nodes.common.input", "Input" },
                 { "hex.builtin.nodes.common.input.a", "Input A" },

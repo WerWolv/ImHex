@@ -442,6 +442,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.dos_time", "DOS 時間" },
                 { "hex.builtin.inspector.guid", "GUID" },
                 { "hex.builtin.inspector.rgba8", "RGBA8 顏色" },
+                { "hex.builtin.inspector.rgb565", "RGB565 顏色" },
 
                 { "hex.builtin.nodes.common.input", "輸入" },
                 { "hex.builtin.nodes.common.input.a", "輸入 A" },

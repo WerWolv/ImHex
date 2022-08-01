@@ -539,6 +539,20 @@ namespace hex::plugin::builtin {
                 return copyValue;
             };
         });
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.rgb565", sizeof(u16), [](auto buffer, auto endian, auto style) {
+            hex::unused(style);
+
+            auto value = hex::changeEndianess(*reinterpret_cast<u16 *>(buffer.data()), endian);
+            ImColor color((value & 0x1F) << 3, ((value >> 5) & 0x3F) << 2, ((value >> 11) & 0x1F) << 3, 0xFF);
+
+            auto copyValue = hex::format("#{:02X}{:02X}{:02X}", u8(0xFF * (color.Value.x)), u8(0xFF * (color.Value.y)), u8(0xFF * (color.Value.z)), 0xFF);
+
+            return [color, copyValue] {
+                ImGui::ColorButton("##inspectorColor", color, ImGuiColorEditFlags_None, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeight()));
+                return copyValue;
+            };
+        });
     }
     // clang-format on
 
