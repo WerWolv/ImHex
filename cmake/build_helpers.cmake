@@ -310,7 +310,7 @@ function(detectBadClone)
 endfunction()
 
 set(IMHEX_REQUIRED_COMPILER "GNU")
-set(IMHEX_MIN_COMPILER_VERSION "12.1.0")
+set(IMHEX_MIN_COMPILER_VERSION "12.0.0")
 function(verifyCompiler)
     if (IMHEX_IGNORE_BAD_COMPILER)
         return()
