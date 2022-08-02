@@ -221,7 +221,7 @@ where
     // we may resize the buffer no matter what, and we must do that.
     // The solution for this will be, I suspect, to build a second api channel that takes
     // an `&mut CStr`, which is ugly! I suspect few to none will want no-resizing, so I'm deferring
-    // fixing the problem. -- sanbox-irl 09/15/2021, see #523 for more
+    // fixing the problem. -- sandbox-irl 09/15/2021, see #523 for more
     //
     // /// By default (as of 0.8.0), imgui-rs will automatically handle string resizes
     // /// for [InputText] and [InputTextMultiline].
@@ -323,7 +323,7 @@ where
         }
 
         if o {
-            // if a truncation occured, we'll find another one too on the end.
+            // if a truncation occurred, we'll find another one too on the end.
             // this might end up deleting user `\0` though!
             // this hack is working but WOW is it hacky!
             if let Some(null_terminator_position) = self.buf.rfind('\0') {
@@ -379,7 +379,7 @@ impl<'ui, 'p, T: InputTextCallbackHandler, L: AsRef<str>> InputTextMultiline<'ui
     // we may resize the buffer no matter what, and we must do that.
     // The solution for this will be, I suspect, to build a second api channel that takes
     // an `&mut CStr`, which is ugly! I suspect few to none will want no-resizing, so I'm deferring
-    // fixing the problem. -- sanbox-irl 09/15/2021, see #523 for more
+    // fixing the problem. -- sandbox-irl 09/15/2021, see #523 for more
     // /// By default (as of 0.8.0), imgui-rs will automatically handle string resizes
     // /// for [InputText] and [InputTextMultiline].
     // ///
@@ -463,7 +463,7 @@ impl<'ui, 'p, T: InputTextCallbackHandler, L: AsRef<str>> InputTextMultiline<'ui
         }
 
         if o {
-            // if a truncation occured, we'll find another one too on the end.
+            // if a truncation occurred, we'll find another one too on the end.
             // this might end up deleting user `\0` though!
             if let Some(null_terminator_position) = self.buf.rfind('\0') {
                 self.buf.truncate(null_terminator_position);

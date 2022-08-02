@@ -101,7 +101,7 @@ pub struct Style {
     /// `= 0.0`: always show when hovering
     /// `= f32::MAX`: never show close button unless selected
     pub tab_min_width_for_close_button: f32,
-    /// Side of the color buttonton pubin color editor widgets (left/right).
+    /// Side of the color button position color editor widgets (left/right).
     pub color_button_position: Direction,
     /// Alignment of button text when button is larger than text.
     ///
@@ -132,7 +132,7 @@ pub struct Style {
     ///
     /// Require back-end to render with bilinear filtering. Latched at the beginning of the frame.
     pub anti_aliased_lines_use_tex: bool,
-    /// Enable anti-aliased edges around filled shapes (rounded recatngles, circles, etc.).
+    /// Enable anti-aliased edges around filled shapes (rounded rectangles, circles, etc.).
     ///
     /// Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame.
     pub anti_aliased_fill: bool,
@@ -162,7 +162,7 @@ impl Style {
         }
     }
     /// Replaces current colors with classic Dear ImGui style
-    #[doc(alias = "StyleColors", alias = "StlyeColorsClassic")]
+    #[doc(alias = "StyleColors", alias = "StyleColorsClassic")]
     pub fn use_classic_colors(&mut self) -> &mut Self {
         unsafe {
             sys::igStyleColorsClassic(self.raw_mut());

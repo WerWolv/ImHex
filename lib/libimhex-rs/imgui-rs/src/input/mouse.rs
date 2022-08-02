@@ -14,7 +14,7 @@ pub enum MouseButton {
 }
 
 impl MouseButton {
-    /// All possible `MouseButton` varirants
+    /// All possible `MouseButton` variants
     pub const VARIANTS: [MouseButton; MouseButton::COUNT] = [
         MouseButton::Left,
         MouseButton::Right,
@@ -64,7 +64,7 @@ pub enum MouseCursor {
 }
 
 impl MouseCursor {
-    /// All possible `MouseCursor` varirants
+    /// All possible `MouseCursor` variants
     pub const VARIANTS: [MouseCursor; MouseCursor::COUNT] = [
         MouseCursor::Arrow,
         MouseCursor::TextInput,

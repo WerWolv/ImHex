@@ -62,7 +62,7 @@ impl<'a> ChildWindow<'a> {
     }
     /// Sets the window focused state, which can be used to bring the window to front
     #[inline]
-    #[doc(alias = "SetNextWindwowFocus")]
+    #[doc(alias = "SetNextWindowFocus")]
     pub fn focused(mut self, focused: bool) -> Self {
         self.focused = focused;
         self

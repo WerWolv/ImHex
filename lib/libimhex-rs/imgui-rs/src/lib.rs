@@ -123,7 +123,7 @@ impl Context {
 pub struct Ui<'ui> {
     ctx: &'ui Context,
     font_atlas: Option<cell::RefMut<'ui, SharedFontAtlas>>,
-    // imgui isn't mutli-threaded -- so no one will ever access twice.
+    // imgui isn't multi-threaded -- so no one will ever access twice.
     buffer: cell::UnsafeCell<string::UiBuffer>,
 }
 
@@ -431,7 +431,7 @@ impl<'ui> Ui<'ui> {
     ///     }
     /// }
     /// ```
-    #[doc(alias = "BeginTooltip", alias = "EndTootip")]
+    #[doc(alias = "BeginTooltip", alias = "EndTooltip")]
     pub fn tooltip<F: FnOnce()>(&self, f: F) {
         unsafe { sys::igBeginTooltip() };
         f();
@@ -460,7 +460,7 @@ impl<'ui> Ui<'ui> {
     ///     }
     /// }
     /// ```
-    #[doc(alias = "BeginTooltip", alias = "EndTootip")]
+    #[doc(alias = "BeginTooltip", alias = "EndTooltip")]
     pub fn tooltip_text<T: AsRef<str>>(&self, text: T) {
         self.tooltip(|| self.text(text));
     }
