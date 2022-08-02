@@ -345,8 +345,9 @@ namespace hex::plugin::builtin {
                     if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
                         runtime.abort();
                 } else {
-                    if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)))
+                    if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                         this->evaluatePattern(this->m_textEditor.GetText());
+                    }
                 }
 
 
@@ -381,7 +382,7 @@ namespace hex::plugin::builtin {
                     if (this->m_runAutomatically)
                         this->evaluatePattern(this->m_textEditor.GetText());
                     else
-                        this->parsePattern(this->m_textEditor.GetText());
+                        std::thread([this, code = this->m_textEditor.GetText()] { this->parsePattern(code); }).detach();
                 }
             }
 
@@ -732,51 +733,40 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code);
             this->m_textEditor.SetText(code);
-            this->parsePattern(code);
+            std::thread([this, code] { this->parsePattern(code); }).detach();
         }
     }
 
-    void ViewPatternEditor::clearPatterns() {
-        if (!ImHexApi::Provider::isValid()) return;
-
-        ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
-        this->parsePattern("");
-    }
-
-
     void ViewPatternEditor::parsePattern(const std::string &code) {
-        this->m_runningParsers++;
-        std::thread([this, code] {
-            auto ast = this->m_parserRuntime->parseString(code);
+        auto ast = this->m_parserRuntime->parseString(code);
 
-            this->m_patternVariables.clear();
+        this->m_patternVariables.clear();
 
-            if (ast) {
-                for (auto &node : *ast) {
-                    if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl *>(node.get())) {
-                        auto type = dynamic_cast<pl::ASTNodeTypeDecl *>(variableDecl->getType().get());
-                        if (type == nullptr) continue;
+        if (ast) {
+            for (auto &node : *ast) {
+                if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl *>(node.get())) {
+                    auto type = dynamic_cast<pl::ASTNodeTypeDecl *>(variableDecl->getType().get());
+                    if (type == nullptr) continue;
 
-                        auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType *>(type->getType().get());
-                        if (builtinType == nullptr) continue;
+                    auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType *>(type->getType().get());
+                    if (builtinType == nullptr) continue;
 
-                        PatternVariable variable = {
-                            .inVariable  = variableDecl->isInVariable(),
-                            .outVariable = variableDecl->isOutVariable(),
-                            .type        = builtinType->getType(),
-                            .value       = { }
-                        };
+                    PatternVariable variable = {
+                        .inVariable  = variableDecl->isInVariable(),
+                        .outVariable = variableDecl->isOutVariable(),
+                        .type        = builtinType->getType(),
+                        .value       = { }
+                    };
 
-                        if (variable.inVariable || variable.outVariable) {
-                            if (!this->m_patternVariables.contains(variableDecl->getName()))
-                                this->m_patternVariables[variableDecl->getName()] = variable;
-                        }
+                    if (variable.inVariable || variable.outVariable) {
+                        if (!this->m_patternVariables.contains(variableDecl->getName()))
+                            this->m_patternVariables[variableDecl->getName()] = variable;
                     }
                 }
             }
+        }
 
-            this->m_runningParsers--;
-        }).detach();
+        this->m_runningParsers--;
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code) {
@@ -792,6 +782,8 @@ namespace hex::plugin::builtin {
             std::map<std::string, pl::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
                 envVars.insert({ name, value });
+
+            this->parsePattern(code);
 
             std::map<std::string, pl::Token::Literal> inVariables;
             for (auto &[name, variable] : this->m_patternVariables) {

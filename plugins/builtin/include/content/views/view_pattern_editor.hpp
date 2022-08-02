@@ -100,7 +100,6 @@ namespace hex::plugin::builtin {
         void drawPatternTooltip(pl::Pattern *pattern);
 
         void loadPatternFile(const std::fs::path &path);
-        void clearPatterns();
 
         void parsePattern(const std::string &code);
         void evaluatePattern(const std::string &code);
