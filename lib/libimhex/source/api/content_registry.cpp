@@ -352,7 +352,7 @@ namespace hex {
         }
 
         void add(const std::string &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
-            log::info("Registered new data inspector format: {}", unlocalizedName);
+            log::debug("Registered new data inspector format: {}", unlocalizedName);
 
             getEntries().push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
