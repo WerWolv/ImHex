@@ -400,7 +400,7 @@ namespace hex::plugin::builtin {
 
                     value = copyValue = hex::encodeByteString(stringBuffer);
 
-                    if (currSelection->size > MaxStringLength) {
+                    if (value.size() > MaxStringLength) {
                         value.resize(MaxStringLength);
                         value += "...";
                     }
