@@ -309,6 +309,18 @@ function(detectBadClone)
     endforeach ()
 endfunction()
 
+set(IMHEX_REQUIRED_COMPILER "GNU")
+set(IMHEX_MIN_COMPILER_VERSION "12.1.0")
+function(verifyCompiler)
+    if (IMHEX_IGNORE_BAD_COMPILER)
+        return()
+    endif()
+
+    if (NOT CMAKE_CXX_COMPILER_ID STREQUAL ${IMHEX_REQUIRED_COMPILER} OR CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${IMHEX_MIN_COMPILER_VERSION})
+        message(FATAL_ERROR "ImHex requires GCC ${IMHEX_MIN_COMPILER_VERSION} or newer. Please use the latest GCC version.")
+    endif()
+endfunction()
+
 macro(setVariableInParent variable value)
     get_directory_property(hasParent PARENT_DIRECTORY)
 

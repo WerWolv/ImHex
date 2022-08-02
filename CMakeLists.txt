@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
 option(IMHEX_IGNORE_BAD_CLONE "Disabled the bad clone prevention checks" OFF)
 option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of the ImHex-Patterns repo" OFF)
+option(IMHEX_IGNORE_BAD_COMPILER "Allow compiling with an unsupported compiler" OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
@@ -19,6 +20,7 @@ project(imhex VERSION ${IMHEX_VERSION})
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
 detectBadClone()
+verifyCompiler()
 
 # List plugin names here. Project name must match folder name
 set(PLUGINS
