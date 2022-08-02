@@ -28,11 +28,12 @@ package() {
     install -DT $srcdir/usr/bin/imhex $pkgdir/usr/bin/imhex
     install -DT $srcdir/usr/lib/libimhex.so.$pkgver $pkgdir/usr/lib/libimhex.so.$pkgver
 
-    for plugin in $srcdir/usr/share/imhex/plugins/*.hexplug;
+    for plugin in $srcdir/usr/lib/imhex/plugins/*.hexplug;
     do
-	    install -DT $plugin $pkgdir/usr/share/imhex/plugins/`basename $plugin`
+	    install -DT $plugin $pkgdir/usr/lib/imhex/plugins/`basename $plugin`
     done
 
+    mkdir -p $pkgdir/usr/share/imhex
 	cp -r $srcdir/usr/share/imhex/{constants,encodings,includes,magic,patterns} $pkgdir/usr/share/imhex
 	cp -r $srcdir/usr/share/{applications,licenses} $pkgdir/usr/share
     install -d $pkgdir/usr/share
