@@ -110,6 +110,16 @@ The custom C-like Pattern Language developed and used by ImHex is easy to read, 
 
 For format patterns, includable libraries magic and constant files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. Feel free to PR your own files there as well!
 
+## Requirements
+
+To use ImHex, the following minimal system requirements need to be met:
+
+- **OS**: Windows 10 or higher, macOS 11 (Big Sur) or higher, "Modern" Linux (Ubuntu 22.04+, Fedora and Arch Linux are officially supported)
+- **CPU**: x86_64 (64 Bit)
+- **GPU**: OpenGL 3.0 or higher (preferable a dedicated GPU and not Intel HD Graphics)
+- **RAM**: 512MB, more may be required for more complicated analysis
+- **Storage**: 100MB
+
 ## Plugin development
 
 To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
