@@ -131,7 +131,7 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
   - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
   - [Arch Package](https://nightly.link/WerWolv/ImHex/workflows/build/master/ArchLinux%20.pkg.tar.zst.zip)
   - [Fedora Rawhide RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Rawhide%20RPM.zip)
-  - [Fedora Stable RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Stable%20RPM.zip)
+  - [Fedora Stable RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Latest%20RPM.zip)
 
 ## Compiling
 
