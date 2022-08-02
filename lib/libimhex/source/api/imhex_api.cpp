@@ -344,7 +344,7 @@ namespace hex {
                 s_customFontPath = path;
             }
 
-            static float s_fontSize;
+            static float s_fontSize = 13.0;
             void setFontSize(float size) {
                 s_fontSize = size;
             }
