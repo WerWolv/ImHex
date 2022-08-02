@@ -108,7 +108,9 @@ The custom C-like Pattern Language developed and used by ImHex is easy to read, 
 
 ## Database
 
-For format patterns, includable libraries magic and constant files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. Feel free to PR your own files there as well!
+For format patterns, libraries, magic and constant files, check out the [ImHex-Patterns](https://github.com/WerWolv/ImHex-Patterns) repository. 
+
+**Feel free to PR your own files there as well!**
 
 ## Requirements
 
@@ -151,7 +153,8 @@ ImHex is available in various third party repositories.
 
 ## Compiling
 
-To compile ImHex, a C++20 compiler is required. Releases are all mainly built using GCC, however on macOS, clang is also required to compile some ObjC code. 
+To compile ImHex on any platform, GCC is required with a version that supports C++23 or higher. 
+On macOS, Clang is also required to compile some ObjC code. 
 
 Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.
 All dependencies that aren't bundled, can be installed using the dependency installer scripts found in the `/dist` folder.
@@ -167,7 +170,7 @@ All dependencies that aren't bundled, can be installed using the dependency inst
 - [iTrooz](https://github.com/iTrooz) for many improvements related to release packaging and the GitHub Action runners.
 - Everybody else who has reported issues on Discord or GitHub that I had great conversations with :)
 
-### Libraries
+### Dependencies
 
 - Thanks a lot to ocornut for their amazing [Dear ImGui](https://github.com/ocornut/imgui) which is used for building the entire interface
   - Thanks to ocornut as well for their hex editor view used as base for this project.
@@ -176,3 +179,6 @@ All dependencies that aren't bundled, can be installed using the dependency inst
 - Thanks to aquynh for [capstone](https://github.com/aquynh/capstone) which is the base of the disassembly window
 - Thanks to vitaut for their [libfmt](https://github.com/fmtlib/fmt) library which makes formatting and logging so much better
 - Thanks to rxi for [microtar](https://github.com/rxi/microtar) used for extracting downloaded store assets 
+- Thanks to btzy for [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended)
+- Thanks to danyspin97 for [xdgpp](https://sr.ht/~danyspin97/xdgpp)
+- Thanks to all other groups and organizations whose libraries are used in ImHex
