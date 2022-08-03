@@ -280,6 +280,15 @@ namespace hex {
         #endif
     }
 
+    std::optional<u8> hexCharToValue(char c) {
+        if (std::isdigit(c))
+            return c - '0';
+        else if (std::isxdigit(c))
+            return std::toupper(c) - 'A' + 0x0A;
+        else
+            return { };
+    }
+
     std::string encodeByteString(const std::vector<u8> &bytes) {
         std::string result;
 
@@ -370,12 +379,8 @@ namespace hex {
 
                             for (u8 i = 0; i < 2; i++) {
                                 byte <<= 4;
-                                if (c() >= '0' && c() <= '9')
-                                    byte |= 0x00 + (c() - '0');
-                                else if (c() >= 'A' && c() <= 'F')
-                                    byte |= 0x0A + (c() - 'A');
-                                else if (c() >= 'a' && c() <= 'f')
-                                    byte |= 0x0A + (c() - 'a');
+                                if (auto hexValue = hexCharToValue(c()); hexValue.has_value())
+                                    byte |= hexValue.value();
                                 else
                                     return {};
 

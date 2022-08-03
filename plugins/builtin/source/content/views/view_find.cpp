@@ -100,6 +100,63 @@ namespace hex::plugin::builtin {
         });
     }
 
+
+    std::vector<ViewFind::BinaryPattern> ViewFind::parseBinaryPatternString(std::string string) {
+        std::vector<BinaryPattern> result;
+
+        if (string.length() < 2)
+            return { };
+
+        bool inString = false;
+        while (string.length() > 0) {
+            BinaryPattern pattern = { 0, 0 };
+            if (string.starts_with("\"")) {
+                inString = !inString;
+                string = string.substr(1);
+                continue;
+            } else if (inString) {
+                pattern = { 0xFF, u8(string.front()) };
+                string = string.substr(1);
+            } else if (string.starts_with("??")) {
+                pattern = { 0x00, 0x00 };
+                string = string.substr(2);
+            } else if ((std::isxdigit(string.front()) || string.front() == '?') && string.length() >= 2) {
+                const auto hex = string.substr(0, 2);
+
+                for (const auto &c : hex) {
+                    pattern.mask  <<= 4;
+                    pattern.value <<= 4;
+
+                    if (std::isxdigit(c)) {
+                        pattern.mask |= 0x0F;
+
+                        if (auto hexValue = hex::hexCharToValue(c); hexValue.has_value())
+                            pattern.value |= hexValue.value();
+                        else
+                            return { };
+                    } else if (c != '?') {
+                        return { };
+                    }
+                }
+
+                string = string.substr(2);
+            } else if (std::isspace(string.front())) {
+                string = string.substr(1);
+                continue;
+            } else {
+                return { };
+            }
+
+            result.push_back(pattern);
+        }
+
+        if (inString)
+            return { };
+
+        return result;
+    }
+
+
     std::vector<Region> ViewFind::searchStrings(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Strings settings) {
         std::vector<Region> results;
 
@@ -196,6 +253,34 @@ namespace hex::plugin::builtin {
         return result;
     }
 
+    std::vector<Region> ViewFind::searchBinaryPattern(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::BinaryPattern settings) {
+        std::vector<Region> results;
+
+        auto reader = prv::BufferedReader(provider);
+        reader.seek(searchRegion.getStartAddress());
+        reader.setEndAddress(searchRegion.getEndAddress());
+
+        u32 matchedBytes = 0;
+        u64 address = searchRegion.getStartAddress();
+        const size_t patternSize = settings.pattern.size();
+        for (u8 byte : reader) {
+            if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
+                matchedBytes++;
+                if (matchedBytes == settings.pattern.size()) {
+                    results.push_back(Region { address - (patternSize - 1), patternSize });
+                    task.update(address);
+                    matchedBytes = 0;
+                }
+            } else {
+                matchedBytes = 0;
+            }
+
+            address++;
+        }
+
+        return results;
+    }
+
     void ViewFind::runSearch() {
         Region searchRegion = [this]{
             if (this->m_searchSettings.range == 0 || !ImHexApi::HexEditor::isSelectionValid()) {
@@ -222,7 +307,10 @@ namespace hex::plugin::builtin {
                 case Regex:
                     this->m_foundRegions[provider] = searchRegex(std::move(task), provider, searchRegion, settings.regex);
                     break;
-            }
+                case BinaryPattern:
+                    this->m_foundRegions[provider] = searchBinaryPattern(std::move(task), provider, searchRegion, settings.binaryPattern);
+                    break;
+                }
 
             this->m_sortedRegions = this->m_foundRegions;
             this->m_searchRunning = false;
@@ -259,6 +347,7 @@ namespace hex::plugin::builtin {
                 break;
             case Sequence:
             case Regex:
+            case BinaryPattern:
                 result = hex::encodeByteString(bytes);
                 break;
         }
@@ -358,6 +447,18 @@ namespace hex::plugin::builtin {
 
                         if (settings.pattern.empty())
                             this->m_settingsValid = false;
+
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("hex.builtin.view.find.binary_pattern"_lang)) {
+                        auto &settings = this->m_searchSettings.binaryPattern;
+
+                        mode = SearchSettings::Mode::BinaryPattern;
+
+                        ImGui::InputText("hex.builtin.view.find.binary_pattern"_lang, settings.input);
+
+                        settings.pattern = parseBinaryPatternString(settings.input);
+                        this->m_settingsValid = !settings.pattern.empty();
 
                         ImGui::EndTabItem();
                     }

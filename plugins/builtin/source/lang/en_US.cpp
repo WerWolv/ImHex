@@ -406,6 +406,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.find.strings.line_feeds", "Line Feeds" },
                     { "hex.builtin.view.find.sequences", "Sequences" },
                     { "hex.builtin.view.find.regex", "Regex" },
+                    { "hex.builtin.view.find.binary_pattern", "Binary Pattern" },
                     { "hex.builtin.view.find.search", "Search" },
                     { "hex.builtin.view.find.context.copy", "Copy Value" },
                     { "hex.builtin.view.find.context.copy_demangle", "Copy Demangled Value" },

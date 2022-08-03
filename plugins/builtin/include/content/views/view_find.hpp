@@ -19,13 +19,18 @@ namespace hex::plugin::builtin {
 
     private:
 
+        struct BinaryPattern {
+            u8 mask, value;
+        };
+
         struct SearchSettings {
             int range = 0;
 
             enum class Mode : int {
                 Strings,
                 Sequence,
-                Regex
+                Regex,
+                BinaryPattern
             } mode = Mode::Strings;
 
             struct Strings {
@@ -49,6 +54,11 @@ namespace hex::plugin::builtin {
             struct Regex {
                 std::string pattern;
             } regex;
+
+            struct BinaryPattern {
+                std::string input;
+                std::vector<ViewFind::BinaryPattern> pattern;
+            } binaryPattern;
         } m_searchSettings, m_decodeSettings;
 
         std::map<prv::Provider*, std::vector<Region>> m_foundRegions, m_sortedRegions;
@@ -60,6 +70,9 @@ namespace hex::plugin::builtin {
         static std::vector<Region> searchStrings(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::Strings settings);
         static std::vector<Region> searchSequence(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::Bytes settings);
         static std::vector<Region> searchRegex(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::Regex settings);
+        static std::vector<Region> searchBinaryPattern(Task &&task, prv::Provider *provider, Region searchRegion, SearchSettings::BinaryPattern settings);
+
+        static std::vector<BinaryPattern> parseBinaryPatternString(std::string string);
 
         void runSearch();
         std::string decodeValue(prv::Provider *provider, Region region);

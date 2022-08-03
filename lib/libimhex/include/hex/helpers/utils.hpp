@@ -326,6 +326,8 @@ namespace hex {
         return remainder != 0 ? value + (alignment - remainder) : value;
     }
 
+    std::optional<u8> hexCharToValue(char c);
+
     bool isProcessElevated();
 
     std::optional<std::string> getEnvironmentVariable(const std::string &env);
