@@ -339,8 +339,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-          -DRUST_PATH="$HOME/.cargo/bin/"           \
-          -DUSE_SYSTEM_CURL=ON                     \
+          -DUSE_SYSTEM_CURL=ON                      \
           -DIMHEX_PATTERNS_PULL_MASTER=ON           \
           ..
           make -j 4 install DESTDIR=installDir
