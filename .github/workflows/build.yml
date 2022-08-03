@@ -93,8 +93,6 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           -DRUST_PATH="$USERPROFILE/.cargo/bin/"  \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           ..
