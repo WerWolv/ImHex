@@ -451,4 +451,4 @@ jobs:
         with:
           name: Fedora ${{ matrix.release }} RPM
           path: |
-            ~/rpmbuild/RPMS/*/*.rpm
+            ~/rpmbuild/RPMS/x86_64/*.rpm
