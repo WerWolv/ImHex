@@ -175,8 +175,8 @@ jobs:
         name: macOS DMG
         path: build/*.dmg
 
-  # Linux build
-  linux:
+  # Ubuntu build
+  ubuntu:
     runs-on: ubuntu-22.04
     name: 🐧 Ubuntu 22.04
     steps:
@@ -288,6 +288,7 @@ jobs:
           name: Linux AppImage
           path: '*.AppImage'
 
+  # ArchLinux build
   archlinux-build:
     name: 🐧 ArchLinux
     runs-on: ubuntu-latest
@@ -376,7 +377,8 @@ jobs:
           name: ArchLinux .pkg.tar.zst
           path: |
             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
-            
+
+  # Fedora build     
   fedora-build:
     strategy:
       matrix:
