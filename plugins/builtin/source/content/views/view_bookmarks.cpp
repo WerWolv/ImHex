@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
     void ViewBookmarks::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter);
             ImGui::PopItemWidth();
 

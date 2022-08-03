@@ -154,7 +154,7 @@ namespace hex::init {
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, fontSize, &cfg, codiconsRange);
         fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize, &cfg, unifontRange);
 
-        ImGuiFreeType::BuildFontAtlas(fonts);
+        fonts->Build();
 
         View::setFontAtlas(fonts);
         View::setFontConfig(cfg);

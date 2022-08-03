@@ -412,7 +412,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             if (ImGui::InputText("##input", mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 ImGui::SetKeyboardFocusHere();
                 evaluate = true;
@@ -622,7 +622,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::TableNextColumn();
                         if (ImGui::Hyperlink(link.c_str())) {
-                            if (ImGui::GetMergedKeyModFlags() == ImGuiKeyModFlags_Ctrl)
+                            if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
                                 hex::openWebpage(link);
                             else
                                 ImGui::SetClipboardText(link.c_str());

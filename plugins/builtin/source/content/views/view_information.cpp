@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
             {
                 this->m_blockSize = std::max<u32>(std::ceil(provider->getActualSize() / 2048.0F), 256);
 
-                std::array<ImU64, 256> valueCounts = { 0 }, blockValueCounts = { 0 };
+                std::array<ImU64, 256> blockValueCounts = { 0 };
 
                 this->m_blockEntropy.clear();
                 this->m_valueCounts.fill(0);
@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
 
                 u64 count = 0;
                 for (u8 byte : reader) {
-                    valueCounts[byte]++;
+                    this->m_valueCounts[byte]++;
                     blockValueCounts[byte]++;
 
                     count++;
@@ -121,9 +121,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                this->m_valueCounts = valueCounts;
-
-                this->m_averageEntropy = calculateEntropy(valueCounts, provider->getSize());
+                this->m_averageEntropy = calculateEntropy(this->m_valueCounts, provider->getSize());
                 if (!this->m_blockEntropy.empty())
                     this->m_highestBlockEntropy = *std::max_element(this->m_blockEntropy.begin(), this->m_blockEntropy.end());
                 else
@@ -142,7 +140,7 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                     ImGui::BeginDisabled(this->m_analyzing);
                     {
-                        if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvailWidth(), 0)))
+                        if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             this->analyze();
                     }
                     ImGui::EndDisabled();
@@ -218,8 +216,10 @@ namespace hex::plugin::builtin {
                             ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
 
                             ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
-                            ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
-                            if (ImPlot::BeginPlot("##distribution", "Address", "Count", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale)) {
+                            if (ImPlot::BeginPlot("##distribution", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
+                                ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale);
+                                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
+
                                 static auto x = [] {
                                     std::array<ImU64, 256> result { 0 };
                                     std::iota(result.begin(), result.end(), 0);
@@ -235,12 +235,14 @@ namespace hex::plugin::builtin {
 
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
 
-                            ImPlot::SetNextPlotLimits(0, this->m_blockEntropy.size(), -0.1, 1.1, ImGuiCond_Always);
-                            if (ImPlot::BeginPlot("##entropy", "Address", "Entropy", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased, ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_Lock)) {
+                            if (ImPlot::BeginPlot("##entropy", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+                                ImPlot::SetupAxes("Address", "Entropy", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                                ImPlot::SetupAxesLimits(0, this->m_blockEntropy.size(), -0.1F, 1.1F, ImGuiCond_Always);
+
                                 ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
 
-                                if (ImPlot::DragLineX("Position", &this->m_entropyHandlePosition, false)) {
-                                    u64 address = u64(this->m_entropyHandlePosition * this->m_blockSize) + provider->getBaseAddress();
+                                if (ImPlot::DragLineX(1, &this->m_entropyHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                                    u64 address = u64(std::max<double>(this->m_entropyHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
                                     address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
                                     ImHexApi::HexEditor::setSelection(address, 1);
                                 }

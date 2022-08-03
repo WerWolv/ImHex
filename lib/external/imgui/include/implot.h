@@ -20,13 +20,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// ImPlot v0.11 WIP
+// ImPlot v0.13 WIP
+
+// Table of Contents:
+//
+// [SECTION] Macros and Defines
+// [SECTION] Enums and Types
+// [SECTION] Callbacks
+// [SECTION] Contexts
+// [SECTION] Begin/End Plot
+// [SECTION] Begin/End Subplot
+// [SECTION] Setup
+// [SECTION] SetNext
+// [SECTION] Plot Items
+// [SECTION] Plot Tools
+// [SECTION] Plot Utils
+// [SECTION] Legend Utils
+// [SECTION] Drag and Drop
+// [SECTION] Styling
+// [SECTION] Colormaps
+// [SECTION] Input Mapping
+// [SECTION] Miscellaneous
+// [SECTION] Demo
+// [SECTION] Obsolete API
 
 #pragma once
 #include "imgui.h"
 
 //-----------------------------------------------------------------------------
-// Macros and Defines
+// [SECTION] Macros and Defines
 //-----------------------------------------------------------------------------
 
 // Define attributes of all API symbols declarations (e.g. for DLL under Windows)
@@ -37,70 +59,92 @@
 #define IMPLOT_API
 #endif
 
-// ImPlot version string
-#define IMPLOT_VERSION "0.11 WIP"
+// ImPlot version string.
+#define IMPLOT_VERSION "0.13 WIP"
 // Indicates variable should deduced automatically.
 #define IMPLOT_AUTO -1
 // Special color used to indicate that a color should be deduced automatically.
 #define IMPLOT_AUTO_COL ImVec4(0,0,0,-1)
+// Macro for templated plotting functions; keeps header clean.
+#define IMPLOT_TMP template <typename T> IMPLOT_API
 
 //-----------------------------------------------------------------------------
-// Forward Declarations and Basic Types
+// [SECTION] Enums and Types
 //-----------------------------------------------------------------------------
 
 // Forward declarations
-struct ImPlotContext;          // ImPlot context (opaque struct, see implot_internal.h)
+struct ImPlotContext;             // ImPlot context (opaque struct, see implot_internal.h)
 
 // Enums/Flags
-typedef int ImPlotFlags;        // -> enum ImPlotFlags_
-typedef int ImPlotAxisFlags;    // -> enum ImPlotAxisFlags_
-typedef int ImPlotSubplotFlags; // -> enum ImPlotSubplotFlags_
-typedef int ImPlotCol;          // -> enum ImPlotCol_
-typedef int ImPlotStyleVar;     // -> enum ImPlotStyleVar_
-typedef int ImPlotMarker;       // -> enum ImPlotMarker_
-typedef int ImPlotColormap;     // -> enum ImPlotColormap_
-typedef int ImPlotLocation;     // -> enum ImPlotLocation_
-typedef int ImPlotOrientation;  // -> enum ImPlotOrientation_
-typedef int ImPlotYAxis;        // -> enum ImPlotYAxis_;
-typedef int ImPlotBin;          // -> enum ImPlotBin_
+typedef int ImAxis;               // -> enum ImAxis_
+typedef int ImPlotFlags;          // -> enum ImPlotFlags_
+typedef int ImPlotAxisFlags;      // -> enum ImPlotAxisFlags_
+typedef int ImPlotSubplotFlags;   // -> enum ImPlotSubplotFlags_
+typedef int ImPlotLegendFlags;    // -> enum ImPlotLegendFlags_
+typedef int ImPlotMouseTextFlags; // -> enum ImPlotMouseTextFlags_
+typedef int ImPlotDragToolFlags;  // -> ImPlotDragToolFlags_
+typedef int ImPlotBarGroupsFlags; // -> ImPlotBarGroupsFlags_
+
+typedef int ImPlotCond;           // -> enum ImPlotCond_
+typedef int ImPlotCol;            // -> enum ImPlotCol_
+typedef int ImPlotStyleVar;       // -> enum ImPlotStyleVar_
+typedef int ImPlotMarker;         // -> enum ImPlotMarker_
+typedef int ImPlotColormap;       // -> enum ImPlotColormap_
+typedef int ImPlotLocation;       // -> enum ImPlotLocation_
+typedef int ImPlotBin;            // -> enum ImPlotBin_
+
+// Axis indices. The values assigned may change; NEVER hardcode these.
+enum ImAxis_ {
+    // horizontal axes
+    ImAxis_X1 = 0, // enabled by default
+    ImAxis_X2,     // disabled by default
+    ImAxis_X3,     // disabled by default
+    // vertical axes
+    ImAxis_Y1,     // enabled by default
+    ImAxis_Y2,     // disabled by default
+    ImAxis_Y3,     // disabled by default
+    // bookeeping
+    ImAxis_COUNT
+};
 
 // Options for plots (see BeginPlot).
 enum ImPlotFlags_ {
     ImPlotFlags_None          = 0,       // default
     ImPlotFlags_NoTitle       = 1 << 0,  // the plot title will not be displayed (titles are also hidden if preceeded by double hashes, e.g. "##MyPlot")
     ImPlotFlags_NoLegend      = 1 << 1,  // the legend will not be displayed
-    ImPlotFlags_NoMenus       = 1 << 2,  // the user will not be able to open context menus with right-click
-    ImPlotFlags_NoBoxSelect   = 1 << 3,  // the user will not be able to box-select with right-click drag
-    ImPlotFlags_NoMousePos    = 1 << 4,  // the mouse position, in plot coordinates, will not be displayed inside of the plot
-    ImPlotFlags_NoHighlight   = 1 << 5,  // plot items will not be highlighted when their legend entry is hovered
+    ImPlotFlags_NoMouseText   = 1 << 2,  // the mouse position, in plot coordinates, will not be displayed inside of the plot
+    ImPlotFlags_NoInputs      = 1 << 3,  // the user will not be able to interact with the plot
+    ImPlotFlags_NoMenus       = 1 << 4,  // the user will not be able to open context menus
+    ImPlotFlags_NoBoxSelect   = 1 << 5,  // the user will not be able to box-select
     ImPlotFlags_NoChild       = 1 << 6,  // a child window region will not be used to capture mouse scroll (can boost performance for single ImGui window applications)
-    ImPlotFlags_Equal         = 1 << 7,  // primary x and y axes will be constrained to have the same units/pixel (does not apply to auxiliary y-axes)
-    ImPlotFlags_YAxis2        = 1 << 8,  // enable a 2nd y-axis on the right side
-    ImPlotFlags_YAxis3        = 1 << 9,  // enable a 3rd y-axis on the right side
-    ImPlotFlags_Query         = 1 << 10, // the user will be able to draw query rects with middle-mouse or CTRL + right-click drag
-    ImPlotFlags_Crosshairs    = 1 << 11, // the default mouse cursor will be replaced with a crosshair when hovered
-    ImPlotFlags_AntiAliased   = 1 << 12, // plot lines will be software anti-aliased (not recommended for high density plots, prefer MSAA)
-    ImPlotFlags_CanvasOnly    = ImPlotFlags_NoTitle | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoMousePos
+    ImPlotFlags_NoFrame       = 1 << 7,  // the ImGui frame will not be rendered
+    ImPlotFlags_Equal         = 1 << 8,  // x and y axes pairs will be constrained to have the same units/pixel
+    ImPlotFlags_Crosshairs    = 1 << 9,  // the default mouse cursor will be replaced with a crosshair when hovered
+    ImPlotFlags_AntiAliased   = 1 << 10, // plot items will be software anti-aliased (not recommended for high density plots, prefer MSAA)
+    ImPlotFlags_CanvasOnly    = ImPlotFlags_NoTitle | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoMouseText
 };
 
-// Options for plot axes (see BeginPlot).
+// Options for plot axes (see SetupAxis).
 enum ImPlotAxisFlags_ {
     ImPlotAxisFlags_None          = 0,       // default
     ImPlotAxisFlags_NoLabel       = 1 << 0,  // the axis label will not be displayed (axis labels also hidden if the supplied string name is NULL)
     ImPlotAxisFlags_NoGridLines   = 1 << 1,  // no grid lines will be displayed
     ImPlotAxisFlags_NoTickMarks   = 1 << 2,  // no tick marks will be displayed
     ImPlotAxisFlags_NoTickLabels  = 1 << 3,  // no text labels will be displayed
-    ImPlotAxisFlags_Foreground    = 1 << 4,  // grid lines will be displayed in the foreground (i.e. on top of data) in stead of the background
-    ImPlotAxisFlags_LogScale      = 1 << 5,  // a logartithmic (base 10) axis scale will be used (mutually exclusive with ImPlotAxisFlags_Time)
-    ImPlotAxisFlags_Time          = 1 << 6,  // axis will display date/time formatted labels (mutually exclusive with ImPlotAxisFlags_LogScale)
-    ImPlotAxisFlags_Invert        = 1 << 7,  // the axis will be inverted
-    ImPlotAxisFlags_NoInitialFit  = 1 << 8,  // axis will not be initially fit to data extents on the first rendered frame (also the case if SetNextPlotLimits explicitly called)
-    ImPlotAxisFlags_AutoFit       = 1 << 9,  // axis will be auto-fitting to data extents
-    ImPlotAxisFlags_RangeFit      = 1 << 10, // axis will only fit points if the point is in the visible range of the **orthoganol** axis
-    ImPlotAxisFlags_LockMin       = 1 << 11, // the axis minimum value will be locked when panning/zooming
-    ImPlotAxisFlags_LockMax       = 1 << 12, // the axis maximum value will be locked when panning/zooming
+    ImPlotAxisFlags_NoInitialFit  = 1 << 4,  // axis will not be initially fit to data extents on the first rendered frame
+    ImPlotAxisFlags_NoMenus       = 1 << 5,  // the user will not be able to open context menus with right-click
+    ImPlotAxisFlags_Opposite      = 1 << 6,  // axis ticks and labels will be rendered on conventionally opposite side (i.e, right or top)
+    ImPlotAxisFlags_Foreground    = 1 << 7,  // grid lines will be displayed in the foreground (i.e. on top of data) in stead of the background
+    ImPlotAxisFlags_LogScale      = 1 << 8,  // a logartithmic (base 10) axis scale will be used (mutually exclusive with ImPlotAxisFlags_Time)
+    ImPlotAxisFlags_Time          = 1 << 9,  // axis will display date/time formatted labels (mutually exclusive with ImPlotAxisFlags_LogScale)
+    ImPlotAxisFlags_Invert        = 1 << 10, // the axis will be inverted
+    ImPlotAxisFlags_AutoFit       = 1 << 11, // axis will be auto-fitting to data extents
+    ImPlotAxisFlags_RangeFit      = 1 << 12, // axis will only fit points if the point is in the visible range of the **orthogonal** axis
+    ImPlotAxisFlags_LockMin       = 1 << 13, // the axis minimum value will be locked when panning/zooming
+    ImPlotAxisFlags_LockMax       = 1 << 14, // the axis maximum value will be locked when panning/zooming
     ImPlotAxisFlags_Lock          = ImPlotAxisFlags_LockMin | ImPlotAxisFlags_LockMax,
-    ImPlotAxisFlags_NoDecorations = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels
+    ImPlotAxisFlags_NoDecorations = ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels,
+    ImPlotAxisFlags_AuxDefault    = ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_Opposite
 };
 
 // Options for subplots (see BeginSubplot).
@@ -112,11 +156,53 @@ enum ImPlotSubplotFlags_ {
     ImPlotSubplotFlags_NoResize    = 1 << 3,  // resize splitters between subplot cells will be not be provided
     ImPlotSubplotFlags_NoAlign     = 1 << 4,  // subplot edges will not be aligned vertically or horizontally
     ImPlotSubplotFlags_ShareItems  = 1 << 5,  // items across all subplots will be shared and rendered into a single legend entry
-    ImPlotSubplotFlags_LinkRows    = 1 << 6,  // link the y-axis limits of all plots in each row (does not apply auxiliary y-axes)
-    ImPlotSubplotFlags_LinkCols    = 1 << 7,  // link the x-axis limits of all plots in each column
-    ImPlotSubplotFlags_LinkAllX    = 1 << 8,  // link the x-axis limits in every plot in the subplot
-    ImPlotSubplotFlags_LinkAllY    = 1 << 9 , // link the y-axis limits in every plot in the subplot (does not apply to auxiliary y-axes)
+    ImPlotSubplotFlags_LinkRows    = 1 << 6,  // link the y-axis limits of all plots in each row (does not apply to auxiliary axes)
+    ImPlotSubplotFlags_LinkCols    = 1 << 7,  // link the x-axis limits of all plots in each column (does not apply to auxiliary axes)
+    ImPlotSubplotFlags_LinkAllX    = 1 << 8,  // link the x-axis limits in every plot in the subplot (does not apply to auxiliary axes)
+    ImPlotSubplotFlags_LinkAllY    = 1 << 9,  // link the y-axis limits in every plot in the subplot (does not apply to auxiliary axes)
     ImPlotSubplotFlags_ColMajor    = 1 << 10  // subplots are added in column major order instead of the default row major order
+};
+
+// Options for legends (see SetupLegend)
+enum ImPlotLegendFlags_ {
+    ImPlotLegendFlags_None            = 0,      // default
+    ImPlotLegendFlags_NoButtons       = 1 << 0, // legend icons will not function as hide/show buttons
+    ImPlotLegendFlags_NoHighlightItem = 1 << 1, // plot items will not be highlighted when their legend entry is hovered
+    ImPlotLegendFlags_NoHighlightAxis = 1 << 2, // axes will not be highlighted when legend entries are hovered (only relevant if x/y-axis count > 1)
+    ImPlotLegendFlags_NoMenus         = 1 << 3, // the user will not be able to open context menus with right-click
+    ImPlotLegendFlags_Outside         = 1 << 4, // legend will be rendered outside of the plot area
+    ImPlotLegendFlags_Horizontal      = 1 << 5, // legend entries will be displayed horizontally
+};
+
+// Options for mouse hover text (see SetupMouseText)
+enum ImPlotMouseTextFlags_ {
+    ImPlotMouseTextFlags_None        = 0,      // default
+    ImPlotMouseTextFlags_NoAuxAxes   = 1 << 0, // only show the mouse position for primary axes
+    ImPlotMouseTextFlags_NoFormat    = 1 << 1, // axes label formatters won't be used to render text
+    ImPlotMouseTextFlags_ShowAlways  = 1 << 2, // always display mouse position even if plot not hovered
+};
+
+// Options for DragPoint, DragLine, DragRect
+enum ImPlotDragToolFlags_ {
+    ImPlotDragToolFlags_None      = 0,      // default
+    ImPlotDragToolFlags_NoCursors = 1 << 0, // drag tools won't change cursor icons when hovered or held
+    ImPlotDragToolFlags_NoFit     = 1 << 1, // the drag tool won't be considered for plot fits
+    ImPlotDragToolFlags_NoInputs  = 1 << 2, // lock the tool from user inputs
+    ImPlotDragToolFlags_Delayed   = 1 << 3, // tool rendering will be delayed one frame; useful when applying position-constraints
+};
+
+// Flags for ImPlot::PlotBarGroups
+enum ImPlotBarGroupsFlags_ {
+    ImPlotBarGroupsFlags_None     = 0,      // default
+    ImPlotBarGroupsFlags_Stacked  = 1 << 0, // items in a group will be stacked on top of each other
+};
+
+// Represents a condition for SetupAxisLimits etc. (same as ImGuiCond, but we only support a subset of those enums)
+enum ImPlotCond_
+{
+    ImPlotCond_None   = ImGuiCond_None,    // No condition (always set the variable), same as _Always
+    ImPlotCond_Always = ImGuiCond_Always,  // No condition (always set the variable)
+    ImPlotCond_Once   = ImGuiCond_Once,    // Set the variable once per runtime session (only the first call will succeed)
 };
 
 // Plot styling colors.
@@ -136,16 +222,13 @@ enum ImPlotCol_ {
     ImPlotCol_LegendText,    // legend text color (defaults to ImPlotCol_InlayText)
     ImPlotCol_TitleText,     // plot title text color (defaults to ImGuiCol_Text)
     ImPlotCol_InlayText,     // color of text appearing inside of plots (defaults to ImGuiCol_Text)
-    ImPlotCol_XAxis,         // x-axis label and tick lables color (defaults to ImGuiCol_Text)
-    ImPlotCol_XAxisGrid,     // x-axis grid color (defaults to 25% ImPlotCol_XAxis)
-    ImPlotCol_YAxis,         // y-axis label and tick labels color (defaults to ImGuiCol_Text)
-    ImPlotCol_YAxisGrid,     // y-axis grid color (defaults to 25% ImPlotCol_YAxis)
-    ImPlotCol_YAxis2,        // 2nd y-axis label and tick labels color (defaults to ImGuiCol_Text)
-    ImPlotCol_YAxisGrid2,    // 2nd y-axis grid/label color (defaults to 25% ImPlotCol_YAxis2)
-    ImPlotCol_YAxis3,        // 3rd y-axis label and tick labels color (defaults to ImGuiCol_Text)
-    ImPlotCol_YAxisGrid3,    // 3rd y-axis grid/label color (defaults to 25% ImPlotCol_YAxis3)
+    ImPlotCol_AxisText,      // axis label and tick lables color (defaults to ImGuiCol_Text)
+    ImPlotCol_AxisGrid,      // axis grid color (defaults to 25% ImPlotCol_AxisText)
+    ImPlotCol_AxisTick,      // axis tick color (defaults to AxisGrid)
+    ImPlotCol_AxisBg,        // background color of axis hover region (defaults to transparent)
+    ImPlotCol_AxisBgHovered, // axis hover color (defaults to ImGuiCol_ButtonHovered)
+    ImPlotCol_AxisBgActive,  // axis active color (defaults to ImGuiCol_ButtonActive)
     ImPlotCol_Selection,     // box-selection color (defaults to yellow)
-    ImPlotCol_Query,         // box-query color (defaults to green)
     ImPlotCol_Crosshairs,    // crosshairs color (defaults to ImPlotCol_PlotBorder)
     ImPlotCol_COUNT
 };
@@ -233,19 +316,6 @@ enum ImPlotLocation_ {
     ImPlotLocation_SouthEast = ImPlotLocation_South | ImPlotLocation_East  // bottom-right
 };
 
-// Used to orient items on a plot (e.g. legends, labels, etc.)
-enum ImPlotOrientation_ {
-    ImPlotOrientation_Horizontal, // left/right
-    ImPlotOrientation_Vertical    // up/down
-};
-
-// Enums for different y-axes.
-enum ImPlotYAxis_ {
-    ImPlotYAxis_1 = 0, // left (default)
-    ImPlotYAxis_2 = 1, // first on right side
-    ImPlotYAxis_3 = 2  // second on right side
-};
-
 // Enums for different automatic histogram binning methods (k = bin count or w = bin width)
 enum ImPlotBin_ {
     ImPlotBin_Sqrt    = -1, // k = sqrt(n)
@@ -257,8 +327,8 @@ enum ImPlotBin_ {
 // Double precision version of ImVec2 used by ImPlot. Extensible by end users.
 struct ImPlotPoint {
     double x, y;
-    ImPlotPoint()                         { x = y = 0.0; }
-    ImPlotPoint(double _x, double _y)     { x = _x; y = _y; }
+    ImPlotPoint()                         { x = y = 0.0;      }
+    ImPlotPoint(double _x, double _y)     { x = _x; y = _y;   }
     ImPlotPoint(const ImVec2& p)          { x = p.x; y = p.y; }
     double  operator[] (size_t idx) const { return (&x)[idx]; }
     double& operator[] (size_t idx)       { return (&x)[idx]; }
@@ -268,24 +338,28 @@ struct ImPlotPoint {
 #endif
 };
 
-// A range defined by a min/max value. Used for plot axes ranges.
+// Range defined by a min/max value.
 struct ImPlotRange {
     double Min, Max;
-    ImPlotRange()                         { Min = 0; Max = 0; }
-    ImPlotRange(double _min, double _max) { Min = _min; Max = _max; }
-    bool Contains(double value) const     { return value >= Min && value <= Max; };
-    double Size() const                   { return Max - Min; };
+    ImPlotRange()                         { Min = 0; Max = 0;                                         }
+    ImPlotRange(double _min, double _max) { Min = _min; Max = _max;                                   }
+    bool Contains(double value) const     { return value >= Min && value <= Max;                      }
+    double Size() const                   { return Max - Min;                                         }
+    double Clamp(double value) const      { return (value < Min) ? Min : (value > Max) ? Max : value; }
 };
 
-// Combination of two ranges for X and Y axes.
-struct ImPlotLimits {
+// Combination of two range limits for X and Y axes. Also an AABB defined by Min()/Max().
+struct ImPlotRect {
     ImPlotRange X, Y;
-    ImPlotLimits()                                                        { }
-    ImPlotLimits(double x_min, double x_max, double y_min, double y_max)  { X.Min = x_min; X.Max = x_max; Y.Min = y_min; Y.Max = y_max; }
-    bool Contains(const ImPlotPoint& p) const                             { return Contains(p.x, p.y); }
-    bool Contains(double x, double y) const                               { return X.Contains(x) && Y.Contains(y); }
-    ImPlotPoint Min() const                                               { return ImPlotPoint(X.Min, Y.Min); }
-    ImPlotPoint Max() const                                               { return ImPlotPoint(X.Max, Y.Max); }
+    ImPlotRect()                                                       {                                                               }
+    ImPlotRect(double x_min, double x_max, double y_min, double y_max) { X.Min = x_min; X.Max = x_max; Y.Min = y_min; Y.Max = y_max;   }
+    bool Contains(const ImPlotPoint& p) const                          { return Contains(p.x, p.y);                                    }
+    bool Contains(double x, double y) const                            { return X.Contains(x) && Y.Contains(y);                        }
+    ImPlotPoint Size() const                                           { return ImPlotPoint(X.Size(), Y.Size());                       }
+    ImPlotPoint Clamp(const ImPlotPoint& p)                            { return Clamp(p.x, p.y);                                       }
+    ImPlotPoint Clamp(double x, double y)                              { return ImPlotPoint(X.Clamp(x),Y.Clamp(y));                    }
+    ImPlotPoint Min() const                                            { return ImPlotPoint(X.Min, Y.Min);                             }
+    ImPlotPoint Max() const                                            { return ImPlotPoint(X.Max, Y.Max);                             }
 };
 
 // Plot style structure
@@ -331,14 +405,46 @@ struct ImPlotStyle {
     IMPLOT_API ImPlotStyle();
 };
 
+#if (IMGUI_VERSION_NUM < 18716) // Renamed in 1.88
+#define ImGuiModFlags       ImGuiKeyModFlags
+#define ImGuiModFlags_None  ImGuiKeyModFlags_None
+#define ImGuiModFlags_Ctrl  ImGuiKeyModFlags_Ctrl
+#define ImGuiModFlags_Shift ImGuiKeyModFlags_Shift
+#define ImGuiModFlags_Alt   ImGuiKeyModFlags_Alt
+#define ImGuiModFlags_Super ImGuiKeyModFlags_Super
+#endif
+
+// Input mapping structure. Default values listed. See also MapInputDefault, MapInputReverse.
+struct ImPlotInputMap {
+    ImGuiMouseButton Pan;           // LMB    enables panning when held,
+    ImGuiModFlags    PanMod;        // none   optional modifier that must be held for panning/fitting
+    ImGuiMouseButton Fit;           // LMB    initiates fit when double clicked
+    ImGuiMouseButton Select;        // RMB    begins box selection when pressed and confirms selection when released
+    ImGuiMouseButton SelectCancel;  // LMB    cancels active box selection when pressed; cannot be same as Select
+    ImGuiModFlags    SelectMod;     // none   optional modifier that must be held for box selection
+    ImGuiModFlags    SelectHorzMod; // Alt    expands active box selection horizontally to plot edge when held
+    ImGuiModFlags    SelectVertMod; // Shift  expands active box selection vertically to plot edge when held
+    ImGuiMouseButton Menu;          // RMB    opens context menus (if enabled) when clicked
+    ImGuiModFlags    OverrideMod;   // Ctrl   when held, all input is ignored; used to enable axis/plots as DND sources
+    ImGuiModFlags    ZoomMod;       // none   optional modifier that must be held for scroll wheel zooming
+    float            ZoomRate;      // 0.1f   zoom rate for scroll (e.g. 0.1f = 10% plot range every scroll click); make negative to invert
+    IMPLOT_API ImPlotInputMap();
+};
+
 //-----------------------------------------------------------------------------
-// ImPlot End-User API
+// [SECTION] Callbacks
 //-----------------------------------------------------------------------------
+
+// Callback signature for axis tick label formatter.
+typedef void (*ImPlotFormatter)(double value, char* buff, int size, void* user_data);
+
+// Callback signature for data getter.
+typedef ImPlotPoint (*ImPlotGetter)(void* user_data, int idx);
 
 namespace ImPlot {
 
 //-----------------------------------------------------------------------------
-// ImPlot Context
+// [SECTION] Contexts
 //-----------------------------------------------------------------------------
 
 // Creates a new ImPlot context. Call this after ImGui::CreateContext.
@@ -357,14 +463,14 @@ IMPLOT_API void SetCurrentContext(ImPlotContext* ctx);
 IMPLOT_API void SetImGuiContext(ImGuiContext* ctx);
 
 //-----------------------------------------------------------------------------
-// Begin/End Plot
+// [SECTION] Begin/End Plot
 //-----------------------------------------------------------------------------
 
 // Starts a 2D plotting context. If this function returns true, EndPlot() MUST
 // be called! You are encouraged to use the following convention:
 //
 // if (BeginPlot(...)) {
-//     ImPlot::PlotLine(...);
+//     PlotLine(...);
 //     ...
 //     EndPlot();
 // }
@@ -374,31 +480,16 @@ IMPLOT_API void SetImGuiContext(ImGuiContext* ctx);
 // - #title_id must be unique to the current ImGui ID scope. If you need to avoid ID
 //   collisions or don't want to display a title in the plot, use double hashes
 //   (e.g. "MyPlot##HiddenIdText" or "##NoTitle").
-// - If #x_label and/or #y_label are provided, axes labels will be displayed.
 // - #size is the **frame** size of the plot widget, not the plot area. The default
-//   size of plots (i.e. when ImVec2(0,0)) can be modified in your ImPlotStyle
-//   (default is 400x300 px).
-// - Auxiliary y-axes must be enabled with ImPlotFlags_YAxis2/3 to be displayed.
-// - See ImPlotFlags and ImPlotAxisFlags for more available options.
-
-IMPLOT_API bool BeginPlot(const char* title_id,
-                          const char* x_label      = NULL,
-                          const char* y_label      = NULL,
-                          const ImVec2& size       = ImVec2(-1,0),
-                          ImPlotFlags flags        = ImPlotFlags_None,
-                          ImPlotAxisFlags x_flags  = ImPlotAxisFlags_None,
-                          ImPlotAxisFlags y_flags  = ImPlotAxisFlags_None,
-                          ImPlotAxisFlags y2_flags = ImPlotAxisFlags_NoGridLines,
-                          ImPlotAxisFlags y3_flags = ImPlotAxisFlags_NoGridLines,
-                          const char* y2_label     = NULL,
-                          const char* y3_label     = NULL);
+//   size of plots (i.e. when ImVec2(0,0)) can be modified in your ImPlotStyle.
+IMPLOT_API bool BeginPlot(const char* title_id, const ImVec2& size = ImVec2(-1,0), ImPlotFlags flags = ImPlotFlags_None);
 
 // Only call EndPlot() if BeginPlot() returns true! Typically called at the end
 // of an if statement conditioned on BeginPlot(). See example above.
 IMPLOT_API void EndPlot();
 
 //-----------------------------------------------------------------------------
-// Begin/EndSubplots
+// [SECTION] Begin/End Subplots
 //-----------------------------------------------------------------------------
 
 // Starts a subdivided plotting context. If the function returns true,
@@ -419,16 +510,17 @@ IMPLOT_API void EndPlot();
 //     EndSubplots();
 // }
 //
-// Procudes:
+// Produces:
 //
-// [0][1][2]
-// [3][4][5]
+// [0] | [1] | [2]
+// ----|-----|----
+// [3] | [4] | [5]
 //
 // Important notes:
 //
 // - #title_id must be unique to the current ImGui ID scope. If you need to avoid ID
 //   collisions or don't want to display a title in the plot, use double hashes
-//   (e.g. "MyPlot##HiddenIdText" or "##NoTitle").
+//   (e.g. "MySubplot##HiddenIdText" or "##NoTitle").
 // - #rows and #cols must be greater than 0.
 // - #size is the size of the entire grid of subplots, not the individual plots
 // - #row_ratios and #col_ratios must have AT LEAST #rows and #cols elements,
@@ -459,10 +551,107 @@ IMPLOT_API bool BeginSubplots(const char* title_id,
 IMPLOT_API void EndSubplots();
 
 //-----------------------------------------------------------------------------
-// Plot Items
+// [SECTION] Setup
 //-----------------------------------------------------------------------------
 
-// The template functions below are explicitly instantiated in implot_items.cpp.
+// The following API allows you to setup and customize various aspects of the
+// current plot. The functions should be called immediately after BeginPlot
+// and before any other API calls. Typical usage is as follows:
+
+// if (BeginPlot(...)) {                     1) begin a new plot
+//     SetupAxis(ImAxis_X1, "My X-Axis");    2) make Setup calls
+//     SetupAxis(ImAxis_Y1, "My Y-Axis");
+//     SetupLegend(ImPlotLocation_North);
+//     ...
+//     SetupFinish();                        3) [optional] explicitly finish setup
+//     PlotLine(...);                        4) plot items
+//     ...
+//     EndPlot();                            5) end the plot
+// }
+//
+// Important notes:
+//
+// - Always call Setup code at the top of your BeginPlot conditional statement.
+// - Setup is locked once you start plotting or explicitly call SetupFinish.
+//   Do NOT call Setup code after you begin plotting or after you make
+//   any non-Setup API calls (e.g. utils like PlotToPixels also lock Setup)
+// - Calling SetupFinish is OPTIONAL, but probably good practice. If you do not
+//   call it yourself, then the first subsequent plotting or utility function will
+//   call it for you.
+
+// Enables an axis or sets the label and/or flags for an existing axis. Leave #label = NULL for no label.
+IMPLOT_API void SetupAxis(ImAxis axis, const char* label = NULL, ImPlotAxisFlags flags = ImPlotAxisFlags_None);
+// Sets an axis range limits. If ImPlotCond_Always is used, the axes limits will be locked.
+IMPLOT_API void SetupAxisLimits(ImAxis axis, double v_min, double v_max, ImPlotCond cond = ImPlotCond_Once);
+// Links an axis range limits to external values. Set to NULL for no linkage. The pointer data must remain valid until EndPlot.
+IMPLOT_API void SetupAxisLinks(ImAxis axis, double* link_min, double* link_max);
+// Sets the format of numeric axis labels via formater specifier (default="%g"). Formated values will be double (i.e. use %f).
+IMPLOT_API void SetupAxisFormat(ImAxis axis, const char* fmt);
+// Sets the format of numeric axis labels via formatter callback. Given #value, write a label into #buff. Optionally pass user data.
+IMPLOT_API void SetupAxisFormat(ImAxis axis, ImPlotFormatter formatter, void* data = NULL);
+// Sets an axis' ticks and optionally the labels. To keep the default ticks, set #keep_default=true.
+IMPLOT_API void SetupAxisTicks(ImAxis axis, const double* values, int n_ticks, const char* const labels[] = NULL, bool keep_default = false);
+// Sets an axis' ticks and optionally the labels for the next plot. To keep the default ticks, set #keep_default=true.
+IMPLOT_API void SetupAxisTicks(ImAxis axis, double v_min, double v_max, int n_ticks, const char* const labels[] = NULL, bool keep_default = false);
+
+// Sets the label and/or flags for primary X and Y axes (shorthand for two calls to SetupAxis).
+IMPLOT_API void SetupAxes(const char* x_label, const char* y_label, ImPlotAxisFlags x_flags = ImPlotAxisFlags_None, ImPlotAxisFlags y_flags = ImPlotAxisFlags_None);
+// Sets the primary X and Y axes range limits. If ImPlotCond_Always is used, the axes limits will be locked (shorthand for two calls to SetupAxisLimits).
+IMPLOT_API void SetupAxesLimits(double x_min, double x_max, double y_min, double y_max, ImPlotCond cond = ImPlotCond_Once);
+
+// Sets up the plot legend.
+IMPLOT_API void SetupLegend(ImPlotLocation location, ImPlotLegendFlags flags = ImPlotLegendFlags_None);
+// Set the location of the current plot's mouse position text (default = South|East).
+IMPLOT_API void SetupMouseText(ImPlotLocation location, ImPlotMouseTextFlags flags = ImPlotMouseTextFlags_None);
+
+// Explicitly finalize plot setup. Once you call this, you cannot make anymore Setup calls for the current plot!
+// Note that calling this function is OPTIONAL; it will be called by the first subsequent setup-locking API call.
+IMPLOT_API void SetupFinish();
+
+//-----------------------------------------------------------------------------
+// [SECTION] SetNext
+//-----------------------------------------------------------------------------
+
+// Though you should default to the `Setup` API above, there are some scenarios
+// where (re)configuring a plot or axis before `BeginPlot` is needed (e.g. if
+// using a preceding button or slider widget to change the plot limits). In
+// this case, you can use the `SetNext` API below. While this is not as feature
+// rich as the Setup API, most common needs are provided. These functions can be
+// called anwhere except for inside of `Begin/EndPlot`. For example:
+
+// if (ImGui::Button("Center Plot"))
+//     ImPlot::SetNextPlotLimits(-1,1,-1,1);
+// if (ImPlot::BeginPlot(...)) {
+//     ...
+//     ImPlot::EndPlot();
+// }
+//
+// Important notes:
+//
+// - You must still enable non-default axes with SetupAxis for these functions
+//   to work properly.
+
+// Sets an upcoming axis range limits. If ImPlotCond_Always is used, the axes limits will be locked.
+IMPLOT_API void SetNextAxisLimits(ImAxis axis, double v_min, double v_max, ImPlotCond cond = ImPlotCond_Once);
+// Links an upcoming axis range limits to external values. Set to NULL for no linkage. The pointer data must remain valid until EndPlot!
+IMPLOT_API void SetNextAxisLinks(ImAxis axis, double* link_min, double* link_max);
+// Set an upcoming axis to auto fit to its data.
+IMPLOT_API void SetNextAxisToFit(ImAxis axis);
+
+// Sets the upcoming primary X and Y axes range limits. If ImPlotCond_Always is used, the axes limits will be locked (shorthand for two calls to SetupAxisLimits).
+IMPLOT_API void SetNextAxesLimits(double x_min, double x_max, double y_min, double y_max, ImPlotCond cond = ImPlotCond_Once);
+// Sets all upcoming axes to auto fit to their data.
+IMPLOT_API void SetNextAxesToFit();
+
+//-----------------------------------------------------------------------------
+// [SECTION] Plot Items
+//-----------------------------------------------------------------------------
+
+// The main plotting API is provied below. Call these functions between
+// Begin/EndPlot and after any Setup API calls. Each plots data on the current
+// x and y axes, which can be changed with `SetAxis/Axes`.
+//
+// The templated functions are explicitly instantiated in implot_items.cpp.
 // They are not intended to be used generically with custom types. You will get
 // a linker error if you try! All functions support the following scalar types:
 //
@@ -507,71 +696,77 @@ IMPLOT_API void EndSubplots();
 // if you try plotting extremely large 64-bit integral types. Proceed with caution!
 
 // Plots a standard 2D line plot.
-template <typename T> IMPLOT_API void PlotLine(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotLine(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API void PlotLineG(const char* label_id, ImPlotPoint (*getter)(void* data, int idx), void* data, int count, int offset=0);
+IMPLOT_TMP void PlotLine(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotLine(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotLineG(const char* label_id, ImPlotGetter getter, void* data, int count);
 
 // Plots a standard 2D scatter plot. Default marker is ImPlotMarker_Circle.
-template <typename T> IMPLOT_API  void PlotScatter(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API  void PlotScatter(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API  void PlotScatterG(const char* label_id, ImPlotPoint (*getter)(void* data, int idx), void* data, int count, int offset=0);
+IMPLOT_TMP void PlotScatter(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotScatter(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotScatterG(const char* label_id, ImPlotGetter getter, void* data, int count);
 
 // Plots a a stairstep graph. The y value is continued constantly from every x position, i.e. the interval [x[i], x[i+1]) has the value y[i].
-template <typename T> IMPLOT_API void PlotStairs(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotStairs(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API void PlotStairsG(const char* label_id, ImPlotPoint (*getter)(void* data, int idx), void* data, int count, int offset=0);
+IMPLOT_TMP void PlotStairs(const char* label_id, const T* values, int count, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotStairs(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotStairsG(const char* label_id, ImPlotGetter getter, void* data, int count);
 
-// Plots a shaded (filled) region between two lines, or a line and a horizontal reference. Set y_ref to +/-INFINITY for infinite fill extents.
-template <typename T> IMPLOT_API void PlotShaded(const char* label_id, const T* values, int count, double y_ref=0, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotShaded(const char* label_id, const T* xs, const T* ys, int count, double y_ref=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotShaded(const char* label_id, const T* xs, const T* ys1, const T* ys2, int count, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API void PlotShadedG(const char* label_id, ImPlotPoint (*getter1)(void* data, int idx), void* data1, ImPlotPoint (*getter2)(void* data, int idx), void* data2, int count, int offset=0);
+// Plots a shaded (filled) region between two lines, or a line and a horizontal reference. Set yref to +/-INFINITY for infinite fill extents.
+IMPLOT_TMP void PlotShaded(const char* label_id, const T* values, int count, double yref=0, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotShaded(const char* label_id, const T* xs, const T* ys, int count, double yref=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotShaded(const char* label_id, const T* xs, const T* ys1, const T* ys2, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotShadedG(const char* label_id, ImPlotGetter getter1, void* data1, ImPlotGetter getter2, void* data2, int count);
 
-// Plots a vertical bar graph. #width and #shift are in X units.
-template <typename T> IMPLOT_API void PlotBars(const char* label_id, const T* values, int count, double width=0.67, double shift=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotBars(const char* label_id, const T* xs, const T* ys, int count, double width, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API void PlotBarsG(const char* label_id, ImPlotPoint (*getter)(void* data, int idx), void* data, int count, double width, int offset=0);
+// Plots a vertical bar graph. #bar_width and #x0 are in X units.
+IMPLOT_TMP void PlotBars(const char* label_id, const T* values, int count, double bar_width=0.67, double x0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotBars(const char* label_id, const T* xs, const T* ys, int count, double bar_width, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotBarsG(const char* label_id, ImPlotGetter getter, void* data, int count, double bar_width);
 
-// Plots a horizontal bar graph. #height and #shift are in Y units.
-template <typename T> IMPLOT_API void PlotBarsH(const char* label_id, const T* values, int count, double height=0.67, double shift=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotBarsH(const char* label_id, const T* xs, const T* ys, int count, double height, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API void PlotBarsHG(const char* label_id, ImPlotPoint (*getter)(void* data, int idx), void* data, int count, double height,  int offset=0);
+// Plots a horizontal bar graph. #bar_height and #y0 are in Y units.
+IMPLOT_TMP void PlotBarsH(const char* label_id, const T* values, int count, double bar_height=0.67, double y0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotBarsH(const char* label_id, const T* xs, const T* ys, int count, double bar_height, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotBarsHG(const char* label_id, ImPlotGetter getter, void* data, int count, double bar_height);
+
+// Plots a group of vertical bars. #values is a row-major matrix with #item_count rows and #group_count cols. #label_ids should have #item_count elements.
+IMPLOT_TMP void PlotBarGroups(const char* const label_ids[], const T* values, int item_count, int group_count, double group_width=0.67, double x0=0, ImPlotBarGroupsFlags flags=ImPlotBarGroupsFlags_None);
+
+// Plots a group of horizontal bars. #values is a row-major matrix with #item_count rows and #group_count cols. #label_ids should have #item_count elements.
+IMPLOT_TMP void PlotBarGroupsH(const char* const label_ids[], const T* values, int item_count, int group_count, double group_height=0.67, double y0=0, ImPlotBarGroupsFlags flags=ImPlotBarGroupsFlags_None);
 
 // Plots vertical error bar. The label_id should be the same as the label_id of the associated line or bar plot.
-template <typename T> IMPLOT_API void PlotErrorBars(const char* label_id, const T* xs, const T* ys, const T* err, int count, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotErrorBars(const char* label_id, const T* xs, const T* ys, const T* neg, const T* pos, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotErrorBars(const char* label_id, const T* xs, const T* ys, const T* err, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotErrorBars(const char* label_id, const T* xs, const T* ys, const T* neg, const T* pos, int count, int offset=0, int stride=sizeof(T));
 
 // Plots horizontal error bars. The label_id should be the same as the label_id of the associated line or bar plot.
-template <typename T> IMPLOT_API void PlotErrorBarsH(const char* label_id, const T* xs, const T* ys, const T* err, int count, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotErrorBarsH(const char* label_id, const T* xs, const T* ys, const T* neg, const T* pos, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotErrorBarsH(const char* label_id, const T* xs, const T* ys, const T* err, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotErrorBarsH(const char* label_id, const T* xs, const T* ys, const T* neg, const T* pos, int count, int offset=0, int stride=sizeof(T));
 
 /// Plots vertical stems.
-template <typename T> IMPLOT_API void PlotStems(const char* label_id, const T* values, int count, double y_ref=0, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotStems(const char* label_id, const T* xs, const T* ys, int count, double y_ref=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotStems(const char* label_id, const T* values, int count, double yref=0, double xscale=1, double x0=0, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotStems(const char* label_id, const T* xs, const T* ys, int count, double yref=0, int offset=0, int stride=sizeof(T));
 
 /// Plots infinite vertical or horizontal lines (e.g. for references or asymptotes).
-template <typename T> IMPLOT_API void PlotVLines(const char* label_id, const T* xs, int count, int offset=0, int stride=sizeof(T));
-template <typename T> IMPLOT_API void PlotHLines(const char* label_id, const T* ys, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotVLines(const char* label_id, const T* xs, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_TMP void PlotHLines(const char* label_id, const T* ys, int count, int offset=0, int stride=sizeof(T));
 
 // Plots a pie chart. If the sum of values > 1 or normalize is true, each value will be normalized. Center and radius are in plot units. #label_fmt can be set to NULL for no labels.
-template <typename T> IMPLOT_API void PlotPieChart(const char* const label_ids[], const T* values, int count, double x, double y, double radius, bool normalize=false, const char* label_fmt="%.1f", double angle0=90);
+IMPLOT_TMP void PlotPieChart(const char* const label_ids[], const T* values, int count, double x, double y, double radius, bool normalize=false, const char* label_fmt="%.1f", double angle0=90);
 
 // Plots a 2D heatmap chart. Values are expected to be in row-major order. Leave #scale_min and scale_max both at 0 for automatic color scaling, or set them to a predefined range. #label_fmt can be set to NULL for no labels.
-template <typename T> IMPLOT_API void PlotHeatmap(const char* label_id, const T* values, int rows, int cols, double scale_min=0, double scale_max=0, const char* label_fmt="%.1f", const ImPlotPoint& bounds_min=ImPlotPoint(0,0), const ImPlotPoint& bounds_max=ImPlotPoint(1,1));
+IMPLOT_TMP void PlotHeatmap(const char* label_id, const T* values, int rows, int cols, double scale_min=0, double scale_max=0, const char* label_fmt="%.1f", const ImPlotPoint& bounds_min=ImPlotPoint(0,0), const ImPlotPoint& bounds_max=ImPlotPoint(1,1));
 
 // Plots a horizontal histogram. #bins can be a positive integer or an ImPlotBin_ method. If #cumulative is true, each bin contains its count plus the counts of all previous bins.
 // If #density is true, the PDF is visualized. If both are true, the CDF is visualized. If #range is left unspecified, the min/max of #values will be used as the range.
 // If #range is specified, outlier values outside of the range are not binned. However, outliers still count toward normalizing and cumulative counts unless #outliers is false. The largest bin count or density is returned.
-template <typename T> IMPLOT_API double PlotHistogram(const char* label_id, const T* values, int count, int bins=ImPlotBin_Sturges, bool cumulative=false, bool density=false, ImPlotRange range=ImPlotRange(), bool outliers=true, double bar_scale=1.0);
+IMPLOT_TMP double PlotHistogram(const char* label_id, const T* values, int count, int bins=ImPlotBin_Sturges, bool cumulative=false, bool density=false, ImPlotRange range=ImPlotRange(), bool outliers=true, double bar_scale=1.0);
 
 // Plots two dimensional, bivariate histogram as a heatmap. #x_bins and #y_bins can be a positive integer or an ImPlotBin. If #density is true, the PDF is visualized.
-// If #range is left unspecified, the min/max of #xs an #ys will be used as the ranges. If #range is specified, outlier values outside of range are not binned.
+// If #bounds is left unspecified, the min/max of #xs an #ys will be used as the ranges. If #bounds is specified, outlier values outside of range are not binned.
 // However, outliers still count toward the normalizing count for density plots unless #outliers is false. The largest bin count or density is returned.
-template <typename T> IMPLOT_API double PlotHistogram2D(const char* label_id, const T* xs, const T* ys, int count, int x_bins=ImPlotBin_Sturges, int y_bins=ImPlotBin_Sturges, bool density=false, ImPlotLimits range=ImPlotLimits(), bool outliers=true);
+IMPLOT_TMP double PlotHistogram2D(const char* label_id, const T* xs, const T* ys, int count, int x_bins=ImPlotBin_Sturges, int y_bins=ImPlotBin_Sturges, bool density=false, ImPlotRect range=ImPlotRect(), bool outliers=true);
 
 // Plots digital data. Digital plots do not respond to y drag or zoom, and are always referenced to the bottom of the plot.
-template <typename T> IMPLOT_API void PlotDigital(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
-                      IMPLOT_API void PlotDigitalG(const char* label_id, ImPlotPoint (*getter)(void* data, int idx), void* data, int count, int offset=0);
+IMPLOT_TMP void PlotDigital(const char* label_id, const T* xs, const T* ys, int count, int offset=0, int stride=sizeof(T));
+IMPLOT_API void PlotDigitalG(const char* label_id, ImPlotGetter getter, void* data, int count);
 
 // Plots an axis-aligned image. #bounds_min/bounds_max are in plot coordinates (y-up) and #uv0/uv1 are in texture coordinates (y-down).
 IMPLOT_API void PlotImage(const char* label_id, ImTextureID user_texture_id, const ImPlotPoint& bounds_min, const ImPlotPoint& bounds_max, const ImVec2& uv0=ImVec2(0,0), const ImVec2& uv1=ImVec2(1,1), const ImVec4& tint_col=ImVec4(1,1,1,1));
@@ -583,163 +778,130 @@ IMPLOT_API void PlotText(const char* text, double x, double y, bool vertical=fal
 IMPLOT_API void PlotDummy(const char* label_id);
 
 //-----------------------------------------------------------------------------
-// Plot Utils
+// [SECTION] Plot Tools
 //-----------------------------------------------------------------------------
 
-// The following functions MUST be called BEFORE BeginPlot!
+// The following can be used to render interactive elements and/or annotations.
+// Like the item plotting functions above, they apply to the current x and y
+// axes, which can be changed with `SetAxis/SetAxes`.
 
-// Set the axes range limits of the next plot. Call right before BeginPlot(). If ImGuiCond_Always is used, the axes limits will be locked.
-IMPLOT_API void SetNextPlotLimits(double xmin, double xmax, double ymin, double ymax, ImGuiCond cond = ImGuiCond_Once);
-// Set the X axis range limits of the next plot. Call right before BeginPlot(). If ImGuiCond_Always is used, the X axis limits will be locked.
-IMPLOT_API void SetNextPlotLimitsX(double xmin, double xmax, ImGuiCond cond = ImGuiCond_Once);
-// Set the Y axis range limits of the next plot. Call right before BeginPlot(). If ImGuiCond_Always is used, the Y axis limits will be locked.
-IMPLOT_API void SetNextPlotLimitsY(double ymin, double ymax, ImGuiCond cond = ImGuiCond_Once, ImPlotYAxis y_axis = ImPlotYAxis_1);
-// Links the next plot limits to external values. Set to NULL for no linkage. The pointer data must remain valid until the matching call to EndPlot.
-IMPLOT_API void LinkNextPlotLimits(double* xmin, double* xmax, double* ymin, double* ymax, double* ymin2 = NULL, double* ymax2 = NULL, double* ymin3 = NULL, double* ymax3 = NULL);
-// Fits the next plot axes to all plotted data if they are unlocked (equivalent to double-clicks).
-IMPLOT_API void FitNextPlotAxes(bool x = true, bool y = true, bool y2 = true, bool y3 = true);
+// Shows a draggable point at x,y. #col defaults to ImGuiCol_Text.
+IMPLOT_API bool DragPoint(int id, double* x, double* y, const ImVec4& col, float size = 4, ImPlotDragToolFlags flags = ImPlotDragToolFlags_None);
+// Shows a draggable vertical guide line at an x-value. #col defaults to ImGuiCol_Text.
+IMPLOT_API bool DragLineX(int id, double* x, const ImVec4& col, float thickness = 1, ImPlotDragToolFlags flags = ImPlotDragToolFlags_None);
+// Shows a draggable horizontal guide line at a y-value. #col defaults to ImGuiCol_Text.
+IMPLOT_API bool DragLineY(int id, double* y, const ImVec4& col, float thickness = 1, ImPlotDragToolFlags flags = ImPlotDragToolFlags_None);
+// Shows a draggable and resizeable rectangle.
+IMPLOT_API bool DragRect(int id, double* x_min, double* y_min, double* x_max, double* y_max, const ImVec4& col, ImPlotDragToolFlags flags = ImPlotDragToolFlags_None);
 
-// Set the X axis ticks and optionally the labels for the next plot. To keep the default ticks, set #keep_default=true.
-IMPLOT_API void SetNextPlotTicksX(const double* values, int n_ticks, const char* const labels[] = NULL, bool keep_default = false);
-IMPLOT_API void SetNextPlotTicksX(double x_min, double x_max, int n_ticks, const char* const labels[] = NULL, bool keep_default = false);
-// Set the Y axis ticks and optionally the labels for the next plot. To keep the default ticks, set #keep_default=true.
-IMPLOT_API void SetNextPlotTicksY(const double* values, int n_ticks, const char* const labels[] = NULL, bool keep_default = false, ImPlotYAxis y_axis = ImPlotYAxis_1);
-IMPLOT_API void SetNextPlotTicksY(double y_min, double y_max, int n_ticks, const char* const labels[] = NULL, bool keep_default = false, ImPlotYAxis y_axis = ImPlotYAxis_1);
+// Shows an annotation callout at a chosen point. Clamping keeps annotations in the plot area. Annotations are always rendered on top.
+IMPLOT_API void Annotation(double x, double y, const ImVec4& color, const ImVec2& pix_offset, bool clamp, bool round = false);
+IMPLOT_API void Annotation(double x, double y, const ImVec4& color, const ImVec2& pix_offset, bool clamp, const char* fmt, ...)           IM_FMTARGS(6);
+IMPLOT_API void AnnotationV(double x, double y, const ImVec4& color, const ImVec2& pix_offset, bool clamp, const char* fmt, va_list args) IM_FMTLIST(6);
 
-// Set the format for numeric X axis labels (default="%g"). Formated values will be doubles (i.e. don't supply %d, %i, etc.). Not applicable if ImPlotAxisFlags_Time enabled.
-IMPLOT_API void SetNextPlotFormatX(const char* fmt);
-// Set the format for numeric Y axis labels (default="%g"). Formated values will be doubles (i.e. don't supply %d, %i, etc.).
-IMPLOT_API void SetNextPlotFormatY(const char* fmt, ImPlotYAxis y_axis=ImPlotYAxis_1);
+// Shows a x-axis tag at the specified coordinate value.
+IMPLOT_API void TagX(double x, const ImVec4& color, bool round = false);
+IMPLOT_API void TagX(double x, const ImVec4& color, const char* fmt, ...)           IM_FMTARGS(3);
+IMPLOT_API void TagXV(double x, const ImVec4& color, const char* fmt, va_list args) IM_FMTLIST(3);
 
-// The following functions MUST be called BETWEEN Begin/EndPlot!
+// Shows a y-axis tag at the specified coordinate value.
+IMPLOT_API void TagY(double y, const ImVec4& color, bool round = false);
+IMPLOT_API void TagY(double y, const ImVec4& color, const char* fmt, ...)           IM_FMTARGS(3);
+IMPLOT_API void TagYV(double y, const ImVec4& color, const char* fmt, va_list args) IM_FMTLIST(3);
 
-// Select which Y axis will be used for subsequent plot elements. The default is ImPlotYAxis_1, or the first (left) Y axis. Enable 2nd and 3rd axes with ImPlotFlags_YAxisX.
-IMPLOT_API void SetPlotYAxis(ImPlotYAxis y_axis);
-// Hides or shows the next plot item (i.e. as if it were toggled from the legend). Use ImGuiCond_Always if you need to forcefully set this every frame.
-IMPLOT_API void HideNextItem(bool hidden = true, ImGuiCond cond = ImGuiCond_Once);
+//-----------------------------------------------------------------------------
+// [SECTION] Plot Utils
+//-----------------------------------------------------------------------------
 
-// Convert pixels to a position in the current plot's coordinate system. A negative y_axis uses the current value of SetPlotYAxis (ImPlotYAxis_1 initially).
-IMPLOT_API ImPlotPoint PixelsToPlot(const ImVec2& pix, ImPlotYAxis y_axis = IMPLOT_AUTO);
-IMPLOT_API ImPlotPoint PixelsToPlot(float x, float y, ImPlotYAxis y_axis = IMPLOT_AUTO);
-// Convert a position in the current plot's coordinate system to pixels. A negative y_axis uses the current value of SetPlotYAxis (ImPlotYAxis_1 initially).
-IMPLOT_API ImVec2 PlotToPixels(const ImPlotPoint& plt, ImPlotYAxis y_axis = IMPLOT_AUTO);
-IMPLOT_API ImVec2 PlotToPixels(double x, double y, ImPlotYAxis y_axis = IMPLOT_AUTO);
+// Select which axis/axes will be used for subsequent plot elements.
+IMPLOT_API void SetAxis(ImAxis axis);
+IMPLOT_API void SetAxes(ImAxis x_axis, ImAxis y_axis);
+
+// Convert pixels to a position in the current plot's coordinate system. Passing IMPLOT_AUTO uses the current axes.
+IMPLOT_API ImPlotPoint PixelsToPlot(const ImVec2& pix, ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+IMPLOT_API ImPlotPoint PixelsToPlot(float x, float y, ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+
+// Convert a position in the current plot's coordinate system to pixels. Passing IMPLOT_AUTO uses the current axes.
+IMPLOT_API ImVec2 PlotToPixels(const ImPlotPoint& plt, ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+IMPLOT_API ImVec2 PlotToPixels(double x, double y, ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+
 // Get the current Plot position (top-left) in pixels.
 IMPLOT_API ImVec2 GetPlotPos();
 // Get the curent Plot size in pixels.
 IMPLOT_API ImVec2 GetPlotSize();
+
+// Returns the mouse position in x,y coordinates of the current plot. Passing IMPLOT_AUTO uses the current axes.
+IMPLOT_API ImPlotPoint GetPlotMousePos(ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+// Returns the current plot axis range.
+IMPLOT_API ImPlotRect GetPlotLimits(ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+
 // Returns true if the plot area in the current plot is hovered.
 IMPLOT_API bool IsPlotHovered();
-// Returns true if the XAxis plot area in the current plot is hovered.
-IMPLOT_API bool IsPlotXAxisHovered();
-// Returns true if the YAxis[n] plot area in the current plot is hovered.
-IMPLOT_API bool IsPlotYAxisHovered(ImPlotYAxis y_axis = 0);
-// Returns the mouse position in x,y coordinates of the current plot. A negative y_axis uses the current value of SetPlotYAxis (ImPlotYAxis_1 initially).
-IMPLOT_API ImPlotPoint GetPlotMousePos(ImPlotYAxis y_axis = IMPLOT_AUTO);
-// Returns the current plot axis range. A negative y_axis uses the current value of SetPlotYAxis (ImPlotYAxis_1 initially).
-IMPLOT_API ImPlotLimits GetPlotLimits(ImPlotYAxis y_axis = IMPLOT_AUTO);
+// Returns true if the axis label area in the current plot is hovered.
+IMPLOT_API bool IsAxisHovered(ImAxis axis);
+// Returns true if the bounding frame of a subplot is hovered.
+IMPLOT_API bool IsSubplotsHovered();
 
 // Returns true if the current plot is being box selected.
 IMPLOT_API bool IsPlotSelected();
-// Returns the current plot box selection bounds.
-IMPLOT_API ImPlotLimits GetPlotSelection(ImPlotYAxis y_axis = IMPLOT_AUTO);
+// Returns the current plot box selection bounds. Passing IMPLOT_AUTO uses the current axes.
+IMPLOT_API ImPlotRect GetPlotSelection(ImAxis x_axis = IMPLOT_AUTO, ImAxis y_axis = IMPLOT_AUTO);
+// Cancels a the current plot box selection.
+IMPLOT_API void CancelPlotSelection();
 
-// Returns true if the current plot is being queried or has an active query. Query must be enabled with ImPlotFlags_Query.
-IMPLOT_API bool IsPlotQueried();
-// Returns the current plot query bounds. Query must be enabled with ImPlotFlags_Query.
-IMPLOT_API ImPlotLimits GetPlotQuery(ImPlotYAxis y_axis = IMPLOT_AUTO);
-// Set the current plot query bounds. Query must be enabled with ImPlotFlags_Query.
-IMPLOT_API void SetPlotQuery(const ImPlotLimits& query, ImPlotYAxis y_axis = IMPLOT_AUTO);
+// Hides or shows the next plot item (i.e. as if it were toggled from the legend).
+// Use ImPlotCond_Always if you need to forcefully set this every frame.
+IMPLOT_API void HideNextItem(bool hidden = true, ImPlotCond cond = ImPlotCond_Once);
 
-//-----------------------------------------------------------------------------
-// Algined Plots
-//-----------------------------------------------------------------------------
-
+// Use the following around calls to Begin/EndPlot to align l/r/t/b padding.
 // Consider using Begin/EndSubplots first. They are more feature rich and
 // accomplish the same behaviour by default. The functions below offer lower
 // level control of plot alignment.
 
-// Align axis padding over multiple plots in a single row or column. If this function returns true, EndAlignedPlots() must be called. #group_id must be unique.
-IMPLOT_API bool BeginAlignedPlots(const char* group_id, ImPlotOrientation orientation = ImPlotOrientation_Vertical);
+// Align axis padding over multiple plots in a single row or column. #group_id must
+// be unique. If this function returns true, EndAlignedPlots() must be called.
+IMPLOT_API bool BeginAlignedPlots(const char* group_id, bool vertical = true);
 // Only call EndAlignedPlots() if BeginAlignedPlots() returns true!
 IMPLOT_API void EndAlignedPlots();
 
 //-----------------------------------------------------------------------------
-// Plot Tools
+// [SECTION] Legend Utils
 //-----------------------------------------------------------------------------
-
-// The following functions MUST be called BETWEEN Begin/EndPlot!
-
-// Shows an annotation callout at a chosen point.
-IMPLOT_API void Annotate(double x, double y, const ImVec2& pix_offset, const char* fmt, ...)                                       IM_FMTARGS(4);
-IMPLOT_API void Annotate(double x, double y, const ImVec2& pix_offset, const ImVec4& color, const char* fmt, ...)                  IM_FMTARGS(5);
-IMPLOT_API void AnnotateV(double x, double y, const ImVec2& pix_offset, const char* fmt, va_list args)                             IM_FMTLIST(4);
-IMPLOT_API void AnnotateV(double x, double y, const ImVec2& pix_offset, const ImVec4& color, const char* fmt, va_list args)        IM_FMTLIST(5);
-
-// Same as above, but the annotation will always be clamped to stay inside the plot area.
-IMPLOT_API void AnnotateClamped(double x, double y, const ImVec2& pix_offset, const char* fmt, ...)                                IM_FMTARGS(4);
-IMPLOT_API void AnnotateClamped(double x, double y, const ImVec2& pix_offset, const ImVec4& color, const char* fmt, ...)           IM_FMTARGS(5);
-IMPLOT_API void AnnotateClampedV(double x, double y, const ImVec2& pix_offset, const char* fmt, va_list args)                      IM_FMTLIST(4);
-IMPLOT_API void AnnotateClampedV(double x, double y, const ImVec2& pix_offset, const ImVec4& color, const char* fmt, va_list args) IM_FMTLIST(5);
-
-// Shows a draggable vertical guide line at an x-value. #col defaults to ImGuiCol_Text.
-IMPLOT_API bool DragLineX(const char* id, double* x_value, bool show_label = true, const ImVec4& col = IMPLOT_AUTO_COL, float thickness = 1);
-// Shows a draggable horizontal guide line at a y-value. #col defaults to ImGuiCol_Text.
-IMPLOT_API bool DragLineY(const char* id, double* y_value, bool show_label = true, const ImVec4& col = IMPLOT_AUTO_COL, float thickness = 1);
-// Shows a draggable point at x,y. #col defaults to ImGuiCol_Text.
-IMPLOT_API bool DragPoint(const char* id, double* x, double* y, bool show_label = true, const ImVec4& col = IMPLOT_AUTO_COL, float radius = 4);
-
-//-----------------------------------------------------------------------------
-// Legend Utils and Tools
-//-----------------------------------------------------------------------------
-
-// The following functions MUST be called BETWEEN Begin/EndPlot!
-
-// Set the location of the current plot's (or subplot's) legend.
-IMPLOT_API void SetLegendLocation(ImPlotLocation location, ImPlotOrientation orientation = ImPlotOrientation_Vertical, bool outside = false);
-// Set the location of the current plot's mouse position text (default = South|East).
-IMPLOT_API void SetMousePosLocation(ImPlotLocation location);
-// Returns true if a plot item legend entry is hovered.
-IMPLOT_API bool IsLegendEntryHovered(const char* label_id);
 
 // Begin a popup for a legend entry.
 IMPLOT_API bool BeginLegendPopup(const char* label_id, ImGuiMouseButton mouse_button = 1);
 // End a popup for a legend entry.
 IMPLOT_API void EndLegendPopup();
+// Returns true if a plot item legend entry is hovered.
+IMPLOT_API bool IsLegendEntryHovered(const char* label_id);
 
 //-----------------------------------------------------------------------------
-// Drag and Drop Utils
+// [SECTION] Drag and Drop
 //-----------------------------------------------------------------------------
-
-// The following functions MUST be called BETWEEN Begin/EndPlot!
 
 // Turns the current plot's plotting area into a drag and drop target. Don't forget to call EndDragDropTarget!
-IMPLOT_API bool BeginDragDropTarget();
+IMPLOT_API bool BeginDragDropTargetPlot();
 // Turns the current plot's X-axis into a drag and drop target. Don't forget to call EndDragDropTarget!
-IMPLOT_API bool BeginDragDropTargetX();
-// Turns the current plot's Y-Axis into a drag and drop target. Don't forget to call EndDragDropTarget!
-IMPLOT_API bool BeginDragDropTargetY(ImPlotYAxis axis = ImPlotYAxis_1);
+IMPLOT_API bool BeginDragDropTargetAxis(ImAxis axis);
 // Turns the current plot's legend into a drag and drop target. Don't forget to call EndDragDropTarget!
 IMPLOT_API bool BeginDragDropTargetLegend();
 // Ends a drag and drop target (currently just an alias for ImGui::EndDragDropTarget).
 IMPLOT_API void EndDragDropTarget();
 
 // NB: By default, plot and axes drag and drop *sources* require holding the Ctrl modifier to initiate the drag.
-// You can change the modifier if desired. If ImGuiKeyModFlags_None is provided, the axes will be locked from panning.
+// You can change the modifier if desired. If ImGuiModFlags_None is provided, the axes will be locked from panning.
 
-// Turns the current plot's plotting area into a drag and drop source. Don't forget to call EndDragDropSource!
-IMPLOT_API bool BeginDragDropSource(ImGuiKeyModFlags key_mods = ImGuiKeyModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
-// Turns the current plot's X-axis into a drag and drop source. Don't forget to call EndDragDropSource!
-IMPLOT_API bool BeginDragDropSourceX(ImGuiKeyModFlags key_mods = ImGuiKeyModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
-// Turns the current plot's Y-axis into a drag and drop source. Don't forget to call EndDragDropSource!
-IMPLOT_API bool BeginDragDropSourceY(ImPlotYAxis axis = ImPlotYAxis_1, ImGuiKeyModFlags key_mods = ImGuiKeyModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
+// Turns the current plot's plotting area into a drag and drop source. You must hold Ctrl. Don't forget to call EndDragDropSource!
+IMPLOT_API bool BeginDragDropSourcePlot(ImGuiDragDropFlags flags = 0);
+// Turns the current plot's X-axis into a drag and drop source. You must hold Ctrl. Don't forget to call EndDragDropSource!
+IMPLOT_API bool BeginDragDropSourceAxis(ImAxis axis, ImGuiDragDropFlags flags = 0);
 // Turns an item in the current plot's legend into drag and drop source. Don't forget to call EndDragDropSource!
 IMPLOT_API bool BeginDragDropSourceItem(const char* label_id, ImGuiDragDropFlags flags = 0);
 // Ends a drag and drop source (currently just an alias for ImGui::EndDragDropSource).
 IMPLOT_API void EndDragDropSource();
 
 //-----------------------------------------------------------------------------
-// Plot and Item Styling
+// [SECTION] Styling
 //-----------------------------------------------------------------------------
 
 // Styling colors in ImPlot works similarly to styling colors in ImGui, but
@@ -825,7 +987,7 @@ IMPLOT_API const char* GetStyleColorName(ImPlotCol idx);
 IMPLOT_API const char* GetMarkerName(ImPlotMarker idx);
 
 //-----------------------------------------------------------------------------
-// Colormaps
+// [SECTION] Colormaps
 //-----------------------------------------------------------------------------
 
 // Item styling is based on colormaps when the relevant ImPlotCol_XXX is set to
@@ -875,7 +1037,7 @@ IMPLOT_API ImVec4 GetColormapColor(int idx, ImPlotColormap cmap = IMPLOT_AUTO);
 IMPLOT_API ImVec4 SampleColormap(float t, ImPlotColormap cmap = IMPLOT_AUTO);
 
 // Shows a vertical color scale with linear spaced ticks using the specified color map. Use double hashes to hide label (e.g. "##NoLabel").
-IMPLOT_API void ColormapScale(const char* label, double scale_min, double scale_max, const ImVec2& size = ImVec2(0,0), ImPlotColormap cmap = IMPLOT_AUTO, const char* fmt = "%g");
+IMPLOT_API void ColormapScale(const char* label, double scale_min, double scale_max, const ImVec2& size = ImVec2(0,0), ImPlotColormap cmap = IMPLOT_AUTO, const char* format = "%g");
 // Shows a horizontal slider with a colormap gradient background. Optionally returns the color sampled at t in [0 1].
 IMPLOT_API bool ColormapSlider(const char* label, float* t, ImVec4* out = NULL, const char* format = "", ImPlotColormap cmap = IMPLOT_AUTO);
 // Shows a button with a colormap gradient brackground.
@@ -891,7 +1053,19 @@ IMPLOT_API bool ColormapButton(const char* label, const ImVec2& size = ImVec2(0,
 IMPLOT_API void BustColorCache(const char* plot_title_id = NULL);
 
 //-----------------------------------------------------------------------------
-// Miscellaneous
+// [SECTION] Input Mapping
+//-----------------------------------------------------------------------------
+
+// Provides access to input mapping structure for permanant modifications to controls for pan, select, etc.
+IMPLOT_API ImPlotInputMap& GetInputMap();
+
+// Default input mapping: pan = LMB drag, box select = RMB drag, fit = LMB double click, context menu = RMB click, zoom = scroll.
+IMPLOT_API void MapInputDefault(ImPlotInputMap* dst = NULL);
+// Reverse input mapping: pan = RMB drag, box select = LMB drag, fit = LMB double click, context menu = RMB click, zoom = scroll.
+IMPLOT_API void MapInputReverse(ImPlotInputMap* dst = NULL);
+
+//-----------------------------------------------------------------------------
+// [SECTION] Miscellaneous
 //-----------------------------------------------------------------------------
 
 // Render icons similar to those that appear in legends (nifty for data lists).
@@ -910,6 +1084,8 @@ IMPLOT_API void PopPlotClipRect();
 IMPLOT_API bool ShowStyleSelector(const char* label);
 // Shows ImPlot colormap selector dropdown menu.
 IMPLOT_API bool ShowColormapSelector(const char* label);
+// Shows ImPlot input map selector dropdown menu.
+IMPLOT_API bool ShowInputMapSelector(const char* label);
 // Shows ImPlot style editor block (not a window).
 IMPLOT_API void ShowStyleEditor(ImPlotStyle* ref = NULL);
 // Add basic help/info block for end users (not a window).
@@ -918,10 +1094,59 @@ IMPLOT_API void ShowUserGuide();
 IMPLOT_API void ShowMetricsWindow(bool* p_popen = NULL);
 
 //-----------------------------------------------------------------------------
-// Demo (add implot_demo.cpp to your sources!)
+// [SECTION] Demo
 //-----------------------------------------------------------------------------
 
-// Shows the ImPlot demo window.
+// Shows the ImPlot demo window (add implot_demo.cpp to your sources!)
 IMPLOT_API void ShowDemoWindow(bool* p_open = NULL);
 
 }  // namespace ImPlot
+
+//-----------------------------------------------------------------------------
+// [SECTION] Obsolete API
+//-----------------------------------------------------------------------------
+
+// The following functions will be removed! Keep your copy of implot up to date!
+// Occasionally set '#define IMPLOT_DISABLE_OBSOLETE_FUNCTIONS' to stay ahead.
+// If you absolutely must use these functions and do not want to receive compiler
+// warnings, set '#define IMPLOT_DISABLE_OBSOLETE_WARNINGS'.
+
+#ifndef IMPLOT_DISABLE_OBSOLETE_FUNCTIONS
+
+#ifndef IMPLOT_DISABLE_DEPRECATED_WARNINGS
+#if __cplusplus > 201402L
+#define IMPLOT_DEPRECATED(method) [[deprecated]] method
+#elif defined( __GNUC__ ) && !defined( __INTEL_COMPILER ) && ( __GNUC__ > 3 || ( __GNUC__ == 3 && __GNUC_MINOR__ >= 1 ) )
+#define IMPLOT_DEPRECATED(method) method __attribute__( ( deprecated ) )
+#elif defined( _MSC_VER )
+#define IMPLOT_DEPRECATED(method) __declspec(deprecated) method
+#else
+#define IMPLOT_DEPRECATED(method) method
+#endif
+#else
+#define IMPLOT_DEPRECATED(method) method
+#endif
+
+enum ImPlotFlagsObsolete_ {
+    ImPlotFlags_YAxis2 = 1 << 20,
+    ImPlotFlags_YAxis3 = 1 << 21,
+};
+
+namespace ImPlot {
+
+// OBSOLETED in v0.13 -> PLANNED REMOVAL in v1.0
+IMPLOT_DEPRECATED( IMPLOT_API bool BeginPlot(const char* title_id,
+                                             const char* x_label,  // = NULL,
+                                             const char* y_label,  // = NULL,
+                                             const ImVec2& size       = ImVec2(-1,0),
+                                             ImPlotFlags flags        = ImPlotFlags_None,
+                                             ImPlotAxisFlags x_flags  = ImPlotAxisFlags_None,
+                                             ImPlotAxisFlags y_flags  = ImPlotAxisFlags_None,
+                                             ImPlotAxisFlags y2_flags = ImPlotAxisFlags_AuxDefault,
+                                             ImPlotAxisFlags y3_flags = ImPlotAxisFlags_AuxDefault,
+                                             const char* y2_label     = NULL,
+                                             const char* y3_label     = NULL) );
+
+} // namespace ImPlot
+
+#endif

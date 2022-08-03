@@ -33,6 +33,8 @@ namespace hex {
         void frame();
         void frameEnd();
 
+        void processEvent() { this->m_hadEvent = true; }
+
         void initGLFW();
         void initImGui();
         void exitGLFW();
@@ -56,6 +58,10 @@ namespace hex {
         std::fs::path m_imguiSettingsPath;
 
         bool m_mouseButtonDown = false;
+
+        bool m_hadEvent = false;
+        bool m_frameRateTemporarilyUnlocked = false;
+        double m_frameRateUnlockTime = 0;
     };
 
 }

@@ -438,7 +438,10 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawConsole(ImVec2 size) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
         if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
-            ImGuiListClipper clipper(this->m_console.size());
+            ImGuiListClipper clipper;
+
+            clipper.Begin(this->m_console.size());
+
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                     const auto &[level, message] = this->m_console[i];
@@ -488,7 +491,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushID(index++);
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                     constexpr const char *Types[] = { "I", "F", "S", "B" };
                     if (ImGui::BeginCombo("", Types[static_cast<int>(type)])) {
                         for (auto i = 0; i < IM_ARRAYSIZE(Types); i++) {
@@ -502,13 +505,13 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                     ImGui::InputText("###name", name);
                     ImGui::PopItemWidth();
 
                     ImGui::TableNextColumn();
 
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                     switch (type) {
                         case EnvVarType::Integer:
                             {

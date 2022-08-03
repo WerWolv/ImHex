@@ -175,18 +175,31 @@ namespace hex {
         while (!glfwWindowShouldClose(this->m_window)) {
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED)) {
                 glfwWaitEvents();
-
             } else {
-                const bool frameRateThrottled = !(ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 || this->m_mouseButtonDown);
+                glfwPollEvents();
+
+                bool frameRateUnlocked = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 || this->m_mouseButtonDown || this->m_hadEvent;
                 const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
 
-                glfwWaitEventsTimeout(frameRateThrottled ? timeout : 0);
+                if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
+                    this->m_frameRateTemporarilyUnlocked = false;
+                }
+
+                if (frameRateUnlocked || this->m_frameRateTemporarilyUnlocked) {
+                    if (!this->m_frameRateTemporarilyUnlocked) {
+                        this->m_frameRateTemporarilyUnlocked = true;
+                        this->m_frameRateUnlockTime = this->m_lastFrameTime;
+                    }
+                } else {
+                    glfwWaitEventsTimeout(timeout);
+                }
             }
 
 
             this->frameBegin();
             this->frame();
             this->frameEnd();
+            this->m_hadEvent = false;
         }
     }
 
@@ -556,6 +569,7 @@ namespace hex {
             win->frameBegin();
             win->frame();
             win->frameEnd();
+            win->processEvent();
         });
 
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
@@ -568,6 +582,7 @@ namespace hex {
             win->frameBegin();
             win->frame();
             win->frameEnd();
+            win->processEvent();
         });
 
         glfwSetMouseButtonCallback(this->m_window, [](GLFWwindow *window, int button, int action, int mods) {
@@ -579,28 +594,22 @@ namespace hex {
                 win->m_mouseButtonDown = true;
             else if (action == GLFW_RELEASE)
                 win->m_mouseButtonDown = false;
+            win->processEvent();
         });
 
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+            hex::unused(mods);
+
             auto keyName = glfwGetKeyName(key, scancode);
             if (keyName != nullptr)
                 key = std::toupper(keyName[0]);
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            auto &io = ImGui::GetIO();
 
             if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                 win->m_pressedKeys.push_back(key);
-                io.KeysDown[key] = true;
-                io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
-                io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;
-                io.KeyAlt        = (mods & GLFW_MOD_ALT) != 0;
-            } else if (action == GLFW_RELEASE) {
-                io.KeysDown[key] = false;
-                io.KeyCtrl       = (mods & GLFW_MOD_CONTROL) != 0;
-                io.KeyShift      = (mods & GLFW_MOD_SHIFT) != 0;
-                io.KeyAlt        = (mods & GLFW_MOD_ALT) != 0;
             }
+            win->processEvent();
         });
 
         glfwSetDropCallback(this->m_window, [](GLFWwindow *, int count, const char **paths) {
@@ -626,6 +635,13 @@ namespace hex {
                 if (!handled)
                     EventManager::post<RequestOpenFile>(path);
             }
+        });
+
+        glfwSetCursorPosCallback(this->m_window, [](GLFWwindow *window, double x, double y) {
+            hex::unused(x, y);
+
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->processEvent();
         });
 
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
@@ -665,28 +681,6 @@ namespace hex {
             io.Fonts->ConfigData.push_back(entry);
 
         io.ConfigViewportsNoTaskBarIcon = false;
-        io.KeyMap[ImGuiKey_Tab]         = GLFW_KEY_TAB;
-        io.KeyMap[ImGuiKey_LeftArrow]   = GLFW_KEY_LEFT;
-        io.KeyMap[ImGuiKey_RightArrow]  = GLFW_KEY_RIGHT;
-        io.KeyMap[ImGuiKey_UpArrow]     = GLFW_KEY_UP;
-        io.KeyMap[ImGuiKey_DownArrow]   = GLFW_KEY_DOWN;
-        io.KeyMap[ImGuiKey_PageUp]      = GLFW_KEY_PAGE_UP;
-        io.KeyMap[ImGuiKey_PageDown]    = GLFW_KEY_PAGE_DOWN;
-        io.KeyMap[ImGuiKey_Home]        = GLFW_KEY_HOME;
-        io.KeyMap[ImGuiKey_End]         = GLFW_KEY_END;
-        io.KeyMap[ImGuiKey_Insert]      = GLFW_KEY_INSERT;
-        io.KeyMap[ImGuiKey_Delete]      = GLFW_KEY_DELETE;
-        io.KeyMap[ImGuiKey_Backspace]   = GLFW_KEY_BACKSPACE;
-        io.KeyMap[ImGuiKey_Space]       = GLFW_KEY_SPACE;
-        io.KeyMap[ImGuiKey_Enter]       = GLFW_KEY_ENTER;
-        io.KeyMap[ImGuiKey_Escape]      = GLFW_KEY_ESCAPE;
-        io.KeyMap[ImGuiKey_KeyPadEnter] = GLFW_KEY_KP_ENTER;
-        io.KeyMap[ImGuiKey_A]           = GLFW_KEY_A;
-        io.KeyMap[ImGuiKey_C]           = GLFW_KEY_C;
-        io.KeyMap[ImGuiKey_V]           = GLFW_KEY_V;
-        io.KeyMap[ImGuiKey_X]           = GLFW_KEY_X;
-        io.KeyMap[ImGuiKey_Y]           = GLFW_KEY_Y;
-        io.KeyMap[ImGuiKey_Z]           = GLFW_KEY_Z;
 
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkCreationOnSnap);
