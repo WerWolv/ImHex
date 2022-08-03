@@ -267,6 +267,7 @@ jobs:
           # Reconfigure CMake to  include a flag needed for AppImage
           # Other flags are kept from old configuration
 
+          cd build
           cmake \
           -DIMHEX_PLUGINS_IN_SHARE=ON \
           ..
