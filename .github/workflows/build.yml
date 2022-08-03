@@ -262,6 +262,18 @@ jobs:
           mv build/AppDir.deb imhex-${{env.IMHEX_VERSION}}.deb
           rm -rf build/AppDir/DEBIAN
 
+      - name: 🛠️ Reconfigure build for AppImage
+        run: |
+          # Reconfigure CMake to  include a flag needed for AppImage
+          # Other flags are kept from old configuration
+
+          cmake \
+          -DIMHEX_PLUGINS_IN_SHARE=ON \
+          ..
+
+          rm -rf AppDir
+          make -j 4 install DESTDIR=AppDir
+
       - name: 📦 Bundle AppImage
         run: |
           cd build

@@ -93,9 +93,15 @@ macro(detectOS)
     elseif (UNIX AND NOT APPLE)
         add_compile_definitions(OS_LINUX)
         include(GNUInstallDirs)
-        set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
-        # Warning : I'm not sure it is a good thing to hardcode the path
-        add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended
+
+        if(IMHEX_PLUGINS_IN_SHARE)
+            set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
+        else()
+            set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
+            # Warning : Do not work with portable versions such as appimage (because the path is hardcoded)
+            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
+        endif()
+            
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()

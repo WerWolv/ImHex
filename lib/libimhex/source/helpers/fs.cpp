@@ -176,7 +176,7 @@ namespace hex::fs {
 
     std::vector<std::fs::path> getPluginPaths() {
         std::vector<std::fs::path> paths = getDataPaths();
-        #if defined(OS_LINUX)
+        #if defined(OS_LINUX) && defined(SYSTEM_PLUGINS_LOCATION)
         paths.push_back(SYSTEM_PLUGINS_LOCATION);
         #endif
         return paths;
