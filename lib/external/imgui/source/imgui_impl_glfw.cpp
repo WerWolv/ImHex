@@ -78,10 +78,12 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>   // for glfwGetWin32Window()
 #endif
-#ifdef __APPLE__
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
-#endif
+// IMHEX PATCH BEGIN
+//#ifdef __APPLE__
+//#define GLFW_EXPOSE_NATIVE_COCOA
+//#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
+//#endif
+// IMHEX PATCH END
 
 #define GLFW_HAS_WINDOW_TOPMOST       (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3200) // 3.2+ GLFW_FLOATING
 #define GLFW_HAS_WINDOW_HOVERED       (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3300) // 3.3+ GLFW_HOVERED
@@ -603,8 +605,10 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     main_viewport->PlatformHandle = (void*)bd->Window;
 #ifdef _WIN32
     main_viewport->PlatformHandleRaw = glfwGetWin32Window(bd->Window);
-#elif defined(__APPLE__)
-    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
+// IMHEX PATCH BEGIN
+//#elif defined(__APPLE__)
+//    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
+// IMHEX PATCH END
 #endif
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplGlfw_InitPlatformInterface();
@@ -948,8 +952,10 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     viewport->PlatformHandle = (void*)vd->Window;
 #ifdef _WIN32
     viewport->PlatformHandleRaw = glfwGetWin32Window(vd->Window);
-#elif defined(__APPLE__)
-    viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->Window);
+// IMHEX PATCH BEGIN
+//#elif defined(__APPLE__)
+//    viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->Window);
+// IMHEX PATCH END
 #endif
     glfwSetWindowPos(vd->Window, (int)viewport->Pos.x, (int)viewport->Pos.y);
 
