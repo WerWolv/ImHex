@@ -79,9 +79,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/imhex.desktop
 %doc README.md
 %{_bindir}/imhex
 %{_datadir}/pixmaps/imhex.png
-%dir %{_datadir}/imhex
-%{_datadir}/imhex/*
 %{_datadir}/applications/imhex.desktop
-%{_prefix}/lib/libimhex.so.%{_version}
+%{_prefix}/lib64/libimhex.so.%{_version}
+%{_prefix}/lib64/imhex/plugins/*
 
 %changelog
