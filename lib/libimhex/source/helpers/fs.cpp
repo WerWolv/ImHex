@@ -130,11 +130,10 @@ namespace hex::fs {
 
         #elif defined(OS_LINUX)
 
-            auto dataDirs = xdg::DataDirs();
+            paths.push_back(xdg::DataHomeDir());
 
+            auto dataDirs = xdg::DataDirs();
             std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
-            
-            paths.insert(paths.begin(), xdg::DataHomeDir());
 
         #endif
 
