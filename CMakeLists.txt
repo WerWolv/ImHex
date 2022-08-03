@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Options
+option(IMHEX_STRIP_RELEASE "Strip the release builds" ON)
 option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
 option(IMHEX_IGNORE_BAD_CLONE "Disabled the bad clone prevention checks" OFF)
 option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of the ImHex-Patterns repo" OFF)
