@@ -130,11 +130,10 @@ namespace hex::fs {
 
         #elif defined(OS_LINUX)
 
-            auto dataDirs = xdg::DataDirs();
-            auto dataDirsHome = xdg::DataHomeDir();
+            paths.push_back(xdg::DataHomeDir());
 
+            auto dataDirs = xdg::DataDirs();
             std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
-            std::copy(dataDirsHome.begin(), dataDirsHome.end(), std::back_inserter(paths));
 
         #endif
 
@@ -159,11 +158,10 @@ namespace hex::fs {
         #elif defined(OS_LINUX)
             std::vector<std::fs::path> paths;
 
-            auto configDirs = xdg::ConfigDirs();
-            auto configDirsHome = xdg::ConfigHomeDir();
+            paths.push_back(xdg::DataHomeDir());
 
-            std::copy(configDirs.begin(), configDirs.end(), std::back_inserter(paths));
-            std::copy(configDirsHome.begin(), configDirsHome.end(), std::back_inserter(paths));
+            auto dataDirs = xdg::DataDirs();
+            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
 
             return paths;
         #endif
