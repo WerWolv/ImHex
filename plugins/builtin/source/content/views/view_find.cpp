@@ -16,17 +16,17 @@ namespace hex::plugin::builtin {
     ViewFind::ViewFind() : View("hex.builtin.view.find.name") {
         const static auto HighlightColor = [] { return (ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarPurple) & 0x00FFFFFF) | 0x70000000; };
 
-        const static auto FindRegion = [this](u64 address) -> std::optional<Region> {
-            auto &regions = this->m_foundRegions[ImHexApi::Provider::get()];
+        const static auto FindOccurrence = [this](u64 address) -> std::optional<Occurrence> {
+            auto &occurrences = this->m_foundOccurrences[ImHexApi::Provider::get()];
 
-            auto it = std::upper_bound(regions.begin(), regions.end(), address, [](u64 address, Region &region) {
-                return address < region.getStartAddress();
+            auto it = std::upper_bound(occurrences.begin(), occurrences.end(), address, [](u64 address, Occurrence &occurrence) {
+                return address < occurrence.region.getStartAddress();
             });
 
-            if (it != regions.begin())
+            if (it != occurrences.begin())
                 it--;
 
-            if (it != regions.end() && it->getStartAddress() <= address && address <= it->getEndAddress())
+            if (it != occurrences.end() && it->region.getStartAddress() <= address && address <= it->region.getEndAddress())
                 return *it;
             else
                 return std::nullopt;
@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
             hex::unused(data, size);
 
-            if (FindRegion(address).has_value())
+            if (FindOccurrence(address).has_value())
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -44,19 +44,19 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8* data, size_t size) {
             hex::unused(data, size);
 
-            auto region = FindRegion(address);
-            if (!region.has_value())
+            auto occurrence = FindOccurrence(address);
+            if (!occurrence.has_value())
                 return;
 
             ImGui::BeginTooltip();
 
-            ImGui::PushID(&region);
+            ImGui::PushID(&occurrence);
             if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
                 {
-                    const auto value = this->decodeValue(ImHexApi::Provider::get(), region.value());
+                    const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value());
 
                     ImGui::ColorButton("##color", ImColor(HighlightColor()));
                     ImGui::SameLine(0, 10);
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region->getStartAddress(), region->getEndAddress());
+                            ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", occurrence->region.getStartAddress(), occurrence->region.getEndAddress());
 
                             auto demangledValue = llvm::demangle(value);
 
@@ -157,12 +157,45 @@ namespace hex::plugin::builtin {
     }
 
 
-    std::vector<Region> ViewFind::searchStrings(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Strings settings) {
-        std::vector<Region> results;
+    std::vector<ViewFind::Occurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Strings settings) {
+        using enum SearchSettings::Strings::Type;
+
+        std::vector<Occurrence> results;
+
+        if (settings.type == ASCII_UTF16BE || settings.type == ASCII_UTF16LE) {
+            auto newSettings = settings;
+
+            newSettings.type = ASCII;
+            auto asciiResults = searchStrings(task, provider, searchRegion, newSettings);
+            std::copy(asciiResults.begin(), asciiResults.end(), std::back_inserter(results));
+
+            if (settings.type == ASCII_UTF16BE) {
+                newSettings.type = UTF16BE;
+                auto utf16Results = searchStrings(task, provider, searchRegion, newSettings);
+                std::copy(utf16Results.begin(), utf16Results.end(), std::back_inserter(results));
+            } else if (settings.type == ASCII_UTF16LE) {
+                newSettings.type = UTF16LE;
+                auto utf16Results = searchStrings(task, provider, searchRegion, newSettings);
+                std::copy(utf16Results.begin(), utf16Results.end(), std::back_inserter(results));
+            }
+
+            return results;
+        }
 
         auto reader = prv::BufferedReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
+
+        const Occurrence::DecodeType decodeType = [&]{
+            if (settings.type == ASCII)
+                return Occurrence::DecodeType::ASCII;
+            else if (settings.type == SearchSettings::Strings::Type::UTF16BE)
+                return Occurrence::DecodeType::UTF16BE;
+            else if (settings.type == SearchSettings::Strings::Type::UTF16LE)
+                return Occurrence::DecodeType::UTF16LE;
+            else
+                return Occurrence::DecodeType::Binary;
+        }();
 
         size_t countedCharacters = 0;
         u64 startAddress = reader.begin().getAddress();
@@ -176,11 +209,11 @@ namespace hex::plugin::builtin {
                 (settings.m_symbols             && std::ispunct(byte))  ||
                 (settings.m_lineFeeds           && byte == '\n');
 
-            if (settings.type == SearchSettings::Strings::Type::UTF16LE) {
+            if (settings.type == UTF16LE) {
                 // Check if second byte of UTF-16 encoded string is 0x00
                 if (countedCharacters % 2 == 1)
                     validChar =  byte == 0x00;
-            } else if (settings.type == SearchSettings::Strings::Type::UTF16BE) {
+            } else if (settings.type == UTF16BE) {
                 // Check if first byte of UTF-16 encoded string is 0x00
                 if (countedCharacters % 2 == 0)
                     validChar =  byte == 0x00;
@@ -191,7 +224,7 @@ namespace hex::plugin::builtin {
             else {
                 if (countedCharacters >= size_t(settings.minLength)) {
                     if (!(settings.nullTermination && byte != 0x00)) {
-                        results.push_back(Region { startAddress, countedCharacters });
+                        results.push_back(Occurrence { Region { startAddress, countedCharacters }, decodeType });
                     }
                 }
 
@@ -204,8 +237,8 @@ namespace hex::plugin::builtin {
         return results;
     }
 
-    std::vector<Region> ViewFind::searchSequence(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Bytes settings) {
-        std::vector<Region> results;
+    std::vector<ViewFind::Occurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Bytes settings) {
+        std::vector<Occurrence> results;
 
         auto reader = prv::BufferedReader(provider);
         reader.seek(searchRegion.getStartAddress());
@@ -220,15 +253,15 @@ namespace hex::plugin::builtin {
 
             auto address = occurrence.getAddress();
             reader.seek(address + sequence.size());
-            results.push_back(Region { address, sequence.size() });
+            results.push_back(Occurrence{ Region { address, sequence.size() }, Occurrence::DecodeType::Binary });
             task.update(address - searchRegion.getStartAddress());
         }
 
         return results;
     }
 
-    std::vector<Region> ViewFind::searchRegex(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Regex settings) {
-        auto stringRegions = searchStrings(std::move(task), provider, searchRegion, SearchSettings::Strings {
+    std::vector<ViewFind::Occurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::Regex settings) {
+        auto stringOccurrences = searchStrings(task, provider, searchRegion, SearchSettings::Strings {
             .minLength          = 1,
             .type               = SearchSettings::Strings::Type::ASCII,
             .m_lowerCaseLetters = true,
@@ -240,21 +273,21 @@ namespace hex::plugin::builtin {
             .m_lineFeeds        = true
         });
 
-        std::vector<Region> result;
+        std::vector<Occurrence> result;
         std::regex regex(settings.pattern);
-        for (const auto &region : stringRegions) {
-            std::string string(region.getSize(), '\x00');
-            provider->read(region.getStartAddress(), string.data(), region.getSize());
+        for (const auto &occurrence : stringOccurrences) {
+            std::string string(occurrence.region.getSize(), '\x00');
+            provider->read(occurrence.region.getStartAddress(), string.data(), occurrence.region.getSize());
 
             if (std::regex_match(string, regex))
-                result.push_back(region);
+                result.push_back(occurrence);
         }
 
         return result;
     }
 
-    std::vector<Region> ViewFind::searchBinaryPattern(Task &&task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::BinaryPattern settings) {
-        std::vector<Region> results;
+    std::vector<ViewFind::Occurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, SearchSettings::BinaryPattern settings) {
+        std::vector<Occurrence> results;
 
         auto reader = prv::BufferedReader(provider);
         reader.seek(searchRegion.getStartAddress());
@@ -267,7 +300,7 @@ namespace hex::plugin::builtin {
             if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
                 matchedBytes++;
                 if (matchedBytes == settings.pattern.size()) {
-                    results.push_back(Region { address - (patternSize - 1), patternSize });
+                    results.push_back(Occurrence { Region { address - (patternSize - 1), patternSize }, Occurrence::DecodeType::Binary });
                     task.update(address);
                     matchedBytes = 0;
                 }
@@ -299,27 +332,27 @@ namespace hex::plugin::builtin {
             switch (settings.mode) {
                 using enum SearchSettings::Mode;
                 case Strings:
-                    this->m_foundRegions[provider] = searchStrings(std::move(task), provider, searchRegion, settings.strings);
+                    this->m_foundOccurrences[provider] = searchStrings(task, provider, searchRegion, settings.strings);
                     break;
                 case Sequence:
-                    this->m_foundRegions[provider] = searchSequence(std::move(task), provider, searchRegion, settings.bytes);
+                    this->m_foundOccurrences[provider] = searchSequence(task, provider, searchRegion, settings.bytes);
                     break;
                 case Regex:
-                    this->m_foundRegions[provider] = searchRegex(std::move(task), provider, searchRegion, settings.regex);
+                    this->m_foundOccurrences[provider] = searchRegex(task, provider, searchRegion, settings.regex);
                     break;
                 case BinaryPattern:
-                    this->m_foundRegions[provider] = searchBinaryPattern(std::move(task), provider, searchRegion, settings.binaryPattern);
+                    this->m_foundOccurrences[provider] = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
                     break;
                 }
 
-            this->m_sortedRegions = this->m_foundRegions;
+            this->m_sortedOccurrences = this->m_foundOccurrences;
             this->m_searchRunning = false;
         }).detach();
     }
 
-    std::string ViewFind::decodeValue(prv::Provider *provider, hex::Region region) {
-        std::vector<u8> bytes(std::min<size_t>(region.getSize(), 128));
-        provider->read(region.getStartAddress(), bytes.data(), bytes.size());
+    std::string ViewFind::decodeValue(prv::Provider *provider, Occurrence occurrence) const {
+        std::vector<u8> bytes(std::min<size_t>(occurrence.region.getSize(), 128));
+        provider->read(occurrence.region.getStartAddress(), bytes.data(), bytes.size());
 
         std::string result;
         switch (this->m_decodeSettings.mode) {
@@ -327,10 +360,9 @@ namespace hex::plugin::builtin {
 
             case Strings:
             {
-                auto &settings = this->m_decodeSettings.strings;
-
-                switch (settings.type) {
-                    using enum SearchSettings::Strings::Type;
+                switch (occurrence.decodeType) {
+                    using enum Occurrence::DecodeType;
+                    case Binary:
                     case ASCII:
                         result = hex::encodeByteString(bytes);
                         break;
@@ -342,6 +374,7 @@ namespace hex::plugin::builtin {
                         for (size_t i = 1; i < bytes.size(); i += 2)
                             result += hex::encodeByteString({ bytes[i] });
                         break;
+
                 }
             }
                 break;
@@ -392,7 +425,14 @@ namespace hex::plugin::builtin {
                         if (settings.minLength < 1)
                             settings.minLength = 1;
 
-                        const std::array<std::string, 3> StringTypes = { "hex.builtin.common.encoding.ascii"_lang,"hex.builtin.common.encoding.utf16le"_lang, "hex.builtin.common.encoding.utf16be"_lang };
+                        const std::array<std::string, 5> StringTypes = {
+                            "hex.builtin.common.encoding.ascii"_lang,
+                            "hex.builtin.common.encoding.utf16le"_lang,
+                            "hex.builtin.common.encoding.utf16be"_lang,
+                            hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16le"_lang),
+                            hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16be"_lang)
+                        };
+
                         if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
                             for (size_t i = 0; i < StringTypes.size(); i++) {
                                 auto type = static_cast<SearchSettings::Strings::Type>(i);
@@ -479,7 +519,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndDisabled();
 
                 ImGui::SameLine();
-                ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundRegions[provider].size());
+                ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundOccurrences[provider].size());
             }
             ImGui::EndDisabled();
 
@@ -487,15 +527,15 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
             ImGui::NewLine();
 
-            auto &currRegion = this->m_sortedRegions[provider];
+            auto &currOccurrences = this->m_sortedOccurrences[provider];
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
             if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter)) {
-                this->m_sortedRegions = this->m_foundRegions;
+                this->m_sortedOccurrences = this->m_foundOccurrences;
 
-                currRegion.erase(std::remove_if(currRegion.begin(), currRegion.end(), [this, provider](const auto &region) {
+                currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider](const auto &region) {
                     return !this->decodeValue(provider, region).contains(this->m_currFilter);
-                }), currRegion.end());
+                }), currOccurrences.end());
             }
             ImGui::PopItemWidth();
 
@@ -508,17 +548,17 @@ namespace hex::plugin::builtin {
                 auto sortSpecs = ImGui::TableGetSortSpecs();
 
                 if (sortSpecs->SpecsDirty) {
-                    std::sort(currRegion.begin(), currRegion.end(), [this, &sortSpecs, provider](Region &left, Region &right) -> bool {
+                    std::sort(currOccurrences.begin(), currOccurrences.end(), [this, &sortSpecs, provider](Occurrence &left, Occurrence &right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left.getStartAddress() > right.getStartAddress();
+                                return left.region.getStartAddress() > right.region.getStartAddress();
                             else
-                                return left.getStartAddress() < right.getStartAddress();
+                                return left.region.getStartAddress() < right.region.getStartAddress();
                         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left.getSize() > right.getSize();
+                                return left.region.getSize() > right.region.getSize();
                             else
-                                return left.getSize() < right.getSize();
+                                return left.region.getSize() < right.region.getSize();
                         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                 return this->decodeValue(provider, left) > this->decodeValue(provider, right);
@@ -535,18 +575,18 @@ namespace hex::plugin::builtin {
                 ImGui::TableHeadersRow();
 
                 ImGuiListClipper clipper;
-                clipper.Begin(currRegion.size(), ImGui::GetTextLineHeightWithSpacing());
+                clipper.Begin(currOccurrences.size(), ImGui::GetTextLineHeightWithSpacing());
 
                 while (clipper.Step()) {
-                    for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd, currRegion.size()); i++) {
-                        auto &foundItem = currRegion[i];
+                    for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd, currOccurrences.size()); i++) {
+                        auto &foundItem = currOccurrences[i];
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::TextFormatted("0x{:08X}", foundItem.getStartAddress());
+                        ImGui::TextFormatted("0x{:08X}", foundItem.region.getStartAddress());
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("{}", hex::toByteString(foundItem.getSize()));
+                        ImGui::TextFormatted("{}", hex::toByteString(foundItem.region.getSize()));
                         ImGui::TableNextColumn();
 
                         ImGui::PushID(i);
@@ -555,7 +595,7 @@ namespace hex::plugin::builtin {
                         ImGui::TextFormatted("{}", value);
                         ImGui::SameLine();
                         if (ImGui::Selectable("##line", false, ImGuiSelectableFlags_SpanAllColumns))
-                            ImHexApi::HexEditor::setSelection(foundItem.getStartAddress(), foundItem.getSize());
+                            ImHexApi::HexEditor::setSelection(foundItem.region.getStartAddress(), foundItem.region.getSize());
                         drawContextMenu(value);
 
                         ImGui::PopID();
