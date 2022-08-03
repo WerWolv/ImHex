@@ -134,7 +134,7 @@ namespace hex::fs {
 
             std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
             
-            paths.insert(paths.begin(), xdg::DataHomeDir())
+            paths.insert(paths.begin(), xdg::DataHomeDir());
 
         #endif
 
