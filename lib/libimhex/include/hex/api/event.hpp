@@ -95,6 +95,11 @@ namespace hex {
             }
         }
 
+        static void clear() noexcept {
+            s_events.clear();
+            s_tokenStore.clear();
+        }
+
     private:
         static std::map<void *, EventList::iterator> s_tokenStore;
         static EventList s_events;

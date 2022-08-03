@@ -163,6 +163,8 @@ namespace hex::init {
     }
 
     bool deleteSharedData() {
+        EventManager::clear();
+
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
         ContentRegistry::Provider::getEntries().clear();

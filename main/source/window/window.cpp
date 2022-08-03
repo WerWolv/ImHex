@@ -160,14 +160,14 @@ namespace hex {
     }
 
     Window::~Window() {
-        this->exitImGui();
-        this->exitGLFW();
-
         EventManager::unsubscribe<EventProviderDeleted>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
         EventManager::unsubscribe<RequestChangeWindowTitle>(this);
         EventManager::unsubscribe<EventAbnormalTermination>(this);
         EventManager::unsubscribe<RequestOpenPopup>(this);
+
+        this->exitImGui();
+        this->exitGLFW();
     }
 
     void Window::loop() {
