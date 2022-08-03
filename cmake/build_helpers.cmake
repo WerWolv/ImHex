@@ -8,6 +8,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 macro(addVersionDefines)
+    if (NOT IMHEX_VERSION)
+        message(FATAL_ERROR "IMHEX_VERSION is not defined")
+    endif ()
+
     if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
         # Get the current working branch
         execute_process(
@@ -325,7 +329,7 @@ macro(setVariableInParent variable value)
     get_directory_property(hasParent PARENT_DIRECTORY)
 
     if (hasParent)
-        set(${variable} "${${value}}" PARENT_SCOPE)
+        set(${variable} "${value}" PARENT_SCOPE)
     else ()
         set(${variable} "${value}")
     endif ()
