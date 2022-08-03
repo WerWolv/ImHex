@@ -72,7 +72,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Ethereum
   - RISC-V
   - WebAssembly
-  - MOS565XX
+  - MOS65XX
   - Berkeley Packet Filter
 - Bookmarks
   - Region highlighting
