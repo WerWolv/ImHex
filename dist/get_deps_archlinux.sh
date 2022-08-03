@@ -10,4 +10,8 @@ pacman -S $@ --needed \
   python3   \
   freetype2 \
   dbus      \
-  xdg-desktop-portal
+  xdg-desktop-portal \
+  curl      \
+  fmt       \
+  yara      \
+  nlohmann-json

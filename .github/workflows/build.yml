@@ -333,12 +333,16 @@ jobs:
           cd build
           CC=gcc CXX=g++ cmake                      \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="/usr" 	        \
+          -DCMAKE_INSTALL_PREFIX="/usr" 	          \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
           -DUSE_SYSTEM_CURL=ON                      \
+          -DUSE_SYSTEM_FMT=ON                       \
+          -DUSE_SYSTEM_YARA=ON                      \
+          -DUSE_SYSTEM_NLOHMANN_JSON=ON             \
+          -DUSE_SYSTEM_CAPSTONE=OFF                 \
           -DIMHEX_PATTERNS_PULL_MASTER=ON           \
           ..
           make -j 4 install DESTDIR=installDir
