@@ -445,10 +445,11 @@ jobs:
       - name: 📦 Build RPM
         run: |
           rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
           name: Fedora ${{ matrix.release }} RPM
           path: |
-            ~/rpmbuild/RPMS/x86_64/*.rpm
+            imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
