@@ -46,8 +46,9 @@ namespace hex::plugin::builtin {
                     auto &patches = provider->getPatches();
                     u32 index     = 0;
 
-                    ImGuiListClipper clipper(patches.size());
+                    ImGuiListClipper clipper;
 
+                    clipper.Begin(patches.size());
                     while (clipper.Step()) {
                         auto iter = patches.begin();
                         for (auto i = 0; i < clipper.DisplayStart; i++)

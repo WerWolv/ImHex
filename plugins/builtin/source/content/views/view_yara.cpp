@@ -128,7 +128,9 @@ namespace hex::plugin::builtin {
             auto consoleSize = ImGui::GetContentRegionAvail();
 
             if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
-                ImGuiListClipper clipper(this->m_consoleMessages.size());
+                ImGuiListClipper clipper;
+
+                clipper.Begin(this->m_consoleMessages.size());
                 while (clipper.Step())
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         const auto &message = this->m_consoleMessages[i];

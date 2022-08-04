@@ -166,6 +166,7 @@ jobs:
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
           ..
         make -j4 package
 
@@ -259,6 +260,19 @@ jobs:
           dpkg-deb --build build/AppDir
           mv build/AppDir.deb imhex-${{env.IMHEX_VERSION}}.deb
           rm -rf build/AppDir/DEBIAN
+
+      - name: 🛠️ Reconfigure build for AppImage
+        run: |
+          # Reconfigure CMake to  include a flag needed for AppImage
+          # Other flags are kept from old configuration
+
+          cd build
+          cmake \
+          -DIMHEX_PLUGINS_IN_SHARE=ON \
+          ..
+
+          rm -rf AppDir
+          make -j 4 install DESTDIR=AppDir
 
       - name: 📦 Bundle AppImage
         run: |
@@ -450,10 +464,11 @@ jobs:
       - name: 📦 Build RPM
         run: |
           rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
           name: Fedora ${{ matrix.release }} RPM
           path: |
-            ~/rpmbuild/RPMS/*/*.rpm
+            imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm

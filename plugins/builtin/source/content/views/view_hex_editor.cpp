@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGui::SetKeyboardFocusHere();
-                ImGui::CaptureKeyboardFromApp(true);
+                ImGui::SetNextFrameWantCaptureKeyboard(true);
                 if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                     if (auto result = this->m_evaluator.evaluate(this->m_input); result.has_value()) {
                         const auto inputResult = result.value();
@@ -531,7 +531,7 @@ namespace hex::plugin::builtin {
         }
         else {
             ImGui::SetKeyboardFocusHere();
-            ImGui::CaptureKeyboardFromApp(true);
+            ImGui::SetNextFrameWantCaptureKeyboard(true);
 
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                 this->m_editingAddress = std::nullopt;
@@ -682,8 +682,9 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
 
-                ImGuiListClipper clipper(std::ceil(provider->getSize() / (long double)(this->m_bytesPerRow)), CharacterSize.y);
+                ImGuiListClipper clipper;
 
+                clipper.Begin(std::ceil(provider->getSize() / (long double)(this->m_bytesPerRow)), CharacterSize.y);
                 while (clipper.Step()) {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
 
@@ -1039,7 +1040,7 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawContent() {
 
         if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            const auto FooterSize = ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetTextLineHeightWithSpacing() * 3);
+            const auto FooterSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 3);
             const auto TableSize = ImGui::GetContentRegionAvail() - ImVec2(0, FooterSize.y);
 
             this->drawPopup();

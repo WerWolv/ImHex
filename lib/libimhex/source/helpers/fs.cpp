@@ -130,20 +130,31 @@ namespace hex::fs {
 
         #elif defined(OS_LINUX)
 
-            auto dataDirs = xdg::DataDirs();
-            auto dataDirsHome = xdg::DataHomeDir();
+            paths.push_back(xdg::DataHomeDir());
 
+            auto dataDirs = xdg::DataDirs();
             std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
-            std::copy(dataDirsHome.begin(), dataDirsHome.end(), std::back_inserter(paths));
 
         #endif
+
 
         for (auto &path : paths) {
             path = path / "imhex";
         }
 
-        if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
-            paths.push_back(executablePath->parent_path());
+
+        #if defined(OS_MACOS)
+
+            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+                paths.push_back(*executablePath);
+
+        #else
+
+            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+                paths.push_back(executablePath->parent_path());
+
+        #endif
+
 
         auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
         std::copy(additionalDirs.begin(), additionalDirs.end(), std::back_inserter(paths));
@@ -159,26 +170,33 @@ namespace hex::fs {
         #elif defined(OS_LINUX)
             std::vector<std::fs::path> paths;
 
-            auto configDirs = xdg::ConfigDirs();
-            auto configDirsHome = xdg::ConfigHomeDir();
+            paths.push_back(xdg::DataHomeDir());
 
-            std::copy(configDirs.begin(), configDirs.end(), std::back_inserter(paths));
-            std::copy(configDirsHome.begin(), configDirsHome.end(), std::back_inserter(paths));
+            auto dataDirs = xdg::DataDirs();
+            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
 
             return paths;
         #endif
     }
 
+    constexpr std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder) {
+        for (auto &path : paths)
+            path = path / folder;
+
+        return paths;
+    };
+
+    std::vector<std::fs::path> getPluginPaths() {
+        std::vector<std::fs::path> paths = getDataPaths();
+        #if defined(OS_LINUX) && defined(SYSTEM_PLUGINS_LOCATION)
+        paths.push_back(SYSTEM_PLUGINS_LOCATION);
+        #endif
+        return paths;
+    }
+
 
     std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting) {
         std::vector<std::fs::path> result;
-
-        constexpr auto appendPath = [](std::vector<std::fs::path> paths, const std::fs::path &folder) {
-            for (auto &path : paths)
-                path = path / folder;
-
-            return paths;
-        };
 
         switch (path) {
             case ImHexPath::Constants:
@@ -194,7 +212,7 @@ namespace hex::fs {
                 result = appendPath(getConfigPaths(), "logs");
                 break;
             case ImHexPath::Plugins:
-                result = appendPath(getDataPaths(), "plugins");
+                result = appendPath(getPluginPaths(), "plugins");
                 break;
             case ImHexPath::Resources:
                 result = appendPath(getDataPaths(), "resources");

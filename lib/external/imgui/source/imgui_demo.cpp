@@ -1,4 +1,4 @@
-// dear imgui, v1.86
+// dear imgui, v1.89 WIP
 // (demo code)
 
 // Help:
@@ -39,7 +39,7 @@
 //   Because we can't assume anything about your support of maths operators, we cannot use them in imgui_demo.cpp.
 
 // Navigating this file:
-// - In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
+// - In Visual Studio IDE: CTRL+comma ("Edit.GoToAll") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
 // - With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
 
 /*
@@ -93,6 +93,7 @@ Index of this file:
 
 // Visual Studio warnings
 #ifdef _MSC_VER
+#pragma warning (disable: 4127)     // condition expression is constant
 #pragma warning (disable: 4996)     // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
 #pragma warning (disable: 26451)    // [Static Analyzer] Arithmetic overflow : Using operator 'xxx' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator 'xxx' to avoid overflow(io.2).
 #endif
@@ -240,7 +241,6 @@ void ImGui::ShowUserGuide()
     ImGui::BulletText("CTRL+X/C/V to use clipboard cut/copy/paste.");
     ImGui::BulletText("CTRL+Z,CTRL+Y to undo/redo.");
     ImGui::BulletText("ESCAPE to revert.");
-    ImGui::BulletText("You can apply arithmetic operators +,*,/ on numerical values.\nUse +- to subtract.");
     ImGui::Unindent();
     ImGui::BulletText("With keyboard navigation enabled:");
     ImGui::Indent();
@@ -316,13 +316,19 @@ void ImGui::ShowDemoWindow(bool* p_open)
 
     // Dear ImGui Apps (accessible from the "Tools" menu)
     static bool show_app_metrics = false;
+    static bool show_app_debug_log = false;
     static bool show_app_stack_tool = false;
-    static bool show_app_style_editor = false;
     static bool show_app_about = false;
+    static bool show_app_style_editor = false;
 
-    if (show_app_metrics)       { ImGui::ShowMetricsWindow(&show_app_metrics); }
-    if (show_app_stack_tool)    { ImGui::ShowStackToolWindow(&show_app_stack_tool); }
-    if (show_app_about)         { ImGui::ShowAboutWindow(&show_app_about); }
+    if (show_app_metrics)
+        ImGui::ShowMetricsWindow(&show_app_metrics);
+    if (show_app_debug_log)
+        ImGui::ShowDebugLogWindow(&show_app_debug_log);
+    if (show_app_stack_tool)
+        ImGui::ShowStackToolWindow(&show_app_stack_tool);
+    if (show_app_about)
+        ImGui::ShowAboutWindow(&show_app_about);
     if (show_app_style_editor)
     {
         ImGui::Begin("Dear ImGui Style Editor", &show_app_style_editor);
@@ -412,10 +418,14 @@ void ImGui::ShowDemoWindow(bool* p_open)
         if (ImGui::BeginMenu("Tools"))
         {
             IMGUI_DEMO_MARKER("Menu/Tools");
-#ifndef IMGUI_DISABLE_METRICS_WINDOW
-            ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics);
-            ImGui::MenuItem("Stack Tool", NULL, &show_app_stack_tool);
+#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+            const bool has_debug_tools = true;
+#else
+            const bool has_debug_tools = false;
 #endif
+            ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics, has_debug_tools);
+            ImGui::MenuItem("Debug Log", NULL, &show_app_debug_log, has_debug_tools);
+            ImGui::MenuItem("Stack Tool", NULL, &show_app_stack_tool, has_debug_tools);
             ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
             ImGui::MenuItem("About Dear ImGui", NULL, &show_app_about);
             ImGui::EndMenu();
@@ -423,7 +433,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
         ImGui::EndMenuBar();
     }
 
-    ImGui::Text("dear imgui says hello. (%s)", IMGUI_VERSION);
+    ImGui::Text("dear imgui says hello! (%s) (%d)", IMGUI_VERSION, IMGUI_VERSION_NUM);
     ImGui::Spacing();
 
     IMGUI_DEMO_MARKER("Help");
@@ -471,7 +481,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
                     ImGui::SameLine();
                     ImGui::Text("<<PRESS SPACE TO DISABLE>>");
                 }
-                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Space)))
+                if (ImGui::IsKeyPressed(ImGuiKey_Space))
                     io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
             }
             ImGui::CheckboxFlags("io.ConfigFlags: NoMouseCursorChange", &io.ConfigFlags, ImGuiConfigFlags_NoMouseCursorChange);
@@ -513,8 +523,12 @@ void ImGui::ShowDemoWindow(bool* p_open)
                 ImGui::Unindent();
             }
 
+            ImGui::Checkbox("io.ConfigInputTrickleEventQueue", &io.ConfigInputTrickleEventQueue);
+            ImGui::SameLine(); HelpMarker("Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.");
             ImGui::Checkbox("io.ConfigInputTextCursorBlink", &io.ConfigInputTextCursorBlink);
-            ImGui::SameLine(); HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)");
+            ImGui::SameLine(); HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting).");
+            ImGui::Checkbox("io.ConfigInputTextEnterKeepActive", &io.ConfigInputTextEnterKeepActive);
+            ImGui::SameLine(); HelpMarker("Pressing Enter will keep item active and select contents (single-line only).");
             ImGui::Checkbox("io.ConfigDragClickToInputText", &io.ConfigDragClickToInputText);
             ImGui::SameLine(); HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).");
             ImGui::Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges);
@@ -535,6 +549,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
                 "Here we expose them as read-only fields to avoid breaking interactions with your backend.");
 
             // Make a local copy to avoid modifying actual backend flags.
+            // FIXME: We don't use BeginDisabled() to keep label bright, maybe we need a BeginReadonly() equivalent..
             ImGuiBackendFlags backend_flags = io.BackendFlags;
             ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &backend_flags, ImGuiBackendFlags_HasGamepad);
             ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &backend_flags, ImGuiBackendFlags_HasMouseCursors);
@@ -731,10 +746,6 @@ static void ShowDemoWindowWidgets()
             IMGUI_DEMO_MARKER("Widgets/Basic/InputInt, InputFloat");
             static int i0 = 123;
             ImGui::InputInt("input int", &i0);
-            ImGui::SameLine(); HelpMarker(
-                "You can apply arithmetic operators +,*,/ on numerical values.\n"
-                "  e.g. [ 100 ], input \'*2\', result becomes [ 200 ]\n"
-                "Use +- to subtract.");
 
             static float f0 = 0.001f;
             ImGui::InputFloat("input float", &f0, 0.01f, 1.0f, "%.3f");
@@ -1914,10 +1925,9 @@ static void ShowDemoWindowWidgets()
         ImGui::Combo("Display Mode", &display_mode, "Auto/Current\0None\0RGB Only\0HSV Only\0Hex Only\0");
         ImGui::SameLine(); HelpMarker(
             "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, "
-            "but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex "
+            "but the user can change it with a right-click on those inputs.\n\nColorPicker defaults to displaying RGB+HSV+Hex "
             "if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().");
-        ImGui::Combo("Picker Mode", &picker_mode, "Auto/Current\0Hue bar + SV rect\0Hue wheel + SV triangle\0");
-        ImGui::SameLine(); HelpMarker("User can right-click the picker to change mode.");
+        ImGui::SameLine(); HelpMarker("When not specified explicitly (Auto/Current mode), user can right-click the picker to change mode.");
         ImGuiColorEditFlags flags = misc_flags;
         if (!alpha)            flags |= ImGuiColorEditFlags_NoAlpha;        // This is by default if you call ColorPicker3() instead of ColorPicker4()
         if (alpha_bar)         flags |= ImGuiColorEditFlags_AlphaBar;
@@ -1940,6 +1950,15 @@ static void ShowDemoWindowWidgets()
             ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_PickerHueBar);
         if (ImGui::Button("Default: Float + HDR + Hue Wheel"))
             ImGui::SetColorEditOptions(ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_PickerHueWheel);
+
+        // Always both a small version of both types of pickers (to make it more visible in the demo to people who are skimming quickly through it)
+        ImGui::Text("Both types:");
+        float w = (ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.y) * 0.40f;
+        ImGui::SetNextItemWidth(w);
+        ImGui::ColorPicker3("##MyColor##5", (float*)&color, ImGuiColorEditFlags_PickerHueBar | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(w);
+        ImGui::ColorPicker3("##MyColor##6", (float*)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 
         // HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
         static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
@@ -2063,6 +2082,7 @@ static void ShowDemoWindowWidgets()
         ImGui::DragScalar("drag s16",       ImGuiDataType_S16,    &s16_v, drag_speed, drag_clamp ? &s16_zero : NULL, drag_clamp ? &s16_fifty : NULL);
         ImGui::DragScalar("drag u16",       ImGuiDataType_U16,    &u16_v, drag_speed, drag_clamp ? &u16_zero : NULL, drag_clamp ? &u16_fifty : NULL, "%u ms");
         ImGui::DragScalar("drag s32",       ImGuiDataType_S32,    &s32_v, drag_speed, drag_clamp ? &s32_zero : NULL, drag_clamp ? &s32_fifty : NULL);
+        ImGui::DragScalar("drag s32 hex",   ImGuiDataType_S32,    &s32_v, drag_speed, drag_clamp ? &s32_zero : NULL, drag_clamp ? &s32_fifty : NULL, "0x%08X");
         ImGui::DragScalar("drag u32",       ImGuiDataType_U32,    &u32_v, drag_speed, drag_clamp ? &u32_zero : NULL, drag_clamp ? &u32_fifty : NULL, "%u ms");
         ImGui::DragScalar("drag s64",       ImGuiDataType_S64,    &s64_v, drag_speed, drag_clamp ? &s64_zero : NULL, drag_clamp ? &s64_fifty : NULL);
         ImGui::DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, drag_clamp ? &u64_zero : NULL, drag_clamp ? &u64_fifty : NULL);
@@ -2080,6 +2100,7 @@ static void ShowDemoWindowWidgets()
         ImGui::SliderScalar("slider s32 low",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty,"%d");
         ImGui::SliderScalar("slider s32 high",      ImGuiDataType_S32,    &s32_v, &s32_hi_a, &s32_hi_b, "%d");
         ImGui::SliderScalar("slider s32 full",      ImGuiDataType_S32,    &s32_v, &s32_min,  &s32_max,  "%d");
+        ImGui::SliderScalar("slider s32 hex",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty, "0x%04X");
         ImGui::SliderScalar("slider u32 low",       ImGuiDataType_U32,    &u32_v, &u32_zero, &u32_fifty,"%u");
         ImGui::SliderScalar("slider u32 high",      ImGuiDataType_U32,    &u32_v, &u32_hi_a, &u32_hi_b, "%u");
         ImGui::SliderScalar("slider u32 full",      ImGuiDataType_U32,    &u32_v, &u32_min,  &u32_max,  "%u");
@@ -2113,9 +2134,9 @@ static void ShowDemoWindowWidgets()
         ImGui::InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, inputs_step ? &s16_one : NULL, NULL, "%d");
         ImGui::InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, inputs_step ? &u16_one : NULL, NULL, "%u");
         ImGui::InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%d");
-        ImGui::InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+        ImGui::InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%04X");
         ImGui::InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%u");
-        ImGui::InputScalar("input u32 hex", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+        ImGui::InputScalar("input u32 hex", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%08X");
         ImGui::InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, inputs_step ? &s64_one : NULL);
         ImGui::InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, inputs_step ? &u64_one : NULL);
         ImGui::InputScalar("input float",   ImGuiDataType_Float,  &f32_v, inputs_step ? &f32_one : NULL);
@@ -3266,59 +3287,58 @@ static void ShowDemoWindowLayout()
         ImGui::DragFloat2("size", (float*)&size, 0.5f, 1.0f, 200.0f, "%.0f");
         ImGui::TextWrapped("(Click and drag to scroll)");
 
+        HelpMarker(
+            "(Left) Using ImGui::PushClipRect():\n"
+            "Will alter ImGui hit-testing logic + ImDrawList rendering.\n"
+            "(use this if you want your clipping rectangle to affect interactions)\n\n"
+            "(Center) Using ImDrawList::PushClipRect():\n"
+            "Will alter ImDrawList rendering only.\n"
+            "(use this as a shortcut if you are only using ImDrawList calls)\n\n"
+            "(Right) Using ImDrawList::AddText() with a fine ClipRect:\n"
+            "Will alter only this specific ImDrawList::AddText() rendering.\n"
+            "This is often used internally to avoid altering the clipping rectangle and minimize draw calls.");
+
         for (int n = 0; n < 3; n++)
         {
             if (n > 0)
                 ImGui::SameLine();
-            ImGui::PushID(n);
-            ImGui::BeginGroup(); // Lock X position
 
-            ImGui::InvisibleButton("##empty", size);
+            ImGui::PushID(n);
+            ImGui::InvisibleButton("##canvas", size);
             if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
             {
                 offset.x += ImGui::GetIO().MouseDelta.x;
                 offset.y += ImGui::GetIO().MouseDelta.y;
             }
+            ImGui::PopID();
+            if (!ImGui::IsItemVisible()) // Skip rendering as ImDrawList elements are not clipped.
+                continue;
+
             const ImVec2 p0 = ImGui::GetItemRectMin();
             const ImVec2 p1 = ImGui::GetItemRectMax();
             const char* text_str = "Line 1 hello\nLine 2 clip me!";
             const ImVec2 text_pos = ImVec2(p0.x + offset.x, p0.y + offset.y);
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
             switch (n)
             {
             case 0:
-                HelpMarker(
-                    "Using ImGui::PushClipRect():\n"
-                    "Will alter ImGui hit-testing logic + ImDrawList rendering.\n"
-                    "(use this if you want your clipping rectangle to affect interactions)");
                 ImGui::PushClipRect(p0, p1, true);
                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list->AddText(text_pos, IM_COL32_WHITE, text_str);
                 ImGui::PopClipRect();
                 break;
             case 1:
-                HelpMarker(
-                    "Using ImDrawList::PushClipRect():\n"
-                    "Will alter ImDrawList rendering only.\n"
-                    "(use this as a shortcut if you are only using ImDrawList calls)");
                 draw_list->PushClipRect(p0, p1, true);
                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list->AddText(text_pos, IM_COL32_WHITE, text_str);
                 draw_list->PopClipRect();
                 break;
             case 2:
-                HelpMarker(
-                    "Using ImDrawList::AddText() with a fine ClipRect:\n"
-                    "Will alter only this specific ImDrawList::AddText() rendering.\n"
-                    "(this is often used internally to avoid altering the clipping rectangle and minimize draw calls)");
                 ImVec4 clip_rect(p0.x, p0.y, p1.x, p1.y); // AddText() takes a ImVec4* here so let's convert.
                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(), text_pos, IM_COL32_WHITE, text_str, NULL, 0.0f, &clip_rect);
                 break;
             }
-            ImGui::EndGroup();
-            ImGui::PopID();
         }
 
         ImGui::TreePop();
@@ -3484,7 +3504,7 @@ static void ShowDemoWindowPopups()
         {
             HelpMarker("Text() elements don't have stable identifiers so we need to provide one.");
             static float value = 0.5f;
-            ImGui::Text("Value = %.3f <-- (1) right-click this value", value);
+            ImGui::Text("Value = %.3f <-- (1) right-click this text", value);
             if (ImGui::BeginPopupContextItem("my popup"))
             {
                 if (ImGui::Selectable("Set to zero")) value = 0.0f;
@@ -3611,19 +3631,12 @@ static void ShowDemoWindowPopups()
         ImGui::TextWrapped("Below we are testing adding menu items to a regular window. It's rather unusual but should work!");
         ImGui::Separator();
 
-        // Note: As a quirk in this very specific example, we want to differentiate the parent of this menu from the
-        // parent of the various popup menus above. To do so we are encloding the items in a PushID()/PopID() block
-        // to make them two different menusets. If we don't, opening any popup above and hovering our menu here would
-        // open it. This is because once a menu is active, we allow to switch to a sibling menu by just hovering on it,
-        // which is the desired behavior for regular menus.
-        ImGui::PushID("foo");
         ImGui::MenuItem("Menu item", "CTRL+M");
         if (ImGui::BeginMenu("Menu inside a regular window"))
         {
             ShowExampleMenuFile();
             ImGui::EndMenu();
         }
-        ImGui::PopID();
         ImGui::Separator();
         ImGui::TreePop();
     }
@@ -3947,7 +3960,7 @@ static void ShowDemoWindowTables()
                     sprintf(buf, "Hello %d,%d", column, row);
                     if (contents_type == CT_Text)
                         ImGui::TextUnformatted(buf);
-                    else if (contents_type)
+                    else if (contents_type == CT_FillButton)
                         ImGui::Button(buf, ImVec2(-FLT_MIN, 0.0f));
                 }
             }
@@ -4491,14 +4504,16 @@ static void ShowDemoWindowTables()
             {
                 ImGui::TableNextColumn();
                 ImGui::PushID(column);
-                ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
+                ImGui::AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation across columns
                 ImGui::Text("'%s'", column_names[column]);
                 ImGui::Spacing();
                 ImGui::Text("Input flags:");
                 EditTableColumnsFlags(&column_flags[column]);
                 ImGui::Spacing();
                 ImGui::Text("Output flags:");
+                ImGui::BeginDisabled();
                 ShowTableColumnsStatusFlags(column_flags_out[column]);
+                ImGui::EndDisabled();
                 ImGui::PopID();
             }
             PopStyleCompact();
@@ -4903,7 +4918,7 @@ static void ShowDemoWindowTables()
                 ImGui::TableSetColumnIndex(1);
                 ImGui::SliderFloat("float1", &dummy_f, 0.0f, 1.0f);
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SliderFloat("float2", &dummy_f, 0.0f, 1.0f);
+                ImGui::SliderFloat("##float2", &dummy_f, 0.0f, 1.0f); // No visible label since right-aligned
                 ImGui::PopID();
             }
             ImGui::EndTable();
@@ -5712,6 +5727,8 @@ static void ShowDemoWindowColumns()
     ImGui::TreePop();
 }
 
+namespace ImGui { extern ImGuiKeyData* GetKeyData(ImGuiKey key); }
+
 static void ShowDemoWindowMisc()
 {
     IMGUI_DEMO_MARKER("Filtering");
@@ -5738,12 +5755,18 @@ static void ShowDemoWindowMisc()
         ImGuiIO& io = ImGui::GetIO();
 
         // Display ImGuiIO output flags
-        ImGui::Text("WantCaptureMouse: %d", io.WantCaptureMouse);
-        ImGui::Text("WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose);
-        ImGui::Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
-        ImGui::Text("WantTextInput: %d", io.WantTextInput);
-        ImGui::Text("WantSetMousePos: %d", io.WantSetMousePos);
-        ImGui::Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible);
+        IMGUI_DEMO_MARKER("Inputs, Navigation & Focus/Output");
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+        if (ImGui::TreeNode("Output"))
+        {
+            ImGui::Text("io.WantCaptureMouse: %d", io.WantCaptureMouse);
+            ImGui::Text("io.WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose);
+            ImGui::Text("io.WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
+            ImGui::Text("io.WantTextInput: %d", io.WantTextInput);
+            ImGui::Text("io.WantSetMousePos: %d", io.WantSetMousePos);
+            ImGui::Text("io.NavActive: %d, io.NavVisible: %d", io.NavActive, io.NavVisible);
+            ImGui::TreePop();
+        }
 
         // Display Mouse state
         IMGUI_DEMO_MARKER("Inputs, Navigation & Focus/Mouse State");
@@ -5765,25 +5788,108 @@ static void ShowDemoWindowMisc()
         }
 
         // Display Keyboard/Mouse state
-        IMGUI_DEMO_MARKER("Inputs, Navigation & Focus/Keyboard & Navigation State");
-        if (ImGui::TreeNode("Keyboard & Navigation State"))
+        IMGUI_DEMO_MARKER("Inputs, Navigation & Focus/Keyboard, Gamepad & Navigation State");
+        if (ImGui::TreeNode("Keyboard, Gamepad & Navigation State"))
         {
-            ImGui::Text("Keys down:");          for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (ImGui::IsKeyDown(i))        { ImGui::SameLine(); ImGui::Text("%d (0x%X) (%.02f secs)", i, i, io.KeysDownDuration[i]); }
-            ImGui::Text("Keys pressed:");       for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (ImGui::IsKeyPressed(i))     { ImGui::SameLine(); ImGui::Text("%d (0x%X)", i, i); }
-            ImGui::Text("Keys release:");       for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (ImGui::IsKeyReleased(i))    { ImGui::SameLine(); ImGui::Text("%d (0x%X)", i, i); }
+            // We iterate both legacy native range and named ImGuiKey ranges, which is a little odd but this allow displaying the data for old/new backends.
+            // User code should never have to go through such hoops: old code may use native keycodes, new code may use ImGuiKey codes.
+#ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
+            struct funcs { static bool IsLegacyNativeDupe(ImGuiKey) { return false; } };
+            const ImGuiKey key_first = ImGuiKey_NamedKey_BEGIN;
+#else
+            struct funcs { static bool IsLegacyNativeDupe(ImGuiKey key) { return key < 512 && ImGui::GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
+            const ImGuiKey key_first = 0;
+            //ImGui::Text("Legacy raw:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (io.KeysDown[key]) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
+#endif
+            ImGui::Text("Keys down:");          for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyDown(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d (%.02f secs)", ImGui::GetKeyName(key), key, ImGui::GetKeyData(key)->DownDuration); } }
+            ImGui::Text("Keys pressed:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyPressed(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
+            ImGui::Text("Keys released:");      for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (ImGui::IsKeyReleased(key)) { ImGui::SameLine(); ImGui::Text("\"%s\" %d", ImGui::GetKeyName(key), key); } }
             ImGui::Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
             ImGui::Text("Chars queue:");        for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; ImGui::SameLine();  ImGui::Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
 
-            ImGui::Text("NavInputs down:");     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { ImGui::SameLine(); ImGui::Text("[%d] %.2f (%.02f secs)", i, io.NavInputs[i], io.NavInputsDownDuration[i]); }
-            ImGui::Text("NavInputs pressed:");  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { ImGui::SameLine(); ImGui::Text("[%d]", i); }
+            // Draw an arbitrary US keyboard layout to visualize translated keys
+            {
+                const ImVec2 key_size = ImVec2(35.0f, 35.0f);
+                const float  key_rounding = 3.0f;
+                const ImVec2 key_face_size = ImVec2(25.0f, 25.0f);
+                const ImVec2 key_face_pos = ImVec2(5.0f, 3.0f);
+                const float  key_face_rounding = 2.0f;
+                const ImVec2 key_label_pos = ImVec2(7.0f, 4.0f);
+                const ImVec2 key_step = ImVec2(key_size.x - 1.0f, key_size.y - 1.0f);
+                const float  key_row_offset = 9.0f;
 
-            ImGui::Button("Hovering me sets the\nkeyboard capture flag");
-            if (ImGui::IsItemHovered())
-                ImGui::CaptureKeyboardFromApp(true);
-            ImGui::SameLine();
-            ImGui::Button("Holding me clears the\nthe keyboard capture flag");
-            if (ImGui::IsItemActive())
-                ImGui::CaptureKeyboardFromApp(false);
+                ImVec2 board_min = ImGui::GetCursorScreenPos();
+                ImVec2 board_max = ImVec2(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10.0f, board_min.y + 3 * key_step.y + 10.0f);
+                ImVec2 start_pos = ImVec2(board_min.x + 5.0f - key_step.x, board_min.y);
+
+                struct KeyLayoutData { int Row, Col; const char* Label; ImGuiKey Key; };
+                const KeyLayoutData keys_to_display[] =
+                {
+                    { 0, 0, "", ImGuiKey_Tab },      { 0, 1, "Q", ImGuiKey_Q }, { 0, 2, "W", ImGuiKey_W }, { 0, 3, "E", ImGuiKey_E }, { 0, 4, "R", ImGuiKey_R },
+                    { 1, 0, "", ImGuiKey_CapsLock }, { 1, 1, "A", ImGuiKey_A }, { 1, 2, "S", ImGuiKey_S }, { 1, 3, "D", ImGuiKey_D }, { 1, 4, "F", ImGuiKey_F },
+                    { 2, 0, "", ImGuiKey_LeftShift },{ 2, 1, "Z", ImGuiKey_Z }, { 2, 2, "X", ImGuiKey_X }, { 2, 3, "C", ImGuiKey_C }, { 2, 4, "V", ImGuiKey_V }
+                };
+
+                // Elements rendered manually via ImDrawList API are not clipped automatically.
+                // While not strictly necessary, here IsItemVisible() is used to avoid rendering these shapes when they are out of view.
+                ImGui::Dummy(ImVec2(board_max.x - board_min.x, board_max.y - board_min.y));
+                if (ImGui::IsItemVisible())
+                {
+                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                    draw_list->PushClipRect(board_min, board_max, true);
+                    for (int n = 0; n < IM_ARRAYSIZE(keys_to_display); n++)
+                    {
+                        const KeyLayoutData* key_data = &keys_to_display[n];
+                        ImVec2 key_min = ImVec2(start_pos.x + key_data->Col * key_step.x + key_data->Row * key_row_offset, start_pos.y + key_data->Row * key_step.y);
+                        ImVec2 key_max = ImVec2(key_min.x + key_size.x, key_min.y + key_size.y);
+                        draw_list->AddRectFilled(key_min, key_max, IM_COL32(204, 204, 204, 255), key_rounding);
+                        draw_list->AddRect(key_min, key_max, IM_COL32(24, 24, 24, 255), key_rounding);
+                        ImVec2 face_min = ImVec2(key_min.x + key_face_pos.x, key_min.y + key_face_pos.y);
+                        ImVec2 face_max = ImVec2(face_min.x + key_face_size.x, face_min.y + key_face_size.y);
+                        draw_list->AddRect(face_min, face_max, IM_COL32(193, 193, 193, 255), key_face_rounding, ImDrawFlags_None, 2.0f);
+                        draw_list->AddRectFilled(face_min, face_max, IM_COL32(252, 252, 252, 255), key_face_rounding);
+                        ImVec2 label_min = ImVec2(key_min.x + key_label_pos.x, key_min.y + key_label_pos.y);
+                        draw_list->AddText(label_min, IM_COL32(64, 64, 64, 255), key_data->Label);
+                        if (ImGui::IsKeyDown(key_data->Key))
+                            draw_list->AddRectFilled(key_min, key_max, IM_COL32(255, 0, 0, 128), key_rounding);
+                    }
+                    draw_list->PopClipRect();
+                }
+            }
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("Capture override"))
+        {
+            HelpMarker(
+                "The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui "
+                "to instruct your application of how to route inputs. Typically, when a value is true, it means "
+                "Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n"
+                "The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, "
+                "and underlying application should ignore mouse inputs (in practice there are many and more subtle "
+                "rules leading to how those flags are set).");
+
+            ImGui::Text("io.WantCaptureMouse: %d", io.WantCaptureMouse);
+            ImGui::Text("io.WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose);
+            ImGui::Text("io.WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
+
+            HelpMarker(
+                "Hovering the colored canvas will override io.WantCaptureXXX fields.\n"
+                "Notice how normally (when set to none), the value of io.WantCaptureKeyboard would be false when hovering and true when clicking.");
+            static int capture_override_mouse = -1;
+            static int capture_override_keyboard = -1;
+            const char* capture_override_desc[] = { "None", "Set to false", "Set to true" };
+            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 15);
+            ImGui::SliderInt("SetNextFrameWantCaptureMouse()", &capture_override_mouse, -1, +1, capture_override_desc[capture_override_mouse + 1], ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 15);
+            ImGui::SliderInt("SetNextFrameWantCaptureKeyboard()", &capture_override_keyboard, -1, +1, capture_override_desc[capture_override_keyboard + 1], ImGuiSliderFlags_AlwaysClamp);
+
+            ImGui::ColorButton("##panel", ImVec4(0.7f, 0.1f, 0.7f, 1.0f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(256.0f, 192.0f)); // Dummy item
+            if (ImGui::IsItemHovered() && capture_override_mouse != -1)
+                ImGui::SetNextFrameWantCaptureMouse(capture_override_mouse == 1);
+            if (ImGui::IsItemHovered() && capture_override_keyboard != -1)
+                ImGui::SetNextFrameWantCaptureKeyboard(capture_override_keyboard == 1);
+
             ImGui::TreePop();
         }
 
@@ -5941,6 +6047,9 @@ void ImGui::ShowAboutWindow(bool* p_open)
 #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
         ImGui::Text("define: IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
 #endif
+#ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
+        ImGui::Text("define: IMGUI_DISABLE_OBSOLETE_KEYIO");
+#endif
 #ifdef IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
         ImGui::Text("define: IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS");
 #endif
@@ -6075,7 +6184,7 @@ void ImGui::ShowAboutWindow(bool* p_open)
 namespace ImGui { IMGUI_API void ShowFontAtlas(ImFontAtlas* atlas); }
 
 // Demo helper function to select among loaded fonts.
-// Here we use the regular BeginCombo()/EndCombo() api which is more the more flexible one.
+// Here we use the regular BeginCombo()/EndCombo() api which is the more flexible one.
 void ImGui::ShowFontSelector(const char* label)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -7353,7 +7462,7 @@ static void ShowExampleAppSimpleOverlay(bool* p_open)
 static void ShowExampleAppFullscreen(bool* p_open)
 {
     static bool use_work_area = true;
-    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+    static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
 
     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
     // Based on your use case you may want one of the other.
@@ -7606,8 +7715,8 @@ static void ShowExampleAppCustomRendering(bool* p_open)
 
             // Context menu (under default mouse threshold)
             ImVec2 drag_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
-            if (opt_enable_context_menu && ImGui::IsMouseReleased(ImGuiMouseButton_Right) && drag_delta.x == 0.0f && drag_delta.y == 0.0f)
-                ImGui::OpenPopupOnItemClick("context");
+            if (opt_enable_context_menu && drag_delta.x == 0.0f && drag_delta.y == 0.0f)
+                ImGui::OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
             if (ImGui::BeginPopup("context"))
             {
                 if (adding_line)
@@ -7930,7 +8039,8 @@ void ShowExampleAppDocuments(bool* p_open)
             if (ImGui::MenuItem("Close All Documents", NULL, false, open_count > 0))
                 for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
                     app.Documents[doc_n].DoQueueClose();
-            if (ImGui::MenuItem("Exit", "Alt+F4")) {}
+            if (ImGui::MenuItem("Exit", "Ctrl+F4") && p_open)
+                *p_open = false;
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();

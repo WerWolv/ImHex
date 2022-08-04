@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
             if (this->m_newHashName.empty() && this->m_selectedHash != nullptr)
                 this->m_newHashName = hex::format("{} {}", LangEntry(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
 
-            if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvailWidth(), 200_scaled), true)) {
+            if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
                 if (this->m_selectedHash != nullptr) {
                     auto startPos = ImGui::GetCursorPosY();
                     this->m_selectedHash->draw();
@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndDisabled();
 
-            if (ImGui::BeginTable("##hashes", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders, ImVec2(ImGui::GetContentRegionAvailWidth(), ImGui::GetTextLineHeightWithSpacing() * 10))) {
+            if (ImGui::BeginTable("##hashes", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 10))) {
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.name"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.type"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.result"_lang, ImGuiTableColumnFlags_WidthStretch);
@@ -159,7 +159,7 @@ namespace hex::plugin::builtin {
                     else
                         result = "???";
 
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                     ImGui::InputText("##result", result, ImGuiInputTextFlags_ReadOnly);
                     ImGui::PopItemWidth();
 
