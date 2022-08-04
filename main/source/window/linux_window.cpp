@@ -13,6 +13,8 @@
     #include <sys/wait.h>
     #include <unistd.h>
 
+    #include <imgui_impl_glfw.h>
+
 namespace hex {
 
     void Window::initNative() {
@@ -22,6 +24,8 @@ namespace hex {
     }
 
     void Window::setupNativeWindow() {
+        ImGui_ImplGlfw_SetBorderlessWindowMode(false);
+
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;

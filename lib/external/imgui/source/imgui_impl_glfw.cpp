@@ -128,7 +128,6 @@ struct ImGui_ImplGlfw_Data
     bool                    WantUpdateMonitors;
 #ifdef _WIN32
     WNDPROC                 GlfwWndProc;
-    bool                    BorderlessWindow;   // IMHEX PATCH
 #endif
 
     // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
@@ -140,6 +139,7 @@ struct ImGui_ImplGlfw_Data
     GLFWkeyfun              PrevUserCallbackKey;
     GLFWcharfun             PrevUserCallbackChar;
     GLFWmonitorfun          PrevUserCallbackMonitor;
+    bool                    BorderlessWindow;   // IMHEX PATCH
 
     ImGui_ImplGlfw_Data()   { memset((void*)this, 0, sizeof(*this)); }
 };
