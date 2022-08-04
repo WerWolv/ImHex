@@ -1,10 +1,12 @@
 include(FetchContent)
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+if(IMHEX_STRIP_RELEASE)
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CPACK_STRIP_FILES TRUE)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(CPACK_STRIP_FILES TRUE)
+    endif()
 endif()
 
 macro(addVersionDefines)
@@ -90,9 +92,16 @@ macro(detectOS)
         enable_language(OBJCXX)
     elseif (UNIX AND NOT APPLE)
         add_compile_definitions(OS_LINUX)
-        set(CMAKE_INSTALL_BINDIR "bin")
-        set(CMAKE_INSTALL_LIBDIR "lib")
-        set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
+        include(GNUInstallDirs)
+
+        if(IMHEX_PLUGINS_IN_SHARE)
+            set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
+        else()
+            set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
+            # Warning : Do not work with portable versions such as appimage (because the path is hardcoded)
+            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
+        endif()
+            
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()

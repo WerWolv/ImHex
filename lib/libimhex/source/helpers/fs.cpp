@@ -179,16 +179,24 @@ namespace hex::fs {
         #endif
     }
 
+    constexpr std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder) {
+        for (auto &path : paths)
+            path = path / folder;
+
+        return paths;
+    };
+
+    std::vector<std::fs::path> getPluginPaths() {
+        std::vector<std::fs::path> paths = getDataPaths();
+        #if defined(OS_LINUX) && defined(SYSTEM_PLUGINS_LOCATION)
+        paths.push_back(SYSTEM_PLUGINS_LOCATION);
+        #endif
+        return paths;
+    }
+
 
     std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting) {
         std::vector<std::fs::path> result;
-
-        constexpr auto appendPath = [](std::vector<std::fs::path> paths, const std::fs::path &folder) {
-            for (auto &path : paths)
-                path = path / folder;
-
-            return paths;
-        };
 
         switch (path) {
             case ImHexPath::Constants:
@@ -204,7 +212,7 @@ namespace hex::fs {
                 result = appendPath(getConfigPaths(), "logs");
                 break;
             case ImHexPath::Plugins:
-                result = appendPath(getDataPaths(), "plugins");
+                result = appendPath(getPluginPaths(), "plugins");
                 break;
             case ImHexPath::Resources:
                 result = appendPath(getDataPaths(), "resources");
