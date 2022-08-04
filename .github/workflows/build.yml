@@ -76,6 +76,7 @@ jobs:
         $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
         $USERPROFILE/.cargo/bin/rustup.exe default nightly
 
+    # Windows cmake build
     - name: 🛠️ Build
       run: |
         mkdir -p build
@@ -93,8 +94,6 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           -DRUST_PATH="$USERPROFILE/.cargo/bin/"  \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           ..
@@ -147,6 +146,7 @@ jobs:
       run: |
         brew bundle --no-lock --file dist/Brewfile
 
+    # MacOS cmake build
     - name: 🛠️ Build
       run: |
         mkdir -p build
@@ -176,8 +176,8 @@ jobs:
         name: macOS DMG
         path: build/*.dmg
 
-  # Linux build
-  linux:
+  # Ubuntu build
+  ubuntu:
     runs-on: ubuntu-22.04
     name: 🐧 Ubuntu 22.04
     steps:
@@ -213,7 +213,7 @@ jobs:
           sudo apt update
           sudo bash dist/get_deps_debian.sh
           
-          sudo apt install -y python3-pip python3-setuptools patchelf desktop-file-utils libgdk-pixbuf2.0-dev fakeroot strace fuse
+          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
           sudo pip3 install appimage-builder==1.0.0
@@ -236,8 +236,6 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
             -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-            -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache     \
-            -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache   \
             -DRUST_PATH="$HOME/.cargo/bin/"           \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             ..
@@ -302,6 +300,7 @@ jobs:
           name: Linux AppImage
           path: '*.AppImage'
 
+  # ArchLinux build
   archlinux-build:
     name: 🐧 ArchLinux
     runs-on: ubuntu-latest
@@ -342,19 +341,23 @@ jobs:
             build/CMakeCache.txt
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
+      # ArchLinux cmake build
       - name: 🛠️ Build
         run: |
           mkdir -p build
           cd build
           CC=gcc CXX=g++ cmake                      \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="/usr" 	        \
+          -DCMAKE_INSTALL_PREFIX="/usr"             \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-          -DRUST_PATH="$HOME/.cargo/bin/"           \
-          -DUSE_SYSTEM_CURL=ON                     \
+          -DUSE_SYSTEM_CURL=ON                      \
+          -DUSE_SYSTEM_FMT=ON                       \
+          -DUSE_SYSTEM_YARA=ON                      \
+          -DUSE_SYSTEM_NLOHMANN_JSON=ON             \
+          -DUSE_SYSTEM_CAPSTONE=OFF                 \
           -DIMHEX_PATTERNS_PULL_MASTER=ON           \
           ..
           make -j 4 install DESTDIR=installDir
@@ -391,7 +394,8 @@ jobs:
           name: ArchLinux .pkg.tar.zst
           path: |
             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
-            
+
+  # Fedora build     
   fedora-build:
     strategy:
       matrix:
@@ -456,6 +460,7 @@ jobs:
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
       
+      # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
           rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
