@@ -16,6 +16,7 @@
 #include <chrono>
 #include <random>
 #include <regex>
+#include <limits>
 
 #include <llvm/Demangle/Demangle.h>
 #include "math_evaluator.hpp"
@@ -1222,9 +1223,9 @@ namespace hex::plugin::builtin {
             {
                 const auto exponentBias = (u128(1) << (exponentBitCount - 1)) - 1;
 
-                const long double signValue = signBits == 0 ? 1 : -1;
-                const long double exponentValue = exponentBits == 0 ? 0 : std::pow<long double>(2, i64(i128(exponentBits) - i128(exponentBias)));
-                const long double mantissaValue = [mantissaBitPosition] {
+                long double signValue = signBits == 0 ? 1 : -1;
+                long double exponentValue = exponentBits == 0 ? 0 : std::pow<long double>(2, i64(i128(exponentBits) - i128(exponentBias)));
+                long double mantissaValue = [mantissaBitPosition] {
                     long double mantissa = 1.0;
                     for (i32 bit = 0; bit < mantissaBitCount; bit++) {
                         if (hex::extract(mantissaBitPosition - bit, mantissaBitPosition - bit, value) != 0)
@@ -1233,6 +1234,28 @@ namespace hex::plugin::builtin {
 
                     return mantissa;
                 }();
+
+                enum class NumberType {
+                    Regular,
+                    SignalingNaN,
+                    QuietNaN,
+                    NegativeInfinity,
+                    PositiveInfinity
+                } numberType = NumberType::Regular;
+
+                if (std::popcount(exponentBits) == exponentBitCount) {
+                    if (mantissaBits == 0) {
+                        if (signBits == 0)
+                            numberType = NumberType::PositiveInfinity;
+                        else
+                            numberType = NumberType::NegativeInfinity;
+                    } else {
+                        if (mantissaBits & (u128(1) << (mantissaBitCount - 1)))
+                            numberType = NumberType::QuietNaN;
+                        else
+                            numberType = NumberType::SignalingNaN;
+                    }
+                }
 
 
                 if (ImGui::BeginTable("##result", 5, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
@@ -1264,7 +1287,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("=");
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0}", exponentValue);
+                    ImGui::TextFormatted("{0:.8G}", exponentValue);
 
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.tools.ieee756.mantissa"_lang);
@@ -1274,7 +1297,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("=");
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0:.2f}", mantissaValue);
+                    ImGui::TextFormatted("{0:.8G}", mantissaValue);
 
                     ImGui::TableNextRow();
                     ImGui::TextUnformatted(" ");
@@ -1285,11 +1308,28 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted("hex.builtin.tools.ieee756.result.float"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0} * {1} * {2}", signValue, exponentValue, mantissaValue);
+                    ImGui::TextFormatted("{0} * {1:.8G} * {2:.8G}", signValue, exponentValue, mantissaValue);
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("=");
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0:.2f}", signValue * exponentValue * mantissaValue);
+                    switch (numberType) {
+                        using enum NumberType;
+                        case NumberType::Regular:
+                            ImGui::TextFormatted("{0:.8G}", signValue * exponentValue * mantissaValue);
+                            break;
+                        case NumberType::SignalingNaN:
+                            ImGui::TextUnformatted("Signaling NaN");
+                            break;
+                        case NumberType::QuietNaN:
+                            ImGui::TextUnformatted("Quiet NaN");
+                            break;
+                        case NumberType::NegativeInfinity:
+                            ImGui::TextUnformatted("-Inf");
+                            break;
+                        case NumberType::PositiveInfinity:
+                            ImGui::TextUnformatted("Inf");
+                            break;
+                    }
 
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.tools.ieee756.result.hex"_lang);
