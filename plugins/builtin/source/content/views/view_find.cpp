@@ -529,7 +529,7 @@ namespace hex::plugin::builtin {
 
             auto &currOccurrences = this->m_sortedOccurrences[provider];
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter)) {
                 this->m_sortedOccurrences = this->m_foundOccurrences;
 

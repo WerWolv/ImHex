@@ -504,7 +504,7 @@ namespace ImGui {
 
         bool value_changed = false;
         if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), flags))
-            value_changed = DataTypeApplyOpFromText(buf, GImGui->InputTextState.InitialTextA.Data, ImGuiDataType_U64, value, "%llX");
+            value_changed = DataTypeApplyFromText(buf, ImGuiDataType_U64, value, "%llX");
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
@@ -585,7 +585,7 @@ namespace ImGui {
         flags |= ImGuiInputTextFlags_NoMarkEdited;  // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
 
         if (InputText(label, buf, IM_ARRAYSIZE(buf), flags, callback, user_data))
-            value_changed = DataTypeApplyOpFromText(buf, g.InputTextState.InitialTextA.Data, data_type, p_data, format);
+            value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
 
         if (value_changed)
             MarkItemEdited(g.LastItemData.ID);

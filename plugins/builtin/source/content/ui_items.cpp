@@ -210,10 +210,7 @@ namespace hex::plugin::builtin {
             }
 
             if (taskCount > 0) {
-                if (taskCount > 0)
-                    ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
-                else
-                    ImGui::TextSpinner("");
+                ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
 
                 ImGui::SameLine();
 

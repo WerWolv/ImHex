@@ -137,12 +137,24 @@ namespace hex::fs {
 
         #endif
 
+
         for (auto &path : paths) {
             path = path / "imhex";
         }
 
-        if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
-            paths.push_back(executablePath->parent_path());
+
+        #if defined(OS_MACOS)
+
+            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+                paths.push_back(*executablePath);
+
+        #else
+
+            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+                paths.push_back(executablePath->parent_path());
+
+        #endif
+
 
         auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
         std::copy(additionalDirs.begin(), additionalDirs.end(), std::back_inserter(paths));

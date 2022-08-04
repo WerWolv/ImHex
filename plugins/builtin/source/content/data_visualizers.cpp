@@ -195,8 +195,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = 14;
 
-        const static inline auto FormatStringUpperCase = hex::format("%{}E", CharCount);
-        const static inline auto FormatStringLowerCase = hex::format("%{}e", CharCount);
+        const static inline auto FormatStringUpperCase = hex::format("%{}G", CharCount);
+        const static inline auto FormatStringLowerCase = hex::format("%{}g", CharCount);
 
         const char *getFormatString(bool upperCase) {
             if (upperCase)
@@ -242,7 +242,7 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        std::array<float, 4> m_currColor;
+        std::array<float, 4> m_currColor = { 0 };
 
     };
 

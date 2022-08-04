@@ -22,6 +22,8 @@
     #include <dwmapi.h>
     #include <windowsx.h>
 
+    #include <imgui_impl_glfw.h>
+
 namespace hex {
 
     static LONG_PTR g_oldWndProc;
@@ -244,7 +246,12 @@ namespace hex {
         // Setup borderless window
         auto hwnd = glfwGetWin32Window(this->m_window);
 
-        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+        bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
+
+        ImGui_ImplGlfw_SetBorderlessWindowMode(borderlessWindowMode);
+
+
+        if (borderlessWindowMode) {
             g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
 
             MARGINS borderless = { 1, 1, 1, 1 };
@@ -263,6 +270,9 @@ namespace hex {
     }
 
     void Window::endNativeWindowFrame() {
+        if (!ImHexApi::System::isBorderlessWindowModeEnabled())
+            return;
+
         if (g_mouseCursorIcon != ImGuiMouseCursor_None) {
             ImGui::SetMouseCursor(g_mouseCursorIcon);
         }

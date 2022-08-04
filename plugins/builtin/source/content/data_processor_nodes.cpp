@@ -996,8 +996,10 @@ namespace hex::plugin::builtin {
         }
 
         void drawPlot(const ImVec2 &viewSize) {
-            ImPlot::SetNextPlotLimits(0, 256, 0.5, float(*std::max_element(this->m_counts.begin(), this->m_counts.end())) * 1.1F, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##distribution", "Address", "Count", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels)) {
+            if (ImPlot::BeginPlot("##distribution", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
+                ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale);
+                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_counts.begin(), this->m_counts.end())) * 1.1F, ImGuiCond_Always);
+
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
                     std::iota(result.begin(), result.end(), 0);
