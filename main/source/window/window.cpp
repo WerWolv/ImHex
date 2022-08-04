@@ -240,11 +240,16 @@ namespace hex {
             ImGui::Separator();
             ImGui::SetCursorPosX(8);
             for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
+                auto prevIdx = drawList->_VtxCurrentIdx;
                 callback();
+                auto currIdx = drawList->_VtxCurrentIdx;
 
-                ImGui::SameLine();
-                ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-                ImGui::SameLine();
+                // Only draw separator if something was actually drawn
+                if (prevIdx != currIdx) {
+                    ImGui::SameLine();
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
+                }
             }
 
             {
