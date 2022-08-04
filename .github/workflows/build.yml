@@ -76,6 +76,7 @@ jobs:
         $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
         $USERPROFILE/.cargo/bin/rustup.exe default nightly
 
+    # Windows cmake build
     - name: 🛠️ Build
       run: |
         mkdir -p build
@@ -145,6 +146,7 @@ jobs:
       run: |
         brew bundle --no-lock --file dist/Brewfile
 
+    # MacOS cmake build
     - name: 🛠️ Build
       run: |
         mkdir -p build
@@ -327,6 +329,7 @@ jobs:
             build/CMakeCache.txt
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
       
+      # ArchLinux cmake build
       - name: 🛠️ Build
         run: |
           mkdir -p build
@@ -445,6 +448,7 @@ jobs:
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
       
+      # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
           rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
