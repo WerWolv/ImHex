@@ -128,6 +128,7 @@ struct ImGui_ImplGlfw_Data
     bool                    WantUpdateMonitors;
 #ifdef _WIN32
     WNDPROC                 GlfwWndProc;
+    bool                    BorderlessWindow;   // IMHEX PATCH
 #endif
 
     // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
@@ -495,6 +496,11 @@ void ImGui_ImplGlfw_MonitorCallback(GLFWmonitor*, int)
     bd->WantUpdateMonitors = true;
 }
 
+void ImGui_ImplGlfw_SetBorderlessWindowMode(bool enabled) {
+    ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
+    bd->BorderlessWindow = enabled;
+}
+
 void ImGui_ImplGlfw_InstallCallbacks(GLFWwindow* window)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
@@ -741,12 +747,12 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
         else
         {
             // IMHEX PATCH BEGIN
-            #ifndef _WIN32
+            if (!bd->BorderlessWindow) {
                 // Show OS mouse cursor
                 // FIXME-PLATFORM: Unfocused windows seems to fail changing the mouse cursor with GLFW 3.2, but 3.3 works here.
                 glfwSetCursor(window, bd->MouseCursors[imgui_cursor] ? bd->MouseCursors[imgui_cursor] : bd->MouseCursors[ImGuiMouseCursor_Arrow]);
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            #endif
+            }
             // IMHEX PATCH END
         }
     }

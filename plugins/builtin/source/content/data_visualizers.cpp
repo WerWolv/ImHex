@@ -242,7 +242,7 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        std::array<float, 4> m_currColor;
+        std::array<float, 4> m_currColor = { 0 };
 
     };
 
