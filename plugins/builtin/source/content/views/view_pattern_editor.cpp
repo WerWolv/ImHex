@@ -741,6 +741,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code) {
+        this->m_runningParsers++;
+
         auto ast = this->m_parserRuntime->parseString(code);
 
         this->m_patternVariables.clear();
