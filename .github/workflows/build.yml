@@ -166,6 +166,7 @@ jobs:
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
           ..
         make -j4 package
 
