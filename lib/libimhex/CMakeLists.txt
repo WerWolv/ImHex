@@ -155,7 +155,7 @@ add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_compile_options(libimhex PRIVATE -Wall -Wextra -Werror)
+setupCompilerWarnings(libimhex)
 
 target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${Python_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})

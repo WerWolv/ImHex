@@ -367,3 +367,7 @@ function(downloadImHexPatternsFiles dest)
     endif ()
 
 endfunction()
+
+macro(setupCompilerWarnings target)
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Werror -Wno-restrict)
+endmacro()
