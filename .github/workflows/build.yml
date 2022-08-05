@@ -257,7 +257,7 @@ jobs:
       - name: 📦 Bundle DEB
         run: |
           cp -r build/DEBIAN build/AppDir
-          dpkg-deb --build build/AppDir
+          dpkg-deb -Zcompress-type gzip --build build/AppDir
           mv build/AppDir.deb imhex-${{env.IMHEX_VERSION}}.deb
           rm -rf build/AppDir/DEBIAN
 
