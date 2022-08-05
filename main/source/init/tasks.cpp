@@ -34,7 +34,8 @@ namespace hex::init {
             return false;
 
         auto versionString = std::string(IMHEX_VERSION);
-        auto currVersion   = "v" + versionString.substr(0, versionString.find_first_of('-'));
+        size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
+        auto currVersion   = "v" + versionString.substr(0, versionLength);
         auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
         if (latestVersion != currVersion)
