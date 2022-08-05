@@ -356,7 +356,7 @@ namespace hex::plugin::builtin {
                                     ImGui::TextFormatted("{0:.3Lf}", mathHistory[(mathHistory.size() - 1) - i]);
                                     break;
                                 case MathDisplayType::Scientific:
-                                    ImGui::TextFormatted("{0:.6Le}", mathHistory[(mathHistory.size() - 1) - i]);
+                                    ImGui::TextFormatted("{0:.6Lg}", mathHistory[(mathHistory.size() - 1) - i]);
                                     break;
                                 case MathDisplayType::Engineering:
                                     ImGui::TextFormatted("{0}", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
@@ -396,7 +396,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TextFormatted("{0:.3Lf}", value);
                                 break;
                             case MathDisplayType::Scientific:
-                                ImGui::TextFormatted("{0:.6Le}", value);
+                                ImGui::TextFormatted("{0:.6Lg}", value);
                                 break;
                             case MathDisplayType::Engineering:
                                 ImGui::TextFormatted("{}", hex::toEngineeringString(value));
