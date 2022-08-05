@@ -241,7 +241,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.help.about.source", "GitHubからソースコードを入手できます:" },
                         { "hex.builtin.view.help.about.donations", "寄付" },
                         { "hex.builtin.view.help.about.thanks", "ご使用いただきありがとうございます。もし気に入って頂けたなら、プロジェクトを継続するための寄付をご検討ください。" },
-                        { "hex.builtin.view.help.about.contributor", "出資者" },
+                        { "hex.builtin.view.help.about.contributor", "ご協力頂いた方々" },
                         { "hex.builtin.view.help.about.libs", "使用しているライブラリ" },
                         { "hex.builtin.view.help.about.paths", "ImHexのディレクトリ" },
                         { "hex.builtin.view.help.about.license", "ライセンス" },
