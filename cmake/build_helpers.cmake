@@ -369,5 +369,9 @@ function(downloadImHexPatternsFiles dest)
 endfunction()
 
 macro(setupCompilerWarnings target)
-    target_compile_options(${target} PRIVATE -Wall -Wextra -Werror -Wno-restrict -Wno-stringop-overread)
+    set(DEFAULT_FLAGS "-Wall -Wextra -Werror -Wno-stringop-overread")
+
+    set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${DEFAULT_FLAGS} -Wno-restrict")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${DEFAULT_FLAGS} -Wno-restrict")
+    set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${DEFAULT_FLAGS}")
 endmacro()
