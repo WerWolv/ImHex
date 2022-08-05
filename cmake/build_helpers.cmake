@@ -369,5 +369,5 @@ function(downloadImHexPatternsFiles dest)
 endfunction()
 
 macro(setupCompilerWarnings target)
-    target_compile_options(${target} PRIVATE -Wall -Wextra -Werror -Wno-restrict)
+    target_compile_options(${target} PRIVATE -Wall -Wextra -Werror -Wno-restrict -Wno-stringop-overread)
 endmacro()
