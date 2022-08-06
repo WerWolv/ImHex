@@ -2,6 +2,7 @@
 
 #include <hex/ui/view.hpp>
 #include <pl/pattern_language.hpp>
+#include <pl/core/errors/error.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <cstring>
@@ -12,7 +13,7 @@
 
 #include <TextEditor.h>
 
-namespace pl { class Pattern; }
+namespace pl::ptrn { class Pattern; }
 
 namespace hex::plugin::builtin {
 
@@ -29,8 +30,8 @@ namespace hex::plugin::builtin {
             bool inVariable;
             bool outVariable;
 
-            pl::Token::ValueType type;
-            pl::Token::Literal value;
+            pl::core::Token::ValueType type;
+            pl::core::Token::Literal value;
         };
 
         enum class EnvVarType
@@ -44,7 +45,7 @@ namespace hex::plugin::builtin {
         struct EnvVar {
             u64 id;
             std::string name;
-            pl::Token::Literal value;
+            pl::core::Token::Literal value;
             EnvVarType type;
 
             bool operator==(const EnvVar &other) const {
@@ -67,9 +68,9 @@ namespace hex::plugin::builtin {
 
         bool m_lastEvaluationProcessed = true;
         bool m_lastEvaluationResult    = false;
-        std::optional<pl::PatternLanguageError> m_lastEvaluationError;
-        std::vector<std::pair<pl::LogConsole::Level, std::string>> m_lastEvaluationLog;
-        std::map<std::string, pl::Token::Literal> m_lastEvaluationOutVars;
+        std::optional<pl::core::err::PatternLanguageError> m_lastEvaluationError;
+        std::vector<std::pair<pl::core::LogConsole::Level, std::string>> m_lastEvaluationLog;
+        std::map<std::string, pl::core::Token::Literal> m_lastEvaluationOutVars;
 
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
@@ -79,7 +80,7 @@ namespace hex::plugin::builtin {
         bool m_acceptPatternWindowOpen = false;
 
         TextEditor m_textEditor;
-        std::vector<std::pair<pl::LogConsole::Level, std::string>> m_console;
+        std::vector<std::pair<pl::core::LogConsole::Level, std::string>> m_console;
 
         std::map<std::string, PatternVariable> m_patternVariables;
 
@@ -97,7 +98,7 @@ namespace hex::plugin::builtin {
         void drawEnvVars(ImVec2 size);
         void drawVariableSettings(ImVec2 size);
 
-        void drawPatternTooltip(pl::Pattern *pattern);
+        void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
         void loadPatternFile(const std::fs::path &path);
 

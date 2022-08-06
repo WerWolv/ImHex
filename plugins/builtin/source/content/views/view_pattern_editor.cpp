@@ -2,11 +2,11 @@
 
 #include <hex/api/content_registry.hpp>
 
-#include <pl/preprocessor.hpp>
 #include <pl/patterns/pattern.hpp>
-#include <pl/ast/ast_node_variable_decl.hpp>
-#include <pl/ast/ast_node_type_decl.hpp>
-#include <pl/ast/ast_node_builtin_type.hpp>
+#include <pl/core/preprocessor.hpp>
+#include <pl/core/ast/ast_node_variable_decl.hpp>
+#include <pl/core/ast/ast_node_type_decl.hpp>
+#include <pl/core/ast/ast_node_builtin_type.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
@@ -418,7 +418,7 @@ namespace hex::plugin::builtin {
             if (!this->m_lastEvaluationResult) {
                 if (this->m_lastEvaluationError) {
                     TextEditor::ErrorMarkers errorMarkers = {
-                        {this->m_lastEvaluationError->getLineNumber(), this->m_lastEvaluationError->what()}
+                        { this->m_lastEvaluationError->line, this->m_lastEvaluationError->message }
                     };
                     this->m_textEditor.SetErrorMarkers(errorMarkers);
                 }
@@ -447,16 +447,18 @@ namespace hex::plugin::builtin {
                     const auto &[level, message] = this->m_console[i];
 
                     switch (level) {
-                        case pl::LogConsole::Level::Debug:
+                        using enum pl::core::LogConsole::Level;
+
+                        case Debug:
                             ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
                             break;
-                        case pl::LogConsole::Level::Info:
+                        case Info:
                             ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
                             break;
-                        case pl::LogConsole::Level::Warning:
+                        case Warning:
                             ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
                             break;
-                        case pl::LogConsole::Level::Error:
+                        case Error:
                             ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                             break;
                         default:
@@ -591,27 +593,27 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         if (variable.outVariable) {
-                            ImGui::TextUnformatted(pl::Token::literalToString(variable.value, true).c_str());
+                            ImGui::TextUnformatted(pl::core::Token::literalToString(variable.value, true).c_str());
                         } else if (variable.inVariable) {
                             const std::string label { "##" + name };
 
-                            if (pl::Token::isSigned(variable.type)) {
+                            if (pl::core::Token::isSigned(variable.type)) {
                                 i64 value = hex::get_or<i128>(variable.value, 0);
                                 ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value);
                                 variable.value = i128(value);
-                            } else if (pl::Token::isUnsigned(variable.type)) {
+                            } else if (pl::core::Token::isUnsigned(variable.type)) {
                                 u64 value = hex::get_or<u128>(variable.value, 0);
                                 ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value);
                                 variable.value = u128(value);
-                            } else if (pl::Token::isFloatingPoint(variable.type)) {
+                            } else if (pl::core::Token::isFloatingPoint(variable.type)) {
                                 double value = hex::get_or<double>(variable.value, 0.0);
                                 ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value);
                                 variable.value = value;
-                            } else if (variable.type == pl::Token::ValueType::Boolean) {
+                            } else if (variable.type == pl::core::Token::ValueType::Boolean) {
                                 bool value = hex::get_or<bool>(variable.value, false);
                                 ImGui::Checkbox(label.c_str(), &value);
                                 variable.value = value;
-                            } else if (variable.type == pl::Token::ValueType::Character) {
+                            } else if (variable.type == pl::core::Token::ValueType::Character) {
                                 char buffer[2];
                                 ImGui::InputText(label.c_str(), buffer, 2);
                                 variable.value = buffer[0];
@@ -667,7 +669,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewPatternEditor::drawPatternTooltip(pl::Pattern *pattern) {
+    void ViewPatternEditor::drawPatternTooltip(pl::ptrn::Pattern *pattern) {
         ImGui::PushID(pattern);
         {
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
@@ -749,11 +751,11 @@ namespace hex::plugin::builtin {
 
         if (ast) {
             for (auto &node : *ast) {
-                if (auto variableDecl = dynamic_cast<pl::ASTNodeVariableDecl *>(node.get())) {
-                    auto type = dynamic_cast<pl::ASTNodeTypeDecl *>(variableDecl->getType().get());
+                if (auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(node.get())) {
+                    auto type = dynamic_cast<pl::core::ast::ASTNodeTypeDecl *>(variableDecl->getType().get());
                     if (type == nullptr) continue;
 
-                    auto builtinType = dynamic_cast<pl::ASTNodeBuiltinType *>(type->getType().get());
+                    auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(type->getType().get());
                     if (builtinType == nullptr) continue;
 
                     PatternVariable variable = {
@@ -784,13 +786,13 @@ namespace hex::plugin::builtin {
         EventManager::post<EventHighlightingChanged>();
 
         std::thread([this, code] {
-            std::map<std::string, pl::Token::Literal> envVars;
+            std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
                 envVars.insert({ name, value });
 
             this->parsePattern(code);
 
-            std::map<std::string, pl::Token::Literal> inVariables;
+            std::map<std::string, pl::core::Token::Literal> inVariables;
             for (auto &[name, variable] : this->m_patternVariables) {
                 if (variable.inVariable)
                     inVariables[name] = variable.value;

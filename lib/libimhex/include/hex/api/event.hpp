@@ -18,16 +18,12 @@
 
 struct GLFWwindow;
 
-namespace pl {
-    class Pattern;
-}
-
 namespace hex {
 
     class EventId {
     public:
         explicit constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
-            this->m_hash = line ^ 123456789;
+            this->m_hash = line ^ 987654321;
             for (auto c : std::string_view(func)) {
                 this->m_hash = (this->m_hash >> 5) | (this->m_hash << 27);
                 this->m_hash ^= c;

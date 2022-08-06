@@ -34,15 +34,15 @@ namespace {
 
 namespace hex {
 
-    void PatternDrawer::visit(pl::PatternArrayDynamic& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternArrayDynamic& pattern) {
         this->drawArray(pattern);
     }
 
-    void PatternDrawer::visit(pl::PatternArrayStatic& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternArrayStatic& pattern) {
         this->drawArray(pattern);
     }
 
-    void PatternDrawer::visit(pl::PatternBitfieldField& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternBitfieldField& pattern) {
         ImGui::TableNextRow();
         createLeafNode(pattern);
         ImGui::TableNextColumn();
@@ -72,7 +72,7 @@ namespace hex {
         ImGui::TextFormatted("{}", pattern.getFormattedValue());
     }
 
-    void PatternDrawer::visit(pl::PatternBitfield& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternBitfield& pattern) {
         bool open = true;
         if (!pattern.isInlined()) {
             ImGui::TableNextRow();
@@ -101,15 +101,15 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::visit(pl::PatternBoolean& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternBoolean& pattern) {
         this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<bool>(pattern.getValue()));
     }
 
-    void PatternDrawer::visit(pl::PatternCharacter& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternCharacter& pattern) {
         this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
-    void PatternDrawer::visit(pl::PatternEnum& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternEnum& pattern) {
         ImGui::TableNextRow();
         createLeafNode(pattern);
         drawCommentTooltip(pattern);
@@ -124,7 +124,7 @@ namespace hex {
         ImGui::TextFormatted("{}", pattern.getFormattedValue());
     }
 
-    void PatternDrawer::visit(pl::PatternFloat& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternFloat& pattern) {
         if (pattern.getSize() == 4) {
             this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<float>(pattern.getValue()));
         } else if (pattern.getSize() == 8) {
@@ -132,12 +132,12 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::visit(pl::PatternPadding& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternPadding& pattern) {
         // Do nothing
         hex::unused(pattern);
     }
 
-    void PatternDrawer::visit(pl::PatternPointer& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternPointer& pattern) {
         bool open = true;
 
         if (!pattern.isInlined()) {
@@ -166,16 +166,16 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::visit(pl::PatternSigned& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternSigned& pattern) {
         this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
-    void PatternDrawer::visit(pl::PatternString& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternString& pattern) {
         if (pattern.getSize() > 0)
             this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
         }
 
-    void PatternDrawer::visit(pl::PatternStruct& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternStruct& pattern) {
         bool open = true;
 
         if (!pattern.isInlined()) {
@@ -204,7 +204,7 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::visit(pl::PatternUnion& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternUnion& pattern) {
         bool open = true;
 
         if (!pattern.isInlined()) {
@@ -233,20 +233,20 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::visit(pl::PatternUnsigned& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternUnsigned& pattern) {
         this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
-    void PatternDrawer::visit(pl::PatternWideCharacter& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternWideCharacter& pattern) {
         this->createDefaultEntry(pattern, pattern.getFormattedValue(), u128(pattern.getValue()));
     }
 
-    void PatternDrawer::visit(pl::PatternWideString& pattern) {
+    void PatternDrawer::visit(pl::ptrn::PatternWideString& pattern) {
         if (pattern.getSize() > 0)
             this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
-    void PatternDrawer::createDefaultEntry(const pl::Pattern &pattern, const std::string &value, pl::Token::Literal &&literal) const {
+    void PatternDrawer::createDefaultEntry(const pl::ptrn::Pattern &pattern, const std::string &value, pl::core::Token::Literal &&literal) const {
         ImGui::TableNextRow();
         createLeafNode(pattern);
         ImGui::TableNextColumn();
@@ -264,7 +264,7 @@ namespace hex {
         ImGui::TextFormatted("{}", pattern.formatDisplayValue(value, literal));
     }
 
-    void PatternDrawer::makeSelectable(const pl::Pattern &pattern) const {
+    void PatternDrawer::makeSelectable(const pl::ptrn::Pattern &pattern) const {
         ImGui::PushID(static_cast<int>(pattern.getOffset()));
         ImGui::PushID(pattern.getVariableName().c_str());
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
@@ -276,7 +276,7 @@ namespace hex {
     }
 
 
-    void PatternDrawer::drawCommentTooltip(const pl::Pattern &pattern) const {
+    void PatternDrawer::drawCommentTooltip(const pl::ptrn::Pattern &pattern) const {
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && pattern.getComment().has_value()) {
             ImGui::BeginTooltip();
             ImGui::TextUnformatted(pattern.getComment()->c_str());
@@ -284,14 +284,14 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::draw(pl::Pattern& pattern) {
+    void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {
         if (pattern.isHidden())
             return;
 
         pattern.accept(*this);
     }
 
-    bool PatternDrawer::drawArrayRoot(pl::Pattern& pattern, size_t entryCount, bool isInlined) {
+    bool PatternDrawer::drawArrayRoot(pl::ptrn::Pattern& pattern, size_t entryCount, bool isInlined) {
         if (entryCount == 0)
             return false;
 
@@ -325,7 +325,7 @@ namespace hex {
         return open;
     }
 
-    void PatternDrawer::drawArrayNode(u64 idx, u64& displayEnd, pl::Pattern& pattern) {
+    void PatternDrawer::drawArrayNode(u64 idx, u64& displayEnd, pl::ptrn::Pattern& pattern) {
         u64 lastVisible = displayEnd - 1;
 
         ImGui::PushID(pattern.getOffset());
@@ -344,7 +344,7 @@ namespace hex {
         ImGui::PopID();
     }
 
-    void PatternDrawer::drawArrayEnd(pl::Pattern& pattern, bool opened) {
+    void PatternDrawer::drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened) {
         if (opened) {
             ImGui::TreePop();
         } else {
@@ -353,14 +353,14 @@ namespace hex {
         }
     }
 
-    void PatternDrawer::createLeafNode(const pl::Pattern& pattern) const {
+    void PatternDrawer::createLeafNode(const pl::ptrn::Pattern& pattern) const {
         ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
                                                             ImGuiTreeNodeFlags_NoTreePushOnOpen |
                                                             ImGuiTreeNodeFlags_SpanFullWidth |
                                                             ImGuiTreeNodeFlags_AllowItemOverlap);
     }
 
-    bool PatternDrawer::createTreeNode(const pl::Pattern& pattern) const {
+    bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern) const {
         if (pattern.isSealed()) {
             ImGui::Selectable(pattern.getDisplayName().c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap);
             return false;
@@ -369,34 +369,34 @@ namespace hex {
             return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
     }
 
-    void PatternDrawer::drawTypenameColumn(const pl::Pattern& pattern, const std::string& pattern_name) const {
+    void PatternDrawer::drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) const {
         ImGui::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
         ImGui::SameLine();
         ImGui::TextUnformatted(pattern.getTypeName().c_str());
         ImGui::TableNextColumn();
     }
 
-    void PatternDrawer::drawNameColumn(const pl::Pattern& pattern) const {
+    void PatternDrawer::drawNameColumn(const pl::ptrn::Pattern& pattern) const {
         ImGui::TextUnformatted(pattern.getDisplayName().c_str());
         ImGui::TableNextColumn();
     }
 
-    void PatternDrawer::drawColorColumn(const pl::Pattern& pattern) const {
+    void PatternDrawer::drawColorColumn(const pl::ptrn::Pattern& pattern) const {
         ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
         ImGui::TableNextColumn();
     }
 
-    void PatternDrawer::drawOffsetColumn(const pl::Pattern& pattern) const {
+    void PatternDrawer::drawOffsetColumn(const pl::ptrn::Pattern& pattern) const {
         ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
         ImGui::TableNextColumn();
     }
 
-    void PatternDrawer::drawSizeColumn(const pl::Pattern& pattern) const {
+    void PatternDrawer::drawSizeColumn(const pl::ptrn::Pattern& pattern) const {
         ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
         ImGui::TableNextColumn();
     }
 
-    u64& PatternDrawer::getDisplayEnd(const pl::Pattern& pattern) {
+    u64& PatternDrawer::getDisplayEnd(const pl::ptrn::Pattern& pattern) {
         auto it = m_displayEnd.find(&pattern);
         if (it != m_displayEnd.end()) {
             return it->second;

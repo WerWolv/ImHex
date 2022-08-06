@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventHighlightingChanged>(this);
     }
 
-    static bool sortPatterns(prv::Provider *provider, const ImGuiTableSortSpecs* sortSpecs, const pl::Pattern * left, const pl::Pattern * right) {
+    static bool sortPatterns(prv::Provider *provider, const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) {
         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                 return left->getDisplayName() > right->getDisplayName();
@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-    static bool beginPatternTable(prv::Provider *&provider, const std::vector<std::shared_ptr<pl::Pattern>> &patterns, std::vector<pl::Pattern*> &sortedPatterns) {
+    static bool beginPatternTable(prv::Provider *&provider, const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns) {
         if (ImGui::BeginTable("##Patterntable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.builtin.view.pattern_data.var_name"_lang, 0, 0, ImGui::GetID("name"));
@@ -81,16 +81,16 @@ namespace hex::plugin::builtin {
 
             if (sortSpecs->SpecsDirty || sortedPatterns.empty()) {
                 sortedPatterns.clear();
-                std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::Pattern> &pattern) {
+                std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
                     return pattern.get();
                 });
 
-                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs, &provider](pl::Pattern *left, pl::Pattern *right) -> bool {
+                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs, &provider](pl::ptrn::Pattern *left, pl::ptrn::Pattern *right) -> bool {
                     return sortPatterns(provider, sortSpecs, left, right);
                 });
 
                 for (auto &pattern : sortedPatterns)
-                    pattern->sort([&sortSpecs, &provider](const pl::Pattern *left, const pl::Pattern *right){
+                    pattern->sort([&sortSpecs, &provider](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
                         return sortPatterns(provider, sortSpecs, left, right);
                     });
 
