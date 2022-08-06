@@ -994,8 +994,14 @@ namespace hex::plugin::builtin {
                     {
                         auto selection = this->getSelection();
                         std::string value;
-                        if (this->isSelectionValid())
-                            value = hex::format("0x{0:08X} - 0x{1:08X} ({2})", selection.getStartAddress(), selection.getEndAddress(), hex::toByteString(selection.getSize()));
+                        if (this->isSelectionValid()) {
+                            value = hex::format("0x{0:08X} - 0x{1:08X} (0x{2:X} | {3})",
+                                                selection.getStartAddress(),
+                                                selection.getEndAddress(),
+                                                selection.getSize(),
+                                                hex::toByteString(selection.getSize())
+                            );
+                        }
                         else
                             value = std::string("hex.builtin.view.hex_editor.selection.none"_lang);
 
@@ -1005,7 +1011,11 @@ namespace hex::plugin::builtin {
                     // Loaded data size
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} ({2})", "hex.builtin.view.hex_editor.data_size"_lang, provider->getActualSize(), hex::toByteString(provider->getActualSize()));
+                        ImGui::TextFormatted("{0}: 0x{1:08X} (0x{2:X} | {3})", "hex.builtin.view.hex_editor.data_size"_lang,
+                                             provider->getActualSize(),
+                                             provider->getActualSize(),
+                                             hex::toByteString(provider->getActualSize())
+                                             );
                     }
 
                     ImGui::EndTable();
