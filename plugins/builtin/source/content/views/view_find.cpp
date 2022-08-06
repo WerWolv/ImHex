@@ -300,6 +300,8 @@ namespace hex::plugin::builtin {
                     matchedBytes = 0;
                 }
             } else {
+                if (matchedBytes > 0)
+                    it -= matchedBytes;
                 matchedBytes = 0;
             }
         }

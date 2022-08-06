@@ -81,6 +81,19 @@ namespace hex::prv {
                 return copy;
             }
 
+            Iterator& operator--() {
+                this->m_address--;
+
+                return *this;
+            }
+
+            Iterator operator--(int) {
+                auto copy = *this;
+                this->m_address--;
+
+                return copy;
+            }
+
             Iterator& operator+=(i64 offset) {
                 this->m_address += offset;
 
@@ -152,6 +165,19 @@ namespace hex::prv {
             ReverseIterator operator++(int) {
                 auto copy = *this;
                 this->m_address--;
+
+                return copy;
+            }
+
+            ReverseIterator& operator--() {
+                this->m_address++;
+
+                return *this;
+            }
+
+            ReverseIterator operator--(int) {
+                auto copy = *this;
+                this->m_address++;
 
                 return copy;
             }
