@@ -101,6 +101,10 @@ namespace hex::prv {
                 return this->m_address;
             }
 
+            void setAddress(u64 address) {
+                this->m_address = address;
+            }
+
             difference_type operator-(const Iterator &other) const {
                 return this->m_address - other.m_address;
             }
@@ -170,6 +174,10 @@ namespace hex::prv {
 
             [[nodiscard]] u64 getAddress() const {
                 return this->m_address;
+            }
+
+            void setAddress(u64 address) {
+                this->m_address = address;
             }
 
             difference_type operator-(const ReverseIterator &other) const {

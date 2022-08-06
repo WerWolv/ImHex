@@ -16,26 +16,12 @@ namespace hex::plugin::builtin {
     ViewFind::ViewFind() : View("hex.builtin.view.find.name") {
         const static auto HighlightColor = [] { return (ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarPurple) & 0x00FFFFFF) | 0x70000000; };
 
-        const static auto FindOccurrence = [this](u64 address) -> std::optional<Occurrence> {
-            auto &occurrences = this->m_foundOccurrences[ImHexApi::Provider::get()];
-
-            auto it = std::upper_bound(occurrences.begin(), occurrences.end(), address, [](u64 address, Occurrence &occurrence) {
-                return address < occurrence.region.getStartAddress();
-            });
-
-            if (it != occurrences.begin())
-                it--;
-
-            if (it != occurrences.end() && it->region.getStartAddress() <= address && address <= it->region.getEndAddress())
-                return *it;
-            else
-                return std::nullopt;
-        };
-
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
             hex::unused(data, size);
 
-            if (FindOccurrence(address).has_value())
+            auto provider = ImHexApi::Provider::get();
+
+            if (!this->m_occurrenceTree[provider].findOverlapping(address, address).empty())
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -44,57 +30,61 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8* data, size_t size) {
             hex::unused(data, size);
 
-            auto occurrence = FindOccurrence(address);
-            if (!occurrence.has_value())
+            auto provider = ImHexApi::Provider::get();
+
+            auto occurrences = this->m_occurrenceTree[provider].findOverlapping(address, address);
+            if (occurrences.empty())
                 return;
 
             ImGui::BeginTooltip();
 
-            ImGui::PushID(&occurrence);
-            if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
+            for (const auto &occurrence : occurrences) {
+                ImGui::PushID(&occurrence);
+                if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
 
-                {
-                    const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value());
+                    {
+                        const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value);
 
-                    ImGui::ColorButton("##color", ImColor(HighlightColor()));
-                    ImGui::SameLine(0, 10);
-                    ImGui::TextFormatted("{}", value);
+                        ImGui::ColorButton("##color", ImColor(HighlightColor()));
+                        ImGui::SameLine(0, 10);
+                        ImGui::TextFormatted("{}", value);
 
-                    if (ImGui::GetIO().KeyShift) {
-                        ImGui::Indent();
-                        if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                        if (ImGui::GetIO().KeyShift) {
+                            ImGui::Indent();
+                            if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
 
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
-                            ImGui::TableNextColumn();
-                            ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", occurrence->region.getStartAddress(), occurrence->region.getEndAddress());
-
-                            auto demangledValue = llvm::demangle(value);
-
-                            if (value != demangledValue) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}: ", "hex.builtin.view.find.demangled"_lang.get());
+                                ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}", demangledValue);
+                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", occurrence.value.region.getStartAddress(), occurrence.value.region.getEndAddress());
+
+                                auto demangledValue = llvm::demangle(value);
+
+                                if (value != demangledValue) {
+                                    ImGui::TableNextRow();
+                                    ImGui::TableNextColumn();
+                                    ImGui::TextFormatted("{}: ", "hex.builtin.view.find.demangled"_lang.get());
+                                    ImGui::TableNextColumn();
+                                    ImGui::TextFormatted("{}", demangledValue);
+                                }
+
+                                ImGui::EndTable();
                             }
-
-                            ImGui::EndTable();
+                            ImGui::Unindent();
                         }
-                        ImGui::Unindent();
                     }
+
+
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBg, HighlightColor());
+                    ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, HighlightColor());
+                    ImGui::EndTable();
+                    ImGui::PopStyleColor(2);
                 }
-
-
-                ImGui::PushStyleColor(ImGuiCol_TableRowBg, HighlightColor());
-                ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, HighlightColor());
-                ImGui::EndTable();
-                ImGui::PopStyleColor(2);
+                ImGui::PopID();
             }
-            ImGui::PopID();
 
             ImGui::EndTooltip();
         });
@@ -252,7 +242,7 @@ namespace hex::plugin::builtin {
                 break;
 
             auto address = occurrence.getAddress();
-            reader.seek(address + sequence.size());
+            reader.seek(address + 1);
             results.push_back(Occurrence{ Region { address, sequence.size() }, Occurrence::DecodeType::Binary });
             task.update(address - searchRegion.getStartAddress());
         }
@@ -294,21 +284,24 @@ namespace hex::plugin::builtin {
         reader.setEndAddress(searchRegion.getEndAddress());
 
         u32 matchedBytes = 0;
-        u64 address = searchRegion.getStartAddress();
         const size_t patternSize = settings.pattern.size();
-        for (u8 byte : reader) {
+
+        for (auto it = reader.begin(); it != reader.end(); ++it) {
+            auto byte = *it;
+
             if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
                 matchedBytes++;
                 if (matchedBytes == settings.pattern.size()) {
-                    results.push_back(Occurrence { Region { address - (patternSize - 1), patternSize }, Occurrence::DecodeType::Binary });
-                    task.update(address);
+                    auto occurrenceAddress = it.getAddress() - (patternSize - 1);
+
+                    results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary });
+                    task.update(occurrenceAddress);
+                    it.setAddress(occurrenceAddress);
                     matchedBytes = 0;
                 }
             } else {
                 matchedBytes = 0;
             }
-
-            address++;
         }
 
         return results;
@@ -345,7 +338,13 @@ namespace hex::plugin::builtin {
                     break;
                 }
 
-            this->m_sortedOccurrences = this->m_foundOccurrences;
+            this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
+
+            OccurrenceTree::interval_vector intervals;
+            for (const auto &occurrence : this->m_foundOccurrences[provider])
+                intervals.push_back(OccurrenceTree::interval(occurrence.region.getStartAddress(), occurrence.region.getEndAddress(), occurrence));
+            this->m_occurrenceTree[provider] = std::move(intervals);
+
             this->m_searchRunning = false;
         }).detach();
     }

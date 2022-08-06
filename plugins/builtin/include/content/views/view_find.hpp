@@ -8,6 +8,8 @@
 #include <atomic>
 #include <vector>
 
+#include <IntervalTree.h>
+
 namespace hex::plugin::builtin {
 
     class ViewFind : public View {
@@ -66,7 +68,11 @@ namespace hex::plugin::builtin {
             } binaryPattern;
         } m_searchSettings, m_decodeSettings;
 
+        using OccurrenceTree = interval_tree::IntervalTree<u64, Occurrence>;
+
         std::map<prv::Provider*, std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
+        std::map<prv::Provider*, OccurrenceTree> m_occurrenceTree;
+
         std::atomic<bool> m_searchRunning;
         bool m_settingsValid = false;
 
