@@ -271,6 +271,13 @@ namespace hex {
             delete provider;
         }
 
+        prv::Provider* createProvider(const std::string &unlocalizedName) {
+            prv::Provider* result = nullptr;
+            EventManager::post<RequestCreateProvider>(unlocalizedName, &result);
+
+            return result;
+        }
+
     }
 
 

@@ -15,8 +15,7 @@
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
-        hex::prv::Provider *provider = nullptr;
-        EventManager::post<RequestCreateProvider>("hex.builtin.provider.file", &provider);
+        auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file");
 
         if (auto fileProvider = dynamic_cast<prv::FileProvider *>(provider)) {
             fileProvider->setPath(path);

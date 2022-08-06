@@ -135,6 +135,8 @@ namespace hex {
 
             void remove(prv::Provider *provider);
 
+            prv::Provider* createProvider(const std::string &unlocalizedName);
+
         }
 
         namespace Tasks {

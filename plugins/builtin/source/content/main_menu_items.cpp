@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
 
                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
                     if (ImGui::MenuItem(LangEntry(unlocalizedProviderName))) {
-                        EventManager::post<RequestCreateProvider>(unlocalizedProviderName, nullptr);
+                        ImHexApi::Provider::createProvider(unlocalizedProviderName);
                     }
                 }
 
