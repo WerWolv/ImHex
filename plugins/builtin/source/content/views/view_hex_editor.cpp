@@ -866,7 +866,7 @@ namespace hex::plugin::builtin {
 
 
                                     const auto x = address % this->m_bytesPerRow;
-                                    if (x < validBytes / bytesPerCell) {
+                                    if (x < validBytes) {
                                         auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
                                         // Draw highlights and selection
