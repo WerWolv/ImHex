@@ -213,7 +213,7 @@ namespace hex::prv {
         }
 
         Iterator end() {
-            return { this, this->m_endAddress };
+            return { this, this->m_endAddress + 1 };
         }
 
         ReverseIterator rbegin() {
@@ -227,7 +227,7 @@ namespace hex::prv {
     private:
         void updateBuffer(u64 address, size_t size) {
             if (!this->m_bufferValid || address < this->m_bufferAddress || address + size > (this->m_bufferAddress + this->m_buffer.size())) {
-                const auto remainingBytes = this->m_endAddress - address;
+                const auto remainingBytes = (this->m_endAddress - address) + 1;
                 if (remainingBytes < this->m_maxBufferSize)
                     this->m_buffer.resize(remainingBytes);
 
