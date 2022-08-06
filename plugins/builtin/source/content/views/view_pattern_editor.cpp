@@ -156,6 +156,8 @@ namespace hex::plugin::builtin {
 
                     if (foundCorrectType)
                         this->m_possiblePatternFiles.push_back(entry.path());
+
+                    runtime.reset();
                 }
             }
 
