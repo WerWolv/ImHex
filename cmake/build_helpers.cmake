@@ -166,6 +166,8 @@ macro(configurePackingResources)
 endmacro()
 
 macro(createPackage)
+    set(LIBRARY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
     file(MAKE_DIRECTORY "plugins")
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
@@ -180,7 +182,7 @@ macro(createPackage)
 
                 get_target_property(PLUGIN_LOCATION ${plugin} LOCATION)
 
-                install(FILES "${PLUGIN_LOCATION}/../${plugin}.hexplug" DESTINATION "${PLUGINS_INSTALL_LOCATION}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+                install(FILES "${PLUGIN_LOCATION}/../${plugin}.hexplug" DESTINATION "${PLUGINS_INSTALL_LOCATION}" PERMISSIONS ${LIBRARY_PERMISSIONS})
             else ()
                 if (WIN32)
                     install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
@@ -236,7 +238,7 @@ macro(createPackage)
         endforeach()
         ]])
 
-        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
         downloadImHexPatternsFiles("./")
     elseif(UNIX AND NOT APPLE)
 
@@ -247,7 +249,7 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
-        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
         downloadImHexPatternsFiles("./share/imhex")
     endif()
     
