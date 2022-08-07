@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
+#include <ui/widgets.hpp>
 
 #include <hex/helpers/disassembler.hpp>
 
@@ -29,9 +30,9 @@ namespace hex::plugin::builtin {
     private:
         bool m_disassembling = false;
 
-        u64 m_baseAddress           = 0;
-        u64 m_codeRegion[2]         = { 0 };
-        bool m_shouldMatchSelection = false;
+        u64 m_baseAddress   = 0;
+        ui::SelectedRegion m_range = ui::SelectedRegion::EntireData;
+        Region m_codeRegion = { 0, 0 };
 
         Architecture m_architecture = Architecture::ARM;
         cs_mode m_mode              = cs_mode(0);

@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <hex/ui/view.hpp>
+#include <ui/widgets.hpp>
 
 #include <atomic>
 #include <vector>
@@ -31,7 +32,7 @@ namespace hex::plugin::builtin {
         };
 
         struct SearchSettings {
-            int range = 0;
+            ui::SelectedRegion range = ui::SelectedRegion::EntireData;
 
             enum class Mode : int {
                 Strings,

@@ -139,4 +139,5 @@ namespace ImGui {
     void HideTooltip();
 
     bool BitCheckbox(const char* label, bool* v);
+
 }

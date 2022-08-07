@@ -11,17 +11,6 @@ using namespace std::literals::string_literals;
 namespace hex::plugin::builtin {
 
     ViewDisassembler::ViewDisassembler() : View("hex.builtin.view.disassembler.name") {
-        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
-            if (this->m_shouldMatchSelection) {
-                if (region.address == size_t(-1)) {
-                    this->m_codeRegion[0] = this->m_codeRegion[1] = 0;
-                } else {
-                    this->m_codeRegion[0] = region.address;
-                    this->m_codeRegion[1] = region.address + region.size - 1;
-                }
-            }
-        });
-
         EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
             this->m_disassembly.clear();
         });
@@ -49,14 +38,14 @@ namespace hex::plugin::builtin {
 
                 auto provider = ImHexApi::Provider::get();
                 std::vector<u8> buffer(2048, 0x00);
-                size_t size = (this->m_codeRegion[1] - this->m_codeRegion[0] + 1);
+                size_t size = this->m_codeRegion.getSize();
 
                 auto task = ImHexApi::Tasks::createTask("hex.builtin.view.disassembler.disassembling", size);
                 for (u64 address = 0; address < size; address += 2048) {
                     task.update(address);
 
-                    size_t bufferSize = std::min(u64(2048), (this->m_codeRegion[1] - this->m_codeRegion[0] + 1) - address);
-                    provider->read(this->m_codeRegion[0] + address, buffer.data(), bufferSize);
+                    size_t bufferSize = std::min(u64(2048), (size - address));
+                    provider->read(this->m_codeRegion.getStartAddress() + address, buffer.data(), bufferSize);
 
                     size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, this->m_baseAddress + address, 0, &instructions);
                     if (instructionCount == 0)
@@ -69,7 +58,7 @@ namespace hex::plugin::builtin {
                         const auto &instr       = instructions[i];
                         Disassembly disassembly = { };
                         disassembly.address     = instr.address;
-                        disassembly.offset      = this->m_codeRegion[0] + address + usedBytes;
+                        disassembly.offset      = this->m_codeRegion.getStartAddress() + address + usedBytes;
                         disassembly.size        = instr.size;
                         disassembly.mnemonic    = instr.mnemonic;
                         disassembly.operators   = instr.op_str;
@@ -105,10 +94,24 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted("hex.builtin.view.disassembler.position"_lang);
                 ImGui::Separator();
 
-                ImGui::InputScalar("hex.builtin.view.disassembler.base"_lang, ImGuiDataType_U64, &this->m_baseAddress, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::InputScalarN("hex.builtin.view.disassembler.region"_lang, ImGuiDataType_U64, this->m_codeRegion, 2, nullptr, nullptr, "%08llX", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
 
-                ImGui::Checkbox("hex.builtin.common.match_selection"_lang, &this->m_shouldMatchSelection);
+                ui::regionSelectionPicker(&this->m_range);
+                switch (this->m_range) {
+                    case ui::SelectedRegion::Selection: {
+                        auto region = ImHexApi::HexEditor::getSelection();
+                        if (region.has_value()) {
+                            this->m_codeRegion = region.value();
+                        }
+                    }
+                        break;
+                    case ui::SelectedRegion::EntireData: {
+                        auto base = provider->getBaseAddress();
+                        this->m_codeRegion = { base, base + provider->getActualSize() - 1 };
+                    }
+                    break;
+                }
+
                 if (ImGui::IsItemEdited()) {
                     // Force execution of Region Selection Event
                     ImHexApi::HexEditor::setSelection(0, 0);

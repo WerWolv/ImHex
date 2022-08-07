@@ -311,7 +311,7 @@ namespace hex::plugin::builtin {
 
     void ViewFind::runSearch() {
         Region searchRegion = [this]{
-            if (this->m_searchSettings.range == 0 || !ImHexApi::HexEditor::isSelectionValid()) {
+            if (this->m_searchSettings.range == ui::SelectedRegion::EntireData || !ImHexApi::HexEditor::isSelectionValid()) {
                 auto provider = ImHexApi::Provider::get();
                 return Region { provider->getBaseAddress(), provider->getActualSize() };
             } else {
@@ -410,9 +410,7 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(this->m_searchRunning);
             {
-                ImGui::Header("hex.builtin.view.find.range"_lang, true);
-                ImGui::RadioButton("hex.builtin.view.find.range.entire_data"_lang, &this->m_searchSettings.range, 0);
-                ImGui::RadioButton("hex.builtin.view.find.range.selection"_lang, &this->m_searchSettings.range, 1);
+                ui::regionSelectionPicker(&this->m_searchSettings.range);
 
                 ImGui::NewLine();
 
