@@ -398,6 +398,7 @@ namespace hex::plugin::builtin {
 
                 if (this->m_textEditor.IsTextChanged()) {
                     this->m_hasUnevaluatedChanges = true;
+                    ImHexApi::Provider::markDirty();
                 }
 
                 if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {

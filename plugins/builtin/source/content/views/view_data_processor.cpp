@@ -117,6 +117,8 @@ namespace hex::plugin::builtin {
         }
 
         data.links.erase(link);
+
+        ImHexApi::Provider::markDirty();
     }
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
@@ -144,6 +146,8 @@ namespace hex::plugin::builtin {
 
             data.nodes.erase(node);
         }
+
+        ImHexApi::Provider::markDirty();
     }
 
     void ViewDataProcessor::processNodes() {
@@ -260,6 +264,7 @@ namespace hex::plugin::builtin {
 
                     ImNodes::SetNodeScreenSpacePos(node->getId(), this->m_rightClickedCoords);
                     data.nodes.push_back(std::move(node));
+                    ImHexApi::Provider::markDirty();
                 }
 
                 ImGui::EndPopup();

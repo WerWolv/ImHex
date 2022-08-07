@@ -278,8 +278,6 @@ namespace hex::plugin::builtin::prv {
                 }
             });
 
-            Provider::resize(this->getActualSize());
-
             return true;
         } else {
             return false;
@@ -314,18 +312,19 @@ namespace hex::plugin::builtin::prv {
     }
 
     void GDBProvider::loadSettings(const nlohmann::json &settings) {
+        Provider::loadSettings(settings);
+
         this->m_ipAddress = settings["ip"].get<std::string>();
         this->m_port      = settings["port"].get<int>();
         this->m_size      = settings["size"].get<size_t>();
     }
 
-    nlohmann::json GDBProvider::storeSettings() const {
-        nlohmann::json settings;
+    nlohmann::json GDBProvider::storeSettings(nlohmann::json settings) const {
         settings["ip"]   = this->m_ipAddress;
         settings["port"] = this->m_port;
         settings["size"] = this->m_size;
 
-        return settings;
+        return Provider::storeSettings(settings);
     }
 
 }

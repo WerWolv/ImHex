@@ -43,9 +43,9 @@ namespace hex::plugin::builtin::prv {
         void drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;
-        nlohmann::json storeSettings() const override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
-        std::string getTypeName() const override {
+        [[nodiscard]] std::string getTypeName() const override {
             return "hex.builtin.provider.gdb";
         }
 

@@ -28,6 +28,7 @@ namespace hex::prv {
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
         this->writeRaw(offset - this->getBaseAddress(), buffer, size);
+        this->markDirty();
     }
 
     void Provider::save() { }
@@ -37,6 +38,8 @@ namespace hex::prv {
 
     void Provider::resize(size_t newSize) {
         hex::unused(newSize);
+
+        this->markDirty();
     }
 
     void Provider::insert(u64 offset, size_t size) {
@@ -53,6 +56,8 @@ namespace hex::prv {
             patches.erase(address);
         for (const auto &[address, value] : patchesToMove)
             patches.insert({ address + size, value });
+
+        this->markDirty();
     }
 
     void Provider::remove(u64 offset, size_t size) {
@@ -69,6 +74,8 @@ namespace hex::prv {
             patches.erase(address);
         for (const auto &[address, value] : patchesToMove)
             patches.insert({ address - size, value });
+
+        this->markDirty();
     }
 
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
@@ -104,6 +111,7 @@ namespace hex::prv {
         for (auto &[patchAddress, patch] : getPatches()) {
             this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
         }
+        this->markDirty();
     }
 
 
@@ -137,6 +145,7 @@ namespace hex::prv {
 
     void Provider::setBaseAddress(u64 address) {
         this->m_baseAddress = address;
+        this->markDirty();
     }
 
     u64 Provider::getBaseAddress() const {
@@ -183,6 +192,8 @@ namespace hex::prv {
             else
                 getPatches()[offset + i] = patch;
         }
+
+        this->markDirty();
     }
 
     void Provider::createUndoPoint() {
@@ -220,6 +231,18 @@ namespace hex::prv {
     }
 
     void Provider::drawInterface() {
+    }
+
+    nlohmann::json Provider::storeSettings(nlohmann::json settings) const {
+        settings["baseAddress"] = this->m_baseAddress;
+        settings["currPage"]    = this->m_currPage;
+
+        return settings;
+    }
+
+    void Provider::loadSettings(const nlohmann::json &settings) {
+        this->m_baseAddress = settings["baseAddress"];
+        this->m_currPage    = settings["currPage"];
     }
 
 }

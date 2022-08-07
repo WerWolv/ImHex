@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                 false
             });
 
-            ImHexApi::Provider::get()->markDirty();
+            ImHexApi::Provider::markDirty();
         });
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {

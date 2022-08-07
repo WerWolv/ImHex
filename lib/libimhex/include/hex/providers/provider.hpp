@@ -12,7 +12,7 @@
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 namespace pl {
     class PatternLanguage;
@@ -91,10 +91,10 @@ namespace hex::prv {
             return this->m_id;
         }
 
-        virtual nlohmann::json storeSettings() const = 0;
-        virtual void loadSettings(const nlohmann::json &settings) = 0;
+        [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings = { }) const;
+        virtual void loadSettings(const nlohmann::json &settings);
 
-        virtual std::string getTypeName() const = 0;
+        [[nodiscard]] virtual std::string getTypeName() const = 0;
 
         void markDirty(bool dirty = true) { this->m_dirty = dirty; }
         [[nodiscard]] bool isDirty() const { return this->m_dirty; }
