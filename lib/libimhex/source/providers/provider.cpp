@@ -1,7 +1,6 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex.hpp>
-#include <hex/api/content_registry.hpp>
 
 #include <cmath>
 #include <cstring>
@@ -10,9 +9,10 @@
 
 namespace hex::prv {
 
-    Provider::Provider() {
+    u32 Provider::s_idCounter = 0;
+
+    Provider::Provider() : m_id(s_idCounter++) {
         this->m_patches.emplace_back();
-        this->m_patternLanguageRuntime = ContentRegistry::PatternLanguage::createDefaultRuntime(this);
     }
 
     Provider::~Provider() {
@@ -36,7 +36,7 @@ namespace hex::prv {
     }
 
     void Provider::resize(size_t newSize) {
-        this->m_patternLanguageRuntime->setDataSize(newSize);
+        hex::unused(newSize);
     }
 
     void Provider::insert(u64 offset, size_t size) {
@@ -137,7 +137,6 @@ namespace hex::prv {
 
     void Provider::setBaseAddress(u64 address) {
         this->m_baseAddress = address;
-        this->m_patternLanguageRuntime->setDataBaseAddress(address);
     }
 
     u64 Provider::getBaseAddress() const {

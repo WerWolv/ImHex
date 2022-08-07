@@ -10,6 +10,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <hex/data_processor/node.hpp>
+
 namespace hex {
 
     namespace ContentRegistry::Settings {

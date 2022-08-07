@@ -313,7 +313,7 @@ namespace hex::plugin::builtin {
 
                         bool open = true;
                         ImGui::PushID(tabProvider);
-                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open)) {
+                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, provider->isDirty() ? ImGuiTabItemFlags_UnsavedDocument : ImGuiTabItemFlags_None)) {
                             ImHexApi::Provider::setCurrentProvider(i);
                             ImGui::EndTabItem();
                         }

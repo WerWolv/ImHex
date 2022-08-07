@@ -110,6 +110,7 @@ set(LIBIMHEX_SOURCES
     source/api/keybinding.cpp
     source/api/plugin_manager.cpp
     source/api/localization.cpp
+    source/api/project_file_manager.cpp
 
     source/data_processor/attribute.cpp
     source/data_processor/link.cpp
@@ -123,7 +124,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/file.cpp
     source/helpers/socket.cpp
     source/helpers/patches.cpp
-    source/helpers/project_file_handler.cpp
     source/helpers/encoding_file.cpp
     source/helpers/logger.cpp
     source/helpers/tar.cpp

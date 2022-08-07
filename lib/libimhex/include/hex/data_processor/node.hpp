@@ -42,7 +42,10 @@ namespace hex::dp {
         virtual void store(nlohmann::json &j) { hex::unused(j); }
         virtual void load(nlohmann::json &j) { hex::unused(j); }
 
-        using NodeError = std::pair<Node *, std::string>;
+        struct NodeError {
+            Node *node;
+            std::string message;
+        };
 
         void resetOutputData() {
             for (auto &attribute : this->m_attributes)

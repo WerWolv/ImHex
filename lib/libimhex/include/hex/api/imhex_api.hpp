@@ -126,6 +126,10 @@ namespace hex {
 
             bool isValid();
 
+            void markDirty();
+            void resetDirty();
+            bool isDirty();
+
             void add(prv::Provider *provider);
 
             template<std::derived_from<prv::Provider> T>

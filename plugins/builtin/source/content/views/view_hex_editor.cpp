@@ -1,7 +1,6 @@
 #include "content/views/view_hex_editor.hpp"
 
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/project_file_handler.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/crypto.hpp>

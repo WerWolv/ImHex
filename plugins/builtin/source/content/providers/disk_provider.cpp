@@ -11,6 +11,8 @@
 
 #include <imgui.h>
 
+#include <nlohmann/json.hpp>
+
 #if defined(OS_LINUX)
     #include <fcntl.h>
     #include <unistd.h>
@@ -326,6 +328,18 @@ namespace hex::plugin::builtin::prv {
             this->m_path = this->m_pathBuffer;
 
 #endif
+    }
+
+    void DiskProvider::loadSettings(const nlohmann::json &settings) {
+        this->setPath(settings["path"].get<std::string>());
+        this->reloadDrives();
+    }
+
+    nlohmann::json DiskProvider::storeSettings() const {
+        nlohmann::json settings;
+        settings["path"] = this->m_path.string();
+
+        return settings;
     }
 
 }

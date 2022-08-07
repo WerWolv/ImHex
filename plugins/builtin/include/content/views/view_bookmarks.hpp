@@ -15,7 +15,6 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::list<ImHexApi::Bookmarks::Entry> m_bookmarks;
         std::string m_currFilter;
     };
 

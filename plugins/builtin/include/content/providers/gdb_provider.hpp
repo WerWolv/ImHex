@@ -12,7 +12,7 @@ namespace hex::plugin::builtin::prv {
 
     class GDBProvider : public hex::prv::Provider {
     public:
-        explicit GDBProvider();
+        GDBProvider();
         ~GDBProvider() override;
 
         [[nodiscard]] bool isAvailable() const override;
@@ -41,6 +41,13 @@ namespace hex::plugin::builtin::prv {
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
         void drawLoadInterface() override;
+
+        void loadSettings(const nlohmann::json &settings) override;
+        nlohmann::json storeSettings() const override;
+
+        std::string getTypeName() const override {
+            return "hex.builtin.provider.gdb";
+        }
 
     protected:
         hex::Socket m_socket;

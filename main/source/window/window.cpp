@@ -32,7 +32,7 @@
 
 #include <fonts/codicons_font.h>
 
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -95,13 +95,14 @@ namespace hex {
             std::string title = "ImHex";
 
             if (ImHexApi::Provider::isValid()) {
+                auto provider = ImHexApi::Provider::get();
                 if (!windowTitle.empty())
                     title += " - " + windowTitle;
 
-                if (ProjectFile::hasUnsavedChanges())
+                if (provider->isDirty())
                     title += " (*)";
 
-                if (!ImHexApi::Provider::get()->isWritable())
+                if (!provider->isWritable())
                     title += " (Read Only)";
             }
 
@@ -114,11 +115,11 @@ namespace hex {
         EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int) {
             ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
 
-            if (!ProjectFile::hasUnsavedChanges())
+            if (!ImHexApi::Provider::isDirty())
                 return;
 
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store(std::fs::path(path) / CrashBackupFileName))
+                if (ProjectFile::store((std::fs::path(path) / CrashBackupFileName).string()))
                     break;
             }
         });

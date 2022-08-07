@@ -20,16 +20,8 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::list<dp::Node *> m_endNodes;
-        std::list<dp::Node *> m_nodes;
-        std::list<dp::Link> m_links;
-
-        std::vector<hex::prv::Overlay *> m_dataOverlays;
-
         int m_rightClickedId = -1;
         ImVec2 m_rightClickedCoords;
-
-        std::optional<dp::Node::NodeError> m_currNodeError;
 
         bool m_continuousEvaluation = false;
 
@@ -37,8 +29,8 @@ namespace hex::plugin::builtin {
         void eraseNodes(const std::vector<int> &ids);
         void processNodes();
 
-        std::string saveNodes();
-        void loadNodes(const std::string &data);
+        std::string saveNodes(prv::Provider *provider);
+        void loadNodes(prv::Provider *provider, const std::string &data);
     };
 
 }

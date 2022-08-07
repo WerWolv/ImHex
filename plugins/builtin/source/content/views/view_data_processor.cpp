@@ -5,10 +5,12 @@
 #include <hex/helpers/file.hpp>
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <imnodes.h>
 #include <nlohmann/json.hpp>
+
+#include "provider_extra_data.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -30,24 +32,28 @@ namespace hex::plugin::builtin {
             ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
         });
 
-        EventManager::subscribe<EventProjectFileStore>(this, [this] {
-            ProjectFile::setDataProcessorContent(this->saveNodes());
-        });
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "data_processor.json",
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                auto save = tar.readString(basePath);
 
-        EventManager::subscribe<EventProjectFileLoad>(this, [this] {
-            try {
-                this->loadNodes(ProjectFile::getDataProcessorContent());
-            } catch (nlohmann::json::exception &e) {
+                this->loadNodes(provider, save);
+
+                return true;
+            },
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                tar.write(basePath, this->saveNodes(provider));
+
+                return true;
             }
         });
 
-        EventManager::subscribe<EventFileLoaded>(this, [this](const std::fs::path &path) {
-            hex::unused(path);
-
-            for (auto &node : this->m_nodes) {
+        EventManager::subscribe<EventProviderChanged>(this, [](const auto &, const auto &) {
+            auto &data = ProviderExtraData::getCurrent().dataProcessor;
+            for (auto &node : data.nodes) {
                 node->setCurrentOverlay(nullptr);
             }
-            this->m_dataOverlays.clear();
+            data.dataOverlays.clear();
         });
 
         EventManager::subscribe<EventDataChanged>(this, [this] {
@@ -56,22 +62,25 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
             bool providerValid = ImHexApi::Provider::isValid();
+            auto provider = ImHexApi::Provider::get();
+
+            auto &data = ProviderExtraData::getCurrent().dataProcessor;
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang, nullptr, false, providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
-                    [this](const std::fs::path &path) {
+                    [&, this](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Read);
                         if (file.isValid())
-                            this->loadNodes(file.readString());
+                            this->loadNodes(provider, file.readString());
                     });
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !this->m_nodes.empty() && providerValid)) {
+            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !data.nodes.empty() && providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
-                    [this](const std::fs::path &path) {
+                    [&, this](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Create);
                         if (file.isValid())
-                            file.write(this->saveNodes());
+                            file.write(this->saveNodes(provider));
                     });
             }
         });
@@ -80,44 +89,43 @@ namespace hex::plugin::builtin {
             fs::File file(path, fs::File::Mode::Read);
             if (!file.isValid()) return false;
 
-            this->loadNodes(file.readString());
+            this->loadNodes(ImHexApi::Provider::get(), file.readString());
 
             return true;
         });
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
-        for (auto &node : this->m_nodes)
-            delete node;
-
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventProjectFileStore>(this);
-        EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<EventDataChanged>(this);
     }
 
 
     void ViewDataProcessor::eraseLink(u32 id) {
-        auto link = std::find_if(this->m_links.begin(), this->m_links.end(), [&id](auto link) { return link.getId() == id; });
+        auto &data = ProviderExtraData::getCurrent().dataProcessor;
 
-        if (link == this->m_links.end())
+        auto link = std::find_if(data.links.begin(), data.links.end(), [&id](auto link) { return link.getId() == id; });
+
+        if (link == data.links.end())
             return;
 
-        for (auto &node : this->m_nodes) {
+        for (auto &node : data.nodes) {
             for (auto &attribute : node->getAttributes()) {
                 attribute.removeConnectedAttribute(id);
             }
         }
 
-        this->m_links.erase(link);
-
-        ProjectFile::markDirty();
+        data.links.erase(link);
     }
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
+        auto &data = ProviderExtraData::getCurrent().dataProcessor;
         for (u32 id : ids) {
-            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getId() == id; });
+            auto node = std::find_if(data.nodes.begin(), data.nodes.end(),
+            [&id](const auto &node) {
+                return node->getId() == id;
+            });
 
             for (auto &attr : (*node)->getAttributes()) {
                 std::vector<u32> linksToRemove;
@@ -130,52 +138,49 @@ namespace hex::plugin::builtin {
         }
 
         for (u32 id : ids) {
-            auto node = std::find_if(this->m_nodes.begin(), this->m_nodes.end(), [&id](auto node) { return node->getId() == id; });
+            auto node = std::find_if(data.nodes.begin(), data.nodes.end(), [&id](const auto &node) { return node->getId() == id; });
 
-            std::erase_if(this->m_endNodes, [&id](auto node) { return node->getId() == id; });
+            std::erase_if(data.endNodes, [&id](const auto &node) { return node->getId() == id; });
 
-            delete *node;
-
-            this->m_nodes.erase(node);
+            data.nodes.erase(node);
         }
-
-        ProjectFile::markDirty();
     }
 
     void ViewDataProcessor::processNodes() {
+        auto &data = ProviderExtraData::getCurrent().dataProcessor;
 
-        if (this->m_dataOverlays.size() != this->m_endNodes.size()) {
-            for (auto overlay : this->m_dataOverlays)
+        if (data.dataOverlays.size() != data.endNodes.size()) {
+            for (auto overlay : data.dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
-            this->m_dataOverlays.clear();
+            data.dataOverlays.clear();
 
-            for (u32 i = 0; i < this->m_endNodes.size(); i++)
-                this->m_dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
+            for (u32 i = 0; i < data.endNodes.size(); i++)
+                data.dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
 
             u32 overlayIndex = 0;
-            for (auto endNode : this->m_endNodes) {
-                endNode->setCurrentOverlay(this->m_dataOverlays[overlayIndex]);
+            for (auto endNode : data.endNodes) {
+                endNode->setCurrentOverlay(data.dataOverlays[overlayIndex]);
                 overlayIndex++;
             }
         }
 
-        this->m_currNodeError.reset();
+        data.currNodeError.reset();
 
         try {
-            for (auto &endNode : this->m_endNodes) {
+            for (auto &endNode : data.endNodes) {
                 endNode->resetOutputData();
 
-                for (auto &node : this->m_nodes)
+                for (auto &node : data.nodes)
                     node->resetProcessedInputs();
 
                 endNode->process();
             }
         } catch (dp::Node::NodeError &e) {
-            this->m_currNodeError = e;
+            data.currNodeError = e;
 
-            for (auto overlay : this->m_dataOverlays)
+            for (auto overlay : data.dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
-            this->m_dataOverlays.clear();
+            data.dataOverlays.clear();
 
         } catch (std::runtime_error &e) {
             printf("Node implementation bug! %s\n", e.what());
@@ -183,6 +188,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::drawContent() {
+        auto &data = ProviderExtraData::getCurrent().dataProcessor;
+
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
@@ -200,7 +207,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginPopup("Context Menu")) {
-                dp::Node *node = nullptr;
+                std::unique_ptr<dp::Node> node;
 
                 if (ImNodes::NumSelectedNodes() > 0 || ImNodes::NumSelectedLinks() > 0) {
                     if (ImGui::MenuItem("hex.builtin.view.data_processor.name"_lang)) {
@@ -226,13 +233,11 @@ namespace hex::plugin::builtin {
                     } else if (unlocalizedCategory.empty()) {
                         if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                             node = function();
-                            ProjectFile::markDirty();
                         }
                     } else {
                         if (ImGui::BeginMenu(LangEntry(unlocalizedCategory))) {
                             if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                                 node = function();
-                                ProjectFile::markDirty();
                             }
                             ImGui::EndMenu();
                         }
@@ -240,8 +245,6 @@ namespace hex::plugin::builtin {
                 }
 
                 if (node != nullptr) {
-                    this->m_nodes.push_back(node);
-
                     bool hasOutput = false;
                     bool hasInput  = false;
                     for (auto &attr : node->getAttributes()) {
@@ -253,9 +256,10 @@ namespace hex::plugin::builtin {
                     }
 
                     if (hasInput && !hasOutput)
-                        this->m_endNodes.push_back(node);
+                        data.endNodes.push_back(node.get());
 
                     ImNodes::SetNodeScreenSpacePos(node->getId(), this->m_rightClickedCoords);
+                    data.nodes.push_back(std::move(node));
                 }
 
                 ImGui::EndPopup();
@@ -277,11 +281,11 @@ namespace hex::plugin::builtin {
 
             {
                 int nodeId;
-                if (ImNodes::IsNodeHovered(&nodeId) && this->m_currNodeError.has_value() && this->m_currNodeError->first->getId() == static_cast<u32>(nodeId)) {
+                if (ImNodes::IsNodeHovered(&nodeId) && data.currNodeError.has_value() && data.currNodeError->node->getId() == static_cast<u32>(nodeId)) {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted("hex.builtin.common.error"_lang);
                     ImGui::Separator();
-                    ImGui::TextUnformatted(this->m_currNodeError->second.c_str());
+                    ImGui::TextUnformatted(data.currNodeError->message.c_str());
                     ImGui::EndTooltip();
                 }
             }
@@ -289,8 +293,8 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3))) {
                 ImNodes::BeginNodeEditor();
 
-                for (auto &node : this->m_nodes) {
-                    const bool hasError = this->m_currNodeError.has_value() && this->m_currNodeError->first == node;
+                for (auto &node : data.nodes) {
+                    const bool hasError = data.currNodeError.has_value() && data.currNodeError->node == node.get();
 
                     if (hasError)
                         ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
@@ -336,12 +340,12 @@ namespace hex::plugin::builtin {
                         ImNodes::PopColorStyle();
                 }
 
-                for (const auto &link : this->m_links)
+                for (const auto &link : data.links)
                     ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
 
                 ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
 
-                if (this->m_nodes.empty())
+                if (data.nodes.empty())
                     ImGui::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
 
                 ImNodes::EndNodeEditor();
@@ -367,7 +371,7 @@ namespace hex::plugin::builtin {
 
                     do {
                         dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
-                        for (auto &node : this->m_nodes) {
+                        for (auto &node : data.nodes) {
                             for (auto &attribute : node->getAttributes()) {
                                 if (attribute.getId() == static_cast<u32>(from))
                                     fromAttr = &attribute;
@@ -388,7 +392,7 @@ namespace hex::plugin::builtin {
                         if (!toAttr->getConnectedAttributes().empty())
                             break;
 
-                        auto newLink = this->m_links.emplace_back(from, to);
+                        auto newLink = data.links.emplace_back(from, to);
 
                         fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
                         toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
@@ -423,12 +427,14 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    std::string ViewDataProcessor::saveNodes() {
+    std::string ViewDataProcessor::saveNodes(prv::Provider *provider) {
+        auto &data = ProviderExtraData::get(provider).dataProcessor;
+
         using json = nlohmann::json;
         json output;
 
         output["nodes"] = json::object();
-        for (auto &node : this->m_nodes) {
+        for (auto &node : data.nodes) {
             auto id              = node->getId();
             auto &currNodeOutput = output["nodes"][std::to_string(id)];
             auto pos             = ImNodes::GetNodeGridSpacePos(id);
@@ -453,7 +459,7 @@ namespace hex::plugin::builtin {
         }
 
         output["links"] = json::object();
-        for (auto &link : this->m_links) {
+        for (auto &link : data.links) {
             auto id          = link.getId();
             auto &currOutput = output["links"][std::to_string(id)];
 
@@ -465,27 +471,26 @@ namespace hex::plugin::builtin {
         return output.dump();
     }
 
-    void ViewDataProcessor::loadNodes(const std::string &data) {
+    void ViewDataProcessor::loadNodes(prv::Provider *provider, const std::string &jsonData) {
         if (!ImHexApi::Provider::isValid()) return;
+
+        auto &data = ProviderExtraData::get(provider).dataProcessor;
 
         using json = nlohmann::json;
 
-        json input = json::parse(data);
+        json input = json::parse(jsonData);
 
         u32 maxNodeId = 0;
         u32 maxAttrId = 0;
         u32 maxLinkId = 0;
 
-        for (auto &node : this->m_nodes)
-            delete node;
-
-        this->m_nodes.clear();
-        this->m_endNodes.clear();
-        this->m_links.clear();
+        data.nodes.clear();
+        data.endNodes.clear();
+        data.links.clear();
 
         auto &nodeEntries = ContentRegistry::DataProcessorNode::getEntries();
         for (auto &node : input["nodes"]) {
-            dp::Node *newNode = nullptr;
+            std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
                 if (entry.name == node["type"])
                     newNode = entry.creatorFunction();
@@ -520,9 +525,9 @@ namespace hex::plugin::builtin {
                 newNode->load(node["data"]);
 
             if (hasInput && !hasOutput)
-                this->m_endNodes.push_back(newNode);
+                data.endNodes.push_back(newNode.get());
 
-            this->m_nodes.push_back(newNode);
+            data.nodes.push_back(std::move(newNode));
             ImNodes::SetNodeGridSpacePos(nodeId, ImVec2(node["pos"]["x"], node["pos"]["y"]));
         }
 
@@ -533,10 +538,10 @@ namespace hex::plugin::builtin {
             maxLinkId  = std::max(linkId, maxLinkId);
 
             newLink.setID(linkId);
-            this->m_links.push_back(newLink);
+            data.links.push_back(newLink);
 
             dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
-            for (auto &node : this->m_nodes) {
+            for (auto &node : data.nodes) {
                 for (auto &attribute : node->getAttributes()) {
                     if (attribute.getId() == newLink.getFromId())
                         fromAttr = &attribute;

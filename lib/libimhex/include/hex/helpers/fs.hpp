@@ -65,6 +65,12 @@ namespace hex::fs {
         else return size;
     }
 
+    static inline bool isSubPath(const std::fs::path& base, const std::fs::path& destination) {
+        const auto relative = std::fs::relative(destination, base).string();
+
+        return relative.size() == 1 || (relative[0] != '.' && relative[1] != '.');
+    }
+
     bool isPathWritable(const std::fs::path &path);
 
     std::fs::path toShortPath(const std::fs::path &path);

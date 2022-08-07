@@ -7,8 +7,7 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
-
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <imgui.h>
 #include <implot.h>
@@ -90,9 +89,6 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
                 ProjectFile::load(s_safetyBackupPath);
-                ProjectFile::markDirty();
-
-                ProjectFile::clearProjectFilePath();
                 fs::remove(s_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();

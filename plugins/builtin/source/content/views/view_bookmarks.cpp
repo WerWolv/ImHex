@@ -1,16 +1,18 @@
 #include "content/views/view_bookmarks.hpp"
 
+#include <hex/api/project_file_manager.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <hex/helpers/project_file_handler.hpp>
-
+#include <nlohmann/json.hpp>
 #include <cstring>
+
+#include <provider_extra_data.hpp>
 
 namespace hex::plugin::builtin {
 
     ViewBookmarks::ViewBookmarks() : View("hex.builtin.view.bookmarks.name") {
-        EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color) {
+        EventManager::subscribe<RequestAddBookmark>(this, [](Region region, std::string name, std::string comment, color_t color) {
             if (name.empty()) {
                 name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
@@ -18,34 +20,21 @@ namespace hex::plugin::builtin {
             if (color == 0x00)
                 color = ImGui::GetColorU32(ImGuiCol_Header);
 
-
-            this->m_bookmarks.push_back({ region,
+            ProviderExtraData::getCurrent().bookmarks.push_back({
+                region,
                 name,
                 std::move(comment),
                 color,
                 false
             });
 
-            ProjectFile::markDirty();
+            ImHexApi::Provider::get()->markDirty();
         });
 
-        EventManager::subscribe<EventProjectFileLoad>(this, [this] {
-            this->m_bookmarks = ProjectFile::getBookmarks();
-        });
-
-        EventManager::subscribe<EventProjectFileStore>(this, [this] {
-            ProjectFile::setBookmarks(this->m_bookmarks);
-        });
-
-        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
-            this->m_bookmarks.clear();
-        });
-
-
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
             hex::unused(data);
 
-            for (const auto &bookmark : this->m_bookmarks) {
+            for (const auto &bookmark : ProviderExtraData::getCurrent().bookmarks) {
                 if (Region { address, size }.isWithin(bookmark.region))
                     return bookmark.color;
             }
@@ -53,9 +42,9 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         });
 
-        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
+        ImHexApi::HexEditor::addTooltipProvider([](u64 address, const u8 *data, size_t size) {
             hex::unused(data);
-            for (const auto &bookmark : this->m_bookmarks) {
+            for (const auto &bookmark : ProviderExtraData::getCurrent().bookmarks) {
                 if (!Region { address, size }.isWithin(bookmark.region))
                     continue;
 
@@ -109,15 +98,69 @@ namespace hex::plugin::builtin {
                 ImGui::EndTooltip();
             }
         });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "bookmarks.json",
+            .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+                auto fileContent = tar.read(basePath);
+                if (fileContent.empty())
+                    return true;
+
+                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
+                if (!data.contains("bookmarks"))
+                    return false;
+
+                auto &bookmarks = ProviderExtraData::get(provider).bookmarks;
+                bookmarks.clear();
+                for (const auto &bookmark : data["bookmarks"]) {
+                    if (!bookmark.contains("name") || !bookmark.contains("comment") || !bookmark.contains("color") || !bookmark.contains("region") || !bookmark.contains("locked"))
+                        continue;
+
+                    const auto &region = bookmark["region"];
+                    if (!region.contains("address") || !region.contains("size"))
+                        continue;
+
+                    bookmarks.push_back({
+                        .region = { region["address"], region["size"] },
+                        .name = bookmark["name"],
+                        .comment = bookmark["comment"],
+                        .color = bookmark["color"],
+                        .locked = bookmark["locked"]
+                    });
+                }
+
+                return true;
+            },
+            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+                nlohmann::json data;
+
+                data["bookmarks"] = nlohmann::json::array();
+                size_t index = 0;
+                for (const auto &bookmark : ProviderExtraData::get(provider).bookmarks) {
+                    data["bookmarks"][index] = {
+                        { "name", bookmark.name },
+                        { "comment", bookmark.comment },
+                        { "color", bookmark.color },
+                        { "region", {
+                                { "address", bookmark.region.address },
+                                { "size", bookmark.region.size }
+                            }
+                        },
+                        { "locked", bookmark.locked }
+                    };
+                    index++;
+                }
+
+                tar.write(basePath, data.dump(4));
+
+                return true;
+            }
+        });
     }
 
     ViewBookmarks::~ViewBookmarks() {
         EventManager::unsubscribe<RequestAddBookmark>(this);
-        EventManager::unsubscribe<EventProjectFileLoad>(this);
-        EventManager::unsubscribe<EventProjectFileStore>(this);
         EventManager::unsubscribe<EventProviderDeleted>(this);
-
-        this->m_bookmarks.clear();
     }
 
     void ViewBookmarks::drawContent() {
@@ -130,14 +173,14 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             if (ImGui::BeginChild("##bookmarks")) {
-
-                if (this->m_bookmarks.empty()) {
+                auto &bookmarks = ProviderExtraData::getCurrent().bookmarks;
+                if (bookmarks.empty()) {
                     ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
                 u32 id = 1;
-                auto bookmarkToRemove = this->m_bookmarks.end();
-                for (auto iter = this->m_bookmarks.begin(); iter != this->m_bookmarks.end(); iter++) {
+                auto bookmarkToRemove = bookmarks.end();
+                for (auto iter = bookmarks.begin(); iter != bookmarks.end(); iter++) {
                     auto &[region, name, comment, color, locked] = *iter;
 
                     if (!this->m_currFilter.empty()) {
@@ -248,9 +291,8 @@ namespace hex::plugin::builtin {
                     id++;
                 }
 
-                if (bookmarkToRemove != this->m_bookmarks.end()) {
-                    this->m_bookmarks.erase(bookmarkToRemove);
-                    ProjectFile::markDirty();
+                if (bookmarkToRemove != bookmarks.end()) {
+                    bookmarks.erase(bookmarkToRemove);
                 }
             }
             ImGui::EndChild();

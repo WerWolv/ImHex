@@ -240,6 +240,21 @@ namespace hex {
             return !s_providers.empty() && s_currentProvider < s_providers.size();
         }
 
+        void markDirty() {
+            get()->markDirty();
+        }
+
+        void resetDirty() {
+            for (auto &provider : s_providers)
+                provider->markDirty(false);
+        }
+
+        bool isDirty() {
+            return std::ranges::any_of(s_providers, [](const auto &provider) {
+                return provider->isDirty();
+            });
+        }
+
         void add(prv::Provider *provider) {
             if (Task::getRunningTaskCount() > 0)
                 return;

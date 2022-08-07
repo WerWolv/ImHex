@@ -107,8 +107,6 @@ namespace hex {
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, Region);
-    EVENT_DEF(EventProjectFileStore);
-    EVENT_DEF(EventProjectFileLoad);
     EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);

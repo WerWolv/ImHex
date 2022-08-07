@@ -11,6 +11,8 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/api/localization.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::plugin::builtin::prv {
 
     using namespace std::chrono_literals;
@@ -309,6 +311,21 @@ namespace hex::plugin::builtin::prv {
             this->m_port = 0;
         else if (this->m_port > 0xFFFF)
             this->m_port = 0xFFFF;
+    }
+
+    void GDBProvider::loadSettings(const nlohmann::json &settings) {
+        this->m_ipAddress = settings["ip"].get<std::string>();
+        this->m_port      = settings["port"].get<int>();
+        this->m_size      = settings["size"].get<size_t>();
+    }
+
+    nlohmann::json GDBProvider::storeSettings() const {
+        nlohmann::json settings;
+        settings["ip"]   = this->m_ipAddress;
+        settings["port"] = this->m_port;
+        settings["size"] = this->m_size;
+
+        return settings;
     }
 
 }

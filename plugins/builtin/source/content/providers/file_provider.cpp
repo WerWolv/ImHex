@@ -2,11 +2,13 @@
 
 #include <cstring>
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/project_file_handler.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin::prv {
 
@@ -260,8 +262,6 @@ namespace hex::plugin::builtin::prv {
             }
 
             mappingCleanup.release();
-
-            ProjectFile::setFilePath(this->m_path);
         } else if (!this->m_emptyFile) {
             this->m_emptyFile = true;
             this->resize(1);
@@ -317,6 +317,17 @@ namespace hex::plugin::builtin::prv {
         ::munmap(this->m_mappedFile, this->m_fileSize);
         ::close(this->m_file);
 #endif
+    }
+
+    void FileProvider::loadSettings(const nlohmann::json &settings) {
+        this->setPath(settings["path"].get<std::string>());
+    }
+
+    nlohmann::json FileProvider::storeSettings() const {
+        nlohmann::json settings;
+        settings["path"] = this->m_path.string();
+
+        return settings;
     }
 
 }

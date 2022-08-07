@@ -196,11 +196,11 @@ namespace hex::plugin::builtin {
     class NodeComment : public dp::Node {
     public:
         NodeComment() : Node("hex.builtin.nodes.constants.comment.header", {}) {
-            this->m_comment.resize(0xFFF, 0x00);
+
         }
 
         void drawNode() override {
-            ImGui::InputTextMultiline("##string", reinterpret_cast<char *>(this->m_comment.data()), this->m_comment.size() - 1, ImVec2(150, 100));
+            ImGui::InputTextMultiline("##string", this->m_comment, scaled(ImVec2(150, 100)));
         }
 
         void process() override {

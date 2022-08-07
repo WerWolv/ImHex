@@ -50,6 +50,13 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] bool open() override;
         void close() override;
 
+        void loadSettings(const nlohmann::json &settings) override;
+        nlohmann::json storeSettings() const override;
+
+        std::string getTypeName() const override {
+            return "hex.builtin.provider.file";
+        }
+
     protected:
 #if defined(OS_WINDOWS)
         HANDLE m_file    = INVALID_HANDLE_VALUE;

@@ -8,8 +8,11 @@
 #include <string>
 #include <vector>
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
+
+#include <nlohmann/json_fwd.hpp>
 
 namespace pl {
     class PatternLanguage;
@@ -84,8 +87,17 @@ namespace hex::prv {
         virtual void drawLoadInterface();
         virtual void drawInterface();
 
-        pl::PatternLanguage &getPatternLanguageRuntime() { return *this->m_patternLanguageRuntime; }
-        std::string &getPatternLanguageSourceCode() { return this->m_patternLanguageSourceCode; }
+        [[nodiscard]] u32 getID() const {
+            return this->m_id;
+        }
+
+        virtual nlohmann::json storeSettings() const = 0;
+        virtual void loadSettings(const nlohmann::json &settings) = 0;
+
+        virtual std::string getTypeName() const = 0;
+
+        void markDirty(bool dirty = true) { this->m_dirty = dirty; }
+        [[nodiscard]] bool isDirty() const { return this->m_dirty; }
 
     protected:
         u32 m_currPage    = 0;
@@ -95,8 +107,12 @@ namespace hex::prv {
         std::list<std::map<u64, u8>> m_patches;
         std::list<Overlay *> m_overlays;
 
-        std::unique_ptr<pl::PatternLanguage> m_patternLanguageRuntime;
-        std::string m_patternLanguageSourceCode;
+        u32 m_id;
+
+        bool m_dirty = false;
+
+    private:
+        static u32 s_idCounter;
     };
 
 }

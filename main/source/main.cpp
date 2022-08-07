@@ -8,10 +8,11 @@
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
+#include <hex/api/project_file_manager.hpp>
+
 int main(int argc, char **argv, char **envp) {
     using namespace hex;
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
-
 
 #if defined(OS_WINDOWS)
     ImHexApi::System::impl::setBorderlessWindowMode(true);

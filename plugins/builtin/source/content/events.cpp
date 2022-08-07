@@ -3,14 +3,16 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/project_file_handler.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <imgui.h>
+#include <nlohmann/json.hpp>
 
 #include "content/providers/file_provider.hpp"
+#include "provider_extra_data.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -38,20 +40,15 @@ namespace hex::plugin::builtin {
             return;
         }
 
-        ProjectFile::setFilePath(path);
-
         EventManager::post<EventFileLoaded>(path);
         EventManager::post<EventDataChanged>();
         EventManager::post<EventHighlightingChanged>();
     }
 
     void registerEventHandlers() {
-        EventManager::subscribe<EventProjectFileLoad>([]() {
-            EventManager::post<RequestOpenFile>(ProjectFile::getFilePath());
-        });
 
         EventManager::subscribe<EventWindowClosing>([](GLFWwindow *window) {
-            if (ProjectFile::hasUnsavedChanges()) {
+            if (ImHexApi::Provider::isDirty()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.popup.exit_application.title"_lang); });
             }
@@ -93,6 +90,11 @@ namespace hex::plugin::builtin {
             if (provider->hasLoadInterface())
                 EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
         });
+
+        EventManager::subscribe<EventProviderDeleted>([](hex::prv::Provider *provider) {
+            ProviderExtraData::erase(provider);
+        });
+
     }
 
 }
