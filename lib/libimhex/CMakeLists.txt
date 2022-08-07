@@ -11,7 +11,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/microtar ${CMAKE_CURREN
 set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 set(NFD_PORTAL ON CACHE BOOL "Use Portals for Linux file dialogs" FORCE)
-set(NFD_USE_ALLOWEDCONTENTTYPES OFF CACHE BOOL "Disable allowedContentTypes for macOS file dialogs" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
 set_target_properties(nfd PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
