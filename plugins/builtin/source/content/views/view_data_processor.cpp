@@ -473,7 +473,7 @@ namespace hex::plugin::builtin {
             currOutput["to"]   = link.getToId();
         }
 
-        return output.dump();
+        return output.dump(4);
     }
 
     void ViewDataProcessor::loadNodes(prv::Provider *provider, const std::string &jsonData) {
