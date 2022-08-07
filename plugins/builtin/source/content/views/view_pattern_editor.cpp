@@ -745,6 +745,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code) {
+        auto task = ImHexApi::Tasks::createTask("hex.builtin.view.pattern_editor.evaluating", 1);
+
         this->m_runningParsers++;
 
         auto ast = this->m_parserRuntime->parseString(code);
@@ -787,7 +789,10 @@ namespace hex::plugin::builtin {
 
         EventManager::post<EventHighlightingChanged>();
 
-        std::thread([this, code] {
+        auto provider = ImHexApi::Provider::get();
+        std::thread([this, code, provider] {
+            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.pattern_editor.evaluating", 1);
+
             std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
                 envVars.insert({ name, value });
@@ -800,7 +805,6 @@ namespace hex::plugin::builtin {
                     inVariables[name] = variable.value;
             }
 
-            auto provider = ImHexApi::Provider::get();
             auto &runtime = provider->getPatternLanguageRuntime();
 
             runtime.setDangerousFunctionCallHandler([this]{
