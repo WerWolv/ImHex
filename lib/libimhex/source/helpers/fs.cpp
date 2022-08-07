@@ -137,11 +137,8 @@ namespace hex::fs {
 
         #endif
 
-
-        for (auto &path : paths) {
+        for (auto &path : paths)
             path = path / "imhex";
-        }
-
 
         #if defined(OS_MACOS)
 
@@ -174,6 +171,9 @@ namespace hex::fs {
 
             auto dataDirs = xdg::DataDirs();
             std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
+
+            for (auto &path : paths)
+                path = path / "imhex";
 
             return paths;
         #endif
