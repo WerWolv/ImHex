@@ -97,7 +97,7 @@ namespace hex {
         }
 
         {
-            const auto metadataContent = hex::format("{}\n{}@{}\n{}", MetadataHeaderMagic, GIT_BRANCH, GIT_COMMIT_HASH, IMHEX_VERSION);
+            const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, IMHEX_VERSION);
             tar.write(MetadataPath, metadataContent);
         }
 
