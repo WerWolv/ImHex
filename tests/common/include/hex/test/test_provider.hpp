@@ -48,6 +48,8 @@ namespace hex::test {
             return this->m_data->size();
         }
 
+        [[nodiscard]] virtual std::string getTypeName() const { return "hex.test.provider.test"; }
+
         bool open() override { return true; }
         void close() override { }
 

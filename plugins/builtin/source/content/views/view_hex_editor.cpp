@@ -8,6 +8,7 @@
 #include "math_evaluator.hpp"
 
 #include <imgui_internal.h>
+#include <nlohmann/json.hpp>
 
 #include <thread>
 
