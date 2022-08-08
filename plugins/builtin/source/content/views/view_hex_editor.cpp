@@ -9,7 +9,6 @@
 #include "math_evaluator.hpp"
 
 #include <imgui_internal.h>
-#include <nlohmann/json.hpp>
 
 #include <thread>
 
@@ -20,8 +19,8 @@ namespace hex::plugin::builtin {
 
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.goto"_lang);
-            if (ImGui::BeginTabBar("hex.builtin.view.hex_editor.goto.offset.absolute"_lang)) {
-                if (ImGui::BeginTabItem("Absolute")) {
+            if (ImGui::BeginTabBar("goto_tabs")) {
+                if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.goto.offset.absolute"_lang)) {
                     this->m_mode = Mode::Absolute;
                     ImGui::EndTabItem();
                 }
@@ -93,6 +92,53 @@ namespace hex::plugin::builtin {
 
         std::string m_input;
         MathEvaluator<i128> m_evaluator;
+    };
+
+    class PopupSelect : public ViewHexEditor::Popup {
+    public:
+
+        void draw(ViewHexEditor *editor) override {
+            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.select"_lang);
+            if (ImGui::BeginTabBar("select_tabs")) {
+
+                if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.region"_lang)) {
+                    u64 inputA = this->m_region.getStartAddress();
+                    u64 inputB = this->m_region.getEndAddress();
+                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
+                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.end"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
+
+                    if (inputB < inputA)
+                        inputB = inputA;
+
+                    this->m_region = { inputA, (inputB - inputA) + 1 };
+
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.size"_lang)) {
+                    u64 inputA = this->m_region.getStartAddress();
+                    u64 inputB = this->m_region.getSize();
+                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
+                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.size"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
+
+                    if (inputB <= 0)
+                        inputB = 1;
+
+                    this->m_region = { inputA, inputB };
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::Button("hex.builtin.view.hex_editor.select.select"_lang) || (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter)))) {
+                    editor->setSelection(this->m_region.getStartAddress(), this->m_region.getEndAddress());
+                    editor->jumpToSelection();
+                }
+
+                ImGui::EndTabBar();
+            }
+        }
+
+    private:
+        Region m_region = { 0, 1 };
     };
 
     class PopupFind : public ViewHexEditor::Popup {
@@ -252,7 +298,7 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_base"_lang);
 
             ImGui::InputHexadecimal("##base_address", &this->m_baseAddress);
-            if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+            if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter))) {
                 setBaseAddress(this->m_baseAddress);
                 editor->closePopup();
             }
@@ -285,7 +331,7 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.resize"_lang);
 
             ImGui::InputHexadecimal("##resize", &this->m_size);
-            if (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+            if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter))) {
                 resize(static_cast<size_t>(this->m_size));
                 editor->closePopup();
             }
@@ -1137,6 +1183,12 @@ namespace hex::plugin::builtin {
                 this->setSelection(size_t(0), ImHexApi::Provider::get()->getActualSize());
         });
 
+        // Select range
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::A, [this] {
+            if (ImHexApi::Provider::isValid())
+                this->openPopup<PopupSelect>();
+        });
+
         // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
             this->m_selectionStart = InvalidSelection;
@@ -1392,6 +1444,10 @@ namespace hex::plugin::builtin {
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.goto"_lang, "CTRL + G", false, providerValid)) {
                 this->openPopup<PopupGoto>();
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.select"_lang, "CTRL + SHIFT + A", false, providerValid)) {
+                this->openPopup<PopupSelect>();
             }
         });
 

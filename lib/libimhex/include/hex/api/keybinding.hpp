@@ -181,8 +181,8 @@ namespace hex {
 
     static constexpr auto CTRL  = Key(static_cast<Keys>(0x1000'0000));
     static constexpr auto ALT   = Key(static_cast<Keys>(0x2000'0000));
-    static constexpr auto SHIFT = Key(static_cast<Keys>(0x3000'0000));
-    static constexpr auto SUPER = Key(static_cast<Keys>(0x4000'0000));
+    static constexpr auto SHIFT = Key(static_cast<Keys>(0x4000'0000));
+    static constexpr auto SUPER = Key(static_cast<Keys>(0x8000'0000));
 
     class ShortcutManager {
     public:

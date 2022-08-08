@@ -271,6 +271,12 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.hex_editor.goto.offset.relative", "相対アドレス" },
                         { "hex.builtin.view.hex_editor.goto.offset.begin", "開始" }, //?
                         { "hex.builtin.view.hex_editor.goto.offset.end", "終了" }, //?
+                    //{ "hex.builtin.view.hex_editor.menu.file.select", "Select" },
+                    //    { "hex.builtin.view.hex_editor.select.offset.region", "Region" },
+                    //        { "hex.builtin.view.hex_editor.select.offset.begin", "Begin" },
+                    //        { "hex.builtin.view.hex_editor.select.offset.end", "End" },
+                    //          { "hex.builtin.view.hex_editor.select.offset.size", "Size" },
+                    //    { "hex.builtin.view.hex_editor.select.select", "Select" },
                     { "hex.builtin.view.hex_editor.menu.file.save", "保存" },
                     { "hex.builtin.view.hex_editor.menu.file.save_as", "名前をつけて保存…" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "コピー" },
