@@ -224,7 +224,7 @@ namespace hex {
 
             namespace impl {
 
-                using CreatorFunction = std::function<dp::Node *()>;
+                using CreatorFunction = std::function<std::unique_ptr<dp::Node>()>;
 
                 struct Entry {
                     std::string category;
@@ -239,11 +239,15 @@ namespace hex {
 
             template<std::derived_from<dp::Node> T, typename... Args>
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args &&...args) {
-                add(impl::Entry { unlocalizedCategory.c_str(), unlocalizedName.c_str(), [=] {
-                                     auto node = new T(std::forward<Args>(args)...);
-                                     node->setUnlocalizedName(unlocalizedName);
-                                     return node;
-                                 } });
+                add(impl::Entry {
+                    unlocalizedCategory.c_str(),
+                    unlocalizedName.c_str(),
+                    [=] {
+                        auto node = std::make_unique<T>(std::forward<Args>(args)...);
+                        node->setUnlocalizedName(unlocalizedName);
+                        return node;
+                    }
+                });
             }
 
             void addSeparator();
@@ -330,8 +334,10 @@ namespace hex {
             }
 
             template<std::derived_from<hex::prv::Provider> T>
-            void add(const std::string &unlocalizedName, bool addToList = true) {
-                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = unlocalizedName](const std::string &name, hex::prv::Provider **provider) {
+            void add(bool addToList = true) {
+                auto typeName = T().getTypeName();
+
+                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, hex::prv::Provider **provider) {
                     if (name != expectedName) return;
 
                     auto newProvider = new T();
@@ -343,7 +349,7 @@ namespace hex {
                 });
 
                 if (addToList)
-                    impl::addProviderName(unlocalizedName);
+                    impl::addProviderName(typeName);
             }
 
             std::vector<std::string> &getEntries();

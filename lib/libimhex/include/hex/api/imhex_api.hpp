@@ -119,12 +119,23 @@ namespace hex {
 
         namespace Provider {
 
+            namespace impl {
+
+                void resetClosingProvider();
+                prv::Provider* getClosingProvider();
+
+            }
+
             prv::Provider *get();
             const std::vector<prv::Provider *> &getProviders();
 
             void setCurrentProvider(u32 index);
 
             bool isValid();
+
+            void markDirty();
+            void resetDirty();
+            bool isDirty();
 
             void add(prv::Provider *provider);
 
@@ -133,7 +144,7 @@ namespace hex {
                 add(new T(std::forward<decltype(args)>(args)...));
             }
 
-            void remove(prv::Provider *provider);
+            void remove(prv::Provider *provider, bool noQuestions = false);
 
             prv::Provider* createProvider(const std::string &unlocalizedName);
 

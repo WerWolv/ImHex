@@ -214,6 +214,19 @@ namespace hex {
         static u32 s_currentProvider;
         static std::vector<prv::Provider *> s_providers;
 
+        namespace impl {
+
+            static prv::Provider *s_closingProvider = nullptr;
+            void resetClosingProvider() {
+                s_closingProvider = nullptr;
+            }
+
+            prv::Provider* getClosingProvider() {
+                return s_closingProvider;
+            }
+
+        }
+
         prv::Provider *get() {
             if (!ImHexApi::Provider::isValid())
                 return nullptr;
@@ -240,6 +253,21 @@ namespace hex {
             return !s_providers.empty() && s_currentProvider < s_providers.size();
         }
 
+        void markDirty() {
+            get()->markDirty();
+        }
+
+        void resetDirty() {
+            for (auto &provider : s_providers)
+                provider->markDirty(false);
+        }
+
+        bool isDirty() {
+            return std::ranges::any_of(s_providers, [](const auto &provider) {
+                return provider->isDirty();
+            });
+        }
+
         void add(prv::Provider *provider) {
             if (Task::getRunningTaskCount() > 0)
                 return;
@@ -250,12 +278,21 @@ namespace hex {
             setCurrentProvider(s_providers.size() - 1);
         }
 
-        void remove(prv::Provider *provider) {
+        void remove(prv::Provider *provider, bool noQuestions) {
             if (provider == nullptr)
                  return;
 
             if (Task::getRunningTaskCount() > 0)
                 return;
+
+            if (!noQuestions) {
+                impl::s_closingProvider = provider;
+
+                bool shouldClose = true;
+                EventManager::post<EventProviderClosing>(provider, &shouldClose);
+                if (!shouldClose)
+                    return;
+            }
 
             auto it = std::find(s_providers.begin(), s_providers.end(), provider);
             if (it == s_providers.end())

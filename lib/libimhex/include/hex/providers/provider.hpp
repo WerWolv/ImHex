@@ -8,8 +8,11 @@
 #include <string>
 #include <vector>
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace pl {
     class PatternLanguage;
@@ -67,8 +70,8 @@ namespace hex::prv {
         [[nodiscard]] virtual std::string getName() const                                                 = 0;
         [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataInformation() const = 0;
 
-        [[nodiscard]] virtual bool open() = 0;
-        virtual void close()              = 0;
+        [[nodiscard]] virtual bool open();
+        virtual void close();
 
         void addPatch(u64 offset, const void *buffer, size_t size, bool createUndo = false);
         void createUndoPoint();
@@ -84,8 +87,17 @@ namespace hex::prv {
         virtual void drawLoadInterface();
         virtual void drawInterface();
 
-        pl::PatternLanguage &getPatternLanguageRuntime() { return *this->m_patternLanguageRuntime; }
-        std::string &getPatternLanguageSourceCode() { return this->m_patternLanguageSourceCode; }
+        [[nodiscard]] u32 getID() const {
+            return this->m_id;
+        }
+
+        [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings = { }) const;
+        virtual void loadSettings(const nlohmann::json &settings);
+
+        [[nodiscard]] virtual std::string getTypeName() const = 0;
+
+        void markDirty(bool dirty = true) { this->m_dirty = dirty; }
+        [[nodiscard]] bool isDirty() const { return this->m_dirty; }
 
     protected:
         u32 m_currPage    = 0;
@@ -95,8 +107,12 @@ namespace hex::prv {
         std::list<std::map<u64, u8>> m_patches;
         std::list<Overlay *> m_overlays;
 
-        std::unique_ptr<pl::PatternLanguage> m_patternLanguageRuntime;
-        std::string m_patternLanguageSourceCode;
+        u32 m_id;
+
+        bool m_dirty = false;
+
+    private:
+        static u32 s_idCounter;
     };
 
 }

@@ -32,7 +32,7 @@
 
 #include <fonts/codicons_font.h>
 
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <GLFW/glfw3.h>
 
@@ -63,6 +63,20 @@ namespace hex {
         buf->append("\n");
     }
 
+    static void signalHandler(int signalNumber) {
+        log::fatal("Terminating with signal {}", signalNumber);
+        EventManager::post<EventAbnormalTermination>(signalNumber);
+
+        if (std::uncaught_exceptions() > 0) {
+            log::fatal("Uncaught exception thrown!");
+        }
+
+        // Let's not loop on this...
+        std::signal(signalNumber, nullptr);
+
+        std::raise(signalNumber);
+    };
+
     Window::Window() {
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
@@ -81,7 +95,7 @@ namespace hex {
         this->setupNativeWindow();
 
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
-            glfwSetWindowShouldClose(this->m_window, true);
+            glfwSetWindowShouldClose(this->m_window, GLFW_TRUE);
 
             if (!noQuestions)
                 EventManager::post<EventWindowClosing>(this->m_window);
@@ -95,13 +109,14 @@ namespace hex {
             std::string title = "ImHex";
 
             if (ImHexApi::Provider::isValid()) {
+                auto provider = ImHexApi::Provider::get();
                 if (!windowTitle.empty())
                     title += " - " + windowTitle;
 
-                if (ProjectFile::hasUnsavedChanges())
+                if (provider->isDirty())
                     title += " (*)";
 
-                if (!ImHexApi::Provider::get()->isWritable())
+                if (!provider->isWritable())
                     title += " (Read Only)";
             }
 
@@ -114,11 +129,11 @@ namespace hex {
         EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int) {
             ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
 
-            if (!ProjectFile::hasUnsavedChanges())
+            if (!ImHexApi::Provider::isDirty())
                 return;
 
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store(std::fs::path(path) / CrashBackupFileName))
+                if (ProjectFile::store((std::fs::path(path) / CrashBackupFileName).string()))
                     break;
             }
         });
@@ -127,29 +142,9 @@ namespace hex {
             this->m_popupsToOpen.push_back(name);
         });
 
-        auto signalHandler = [](int signalNumber) {
-            EventManager::post<EventAbnormalTermination>(signalNumber);
-
-            if (std::uncaught_exceptions() > 0) {
-                log::fatal("Uncaught exception thrown!");
-            }
-
-            // Let's not loop on this...
-            std::signal(signalNumber, nullptr);
-
-#if defined(DEBUG)
-            assert(false);
-#else
-            std::raise(signalNumber);
-#endif
-        };
-
-        std::signal(SIGTERM, signalHandler);
-        std::signal(SIGSEGV, signalHandler);
-        std::signal(SIGINT, signalHandler);
-        std::signal(SIGILL, signalHandler);
-        std::signal(SIGABRT, signalHandler);
-        std::signal(SIGFPE, signalHandler);
+        for (u32 signal = 0; signal < NSIG; signal++)
+            std::signal(signal, signalHandler);
+        std::set_terminate([]{ signalHandler(SIGTERM); });
 
         auto imhexLogo      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(imhexLogo.data()), imhexLogo.size());
@@ -199,6 +194,13 @@ namespace hex {
             this->frameBegin();
             this->frame();
             this->frameEnd();
+
+            const auto targetFps = ImHexApi::System::getTargetFPS();
+            if (targetFps <= 200)
+                std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000)));
+
+            this->m_lastFrameTime = glfwGetTime();
+
             this->m_hadEvent = false;
         }
     }
@@ -493,12 +495,6 @@ namespace hex {
         glfwMakeContextCurrent(backup_current_context);
 
         glfwSwapBuffers(this->m_window);
-
-        const auto targetFps = ImHexApi::System::getTargetFPS();
-        if (targetFps <= 200)
-            std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000)));
-
-        this->m_lastFrameTime = glfwGetTime();
     }
 
     void Window::initGLFW() {

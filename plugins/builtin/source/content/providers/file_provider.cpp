@@ -2,11 +2,13 @@
 
 #include <cstring>
 
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/project_file_handler.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin::prv {
 
@@ -19,11 +21,11 @@ namespace hex::plugin::builtin::prv {
 
 
     bool FileProvider::isAvailable() const {
-#if defined(OS_WINDOWS)
-        return this->m_file != INVALID_HANDLE_VALUE && this->m_mapping != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
-#else
-        return this->m_file != -1 && this->m_mappedFile != nullptr;
-#endif
+        #if defined(OS_WINDOWS)
+            return this->m_file != INVALID_HANDLE_VALUE && this->m_mapping != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
+        #else
+            return this->m_file != -1 && this->m_mappedFile != nullptr;
+        #endif
     }
 
     bool FileProvider::isReadable() const {
@@ -202,121 +204,137 @@ namespace hex::plugin::builtin::prv {
         this->m_readable = true;
         this->m_writable = true;
 
-#if defined(OS_WINDOWS)
-        const auto &path = this->m_path.native();
+        #if defined(OS_WINDOWS)
+            const auto &path = this->m_path.native();
 
-        this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
+            this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
 
-        LARGE_INTEGER fileSize = {};
-        this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            LARGE_INTEGER fileSize = {};
+            this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
-        GetFileSizeEx(this->m_file, &fileSize);
-        this->m_fileSize = fileSize.QuadPart;
-        CloseHandle(this->m_file);
-
-        this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            this->m_file     = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-            this->m_writable = false;
-        }
-
-        auto fileCleanup = SCOPE_GUARD {
+            GetFileSizeEx(this->m_file, &fileSize);
+            this->m_fileSize = fileSize.QuadPart;
             CloseHandle(this->m_file);
 
-            this->m_readable = false;
-            this->m_file     = nullptr;
-        };
-
-        if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-            return false;
-        }
-
-        if (this->m_fileSize > 0) {
-            this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
-            if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
-
-                this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
-
-                if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE)
-                    return false;
+            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+                this->m_file     = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+                this->m_writable = false;
             }
 
-            auto mappingCleanup = SCOPE_GUARD {
-                CloseHandle(this->m_mapping);
+            auto fileCleanup = SCOPE_GUARD {
+                CloseHandle(this->m_file);
 
-                this->m_mapping  = nullptr;
                 this->m_readable = false;
+                this->m_file     = nullptr;
             };
 
-            this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
-            if (this->m_mappedFile == nullptr) {
-
-                this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
-                if (this->m_mappedFile == nullptr) {
-                    this->m_readable = false;
-
-                    return false;
-                }
+            if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+                return false;
             }
 
-            mappingCleanup.release();
+            if (this->m_fileSize > 0) {
+                this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
+                if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
 
-            ProjectFile::setFilePath(this->m_path);
-        } else if (!this->m_emptyFile) {
-            this->m_emptyFile = true;
-            this->resize(1);
-        } else {
-            return false;
-        }
+                    this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
 
-        fileCleanup.release();
+                    if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE)
+                        return false;
+                }
 
-#else
-        const auto &path       = this->m_path.native();
-        this->m_fileStatsValid = stat(path.c_str(), &this->m_fileStats) == 0;
+                auto mappingCleanup = SCOPE_GUARD {
+                    CloseHandle(this->m_mapping);
 
-        int mmapprot = PROT_READ | PROT_WRITE;
+                    this->m_mapping  = nullptr;
+                    this->m_readable = false;
+                };
 
-        this->m_file = ::open(path.c_str(), O_RDWR);
-        if (this->m_file == -1) {
-            this->m_file     = ::open(path.c_str(), O_RDONLY);
-            this->m_writable = false;
-            mmapprot &= ~(PROT_WRITE);
-        }
+                this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
+                if (this->m_mappedFile == nullptr) {
 
-        if (this->m_file == -1) {
-            this->m_readable = false;
-            return false;
-        }
+                    this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
+                    if (this->m_mappedFile == nullptr) {
+                        this->m_readable = false;
 
-        this->m_fileSize = this->m_fileStats.st_size;
+                        return false;
+                    }
+                }
 
-        this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, mmapprot, MAP_SHARED, this->m_file, 0);
-        if (this->m_mappedFile == MAP_FAILED) {
-            ::close(this->m_file);
-            this->m_file = -1;
+                mappingCleanup.release();
+            } else if (!this->m_emptyFile) {
+                this->m_emptyFile = true;
+                this->resize(1);
+            } else {
+                return false;
+            }
 
-            return false;
-        }
-#endif
+            fileCleanup.release();
 
-        Provider::resize(this->getActualSize());
+        #else
 
-        return true;
+            const auto &path       = this->m_path.native();
+            this->m_fileStatsValid = stat(path.c_str(), &this->m_fileStats) == 0;
+
+            int mmapprot = PROT_READ | PROT_WRITE;
+
+            this->m_file = ::open(path.c_str(), O_RDWR);
+            if (this->m_file == -1) {
+                this->m_file     = ::open(path.c_str(), O_RDONLY);
+                this->m_writable = false;
+                mmapprot &= ~(PROT_WRITE);
+            }
+
+            if (this->m_file == -1) {
+                this->m_readable = false;
+                return false;
+            }
+
+            this->m_fileSize = this->m_fileStats.st_size;
+
+            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, mmapprot, MAP_SHARED, this->m_file, 0);
+            if (this->m_mappedFile == MAP_FAILED) {
+                ::close(this->m_file);
+                this->m_file = -1;
+
+                return false;
+            }
+
+        #endif
+
+        return Provider::open();
     }
 
     void FileProvider::close() {
-#if defined(OS_WINDOWS)
-        if (this->m_mappedFile != nullptr)
-            ::UnmapViewOfFile(this->m_mappedFile);
-        if (this->m_mapping != nullptr)
-            ::CloseHandle(this->m_mapping);
-        if (this->m_file != nullptr)
-            ::CloseHandle(this->m_file);
-#else
-        ::munmap(this->m_mappedFile, this->m_fileSize);
-        ::close(this->m_file);
-#endif
+        #if defined(OS_WINDOWS)
+
+            if (this->m_mappedFile != nullptr)
+                ::UnmapViewOfFile(this->m_mappedFile);
+            if (this->m_mapping != nullptr)
+                ::CloseHandle(this->m_mapping);
+            if (this->m_file != nullptr)
+                ::CloseHandle(this->m_file);
+
+        #else
+
+            ::munmap(this->m_mappedFile, this->m_fileSize);
+            ::close(this->m_file);
+
+        #endif
+
+        Provider::close();
+    }
+
+    void FileProvider::loadSettings(const nlohmann::json &settings) {
+        Provider::loadSettings(settings);
+
+        this->setPath(settings["path"].get<std::string>());
+    }
+
+    nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
+        settings["path"] = this->m_path.string();
+
+        return Provider::storeSettings(settings);
     }
 
 }

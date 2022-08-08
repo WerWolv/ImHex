@@ -95,6 +95,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.popup.exit_application.title", "離開應用程式？" },
                 { "hex.builtin.popup.exit_application.desc", "您的專案有未儲存的更動。\n您確定要離開嗎？" },
+                //{ "hex.builtin.popup.close_provider.title", "Close Provider?" },
+                //{ "hex.builtin.popup.close_provider.desc", "You have unsaved changes made to this Provider.\nAre you sure you want to close it?" },
                 { "hex.builtin.popup.error.read_only", "無法取得寫入權限。檔案已以唯讀模式開啟。" },
                 { "hex.builtin.popup.error.open", "無法開啟檔案！" },
                 { "hex.builtin.popup.error.create", "無法建立新檔案！" },

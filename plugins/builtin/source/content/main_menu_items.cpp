@@ -4,9 +4,10 @@
 #include <implot.h>
 
 #include <hex/ui/view.hpp>
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/patches.hpp>
 
 #include <thread>
 
@@ -69,18 +70,14 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
-                if (ProjectFile::getProjectFilePath() == "") {
-                    fs::openFileBrowser(fs::DialogMode::Save, { {"Project File", "hexproj"}
-                    },
-                        [](std::fs::path path) {
-                            if (path.extension() != ".hexproj") {
-                                path.replace_extension(".hexproj");
-                            }
+                fs::openFileBrowser(fs::DialogMode::Save, { {"Project File", "hexproj"} },
+                    [](std::fs::path path) {
+                        if (path.extension() != ".hexproj") {
+                            path.replace_extension(".hexproj");
+                        }
 
-                            ProjectFile::store(path);
-                        });
-                } else
-                    ProjectFile::store();
+                        ProjectFile::store(path);
+                    });
             }
         });
 

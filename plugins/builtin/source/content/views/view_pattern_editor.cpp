@@ -11,8 +11,10 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/magic.hpp>
+
+#include <provider_extra_data.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -86,15 +88,6 @@ namespace hex::plugin::builtin {
         this->m_envVarEntries.push_back({ 0, "", 0, EnvVarType::Integer });
         this->m_envVarIdCounter = 1;
 
-        EventManager::subscribe<EventProjectFileStore>(this, [this]() {
-            ProjectFile::setPattern(this->m_textEditor.GetText());
-        });
-
-        EventManager::subscribe<EventProjectFileLoad>(this, [this]() {
-            this->m_textEditor.SetText(ProjectFile::getPattern());
-            this->evaluatePattern(this->m_textEditor.GetText());
-        });
-
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
             this->m_textEditor.SetText(code);
         });
@@ -115,21 +108,25 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderCreated>(this, [this](prv::Provider *provider) {
+        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
             if (!this->m_autoLoadPatterns)
                 return;
 
+            auto &patternLanguageData = ProviderExtraData::get(provider).patternLanguage;
+
+            patternLanguageData.runtime = ContentRegistry::PatternLanguage::createDefaultRuntime(provider);
+
             // Copy over current pattern source code to the new provider
             if (!this->m_syncPatternSourceCode) {
-                provider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
+                patternLanguageData.sourceCode = this->m_textEditor.GetText();
             }
 
-            auto &runtime = provider->getPatternLanguageRuntime();
+            auto &runtime = patternLanguageData.runtime;
 
-            auto mimeType = magic::getMIMEType(ImHexApi::Provider::get());
+            auto mimeType = magic::getMIMEType(provider);
 
             bool foundCorrectType = false;
-            runtime.addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
+            runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
                 hex::unused(runtime);
 
                 if (value == mimeType) {
@@ -152,16 +149,16 @@ namespace hex::plugin::builtin {
                     if (!file.isValid())
                         continue;
 
-                    runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+                    runtime->getInternals().preprocessor->preprocess(*runtime, file.readString());
 
                     if (foundCorrectType)
                         this->m_possiblePatternFiles.push_back(entry.path());
 
-                    runtime.reset();
+                    runtime->reset();
                 }
             }
 
-            runtime.addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
+            runtime->addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
 
             if (!this->m_possiblePatternFiles.empty()) {
                 this->m_selectedPatternFile = 0;
@@ -170,14 +167,14 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderDeleted>(this, [](auto *provider) {
-            provider->getPatternLanguageRuntime().abort();
-        });
-
         EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (!this->m_syncPatternSourceCode) {
-                if (oldProvider != nullptr) oldProvider->getPatternLanguageSourceCode() = this->m_textEditor.GetText();
-                if (newProvider != nullptr) this->m_textEditor.SetText(newProvider->getPatternLanguageSourceCode());
+                if (oldProvider != nullptr) ProviderExtraData::get(oldProvider).patternLanguage.sourceCode = this->m_textEditor.GetText();
+
+                if (newProvider != nullptr)
+                    this->m_textEditor.SetText(ProviderExtraData::get(newProvider).patternLanguage.sourceCode);
+                else
+                    this->m_textEditor.SetText("");
 
                 auto lines = this->m_textEditor.GetTextLines();
                 lines.pop_back();
@@ -257,7 +254,7 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
 
             std::optional<ImColor> color;
-            for (const auto &pattern : ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address)) {
+            for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatterns(address)) {
                 if (pattern->isHidden())
                     continue;
 
@@ -273,7 +270,7 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            auto patterns = ImHexApi::Provider::get()->getPatternLanguageRuntime().getPatterns(address);
+            auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatterns(address);
             if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
                 ImGui::BeginTooltip();
                 for (const auto &pattern : patterns) {
@@ -298,11 +295,37 @@ namespace hex::plugin::builtin {
                 ImGui::EndTooltip();
             }
         });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "pattern_source_code.hexpat",
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                std::string sourceCode = tar.readString(basePath);
+
+                if (!this->m_syncPatternSourceCode)
+                    ProviderExtraData::get(provider).patternLanguage.sourceCode = sourceCode;
+
+                this->m_textEditor.SetText(sourceCode);
+
+                return true;
+            },
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                std::string sourceCode;
+
+                if (provider == ImHexApi::Provider::get())
+                    ProviderExtraData::get(provider).patternLanguage.sourceCode = this->m_textEditor.GetText();
+
+                if (this->m_syncPatternSourceCode)
+                    sourceCode = this->m_textEditor.GetText();
+                else
+                    sourceCode = ProviderExtraData::get(provider).patternLanguage.sourceCode;
+
+                tar.write(basePath, sourceCode);
+                return true;
+            }
+        });
     }
 
     ViewPatternEditor::~ViewPatternEditor() {
-        EventManager::unsubscribe<EventProjectFileStore>(this);
-        EventManager::unsubscribe<EventProjectFileLoad>(this);
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventProviderDeleted>(this);
@@ -342,10 +365,10 @@ namespace hex::plugin::builtin {
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-                auto &runtime = provider->getPatternLanguageRuntime();
-                if (runtime.isRunning()) {
+                auto &runtime = ProviderExtraData::getCurrent().patternLanguage.runtime;
+                if (runtime->isRunning()) {
                     if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
-                        runtime.abort();
+                        runtime->abort();
                 } else {
                     if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                         this->evaluatePattern(this->m_textEditor.GetText());
@@ -369,13 +392,13 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     ImGui::TextFormatted("{} / {}",
-                        provider->getPatternLanguageRuntime().getCreatedPatternCount(),
-                        provider->getPatternLanguageRuntime().getMaximumPatternCount());
+                        runtime->getCreatedPatternCount(),
+                        runtime->getMaximumPatternCount());
                 }
 
                 if (this->m_textEditor.IsTextChanged()) {
-                    ProjectFile::markDirty();
                     this->m_hasUnevaluatedChanges = true;
+                    ImHexApi::Provider::markDirty();
                 }
 
                 if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
@@ -785,13 +808,15 @@ namespace hex::plugin::builtin {
 
         this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
-        ImHexApi::Provider::get()->getPatternLanguageRuntime().reset();
+
+        auto &runtime = ProviderExtraData::getCurrent().patternLanguage.runtime;
+        runtime->reset();
 
         EventManager::post<EventHighlightingChanged>();
 
-        auto provider = ImHexApi::Provider::get();
-        std::thread([this, code, provider] {
+        std::thread([this, code, &runtime] {
             auto task = ImHexApi::Tasks::createTask("hex.builtin.view.pattern_editor.evaluating", 1);
+
 
             std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
@@ -805,9 +830,7 @@ namespace hex::plugin::builtin {
                     inVariables[name] = variable.value;
             }
 
-            auto &runtime = provider->getPatternLanguageRuntime();
-
-            runtime.setDangerousFunctionCallHandler([this]{
+            runtime->setDangerousFunctionCallHandler([this]{
                 this->m_dangerousFunctionCalled = true;
 
                 while (this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Ask) {
@@ -817,15 +840,15 @@ namespace hex::plugin::builtin {
                 return this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
-            this->m_lastEvaluationResult = runtime.executeString(code, envVars, inVariables);
+            this->m_lastEvaluationResult = runtime->executeString(code, envVars, inVariables);
             if (!this->m_lastEvaluationResult) {
-                this->m_lastEvaluationError = runtime.getError();
+                this->m_lastEvaluationError = runtime->getError();
             }
 
-            runtime.flattenPatterns();
+            runtime->flattenPatterns();
 
-            this->m_lastEvaluationLog     = runtime.getConsoleLog();
-            this->m_lastEvaluationOutVars = runtime.getOutVariables();
+            this->m_lastEvaluationLog     = runtime->getConsoleLog();
+            this->m_lastEvaluationOutVars = runtime->getOutVariables();
             this->m_runningEvaluators--;
 
             this->m_lastEvaluationProcessed = false;

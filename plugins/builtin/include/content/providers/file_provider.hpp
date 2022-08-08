@@ -7,11 +7,15 @@
 #include <sys/stat.h>
 
 #if defined(OS_WINDOWS)
+
     #include <windows.h>
+
 #else
+
     #include <sys/mman.h>
     #include <unistd.h>
     #include <sys/fcntl.h>
+
 #endif
 
 namespace hex::plugin::builtin::prv {
@@ -50,13 +54,24 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] bool open() override;
         void close() override;
 
+        void loadSettings(const nlohmann::json &settings) override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
+
+        [[nodiscard]] std::string getTypeName() const override {
+            return "hex.builtin.provider.file";
+        }
+
     protected:
-#if defined(OS_WINDOWS)
-        HANDLE m_file    = INVALID_HANDLE_VALUE;
-        HANDLE m_mapping = INVALID_HANDLE_VALUE;
-#else
-        int m_file = -1;
-#endif
+        #if defined(OS_WINDOWS)
+
+            HANDLE m_file    = INVALID_HANDLE_VALUE;
+            HANDLE m_mapping = INVALID_HANDLE_VALUE;
+
+        #else
+
+            int m_file = -1;
+
+        #endif
 
         std::fs::path m_path;
         void *m_mappedFile = nullptr;

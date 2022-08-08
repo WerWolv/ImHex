@@ -2,7 +2,8 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <hex/helpers/project_file_handler.hpp>
+#include <hex/api/project_file_manager.hpp>
+#include <nlohmann/json.hpp>
 
 #include <string>
 
@@ -11,22 +12,26 @@ using namespace std::literals::string_literals;
 namespace hex::plugin::builtin {
 
     ViewPatches::ViewPatches() : View("hex.builtin.view.patches.name") {
-        EventManager::subscribe<EventProjectFileStore>(this, [] {
-            auto provider = ImHexApi::Provider::get();
-            if (ImHexApi::Provider::isValid())
-                ProjectFile::setPatches(provider->getPatches());
-        });
 
-        EventManager::subscribe<EventProjectFileLoad>(this, [] {
-            auto provider = ImHexApi::Provider::get();
-            if (ImHexApi::Provider::isValid())
-                provider->getPatches() = ProjectFile::getPatches();
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "patches.json",
+            .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                auto json = nlohmann::json::parse(tar.read(basePath));
+                provider->getPatches() = json["patches"].get<std::map<u64, u8>>();
+                return true;
+            },
+            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                nlohmann::json json;
+                json["patches"] = provider->getPatches();
+                tar.write(basePath, json.dump(4));
+
+                return true;
+            }
         });
     }
 
     ViewPatches::~ViewPatches() {
-        EventManager::unsubscribe<EventProjectFileStore>(this);
-        EventManager::unsubscribe<EventProjectFileLoad>(this);
+
     }
 
     void ViewPatches::drawContent() {
@@ -86,7 +91,6 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginPopup("PatchContextMenu")) {
                         if (ImGui::MenuItem("hex.builtin.view.patches.remove"_lang)) {
                             patches.erase(this->m_selectedPatch);
-                            ProjectFile::markDirty();
                         }
                         ImGui::EndPopup();
                     }

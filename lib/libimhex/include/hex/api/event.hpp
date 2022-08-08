@@ -107,13 +107,14 @@ namespace hex {
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, Region);
-    EVENT_DEF(EventProjectFileStore);
-    EVENT_DEF(EventProjectFileLoad);
     EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
+    EVENT_DEF(EventProviderOpened,  prv::Provider *);
+    EVENT_DEF(EventProviderClosing, prv::Provider *, bool *);
+    EVENT_DEF(EventProviderClosed,  prv::Provider *);
     EVENT_DEF(EventProviderDeleted, prv::Provider *);
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);

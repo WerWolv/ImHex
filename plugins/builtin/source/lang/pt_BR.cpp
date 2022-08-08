@@ -95,6 +95,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.popup.exit_application.title", "Sair da aplicação?" },
                 { "hex.builtin.popup.exit_application.desc", "Você tem alterações não salvas feitas em seu projeto.\nVocê tem certeza que quer sair?" },
+                //{ "hex.builtin.popup.close_provider.title", "Close Provider?" },
+                //{ "hex.builtin.popup.close_provider.desc", "You have unsaved changes made to this Provider.\nAre you sure you want to close it?" },
                 { "hex.builtin.popup.error.read_only", "Não foi possível obter acesso de gravação. Arquivo aberto no modo somente leitura." },
                 { "hex.builtin.popup.error.open", "Falha ao abrir o arquivo!" },
                 { "hex.builtin.popup.error.create", "Falha ao criar um novo arquivo!" },

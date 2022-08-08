@@ -28,8 +28,27 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.popup.exit_application.desc"_lang);
             ImGui::NewLine();
 
-            View::confirmButtons(
-                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [] { ImHexApi::Common::closeImHex(true); }, [] { ImGui::CloseCurrentPopup(); });
+            View::confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                                 [] { ImHexApi::Common::closeImHex(true); },
+                                 [] { ImGui::CloseCurrentPopup(); }
+                                 );
+
+            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        // "Are you sure you want to close provider?" Popup
+        if (ImGui::BeginPopupModal("hex.builtin.popup.close_provider.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::NewLine();
+            ImGui::TextUnformatted("hex.builtin.popup.close_provider.desc"_lang);
+            ImGui::NewLine();
+
+            View::confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                                 [] { ImHexApi::Provider::remove(ImHexApi::Provider::impl::getClosingProvider(), true); ImGui::CloseCurrentPopup(); },
+                                 [] { ImGui::CloseCurrentPopup(); }
+                                 );
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -313,7 +332,7 @@ namespace hex::plugin::builtin {
 
                         bool open = true;
                         ImGui::PushID(tabProvider);
-                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open)) {
+                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, provider->isDirty() ? ImGuiTabItemFlags_UnsavedDocument : ImGuiTabItemFlags_None)) {
                             ImHexApi::Provider::setCurrentProvider(i);
                             ImGui::EndTabItem();
                         }

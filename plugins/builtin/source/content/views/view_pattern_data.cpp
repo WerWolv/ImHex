@@ -5,6 +5,8 @@
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
 
+#include <provider_extra_data.hpp>
+
 namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
@@ -109,7 +111,7 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
                 auto &sortedPatterns = this->m_sortedPatterns[ImHexApi::Provider::get()];
-                if (beginPatternTable(provider, provider->getPatternLanguageRuntime().getPatterns(), sortedPatterns)) {
+                if (beginPatternTable(provider, ProviderExtraData::get(provider).patternLanguage.runtime->getPatterns(), sortedPatterns)) {
                     ImGui::TableHeadersRow();
                     if (!sortedPatterns.empty()) {
 

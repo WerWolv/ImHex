@@ -38,6 +38,13 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
         void drawLoadInterface() override;
 
+        void loadSettings(const nlohmann::json &settings) override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings = { }) const override;
+
+        [[nodiscard]] std::string getTypeName() const override {
+            return "hex.builtin.provider.disk";
+        }
+
     protected:
         void reloadDrives();
 
