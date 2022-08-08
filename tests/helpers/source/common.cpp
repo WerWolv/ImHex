@@ -53,9 +53,6 @@ TEST_SEQUENCE("TestProvider_write") {
     std::fill(std::begin(buff), std::end(buff), 22);
     provider2->write(1, data, 4);
     provider2->applyPatches();
-    hex::log::error("asd {:#x}", buff[0]);
-    hex::log::error("asd {:#x}", buff[1]);
-    hex::log::error("asd {:#x}", buff[2]);
     TEST_ASSERT(buff[0] == 22);    // should be unchanged
     TEST_ASSERT(buff[1] == 0xde);
     TEST_ASSERT(buff[2] == 0xad);
