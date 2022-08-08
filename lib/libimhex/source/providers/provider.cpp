@@ -1,6 +1,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex.hpp>
+#include <hex/api/event.hpp>
 
 #include <cmath>
 #include <cstring>
@@ -167,6 +168,14 @@ namespace hex::prv {
             return std::nullopt;
 
         return page;
+    }
+
+    bool Provider::open() {
+        EventManager::post<EventProviderOpened>(this);
+        return true;
+    }
+    void Provider::close() {
+        EventManager::post<EventProviderClosed>(this);
     }
 
     void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {

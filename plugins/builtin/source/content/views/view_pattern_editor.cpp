@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderCreated>(this, [this](prv::Provider *provider) {
+        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
             if (!this->m_autoLoadPatterns)
                 return;
 
@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
 
             auto &runtime = patternLanguageData.runtime;
 
-            auto mimeType = magic::getMIMEType(ImHexApi::Provider::get());
+            auto mimeType = magic::getMIMEType(provider);
 
             bool foundCorrectType = false;
             runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {

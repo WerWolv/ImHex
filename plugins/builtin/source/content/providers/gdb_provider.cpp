@@ -278,7 +278,7 @@ namespace hex::plugin::builtin::prv {
                 }
             });
 
-            return true;
+            return Provider::open();
         } else {
             return false;
         }
@@ -290,6 +290,8 @@ namespace hex::plugin::builtin::prv {
         if (this->m_cacheUpdateThread.joinable()) {
             this->m_cacheUpdateThread.join();
         }
+
+        Provider::close();
     }
 
     bool GDBProvider::isConnected() const {

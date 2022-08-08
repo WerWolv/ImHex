@@ -112,6 +112,8 @@ namespace hex {
     EVENT_DEF(EventOSThemeChanged);
     EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
+    EVENT_DEF(EventProviderOpened,  prv::Provider*);
+    EVENT_DEF(EventProviderClosed,  prv::Provider*);
     EVENT_DEF(EventProviderDeleted, prv::Provider *);
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
