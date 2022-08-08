@@ -116,7 +116,7 @@ For format patterns, libraries, magic and constant files, check out the [ImHex-P
 
 To use ImHex, the following minimal system requirements need to be met:
 
-- **OS**: Windows 10 or higher, macOS 11 (Big Sur) or higher, "Modern" Linux (Ubuntu 22.04+, Fedora and Arch Linux are officially supported)
+- **OS**: Windows 10 or higher, macOS 10.10 (Yosemite) or higher, "Modern" Linux (Ubuntu 22.04+, Fedora Stable/Rawhide and Arch Linux are officially supported)
 - **CPU**: x86_64 (64 Bit)
 - **GPU**: OpenGL 3.0 or higher (preferable a dedicated GPU and not Intel HD Graphics)
 - **RAM**: 512MB, more may be required for more complicated analysis
@@ -153,8 +153,9 @@ ImHex is available in various third party repositories.
 
 ## Compiling
 
-To compile ImHex on any platform, GCC is required with a version that supports C++23 or higher. 
-On macOS, Clang is also required to compile some ObjC code. 
+To compile ImHex on any platform, GCC (or Clang) is required with a version that supports C++23 or higher. 
+On macOS, Clang is also required to compile some ObjC code.
+All releases are being built using latest available GCC.
 
 Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.
 All dependencies that aren't bundled, can be installed using the dependency installer scripts found in the `/dist` folder.
