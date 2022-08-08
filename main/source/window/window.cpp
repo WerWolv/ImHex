@@ -129,6 +129,7 @@ namespace hex {
         });
 
         auto signalHandler = [](int signalNumber) {
+            log::fatal("Terminating with signal {}", signalNumber);
             EventManager::post<EventAbnormalTermination>(signalNumber);
 
             if (std::uncaught_exceptions() > 0) {
