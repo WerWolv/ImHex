@@ -95,6 +95,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.popup.exit_application.title", "退出？" },
                 { "hex.builtin.popup.exit_application.desc", "工程还有未保存的更改。\n确定要退出吗？" },
+                //{ "hex.builtin.popup.close_provider.title", "Close Provider?" },
+                //{ "hex.builtin.popup.close_provider.desc", "You have unsaved changes made to this Provider.\nAre you sure you want to close it?" },
                 { "hex.builtin.popup.error.read_only", "无法获得写权限，文件以只读方式打开。" },
                 { "hex.builtin.popup.error.open", "打开文件失败！" },
                 { "hex.builtin.popup.error.create", "创建新文件失败！" },

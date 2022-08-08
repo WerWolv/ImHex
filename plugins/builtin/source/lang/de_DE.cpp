@@ -94,7 +94,9 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.encoding.utf8", "UTF-8" },
 
                 { "hex.builtin.popup.exit_application.title", "Applikation verlassen?" },
-                { "hex.builtin.popup.exit_application.desc", "Es wurden ungespeicherte Änderungen an diesem Projekt vorgenommen\nBist du sicher, dass du ImHex schliessen willst?" },
+                { "hex.builtin.popup.exit_application.desc", "Es wurden ungespeicherte Änderungen an diesem Projekt vorgenommen.\nBist du sicher, dass du ImHex schliessen willst?" },
+                { "hex.builtin.popup.close_provider.title", "Provider schliessen?" },
+                { "hex.builtin.popup.close_provider.desc", "Es wurden ungespeicherte Änderungen an diesem Provider vorgenommen.\nBist du sicher, dass du ihn schliessen willst?" },
                 { "hex.builtin.popup.error.read_only", "Schreibzugriff konnte nicht erlangt werden. Datei wurde im Lesemodus geöffnet." },
                 { "hex.builtin.popup.error.open", "Öffnen der Datei fehlgeschlagen!" },
                 { "hex.builtin.popup.error.create", "Erstellen der neuen Datei fehlgeschlagen!" },

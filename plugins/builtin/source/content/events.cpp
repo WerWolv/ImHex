@@ -54,6 +54,13 @@ namespace hex::plugin::builtin {
             }
         });
 
+        EventManager::subscribe<EventProviderClosing>([](hex::prv::Provider *provider, bool *shouldClose) {
+            if (provider->isDirty()) {
+                *shouldClose = false;
+                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.popup.close_provider.title"_lang); });
+            }
+        });
+
         EventManager::subscribe<RequestOpenFile>(openFile);
 
         EventManager::subscribe<RequestOpenWindow>([](const std::string &name) {

@@ -81,7 +81,7 @@ namespace hex {
         this->setupNativeWindow();
 
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
-            glfwSetWindowShouldClose(this->m_window, true);
+            glfwSetWindowShouldClose(this->m_window, GLFW_TRUE);
 
             if (!noQuestions)
                 EventManager::post<EventWindowClosing>(this->m_window);

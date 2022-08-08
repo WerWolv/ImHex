@@ -95,6 +95,8 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.popup.exit_application.title", "アプリケーションを終了しますか？" },
                 { "hex.builtin.popup.exit_application.desc", "プロジェクトに保存されていない変更があります。\n終了してもよろしいですか？" },
+                //{ "hex.builtin.popup.close_provider.title", "Close Provider?" },
+                //{ "hex.builtin.popup.close_provider.desc", "You have unsaved changes made to this Provider.\nAre you sure you want to close it?" },
                 { "hex.builtin.popup.error.read_only", "書き込み権限を取得できませんでした。ファイルが読み取り専用で開かれました。" },
                 { "hex.builtin.popup.error.open", "ファイルを開けませんでした。" },
                 { "hex.builtin.popup.error.create", "新しいファイルを作成できませんでした。" },
