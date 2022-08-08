@@ -63,6 +63,20 @@ namespace hex {
         buf->append("\n");
     }
 
+    static void signalHandler(int signalNumber) {
+        log::fatal("Terminating with signal {}", signalNumber);
+        EventManager::post<EventAbnormalTermination>(signalNumber);
+
+        if (std::uncaught_exceptions() > 0) {
+            log::fatal("Uncaught exception thrown!");
+        }
+
+        // Let's not loop on this...
+        std::signal(signalNumber, nullptr);
+
+        std::raise(signalNumber);
+    };
+
     Window::Window() {
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
@@ -128,30 +142,9 @@ namespace hex {
             this->m_popupsToOpen.push_back(name);
         });
 
-        auto signalHandler = [](int signalNumber) {
-            log::fatal("Terminating with signal {}", signalNumber);
-            EventManager::post<EventAbnormalTermination>(signalNumber);
-
-            if (std::uncaught_exceptions() > 0) {
-                log::fatal("Uncaught exception thrown!");
-            }
-
-            // Let's not loop on this...
-            std::signal(signalNumber, nullptr);
-
-#if defined(DEBUG)
-            assert(false);
-#else
-            std::raise(signalNumber);
-#endif
-        };
-
-        std::signal(SIGTERM, signalHandler);
-        std::signal(SIGSEGV, signalHandler);
-        std::signal(SIGINT, signalHandler);
-        std::signal(SIGILL, signalHandler);
-        std::signal(SIGABRT, signalHandler);
-        std::signal(SIGFPE, signalHandler);
+        for (u32 signal = 0; signal < NSIG; signal++)
+            std::signal(signal, signalHandler);
+        std::set_terminate([]{ signalHandler(SIGTERM); });
 
         auto imhexLogo      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(imhexLogo.data()), imhexLogo.size());
@@ -201,6 +194,13 @@ namespace hex {
             this->frameBegin();
             this->frame();
             this->frameEnd();
+
+            const auto targetFps = ImHexApi::System::getTargetFPS();
+            if (targetFps <= 200)
+                std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000)));
+
+            this->m_lastFrameTime = glfwGetTime();
+
             this->m_hadEvent = false;
         }
     }
@@ -495,12 +495,6 @@ namespace hex {
         glfwMakeContextCurrent(backup_current_context);
 
         glfwSwapBuffers(this->m_window);
-
-        const auto targetFps = ImHexApi::System::getTargetFPS();
-        if (targetFps <= 200)
-            std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000)));
-
-        this->m_lastFrameTime = glfwGetTime();
     }
 
     void Window::initGLFW() {
