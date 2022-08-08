@@ -443,6 +443,7 @@ namespace hex {
             s_systemThemeDetection = enabled;
 
             EventManager::post<EventSettingsChanged>();
+            EventManager::post<EventOSThemeChanged>();
         }
 
         bool usesSystemThemeDetection() {

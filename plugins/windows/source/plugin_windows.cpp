@@ -23,9 +23,10 @@ namespace hex::plugin::windows {
 
 static void detectSystemTheme() {
     // Setup system theme change detector
-    bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
-    EventManager::subscribe<EventOSThemeChanged>([themeFollowSystem] {
-        if (!themeFollowSystem) return;
+    EventManager::subscribe<EventOSThemeChanged>([] {
+        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
+        if (!themeFollowSystem)
+            return;
 
         HKEY hkey;
         if (RegOpenKey(HKEY_CURRENT_USER, R"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)", &hkey) == ERROR_SUCCESS) {
@@ -42,6 +43,8 @@ static void detectSystemTheme() {
     });
 
     EventManager::subscribe<EventWindowInitialized>([=] {
+        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
+
         if (themeFollowSystem)
             EventManager::post<EventOSThemeChanged>();
     });
