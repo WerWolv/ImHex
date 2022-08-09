@@ -211,7 +211,7 @@ namespace hex {
 
     namespace ImHexApi::Provider {
 
-        static u32 s_currentProvider;
+        static u32 s_currentProvider = std::numeric_limits<u32>::max();
         static std::vector<prv::Provider *> s_providers;
 
         namespace impl {
@@ -302,7 +302,9 @@ namespace hex {
 
             s_providers.erase(it);
 
-            if (it - s_providers.begin() == s_currentProvider && !s_providers.empty())
+            if (s_providers.empty())
+                EventManager::post<EventProviderChanged>(provider, nullptr);
+            else if (it - s_providers.begin() == s_currentProvider)
                 setCurrentProvider(0);
 
             delete provider;

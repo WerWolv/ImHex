@@ -113,10 +113,6 @@ namespace hex {
                 EventManager::post<EventWindowClosing>(this->m_window);
         });
 
-        EventManager::subscribe<EventProviderDeleted>(this, [](const auto*) {
-            EventManager::post<RequestChangeWindowTitle>("");
-        });
-
         EventManager::subscribe<RequestChangeWindowTitle>(this, [this](const std::string &windowTitle) {
             std::string title = "ImHex";
 

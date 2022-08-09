@@ -140,7 +140,9 @@ namespace hex::plugin::builtin {
 
                 for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
                     if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
-                        ImHexApi::Provider::createProvider(unlocalizedProviderName);
+                        auto *provider = ImHexApi::Provider::createProvider(unlocalizedProviderName);
+                        if (!provider->hasLoadInterface())
+                            (void)provider->open();
                         ImGui::CloseCurrentPopup();
                     }
                 }

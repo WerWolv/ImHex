@@ -61,6 +61,16 @@ namespace hex::plugin::builtin {
             }
         });
 
+        EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
+            hex::unused(oldProvider);
+
+            if (newProvider != nullptr) {
+                EventManager::post<RequestChangeWindowTitle>(newProvider->getName());
+            } else {
+                EventManager::post<RequestChangeWindowTitle>("");
+            }
+        });
+
         EventManager::subscribe<RequestOpenFile>(openFile);
 
         EventManager::subscribe<RequestOpenWindow>([](const std::string &name) {
