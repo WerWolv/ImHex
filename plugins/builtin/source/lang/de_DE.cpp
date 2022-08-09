@@ -87,6 +87,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.range", "Bereich" },
                     { "hex.builtin.common.range.entire_data", "Gesammte Daten" },
                     { "hex.builtin.common.range.selection", "Selektion" },
+                { "hex.builtin.common.comment", "Kommentar" },
 
                 { "hex.builtin.common.encoding.ascii", "ASCII" },
                 { "hex.builtin.common.encoding.utf16le", "UTF-16LE" },

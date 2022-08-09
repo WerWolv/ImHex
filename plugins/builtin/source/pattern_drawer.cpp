@@ -55,7 +55,7 @@ namespace hex {
 
         auto byteAddr = pattern.getOffset() + pattern.getBitOffset() / 8;
         auto firstBitIdx = pattern.getBitOffset() % 8;
-        auto lastBitIdx = firstBitIdx + (pattern.getBitSize() - 1) % 8;
+        auto lastBitIdx = firstBitIdx + (pattern.getBitSize() - 1);
         if (firstBitIdx == lastBitIdx)
             ImGui::TextFormatted("0x{0:08X} bit {1}", byteAddr, firstBitIdx);
         else

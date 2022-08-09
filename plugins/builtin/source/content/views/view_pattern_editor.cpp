@@ -715,32 +715,32 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("Type: ");
+                    ImGui::TextFormatted("{}: ", "hex.builtin.common.type"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("{}", pattern->getTypeName());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("Address: ");
+                    ImGui::TextFormatted("{}: ", "hex.builtin.common.address"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("0x{:08X}", pattern->getOffset());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("Size: ");
+                    ImGui::TextFormatted("{}: ", "hex.builtin.common.size"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{} {}", pattern->getSize(), pattern->getSize() > 1 ? "Bytes" : "Byte");
+                    ImGui::TextFormatted("{}", hex::toByteString(pattern->getSize()));
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("Endian: ");
+                    ImGui::TextFormatted("{}: ", "hex.builtin.common.endian"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}", pattern->getEndian() == std::endian::little ? "Little" : "Big");
+                    ImGui::TextFormatted("{}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
 
                     if (const auto &comment = pattern->getComment(); comment.has_value()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("Comment: ");
+                        ImGui::TextFormatted("{}: ", "hex.builtin.common.comment"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TextWrapped("\"%s\"", pattern->getComment()->c_str());
                     }
