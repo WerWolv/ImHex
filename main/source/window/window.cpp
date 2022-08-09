@@ -74,7 +74,11 @@ namespace hex {
         // Let's not loop on this...
         std::signal(signalNumber, nullptr);
 
-        std::raise(signalNumber);
+        #if defined(DEBUG)
+            assert(false);
+        #else
+            std::raise(signalNumber);
+        #endif
     };
 
     Window::Window() {
