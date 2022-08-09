@@ -64,7 +64,12 @@ namespace hex {
     }
 
     static void signalHandler(int signalNumber) {
+        // Ignore SIGTERMs and SIGINTs so ImHex can be killed with Ctrl+C and a debugger
+        if (signalNumber == SIGTERM || signalNumber == SIGINT)
+            return;
+
         log::fatal("Terminating with signal {}", signalNumber);
+
         EventManager::post<EventAbnormalTermination>(signalNumber);
 
         if (std::uncaught_exceptions() > 0) {
