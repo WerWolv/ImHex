@@ -1,9 +1,12 @@
 ### Compiling ImHex on macOS
 
-To build ImHex on macOS, run the following commands:
+On macOS, ImHex is built through regular GCC and AppleClang.
 
+1. Clone the repo using `git clone https://github.com/WerWolv/ImHex --recurse-submodules`
+2. Install all the dependencies using `brew bundle --no-lock --file dist/Brewfile`
+3. Build ImHex itself using the following commands:
 ```sh
-brew bundle --no-lock --file dist/Brewfile
+cd ImHex
 mkdir -p build
 cd build
 CC=$(brew --prefix gcc@12)/bin/gcc-12     \
@@ -22,18 +25,6 @@ cmake                                     \
   -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
   ..
 make -j4 package
-```
-
-Open the generated .dmg file and drag-n-drop the ImHex executable to the Applications folder
-
-All other files belong in `~/Library/Application Support/imhex`:
-```
-Patterns: ~/Library/Application Support/imhex/patterns
-Pattern Includes: ~/Library/Application Support/imhex/includes
-Magic files: ~/Library/Application Support/imhex/magic
-Python: ~/Library/Application Support/imhex/lib/pythonX.X
-Plugins: ~/Library/Application Support/imhex/plugins
-Configuration: ~/Library/Application Support/imhex/config
 ```
 
 If the build fails while trying to find the macOS libraries, make sure you have

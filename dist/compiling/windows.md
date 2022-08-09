@@ -1,9 +1,14 @@
 ### Compiling ImHex on Windows
 
-On Windows, ImHex is built through msys2 / mingw. To install all dependencies, open a msys2 window and run the PKGCONFIG script in the [dist/msys2](dist/msys2) folder.
-After all the dependencies are installed, run the following commands to build ImHex:
+On Windows, ImHex is built through [msys2 / mingw](https://www.msys2.org/)'s gcc.
 
+1. Download and install msys2 from their [website](https://www.msys2.org/).
+2. Open the `MSYS2 MinGW x64` shell
+3. Clone the repo using `git clone https://github.com/WerWolv/ImHex --recurse-submodules`
+4. Install all the dependencies using `./ImHex/dist/get_deps_msys2.sh`
+5. Build ImHex itself using the following commands:
 ```sh
+cd ImHex
 mkdir build
 cd build
 cmake -G "MinGW Makefiles"                \

@@ -1,9 +1,12 @@
 ### Compiling ImHex on Linux
 
-Dependency installation scripts are available for many common Linux distributions in the [/dist](dist) folder.
-After all the dependencies are installed, run the following commands to build ImHex:
+On Linux, ImHex is built through regular GCC (or optionally Clang).
 
+1. Clone the repo using `git clone https://github.com/WerWolv/ImHex --recurse-submodules`
+2. Install the dependencies using one of the `dist/get_deps_*.sh` scripts. Choose the one that matches your distro.
+3. Build ImHex itself using the following commands:
 ```sh
+cd ImHex
 mkdir -p build
 cd build
 CC=gcc-12 CXX=g++-12 cmake                    \
@@ -15,25 +18,8 @@ CC=gcc-12 CXX=g++-12 cmake                    \
     -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
     -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache     \
     -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache   \
-    -DRUST_PATH="$HOME/.cargo/bin/"           \
     ..
 make -j 4 install
-```
-
----
-
-Put the ImHex executable into the `/usr/bin` folder.
-Put libimhex.so into the `/usr/lib` folder.
-Configuration files go to `/usr/etc/imhex` or `~/.config/imhex`.
-All other files belong in `/usr/share/imhex` or `~/.local/share/imhex`:
-
-```
-Patterns: /usr/share/imhex/patterns
-Pattern Includes: /usr/share/imhex/includes
-Magic files: /usr/share/imhex/magic
-Python: /usr/share/imhex/lib/pythonX.X
-Plugins: /usr/share/imhex/plugins
-Configuration: /etc/xdg/imhex/config
 ```
 
 All paths follow the XDG Base Directories standard, and can thus be modified
