@@ -61,4 +61,4 @@ jobs:
     - name: 🧪 Perform Unit Tests
       run: |
         cd build
-        ctest
+        ctest --output-on-failure
