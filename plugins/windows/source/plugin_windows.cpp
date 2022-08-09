@@ -37,8 +37,10 @@ static void detectSystemTheme() {
             if (error == ERROR_SUCCESS) {
                 EventManager::post<RequestChangeTheme>(value == 0 ? 1 : 2);
             } else {
-                EventManager::post<RequestChangeTheme>(1);
+                ImHexApi::System::impl::setBorderlessWindowMode(false);
             }
+        } else {
+            ImHexApi::System::impl::setBorderlessWindowMode(false);
         }
     });
 

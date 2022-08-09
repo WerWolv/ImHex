@@ -103,6 +103,9 @@ namespace hex {
         this->initImGui();
         this->setupNativeWindow();
 
+        // Initialize default theme
+        EventManager::post<RequestChangeTheme>(1);
+
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, GLFW_TRUE);
 
