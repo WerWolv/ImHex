@@ -109,12 +109,11 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
+            auto &patternLanguageData = ProviderExtraData::get(provider).patternLanguage;
+            patternLanguageData.runtime = ContentRegistry::PatternLanguage::createDefaultRuntime(provider);
+
             if (!this->m_autoLoadPatterns)
                 return;
-
-            auto &patternLanguageData = ProviderExtraData::get(provider).patternLanguage;
-
-            patternLanguageData.runtime = ContentRegistry::PatternLanguage::createDefaultRuntime(provider);
 
             // Copy over current pattern source code to the new provider
             if (!this->m_syncPatternSourceCode) {
