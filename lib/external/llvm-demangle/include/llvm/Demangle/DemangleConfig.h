@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEMANGLE_COMPILER_H
-#define LLVM_DEMANGLE_COMPILER_H
+#ifndef LLVM_DEMANGLE_DEMANGLECONFIG_H
+#define LLVM_DEMANGLE_DEMANGLECONFIG_H
 
 #ifndef __has_feature
 #define __has_feature(x) 0

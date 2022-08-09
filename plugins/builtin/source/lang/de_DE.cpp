@@ -594,7 +594,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "Byteverteilung" },
 
 
-                { "hex.builtin.tools.demangler", "Itanium/MSVC demangler" },
+                { "hex.builtin.tools.demangler", "LLVM Demangler" },
                     { "hex.builtin.tools.demangler.mangled", "Mangled Namen" },
                     { "hex.builtin.tools.demangler.demangled", "Demangled Namen" },
                 { "hex.builtin.tools.ascii_table", "ASCII Tabelle" },

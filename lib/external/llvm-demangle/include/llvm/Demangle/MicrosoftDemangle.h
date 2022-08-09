@@ -6,13 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEMANGLE_MICROSOFT_DEMANGLE_H
-#define LLVM_DEMANGLE_MICROSOFT_DEMANGLE_H
+#ifndef LLVM_DEMANGLE_MICROSOFTDEMANGLE_H
+#define LLVM_DEMANGLE_MICROSOFTDEMANGLE_H
 
-#include "llvm/Demangle/DemangleConfig.h"
 #include "llvm/Demangle/MicrosoftDemangleNodes.h"
 #include "llvm/Demangle/StringView.h"
-#include "llvm/Demangle/Utility.h"
 
 #include <utility>
 
@@ -275,4 +273,4 @@ private:
 } // namespace ms_demangle
 } // namespace llvm
 
-#endif // LLVM_DEMANGLE_MICROSOFT_DEMANGLE_H
+#endif // LLVM_DEMANGLE_MICROSOFTDEMANGLE_H

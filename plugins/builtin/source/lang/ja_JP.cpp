@@ -599,7 +599,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "バイト分布" },
 
 
-                { "hex.builtin.tools.demangler", "Itanium/MSVCデマングラー" },
+                { "hex.builtin.tools.demangler", "LLVMデマングラー" },
                     { "hex.builtin.tools.demangler.mangled", "マングリング名" },
                     { "hex.builtin.tools.demangler.demangled", "デマングリング名" },
                 { "hex.builtin.tools.ascii_table", "ASCIIテーブル" },

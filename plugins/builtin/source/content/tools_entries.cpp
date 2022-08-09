@@ -37,15 +37,21 @@ namespace hex::plugin::builtin {
         using namespace hex::literals;
 
         void drawDemangler() {
-            static std::vector<char> mangledBuffer(0xF'FFFF, 0x00);
-            static std::string demangledName;
+            static std::string mangledName, demangledName;
 
-            if (ImGui::InputText("hex.builtin.tools.demangler.mangled"_lang, mangledBuffer.data(), 0xF'FFFF)) {
-                demangledName = llvm::demangle(mangledBuffer.data());
+            if (ImGui::InputTextWithHint("hex.builtin.tools.demangler.mangled"_lang, "Itanium, MSVC, Dlang & Rust", mangledName)) {
+                demangledName = llvm::demangle(mangledName);
+
+                if (demangledName == mangledName) {
+                    demangledName = "???";
+                }
             }
 
-            ImGui::InputText("hex.builtin.tools.demangler.demangled"_lang, demangledName.data(), demangledName.size(), ImGuiInputTextFlags_ReadOnly);
-            ImGui::NewLine();
+            ImGui::Header("hex.builtin.tools.demangler.demangled"_lang);
+            if (ImGui::BeginChild("demangled", ImVec2(0, 200_scaled), true)) {
+                ImGui::TextFormattedWrapped("{}", demangledName);
+            }
+            ImGui::EndChild();
         }
 
         void drawASCIITable() {

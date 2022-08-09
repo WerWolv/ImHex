@@ -602,7 +602,7 @@ namespace hex::plugin::builtin {
                         //{ "hex.builtin.nodes.visualizer.byte_distribution.header", "Byte Distribution" },
 
 
-                { "hex.builtin.tools.demangler", "Itanium/MSVC demangler" },
+                { "hex.builtin.tools.demangler", "LLVM Demangler" },
                     { "hex.builtin.tools.demangler.mangled", "Nome Mangled" },
                     { "hex.builtin.tools.demangler.demangled", "Nome Demangled" },
                 { "hex.builtin.tools.ascii_table", "Tavola ASCII" },
