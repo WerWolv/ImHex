@@ -745,7 +745,7 @@ namespace hex::plugin::builtin {
 
                         const u8 validBytes = std::min<u64>(this->m_bytesPerRow, provider->getSize() - y * this->m_bytesPerRow);
 
-                        std::vector<u8> bytes(validBytes);
+                        std::vector<u8> bytes(this->m_bytesPerRow, 0x00);
                         provider->read(y * this->m_bytesPerRow + provider->getBaseAddress() + provider->getCurrentPageAddress(), bytes.data(), validBytes);
 
                         std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
@@ -756,7 +756,7 @@ namespace hex::plugin::builtin {
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
 
                                 // Query cell colors
-                                if (x < validBytes / bytesPerCell) {
+                                if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                     const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
                                     const auto backgroundColor = [&]{
                                         auto color = queryBackgroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
@@ -778,6 +778,11 @@ namespace hex::plugin::builtin {
                                         foregroundColor,
                                         backgroundColor
                                     );
+                                } else {
+                                    cellColors.emplace_back(
+                                        std::nullopt,
+                                        std::nullopt
+                                    );
                                 }
                             }
                         }
@@ -792,7 +797,7 @@ namespace hex::plugin::builtin {
                             if (isColumnSeparatorColumn(x, columnCount))
                                 ImGui::TableNextColumn();
 
-                            if (x < validBytes / bytesPerCell) {
+                            if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
                                 auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
 
