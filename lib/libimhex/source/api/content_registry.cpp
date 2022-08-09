@@ -1,6 +1,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <hex/ui/view.hpp>
@@ -21,10 +22,10 @@ namespace hex {
         void load() {
             bool loaded = false;
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                std::ifstream settingsFile(dir / SettingsFile);
+                fs::File file(dir / SettingsFile, fs::File::Mode::Read);
 
-                if (settingsFile.good()) {
-                    settingsFile >> getSettingsData();
+                if (file.isValid()) {
+                    getSettingsData() = nlohmann::json::parse(file.readString());
                     loaded = true;
                     break;
                 }
@@ -36,10 +37,10 @@ namespace hex {
 
         void store() {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                std::ofstream settingsFile(dir / SettingsFile, std::ios::trunc);
+                fs::File file(dir / SettingsFile, fs::File::Mode::Create);
 
-                if (settingsFile.good()) {
-                    settingsFile << getSettingsData();
+                if (file.isValid()) {
+                    file.write(getSettingsData().dump(4));
                     break;
                 }
             }
