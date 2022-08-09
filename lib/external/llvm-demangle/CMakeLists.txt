@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
-project(llvm-demangle)
+project(LLVMDemangle)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(llvm-demangle STATIC
+add_library(LLVMDemangle STATIC
     source/Demangle.cpp
     source/DLangDemangle.cpp
     source/ItaniumDemangle.cpp
@@ -12,4 +12,4 @@ add_library(llvm-demangle STATIC
     source/RustDemangle.cpp
 )
 
-target_include_directories(llvm-demangle PUBLIC include)
+target_include_directories(LLVMDemangle PUBLIC include)
