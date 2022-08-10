@@ -244,9 +244,11 @@ namespace hex {
         std::unique_ptr<pl::PatternLanguage> createDefaultRuntime(prv::Provider *provider) {
             auto runtime = std::make_unique<pl::PatternLanguage>();
 
-            runtime->setDataSource([provider](u64 offset, u8 *buffer, size_t size) {
-                provider->read(offset, buffer, size);
-            }, 0, 0);
+            if (provider != nullptr) {
+                runtime->setDataSource([provider](u64 offset, u8 *buffer, size_t size) {
+                    provider->read(offset, buffer, size);
+                }, provider->getBaseAddress(), provider->getActualSize());
+            }
 
             runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude));
 

@@ -728,6 +728,16 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
 
+                std::pair<Region, bool> validRegion = { Region::Invalid(), false };
+                const auto isCurrRegionValid = [&validRegion, &provider](u64 address){
+                    auto &[currRegion, currRegionValid] = validRegion;
+                    if (!Region{ address, 1 }.isWithin(currRegion)) {
+                        validRegion = provider->getRegionValidity(address);
+                    }
+
+                    return currRegionValid;
+                };
+
                 ImGuiListClipper clipper;
 
                 clipper.Begin(std::ceil(provider->getSize() / (long double)(this->m_bytesPerRow)), CharacterSize.y);
@@ -735,7 +745,7 @@ namespace hex::plugin::builtin {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
 
                     // Loop over rows
-                    for (i128 y = clipper.DisplayStart; y < u64(clipper.DisplayEnd); y++) {
+                    for (u64 y = u64(clipper.DisplayStart); y < u64(clipper.DisplayEnd); y++) {
 
                         // Draw address column
                         ImGui::TableNextRow();
@@ -800,13 +810,14 @@ namespace hex::plugin::builtin {
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
                                 auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
+                                auto maxCharsPerCell = this->m_currDataVisualizer->getMaxCharsPerCell();
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 
                                 if (isColumnSeparatorColumn(x + 1, columnCount) && selectionMax != x + y * columnCount) {
                                     cellSize.x += SeparatorColumWidth + 1;
                                 }
-                                if (y == clipper.DisplayStart)
+                                if (y == u64(clipper.DisplayStart))
                                     cellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
 
                                 // Draw highlights and selection
@@ -830,8 +841,11 @@ namespace hex::plugin::builtin {
 
                                 // Draw cell content
                                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                                ImGui::PushItemWidth((CharacterSize * this->m_currDataVisualizer->getMaxCharsPerCell()).x);
-                                this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered);
+                                ImGui::PushItemWidth((CharacterSize * maxCharsPerCell).x);
+                                if (isCurrRegionValid(byteAddress))
+                                    this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered);
+                                else
+                                    ImGui::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
                                 ImGui::PopItemWidth();
                                 ImGui::PopStyleVar();
 
@@ -875,7 +889,9 @@ namespace hex::plugin::builtin {
                                             this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
 
-                                        if (std::isprint(bytes[x]))
+                                        if (!isCurrRegionValid(byteAddress))
+                                            ImGui::TextFormatted("?");
+                                        else if (std::isprint(bytes[x]))
                                             ImGui::TextFormatted("{:c}", bytes[x]);
                                         else
                                             ImGui::TextDisabled(".");
@@ -917,7 +933,7 @@ namespace hex::plugin::builtin {
 
 
                                     const auto x = address % this->m_bytesPerRow;
-                                    if (x < validBytes) {
+                                    if (x < validBytes && isCurrRegionValid(address)) {
                                         auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
                                         // Draw highlights and selection
@@ -951,13 +967,13 @@ namespace hex::plugin::builtin {
                             if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && this->m_selectionStart != this->m_selectionEnd)) {
                                 auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
-                                if (y == clipper.DisplayStart + 2) {
+                                if (y == u64(clipper.DisplayStart + 2)) {
                                     if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 2) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * 4);
 
                                     }
-                                } else if (y == (clipper.DisplayEnd - 2)) {
+                                } else if (y == u64(clipper.DisplayEnd - 2)) {
                                     if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * (this->m_visibleRowCount - 1));

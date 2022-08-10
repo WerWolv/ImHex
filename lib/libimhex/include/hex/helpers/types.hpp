@@ -21,11 +21,11 @@ namespace hex {
         size_t size;
 
         [[nodiscard]] constexpr bool isWithin(const Region &other) const {
-            return (this->getStartAddress() >= other.getStartAddress()) && (this->getEndAddress() <= other.getEndAddress());
+            return (this->getStartAddress() >= other.getStartAddress()) && (this->getEndAddress() <= other.getEndAddress()) && *this != Invalid() && other != Invalid();
         }
 
         [[nodiscard]] constexpr bool overlaps(const Region &other) const {
-            return (this->getEndAddress() >= other.getStartAddress()) && (this->getStartAddress() < other.getEndAddress());
+            return (this->getEndAddress() >= other.getStartAddress()) && (this->getStartAddress() < other.getEndAddress()) && *this != Invalid() && other != Invalid();
         }
 
         [[nodiscard]] constexpr u64 getStartAddress() const {
@@ -38,6 +38,14 @@ namespace hex {
 
         [[nodiscard]] constexpr size_t getSize() const {
             return this->size;
+        }
+
+        constexpr bool operator==(const Region &other) const {
+            return this->address == other.address && this->size == other.size;
+        }
+
+        constexpr static Region Invalid() {
+            return { 0, 0 };
         }
     };
 

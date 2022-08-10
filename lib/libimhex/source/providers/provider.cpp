@@ -254,4 +254,36 @@ namespace hex::prv {
         this->m_currPage    = settings["currPage"];
     }
 
+    std::pair<Region, bool> Provider::getRegionValidity(u64 address) const {
+        if (address > this->getActualSize())
+            return { Region::Invalid(), false };
+
+        bool insideValidRegion = false;
+
+        std::optional<u64> nextRegionAddress;
+        for (const auto &overlay : this->m_overlays) {
+            Region overlayRegion = { overlay->getAddress(), overlay->getSize() };
+            if (!nextRegionAddress.has_value() || overlay->getAddress() < nextRegionAddress) {
+                nextRegionAddress = overlayRegion.getStartAddress();
+            }
+
+            if (Region { address, 1 }.overlaps(overlayRegion)) {
+                insideValidRegion = true;
+            }
+        }
+
+        for (const auto &[patchAddress, value] : this->m_patches.back()) {
+            if (!nextRegionAddress.has_value() || patchAddress < nextRegionAddress)
+                nextRegionAddress = patchAddress;
+
+            if (address == patchAddress)
+                insideValidRegion = true;
+        }
+
+        if (!nextRegionAddress.has_value())
+            return { Region { address, this->getActualSize() - address }, true };
+        else
+            return { Region { address, *nextRegionAddress - address }, insideValidRegion };
+    }
+
 }

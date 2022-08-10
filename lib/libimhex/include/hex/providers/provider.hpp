@@ -99,6 +99,8 @@ namespace hex::prv {
         void markDirty(bool dirty = true) { this->m_dirty = dirty; }
         [[nodiscard]] bool isDirty() const { return this->m_dirty; }
 
+        virtual std::pair<Region, bool> getRegionValidity(u64 address) const;
+
     protected:
         u32 m_currPage    = 0;
         u64 m_baseAddress = 0;
