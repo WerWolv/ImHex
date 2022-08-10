@@ -163,8 +163,6 @@ macro(configurePackingResources)
             else ()
                 set ( bundle_path "${CMAKE_BINARY_DIR}/ImHex.app" )
             endif()
-
-            set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
         endif()
     endif()
 endmacro()
@@ -261,7 +259,8 @@ macro(createPackage)
         include(PostprocessBundle)
         
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
-    
+
+        set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
 
         # Fix rpath
         add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
