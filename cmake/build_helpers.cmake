@@ -163,6 +163,8 @@ macro(configurePackingResources)
             else ()
                 set ( bundle_path "${CMAKE_BINARY_DIR}/ImHex.app" )
             endif()
+
+            set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
         endif()
     endif()
 endmacro()
