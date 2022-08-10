@@ -64,10 +64,6 @@ namespace hex {
     }
 
     static void signalHandler(int signalNumber) {
-        // Ignore SIGTERMs and SIGINTs so ImHex can be killed with Ctrl+C and a debugger
-        if (signalNumber == SIGTERM || signalNumber == SIGINT)
-            return;
-
         log::fatal("Terminating with signal {}", signalNumber);
 
         EventManager::post<EventAbnormalTermination>(signalNumber);
@@ -150,9 +146,11 @@ namespace hex {
             this->m_popupsToOpen.push_back(name);
         });
 
-        for (u32 signal = 0; signal < NSIG; signal++)
-            std::signal(signal, signalHandler);
-        std::set_terminate([]{ signalHandler(SIGTERM); });
+        for (u32 signal = 0; signal < NSIG; signal++) {
+            if (signal != SIGTERM && signal != SIGINT)
+                std::signal(signal, signalHandler);
+        }
+        std::set_terminate([]{ signalHandler(SIGABRT); });
 
         auto imhexLogo      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(imhexLogo.data()), imhexLogo.size());

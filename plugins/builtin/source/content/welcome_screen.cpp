@@ -262,6 +262,13 @@ namespace hex::plugin::builtin {
 
             ImGui::EndTable();
         }
+
+        ImGui::SetCursorPos(ImVec2(ImGui::GetWindowSize().x - ImGui::CalcTextSize("X").x * 2, 0));
+        if (ImGui::Hyperlink("X")) {
+            auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null");
+            if (provider != nullptr)
+                (void)provider->open();
+        }
     }
 
     static void drawWelcomeScreen() {

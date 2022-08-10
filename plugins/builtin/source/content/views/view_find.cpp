@@ -410,7 +410,7 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(this->m_searchRunning);
             {
-                ui::regionSelectionPicker(&this->m_searchSettings.range);
+                ui::regionSelectionPicker(&this->m_searchSettings.range, true, true);
 
                 ImGui::NewLine();
 
