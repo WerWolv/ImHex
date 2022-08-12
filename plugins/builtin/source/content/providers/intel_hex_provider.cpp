@@ -172,7 +172,11 @@ namespace hex::plugin::builtin::prv {
     }
 
     bool IntelHexProvider::open() {
-        auto data = intel_hex::parseIntelHex(this->m_sourceFileContent);
+        auto file = fs::File(this->m_sourceFilePath, fs::File::Mode::Read);
+        if (!file.isValid())
+            return false;
+
+        auto data = intel_hex::parseIntelHex(file.readString());
         if (data.empty())
             return false;
 
@@ -197,17 +201,18 @@ namespace hex::plugin::builtin::prv {
         Provider::close();
     }
 
+    [[nodiscard]] std::string IntelHexProvider::getName() const {
+        return hex::format("hex.builtin.provider.intel_hex.name"_lang, this->m_sourceFilePath.string());
+    }
+
     bool IntelHexProvider::handleFilePicker() {
-        fs::File file;
-        auto picked = fs::openFileBrowser(fs::DialogMode::Open, { { "Intel Hex File", "*" } }, [&](const std::fs::path &path) {
-            file = fs::File(path, fs::File::Mode::Read);
+        auto picked = fs::openFileBrowser(fs::DialogMode::Open, { { "Intel Hex File", "*" } }, [this](const std::fs::path &path) {
+            this->m_sourceFilePath = path;
         });
         if (!picked)
             return false;
-        if (!file.isValid())
+        if (!fs::isRegularFile(this->m_sourceFilePath))
             return false;
-
-        this->m_sourceFileContent = file.readString();
 
         return true;
     }

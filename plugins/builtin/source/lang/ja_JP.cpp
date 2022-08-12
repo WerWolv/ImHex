@@ -745,13 +745,12 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.proxy.url", "プロキシURL" },
                     //{ "hex.builtin.setting.proxy.url.tooltip", "http(s):// or socks5:// (e.g., http://127.0.0.1:1080)" },
 
-                { "hex.builtin.provider.file.path", "ファイルパス" },
-                { "hex.builtin.provider.file.size", "サイズ" },
-                { "hex.builtin.provider.file.creation", "作成時刻" },
-                { "hex.builtin.provider.file.access", "最終アクセス時刻" },
-                { "hex.builtin.provider.file.modification", "最終編集時刻" },
-
                 { "hex.builtin.provider.file", "ファイルプロバイダ" },
+                    { "hex.builtin.provider.file.path", "ファイルパス" },
+                    { "hex.builtin.provider.file.size", "サイズ" },
+                    { "hex.builtin.provider.file.creation", "作成時刻" },
+                    { "hex.builtin.provider.file.access", "最終アクセス時刻" },
+                    { "hex.builtin.provider.file.modification", "最終編集時刻" },
                 { "hex.builtin.provider.gdb", "GDBサーバープロバイダ" },
                     { "hex.builtin.provider.gdb.name", "GDBサーバー <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "サーバー" },
@@ -762,6 +761,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.disk_size", "ディスクサイズ" },
                     { "hex.builtin.provider.disk.sector_size", "セクタサイズ" },
                     { "hex.builtin.provider.disk.reload", "リロード" },
+                //{ "hex.builtin.provider.intel_hex", "Intel Hex Provider" },
+                //    { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
 
                 { "hex.builtin.layouts.default", "標準" },
 

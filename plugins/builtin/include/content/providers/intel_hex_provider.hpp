@@ -24,7 +24,7 @@ namespace hex::plugin::builtin::prv {
         bool open() override;
         void close() override;
 
-        [[nodiscard]] std::string getName() const override { return "Intel Hex"; }
+        [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override { return { }; }
 
         void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
@@ -44,7 +44,7 @@ namespace hex::plugin::builtin::prv {
         size_t m_dataSize = 0x00;
         interval_tree::IntervalTree<u64, std::vector<u8>> m_data;
 
-        std::string m_sourceFileContent;
+        std::fs::path m_sourceFilePath;
     };
 
 }

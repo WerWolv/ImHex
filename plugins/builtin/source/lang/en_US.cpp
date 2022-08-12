@@ -744,13 +744,12 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.proxy.url", "Proxy URL" },
                     { "hex.builtin.setting.proxy.url.tooltip", "http(s):// or socks5:// (e.g., http://127.0.0.1:1080)" },
 
-                { "hex.builtin.provider.file.path", "File path" },
-                { "hex.builtin.provider.file.size", "Size" },
-                { "hex.builtin.provider.file.creation", "Creation time" },
-                { "hex.builtin.provider.file.access", "Last access time" },
-                { "hex.builtin.provider.file.modification", "Last modification time" },
-
                 { "hex.builtin.provider.file", "File Provider" },
+                    { "hex.builtin.provider.file.path", "File path" },
+                    { "hex.builtin.provider.file.size", "Size" },
+                    { "hex.builtin.provider.file.creation", "Creation time" },
+                    { "hex.builtin.provider.file.access", "Last access time" },
+                    { "hex.builtin.provider.file.modification", "Last modification time" },
                 { "hex.builtin.provider.gdb", "GDB Server Provider" },
                     { "hex.builtin.provider.gdb.name", "GDB Server <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "Server" },
@@ -761,6 +760,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.disk_size", "Disk Size" },
                     { "hex.builtin.provider.disk.sector_size", "Sector Size" },
                     { "hex.builtin.provider.disk.reload", "Reload" },
+                { "hex.builtin.provider.intel_hex", "Intel Hex Provider" },
+                    { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
 
                 { "hex.builtin.layouts.default", "Default" },
 
