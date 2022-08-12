@@ -12,14 +12,6 @@
 
 namespace hex::plugin::builtin::prv {
 
-    FileProvider::FileProvider() : Provider() {
-    }
-
-    FileProvider::~FileProvider() {
-        this->close();
-    }
-
-
     bool FileProvider::isAvailable() const {
         #if defined(OS_WINDOWS)
             return this->m_file != INVALID_HANDLE_VALUE && this->m_mapping != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
@@ -194,6 +186,12 @@ namespace hex::plugin::builtin::prv {
         }
 
         return result;
+    }
+
+    bool FileProvider::handleFilePicker() {
+        return fs::openFileBrowser(fs::DialogMode::Open, {}, [this](const auto &path) {
+            this->setPath(path);
+        });
     }
 
     void FileProvider::setPath(const std::fs::path &path) {

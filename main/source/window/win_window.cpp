@@ -22,6 +22,8 @@
     #include <dwmapi.h>
     #include <windowsx.h>
 
+    #include <csignal>
+
     #include <imgui_impl_glfw.h>
 
 namespace hex {
@@ -262,6 +264,21 @@ namespace hex {
 
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
+        }
+
+        // Catch heap corruption
+        {
+            ::AddVectoredExceptionHandler(TRUE, [](PEXCEPTION_POINTERS exception) -> LONG {
+                if ((exception->ExceptionRecord->ExceptionCode & 0xF000'0000) == 0xC000'0000) {
+                    log::fatal("Exception raised: 0x{:08X}", exception->ExceptionRecord->ExceptionCode);
+                    if (exception->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION) {
+                        log::fatal("Heap corruption detected!");
+                        std::raise(SIGABRT);
+                    }
+                }
+
+                return EXCEPTION_CONTINUE_SEARCH;
+            });
         }
     }
 

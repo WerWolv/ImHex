@@ -18,6 +18,9 @@ set(LIBROMFS_RESOURCE_LOCATION ${IMHEX_BASE_FOLDER}/resources/romfs)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/external/libromfs EXCLUDE_FROM_ALL)
 set_target_properties(libromfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/intervaltree ${CMAKE_CURRENT_BINARY_DIR}/external/intervaltree EXCLUDE_FROM_ALL)
+set_target_properties(intervaltree PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 set(XDGPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../external/xdgpp")
 set(CURL_USE_MBEDTLS ON)
 set(BUILD_CURL_EXE OFF)
@@ -163,4 +166,4 @@ if (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs libpl)
+target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs libpl intervaltree)

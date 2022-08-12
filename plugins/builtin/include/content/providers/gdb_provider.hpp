@@ -13,7 +13,7 @@ namespace hex::plugin::builtin::prv {
     class GDBProvider : public hex::prv::Provider {
     public:
         GDBProvider();
-        ~GDBProvider() override;
+        ~GDBProvider() override = default;;
 
         [[nodiscard]] bool isAvailable() const override;
         [[nodiscard]] bool isReadable() const override;

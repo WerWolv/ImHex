@@ -22,8 +22,8 @@ namespace hex::plugin::builtin::prv {
 
     class FileProvider : public hex::prv::Provider {
     public:
-        explicit FileProvider();
-        ~FileProvider() override;
+        FileProvider() = default;;
+        ~FileProvider() override = default;;
 
         [[nodiscard]] bool isAvailable() const override;
         [[nodiscard]] bool isReadable() const override;
@@ -48,6 +48,9 @@ namespace hex::plugin::builtin::prv {
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
+
+        bool hasFilePicker() const override { return true; }
+        bool handleFilePicker() override;
 
         void setPath(const std::fs::path &path);
 

@@ -4,6 +4,7 @@
 #include "content/providers/file_provider.hpp"
 #include "content/providers/null_provider.hpp"
 #include "content/providers/disk_provider.hpp"
+#include "content/providers/intel_hex_provider.hpp"
 
 #include <hex/api/project_file_manager.hpp>
 #include <nlohmann/json.hpp>
@@ -17,6 +18,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<prv::NullProvider>(false);
         ContentRegistry::Provider::add<prv::DiskProvider>();
         ContentRegistry::Provider::add<prv::GDBProvider>();
+        ContentRegistry::Provider::add<prv::IntelHexProvider>();
 
         ProjectFile::registerHandler({
              .basePath = "providers",
