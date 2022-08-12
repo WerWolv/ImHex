@@ -146,10 +146,10 @@ namespace hex {
             this->m_popupsToOpen.push_back(name);
         });
 
-        for (u32 signal = 0; signal < NSIG; signal++) {
-            if (signal != SIGTERM && signal != SIGINT)
-                std::signal(signal, signalHandler);
-        }
+		std::signal(SIGSEGV, signalHandler);
+		std::signal(SIGILL, signalHandler);
+		std::signal(SIGABRT, signalHandler);
+		std::signal(SIGFPE, signalHandler);
         std::set_terminate([]{ signalHandler(SIGABRT); });
 
         auto imhexLogo      = romfs::get("logo.png");
