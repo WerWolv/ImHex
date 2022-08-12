@@ -39,7 +39,7 @@ namespace hex::plugin::builtin::prv {
 
         std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
-    private:
+    protected:
         bool m_dataValid = false;
         size_t m_dataSize = 0x00;
         interval_tree::IntervalTree<u64, std::vector<u8>> m_data;

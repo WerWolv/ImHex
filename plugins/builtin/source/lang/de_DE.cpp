@@ -758,6 +758,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.reload", "Neu laden" },
                 { "hex.builtin.provider.intel_hex", "Intel Hex Provider" },
                     { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
+                { "hex.builtin.provider.motorola_srec", "Motorola SREC Provider" },
+                    { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
 
                 { "hex.builtin.layouts.default", "Standard" },
 

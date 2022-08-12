@@ -77,6 +77,8 @@ namespace hex::plugin::builtin::prv {
                     if (c() != ':')
                         return { };
 
+                    checksum = 0x00;
+
                     if (endOfFile)
                         throw std::runtime_error("Unexpected end of file");
 
