@@ -202,7 +202,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     [[nodiscard]] std::string IntelHexProvider::getName() const {
-        return hex::format("hex.builtin.provider.intel_hex.name"_lang, this->m_sourceFilePath.string());
+        return hex::format("hex.builtin.provider.intel_hex.name"_lang, this->m_sourceFilePath.filename().string());
     }
 
     bool IntelHexProvider::handleFilePicker() {
