@@ -70,11 +70,15 @@ namespace hex::plugin::builtin::prv {
                 return value;
             };
 
+            bool endOfFile = false;
             try {
                 while (offset < string.length()) {
                     // Parse start code
                     if (c() != ':')
                         return { };
+
+                    if (endOfFile)
+                        throw std::runtime_error("Unexpected end of file");
 
                     // Parse byte count
                     byteCount = parseValue(1);
@@ -94,6 +98,9 @@ namespace hex::plugin::builtin::prv {
                     if (!data.empty() && checksum != 0x00)
                         throw std::runtime_error("Checksum mismatch");
 
+                    while (std::isspace(string[offset]) && offset < string.length())
+                        offset++;
+
                     // Construct region
                     switch (recordType) {
                         case RecordType::Data: {
@@ -101,8 +108,7 @@ namespace hex::plugin::builtin::prv {
                             break;
                         }
                         case RecordType::EndOfFile: {
-                            if (offset != string.length())
-                                throw std::runtime_error("Unexpected end of file");
+                            endOfFile = true;
                             break;
                         }
                         case RecordType::ExtendedSegmentAddress: {
@@ -146,13 +152,14 @@ namespace hex::plugin::builtin::prv {
     }
 
     void IntelHexProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        auto intervals = this->m_data.findOverlapping(offset, offset + size - 1);
+        auto intervals = this->m_data.findOverlapping(offset, (offset + size) - 1);
 
+        std::memset(buffer, 0x00, size);
+        auto bytes = reinterpret_cast<u8*>(buffer);
         for (const auto &interval : intervals) {
-            auto intervalSize = (interval.stop - interval.start) + 1;
-            auto copyStart = interval.start - offset;
-
-            std::memcpy(&reinterpret_cast<u8*>(buffer)[copyStart], interval.value.data(), std::min<size_t>(intervalSize, size - copyStart));
+            for (u32 i = std::max(interval.start, offset); i <= interval.stop && (i - offset) < size; i++) {
+                bytes[i - offset] =  interval.value[i - interval.start];
+            }
         }
     }
 
@@ -173,7 +180,7 @@ namespace hex::plugin::builtin::prv {
         decltype(this->m_data)::interval_vector intervals;
         for (auto &[address, bytes] : data) {
             auto endAddress = (address + bytes.size()) - 1;
-            intervals.push_back({ address, endAddress, std::move(bytes) });
+            intervals.emplace_back(address, endAddress, std::move(bytes));
 
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
