@@ -121,11 +121,6 @@ namespace hex::plugin::builtin::prv {
     GDBProvider::GDBProvider() : Provider(), m_size(0xFFFF'FFFF) {
     }
 
-    GDBProvider::~GDBProvider() {
-        this->close();
-    }
-
-
     bool GDBProvider::isAvailable() const {
         return this->m_socket.isConnected();
     }

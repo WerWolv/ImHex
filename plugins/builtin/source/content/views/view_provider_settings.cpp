@@ -28,7 +28,6 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.provider_settings.load_popup").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
             auto provider = hex::ImHexApi::Provider::get();
-
             if (provider != nullptr) {
                 provider->drawLoadInterface();
 

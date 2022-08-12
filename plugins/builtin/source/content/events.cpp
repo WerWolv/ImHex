@@ -11,38 +11,13 @@
 #include <imgui.h>
 #include <nlohmann/json.hpp>
 
-#include "content/providers/file_provider.hpp"
 #include "provider_extra_data.hpp"
 
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
-        auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file");
-
-        if (auto fileProvider = dynamic_cast<prv::FileProvider *>(provider)) {
-            fileProvider->setPath(path);
-            if (!fileProvider->open()) {
-                View::showErrorPopup("hex.builtin.popup.error.open"_lang);
-                ImHexApi::Provider::remove(provider);
-
-                return;
-            }
-        }
-
-        if (!provider->isWritable()) {
-            View::showErrorPopup("hex.builtin.popup.error.read_only"_lang);
-        }
-
-        if (!provider->isAvailable()) {
-            View::showErrorPopup("hex.builtin.popup.error.open"_lang);
-            ImHexApi::Provider::remove(provider);
-
-            return;
-        }
-
+        ImHexApi::Provider::createProvider("hex.builtin.provider.file");
         EventManager::post<EventFileLoaded>(path);
-        EventManager::post<EventDataChanged>();
-        EventManager::post<EventHighlightingChanged>();
     }
 
     void registerEventHandlers() {
@@ -88,9 +63,7 @@ namespace hex::plugin::builtin {
                     EventManager::post<RequestOpenFile>(path);
                 });
             } else if (name == "Open File") {
-                fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                    EventManager::post<RequestOpenFile>(path);
-                });
+                ImHexApi::Provider::createProvider("hex.builtin.provider.file");
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
@@ -104,8 +77,28 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderCreated>([](hex::prv::Provider *provider) {
-            if (provider->hasLoadInterface())
+            if (provider->hasFilePicker()) {
+                if (!provider->handleFilePicker()) {
+                    ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    return;
+                }
+                if (!provider->open()) {
+                    View::showErrorPopup("hex.builtin.popup.error.open"_lang);
+                    ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    return;
+                }
+            }
+            else if (provider->hasLoadInterface())
                 EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
+            else {
+                if (!provider->open() || !provider->isAvailable()) {
+                    View::showErrorPopup("hex.builtin.popup.error.open"_lang);
+                    ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                }
+
+                if (!provider->isWritable())
+                    View::showErrorPopup("hex.builtin.popup.error.read_only"_lang);
+            }
         });
 
         EventManager::subscribe<EventProviderDeleted>([](hex::prv::Provider *provider) {

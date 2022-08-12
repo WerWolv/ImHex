@@ -745,13 +745,12 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.proxy.url", "代理 URL" },
                     { "hex.builtin.setting.proxy.url.tooltip", "http(s):// 或 socks5://（如 http://127.0.0.1:1080）" },
 
-                { "hex.builtin.provider.file.path", "路径" },
-                { "hex.builtin.provider.file.size", "大小" },
-                { "hex.builtin.provider.file.creation", "创建时间" },
-                { "hex.builtin.provider.file.access", "最后访问时间" },
-                { "hex.builtin.provider.file.modification", "最后更改时间" },
-
                 { "hex.builtin.provider.file", "文件" },
+                    { "hex.builtin.provider.file.path", "路径" },
+                    { "hex.builtin.provider.file.size", "大小" },
+                    { "hex.builtin.provider.file.creation", "创建时间" },
+                    { "hex.builtin.provider.file.access", "最后访问时间" },
+                    { "hex.builtin.provider.file.modification", "最后更改时间" },
                 { "hex.builtin.provider.gdb", "GDB 服务器" },
                     { "hex.builtin.provider.gdb.name", "GDB 服务器 <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "服务器" },
@@ -762,6 +761,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.disk_size", "磁盘大小" },
                     { "hex.builtin.provider.disk.sector_size", "扇区大小" },
                     { "hex.builtin.provider.disk.reload", "刷新" },
+                //{ "hex.builtin.provider.intel_hex", "Intel Hex Provider" },
+                //    { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
+                //{ "hex.builtin.provider.motorola_srec", "Motorola SREC Provider" },
+                //    { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
 
                 { "hex.builtin.layouts.default", "默认" },
 

@@ -748,13 +748,12 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.setting.proxy.url", "Proxy URL" },
                     //{ "hex.builtin.setting.proxy.url.tooltip", "http(s):// or socks5:// (e.g., http://127.0.0.1:1080)" },
 
-                { "hex.builtin.provider.file.path", "Percorso del File" },
-                { "hex.builtin.provider.file.size", "Dimensione" },
-                { "hex.builtin.provider.file.creation", "Data di creazione" },
-                { "hex.builtin.provider.file.access", "Data dell'ultimo accesso" },
-                { "hex.builtin.provider.file.modification", "Data dell'ultima modifica" },
-
                 { "hex.builtin.provider.file", "Provider di file" },
+                    { "hex.builtin.provider.file.path", "Percorso del File" },
+                    { "hex.builtin.provider.file.size", "Dimensione" },
+                    { "hex.builtin.provider.file.creation", "Data di creazione" },
+                    { "hex.builtin.provider.file.access", "Data dell'ultimo accesso" },
+                    { "hex.builtin.provider.file.modification", "Data dell'ultima modifica" },
                 { "hex.builtin.provider.gdb", "Server GDB Provider" },
                     { "hex.builtin.provider.gdb.name", "Server GDB <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "Server" },
@@ -765,6 +764,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.disk_size", "Dimensione disco" },
                     { "hex.builtin.provider.disk.sector_size", "Dimensione settore" },
                     { "hex.builtin.provider.disk.reload", "Ricarica" },
+                //{ "hex.builtin.provider.intel_hex", "Intel Hex Provider" },
+                //    { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
+                //{ "hex.builtin.provider.motorola_srec", "Motorola SREC Provider" },
+                //    { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
 
                 { "hex.builtin.layouts.default", "Default" },
 

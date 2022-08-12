@@ -28,6 +28,8 @@ add_library(${PROJECT_NAME} SHARED
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp
         source/content/providers/disk_provider.cpp
+        source/content/providers/intel_hex_provider.cpp
+        source/content/providers/motorola_srec_provider.cpp
 
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp

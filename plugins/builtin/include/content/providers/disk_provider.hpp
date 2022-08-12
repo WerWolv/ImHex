@@ -15,7 +15,7 @@ namespace hex::plugin::builtin::prv {
     class DiskProvider : public hex::prv::Provider {
     public:
         DiskProvider();
-        ~DiskProvider() override;
+        ~DiskProvider() override = default;
 
         [[nodiscard]] bool isAvailable() const override;
         [[nodiscard]] bool isReadable() const override;

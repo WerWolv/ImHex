@@ -82,6 +82,9 @@ namespace hex::prv {
         [[nodiscard]] bool canUndo() const;
         [[nodiscard]] bool canRedo() const;
 
+        [[nodiscard]] virtual bool hasFilePicker() const;
+        virtual bool handleFilePicker();
+
         [[nodiscard]] virtual bool hasLoadInterface() const;
         [[nodiscard]] virtual bool hasInterface() const;
         virtual void drawLoadInterface();

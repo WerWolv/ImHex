@@ -740,13 +740,12 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.setting.proxy.url", "Proxy URL" },
                     //{ "hex.builtin.setting.proxy.url.tooltip", "http(s):// or socks5:// (e.g., http://127.0.0.1:1080)" },
 
-                { "hex.builtin.provider.file.path", "Caminho do Arquivo" },
-                { "hex.builtin.provider.file.size", "Tamanho" },
-                { "hex.builtin.provider.file.creation", "Data de Criação" },
-                { "hex.builtin.provider.file.access", "Ultima vez acessado" },
-                { "hex.builtin.provider.file.modification", "Ultima vez modificado" },
-
                 { "hex.builtin.provider.file", "Provedor de arquivo" },
+                    { "hex.builtin.provider.file.path", "Caminho do Arquivo" },
+                    { "hex.builtin.provider.file.size", "Tamanho" },
+                    { "hex.builtin.provider.file.creation", "Data de Criação" },
+                    { "hex.builtin.provider.file.access", "Ultima vez acessado" },
+                    { "hex.builtin.provider.file.modification", "Ultima vez modificado" },
                 { "hex.builtin.provider.gdb", "GDB Server Provider" },
                     { "hex.builtin.provider.gdb.name", "GDB Server <{0}:{1}>" },
                     { "hex.builtin.provider.gdb.server", "Servidor" },
@@ -757,6 +756,10 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.disk.disk_size", "Tamanho do Disco" },
                     { "hex.builtin.provider.disk.sector_size", "Tamanho do Setor" },
                     { "hex.builtin.provider.disk.reload", "Recarregar" },
+                //{ "hex.builtin.provider.intel_hex", "Intel Hex Provider" },
+                //    { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
+                //{ "hex.builtin.provider.motorola_srec", "Motorola SREC Provider" },
+                //    { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
 
                 { "hex.builtin.layouts.default", "Default" },
 

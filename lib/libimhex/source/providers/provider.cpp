@@ -19,6 +19,7 @@ namespace hex::prv {
     Provider::~Provider() {
         for (auto &overlay : this->m_overlays)
             this->deleteOverlay(overlay);
+        this->close();
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
@@ -227,6 +228,13 @@ namespace hex::prv {
         return this->m_patchTreeOffset > 0;
     }
 
+    bool Provider::hasFilePicker() const {
+        return false;
+    }
+
+    bool Provider::handleFilePicker() {
+        return false;
+    }
 
     bool Provider::hasLoadInterface() const {
         return false;

@@ -35,10 +35,6 @@ namespace hex::plugin::builtin::prv {
         this->reloadDrives();
     }
 
-    DiskProvider::~DiskProvider() {
-        this->close();
-    }
-
     bool DiskProvider::isAvailable() const {
         #if defined(OS_WINDOWS)
 
