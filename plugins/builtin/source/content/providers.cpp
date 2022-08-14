@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
                  for (const auto &id : providerIds) {
                      auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
 
-                     auto provider = ImHexApi::Provider::createProvider(providerSettings["type"].get<std::string>());
+                     auto provider = ImHexApi::Provider::createProvider(providerSettings["type"].get<std::string>(), true);
                      if (provider == nullptr) {
                          success = false;
                          continue;
