@@ -6,18 +6,17 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 
 #include <imgui.h>
 #include <implot.h>
-#include <imnodes.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
 
-#include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
 
 #include <list>
@@ -25,11 +24,73 @@
 namespace hex::plugin::builtin {
 
     static ImGui::Texture s_bannerTexture, s_backdropTexture;
-    static std::list<std::fs::path> s_recentFilePaths;
 
     static std::fs::path s_safetyBackupPath;
 
     static std::string s_tipOfTheDay;
+
+    struct RecentProvider {
+        std::string displayName;
+        std::string type;
+        std::fs::path filePath;
+
+        nlohmann::json data;
+
+        bool operator==(const RecentProvider &other) const {
+            return displayName == other.displayName && type == other.type && data == other.data;
+        }
+    };
+    static std::vector<RecentProvider> s_recentProviders;
+
+    static void updateRecentProviders() {
+        s_recentProviders.clear();
+
+        // Query all recent providers
+        std::vector<std::fs::path> recentFiles;
+        for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+            for (const auto &entry : std::fs::directory_iterator(folder)) {
+                if (entry.is_regular_file())
+                    recentFiles.push_back(entry.path());
+            }
+        }
+
+        // Sort recent provider files by last modified time
+        std::sort(recentFiles.begin(), recentFiles.end(), [](const auto &a, const auto &b) {
+            return std::fs::last_write_time(a) > std::fs::last_write_time(b);
+        });
+
+        for (u32 i = 0; i < recentFiles.size() && s_recentProviders.size() < 5; i++) {
+            auto &path = recentFiles[i];
+            try {
+                auto jsonData = nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString());
+                s_recentProviders.push_back(RecentProvider {
+                    .displayName = jsonData["displayName"],
+                    .type = jsonData["type"],
+                    .filePath = path,
+                    .data = jsonData
+                });
+            } catch (...) { }
+        }
+
+        // De-duplicate recent providers
+        s_recentProviders.erase(std::unique(s_recentProviders.begin(), s_recentProviders.end()), s_recentProviders.end());
+    }
+
+    static void loadRecentProvider(const RecentProvider &recentProvider) {
+        auto *provider = ImHexApi::Provider::createProvider(recentProvider.type, true);
+        if (provider != nullptr) {
+            provider->loadSettings(recentProvider.data);
+
+            if (!provider->open() || !provider->isAvailable()) {
+                View::showErrorPopup("hex.builtin.popup.error.open"_lang);
+                ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                return;
+            }
+
+            updateRecentProviders();
+        }
+
+    }
 
     static void loadDefaultLayout() {
         auto layouts = ContentRegistry::Interface::getLayouts();
@@ -153,9 +214,9 @@ namespace hex::plugin::builtin {
             ImGui::UnderlinedText("hex.builtin.welcome.start.recent"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
-                for (auto &path : s_recentFilePaths) {
-                    if (ImGui::BulletHyperlink(std::fs::path(path).filename().string().c_str())) {
-                        EventManager::post<RequestOpenFile>(path);
+                for (const auto &recentProvider : s_recentProviders) {
+                    if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
+                        loadRecentProvider(recentProvider);
                         break;
                     }
                 }
@@ -314,6 +375,8 @@ namespace hex::plugin::builtin {
     }
 
     void createWelcomeScreen() {
+        updateRecentProviders();
+
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
         (void)EventManager::subscribe<EventFrameBegin>(drawNoViewsBackground);
 
@@ -405,35 +468,16 @@ namespace hex::plugin::builtin {
             }
         });
 
-        (void)EventManager::subscribe<EventFileLoaded>([](const auto &path) {
-            s_recentFilePaths.push_front(path);
-
+        (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             {
-                std::list<std::fs::path> uniques;
-                for (auto &file : s_recentFilePaths) {
+                auto recentPath = fs::getDefaultPaths(fs::ImHexPath::Recent).front();
+                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+                fs::File recentFile(recentPath / fileName, fs::File::Mode::Create);
 
-                    bool exists = false;
-                    for (auto &unique : uniques) {
-                        if (file == unique)
-                            exists = true;
-                    }
-
-                    if (!exists && !file.empty())
-                        uniques.push_back(file);
-
-                    if (uniques.size() > 5)
-                        break;
-                }
-                s_recentFilePaths = uniques;
+                recentFile.write(provider->storeSettings().dump(4));
             }
 
-            {
-                std::vector<std::string> recentFilesVector;
-                for (const auto &recentPath : s_recentFilePaths)
-                    recentFilesVector.push_back(recentPath.string());
-
-                ContentRegistry::Settings::write("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files", recentFilesVector);
-            }
+            updateRecentProviders();
         });
 
         EventManager::subscribe<EventProviderCreated>([](auto) {
@@ -442,23 +486,23 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
-            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentFilePaths.empty())) {
+            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProviders.empty())) {
                 // Copy to avoid changing list while iteration
-                std::list<std::fs::path> recentFilePaths = s_recentFilePaths;
-                for (auto &path : recentFilePaths) {
-                    auto filename = std::fs::path(path).filename().string();
-                    if (ImGui::MenuItem(filename.c_str())) {
-                        EventManager::post<RequestOpenFile>(path);
+                auto recentProviders = s_recentProviders;
+                for (auto &recentProvider : recentProviders) {
+                    if (ImGui::MenuItem(recentProvider.displayName.c_str())) {
+                        loadRecentProvider(recentProvider);
                     }
                 }
 
                 ImGui::Separator();
                 if (ImGui::MenuItem("hex.builtin.menu.file.clear_recent"_lang)) {
-                    s_recentFilePaths.clear();
-                    ContentRegistry::Settings::write(
-                        "hex.builtin.setting.imhex",
-                        "hex.builtin.setting.imhex.recent_files",
-                        std::vector<std::string> {});
+                    s_recentProviders.clear();
+
+                    // Remove all recent files
+                    for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent))
+                        for (const auto &entry : std::fs::directory_iterator(recentPath))
+                            std::fs::remove(entry.path());
                 }
 
                 ImGui::EndMenu();
@@ -472,12 +516,6 @@ namespace hex::plugin::builtin {
                 s_safetyBackupPath = filePath;
                 ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
             }
-        }
-
-        for (const auto &pathString : ContentRegistry::Settings::read("hex.builtin.setting.imhex", "hex.builtin.setting.imhex.recent_files")) {
-            std::fs::path path = std::u8string(pathString.begin(), pathString.end());
-            if (fs::exists(path))
-                s_recentFilePaths.emplace_back(path);
         }
 
         if (ImHexApi::System::getInitArguments().contains("tip-of-the-day")) {

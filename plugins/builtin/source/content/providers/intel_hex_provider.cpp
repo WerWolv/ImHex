@@ -232,4 +232,16 @@ namespace hex::plugin::builtin::prv {
         return { Region { closestInterval.start, (closestInterval.stop - closestInterval.start) + 1}, true };
     }
 
+    void IntelHexProvider::loadSettings(const nlohmann::json &settings) {
+        Provider::loadSettings(settings);
+
+        this->m_sourceFilePath = settings["path"].get<std::string>();
+    }
+
+    nlohmann::json IntelHexProvider::storeSettings(nlohmann::json settings) const {
+        settings["path"] = this->m_sourceFilePath.string();
+
+        return Provider::storeSettings(settings);
+    }
+
 }

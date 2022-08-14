@@ -337,12 +337,12 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, hex::prv::Provider **provider) {
+                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, bool skipLoadInterface, hex::prv::Provider **provider) {
                     if (name != expectedName) return;
 
-                    auto newProvider = new T();
+                    prv::Provider *newProvider = new T();
 
-                    hex::ImHexApi::Provider::add(newProvider);
+                    hex::ImHexApi::Provider::add(newProvider, skipLoadInterface);
 
                     if (provider != nullptr)
                         *provider = newProvider;

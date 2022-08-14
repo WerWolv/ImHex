@@ -13,11 +13,16 @@
 
 #include "provider_extra_data.hpp"
 
+#include "content/providers/file_provider.hpp"
+
 namespace hex::plugin::builtin {
 
     static void openFile(const std::fs::path &path) {
-        ImHexApi::Provider::createProvider("hex.builtin.provider.file");
-        EventManager::post<EventFileLoaded>(path);
+        auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
+        if (auto *fileProvider = dynamic_cast<prv::FileProvider*>(provider); fileProvider != nullptr) {
+            fileProvider->setPath(path);
+            (void)fileProvider->open();
+        }
     }
 
     void registerEventHandlers() {
@@ -77,6 +82,9 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderCreated>([](hex::prv::Provider *provider) {
+            if (provider->shouldSkipLoadInterface())
+                return;
+
             if (provider->hasFilePicker()) {
                 if (!provider->handleFilePicker()) {
                     ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
@@ -95,9 +103,6 @@ namespace hex::plugin::builtin {
                     View::showErrorPopup("hex.builtin.popup.error.open"_lang);
                     ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 }
-
-                if (!provider->isWritable())
-                    View::showErrorPopup("hex.builtin.popup.error.read_only"_lang);
             }
         });
 

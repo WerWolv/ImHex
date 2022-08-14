@@ -268,9 +268,12 @@ namespace hex {
             });
         }
 
-        void add(prv::Provider *provider) {
+        void add(prv::Provider *provider, bool skipLoadInterface) {
             if (Task::getRunningTaskCount() > 0)
                 return;
+
+            if (skipLoadInterface)
+                provider->skipLoadInterface();
 
             s_providers.push_back(provider);
             EventManager::post<EventProviderCreated>(provider);
@@ -310,9 +313,9 @@ namespace hex {
             delete provider;
         }
 
-        prv::Provider* createProvider(const std::string &unlocalizedName) {
+        prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface) {
             prv::Provider* result = nullptr;
-            EventManager::post<RequestCreateProvider>(unlocalizedName, &result);
+            EventManager::post<RequestCreateProvider>(unlocalizedName, skipLoadInterface, &result);
 
             return result;
         }

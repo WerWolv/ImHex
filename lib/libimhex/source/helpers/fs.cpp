@@ -232,6 +232,9 @@ namespace hex::fs {
             case ImHexPath::Yara:
                 result = appendPath(getDataPaths(), "yara");
                 break;
+            case ImHexPath::Recent:
+                result = appendPath(getConfigPaths(), "recent");
+                break;
         }
 
         if (!listNonExisting) {

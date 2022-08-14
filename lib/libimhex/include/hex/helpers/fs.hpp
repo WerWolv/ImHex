@@ -96,7 +96,8 @@ namespace hex::fs {
         Resources,
         Constants,
         Encodings,
-        Logs
+        Logs,
+        Recent
     };
 
     std::optional<std::fs::path> getExecutablePath();

@@ -104,6 +104,9 @@ namespace hex::prv {
 
         virtual std::pair<Region, bool> getRegionValidity(u64 address) const;
 
+        void skipLoadInterface() { this->m_skipLoadInterface = true; }
+        [[nodiscard]] bool shouldSkipLoadInterface() const { return this->m_skipLoadInterface; }
+
     protected:
         u32 m_currPage    = 0;
         u64 m_baseAddress = 0;
@@ -115,6 +118,7 @@ namespace hex::prv {
         u32 m_id;
 
         bool m_dirty = false;
+        bool m_skipLoadInterface = false;
 
     private:
         static u32 s_idCounter;

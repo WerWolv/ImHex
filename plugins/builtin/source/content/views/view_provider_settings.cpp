@@ -35,8 +35,9 @@ namespace hex::plugin::builtin {
                 ImGui::Separator();
 
                 if (ImGui::Button("hex.builtin.common.open"_lang)) {
-                    if (provider->open())
+                    if (provider->open()) {
                         ImGui::CloseCurrentPopup();
+                    }
                     else {
                         View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
                         ImHexApi::Provider::remove(provider);

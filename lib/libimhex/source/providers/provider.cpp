@@ -251,6 +251,9 @@ namespace hex::prv {
     }
 
     nlohmann::json Provider::storeSettings(nlohmann::json settings) const {
+        settings["displayName"] = this->getName();
+        settings["type"]        = this->getTypeName();
+
         settings["baseAddress"] = this->m_baseAddress;
         settings["currPage"]    = this->m_currPage;
 
@@ -263,7 +266,7 @@ namespace hex::prv {
     }
 
     std::pair<Region, bool> Provider::getRegionValidity(u64 address) const {
-        if (address > this->getActualSize())
+        if (address < this->getActualSize())
             return { Region::Invalid(), false };
 
         bool insideValidRegion = false;

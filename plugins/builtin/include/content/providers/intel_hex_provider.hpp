@@ -27,8 +27,8 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override { return { }; }
 
-        void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
-        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
+        void loadSettings(const nlohmann::json &settings) override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
         [[nodiscard]] std::string getTypeName() const override {
             return "hex.builtin.provider.intel_hex";

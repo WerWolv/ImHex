@@ -59,18 +59,20 @@ namespace hex::init {
     bool createDirectories() {
         bool result = true;
 
+        using enum fs::ImHexPath;
         constexpr std::array paths = {
-            fs::ImHexPath::Patterns,
-            fs::ImHexPath::PatternsInclude,
-            fs::ImHexPath::Magic,
-            fs::ImHexPath::Plugins,
-            fs::ImHexPath::Resources,
-            fs::ImHexPath::Config,
-            fs::ImHexPath::Constants,
-            fs::ImHexPath::Yara,
-            fs::ImHexPath::Encodings,
-            fs::ImHexPath::Python,
-            fs::ImHexPath::Logs
+            Patterns,
+            PatternsInclude,
+            Magic,
+            Plugins,
+            Resources,
+            Config,
+            Constants,
+            Yara,
+            Encodings,
+            Python,
+            Logs,
+            Recent
         };
 
         // Check if ImHex is installed in portable mode

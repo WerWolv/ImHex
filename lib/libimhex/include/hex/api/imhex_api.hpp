@@ -137,7 +137,7 @@ namespace hex {
             void resetDirty();
             bool isDirty();
 
-            void add(prv::Provider *provider);
+            void add(prv::Provider *provider, bool skipLoadInterface = false);
 
             template<std::derived_from<prv::Provider> T>
             void add(auto &&...args) {
@@ -146,7 +146,7 @@ namespace hex {
 
             void remove(prv::Provider *provider, bool noQuestions = false);
 
-            prv::Provider* createProvider(const std::string &unlocalizedName);
+            prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false);
 
         }
 
