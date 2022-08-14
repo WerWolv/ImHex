@@ -324,4 +324,11 @@ namespace hex::plugin::builtin::prv {
         return Provider::storeSettings(settings);
     }
 
+    std::pair<Region, bool> GDBProvider::getRegionValidity(u64 address) const {
+        if (address < this->getActualSize())
+            return { Region { address, this->getActualSize() - address }, true };
+        else
+            return { Region::Invalid(), false };
+    }
+
 }

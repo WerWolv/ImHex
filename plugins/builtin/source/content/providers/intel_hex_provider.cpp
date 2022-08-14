@@ -221,8 +221,9 @@ namespace hex::plugin::builtin::prv {
 
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
         auto intervals = this->m_data.findOverlapping(address, address);
-        if (intervals.empty())
-            return { Region::Invalid(), false };
+        if (intervals.empty()) {
+            return Provider::getRegionValidity(address);
+        }
 
         auto closestInterval = intervals.front();
         for (const auto &interval : intervals) {

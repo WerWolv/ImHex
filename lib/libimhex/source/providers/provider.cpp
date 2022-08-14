@@ -266,7 +266,7 @@ namespace hex::prv {
     }
 
     std::pair<Region, bool> Provider::getRegionValidity(u64 address) const {
-        if (address < this->getActualSize())
+        if (address > this->getActualSize())
             return { Region::Invalid(), false };
 
         bool insideValidRegion = false;

@@ -357,4 +357,11 @@ namespace hex::plugin::builtin::prv {
         this->reloadDrives();
     }
 
+    std::pair<Region, bool> DiskProvider::getRegionValidity(u64 address) const {
+        if (address < this->getActualSize())
+            return { Region { address, this->getActualSize() - address }, true };
+        else
+            return { Region::Invalid(), false };
+    }
+
 }

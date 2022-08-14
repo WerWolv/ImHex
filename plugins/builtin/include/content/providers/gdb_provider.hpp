@@ -49,6 +49,8 @@ namespace hex::plugin::builtin::prv {
             return "hex.builtin.provider.gdb";
         }
 
+        std::pair<Region, bool> getRegionValidity(u64 address) const override;
+
     protected:
         hex::Socket m_socket;
 
