@@ -10,10 +10,6 @@ set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/microtar ${CMAKE_CURRENT_BINARY_DIR}/external/microtar EXCLUDE_FROM_ALL)
 set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-set(NFD_PORTAL ON CACHE BOOL "Use Portals for Linux file dialogs" FORCE)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
-set_target_properties(nfd PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
 set(LIBROMFS_RESOURCE_LOCATION ${IMHEX_BASE_FOLDER}/resources/romfs)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/external/libromfs EXCLUDE_FROM_ALL)
 set_target_properties(libromfs PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -28,6 +24,16 @@ set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
 # Find packages
 find_package(PkgConfig REQUIRED)
+
+if (NOT USE_SYSTEM_NFD)
+    set(NFD_PORTAL ON CACHE BOOL "Use Portals for Linux file dialogs" FORCE)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/nativefiledialog ${CMAKE_CURRENT_BINARY_DIR}/external/nativefiledialog EXCLUDE_FROM_ALL)
+    set_target_properties(nfd PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set(NFD_LIBRARIES nfd)
+else()
+    find_package(nfd)
+    set(NFD_LIBRARIES nfd)
+endif()
 
 if(NOT USE_SYSTEM_NLOHMANN_JSON)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/nlohmann_json ${CMAKE_CURRENT_BINARY_DIR}/external/nlohmann_json EXCLUDE_FROM_ALL)
@@ -166,4 +172,4 @@ if (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC dl imgui nfd magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs libpl intervaltree)
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libromfs libpl intervaltree)
