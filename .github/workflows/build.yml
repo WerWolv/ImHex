@@ -448,14 +448,7 @@ jobs:
             ~/.cache/ccache
           key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build
-        
-      - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/rpmbuild/BUILDROOT/CMakeCache.txt
-          key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-      
+   
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV

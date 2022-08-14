@@ -1,7 +1,7 @@
 # ftbfs without this
 %global _lto_cflags %{nil}
 
-Name:           ImHex
+Name:           imhex
 Version:        %{_version}
 Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
