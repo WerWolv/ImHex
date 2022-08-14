@@ -215,6 +215,9 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 for (const auto &recentProvider : s_recentProviders) {
+                    ImGui::PushID(&recentProvider);
+                    ON_SCOPE_EXIT { ImGui::PopID(); };
+
                     if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
                         loadRecentProvider(recentProvider);
                         break;
