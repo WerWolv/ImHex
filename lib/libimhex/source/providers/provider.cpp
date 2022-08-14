@@ -292,7 +292,7 @@ namespace hex::prv {
         }
 
         if (!nextRegionAddress.has_value())
-            return { Region { address, this->getActualSize() - address }, true };
+            return { Region::Invalid(), false };
         else
             return { Region { address, *nextRegionAddress - address }, insideValidRegion };
     }
