@@ -64,6 +64,8 @@ namespace hex::plugin::builtin::prv {
             return "hex.builtin.provider.file";
         }
 
+        std::pair<Region, bool> getRegionValidity(u64 address) const override;
+
     protected:
         #if defined(OS_WINDOWS)
 
