@@ -251,15 +251,6 @@ namespace hex::plugin::builtin {
                 provider->redo();
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1050, [&] {
-            bool providerValid = ImHexApi::Provider::isValid();
-            auto selection     = ImHexApi::HexEditor::getSelection();
-
-            if (ImGui::MenuItem("hex.builtin.menu.edit.bookmark"_lang, nullptr, false, selection.has_value() && providerValid)) {
-                ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
-            }
-        });
-
     }
 
     static void createViewMenu() {

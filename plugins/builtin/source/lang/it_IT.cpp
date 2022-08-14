@@ -124,11 +124,13 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.menu.file.export.ips32", "IPS32 Patch" },
                         //{ "hex.builtin.menu.file.export.base64.popup.export_error", "File is not in a valid Base64 format!" },
                     //{ "hex.builtin.menu.file.export.popup.create", "Cannot export data. Failed to create file!" },
+                    //{ "hex.builtin.menu.file.bookmark.import", "Import bookmarks" },
+                    //{ "hex.builtin.menu.file.bookmark.export", "Export bookmarks" },
 
                 { "hex.builtin.menu.edit", "Modifica" },
                     { "hex.builtin.menu.edit.undo", "Annulla" },
                     { "hex.builtin.menu.edit.redo", "Ripeti" },
-                    { "hex.builtin.menu.edit.bookmark", "Crea segnalibro" },
+                    { "hex.builtin.menu.edit.bookmark.create", "Crea segnalibro" },
 
                 { "hex.builtin.menu.view", "Vista" },
                 { "hex.builtin.menu.layout", "Layout" },

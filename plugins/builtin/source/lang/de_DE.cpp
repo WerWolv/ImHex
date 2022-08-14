@@ -122,11 +122,13 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.menu.file.export.ips", "IPS Patch" },
                         { "hex.builtin.menu.file.export.ips32", "IPS32 Patch" },
                         { "hex.builtin.menu.file.export.base64.popup.export_error", "File is not in a valid Base64 format!" },
+                    { "hex.builtin.menu.file.bookmark.import", "Lesezeichen importieren" },
+                    { "hex.builtin.menu.file.bookmark.export", "Lesezeichen exportieren" },
 
                 { "hex.builtin.menu.edit", "Bearbeiten" },
                     { "hex.builtin.menu.edit.undo", "Rückgängig" },
                     { "hex.builtin.menu.edit.redo", "Wiederholen" },
-                    { "hex.builtin.menu.edit.bookmark", "Lesezeichen erstellen" },
+                    { "hex.builtin.menu.edit.bookmark.create", "Lesezeichen erstellen" },
 
                 { "hex.builtin.menu.view", "Ansicht" },
                 { "hex.builtin.menu.layout", "Layout" },

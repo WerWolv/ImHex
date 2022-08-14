@@ -1,8 +1,10 @@
 #include "content/views/view_bookmarks.hpp"
 
+#include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <nlohmann/json.hpp>
 #include <cstring>
@@ -107,55 +109,20 @@ namespace hex::plugin::builtin {
                     return true;
 
                 auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                if (!data.contains("bookmarks"))
-                    return false;
-
-                auto &bookmarks = ProviderExtraData::get(provider).bookmarks;
-                bookmarks.clear();
-                for (const auto &bookmark : data["bookmarks"]) {
-                    if (!bookmark.contains("name") || !bookmark.contains("comment") || !bookmark.contains("color") || !bookmark.contains("region") || !bookmark.contains("locked"))
-                        continue;
-
-                    const auto &region = bookmark["region"];
-                    if (!region.contains("address") || !region.contains("size"))
-                        continue;
-
-                    bookmarks.push_back({
-                        .region = { region["address"], region["size"] },
-                        .name = bookmark["name"],
-                        .comment = bookmark["comment"],
-                        .color = bookmark["color"],
-                        .locked = bookmark["locked"]
-                    });
-                }
-
-                return true;
+                ProviderExtraData::get(provider).bookmarks.clear();
+                return ViewBookmarks::importBookmarks(provider, data);
             },
             .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
                 nlohmann::json data;
 
-                data["bookmarks"] = nlohmann::json::array();
-                size_t index = 0;
-                for (const auto &bookmark : ProviderExtraData::get(provider).bookmarks) {
-                    data["bookmarks"][index] = {
-                        { "name", bookmark.name },
-                        { "comment", bookmark.comment },
-                        { "color", bookmark.color },
-                        { "region", {
-                                { "address", bookmark.region.address },
-                                { "size", bookmark.region.size }
-                            }
-                        },
-                        { "locked", bookmark.locked }
-                    };
-                    index++;
-                }
-
+                bool result = ViewBookmarks::exportBookmarks(provider, data);
                 tar.write(basePath, data.dump(4));
 
-                return true;
+                return result;
             }
         });
+
+        this->registerMenuItems();
     }
 
     ViewBookmarks::~ViewBookmarks() {
@@ -298,6 +265,84 @@ namespace hex::plugin::builtin {
             ImGui::EndChild();
         }
         ImGui::End();
+    }
+
+    bool ViewBookmarks::importBookmarks(prv::Provider *provider, const nlohmann::json &json) {
+        if (!json.contains("bookmarks"))
+            return false;
+
+        auto &bookmarks = ProviderExtraData::get(provider).bookmarks;
+        for (const auto &bookmark : json["bookmarks"]) {
+            if (!bookmark.contains("name") || !bookmark.contains("comment") || !bookmark.contains("color") || !bookmark.contains("region") || !bookmark.contains("locked"))
+                continue;
+
+            const auto &region = bookmark["region"];
+            if (!region.contains("address") || !region.contains("size"))
+                continue;
+
+            bookmarks.push_back({
+                .region = { region["address"], region["size"] },
+                .name = bookmark["name"],
+                .comment = bookmark["comment"],
+                .color = bookmark["color"],
+                .locked = bookmark["locked"]
+            });
+        }
+
+        return true;
+    }
+
+    bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
+        json["bookmarks"] = nlohmann::json::array();
+        size_t index = 0;
+        for (const auto &bookmark : ProviderExtraData::get(provider).bookmarks) {
+            json["bookmarks"][index] = {
+                    { "name", bookmark.name },
+                    { "comment", bookmark.comment },
+                    { "color", bookmark.color },
+                    { "region", {
+                            { "address", bookmark.region.address },
+                            { "size", bookmark.region.size }
+                        }
+                    },
+                    { "locked", bookmark.locked }
+            };
+            index++;
+        }
+
+        return true;
+    }
+
+    void ViewBookmarks::registerMenuItems() {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1050, [&] {
+            bool providerValid = ImHexApi::Provider::isValid();
+            auto selection     = ImHexApi::HexEditor::getSelection();
+
+            if (ImGui::MenuItem("hex.builtin.menu.edit.bookmark.create"_lang, nullptr, false, selection.has_value() && providerValid)) {
+                ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
+            }
+        });
+
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 4000, [&] {
+            bool providerValid = ImHexApi::Provider::isValid();
+            auto selection     = ImHexApi::HexEditor::getSelection();
+
+            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.import"_lang, nullptr, false, selection.has_value() && providerValid)) {
+                fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
+                    try {
+                        importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString()));
+                    } catch (...) { }
+                });
+            }
+            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.export"_lang, nullptr, false, selection.has_value() && providerValid)) {
+                fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
+                    nlohmann::json json;
+                    exportBookmarks(ImHexApi::Provider::get(), json);
+
+                    fs::File(path, fs::File::Mode::Create).write(json.dump(4));
+                });
+            }
+        });
     }
 
 }

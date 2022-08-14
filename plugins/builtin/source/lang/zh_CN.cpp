@@ -123,11 +123,13 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.menu.file.export.ips32", "IPS32 补丁" },
                         { "hex.builtin.menu.file.export.base64.popup.export_error", "文件不是有效的 Base64 格式！" },
                     { "hex.builtin.menu.file.export.popup.create", "无法导出文件。文件创建失败！" },
+                    //{ "hex.builtin.menu.file.bookmark.import", "Import bookmarks" },
+                    //{ "hex.builtin.menu.file.bookmark.export", "Export bookmarks" },
 
                 { "hex.builtin.menu.edit", "编辑" },
                     { "hex.builtin.menu.edit.undo", "撤销" },
                     { "hex.builtin.menu.edit.redo", "重做" },
-                    { "hex.builtin.menu.edit.bookmark", "添加书签" },
+                    { "hex.builtin.menu.edit.bookmark.create", "添加书签" },
 
                 { "hex.builtin.menu.view", "视图" },
                 { "hex.builtin.menu.layout", "布局" },

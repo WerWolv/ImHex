@@ -15,6 +15,11 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
+        static bool importBookmarks(prv::Provider *provider, const nlohmann::json &json);
+        static bool exportBookmarks(prv::Provider *provider, nlohmann::json &json);
+
+        void registerMenuItems();
+    private:
         std::string m_currFilter;
     };
 
