@@ -161,10 +161,11 @@ namespace hex {
                     auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
                     if (message == nullptr) break;
 
-                    auto path = reinterpret_cast<const char *>(message->lpData);
-                    if (path == nullptr) break;
+                    auto data = reinterpret_cast<const char8_t *>(message->lpData);
+                    if (data == nullptr) break;
 
-                    log::info("Opening file in existing instance: {}", path);
+                    std::fs::path path = data;
+                    log::info("Opening file in existing instance: {}", path.string());
                     EventManager::post<RequestOpenFile>(path);
                     break;
                 }
