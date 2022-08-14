@@ -403,10 +403,14 @@ namespace hex::plugin::builtin {
                 if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
                     this->m_hasUnevaluatedChanges = false;
 
-                    if (this->m_runAutomatically)
-                        this->evaluatePattern(this->m_textEditor.GetText());
-                    else
-                        std::thread([this, code = this->m_textEditor.GetText()] { this->parsePattern(code); }).detach();
+
+                    std::thread([this, code = this->m_textEditor.GetText()]{
+                        this->parsePattern(code);
+
+                        if (this->m_runAutomatically)
+                            this->evaluatePattern(code);
+                    }).detach();
+
                 }
             }
 
@@ -767,8 +771,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code) {
-        auto task = ImHexApi::Tasks::createTask("hex.builtin.view.pattern_editor.evaluating", 1);
-
         this->m_runningParsers++;
 
         auto ast = this->m_parserRuntime->parseString(code);
@@ -820,8 +822,6 @@ namespace hex::plugin::builtin {
             std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
                 envVars.insert({ name, value });
-
-            this->parsePattern(code);
 
             std::map<std::string, pl::core::Token::Literal> inVariables;
             for (auto &[name, variable] : this->m_patternVariables) {
