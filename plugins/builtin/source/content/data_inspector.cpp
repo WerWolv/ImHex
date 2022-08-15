@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
         auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
 
         T value = 0x00;
-        std::memcpy(&value, buffer.data(), Size);
+        std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
         return hex::format(format, hex::changeEndianess(value, Size, endian));
     }
 
@@ -98,7 +98,7 @@ namespace hex::plugin::builtin {
         auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? hex::format("{{0}}0x{{1:0{}X}}", Size * 2) : hex::format("{{0}}0o{{1:0{}o}}", Size * 3));
 
         T value = 0x00;
-        std::memcpy(&value, buffer.data(), Size);
+        std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
         auto number   = hex::signExtend(Size * 8, hex::changeEndianess(value, Size, endian));
         bool negative = number < 0;
 
