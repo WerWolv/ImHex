@@ -202,8 +202,11 @@ namespace hex {
             this->frameEnd();
 
             const auto targetFps = ImHexApi::System::getTargetFPS();
-            if (targetFps <= 200)
-                std::this_thread::sleep_for(std::chrono::milliseconds(u64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000)));
+            if (targetFps <= 200) {
+                auto leftoverFrameTime = i64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000);
+                if (leftoverFrameTime > 0)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(leftoverFrameTime));
+            }
 
             this->m_lastFrameTime = glfwGetTime();
 
