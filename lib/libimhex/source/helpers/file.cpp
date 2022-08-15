@@ -1,7 +1,8 @@
 #include <hex/helpers/file.hpp>
 
+#include <hex/helpers/utils.hpp>
+
 #include <unistd.h>
-#include <cstring>
 
 namespace hex::fs {
 
@@ -90,7 +91,7 @@ namespace hex::fs {
             return "";
 
         auto cString = reinterpret_cast<const char *>(bytes.data());
-        return { cString, std::strnlen(cString, bytes.size()) };
+        return { cString, hex::strnlen(cString, bytes.size()) };
     }
 
     std::u8string File::readU8String(size_t numBytes) {
@@ -104,7 +105,7 @@ namespace hex::fs {
             return u8"";
 
         auto cString = reinterpret_cast<const char8_t *>(bytes.data());
-        return { cString, std::min(bytes.size(), std::strlen(reinterpret_cast<const char*>(bytes.data()))) };
+        return { cString, hex::strnlen(reinterpret_cast<const char*>(bytes.data()), bytes.size())) };
     }
 
     void File::write(const u8 *buffer, size_t size) {
