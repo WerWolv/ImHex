@@ -105,7 +105,7 @@ namespace hex::fs {
             return u8"";
 
         auto cString = reinterpret_cast<const char8_t *>(bytes.data());
-        return { cString, hex::strnlen(reinterpret_cast<const char*>(bytes.data()), bytes.size())) };
+        return { cString, hex::strnlen(reinterpret_cast<const char*>(bytes.data()), bytes.size()) };
     }
 
     void File::write(const u8 *buffer, size_t size) {
