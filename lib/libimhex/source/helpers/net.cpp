@@ -124,7 +124,7 @@ namespace hex {
         if (result != CURLE_OK)
             log::error("Net request failed with error {0}: '{1}'", u32(result), curl_easy_strerror(result));
 
-        i32 responseCode = 0;
+        long responseCode = 0;
         curl_easy_getinfo(this->m_ctx, CURLINFO_RESPONSE_CODE, &responseCode);
 
         curl_slist_free_all(this->m_headers);
@@ -135,7 +135,7 @@ namespace hex {
         if (result != CURLE_OK)
             return std::nullopt;
         else
-            return responseCode;
+            return i32(responseCode);
     }
 
     std::future<Response<std::string>> Net::getString(const std::string &url, u32 timeout) {

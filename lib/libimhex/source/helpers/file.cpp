@@ -90,7 +90,7 @@ namespace hex::fs {
             return "";
 
         auto cString = reinterpret_cast<const char *>(bytes.data());
-        return { cString, std::min(bytes.size(), std::strlen(cString)) };
+        return { cString, std::strnlen(cString, bytes.size()) };
     }
 
     std::u8string File::readU8String(size_t numBytes) {
