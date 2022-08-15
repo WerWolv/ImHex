@@ -48,7 +48,7 @@ jobs:
         mkdir -p build
         cd build
         CC=gcc-12 CXX=g++-12 cmake                                                                      \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                                                                \
+          -DCMAKE_BUILD_TYPE=Debug                                                                      \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"                                                         \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                          \
