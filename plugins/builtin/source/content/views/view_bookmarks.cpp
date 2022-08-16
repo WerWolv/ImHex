@@ -325,16 +325,15 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 4000, [&] {
             bool providerValid = ImHexApi::Provider::isValid();
-            auto selection     = ImHexApi::HexEditor::getSelection();
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.import"_lang, nullptr, false, selection.has_value() && providerValid)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.import"_lang, nullptr, false, providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
                     try {
                         importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString()));
                     } catch (...) { }
                 });
             }
-            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.export"_lang, nullptr, false, selection.has_value() && providerValid)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.export"_lang, nullptr, false, providerValid && !ProviderExtraData::getCurrent().bookmarks.empty())) {
                 fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
                     nlohmann::json json;
                     exportBookmarks(ImHexApi::Provider::get(), json);
