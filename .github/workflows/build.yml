@@ -239,7 +239,7 @@ jobs:
             -DRUST_PATH="$HOME/.cargo/bin/"           \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             ..
-          make -j 4 install DESTDIR=AppDir
+          make -j 4 install DESTDIR=DebDir
 
       - name: 📜 Set version variable
         run: |
@@ -256,10 +256,9 @@ jobs:
 
       - name: 📦 Bundle DEB
         run: |
-          cp -r build/DEBIAN build/AppDir
-          dpkg-deb -Zgzip --build build/AppDir
-          mv build/AppDir.deb imhex-${{env.IMHEX_VERSION}}.deb
-          rm -rf build/AppDir/DEBIAN
+          cp -r build/DEBIAN build/DebDir
+          dpkg-deb -Zgzip --build build/DebDir
+          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}.deb
 
       - name: 🛠️ Reconfigure build for AppImage
         run: |
@@ -271,7 +270,6 @@ jobs:
           -DIMHEX_PLUGINS_IN_SHARE=ON \
           ..
 
-          rm -rf AppDir
           make -j 4 install DESTDIR=AppDir
 
       - name: 📦 Bundle AppImage
