@@ -123,9 +123,9 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.menu.file.export.ips", "IPSパッチ" },
                         { "hex.builtin.menu.file.export.ips32", "IPS32パッチ" },
                         { "hex.builtin.menu.file.export.base64.popup.export_error", "有効なBase64形式ではありません。" },
-                    { "hex.builtin.menu.file.export.popup.create", "データをエクスポートできません。\nファイルの作成に失敗しました。" },
-                    //{ "hex.builtin.menu.file.bookmark.import", "Import bookmarks" },
-                    //{ "hex.builtin.menu.file.bookmark.export", "Export bookmarks" },
+                        { "hex.builtin.menu.file.export.popup.create", "データをエクスポートできません。\nファイルの作成に失敗しました。" },
+                    { "hex.builtin.menu.file.bookmark.import", "ブックマークをインポート…" },
+                    { "hex.builtin.menu.file.bookmark.export", "ブックマークをエクスポート…" },
 
                 { "hex.builtin.menu.edit", "編集" },
                     { "hex.builtin.menu.edit.undo", "元に戻す" },
