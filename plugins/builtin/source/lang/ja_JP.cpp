@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.latest.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                     { "hex.builtin.welcome.learn.pattern.title", "ImHexオリジナル言語について" },
                     { "hex.builtin.welcome.learn.pattern.desc", "公式ドキュメントを読む" },
-                    { "hex.builtin.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs/pattern_language/pattern_language.html" },
+                    { "hex.builtin.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs" },
                     { "hex.builtin.welcome.learn.plugins.title", "プラグインAPI" },
                     { "hex.builtin.welcome.learn.plugins.desc", "ImHexの機能を拡張する" },
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },

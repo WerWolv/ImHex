@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.latest.link", "https://github.com/WerWolv/ImHex/releases/latest" },
                     { "hex.builtin.welcome.learn.pattern.title", "模式語言說明文件" },
                     { "hex.builtin.welcome.learn.pattern.desc", " 閱覽我們詳盡的說明文件來學習如何編寫 ImHex 的模式" },
-                    { "hex.builtin.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs/pattern_language/pattern_language.html" },
+                    { "hex.builtin.welcome.learn.pattern.link", "https://imhex.werwolv.net/docs" },
                     { "hex.builtin.welcome.learn.plugins.title", "外掛程式 API" },
                     { "hex.builtin.welcome.learn.plugins.desc", " 使用外掛程式來拓展 ImHex 的功能" },
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
