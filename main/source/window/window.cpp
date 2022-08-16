@@ -455,7 +455,8 @@ namespace hex {
                 continue;
 
             if (view->isAvailable()) {
-                ImGui::SetNextWindowSizeConstraints(scaled(view->getMinSize()), scaled(view->getMaxSize()));
+                float fontScaling = std::max(1.0F, ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize);
+                ImGui::SetNextWindowSizeConstraints(view->getMinSize() * fontScaling, view->getMaxSize() * fontScaling);
                 view->drawContent();
             }
 

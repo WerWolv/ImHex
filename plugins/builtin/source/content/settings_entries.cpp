@@ -484,7 +484,7 @@ namespace hex::plugin::builtin {
         }
 
         // If a custom font has been loaded now, also load the font size
-        float fontSize = 13.0F * ImHexApi::System::getGlobalScale();
+        float fontSize = ImHexApi::System::DefaultFontSize * ImHexApi::System::getGlobalScale();
         if (!fontFile.empty()) {
             ImHexApi::System::impl::setCustomFontPath(fontFile);
 

@@ -210,6 +210,7 @@ namespace hex {
 
             std::map<std::string, std::string> &getInitArguments();
 
+            constexpr static float DefaultFontSize = 13.0;
             const std::fs::path &getCustomFontPath();
             float getFontSize();
 
