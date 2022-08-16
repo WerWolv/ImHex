@@ -221,6 +221,7 @@ namespace hex::init {
 
         ContentRegistry::DataFormatter::getEntries().clear();
         ContentRegistry::FileHandler::getEntries().clear();
+        ContentRegistry::Hashes::impl::getHashes().clear();
 
         {
             auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();

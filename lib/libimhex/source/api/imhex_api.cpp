@@ -20,11 +20,8 @@ namespace hex {
         }
 
         void restartImHex() {
+            EventManager::post<RequestRestartImHex>();
             EventManager::post<RequestCloseImHex>(false);
-            std::atexit([] {
-                auto &programArgs = ImHexApi::System::getProgramArguments();
-                execve(programArgs.argv[0], programArgs.argv, programArgs.envp);
-            });
         }
 
     }
@@ -393,7 +390,7 @@ namespace hex {
                 s_customFontPath = path;
             }
 
-            static float s_fontSize = 13.0;
+            static float s_fontSize = DefaultFontSize;
             void setFontSize(float size) {
                 s_fontSize = size;
             }

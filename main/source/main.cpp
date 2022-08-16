@@ -18,42 +18,51 @@ int main(int argc, char **argv, char **envp) {
     ImHexApi::System::impl::setBorderlessWindowMode(true);
 #endif
 
-    // Initialization
-    {
-        Window::initNative();
+    bool shouldRestart = false;
 
-        hex::log::info("Welcome to ImHex!");
+    EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
 
-        init::WindowSplash splashWindow;
+    do {
+        shouldRestart = false;
 
-        for (const auto &[name, task] : init::getInitTasks())
-            splashWindow.addStartupTask(name, task);
+        // Initialization
+        {
+            Window::initNative();
 
-        if (!splashWindow.loop())
-            ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
-    }
+            hex::log::info("Welcome to ImHex!");
 
-    // Clean up
-    ON_SCOPE_EXIT {
-        for (const auto &[name, task] : init::getExitTasks())
-            task();
-    };
+            init::WindowSplash splashWindow;
 
-    // Main window
-    {
-        Window window;
+            for (const auto &[name, task] : init::getInitTasks())
+                splashWindow.addStartupTask(name, task);
 
-        if (argc == 1)
-            ;    // No arguments provided
-        else if (argc == 2)
-            EventManager::post<RequestOpenFile>(argv[1]);
-        else {
-            hex::log::fatal("Usage: {} [<file_name>]", argv[0]);
-            return EXIT_FAILURE;
+            if (!splashWindow.loop())
+                ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
         }
 
-        window.loop();
-    }
+        // Clean up
+        ON_SCOPE_EXIT {
+            for (const auto &[name, task] : init::getExitTasks())
+                task();
+        };
+
+        // Main window
+        {
+            Window window;
+
+            if (argc == 1)
+                ;    // No arguments provided
+            else if (argc == 2)
+                EventManager::post<RequestOpenFile>(argv[1]);
+            else {
+                hex::log::fatal("Usage: {} [<file_name>]", argv[0]);
+                return EXIT_FAILURE;
+            }
+
+            window.loop();
+        }
+
+    } while (shouldRestart);
 
     return EXIT_SUCCESS;
 }
