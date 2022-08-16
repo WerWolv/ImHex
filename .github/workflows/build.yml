@@ -225,6 +225,7 @@ jobs:
           $HOME/.cargo/bin/rustup target add x86_64-unknown-linux-gnu
           $HOME/.cargo/bin/rustup default nightly
 
+      # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
           mkdir -p build
