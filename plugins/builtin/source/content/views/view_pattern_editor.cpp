@@ -812,6 +812,7 @@ namespace hex::plugin::builtin {
 
         auto &runtime = ProviderExtraData::getCurrent().patternLanguage.runtime;
         runtime->reset();
+        runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
 
         EventManager::post<EventHighlightingChanged>();
 

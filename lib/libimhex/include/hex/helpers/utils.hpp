@@ -31,6 +31,16 @@ namespace hex {
     long double operator""_scaled(unsigned long long value);
     ImVec2 scaled(const ImVec2 &vector);
 
+    template<typename T>
+    std::vector<T> operator|(const std::vector<T> &lhs, const std::vector<T> &rhs) {
+        std::vector<T> result;
+
+        std::copy(lhs.begin(), lhs.end(), std::back_inserter(result));
+        std::copy(rhs.begin(), rhs.end(), std::back_inserter(result));
+
+        return result;
+    }
+
     std::string to_string(u128 value);
     std::string to_string(i128 value);
 

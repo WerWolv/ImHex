@@ -250,7 +250,7 @@ namespace hex {
                 }, provider->getBaseAddress(), provider->getActualSize());
             }
 
-            runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude));
+            runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
 
             for (const auto &func : getFunctions()) {
                 if (func.dangerous)
