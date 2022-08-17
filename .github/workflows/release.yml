@@ -8,9 +8,9 @@ on:
     types: [published]
 
 jobs:
-  release:
+  release-common:
     runs-on: ubuntu-latest
-    name: Release
+    name: Release Common
 
     steps:
       - name: 🧰 Checkout
@@ -110,3 +110,25 @@ jobs:
           tag: ImHex-v${{env.IMHEX_VERSION}}
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
+
+  release-windows:
+    name: Release Windows
+    needs: release-common
+    runs-on: windows-2022
+    steps:
+      - name: ⬇️ Download dependencies
+        shell: pwsh
+        run: |
+          iwr https://github.com/microsoft/winget-create/releases/download/v1.0.4.0/wingetcreate.exe -OutFile wingetcreate.exe
+      - name: ⬆️ Update winget manifest
+        shell: pwsh
+        env:
+          WINGET_GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          $tagname = $env:GITHUB_REF.Replace("refs/tags/", "")
+          $version = $tagname.Replace("v", "")
+          $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-win64.msi"
+          .\wingetcreate.exe update WerWolv.ImHex -u $url --version $version
+          if ($version -notmatch "-") {
+            .\wingetcreate.exe submit .\manifests\w\WerWolv\ImHex\${version}\ --token $env:WINGET_GITHUB_TOKEN
+          }
