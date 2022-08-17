@@ -110,6 +110,14 @@ jobs:
           tag: ImHex-v${{env.IMHEX_VERSION}}
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
+          
+      - name: ✉️ Update C++ Plugin Template
+        uses: mvasigh/dispatch-action@main
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          repo: ImHex-Cpp-Plugin-Template
+          owner: WerWolv
+          event_type: update_submodule
 
   release-windows:
     name: Release Windows
