@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
     template<typename T>
     static hex::ContentRegistry::DataInspector::impl::GeneratorFunction drawString(T func) {
         return [func](const std::vector<u8> &buffer, std::endian endian, Style style) {
-            return [value = func(buffer, endian, style)] -> std::string { ImGui::TextUnformatted(value.c_str()); return value; };
+            return [value = func(buffer, endian, style)]() -> std::string { ImGui::TextUnformatted(value.c_str()); return value; };
         };
 
     }
