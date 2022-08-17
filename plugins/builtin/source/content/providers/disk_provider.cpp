@@ -358,8 +358,10 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::pair<Region, bool> DiskProvider::getRegionValidity(u64 address) const {
+        address -= this->getBaseAddress();
+
         if (address < this->getActualSize())
-            return { Region { address, this->getActualSize() - address }, true };
+            return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
     }

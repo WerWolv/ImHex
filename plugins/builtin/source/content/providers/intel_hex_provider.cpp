@@ -153,6 +153,21 @@ namespace hex::plugin::builtin::prv {
 
     }
 
+    void IntelHexProvider::setBaseAddress(u64 address) {
+        auto oldBase = this->getBaseAddress();
+
+        auto intervals = this->m_data.findOverlapping(oldBase, oldBase + this->getActualSize());
+
+        for (auto &interval : intervals) {
+            interval.start = (interval.start - oldBase) + address;
+            interval.stop  = (interval.stop  - oldBase) + address;
+        }
+
+        this->m_data = std::move(intervals);
+
+        Provider::setBaseAddress(address);
+    }
+
     void IntelHexProvider::readRaw(u64 offset, void *buffer, size_t size) {
         auto intervals = this->m_data.findOverlapping(offset, (offset + size) - 1);
 
