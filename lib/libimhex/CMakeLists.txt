@@ -58,7 +58,7 @@ if(NOT USE_SYSTEM_CURL)
   set(LIBCURL_LIBRARIES libcurl)
 else()
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.78.0)
+  pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.76.1)
 endif()
 
 if (NOT USE_SYSTEM_LLVM)
