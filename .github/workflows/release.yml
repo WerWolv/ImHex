@@ -6,6 +6,7 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   release-common:
@@ -114,7 +115,7 @@ jobs:
       - name: ✉️ Update C++ Plugin Template
         uses: mvasigh/dispatch-action@main
         with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.RELEASE_TOKEN }}
           repo: ImHex-Cpp-Plugin-Template
           owner: WerWolv
           event_type: update_submodule
