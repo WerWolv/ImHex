@@ -6,7 +6,6 @@
 #include <array>
 #include <regex>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <llvm/Demangle/Demangle.h>
@@ -319,9 +318,7 @@ namespace hex::plugin::builtin {
             }
         }();
 
-        this->m_searchRunning = true;
-        std::thread([this, settings = this->m_searchSettings, searchRegion]{
-            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.find.searching", searchRegion.getSize());
+        this->m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = this->m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
             switch (settings.mode) {
@@ -338,7 +335,7 @@ namespace hex::plugin::builtin {
                 case BinaryPattern:
                     this->m_foundOccurrences[provider] = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
                     break;
-                }
+            }
 
             this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
 
@@ -346,9 +343,7 @@ namespace hex::plugin::builtin {
             for (const auto &occurrence : this->m_foundOccurrences[provider])
                 intervals.push_back(OccurrenceTree::interval(occurrence.region.getStartAddress(), occurrence.region.getEndAddress(), occurrence));
             this->m_occurrenceTree[provider] = std::move(intervals);
-
-            this->m_searchRunning = false;
-        }).detach();
+        });
     }
 
     std::string ViewFind::decodeValue(prv::Provider *provider, Occurrence occurrence) const {
@@ -408,7 +403,7 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.find.name").c_str(), &this->getWindowOpenState())) {
             auto provider = ImHexApi::Provider::get();
 
-            ImGui::BeginDisabled(this->m_searchRunning);
+            ImGui::BeginDisabled(this->m_searchTask.isRunning());
             {
                 ui::regionSelectionPicker(&this->m_searchSettings.range, true, true);
 

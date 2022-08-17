@@ -150,15 +150,6 @@ namespace hex {
 
         }
 
-        namespace Tasks {
-
-            Task createTask(const std::string &unlocalizedName, u64 maxValue);
-
-            void doLater(const std::function<void()> &function);
-            std::vector<std::function<void()>> &getDeferredCalls();
-
-        }
-
         namespace System {
 
             namespace impl {

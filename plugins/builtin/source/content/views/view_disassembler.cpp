@@ -24,9 +24,8 @@ namespace hex::plugin::builtin {
 
     void ViewDisassembler::disassemble() {
         this->m_disassembly.clear();
-        this->m_disassembling = true;
 
-        std::thread([this] {
+        this->m_disassemblerTask = TaskManager::createTask("hex.builtin.view.disassembler.disassembling", this->m_codeRegion.getSize(), [this](auto &task) {
             csh capstoneHandle;
             cs_insn *instructions = nullptr;
 
@@ -40,7 +39,6 @@ namespace hex::plugin::builtin {
                 std::vector<u8> buffer(2048, 0x00);
                 size_t size = this->m_codeRegion.getSize();
 
-                auto task = ImHexApi::Tasks::createTask("hex.builtin.view.disassembler.disassembling", size);
                 for (u64 address = 0; address < size; address += 2048) {
                     task.update(address);
 
@@ -80,9 +78,7 @@ namespace hex::plugin::builtin {
 
                 cs_close(&capstoneHandle);
             }
-
-            this->m_disassembling = false;
-        }).detach();
+        });
     }
 
     void ViewDisassembler::drawContent() {
@@ -321,14 +317,14 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::EndChild();
 
-                ImGui::BeginDisabled(this->m_disassembling);
+                ImGui::BeginDisabled(this->m_disassemblerTask.isRunning());
                 {
                     if (ImGui::Button("hex.builtin.view.disassembler.disassemble"_lang))
                         this->disassemble();
                 }
                 ImGui::EndDisabled();
 
-                if (this->m_disassembling) {
+                if (this->m_disassemblerTask.isRunning()) {
                     ImGui::SameLine();
                     ImGui::TextSpinner("hex.builtin.view.disassembler.disassembling"_lang);
                 }
@@ -345,7 +341,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.bytes"_lang);
                     ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.title"_lang);
 
-                    if (!this->m_disassembling) {
+                    if (!this->m_disassemblerTask.isRunning()) {
                         ImGuiListClipper clipper;
                         clipper.Begin(this->m_disassembly.size());
 

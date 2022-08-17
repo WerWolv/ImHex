@@ -86,11 +86,11 @@ namespace hex {
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
-                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("No Plugins"); });
+                    TaskManager::doLater([] { ImGui::OpenPopup("No Plugins"); });
                 } else if (argument == "no-builtin-plugin") {
-                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("No Builtin Plugin"); });
+                    TaskManager::doLater([] { ImGui::OpenPopup("No Builtin Plugin"); });
                 } else if (argument == "multiple-builtin-plugins") {
-                    ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("Multiple Builtin Plugins"); });
+                    TaskManager::doLater([] { ImGui::OpenPopup("Multiple Builtin Plugins"); });
                 }
             }
         }
@@ -179,7 +179,7 @@ namespace hex {
             } else {
                 glfwPollEvents();
 
-                bool frameRateUnlocked = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || Task::getRunningTaskCount() > 0 || this->m_mouseButtonDown || this->m_hadEvent || !this->m_pressedKeys.empty();
+                bool frameRateUnlocked = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || TaskManager::getRunningTaskCount() > 0 || this->m_mouseButtonDown || this->m_hadEvent || !this->m_pressedKeys.empty();
                 const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
 
                 if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
@@ -424,7 +424,6 @@ namespace hex {
             }
         }
 
-
         this->m_popupsToOpen.remove_if([](const auto &name) {
             if (ImGui::IsPopupOpen(name.c_str()))
                 return true;
@@ -434,17 +433,12 @@ namespace hex {
             return false;
         });
 
+        TaskManager::runDeferredCalls();
+
         EventManager::post<EventFrameBegin>();
     }
 
     void Window::frame() {
-        {
-            auto &calls = ImHexApi::Tasks::getDeferredCalls();
-            for (const auto &callback : calls)
-                callback();
-            calls.clear();
-        }
-
         auto &io = ImGui::GetIO();
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
@@ -488,6 +482,8 @@ namespace hex {
 
     void Window::frameEnd() {
         EventManager::post<EventFrameEnd>();
+
+        TaskManager::collectGarbage();
 
         this->endNativeWindowFrame();
         ImGui::Render();

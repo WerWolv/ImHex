@@ -74,7 +74,7 @@ namespace hex::plugin::builtin {
         std::map<prv::Provider*, std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
         std::map<prv::Provider*, OccurrenceTree> m_occurrenceTree;
 
-        std::atomic<bool> m_searchRunning;
+        TaskHolder m_searchTask;
         bool m_settingsValid = false;
 
         std::string m_currFilter;

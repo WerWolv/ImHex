@@ -815,10 +815,7 @@ namespace hex::plugin::builtin {
 
         EventManager::post<EventHighlightingChanged>();
 
-        std::thread([this, code, &runtime] {
-            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.pattern_editor.evaluating", 1);
-
-
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &runtime, code](auto &) {
             std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
                 envVars.insert({ name, value });
@@ -851,7 +848,7 @@ namespace hex::plugin::builtin {
             this->m_runningEvaluators--;
 
             this->m_lastEvaluationProcessed = false;
-        }).detach();
+        });
     }
 
 }

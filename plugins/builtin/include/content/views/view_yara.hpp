@@ -5,6 +5,8 @@
 #include <imgui.h>
 #include <hex/ui/view.hpp>
 
+#include <hex/api/task.hpp>
+
 namespace hex::plugin::builtin {
 
     class ViewYara : public View {
@@ -29,7 +31,7 @@ namespace hex::plugin::builtin {
         std::vector<std::pair<std::fs::path, std::fs::path>> m_rules;
         std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
-        bool m_matching    = false;
+        TaskHolder m_matcherTask;
 
         std::vector<std::string> m_consoleMessages;
 

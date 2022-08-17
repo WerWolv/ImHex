@@ -189,13 +189,10 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
 
-            if (!this->m_searchRunning && !searchSequence.empty() && this->m_shouldSearch) {
-                this->m_searchRunning = true;
-                std::thread([this, searchSequence, editor]{
-                    auto task = ImHexApi::Tasks::createTask("Searching", ImHexApi::Provider::get()->getSize());
-
+            if (!this->m_searchTask.isRunning() && !searchSequence.empty() && this->m_shouldSearch) {
+                this->m_searchTask = TaskManager::createTask("hex.builtin.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
                     if (auto region = this->findSequence(editor, searchSequence, this->m_backwards); region.has_value()) {
-                        ImHexApi::Tasks::doLater([editor, region]{
+                        TaskManager::doLater([editor, region]{
                             editor->setSelection(region->getStartAddress(), region->getEndAddress());
                             editor->jumpToSelection();
                         });
@@ -203,8 +200,7 @@ namespace hex::plugin::builtin {
 
                     this->m_shouldSearch = false;
                     this->m_requestFocus = true;
-                    this->m_searchRunning = false;
-                }).detach();
+                });
             }
         }
 
@@ -218,7 +214,7 @@ namespace hex::plugin::builtin {
                 this->m_requestFocus = false;
             }
 
-            ImGui::BeginDisabled(this->m_searchRunning);
+            ImGui::BeginDisabled(this->m_searchTask.isRunning());
             {
                 ImGui::SameLine();
                 if (ImGui::IconButton(ICON_VS_SEARCH "##search", ButtonColor, ButtonSize)) {
@@ -285,7 +281,7 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_shouldSearch = false;
         std::atomic<bool> m_backwards    = false;
 
-        std::atomic<bool> m_searchRunning = false;
+        TaskHolder m_searchTask;
     };
 
     class PopupBaseAddress : public ViewHexEditor::Popup {

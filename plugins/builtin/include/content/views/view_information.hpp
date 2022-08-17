@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/ui/view.hpp>
+#include <hex/api/task.hpp>
 
 #include <array>
 #include <atomic>
@@ -27,7 +28,7 @@ namespace hex::plugin::builtin {
         double m_entropyHandlePosition;
 
         std::array<ImU64, 256> m_valueCounts = { 0 };
-        bool m_analyzing                     = false;
+        TaskHolder m_analyzerTask;
 
         Region m_analyzedRegion = { 0, 0 };
 

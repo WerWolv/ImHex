@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        bool m_disassembling = false;
+        TaskHolder m_disassemblerTask;
 
         u64 m_baseAddress   = 0;
         ui::SelectedRegion m_range = ui::SelectedRegion::EntireData;

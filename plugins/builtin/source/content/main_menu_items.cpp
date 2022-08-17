@@ -9,8 +9,6 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
 
-#include <thread>
-
 namespace hex::plugin::builtin {
 
     static bool g_demoWindowOpen = false;
@@ -20,7 +18,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.file", 1000);
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
-            bool taskRunning = Task::getRunningTaskCount() > 0;
+            bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O", false, !taskRunning)) {
 
@@ -44,7 +42,7 @@ namespace hex::plugin::builtin {
         /* File open, quit imhex */
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1150, [&] {
             bool providerValid = ImHexApi::Provider::isValid();
-            bool taskRunning = Task::getRunningTaskCount() > 0;
+            bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.close"_lang, "CTRL + W", false, providerValid && !taskRunning)) {
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
@@ -59,7 +57,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1250, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
-            bool taskRunning = Task::getRunningTaskCount() > 0;
+            bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.open_project"_lang, "", false, !taskRunning)) {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"}
@@ -85,7 +83,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1300, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
-            bool taskRunning = Task::getRunningTaskCount() > 0;
+            bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             /* Import */
             if (ImGui::BeginMenu("hex.builtin.menu.file.import"_lang, !taskRunning)) {
@@ -126,9 +124,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.ips"_lang, nullptr, false)) {
 
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                        std::thread([path] {
-                            auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
-
+                        TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                             auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
                             auto patch     = hex::loadIPSPatch(patchData);
 
@@ -144,15 +140,13 @@ namespace hex::plugin::builtin {
                             }
 
                             provider->createUndoPoint();
-                        }).detach();
+                        });
                     });
                 }
 
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.ips32"_lang, nullptr, false)) {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                        std::thread([path] {
-                            auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
-
+                        TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                             auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
                             auto patch     = hex::loadIPS32Patch(patchData);
 
@@ -168,7 +162,7 @@ namespace hex::plugin::builtin {
                             }
 
                             provider->createUndoPoint();
-                        }).detach();
+                        });
                     });
                 }
 
@@ -186,12 +180,10 @@ namespace hex::plugin::builtin {
                         patches[0x00454F45] = value;
                     }
 
-                    std::thread([patches] {
-                        auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
-
+                    TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
                         auto data = generateIPSPatch(patches);
 
-                        ImHexApi::Tasks::doLater([data] {
+                        TaskManager::doLater([data] {
                             fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
                                 auto file = fs::File(path, fs::File::Mode::Create);
                                 if (!file.isValid()) {
@@ -202,7 +194,7 @@ namespace hex::plugin::builtin {
                                 file.write(data);
                             });
                         });
-                    }).detach();
+                    });
                 }
 
                 if (ImGui::MenuItem("hex.builtin.menu.file.export.ips32"_lang, nullptr, false)) {
@@ -213,23 +205,21 @@ namespace hex::plugin::builtin {
                         patches[0x45454F45] = value;
                     }
 
-                    std::thread([patches] {
-                        auto task = ImHexApi::Tasks::createTask("hex.builtin.common.processing", 0);
-
+                    TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
                         auto data = generateIPS32Patch(patches);
 
-                        ImHexApi::Tasks::doLater([data] {
+                        TaskManager::doLater([data] {
                             fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
                                 auto file = fs::File(path, fs::File::Mode::Create);
                                 if (!file.isValid()) {
-                                    View::showErrorPopup("hex.builtin.menu.file.export.popup.create"_lang);
+                                    View::showErrorPopup("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
                                     return;
                                 }
 
                                 file.write(data);
                             });
                         });
-                    }).detach();
+                    });
                 }
 
                 ImGui::EndMenu();

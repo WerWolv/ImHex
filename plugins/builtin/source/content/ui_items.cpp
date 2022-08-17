@@ -161,19 +161,19 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<RequestShowInfoPopup>([](const std::string &message) {
             s_popupMessage = message;
 
-            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.info"_lang); });
+            TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.info"_lang); });
         });
 
         EventManager::subscribe<RequestShowErrorPopup>([](const std::string &message) {
             s_popupMessage = message;
 
-            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.error"_lang); });
+            TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.error"_lang); });
         });
 
         EventManager::subscribe<RequestShowFatalErrorPopup>([](const std::string &message) {
             s_popupMessage = message;
 
-            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.fatal"_lang); });
+            TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.fatal"_lang); });
         });
 
         EventManager::subscribe<RequestShowYesNoQuestionPopup>([](const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback) {
@@ -182,7 +182,7 @@ namespace hex::plugin::builtin {
             s_yesCallback = yesCallback;
             s_noCallback  = noCallback;
 
-            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
+            TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
         });
 
         EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
@@ -191,7 +191,7 @@ namespace hex::plugin::builtin {
             s_selectableFilesValidExtensions = validExtensions;
             s_selectableFileOpenCallback     = callback;
 
-            ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
+            TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
         });
     }
 
@@ -213,28 +213,51 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addFooterItem([] {
-            size_t taskCount    = 0;
-            double taskProgress = 0.0;
-            std::string taskName;
-
-            {
-                std::scoped_lock lock(Task::getTaskMutex());
-
-                taskCount = Task::getRunningTasks().size();
-                if (taskCount > 0) {
-                    auto frontTask = Task::getRunningTasks().front();
-                    taskProgress   = frontTask->getProgress();
-                    taskName       = frontTask->getName();
-                }
-            }
-
+            auto taskCount = TaskManager::getRunningTaskCount();
             if (taskCount > 0) {
+                auto &tasks = TaskManager::getRunningTasks();
+                auto frontTask = tasks.front();
+
+                auto widgetStart = ImGui::GetCursorPos();
+
                 ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
+                ImGui::SameLine();
+                ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                ImGui::SameLine();
+
+                auto widgetEnd = ImGui::GetCursorPos();
+                ImGui::SetCursorPos(widgetStart);
+                ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindow()->MenuBarHeight()));
+                ImGui::SetCursorPos(widgetEnd);
+
+                ImGui::InfoTooltip(LangEntry(frontTask->getUnlocalizedName()).get().c_str());
+
+                if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
+                    for (const auto &task : tasks) {
+                        ImGui::PushID(&task);
+                        ImGui::TextFormatted("{}", LangEntry(task->getUnlocalizedName()));
+                        ImGui::SameLine();
+                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                        ImGui::SameLine();
+                        ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
+                        ImGui::SameLine();
+
+                        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+                        if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                            task->interrupt();
+                        ImGui::PopStyleVar();
+
+                        ImGui::PopID();
+                    }
+                    ImGui::EndPopup();
+                }
 
                 ImGui::SameLine();
 
-                ImGui::SmallProgressBar(taskProgress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
-                ImGui::InfoTooltip(taskName.c_str());
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled(ImVec2(1, 2)));
+                if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                    frontTask->interrupt();
+                ImGui::PopStyleVar();
             }
         });
     }
@@ -243,7 +266,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = provider != nullptr;
-            bool tasksRunning  = Task::getRunningTaskCount() > 0;
+            bool tasksRunning  = TaskManager::getRunningTaskCount() > 0;
 
             // Undo
             ImGui::BeginDisabled(!providerValid || !provider->canUndo());

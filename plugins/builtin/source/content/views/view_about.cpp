@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
+                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
                 this->m_aboutWindowOpen    = true;
                 this->getWindowOpenState() = true;
             }

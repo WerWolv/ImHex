@@ -13,6 +13,8 @@
 
 #include <imgui_impl_opengl3_loader.h>
 
+#include <hex/api/imhex_api.hpp>
+
 namespace ImGui {
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
@@ -536,7 +538,7 @@ namespace ImGui {
         const ImGuiStyle &style = g.Style;
 
         ImVec2 pos  = window->DC.CursorPos + ImVec2(0, yOffset);
-        ImVec2 size = CalcItemSize(ImVec2(100, 5), 100, g.FontSize + style.FramePadding.y * 2.0f);
+        ImVec2 size = CalcItemSize(ImVec2(100, 5) * hex::ImHexApi::System::getGlobalScale(), 100, g.FontSize + style.FramePadding.y * 2.0f);
         ImRect bb(pos, pos + size);
         ItemSize(size, 0);
         if (!ItemAdd(bb, 0))

@@ -4,20 +4,15 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
+
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/fmt.hpp>
-#include <hex/helpers/literals.hpp>
+#include <hex/helpers/magic.hpp>
 
 #include <cstring>
 #include <cmath>
-#include <cinttypes>
 #include <filesystem>
 #include <numeric>
 #include <span>
-#include <thread>
-#include <vector>
-
-#include <hex/helpers/magic.hpp>
 
 #include <implot.h>
 
@@ -80,12 +75,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewInformation::analyze() {
-        this->m_analyzing = true;
-
-        std::thread([this] {
+        this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
-            auto task = ImHexApi::Tasks::createTask("hex.builtin.view.information.analyzing", provider->getActualSize());
+            task.setMaxValue(provider->getActualSize());
 
             this->m_analyzedRegion = { provider->getBaseAddress(), provider->getBaseAddress() + provider->getSize() };
 
@@ -127,9 +120,7 @@ namespace hex::plugin::builtin {
                 else
                     this->m_highestBlockEntropy = 0;
             }
-
-            this->m_analyzing = false;
-        }).detach();
+        });
     }
 
     void ViewInformation::drawContent() {
@@ -138,14 +129,14 @@ namespace hex::plugin::builtin {
 
                 auto provider = ImHexApi::Provider::get();
                 if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-                    ImGui::BeginDisabled(this->m_analyzing);
+                    ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
                     {
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             this->analyze();
                     }
                     ImGui::EndDisabled();
 
-                    if (this->m_analyzing) {
+                    if (this->m_analyzerTask.isRunning()) {
                         ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
                     } else {
                         ImGui::NewLine();

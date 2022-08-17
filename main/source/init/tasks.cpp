@@ -173,7 +173,6 @@ namespace hex::init {
         ContentRegistry::Provider::getEntries().clear();
 
         ImHexApi::System::getInitArguments().clear();
-        ImHexApi::Tasks::getDeferredCalls().clear();
         ImHexApi::HexEditor::impl::getBackgroundHighlights().clear();
         ImHexApi::HexEditor::impl::getForegroundHighlights().clear();
         ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions().clear();
@@ -215,7 +214,7 @@ namespace hex::init {
 
         ShortcutManager::clearShortcuts();
 
-        hex::Task::getRunningTasks().clear();
+        TaskManager::getRunningTasks().clear();
 
         ContentRegistry::DataProcessorNode::getEntries().clear();
 

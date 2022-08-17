@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
             } else {
-                ImGui::BeginDisabled(this->m_matching);
+                ImGui::BeginDisabled(this->m_matcherTask.isRunning());
                 {
                     if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.string().c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
                 }
                 ImGui::EndDisabled();
 
-                if (this->m_matching) {
+                if (this->m_matcherTask.isRunning()) {
                     ImGui::SameLine();
                     ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
                 }
@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableHeadersRow();
 
-                if (!this->m_matching) {
+                if (!this->m_matcherTask.isRunning()) {
                     ImGuiListClipper clipper;
                     clipper.Begin(this->m_matches.size());
 
@@ -173,19 +173,13 @@ namespace hex::plugin::builtin {
     void ViewYara::applyRules() {
         this->clearResult();
 
-        this->m_matching = true;
-
-        std::thread([this] {
+        this->m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
-
-            auto provider = ImHexApi::Provider::get();
-            auto task     = ImHexApi::Tasks::createTask("hex.builtin.view.yara.matching", provider->getActualSize());
 
             YR_COMPILER *compiler = nullptr;
             yr_compiler_create(&compiler);
             ON_SCOPE_EXIT {
                 yr_compiler_destroy(compiler);
-                this->m_matching = false;
             };
 
             yr_compiler_set_include_callback(
@@ -209,8 +203,8 @@ namespace hex::plugin::builtin {
 
                     delete[] ptr;
                 },
-                fs::toShortPath(this->m_rules[this->m_selectedRule].second).string().data());
-
+                fs::toShortPath(this->m_rules[this->m_selectedRule].second).string().data()
+            );
 
             fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
             if (!file.isValid()) return;
@@ -220,7 +214,7 @@ namespace hex::plugin::builtin {
                 yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
                 hex::trim(errorMessage);
 
-                ImHexApi::Tasks::doLater([this, errorMessage] {
+                TaskManager::doLater([this, errorMessage] {
                     this->clearResult();
 
                     this->m_consoleMessages.push_back("Error: " + errorMessage);
@@ -246,15 +240,14 @@ namespace hex::plugin::builtin {
             context.currBlock.base       = 0;
             context.currBlock.fetch_data = [](auto *block) -> const u8 * {
                 auto &context = *static_cast<ScanContext *>(block->context);
-
                 auto provider = ImHexApi::Provider::get();
 
                 context.buffer.resize(context.currBlock.size);
 
-                if (context.buffer.empty()) return nullptr;
+                if (context.buffer.empty())
+                    return nullptr;
 
                 block->size = context.currBlock.size;
-
                 provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
 
                 return context.buffer.data();
@@ -301,11 +294,11 @@ namespace hex::plugin::builtin {
             ResultContext resultContext;
 
             yr_rules_scan_mem_blocks(
-                rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
-                    auto &results = *static_cast<ResultContext *>(userData);
+                    rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
+                        auto &results = *static_cast<ResultContext *>(userData);
 
-                    switch (message) {
-                        case CALLBACK_MSG_RULE_MATCHING:
+                        switch (message) {
+                            case CALLBACK_MSG_RULE_MATCHING:
                             {
                                 auto rule = static_cast<YR_RULE *>(data);
 
@@ -315,30 +308,30 @@ namespace hex::plugin::builtin {
                                 if (rule->strings != nullptr) {
                                     yr_rule_strings_foreach(rule, string) {
                                         yr_string_matches_foreach(context, string, match) {
-                                            results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
-                                        }
+                                                results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
+                                            }
                                     }
                                 } else {
                                     results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0, 0 });
                                 }
                             }
-                            break;
-                        case CALLBACK_MSG_CONSOLE_LOG:
+                                break;
+                            case CALLBACK_MSG_CONSOLE_LOG:
                             {
                                 results.consoleMessages.emplace_back(static_cast<const char *>(data));
                             }
-                            break;
-                        default:
-                            break;
-                    }
+                                break;
+                            default:
+                                break;
+                        }
 
-                    return CALLBACK_CONTINUE;
-                },
-                &resultContext,
-                0);
+                        return CALLBACK_CONTINUE;
+                    },
+                    &resultContext,
+                    0);
 
 
-            ImHexApi::Tasks::doLater([this, resultContext] {
+            TaskManager::doLater([this, resultContext] {
                 this->m_matches         = resultContext.newMatches;
                 this->m_consoleMessages = resultContext.consoleMessages;
 
@@ -348,7 +341,7 @@ namespace hex::plugin::builtin {
                     match.tooltipId = ImHexApi::HexEditor::addTooltip({ match. address, match.size }, hex::format("{0} [{1}]", match.identifier, match.variable), YaraColor);
                 }
             });
-        }).detach();
+        });
     }
 
 }

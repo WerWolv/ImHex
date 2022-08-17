@@ -745,15 +745,15 @@ namespace hex::plugin::builtin {
 
 
         void drawFileToolShredder() {
-            static bool shredding    = false;
             static std::u8string selectedFile;
             static bool fastMode     = false;
+            static TaskHolder shredderTask;
 
             ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.warning"_lang);
             ImGui::NewLine();
 
             if (ImGui::BeginChild("settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 4 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                ImGui::BeginDisabled(shredding);
+                ImGui::BeginDisabled(shredderTask.isRunning());
                 {
                     ImGui::TextUnformatted("hex.builtin.tools.file_tools.shredder.input"_lang);
                     ImGui::SameLine();
@@ -771,17 +771,14 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndChild();
 
-            if (shredding)
+            if (shredderTask.isRunning())
                 ImGui::TextSpinner("hex.builtin.tools.file_tools.shredder.shredding"_lang);
             else {
                 ImGui::BeginDisabled(selectedFile.empty());
                 {
                     if (ImGui::Button("hex.builtin.tools.file_tools.shredder.shred"_lang)) {
-                        shredding = true;
-
-                        std::thread([] {
+                        shredderTask = TaskManager::createTask("hex.builtin.tools.file_tools.shredder.shredding", 0, [](auto &task) {
                             ON_SCOPE_EXIT {
-                                shredding = false;
                                 selectedFile.clear();
                             };
                             fs::File file(selectedFile, fs::File::Mode::Write);
@@ -790,6 +787,8 @@ namespace hex::plugin::builtin {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.shredder.error.open"_lang);
                                 return;
                             }
+
+                            task.setMaxValue(file.getSize());
 
                             std::vector<std::array<u8, 3>> overwritePattern;
                             if (fastMode) {
@@ -803,40 +802,40 @@ namespace hex::plugin::builtin {
 
                                 /* Fill fixed patterns */
                                 overwritePattern = {
-                                    {    },
-                                    {    },
-                                    {},
-                                    {},
-                                    { 0x55, 0x55, 0x55 },
-                                    { 0xAA, 0xAA, 0xAA },
-                                    { 0x92, 0x49, 0x24 },
-                                    { 0x49, 0x24, 0x92 },
-                                    { 0x24, 0x92, 0x49 },
-                                    { 0x00, 0x00, 0x00 },
-                                    { 0x11, 0x11, 0x11 },
-                                    { 0x22, 0x22, 0x22 },
-                                    { 0x33, 0x33, 0x44 },
-                                    { 0x55, 0x55, 0x55 },
-                                    { 0x66, 0x66, 0x66 },
-                                    { 0x77, 0x77, 0x77 },
-                                    { 0x88, 0x88, 0x88 },
-                                    { 0x99, 0x99, 0x99 },
-                                    { 0xAA, 0xAA, 0xAA },
-                                    { 0xBB, 0xBB, 0xBB },
-                                    { 0xCC, 0xCC, 0xCC },
-                                    { 0xDD, 0xDD, 0xDD },
-                                    { 0xEE, 0xEE, 0xEE },
-                                    { 0xFF, 0xFF, 0xFF },
-                                    { 0x92, 0x49, 0x24 },
-                                    { 0x49, 0x24, 0x92 },
-                                    { 0x24, 0x92, 0x49 },
-                                    { 0x6D, 0xB6, 0xDB },
-                                    { 0xB6, 0xDB, 0x6D },
-                                    { 0xBD, 0x6D, 0xB6 },
-                                    {},
-                                    {},
-                                    {},
-                                    {}
+                                        {    },
+                                        {    },
+                                        {},
+                                        {},
+                                        { 0x55, 0x55, 0x55 },
+                                        { 0xAA, 0xAA, 0xAA },
+                                        { 0x92, 0x49, 0x24 },
+                                        { 0x49, 0x24, 0x92 },
+                                        { 0x24, 0x92, 0x49 },
+                                        { 0x00, 0x00, 0x00 },
+                                        { 0x11, 0x11, 0x11 },
+                                        { 0x22, 0x22, 0x22 },
+                                        { 0x33, 0x33, 0x44 },
+                                        { 0x55, 0x55, 0x55 },
+                                        { 0x66, 0x66, 0x66 },
+                                        { 0x77, 0x77, 0x77 },
+                                        { 0x88, 0x88, 0x88 },
+                                        { 0x99, 0x99, 0x99 },
+                                        { 0xAA, 0xAA, 0xAA },
+                                        { 0xBB, 0xBB, 0xBB },
+                                        { 0xCC, 0xCC, 0xCC },
+                                        { 0xDD, 0xDD, 0xDD },
+                                        { 0xEE, 0xEE, 0xEE },
+                                        { 0xFF, 0xFF, 0xFF },
+                                        { 0x92, 0x49, 0x24 },
+                                        { 0x49, 0x24, 0x92 },
+                                        { 0x24, 0x92, 0x49 },
+                                        { 0x6D, 0xB6, 0xDB },
+                                        { 0xB6, 0xDB, 0x6D },
+                                        { 0xBD, 0x6D, 0xB6 },
+                                        {},
+                                        {},
+                                        {},
+                                        {}
                                 };
 
                                 /* Fill random patterns */
@@ -848,7 +847,6 @@ namespace hex::plugin::builtin {
 
                             size_t fileSize = file.getSize();
 
-                            auto task = ImHexApi::Tasks::createTask("hex.builtin.tools.file_tools.shredder.shredding", fileSize);
                             for (const auto &pattern : overwritePattern) {
                                 for (u64 offset = 0; offset < fileSize; offset += 3) {
                                     file.write(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
@@ -861,7 +859,7 @@ namespace hex::plugin::builtin {
                             file.remove();
 
                             View::showInfoPopup("hex.builtin.tools.file_tools.shredder.success"_lang);
-                        }).detach();
+                        });
                     }
                 }
                 ImGui::EndDisabled();
@@ -890,14 +888,14 @@ namespace hex::plugin::builtin {
                 1
             };
 
-            static bool splitting = false;
             static std::u8string selectedFile;
             static std::u8string baseOutputPath;
             static u64 splitSize = sizes[0];
             static int selectedItem = 0;
+            static TaskHolder splitterTask;
 
             if (ImGui::BeginChild("split_settings", { 0, ImGui::GetTextLineHeightWithSpacing() * 7 }, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                ImGui::BeginDisabled(splitting);
+                ImGui::BeginDisabled(splitterTask.isRunning());
                 {
                     ImGui::InputText("##path", selectedFile);
                     ImGui::SameLine();
@@ -926,7 +924,7 @@ namespace hex::plugin::builtin {
                     }
                 }
                 ImGui::EndDisabled();
-                ImGui::BeginDisabled(splitting || selectedItem != sizes.size() - 1);
+                ImGui::BeginDisabled(splitterTask.isRunning() || selectedItem != sizes.size() - 1);
                 {
                     ImGui::InputScalar("###custom_size", ImGuiDataType_U64, &splitSize);
                     ImGui::SameLine();
@@ -938,15 +936,13 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(selectedFile.empty() || baseOutputPath.empty() || splitSize == 0);
             {
-                if (splitting)
+                if (splitterTask.isRunning())
                     ImGui::TextSpinner("hex.builtin.tools.file_tools.splitter.splitting"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.splitter.split"_lang)) {
-                        splitting = true;
 
-                        std::thread([] {
+                        splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.splitting", 0, [](auto &task) {
                             ON_SCOPE_EXIT {
-                                splitting = false;
                                 selectedFile.clear();
                                 baseOutputPath.clear();
                             };
@@ -962,7 +958,8 @@ namespace hex::plugin::builtin {
                                 return;
                             }
 
-                            auto task = ImHexApi::Tasks::createTask("hex.builtin.tools.file_tools.splitter.splitting", file.getSize());
+                            task.setMaxValue(file.getSize());
+
                             u32 index = 1;
                             for (u64 offset = 0; offset < file.getSize(); offset += splitSize) {
                                 task.update(offset);
@@ -987,7 +984,7 @@ namespace hex::plugin::builtin {
                             }
 
                             View::showInfoPopup("hex.builtin.tools.file_tools.splitter.success"_lang);
-                        }).detach();
+                        });
                     }
                 }
             }
@@ -995,10 +992,10 @@ namespace hex::plugin::builtin {
         }
 
         void drawFileToolCombiner() {
-            static bool combining = false;
             static std::vector<std::fs::path> files;
             static std::u8string outputPath;
             static u32 selectedIndex;
+            static TaskHolder combinerTask;
 
             if (ImGui::BeginTable("files_table", 2, ImGuiTableFlags_SizingStretchProp)) {
                 ImGui::TableSetupColumn("file list", ImGuiTableColumnFlags_NoHeaderLabel, 10);
@@ -1041,7 +1038,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                ImGui::BeginDisabled(combining);
+                ImGui::BeginDisabled(combinerTask.isRunning());
                 {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
                         fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
@@ -1063,7 +1060,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGui::BeginDisabled(combining);
+            ImGui::BeginDisabled(combinerTask.isRunning());
             {
                 ImGui::InputText("##output_path", outputPath);
                 ImGui::SameLine();
@@ -1079,14 +1076,12 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(files.empty() || outputPath.empty());
             {
-                if (combining)
+                if (combinerTask.isRunning())
                     ImGui::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
-                        combining = true;
 
-                        std::thread([] {
-                            ON_SCOPE_EXIT { combining = false; };
+                        combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
 
                             fs::File output(outputPath, fs::File::Mode::Create);
 
@@ -1095,7 +1090,7 @@ namespace hex::plugin::builtin {
                                 return;
                             }
 
-                            auto task = ImHexApi::Tasks::createTask("hex.builtin.tools.file_tools.combiner.combining", files.size());
+                            task.setMaxValue(files.size());
 
                             u64 fileIndex = 0;
                             for (const auto &file : files) {
@@ -1121,7 +1116,7 @@ namespace hex::plugin::builtin {
                             outputPath.clear();
 
                             View::showInfoPopup("hex.builtin.tools.file_tools.combiner.success"_lang);
-                        }).detach();
+                        });
                     }
                 }
             }

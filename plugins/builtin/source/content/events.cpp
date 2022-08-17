@@ -30,14 +30,14 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventWindowClosing>([](GLFWwindow *window) {
             if (ImHexApi::Provider::isDirty()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.popup.exit_application.title"_lang); });
+                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.popup.exit_application.title"_lang); });
             }
         });
 
         EventManager::subscribe<EventProviderClosing>([](hex::prv::Provider *provider, bool *shouldClose) {
             if (provider->isDirty()) {
                 *shouldClose = false;
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.popup.close_provider.title"_lang); });
+                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.popup.close_provider.title"_lang); });
             }
         });
 
@@ -87,12 +87,12 @@ namespace hex::plugin::builtin {
 
             if (provider->hasFilePicker()) {
                 if (!provider->handleFilePicker()) {
-                    ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
                 if (!provider->open()) {
                     View::showErrorPopup("hex.builtin.popup.error.open"_lang);
-                    ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
             }
@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
             else {
                 if (!provider->open() || !provider->isAvailable()) {
                     View::showErrorPopup("hex.builtin.popup.error.open"_lang);
-                    ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 }
             }
         });

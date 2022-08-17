@@ -11,14 +11,14 @@ namespace hex::plugin::builtin {
     ViewSettings::ViewSettings() : View("hex.builtin.view.settings.name") {
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
             if (name == "Settings") {
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 2000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.settings.name"_lang)) {
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
         });

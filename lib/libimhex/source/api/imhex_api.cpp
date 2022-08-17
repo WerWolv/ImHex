@@ -236,7 +236,7 @@ namespace hex {
         }
 
         void setCurrentProvider(u32 index) {
-            if (Task::getRunningTaskCount() > 0)
+            if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
             if (index < s_providers.size() && s_currentProvider != index) {
@@ -266,7 +266,7 @@ namespace hex {
         }
 
         void add(prv::Provider *provider, bool skipLoadInterface) {
-            if (Task::getRunningTaskCount() > 0)
+            if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
             if (skipLoadInterface)
@@ -282,7 +282,7 @@ namespace hex {
             if (provider == nullptr)
                  return;
 
-            if (Task::getRunningTaskCount() > 0)
+            if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
             if (!noQuestions) {
@@ -318,29 +318,6 @@ namespace hex {
         }
 
     }
-
-
-    namespace ImHexApi::Tasks {
-
-        Task createTask(const std::string &unlocalizedName, u64 maxValue) {
-            return { unlocalizedName, maxValue };
-        }
-
-        void doLater(const std::function<void()> &function) {
-            static std::mutex tasksMutex;
-            std::scoped_lock lock(tasksMutex);
-
-            getDeferredCalls().push_back(function);
-        }
-
-        std::vector<std::function<void()>> &getDeferredCalls() {
-            static std::vector<std::function<void()>> deferredCalls;
-
-            return deferredCalls;
-        }
-
-    }
-
 
     namespace ImHexApi::System {
 

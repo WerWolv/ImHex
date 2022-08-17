@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
 
             if (!provider->open() || !provider->isAvailable()) {
                 View::showErrorPopup("hex.builtin.popup.error.open"_lang);
-                ImHexApi::Tasks::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }
 
@@ -517,7 +517,7 @@ namespace hex::plugin::builtin {
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             if (auto filePath = std::fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
                 s_safetyBackupPath = filePath;
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
+                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
             }
         }
 
@@ -526,7 +526,7 @@ namespace hex::plugin::builtin {
 
             bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
             if (showTipOfTheDay)
-                ImHexApi::Tasks::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.tip_of_the_day"_lang); });
+                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.tip_of_the_day"_lang); });
         }
     }
 
