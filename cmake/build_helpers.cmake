@@ -102,7 +102,11 @@ macro(detectOS)
             # Warning : Do not work with portable versions such as appimage (because the path is hardcoded)
             add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
         endif()
-            
+
+        if(IMHEX_USE_BUNDLED_CA)
+            add_compile_definitions(IMHEX_USE_BUNDLED_CA)
+        endif()
+
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()
