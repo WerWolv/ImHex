@@ -277,6 +277,7 @@ jobs:
             -DRUST_PATH="$HOME/.cargo/bin/"           \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             -DIMHEX_PLUGINS_IN_SHARE=ON               \
+            -DIMHEX_USE_BUNDLED_CA=ON                 \
             ..
           make -j 4 install DESTDIR=AppDir
 
