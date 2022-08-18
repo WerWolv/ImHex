@@ -4,6 +4,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include "math_evaluator.hpp"
 
@@ -11,6 +12,7 @@
 #include <nlohmann/json.hpp>
 
 #include <thread>
+#include <sstream>
 
 namespace hex::plugin::builtin {
 
@@ -1158,15 +1160,18 @@ namespace hex::plugin::builtin {
         ImGui::SetClipboardText(str.c_str());
     }
 
-    static std::optional<std::vector<u8>> parseWholeHexBytesWithoutPrefix(const std::string &input) {
-        std::string str = input;
-        // Check for non-hex characters
-        bool isValidHexString = std::find_if(str.begin(), str.end(), [](char c) {
+    // Check for non-hex characters
+    static bool isValidHexString(const std::string_view& str) {
+        return std::find_if(str.begin(), str.end(), [](char c) {
             return !std::isxdigit(c) && !std::isspace(c);
         }) == str.end();
+    }
 
-        if (!isValidHexString)
+    static std::optional<std::vector<u8>> parseWholeHexBytesWithoutPrefix(const std::string &input) {
+        if (!isValidHexString(input))
             return std::nullopt;
+
+        std::string str = input;
 
         // Remove all whitespace
         str.erase(std::remove_if(str.begin(), str.end(), [](char c) { return std::isspace(c); }), str.end());
@@ -1180,14 +1185,58 @@ namespace hex::plugin::builtin {
         return std::optional<std::vector<u8> > {buffer};
     }
 
+    static std::string_view getHexAfterPrefix(const std::string &hexByte) {
+        const char *ptr = hexByte.c_str() + 2; // Skip 0x
+        const size_t size = hexByte.size() - 2;
+        return std::string_view(ptr, size);
+    }
+
+    static std::optional<std::vector<u8>> parseHexBytesWithPrefix(const std::string &input) {
+        std::istringstream iss(input);
+        std::vector<std::string> hexBytes((std::istream_iterator<std::string>(iss)),
+                                           std::istream_iterator<std::string>());
+
+        bool isValid = std::find_if(hexBytes.begin(), hexBytes.end(),
+                                    [](const std::string &hexStr) {
+            if (!hexStr.starts_with("0x"))
+                return true;
+
+            const auto hexByte = getHexAfterPrefix(hexStr);
+            if (hexByte.size() == 0 || hexByte.size() > 2)
+                return true;
+
+            return !isValidHexString(hexByte);
+        }) == hexBytes.end();
+
+        if (!isValid)
+            return std::nullopt;
+
+        std::ostringstream oss;
+
+        for (const std::string &hexStr : hexBytes) {
+            const auto hexByte = getHexAfterPrefix(hexStr);
+            if (hexByte.size() == 1)
+                oss << '0';
+
+            oss << hexByte;
+        }
+
+        // Convert hex string to bytes
+        std::vector<u8> buffer = crypt::decode16(oss.str());
+        return std::optional<std::vector<u8> > {buffer};
+    }
+
     static void pasteBytes(const Region &selection) {
         auto provider = ImHexApi::Provider::get();
 
         std::string clipboard = ImGui::GetClipboardText();
 
         auto parseRes = parseWholeHexBytesWithoutPrefix(clipboard);
-        if (!parseRes.has_value())
-            return;
+        if (!parseRes.has_value()) {
+            parseRes = parseHexBytesWithPrefix(clipboard);
+            if (!parseRes.has_value())
+                return;
+        }
 
         auto buffer = parseRes.value();
 
