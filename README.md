@@ -116,7 +116,7 @@ For format patterns, libraries, magic and constant files, check out the [ImHex-P
 
 To use ImHex, the following minimal system requirements need to be met:
 
-- **OS**: Windows 7 or higher, macOS 10.10 (Yosemite) or higher, "Modern" Linux (Ubuntu 22.04+, Fedora Stable/Rawhide and Arch Linux are officially supported)
+- **OS**: Windows 7 or higher, macOS 10.10 (Yosemite) or higher, "Modern" Linux (Ubuntu 22.04+, Fedora Stable/Rawhide, and Arch Linux are officially supported)
 - **CPU**: x86_64 (64 Bit)
 - **GPU**: OpenGL 3.0 or higher (preferable a dedicated GPU and not Intel HD Graphics)
 - **RAM**: 512MB, more may be required for more complicated analysis
@@ -128,6 +128,25 @@ To develop plugins for ImHex, use one of the following two templates projects to
 - [C++ Plugin Template](https://github.com/WerWolv/ImHex-Cpp-Plugin-Template)
 - [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
 
+## Installing
+The following OSs have packages available in their respositories making it easy to install ImHex.
+### Fedora (36+)
+```
+dnf install imhex
+```
+
+### RHEL 9 / AlmaLinux 9 (coming soon)
+
+### Arch Linux (AUR)
+```
+yay install imhex
+```
+
+## Third Party Repositories
+
+ImHex is available in various thid party repositores.
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/imhex.svg)](https://repology.org/project/imhex/versions)
 
 ## Nightly builds
 
@@ -144,12 +163,6 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
   - [Arch Package](https://nightly.link/WerWolv/ImHex/workflows/build/master/ArchLinux%20.pkg.tar.zst.zip)
   - [Fedora Rawhide RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Rawhide%20RPM.zip)
   - [Fedora Stable RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Latest%20RPM.zip)
-
-## Third party repositories
-
-ImHex is available in various third party repositories.
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/imhex.svg)](https://repology.org/project/imhex/versions)
 
 ## Compiling
 
