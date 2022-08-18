@@ -200,6 +200,7 @@ jobs:
         with:
           path: |
             build/CMakeCache.txt
+            build-appimage/CMakeCache.txt
             .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
@@ -261,21 +262,27 @@ jobs:
           dpkg-deb -Zgzip --build build/DebDir
           mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}.deb
 
+      # AppImage cmake build
       - name: 🛠️ Reconfigure build for AppImage
         run: |
-          # Reconfigure CMake to  include a flag needed for AppImage
-          # Other flags are kept from old configuration
-
-          cd build
-          cmake \
-          -DIMHEX_PLUGINS_IN_SHARE=ON \
-          ..
-
+          mkdir -p build-appimage
+          cd build-appimage
+          CC=gcc-12 CXX=g++-12 cmake                  \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
+            -DCMAKE_INSTALL_PREFIX="/usr"             \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
+            -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
+            -DRUST_PATH="$HOME/.cargo/bin/"           \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+            -DIMHEX_PLUGINS_IN_SHARE=ON               \
+            ..
           make -j 4 install DESTDIR=AppDir
 
       - name: 📦 Bundle AppImage
         run: |
-          cd build
+          cd build-appimage
           appimage-builder --recipe ../dist/AppImageBuilder.yml
           mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.IMHEX_VERSION}}.AppImage
           cd ..
