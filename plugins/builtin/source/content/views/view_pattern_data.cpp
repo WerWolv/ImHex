@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
     void ViewPatternData::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = ImHexApi::Provider::get();
-            if (ImHexApi::Provider::isValid() && provider->isReadable()) {
+            if (ImHexApi::Provider::isValid() && provider->isReadable() && !ProviderExtraData::get(provider).patternLanguage.runtime->isRunning()) {
 
                 auto &sortedPatterns = this->m_sortedPatterns[ImHexApi::Provider::get()];
                 if (beginPatternTable(provider, ProviderExtraData::get(provider).patternLanguage.runtime->getPatterns(), sortedPatterns)) {
