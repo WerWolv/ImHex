@@ -283,6 +283,8 @@ jobs:
       - name: 📦 Bundle AppImage
         run: |
           cd build-appimage
+          mkdir -p ./AppDir/usr/share/metainfo
+          cp ../dist/imhex.appdata.xml ./AppDir/usr/share/metainfo/imhex.appdata.xml
           appimage-builder --recipe ../dist/AppImageBuilder.yml
           mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.IMHEX_VERSION}}.AppImage
           cd ..
