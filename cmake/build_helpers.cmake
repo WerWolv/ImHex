@@ -84,6 +84,8 @@ macro(detectOS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
+
+        SET(IMHEX_USE_BUNDLED_CA ON)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -103,13 +105,14 @@ macro(detectOS)
             add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
         endif()
 
-        if(IMHEX_USE_BUNDLED_CA)
-            add_compile_definitions(IMHEX_USE_BUNDLED_CA)
-        endif()
-
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()
+
+    if(IMHEX_USE_BUNDLED_CA)
+        add_compile_definitions(IMHEX_USE_BUNDLED_CA)
+    endif()
+
 endmacro()
 
 # Detect 32 vs. 64 bit system

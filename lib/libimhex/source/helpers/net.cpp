@@ -109,7 +109,7 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_NOSIGNAL, 1L);
         curl_easy_setopt(this->m_ctx, CURLOPT_NOPROGRESS, 0L);
 
-#if defined(OS_WINDOWS) || defined(IMHEX_USE_BUNDLED_CA)
+#if defined(IMHEX_USE_BUNDLED_CA)
         curl_easy_setopt(this->m_ctx, CURLOPT_CAINFO, nullptr);
         curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
         curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
