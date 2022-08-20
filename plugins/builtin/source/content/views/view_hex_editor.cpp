@@ -1192,9 +1192,23 @@ namespace hex::plugin::builtin {
     }
 
     static std::optional<std::vector<u8>> parseHexBytesWithPrefix(const std::string &input) {
-        std::istringstream iss(input);
-        std::vector<std::string> hexBytes((std::istream_iterator<std::string>(iss)),
-                                           std::istream_iterator<std::string>());
+        std::vector<std::string> hexBytes;
+        std::string currentHexByte;
+
+        for (const char &c: input) {
+            if (isspace(c)) {
+                if (!currentHexByte.empty()) {
+                    hexBytes.push_back(currentHexByte);
+                    currentHexByte.clear();
+                }
+            } else {
+                currentHexByte.push_back(c);
+            }
+        }
+
+        if (!currentHexByte.empty()) {
+            hexBytes.push_back(currentHexByte);
+        }
 
         bool isValid = std::find_if(hexBytes.begin(), hexBytes.end(),
                                     [](const std::string &hexStr) {
@@ -1211,18 +1225,18 @@ namespace hex::plugin::builtin {
         if (!isValid)
             return std::nullopt;
 
-        std::ostringstream oss;
+        std::string plainHexString;
 
         for (const std::string &hexStr : hexBytes) {
             const auto hexByte = getHexAfterPrefix(hexStr);
             if (hexByte.size() == 1)
-                oss << '0';
+                plainHexString += "0";
 
-            oss << hexByte;
+            plainHexString += hexByte;
         }
 
         // Convert hex string to bytes
-        std::vector<u8> buffer = crypt::decode16(oss.str());
+        std::vector<u8> buffer = crypt::decode16(plainHexString);
         return std::optional<std::vector<u8> > {buffer};
     }
 
