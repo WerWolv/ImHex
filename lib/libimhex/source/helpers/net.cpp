@@ -167,8 +167,10 @@ namespace hex {
             setCommonSettings(response, url, timeout);
 
             auto responseCode = execute();
-
-            return Response<nlohmann::json> { responseCode.value_or(0), nlohmann::json::parse(response) };
+            if (!responseCode.has_value())
+                return Response<nlohmann::json> { 0, { } };
+            else
+                return Response<nlohmann::json> { responseCode.value_or(0), nlohmann::json::parse(response, nullptr, false, true) };
         });
     }
 
