@@ -114,14 +114,15 @@ namespace hex {
 
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
-                if (!windowTitle.empty())
+                if (!windowTitle.empty() && provider != nullptr) {
                     title += " - " + windowTitle;
 
-                if (provider->isDirty())
-                    title += " (*)";
+                    if (provider->isDirty())
+                        title += " (*)";
 
-                if (!provider->isWritable())
-                    title += " (Read Only)";
+                    if (!provider->isWritable())
+                        title += " (Read Only)";
+                }
             }
 
             this->m_windowTitle = title;
