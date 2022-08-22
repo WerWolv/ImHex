@@ -34,10 +34,16 @@ namespace hex::plugin::builtin {
                     this->m_upperCaseHex = static_cast<int>(upperCaseHex);
             }
         });
+
+        EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
+            this->m_providerA = -1;
+            this->m_providerB = -1;
+        });
     }
 
     ViewDiff::~ViewDiff() {
         EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventProviderClosed>(this);
     }
 
     static void drawProviderSelector(int &provider) {
