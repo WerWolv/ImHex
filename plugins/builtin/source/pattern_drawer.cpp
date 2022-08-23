@@ -102,7 +102,7 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternBoolean& pattern) {
-        this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<bool>(pattern.getValue()));
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), bool(hex::get_or<u128>(pattern.getValue(), 0x00)));
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternCharacter& pattern) {
@@ -126,9 +126,9 @@ namespace hex {
 
     void PatternDrawer::visit(pl::ptrn::PatternFloat& pattern) {
         if (pattern.getSize() == 4) {
-            this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<float>(pattern.getValue()));
+            this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
         } else if (pattern.getSize() == 8) {
-            this->createDefaultEntry(pattern, pattern.getFormattedValue(), static_cast<double>(pattern.getValue()));
+            this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
         }
     }
 
@@ -238,7 +238,7 @@ namespace hex {
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideCharacter& pattern) {
-        this->createDefaultEntry(pattern, pattern.getFormattedValue(), u128(pattern.getValue()));
+        this->createDefaultEntry(pattern, pattern.getFormattedValue(), pattern.getValue());
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideString& pattern) {
