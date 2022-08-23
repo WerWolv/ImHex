@@ -19,7 +19,9 @@
 
 #include <fonts/codicons_font.h>
 
+#include <string>
 #include <list>
+#include <unordered_set>
 
 namespace hex::plugin::builtin {
 
@@ -37,43 +39,53 @@ namespace hex::plugin::builtin {
         nlohmann::json data;
 
         bool operator==(const RecentProvider &other) const {
-            return displayName == other.displayName && type == other.type && data == other.data;
+            return HashFunction()(*this) == HashFunction()(other);
         }
+
+        struct HashFunction {
+            std::size_t operator()(const RecentProvider& provider) const {
+                return
+                    (std::hash<std::string>()(provider.displayName)) ^
+                    (std::hash<std::string>()(provider.type) << 1);
+            }
+        };
+
     };
-    static std::vector<RecentProvider> s_recentProviders;
+
+    static std::list<RecentProvider> s_recentProviders;
 
     static void updateRecentProviders() {
         s_recentProviders.clear();
 
         // Query all recent providers
-        std::vector<std::fs::path> recentFiles;
+        std::vector<std::fs::path> recentFilePaths;
         for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
             for (const auto &entry : std::fs::directory_iterator(folder)) {
                 if (entry.is_regular_file())
-                    recentFiles.push_back(entry.path());
+                    recentFilePaths.push_back(entry.path());
             }
         }
 
         // Sort recent provider files by last modified time
-        std::sort(recentFiles.begin(), recentFiles.end(), [](const auto &a, const auto &b) {
+        std::sort(recentFilePaths.begin(), recentFilePaths.end(), [](const auto &a, const auto &b) {
             return std::fs::last_write_time(a) > std::fs::last_write_time(b);
         });
 
-        for (u32 i = 0; i < recentFiles.size() && s_recentProviders.size() < 5; i++) {
-            auto &path = recentFiles[i];
+        std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
+        for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < 5; i++) {
+            auto &path = recentFilePaths[i];
             try {
                 auto jsonData = nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString());
-                s_recentProviders.push_back(RecentProvider {
-                    .displayName = jsonData["displayName"],
-                    .type = jsonData["type"],
-                    .filePath = path,
-                    .data = jsonData
+                uniqueProviders.insert(RecentProvider {
+                    .displayName    = jsonData["displayName"],
+                    .type           = jsonData["type"],
+                    .filePath       = path,
+                    .data           = jsonData
                 });
             } catch (...) { }
         }
 
-        // De-duplicate recent providers
-        s_recentProviders.erase(std::unique(s_recentProviders.begin(), s_recentProviders.end()), s_recentProviders.end());
+        std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
     }
 
     static void loadRecentProvider(const RecentProvider &recentProvider) {
@@ -89,7 +101,6 @@ namespace hex::plugin::builtin {
 
             updateRecentProviders();
         }
-
     }
 
     static void loadDefaultLayout() {
