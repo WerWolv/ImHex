@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
 
             if (!this->m_searchTask.isRunning() && !searchSequence.empty() && this->m_shouldSearch) {
                 this->m_searchTask = TaskManager::createTask("hex.builtin.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
-                    if (auto region = this->findSequence(editor, searchSequence, this->m_backwards); region.has_value()) {
+                    if (auto region = this->findSequence(searchSequence, this->m_backwards); region.has_value()) {
                         TaskManager::doLater([editor, region]{
                             editor->setSelection(region->getStartAddress(), region->getEndAddress());
                             editor->jumpToSelection();
@@ -253,7 +253,7 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
         }
 
-        std::optional<Region> findSequence(ViewHexEditor *editor, const std::vector<u8> &sequence, bool backwards) {
+        std::optional<Region> findSequence(const std::vector<u8> &sequence, bool backwards) {
             hex::prv::BufferedReader reader(ImHexApi::Provider::get());
 
             reader.seek(this->m_searchPosition.value_or(0x00));
