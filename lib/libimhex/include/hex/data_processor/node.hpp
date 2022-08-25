@@ -90,7 +90,7 @@ namespace hex::dp {
 
     protected:
         [[noreturn]] void throwNodeError(const std::string &message) {
-            throw NodeError(this, message);
+            throw NodeError { this, message };
         }
 
         std::vector<u8> getBufferOnInput(u32 index);
