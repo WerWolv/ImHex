@@ -103,6 +103,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.create", "创建新文件失败！" },
 
                 { "hex.builtin.menu.file", "文件" },
+                    //{ "hex.builtin.menu.file.create_file", "New File..." },
                     { "hex.builtin.menu.file.open_file", "打开文件..." },
                     { "hex.builtin.menu.file.open_recent", "最近打开" },
                     { "hex.builtin.menu.file.clear_recent", "清除" },

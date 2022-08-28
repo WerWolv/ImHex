@@ -4,11 +4,14 @@
 namespace hex::plugin::builtin {
 
     void registerShortcuts() {
+        // New file
+        ShortcutManager::addGlobalShortcut(CTRL + Keys::N, [] {
+            EventManager::post<RequestOpenWindow>("Create File");
+        });
+
         // Open file
         ShortcutManager::addGlobalShortcut(CTRL + Keys::O, [] {
-            fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                EventManager::post<RequestOpenFile>(path);
-            });
+            EventManager::post<RequestOpenWindow>("Open File");
         });
 
         // Close file

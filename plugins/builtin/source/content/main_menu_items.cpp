@@ -20,11 +20,12 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O", false, !taskRunning)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.create_file"_lang, "CTRL + N", false, !taskRunning)) {
+                EventManager::post<RequestOpenWindow>("Create File");
+            }
 
-                fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                    EventManager::post<RequestOpenFile>(path);
-                });
+            if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O", false, !taskRunning)) {
+                EventManager::post<RequestOpenWindow>("Open File");
             }
 
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_other"_lang, !taskRunning)) {

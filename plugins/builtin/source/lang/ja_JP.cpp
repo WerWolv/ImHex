@@ -103,6 +103,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.create", "新しいファイルを作成できませんでした。" },
 
                 { "hex.builtin.menu.file", "ファイル" },
+                    //{ "hex.builtin.menu.file.create_file", "New File..." },
                     { "hex.builtin.menu.file.open_file", "ファイルを開く…" },
                     { "hex.builtin.menu.file.open_recent", "最近使用したファイル" },
                     { "hex.builtin.menu.file.clear_recent", "リストをクリア" },
