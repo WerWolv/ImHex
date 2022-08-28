@@ -99,7 +99,10 @@ namespace hex::plugin::builtin {
 
         T value = 0x00;
         std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
-        auto number   = hex::signExtend(Size * 8, hex::changeEndianess(value, Size, endian));
+        auto number   = hex::changeEndianess(value, Size, endian);
+        if (Size != sizeof(T))
+            number = hex::signExtend(Size * 8, number);
+
         bool negative = number < 0;
 
         return hex::format(format, negative ? "-" : "", std::abs(number));
