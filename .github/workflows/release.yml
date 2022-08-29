@@ -59,7 +59,9 @@ jobs:
           done
 
       - name: 🟩 Rename Windows Portable Zip
-        run: mv "Windows Portable.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable.zip
+        run: |
+          mv "Windows Portable.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable.zip
+          mv "Windows Portable NoGPU.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable.zip
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
