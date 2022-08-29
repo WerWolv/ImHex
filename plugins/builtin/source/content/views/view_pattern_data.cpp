@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid() && provider->isReadable() && !ProviderExtraData::get(provider).patternLanguage.runtime->isRunning()) {
 
                 auto &sortedPatterns = this->m_sortedPatterns[ImHexApi::Provider::get()];
-                if (beginPatternTable(provider, ProviderExtraData::get(provider).patternLanguage.runtime->getPatterns(), sortedPatterns)) {
+                if (beginPatternTable(provider, ProviderExtraData::get(provider).patternLanguage.runtime->getAllPatterns(), sortedPatterns)) {
                     ImGui::TableHeadersRow();
                     if (!sortedPatterns.empty()) {
 
