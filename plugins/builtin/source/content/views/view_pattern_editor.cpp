@@ -303,7 +303,8 @@ namespace hex::plugin::builtin {
                 if (!this->m_syncPatternSourceCode)
                     ProviderExtraData::get(provider).patternLanguage.sourceCode = sourceCode;
 
-                this->m_textEditor.SetText(sourceCode);
+                if (provider == ImHexApi::Provider::get())
+                    this->m_textEditor.SetText(sourceCode);
 
                 return true;
             },
