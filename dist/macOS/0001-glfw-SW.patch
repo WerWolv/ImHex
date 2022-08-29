@@ -1,0 +1,25 @@
+From 9c8665af4c2e2ce66555c15c05c72027bfdf0cb6 Mon Sep 17 00:00:00 2001
+From: iTrooz <itrooz@protonmail.com>
+Date: Mon, 29 Aug 2022 17:29:38 +0200
+Subject: [PATCH] Use software rendering on MacOS
+
+---
+ src/nsgl_context.m | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/nsgl_context.m b/src/nsgl_context.m
+index fc1f7521..e5906575 100644
+--- a/src/nsgl_context.m
++++ b/src/nsgl_context.m
+@@ -198,7 +198,7 @@ GLFWbool _glfwCreateContextNSGL(_GLFWwindow* window,
+     NSOpenGLPixelFormatAttribute attribs[40];
+     int index = 0;
+ 
+-    ADD_ATTRIB(NSOpenGLPFAAccelerated);
++    ADD_ATTRIB(NSOpenGLPFARendererID);ADD_ATTRIB(kCGLRendererGenericFloatID);
+     ADD_ATTRIB(NSOpenGLPFAClosestPolicy);
+ 
+     if (ctxconfig->nsgl.offline)
+-- 
+2.37.2
+
