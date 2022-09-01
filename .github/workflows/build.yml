@@ -115,7 +115,7 @@ jobs:
         path: |
           build/install/*
       
-    - name: Download Mesa3D for NoGPU version
+    - name: ⬇️ Download Mesa3D for NoGPU version
       shell: bash
       run: |
         echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
