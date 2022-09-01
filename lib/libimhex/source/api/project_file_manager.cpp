@@ -101,6 +101,8 @@ namespace hex {
             tar.write(MetadataPath, metadataContent);
         }
 
+        ImHexApi::Provider::resetDirty();
+
         return result;
     }
 

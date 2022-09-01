@@ -253,7 +253,7 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
 
             std::optional<ImColor> color;
-            for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatterns(address)) {
+            for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address)) {
                 if (pattern->isHidden())
                     continue;
 
@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatterns(address);
+            auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address);
             if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
                 ImGui::BeginTooltip();
                 for (const auto &pattern : patterns) {
@@ -290,6 +290,7 @@ namespace hex::plugin::builtin {
                         ImGui::PopStyleColor(2);
                     }
                     ImGui::PopID();
+
                 }
                 ImGui::EndTooltip();
             }
@@ -303,7 +304,8 @@ namespace hex::plugin::builtin {
                 if (!this->m_syncPatternSourceCode)
                     ProviderExtraData::get(provider).patternLanguage.sourceCode = sourceCode;
 
-                this->m_textEditor.SetText(sourceCode);
+                if (provider == ImHexApi::Provider::get())
+                    this->m_textEditor.SetText(sourceCode);
 
                 return true;
             },
@@ -841,8 +843,6 @@ namespace hex::plugin::builtin {
             if (!this->m_lastEvaluationResult) {
                 this->m_lastEvaluationError = runtime->getError();
             }
-
-            runtime->flattenPatterns();
 
             this->m_lastEvaluationLog     = runtime->getConsoleLog();
             this->m_lastEvaluationOutVars = runtime->getOutVariables();

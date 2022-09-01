@@ -4,14 +4,17 @@
 #include <vector>
 
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/literals.hpp>
 
 namespace hex::prv {
 
+    using namespace hex::literals;
+
     class BufferedReader {
     public:
-        explicit BufferedReader(Provider *provider, size_t bufferSize = 0xFF'FFFF)
+        explicit BufferedReader(Provider *provider, size_t bufferSize = 16_MiB)
         : m_provider(provider), m_bufferAddress(provider->getBaseAddress()), m_maxBufferSize(bufferSize),
-          m_startAddress(0x00), m_endAddress(provider->getActualSize()),
+          m_startAddress(0x00), m_endAddress(provider->getActualSize() - 1),
           m_buffer(bufferSize) {
 
         }
@@ -253,9 +256,11 @@ namespace hex::prv {
     private:
         void updateBuffer(u64 address, size_t size) {
             if (!this->m_bufferValid || address < this->m_bufferAddress || address + size > (this->m_bufferAddress + this->m_buffer.size())) {
-                const auto remainingBytes = (this->m_endAddress - address) + 1;
+                const auto remainingBytes = (this->m_endAddress - address) - 1;
                 if (remainingBytes < this->m_maxBufferSize)
                     this->m_buffer.resize(remainingBytes);
+                else
+                    this->m_buffer.resize(this->m_maxBufferSize);
 
                 this->m_provider->read(address, this->m_buffer.data(), this->m_buffer.size());
                 this->m_bufferAddress = address;

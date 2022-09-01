@@ -307,6 +307,7 @@ namespace hex {
             else if (it - s_providers.begin() == s_currentProvider)
                 setCurrentProvider(0);
 
+            provider->close();
             delete provider;
         }
 

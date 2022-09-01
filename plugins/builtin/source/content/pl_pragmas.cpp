@@ -13,6 +13,8 @@ namespace hex::plugin::builtin {
             auto baseAddress = strtoull(value.c_str(), nullptr, 0);
 
             ImHexApi::Provider::get()->setBaseAddress(baseAddress);
+            runtime.setDataBaseAddress(baseAddress);
+
             return true;
         });
 

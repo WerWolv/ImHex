@@ -84,6 +84,8 @@ macro(detectOS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
+
+        SET(IMHEX_USE_BUNDLED_CA ON)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -102,10 +104,15 @@ macro(detectOS)
             # Warning : Do not work with portable versions such as appimage (because the path is hardcoded)
             add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
         endif()
-            
+
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
     endif()
+
+    if(IMHEX_USE_BUNDLED_CA)
+        add_compile_definitions(IMHEX_USE_BUNDLED_CA)
+    endif()
+
 endmacro()
 
 # Detect 32 vs. 64 bit system
@@ -344,7 +351,7 @@ function(verifyCompiler)
         message(FATAL_ERROR "ImHex requires GCC 12.0.0 or newer. Please use the latest GCC version.")
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "14.0.0")
         message(FATAL_ERROR "ImHex requires Clang 14.0.0 or newer. Please use the latest Clang version.")
-    elseif (NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    elseif (NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
         message(FATAL_ERROR "ImHex can only be compiled with GCC or Clang. ${CMAKE_CXX_COMPILER_ID} is not supported.")
     endif()
 endfunction()

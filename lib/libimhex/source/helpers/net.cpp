@@ -109,7 +109,7 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_NOSIGNAL, 1L);
         curl_easy_setopt(this->m_ctx, CURLOPT_NOPROGRESS, 0L);
 
-#if defined(OS_WINDOWS)
+#if defined(IMHEX_USE_BUNDLED_CA)
         curl_easy_setopt(this->m_ctx, CURLOPT_CAINFO, nullptr);
         curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
         curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
@@ -167,8 +167,10 @@ namespace hex {
             setCommonSettings(response, url, timeout);
 
             auto responseCode = execute();
-
-            return Response<nlohmann::json> { responseCode.value_or(0), nlohmann::json::parse(response) };
+            if (!responseCode.has_value())
+                return Response<nlohmann::json> { 0, { } };
+            else
+                return Response<nlohmann::json> { responseCode.value_or(0), nlohmann::json::parse(response, nullptr, false, true) };
         });
     }
 

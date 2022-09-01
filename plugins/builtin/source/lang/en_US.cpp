@@ -105,6 +105,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.create", "Failed to create new file!" },
 
                 { "hex.builtin.menu.file", "File" },
+                    { "hex.builtin.menu.file.create_file", "New File..." },
                     { "hex.builtin.menu.file.open_file", "Open File..." },
                     { "hex.builtin.menu.file.open_recent", "Open Recent" },
                     { "hex.builtin.menu.file.clear_recent", "Clear" },

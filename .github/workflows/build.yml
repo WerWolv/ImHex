@@ -118,20 +118,33 @@ jobs:
   # MacOS build
   macos:
     runs-on: macos-11
-    name: 🍎 macOS 11.0
-    steps:
 
+    strategy:
+      matrix:
+        include:
+          - suffix: "-NoGPU"
+            custom_glfw: true
+          - suffix: ""
+            custom_glfw: false
+    
+    name: 🍎 macOS 11.0${{matrix.suffix}}
+
+    steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
       with:
         submodules: recursive
+
+    - name: 📜 Set version variable
+      run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
         
     - name: 📜 Restore ccache
       uses: actions/cache@v3
       with:
         path: |
           ~/Library/Caches/ccache
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+        key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
 
         
@@ -140,11 +153,42 @@ jobs:
       with:
         path: |
           build/CMakeCache.txt
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
         brew bundle --no-lock --file dist/Brewfile
+
+    - name: ⬇️ Install classic glfw
+      if: ${{! matrix.custom_glfw}}
+      run: |
+        brew install glfw
+
+
+    - name: 🧰 Checkout glfw
+      if: ${{matrix.custom_glfw}}
+      uses: actions/checkout@v3
+      with:
+        repository: glfw/glfw
+        path: glfw
+
+    - name: ⬇️ Patch and install custom glfw
+      if: ${{matrix.custom_glfw}}
+      run: |
+        cd glfw
+        git apply ../dist/macOS/0001-glfw-SW.patch
+
+        mkdir build
+        cd build
+
+        cmake                                     \
+          -DBUILD_SHARED_LIBS=ON                  \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
+        ..
+        make -j 4 install
 
     # MacOS cmake build
     - name: 🛠️ Build
@@ -167,13 +211,14 @@ jobs:
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
+          -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}"  \
           ..
         make -j4 package
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
-        name: macOS DMG
+        name: macOS DMG${{matrix.suffix}}
         path: build/*.dmg
 
   # Ubuntu build
@@ -277,12 +322,15 @@ jobs:
             -DRUST_PATH="$HOME/.cargo/bin/"           \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             -DIMHEX_PLUGINS_IN_SHARE=ON               \
+            -DIMHEX_USE_BUNDLED_CA=ON                 \
             ..
           make -j 4 install DESTDIR=AppDir
 
       - name: 📦 Bundle AppImage
         run: |
           cd build-appimage
+          mkdir -p ./AppDir/usr/share/metainfo
+          cp ../dist/imhex.appdata.xml ./AppDir/usr/share/metainfo/imhex.appdata.xml
           appimage-builder --recipe ../dist/AppImageBuilder.yml
           mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.IMHEX_VERSION}}.AppImage
           cd ..

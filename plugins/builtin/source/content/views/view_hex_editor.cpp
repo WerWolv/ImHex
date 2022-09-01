@@ -143,6 +143,17 @@ namespace hex::plugin::builtin {
 
     class PopupFind : public ViewHexEditor::Popup {
     public:
+        PopupFind() {
+            EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
+                this->m_searchPosition = this->m_nextSearchPosition.value_or(region.getStartAddress());
+                this->m_nextSearchPosition.reset();
+            });
+        }
+
+        ~PopupFind() override {
+            EventManager::unsubscribe<EventRegionSelected>(this);
+        }
+
         void draw(ViewHexEditor *editor) override {
             std::vector<u8> searchSequence;
 
@@ -191,7 +202,7 @@ namespace hex::plugin::builtin {
 
             if (!this->m_searchTask.isRunning() && !searchSequence.empty() && this->m_shouldSearch) {
                 this->m_searchTask = TaskManager::createTask("hex.builtin.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
-                    if (auto region = this->findSequence(editor, searchSequence, this->m_backwards); region.has_value()) {
+                    if (auto region = this->findSequence(searchSequence, this->m_backwards); region.has_value()) {
                         TaskManager::doLater([editor, region]{
                             editor->setSelection(region->getStartAddress(), region->getEndAddress());
                             editor->jumpToSelection();
@@ -221,6 +232,7 @@ namespace hex::plugin::builtin {
                     this->m_shouldSearch = true;
                     this->m_backwards = false;
                     this->m_searchPosition.reset();
+                    this->m_nextSearchPosition.reset();
                 }
 
                 ImGui::BeginDisabled(!this->m_searchPosition.has_value());
@@ -241,13 +253,10 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
         }
 
-        std::optional<Region> findSequence(ViewHexEditor *editor, const std::vector<u8> &sequence, bool backwards) {
+        std::optional<Region> findSequence(const std::vector<u8> &sequence, bool backwards) {
             hex::prv::BufferedReader reader(ImHexApi::Provider::get());
 
-            if (!editor->isSelectionValid())
-                reader.seek(this->m_searchPosition.value_or(0x00));
-            else
-                reader.seek(this->m_searchPosition.value_or(editor->getSelection().getStartAddress()));
+            reader.seek(this->m_searchPosition.value_or(0x00));
 
             constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
                 return std::search(haystackBegin, haystackEnd, std::boyer_moore_horspool_searcher(needleBegin, needleEnd));
@@ -256,16 +265,16 @@ namespace hex::plugin::builtin {
             if (!backwards) {
                 auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
                 if (occurrence != reader.end()) {
-                    this->m_searchPosition = occurrence.getAddress() + sequence.size();
+                    this->m_nextSearchPosition = occurrence.getAddress() + sequence.size();
                     return Region { occurrence.getAddress(), sequence.size() };
                 }
             } else {
                 auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.begin(), sequence.end());
                 if (occurrence != reader.rend()) {
                     if (occurrence.getAddress() < sequence.size())
-                        this->m_searchPosition = 0x00;
+                        this->m_nextSearchPosition = 0x00;
                     else
-                        this->m_searchPosition = occurrence.getAddress() - sequence.size();
+                        this->m_nextSearchPosition = occurrence.getAddress() - sequence.size();
 
                     return Region { occurrence.getAddress(), sequence.size() };
                 }
@@ -275,7 +284,7 @@ namespace hex::plugin::builtin {
         }
 
         std::string m_input;
-        std::optional<u64> m_searchPosition;
+        std::optional<u64> m_searchPosition, m_nextSearchPosition;
 
         bool m_requestFocus = true;
         std::atomic<bool> m_shouldSearch = false;
@@ -1345,6 +1354,12 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
+            if (region == Region::Invalid()) {
+                this->m_selectionStart = InvalidSelection;
+                this->m_selectionEnd   = InvalidSelection;
+                return;
+            }
+
             auto provider = ImHexApi::Provider::get();
             auto page     = provider->getPageOfAddress(region.getStartAddress());
 

@@ -19,7 +19,6 @@ namespace hex::prv {
     Provider::~Provider() {
         for (auto &overlay : this->m_overlays)
             this->deleteOverlay(overlay);
-        this->close();
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
