@@ -136,4 +136,4 @@ AppDir:
     - usr/share/doc/*/TODO.*
 AppImage:
   arch: x86_64
-  update-information: guess
+  update-information: gh-releases-zsync|iTrooz|ImHex|latest|imhex-*.AppImage.zsync
