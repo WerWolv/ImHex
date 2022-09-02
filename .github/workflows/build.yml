@@ -99,7 +99,7 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
-        touch $PWD/install/PORTABLE
+        echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
