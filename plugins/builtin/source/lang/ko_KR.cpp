@@ -5,7 +5,6 @@ namespace hex::plugin::builtin {
 
     void registerLanguageKoKR() {
         ContentRegistry::Language::registerLanguage("한국어 (KR)", "ko-KR");
-        LangEntry::setFallbackLanguage("ko-KR");
 
         ContentRegistry::Language::addLocalizations("ko-KR", {
                 { "hex.builtin.welcome.header.main", "Welcome to ImHex" },
