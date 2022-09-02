@@ -6,7 +6,7 @@ AppDir:
     id: imhex
     name: ImHex
     icon: imhex
-    version: AppImage
+    version: "{{VERSION}}"
     exec: usr/bin/imhex
     exec_args: $@
   apt:
