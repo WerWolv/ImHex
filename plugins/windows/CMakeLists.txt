@@ -11,10 +11,11 @@ if (WIN32)
 
             source/views/view_tty_console.cpp
 
-            source/lang/en_US.cpp
             source/lang/de_DE.cpp
-            source/lang/zh_CN.cpp
+            source/lang/en_US.cpp
+            source/lang/ko_KR.cpp
             source/lang/pt_BR.cpp
+            source/lang/zh_CN.cpp
             source/lang/zh_TW.cpp
 
             source/content/ui_items.cpp

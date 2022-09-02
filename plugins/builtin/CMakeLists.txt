@@ -56,12 +56,13 @@ add_library(${PROJECT_NAME} SHARED
         source/math_evaluator.cpp
         source/pattern_drawer.cpp
 
-        source/lang/en_US.cpp
         source/lang/de_DE.cpp
+        source/lang/en_US.cpp
         source/lang/it_IT.cpp
-        source/lang/zh_CN.cpp
         source/lang/ja_JP.cpp
+        source/lang/ko_KR.cpp
         source/lang/pt_BR.cpp
+        source/lang/zh_CN.cpp
         source/lang/zh_TW.cpp
 )
 
