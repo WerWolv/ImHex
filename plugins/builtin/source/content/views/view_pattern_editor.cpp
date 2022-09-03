@@ -812,9 +812,13 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
 
-        auto &runtime = ProviderExtraData::getCurrent().patternLanguage.runtime;
+        auto provider = ImHexApi::Provider::get();
+        auto &runtime = ProviderExtraData::get(provider).patternLanguage.runtime;
+
         runtime->reset();
         runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
+        runtime->setDataBaseAddress(provider->getBaseAddress());
+        runtime->setDataSize(provider->getActualSize());
 
         EventManager::post<EventHighlightingChanged>();
 
