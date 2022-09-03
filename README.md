@@ -139,7 +139,7 @@ dnf install imhex
 
 ### Arch Linux (AUR)
 ```
-yay -S imhex
+yay -S imhex-bin
 ```
 
 ## Third Party Repositories
