@@ -103,6 +103,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Couldn't get write access. File opened in read-only mode." },
                 { "hex.builtin.popup.error.open", "Failed to open file!" },
                 { "hex.builtin.popup.error.create", "Failed to create new file!" },
+                { "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "File" },
                     { "hex.builtin.menu.file.create_file", "New File..." },

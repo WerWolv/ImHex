@@ -102,6 +102,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "쓰기 권한을 가져올 수 없습니다. 파일이 읽기 전용 모드로 열렸습니다." },
                 { "hex.builtin.popup.error.open", "파일을 여는데 실패했습니다!" },
                 { "hex.builtin.popup.error.create", "새 파일을 만드는데 실패했습니다!" },
+                //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "파일" },
                     { "hex.builtin.menu.file.create_file", "새 파일..." },

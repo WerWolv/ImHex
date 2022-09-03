@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Schreibzugriff konnte nicht erlangt werden. Datei wurde im Lesemodus geöffnet." },
                 { "hex.builtin.popup.error.open", "Öffnen der Datei fehlgeschlagen!" },
                 { "hex.builtin.popup.error.create", "Erstellen der neuen Datei fehlgeschlagen!" },
+                { "hex.builtin.popup.error.task_exception", "Fehler in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "Datei" },
                     { "hex.builtin.file.open_file", "Datei öffnen..." },

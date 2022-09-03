@@ -32,6 +32,7 @@ namespace hex {
         [[nodiscard]] bool hadException() const;
         [[nodiscard]] bool wasInterrupted() const;
         void clearException();
+        [[nodiscard]] std::string getExceptionMessage() const;
 
         [[nodiscard]] const std::string &getUnlocalizedName();
         [[nodiscard]] u64 getValue() const;
@@ -42,7 +43,7 @@ namespace hex {
     private:
         void finish();
         void interruption();
-        void exception();
+        void exception(const char *message);
 
     private:
         mutable std::mutex m_mutex;
@@ -56,6 +57,7 @@ namespace hex {
         bool m_interrupted = false;
         bool m_finished = false;
         bool m_hadException = false;
+        std::string m_exceptionMessage;
 
         struct TaskInterruptor { virtual ~TaskInterruptor() = default; };
 

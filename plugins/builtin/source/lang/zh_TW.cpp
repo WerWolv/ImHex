@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "無法取得寫入權限。檔案已以唯讀模式開啟。" },
                 { "hex.builtin.popup.error.open", "無法開啟檔案！" },
                 { "hex.builtin.popup.error.create", "無法建立新檔案！" },
+                //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "檔案" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },

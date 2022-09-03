@@ -153,6 +153,15 @@ namespace hex::plugin::builtin {
 
             ImGui::EndPopup();
         }
+
+        // Task exception popup
+        for (const auto &task : TaskManager::getRunningTasks()) {
+            if (task->hadException()) {
+                EventManager::post<RequestShowErrorPopup>(hex::format("hex.builtin.popup.error.task_exception"_lang, LangEntry(task->getUnlocalizedName()), task->getExceptionMessage()));
+                task->clearException();
+                break;
+            }
+        }
     }
 
     void addGlobalUIItems() {
