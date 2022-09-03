@@ -73,11 +73,11 @@ namespace hex::plugin::builtin {
 
         std::map<prv::Provider*, std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
         std::map<prv::Provider*, OccurrenceTree> m_occurrenceTree;
+        std::map<prv::Provider*, std::string> m_currFilter;
 
         TaskHolder m_searchTask;
         bool m_settingsValid = false;
 
-        std::string m_currFilter;
     private:
         static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, SearchSettings::Strings settings);
         static std::vector<Occurrence> searchSequence(Task &task, prv::Provider *provider, Region searchRegion, SearchSettings::Bytes settings);
