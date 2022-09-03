@@ -21,10 +21,10 @@ namespace hex {
                 this->interruption();
             } catch (const std::exception &e) {
                 log::error("Exception in task {}: {}", this->m_unlocalizedName, e.what());
-                this->exception();
+                this->exception(e.what());
             } catch (...) {
                 log::error("Exception in task {}", this->m_unlocalizedName);
-                this->exception();
+                this->exception("Unknown Exception");
             }
 
             this->finish();
