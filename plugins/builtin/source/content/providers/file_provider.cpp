@@ -29,7 +29,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     bool FileProvider::isResizable() const {
-        return true;
+        return isAvailable() && isWritable();
     }
 
     bool FileProvider::isSavable() const {
