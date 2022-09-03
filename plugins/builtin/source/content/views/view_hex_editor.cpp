@@ -202,11 +202,27 @@ namespace hex::plugin::builtin {
 
             if (!this->m_searchTask.isRunning() && !searchSequence.empty() && this->m_shouldSearch) {
                 this->m_searchTask = TaskManager::createTask("hex.builtin.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
-                    if (auto region = this->findSequence(searchSequence, this->m_backwards); region.has_value()) {
-                        TaskManager::doLater([editor, region]{
-                            editor->setSelection(region->getStartAddress(), region->getEndAddress());
-                            editor->jumpToSelection();
-                        });
+                    for (u8 retry = 0; retry < 2; retry++) {
+                        auto region = this->findSequence(searchSequence, this->m_backwards);
+
+                        if (region.has_value()) {
+                            if (editor->getSelection() == region) {
+                                if (this->m_nextSearchPosition.has_value())
+                                    this->m_searchPosition = this->m_nextSearchPosition.value();
+                                this->m_nextSearchPosition.reset();
+
+                                continue;
+                            } else {
+                                TaskManager::doLater([editor, region]{
+                                    editor->setSelection(region->getStartAddress(), region->getEndAddress());
+                                    editor->jumpToSelection();
+                                });
+
+                                break;
+                            }
+                        } else {
+                            this->m_reachedEnd = true;
+                        }
                     }
 
                     this->m_shouldSearch = false;
@@ -231,21 +247,34 @@ namespace hex::plugin::builtin {
                 if (ImGui::IconButton(ICON_VS_SEARCH "##search", ButtonColor, ButtonSize)) {
                     this->m_shouldSearch = true;
                     this->m_backwards = false;
+                    this->m_reachedEnd = false;
                     this->m_searchPosition.reset();
                     this->m_nextSearchPosition.reset();
                 }
 
                 ImGui::BeginDisabled(!this->m_searchPosition.has_value());
                 {
-                    if (ImGui::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
-                        this->m_shouldSearch = true;
-                        this->m_backwards = true;
+                    ImGui::BeginDisabled(this->m_reachedEnd && this->m_backwards);
+                    {
+                        if (ImGui::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
+                            this->m_shouldSearch = true;
+                            this->m_backwards = true;
+                            this->m_reachedEnd = false;
+                        }
                     }
+                    ImGui::EndDisabled();
+
                     ImGui::SameLine();
-                    if (ImGui::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
-                        this->m_shouldSearch = true;
-                        this->m_backwards = false;
+
+                    ImGui::BeginDisabled(this->m_reachedEnd && !this->m_backwards);
+                    {
+                        if (ImGui::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
+                            this->m_shouldSearch = true;
+                            this->m_backwards = false;
+                            this->m_reachedEnd = false;
+                        }
                     }
+                    ImGui::EndDisabled();
                 }
 
                 ImGui::EndDisabled();
@@ -269,14 +298,14 @@ namespace hex::plugin::builtin {
                     return Region { occurrence.getAddress(), sequence.size() };
                 }
             } else {
-                auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.begin(), sequence.end());
+                auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend());
                 if (occurrence != reader.rend()) {
                     if (occurrence.getAddress() < sequence.size())
                         this->m_nextSearchPosition = 0x00;
                     else
                         this->m_nextSearchPosition = occurrence.getAddress() - sequence.size();
 
-                    return Region { occurrence.getAddress(), sequence.size() };
+                    return Region { occurrence.getAddress() - (sequence.size() - 1), sequence.size() };
                 }
             }
 
@@ -289,6 +318,7 @@ namespace hex::plugin::builtin {
         bool m_requestFocus = true;
         std::atomic<bool> m_shouldSearch = false;
         std::atomic<bool> m_backwards    = false;
+        std::atomic<bool> m_reachedEnd   = false;
 
         TaskHolder m_searchTask;
     };
