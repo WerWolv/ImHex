@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
 	<id>imhex</id>
-	<metadata_license>GPL-2.0</metadata_license>
+	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-2.0</project_license>
 	<name>ImHex</name>
 	<summary>A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM</summary>
