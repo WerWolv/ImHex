@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="138.42885mm"
+   height="42.6539mm"
+   viewBox="0 0 138.42885 42.6539"
+   version="1.1"
+   id="svg1"
+   inkscape:export-filename="bitmap.png"
+   inkscape:export-xdpi="93.949997"
+   inkscape:export-ydpi="93.949997"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:export-bgcolor="#babec900" />
+  <defs
+     id="defs1">
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Drop Shadow"
+       id="filter30"
+       x="-0.037258737"
+       y="-0.14521736"
+       width="1.0745175"
+       height="1.2904347">
+      <feFlood
+         result="flood"
+         in="SourceGraphic"
+         flood-opacity="0.564706"
+         flood-color="rgb(0,0,0)"
+         id="feFlood29" />
+      <feGaussianBlur
+         result="blur"
+         in="SourceGraphic"
+         stdDeviation="2.000000"
+         id="feGaussianBlur29" />
+      <feOffset
+         result="offset"
+         in="blur"
+         dx="0.000000"
+         dy="0.000000"
+         id="feOffset29" />
+      <feComposite
+         result="comp1"
+         operator="in"
+         in="flood"
+         in2="offset"
+         id="feComposite29" />
+      <feComposite
+         result="comp2"
+         operator="over"
+         in="SourceGraphic"
+         in2="comp1"
+         id="feComposite30" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-44.395001,-12.770095)">
+    <text
+       xml:space="preserve"
+       style="font-size:45.1556px;line-height:0;fill:#d8dbe1;fill-opacity:1;stroke-width:0.264583;filter:url(#filter30)"
+       x="45.943798"
+       y="49.901505"
+       id="text2"
+       inkscape:label="text2"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:45.1556px;font-family:'Product Sans';-inkscape-font-specification:'Product Sans Bold';fill:#d8dbe1;fill-opacity:1;stroke-width:0.264583"
+         x="45.943798"
+         y="49.901505">ImHex</tspan></text>
+  </g>
+</svg>
