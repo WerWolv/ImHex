@@ -190,11 +190,11 @@ namespace hex::plugin::builtin::prv {
         this->m_dataSize = maxAddress + 1;
         this->m_dataValid = true;
 
-        return Provider::open();
+        return true;
     }
 
     void MotorolaSRECProvider::close() {
-        Provider::close();
+
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {

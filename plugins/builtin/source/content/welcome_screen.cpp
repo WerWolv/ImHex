@@ -99,6 +99,8 @@ namespace hex::plugin::builtin {
                 return;
             }
 
+            EventManager::post<EventProviderOpened>(provider);
+
             updateRecentProviders();
         }
     }
@@ -340,7 +342,8 @@ namespace hex::plugin::builtin {
         if (ImGui::Hyperlink("X")) {
             auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null");
             if (provider != nullptr)
-                (void)provider->open();
+                if (provider->open())
+                    EventManager::post<EventProviderOpened>(provider);
         }
     }
 

@@ -137,7 +137,7 @@ namespace hex::plugin::builtin::prv {
 
         #endif
 
-        return Provider::open();
+        return true;
     }
 
     void DiskProvider::close() {
@@ -156,8 +156,6 @@ namespace hex::plugin::builtin::prv {
             this->m_diskHandle = -1;
 
         #endif
-
-        Provider::close();
     }
 
     void DiskProvider::readRaw(u64 offset, void *buffer, size_t size) {

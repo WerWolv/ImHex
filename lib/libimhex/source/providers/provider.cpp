@@ -170,14 +170,6 @@ namespace hex::prv {
         return page;
     }
 
-    bool Provider::open() {
-        EventManager::post<EventProviderOpened>(this);
-        return true;
-    }
-    void Provider::close() {
-        EventManager::post<EventProviderClosed>(this);
-    }
-
     void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
         if (this->m_patchTreeOffset > 0) {
             auto iter = this->m_patches.end();

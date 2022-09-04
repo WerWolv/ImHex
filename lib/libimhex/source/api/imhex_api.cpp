@@ -308,6 +308,8 @@ namespace hex {
                 setCurrentProvider(0);
 
             provider->close();
+            EventManager::post<EventProviderClosed>(provider);
+
             delete provider;
         }
 

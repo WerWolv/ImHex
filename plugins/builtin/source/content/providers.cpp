@@ -41,6 +41,8 @@ namespace hex::plugin::builtin {
                      provider->loadSettings(providerSettings["settings"]);
                      if (!provider->open())
                          success = false;
+                     else
+                         EventManager::post<EventProviderOpened>(provider);
                  }
 
                  return success;

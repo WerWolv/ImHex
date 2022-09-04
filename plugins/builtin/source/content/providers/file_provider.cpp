@@ -300,7 +300,7 @@ namespace hex::plugin::builtin::prv {
 
         #endif
 
-        return Provider::open();
+        return true;
     }
 
     void FileProvider::close() {
@@ -319,8 +319,6 @@ namespace hex::plugin::builtin::prv {
             ::close(this->m_file);
 
         #endif
-
-        Provider::close();
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
