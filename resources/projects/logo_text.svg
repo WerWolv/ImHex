@@ -14,6 +14,15 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
+
+  <style>
+    #text2 { fill:#d8dbe1; }
+
+    @media (prefers-color-scheme: dark) {
+      #text2 { fill:#121419; }
+    }
+  </style>
+
   <sodipodi:namedview
      id="namedview1"
      pagecolor="#ffffff"
@@ -74,14 +83,14 @@
      transform="translate(-44.395001,-12.770095)">
     <text
        xml:space="preserve"
-       style="font-size:45.1556px;line-height:0;fill:#d8dbe1;fill-opacity:1;stroke-width:0.264583;filter:url(#filter30)"
+       style="font-size:45.1556px;line-height:0;fill-opacity:1;stroke-width:0.264583;filter:url(#filter30)"
        x="45.943798"
        y="49.901505"
        id="text2"
        inkscape:label="text2"><tspan
          sodipodi:role="line"
          id="tspan2"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:45.1556px;font-family:'Product Sans';-inkscape-font-specification:'Product Sans Bold';fill:#d8dbe1;fill-opacity:1;stroke-width:0.264583"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:45.1556px;font-family:'Product Sans';-inkscape-font-specification:'Product Sans Bold';fill-opacity:1;stroke-width:0.264583"
          x="45.943798"
          y="49.901505">ImHex</tspan></text>
   </g>
