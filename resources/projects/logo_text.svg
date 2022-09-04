@@ -18,7 +18,7 @@
   <style>
     #text2 { fill:#d8dbe1; }
 
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       #text2 { fill:#121419; }
     }
   </style>
