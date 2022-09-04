@@ -287,6 +287,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "Copiar" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "Copiar como..." },
                         { "hex.builtin.view.hex_editor.copy.hex", "String" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C Array" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ Array" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# Array" },

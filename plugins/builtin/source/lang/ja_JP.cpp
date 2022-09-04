@@ -289,6 +289,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "コピー" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "〜としてコピー…" },
                         { "hex.builtin.view.hex_editor.copy.hex", "文字列" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C 配列" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ 配列" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# 配列" },

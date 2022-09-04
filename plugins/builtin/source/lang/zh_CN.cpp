@@ -290,6 +290,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "复制" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "复制为..." },
                         { "hex.builtin.view.hex_editor.copy.hex", "字符串" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C 数组" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ 数组" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# 数组" },

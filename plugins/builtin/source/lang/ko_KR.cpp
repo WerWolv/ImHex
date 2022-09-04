@@ -289,6 +289,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "복사" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "다른 방법으로 복사..." },
                         { "hex.builtin.view.hex_editor.copy.hex", "문자열" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C 배열" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ 배열" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# 배열" },

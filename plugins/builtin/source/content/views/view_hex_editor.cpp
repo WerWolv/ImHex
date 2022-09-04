@@ -1526,6 +1526,8 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.edit.copy_as"_lang, selection.has_value() && providerValid)) {
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.hex"_lang, "CTRL + SHIFT + C"))
                     copyString(*selection);
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.address"_lang))
+                    ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());
 
                 ImGui::Separator();
 
