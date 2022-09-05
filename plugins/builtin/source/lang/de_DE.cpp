@@ -133,7 +133,6 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.menu.view", "Ansicht" },
                 { "hex.builtin.menu.layout", "Layout" },
-                    { "hex.builtin.menu.view.fps", "FPS anzeigen" },
                     { "hex.builtin.menu.view.demo", "ImGui Demo anzeigen" },
                 { "hex.builtin.menu.help", "Hilfe" },
 

@@ -136,7 +136,6 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.menu.view", "뷰" },
                 { "hex.builtin.menu.layout", "레이아웃" },
-                    { "hex.builtin.menu.view.fps", "FPS 표시하기" },
                     { "hex.builtin.menu.view.demo", "ImGui Demo 표시하기" },
                 { "hex.builtin.menu.help", "도움말" },
 

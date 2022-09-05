@@ -212,14 +212,16 @@ namespace hex::plugin::builtin {
             });
         }
 
-        ContentRegistry::Interface::addFooterItem([] {
-            static float framerate = 0;
-            if (ImGui::HasSecondPassed()) {
-                framerate = 1.0F / ImGui::GetIO().DeltaTime;
-            }
+        #if defined(DEBUG)
+            ContentRegistry::Interface::addFooterItem([] {
+                static float framerate = 0;
+                if (ImGui::HasSecondPassed()) {
+                    framerate = 1.0F / ImGui::GetIO().DeltaTime;
+                }
 
-            ImGui::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
-        });
+                ImGui::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
+            });
+        #endif
 
         ContentRegistry::Interface::addFooterItem([] {
             auto taskCount = TaskManager::getRunningTaskCount();

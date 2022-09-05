@@ -190,15 +190,26 @@ namespace hex {
             curl_mimepart *part = curl_mime_addpart(mime);
 
             auto fileName = filePath.filename().string();
-            curl_mime_data_cb(
-                part, file.getSize(), [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
+            curl_mime_data_cb(part, file.getSize(),
+                [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
                     auto file = static_cast<FILE*>(arg);
-                    return fread(buffer, size, nitems, file); }, [](void *arg, curl_off_t offset, int origin) -> int {
+
+                    return fread(buffer, size, nitems, file);
+                },
+                [](void *arg, curl_off_t offset, int origin) -> int {
                     auto file = static_cast<FILE*>(arg);
-                    fseek(file, offset, origin);
-                    return CURL_SEEKFUNC_OK; }, [](void *arg) {
+
+                    if (fseek(file, offset, origin) != 0)
+                        return CURL_SEEKFUNC_CANTSEEK;
+                    else
+                        return CURL_SEEKFUNC_OK;
+                },
+                [](void *arg) {
                     auto file = static_cast<FILE*>(arg);
-                    fclose(file); }, file.getHandle());
+
+                    fclose(file);
+                },
+                file.getHandle());
             curl_mime_filename(part, fileName.c_str());
             curl_mime_name(part, "file");
 
