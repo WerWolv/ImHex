@@ -80,8 +80,9 @@ namespace hex {
             open = createTreeNode(pattern);
             ImGui::TableNextColumn();
             makeSelectable(pattern);
+            ImGui::SameLine();
             drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            drawColorColumn(pattern);
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "bitfield");
@@ -185,7 +186,10 @@ namespace hex {
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            if (pattern.isSealed())
+                drawColorColumn(pattern);
+            else
+                ImGui::TableNextColumn();
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
@@ -214,7 +218,10 @@ namespace hex {
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            if (pattern.isSealed())
+                drawColorColumn(pattern);
+            else
+                ImGui::TableNextColumn();
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
@@ -303,7 +310,10 @@ namespace hex {
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            if (pattern.isSealed())
+                drawColorColumn(pattern);
+            else
+                ImGui::TableNextColumn();
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
