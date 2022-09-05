@@ -19,7 +19,14 @@ Besides all the features a common Hex Editor has, ImHex also features a custom s
             <image>https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png</image>
         </screenshot>
     </screenshots>
+
     <provides>
         <id>imhex.desktop</id>
     </provides>
+
+    <categories>
+        <category>Development</category>
+    </categories>
+
+
 </component>
