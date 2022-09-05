@@ -369,8 +369,6 @@ namespace hex::plugin::builtin {
     }
 
     static void drawNoViewsBackground() {
-        if (isAnyViewOpen() && ImHexApi::Provider::isValid()) return;
-
         if (ImGui::Begin("ImHexDockSpace")) {
             static char title[256];
             ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
@@ -395,7 +393,10 @@ namespace hex::plugin::builtin {
         updateRecentProviders();
 
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
-        (void)EventManager::subscribe<EventFrameBegin>(drawNoViewsBackground);
+        (void)EventManager::subscribe<EventFrameBegin>([]{
+            if (ImHexApi::Provider::isValid() && !isAnyViewOpen())
+                drawNoViewsBackground();
+        });
 
         (void)EventManager::subscribe<EventSettingsChanged>([]() {
             {
