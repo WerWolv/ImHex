@@ -323,7 +323,9 @@ macro(setDefaultBuiltTypeIfUnset)
 endmacro()
 
 function(loadVersion version)
-    file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" read_version)
+    set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${VERSION_FILE})
+    file(READ "${VERSION_FILE}" read_version)
     set(${version} ${read_version} PARENT_SCOPE)
 endfunction()
 
