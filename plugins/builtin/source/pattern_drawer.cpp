@@ -88,9 +88,6 @@ namespace hex {
             drawTypenameColumn(pattern, "bitfield");
 
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
-        } else {
-            ImGui::SameLine();
-            ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
         }
 
         if (open) {
@@ -98,7 +95,8 @@ namespace hex {
                 this->draw(field);
             });
 
-            ImGui::TreePop();
+            if (!pattern.isInlined())
+                ImGui::TreePop();
         }
     }
 
@@ -155,15 +153,13 @@ namespace hex {
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
-        } else {
-            ImGui::SameLine();
-            ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
         }
 
         if (open) {
             pattern.getPointedAtPattern()->accept(*this);
 
-            ImGui::TreePop();
+            if (!pattern.isInlined())
+                ImGui::TreePop();
         }
     }
 
@@ -194,9 +190,6 @@ namespace hex {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
-        } else {
-            ImGui::SameLine();
-            ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
         }
 
         if (open) {
@@ -204,7 +197,8 @@ namespace hex {
                 this->draw(member);
             });
 
-            ImGui::TreePop();
+            if (!pattern.isInlined())
+                ImGui::TreePop();
         }
     }
 
@@ -226,9 +220,6 @@ namespace hex {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
-        } else {
-            ImGui::SameLine();
-            ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
         }
 
         if (open) {
@@ -236,7 +227,8 @@ namespace hex {
                 this->draw(member);
             });
 
-            ImGui::TreePop();
+            if (!pattern.isInlined())
+                ImGui::TreePop();
         }
     }
 
@@ -327,9 +319,6 @@ namespace hex {
 
             ImGui::TableNextColumn();
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
-        } else {
-            ImGui::SameLine();
-            ImGui::TreeNodeEx("", ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf);
         }
 
         return open;
@@ -354,9 +343,10 @@ namespace hex {
         ImGui::PopID();
     }
 
-    void PatternDrawer::drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened) {
+    void PatternDrawer::drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened, bool inlined) {
         if (opened) {
-            ImGui::TreePop();
+            if (!inlined)
+                ImGui::TreePop();
         } else {
             auto& displayEnd = this->getDisplayEnd(pattern);
             displayEnd = DisplayEndDefault;

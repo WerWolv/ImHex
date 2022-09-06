@@ -53,12 +53,12 @@ namespace hex {
                 });
             }
 
-            this->drawArrayEnd(pattern, opened);
+            this->drawArrayEnd(pattern, opened, pattern.isInlined());
         }
 
         bool drawArrayRoot(pl::ptrn::Pattern& pattern, size_t entryCount, bool isInlined);
         void drawArrayNode(u64 idx, u64& displayEnd, pl::ptrn::Pattern& pattern);
-        void drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened);
+        void drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened, bool inlined);
 
         void drawCommentTooltip(const pl::ptrn::Pattern &pattern) const;
         void drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) const;
