@@ -263,9 +263,16 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
         install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
         downloadImHexPatternsFiles("./share/imhex")
+        
+        # install AppStream file
+        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
+        
+        # install symlink for the old standard name
+        file(CREATE_LINK imhex.metainfo.xml ${CMAKE_CURRENT_BINARY_DIR}/imhex.appinfo.xml SYMBOLIC)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/imhex.appinfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
+
     endif()
     
     if (CREATE_BUNDLE)
