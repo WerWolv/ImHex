@@ -360,7 +360,9 @@ namespace hex {
 
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern) const {
         if (pattern.isSealed()) {
-            ImGui::Selectable(pattern.getDisplayName().c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap);
+            ImGui::Indent();
+            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
+            ImGui::Unindent();
             return false;
         }
         else
