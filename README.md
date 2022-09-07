@@ -129,7 +129,7 @@ To develop plugins for ImHex, use one of the following two templates projects to
 - [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
 
 ## Installing
-The following OSs have packages available in their respositories making it easy to install ImHex.
+The following OSs have packages available in their repositories making it easy to install ImHex.
 ### Fedora (36+)
 ```
 dnf install imhex
