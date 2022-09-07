@@ -704,51 +704,51 @@ namespace hex::plugin::builtin {
         {
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
             ImGui::SameLine(0, 10);
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern->getFormattedName());
+            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
             ImGui::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
-            ImGui::TextFormatted("{}", pattern->getFormattedValue());
+            ImGui::TextFormatted("{} ", pattern->getFormattedValue());
 
             if (ImGui::GetIO().KeyShift) {
                 ImGui::Indent();
-                if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip)) {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}: ", "hex.builtin.common.type"_lang);
+                    ImGui::TextFormatted("{} ", "hex.builtin.common.type"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}", pattern->getTypeName());
+                    ImGui::TextFormatted(" {}", pattern->getTypeName());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}: ", "hex.builtin.common.address"_lang);
+                    ImGui::TextFormatted("{} ", "hex.builtin.common.address"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("0x{:08X}", pattern->getOffset());
+                    ImGui::TextFormatted(" 0x{:08X}", pattern->getOffset());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}: ", "hex.builtin.common.size"_lang);
+                    ImGui::TextFormatted("{} ", "hex.builtin.common.size"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}", hex::toByteString(pattern->getSize()));
+                    ImGui::TextFormatted(" {}", hex::toByteString(pattern->getSize()));
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}: ", "hex.builtin.common.endian"_lang);
+                    ImGui::TextFormatted("{} ", "hex.builtin.common.endian"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
+                    ImGui::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
 
                     if (const auto &comment = pattern->getComment(); comment != nullptr) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("{}: ", "hex.builtin.common.comment"_lang);
+                        ImGui::TextFormatted("{} ", "hex.builtin.common.comment"_lang);
                         ImGui::TableNextColumn();
-                        ImGui::TextWrapped("\"%s\"", comment->c_str());
+                        ImGui::TextWrapped(" \"%s\"", comment->c_str());
                     }
 
                     ImGui::EndTable();

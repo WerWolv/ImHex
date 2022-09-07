@@ -34,12 +34,6 @@ namespace hex {
         void visit(pl::ptrn::PatternWideString& pattern) override;
 
     private:
-        void createDefaultEntry(const pl::ptrn::Pattern &pattern, const std::string &value, pl::core::Token::Literal &&literal) const;
-        void createLeafNode(const pl::ptrn::Pattern& pattern) const;
-        bool createTreeNode(const pl::ptrn::Pattern& pattern) const;
-
-        void makeSelectable(const pl::ptrn::Pattern &pattern) const;
-
         void draw(pl::ptrn::Pattern& pattern);
 
         template<ArrayPattern T>
@@ -59,13 +53,6 @@ namespace hex {
         bool drawArrayRoot(pl::ptrn::Pattern& pattern, size_t entryCount, bool isInlined);
         void drawArrayNode(u64 idx, u64& displayEnd, pl::ptrn::Pattern& pattern);
         void drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened, bool inlined);
-
-        void drawCommentTooltip(const pl::ptrn::Pattern &pattern) const;
-        void drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) const;
-        void drawNameColumn(const pl::ptrn::Pattern& pattern) const;
-        void drawColorColumn(const pl::ptrn::Pattern& pattern) const;
-        void drawOffsetColumn(const pl::ptrn::Pattern& pattern) const;
-        void drawSizeColumn(const pl::ptrn::Pattern& pattern) const;
 
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
 

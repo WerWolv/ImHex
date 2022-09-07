@@ -53,7 +53,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/views/view_find.cpp
 
 
-        source/math_evaluator.cpp
+        source/content/helpers/pattern_drawer.cpp
         source/pattern_drawer.cpp
 
         source/lang/de_DE.cpp
