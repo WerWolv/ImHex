@@ -98,7 +98,7 @@ namespace hex {
         };
 
         static i16 comparePrecedence(const Operator &a, const Operator &b);
-        static bool isLeftAssociative(const Operator op);
+        static bool isLeftAssociative(const Operator &op);
         static std::pair<Operator, size_t> toOperator(const std::string &input);
 
     private:

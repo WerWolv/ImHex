@@ -14,10 +14,6 @@
 
 #include <nlohmann/json.hpp>
 
-namespace pl {
-    class PatternLanguage;
-}
-
 namespace hex::prv {
 
     class Provider {

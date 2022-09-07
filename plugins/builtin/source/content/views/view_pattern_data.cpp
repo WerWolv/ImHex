@@ -2,7 +2,6 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
 
 #include <provider_extra_data.hpp>

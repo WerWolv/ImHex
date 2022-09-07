@@ -5,7 +5,7 @@
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/crypto.hpp>
 
-#include "math_evaluator.hpp"
+#include <content/helpers/math_evaluator.hpp>
 
 #include <imgui_internal.h>
 #include <nlohmann/json.hpp>

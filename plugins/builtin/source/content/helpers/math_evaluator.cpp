@@ -1,4 +1,4 @@
-#include "math_evaluator.hpp"
+#include <content/helpers/math_evaluator.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/concepts.hpp>
@@ -6,7 +6,6 @@
 #include <string>
 #include <queue>
 #include <stack>
-#include <stdexcept>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -19,7 +18,7 @@ namespace hex {
     }
 
     template<typename T>
-    bool MathEvaluator<T>::isLeftAssociative(const Operator op) {
+    bool MathEvaluator<T>::isLeftAssociative(const Operator &op) {
         return (static_cast<u32>(op) & 0xF00) == 0;
     }
 

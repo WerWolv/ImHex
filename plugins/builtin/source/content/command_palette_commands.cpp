@@ -5,7 +5,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include "math_evaluator.hpp"
+#include <content/helpers/math_evaluator.hpp>
 
 namespace hex::plugin::builtin {
 
