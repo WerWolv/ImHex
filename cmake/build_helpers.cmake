@@ -270,8 +270,8 @@ macro(createPackage)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.imhex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
         
         # install symlink for the old standard name
-        file(CREATE_LINK net.werwolv.imhex.metainfo.xml ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appinfo.xml SYMBOLIC)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appinfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
+        file(CREATE_LINK net.werwolv.imhex.metainfo.xml ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appdata.xml SYMBOLIC)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appdata.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
 
     endif()
     

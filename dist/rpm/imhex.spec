@@ -85,6 +85,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/imhex.desktop
 %{_prefix}/lib64/libimhex.so.%{_version}
 %{_prefix}/lib64/imhex/plugins/*
 %{_metainfodir}/net.werwolv.imhex.metainfo.xml
-%{_metainfodir}/net.werwolv.imhex.appinfo.xml
+%{_metainfodir}/net.werwolv.imhex.appdata.xml
 
 %changelog
