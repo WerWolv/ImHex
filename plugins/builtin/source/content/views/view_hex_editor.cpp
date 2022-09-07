@@ -1152,7 +1152,7 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawContent() {
 
         if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            const auto FooterSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 3);
+            const auto FooterSize = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 2.3);
             const auto TableSize = ImGui::GetContentRegionAvail() - ImVec2(0, FooterSize.y);
 
             this->drawPopup();
