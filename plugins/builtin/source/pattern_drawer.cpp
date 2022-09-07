@@ -80,7 +80,6 @@ namespace hex {
             open = createTreeNode(pattern);
             ImGui::TableNextColumn();
             makeSelectable(pattern);
-            ImGui::SameLine();
             drawCommentTooltip(pattern);
             drawColorColumn(pattern);
             drawOffsetColumn(pattern);
@@ -146,7 +145,6 @@ namespace hex {
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
-            ImGui::SameLine(0, 0);
             drawColorColumn(pattern);
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
