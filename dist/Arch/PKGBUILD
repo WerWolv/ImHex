@@ -2,8 +2,8 @@
 # Contributor: Morten Linderud <foxboron@archlinux.org>
 
 pkgname=imhex-bin
-pkgver=%version%
-pkgrel=1
+pkgver=1.22.0
+pkgrel=2
 pkgdesc="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM. "
 arch=("x86_64")
 url="https://github.com/WerWolv/ImHex"
@@ -19,7 +19,7 @@ package() {
     install -Dm755 "$srcdir/usr/bin/imhex" "$pkgdir/usr/bin/imhex"
     install -Dm644 "$srcdir/usr/lib/libimhex.so.$pkgver" "$pkgdir/usr/lib/libimhex.so.$pkgver"
 
-    for plugin in `ls "$srcdir"/usr/lib/imhex/plugins/*.hexplug`; do
+    for plugin in "$srcdir/usr/lib/imhex/plugins/"*.hexplug; do
         install -Dm644 "$plugin" "$pkgdir/usr/lib/imhex/plugins/${plugin##*/}"
     done
 
