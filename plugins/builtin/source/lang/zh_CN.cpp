@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "无法获得写权限，文件以只读方式打开。" },
                 { "hex.builtin.popup.error.open", "打开文件失败！" },
                 { "hex.builtin.popup.error.create", "创建新文件失败！" },
+                //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "文件" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },
@@ -289,6 +290,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "复制" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "复制为..." },
                         { "hex.builtin.view.hex_editor.copy.hex", "字符串" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C 数组" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ 数组" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# 数组" },

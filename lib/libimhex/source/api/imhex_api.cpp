@@ -208,7 +208,7 @@ namespace hex {
 
     namespace ImHexApi::Provider {
 
-        static u32 s_currentProvider = std::numeric_limits<u32>::max();
+        static i64 s_currentProvider = -1;
         static std::vector<prv::Provider *> s_providers;
 
         namespace impl {
@@ -247,7 +247,7 @@ namespace hex {
         }
 
         bool isValid() {
-            return !s_providers.empty() && s_currentProvider < s_providers.size();
+            return !s_providers.empty() && s_currentProvider < i64(s_providers.size());
         }
 
         void markDirty() {
@@ -308,6 +308,8 @@ namespace hex {
                 setCurrentProvider(0);
 
             provider->close();
+            EventManager::post<EventProviderClosed>(provider);
+
             delete provider;
         }
 

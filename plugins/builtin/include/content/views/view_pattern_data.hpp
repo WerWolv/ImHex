@@ -1,15 +1,12 @@
 #pragma once
 
-#include "pattern_drawer.hpp"
-
 #include <hex.hpp>
-
-#include <imgui.h>
 #include <hex/ui/view.hpp>
+
+#include <content/helpers/pattern_drawer.hpp>
 
 #include <vector>
 #include <tuple>
-#include <cstdio>
 
 namespace hex::plugin::builtin {
 

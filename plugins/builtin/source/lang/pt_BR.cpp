@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Não foi possível obter acesso de gravação. Arquivo aberto no modo somente leitura." },
                 { "hex.builtin.popup.error.open", "Falha ao abrir o arquivo!" },
                 { "hex.builtin.popup.error.create", "Falha ao criar um novo arquivo!" },
+                //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "File" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },
@@ -286,6 +287,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "Copiar" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "Copiar como..." },
                         { "hex.builtin.view.hex_editor.copy.hex", "String" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C Array" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ Array" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# Array" },

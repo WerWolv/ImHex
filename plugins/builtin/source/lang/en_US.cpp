@@ -103,6 +103,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Couldn't get write access. File opened in read-only mode." },
                 { "hex.builtin.popup.error.open", "Failed to open file!" },
                 { "hex.builtin.popup.error.create", "Failed to create new file!" },
+                { "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "File" },
                     { "hex.builtin.menu.file.create_file", "New File..." },
@@ -287,7 +288,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.file.save_as", "Save As..." },
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "Copy" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "Copy as..." },
-                        { "hex.builtin.view.hex_editor.copy.hex", "String" },
+                        { "hex.builtin.view.hex_editor.copy.hex", "Hex String" },
+                        { "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C Array" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ Array" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# Array" },

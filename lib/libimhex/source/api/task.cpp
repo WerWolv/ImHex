@@ -1,6 +1,7 @@
 #include <hex/api/task.hpp>
 
 #include <hex/api/localization.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <algorithm>
 
@@ -18,8 +19,12 @@ namespace hex {
                 func(*this);
             } catch (const TaskInterruptor &) {
                 this->interruption();
+            } catch (const std::exception &e) {
+                log::error("Exception in task {}: {}", this->m_unlocalizedName, e.what());
+                this->exception(e.what());
             } catch (...) {
-                this->exception();
+                log::error("Exception in task {}", this->m_unlocalizedName);
+                this->exception("Unknown Exception");
             }
 
             this->finish();
@@ -93,6 +98,12 @@ namespace hex {
         this->m_hadException = false;
     }
 
+    std::string Task::getExceptionMessage() const {
+        std::scoped_lock lock(this->m_mutex);
+
+        return this->m_exceptionMessage;
+    }
+
     const std::string &Task::getUnlocalizedName() {
         return this->m_unlocalizedName;
     }
@@ -117,9 +128,10 @@ namespace hex {
         this->m_interrupted = true;
     }
 
-    void Task::exception() {
+    void Task::exception(const char *message) {
         std::scoped_lock lock(this->m_mutex);
 
+        this->m_exceptionMessage = message;
         this->m_hadException = true;
     }
 

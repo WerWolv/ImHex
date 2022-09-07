@@ -36,6 +36,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Button("hex.builtin.common.open"_lang)) {
                     if (provider->open()) {
+                        EventManager::post<EventProviderOpened>(provider);
                         ImGui::CloseCurrentPopup();
                     }
                     else {

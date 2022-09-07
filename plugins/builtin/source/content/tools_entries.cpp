@@ -19,7 +19,7 @@
 #include <limits>
 
 #include <llvm/Demangle/Demangle.h>
-#include "math_evaluator.hpp"
+#include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS

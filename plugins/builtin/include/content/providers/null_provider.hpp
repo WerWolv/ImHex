@@ -15,6 +15,9 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
 
+        [[nodiscard]] bool open() override { return true; }
+        void close() override { }
+
         void readRaw(u64 offset, void *buffer, size_t size) override { hex::unused(offset, buffer, size); }
         void writeRaw(u64 offset, const void *buffer, size_t size) override { hex::unused(offset, buffer, size); }
         [[nodiscard]] size_t getActualSize() const override { return 0x00; }

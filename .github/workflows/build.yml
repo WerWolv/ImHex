@@ -99,14 +99,7 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
-        touch $PWD/install/PORTABLE
-
-    - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v3
-      with:
-        name: Windows Portable
-        path: |
-          build/install/*
+        echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v3
@@ -114,6 +107,29 @@ jobs:
         name: Windows Installer
         path: |
           build/*.msi
+
+    - name: ⬆️ Upload Portable ZIP
+      uses: actions/upload-artifact@v3
+      with:
+        name: Windows Portable
+        path: |
+          build/install/*
+      
+    - name: ⬇️ Download Mesa3D for NoGPU version
+      shell: bash
+      run: |
+        echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
+        curl https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
+        7z e mesa.7z
+        mv opengl32.dll build/install
+        
+
+    - name: ⬆️ Upload NoGPU Portable ZIP
+      uses: actions/upload-artifact@v3
+      with:
+        name: Windows Portable NoGPU
+        path: |
+          build/install/*
 
   # MacOS build
   macos:

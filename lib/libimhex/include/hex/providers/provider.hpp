@@ -14,10 +14,6 @@
 
 #include <nlohmann/json.hpp>
 
-namespace pl {
-    class PatternLanguage;
-}
-
 namespace hex::prv {
 
     class Provider {
@@ -70,8 +66,8 @@ namespace hex::prv {
         [[nodiscard]] virtual std::string getName() const                                                 = 0;
         [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataInformation() const = 0;
 
-        [[nodiscard]] virtual bool open();
-        virtual void close();
+        [[nodiscard]] virtual bool open() = 0;
+        virtual void close() = 0;
 
         void addPatch(u64 offset, const void *buffer, size_t size, bool createUndo = false);
         void createUndoPoint();

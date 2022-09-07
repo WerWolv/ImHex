@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Impossibile scrivere sul File. File aperto solo in modalità lettura" },
                 { "hex.builtin.popup.error.open", "Impossibile aprire il File!" },
                 { "hex.builtin.popup.error.create", "Impossibile creare il nuovo File!" },
+                //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "File" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },
@@ -288,7 +289,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.file.save_as", "Salva come..." },
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "Copia" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "Copia come..." },
-                        { "hex.builtin.view.hex_editor.copy.hex", "Stringa" },
+                        { "hex.builtin.view.hex_editor.copy.hex", "Hex Stringa" },
+                        //{ "hex.builtin.view.hex_editor.copy.address", "Address" },
                         { "hex.builtin.view.hex_editor.copy.c", "C Array" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ Array" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# Array" },

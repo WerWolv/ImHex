@@ -101,6 +101,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Schreibzugriff konnte nicht erlangt werden. Datei wurde im Lesemodus geöffnet." },
                 { "hex.builtin.popup.error.open", "Öffnen der Datei fehlgeschlagen!" },
                 { "hex.builtin.popup.error.create", "Erstellen der neuen Datei fehlgeschlagen!" },
+                { "hex.builtin.popup.error.task_exception", "Fehler in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "Datei" },
                     { "hex.builtin.file.open_file", "Datei öffnen..." },
@@ -132,7 +133,6 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.menu.view", "Ansicht" },
                 { "hex.builtin.menu.layout", "Layout" },
-                    { "hex.builtin.menu.view.fps", "FPS anzeigen" },
                     { "hex.builtin.menu.view.demo", "ImGui Demo anzeigen" },
                 { "hex.builtin.menu.help", "Hilfe" },
 
@@ -284,7 +284,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.file.save_as", "Speichern unter..." },
                     { "hex.builtin.view.hex_editor.menu.edit.copy", "Kopieren" },
                     { "hex.builtin.view.hex_editor.menu.edit.copy_as", "Kopieren als..." },
-                        { "hex.builtin.view.hex_editor.copy.hex", "String" },
+                        { "hex.builtin.view.hex_editor.copy.hex", "Hex String" },
+                        { "hex.builtin.view.hex_editor.copy.address", "Adresse" },
                         { "hex.builtin.view.hex_editor.copy.c", "C Array" },
                         { "hex.builtin.view.hex_editor.copy.cpp", "C++ Array" },
                         { "hex.builtin.view.hex_editor.copy.csharp", "C# Array" },

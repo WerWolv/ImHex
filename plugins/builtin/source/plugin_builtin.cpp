@@ -34,6 +34,7 @@ namespace hex::plugin::builtin {
     void registerLanguageZhCN();
     void registerLanguagePtBR();
     void registerLanguageZhTW();
+    void registerLanguageKoKR();
 }
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
@@ -47,6 +48,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerLanguageZhCN();
     registerLanguagePtBR();
     registerLanguageZhTW();
+    registerLanguageKoKR();
 
     registerEventHandlers();
     registerDataVisualizers();

@@ -21,7 +21,8 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
         if (auto *fileProvider = dynamic_cast<prv::FileProvider*>(provider); fileProvider != nullptr) {
             fileProvider->setPath(path);
-            (void)fileProvider->open();
+            if (fileProvider->open())
+                EventManager::post<EventProviderOpened>(fileProvider);
         }
     }
 
@@ -100,6 +101,8 @@ namespace hex::plugin::builtin {
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
+
+                EventManager::post<EventProviderOpened>(provider);
             }
             else if (provider->hasLoadInterface())
                 EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
@@ -107,7 +110,10 @@ namespace hex::plugin::builtin {
                 if (!provider->open() || !provider->isAvailable()) {
                     View::showErrorPopup("hex.builtin.popup.error.open"_lang);
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+                    return;
                 }
+
+                EventManager::post<EventProviderOpened>(provider);
             }
         });
 

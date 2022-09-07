@@ -218,7 +218,7 @@ namespace hex::prv {
             }
 
             value_type operator[](i64 offset) const {
-                auto result = this->m_reader->readReverse(this->m_address + offset, 1);
+                auto result = this->m_reader->readReverse(this->m_address - offset, 1);
                 if (result.empty())
                     return 0x00;
 
@@ -250,7 +250,7 @@ namespace hex::prv {
         }
 
         ReverseIterator rend() {
-            return { this, std::numeric_limits<u64>::max() };
+            return { this, 0 };
         }
 
     private:

@@ -52,16 +52,16 @@ add_library(${PROJECT_NAME} SHARED
         source/content/views/view_provider_settings.cpp
         source/content/views/view_find.cpp
 
+        source/content/helpers/math_evaluator.cpp
+        source/content/helpers/pattern_drawer.cpp
 
-        source/math_evaluator.cpp
-        source/pattern_drawer.cpp
-
-        source/lang/en_US.cpp
         source/lang/de_DE.cpp
+        source/lang/en_US.cpp
         source/lang/it_IT.cpp
-        source/lang/zh_CN.cpp
         source/lang/ja_JP.cpp
+        source/lang/ko_KR.cpp
         source/lang/pt_BR.cpp
+        source/lang/zh_CN.cpp
         source/lang/zh_TW.cpp
 )
 
