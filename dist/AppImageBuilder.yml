@@ -136,5 +136,5 @@ AppDir:
     - usr/share/doc/*/TODO.*
 AppImage:
   arch: x86_64
-  update-information: gh-releases-zsync|iTrooz|ImHex|latest|imhex-*.AppImage.zsync
+  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*.AppImage.zsync
   file_name: imhex-{{VERSION}}.AppImage
