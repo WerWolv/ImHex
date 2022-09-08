@@ -368,7 +368,7 @@ namespace hex {
     void PatternDrawer::drawArrayNode(u64 idx, u64& displayEnd, pl::ptrn::Pattern& pattern) {
         u64 lastVisible = displayEnd - 1;
 
-        ImGui::PushID(&pattern);
+        ImGui::PushID(reinterpret_cast<void*>(pattern.getOffset()));
 
         if (idx < lastVisible) {
             this->draw(pattern);
