@@ -8,6 +8,31 @@
   <a title="Total Downloads" href="https://github.com/WerWolv/ImHex/releases/latest"><img alt="Total Downloads" src="https://img.shields.io/github/downloads/WerWolv/ImHex/total?longCache=true&style=for-the-badge&label=Downloads&logoColor=fff&logo=GitHub"></a>
 </p>
 
+Table of Contents
+=================
+
+  *[Supporting](#supporting)
+  *[Screenshots](#screenshots)
+  *[Features](#features)
+  *[Pattern Language](#pattern-language)
+  *[Database](#database)
+  *[Requirements](#requirements)
+  *[Plugin development](#plugin-development)
+  *[Installing](#installing)
+    *[Fedora (36+)](#fedora-36)
+    *[RHEL 9 / AlmaLinux 9 (coming soon)](#rhel-9--almalinux-9-coming-soon)
+    *[Arch Linux (AUR)](#arch-linux-aur)
+  *[Third Party Repositories](#third-party-repositories)
+  *[Nightly builds](#nightly-builds)
+  *[Compiling](#compiling)
+  *[Credits](#credits)
+    *[Contributors](#contributors)
+    *[Dependencies](#dependencies)
+  *[License](#license)
+
+  
+
+
 ## Supporting
 
 If you like my work, please consider supporting me on GitHub Sponsors, Patreon or PayPal. Thanks a lot!
@@ -196,3 +221,9 @@ All dependencies that aren't bundled, can be installed using the dependency inst
 - Thanks to btzy for [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended)
 - Thanks to danyspin97 for [xdgpp](https://sr.ht/~danyspin97/xdgpp)
 - Thanks to all other groups and organizations whose libraries are used in ImHex
+
+
+### License
+
+- ImHex is available under the GNU General Public License. Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
+- See the [LICENSE](https://github.com/WerWolv/ImHex/blob/master/LICENSE) file for more info. 
