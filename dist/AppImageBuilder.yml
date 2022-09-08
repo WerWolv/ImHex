@@ -6,7 +6,7 @@ AppDir:
     id: imhex
     name: ImHex
     icon: imhex
-    version: AppImage
+    version: "{{VERSION}}"
     exec: usr/bin/imhex
     exec_args: $@
   apt:
@@ -136,4 +136,5 @@ AppDir:
     - usr/share/doc/*/TODO.*
 AppImage:
   arch: x86_64
-  update-information: guess
+  update-information: gh-releases-zsync|WerWolv|ImHex|latest|imhex-*.AppImage.zsync
+  file_name: imhex-{{VERSION}}.AppImage

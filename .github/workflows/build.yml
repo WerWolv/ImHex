@@ -345,10 +345,8 @@ jobs:
       - name: 📦 Bundle AppImage
         run: |
           cd build-appimage
-          mkdir -p ./AppDir/usr/share/metainfo
-          cp ../dist/imhex.appdata.xml ./AppDir/usr/share/metainfo/imhex.appdata.xml
+          export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-          mv ImHex-AppImage-x86_64.AppImage ../imhex-${{env.IMHEX_VERSION}}.AppImage
           cd ..
 
       #- name: ⬆️ Upload Flatpak
@@ -368,7 +366,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Linux AppImage
-          path: '*.AppImage'
+          path: 'build-appimage/*.AppImage'
+        
+      - name: ⬆️ Upload AppImage zsync
+        uses: actions/upload-artifact@v3
+        with:
+          name: Linux AppImage zsync
+          path: 'build-appimage/*.AppImage.zsync'
 
   # ArchLinux build
   archlinux-build:

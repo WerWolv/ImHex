@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>imhex</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-2.0</project_license>
+    <name>ImHex</name>
+    <developer_name>WerWolv</developer_name>
+    <update_contact>hey@werwolv.net</update_contact>
+    <summary>A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM</summary>
+    <description>
+        <p>ImHex is a feature-rich Hex Editor aimed towards Reverse Engineers working with foreign data formats, malware, executables and raw memory. 
+Besides all the features a common Hex Editor has, ImHex also features a custom scripting language used to declare and dissect data structures, support for running YARA rules, a node-based graphical data pre-processor and support for various data sources such as files, raw disks or GDB Servers.</p>
+    </description>
+    <launchable type="desktop-id">imhex.desktop</launchable>
+    <url type="homepage">https://imhex.werwolv.net</url>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://user-images.githubusercontent.com/10835354/139717326-8044769d-527b-4d88-8adf-2d4ecafdca1f.png</image>
+        </screenshot>
+        <screenshot>
+            <image>https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png</image>
+        </screenshot>
+    </screenshots>
+
+    <provides>
+        <id>imhex.desktop</id>
+    </provides>
+
+    <categories>
+        <category>Development</category>
+    </categories>
+
+
+</component>

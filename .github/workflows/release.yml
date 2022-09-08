@@ -116,6 +116,9 @@ jobs:
           
       - name: ✉️ Update C++ Plugin Template
         uses: mvasigh/dispatch-action@main
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
           repo: ImHex-Cpp-Plugin-Template
@@ -135,6 +138,7 @@ jobs:
         shell: pwsh
         env:
           WINGET_GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.WINGET_GITHUB_TOKEN != '' }}"
         run: |
           $tagname = $env:GITHUB_REF.Replace("refs/tags/", "")
           $version = $tagname.Replace("v", "")
