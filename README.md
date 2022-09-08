@@ -116,7 +116,7 @@ For format patterns, libraries, magic and constant files, check out the [ImHex-P
 
 To use ImHex, the following minimal system requirements need to be met:
 
-- **OS**: Windows 7 or higher, macOS 10.15 (Catalina) or higher, "Modern" Linux (Ubuntu 22.04+, Fedora Stable/Rawhide, and Arch Linux are officially supported)
+- **OS**: Windows 7 or higher, macOS 10.15 (Catalina) or higher, "Modern" Linux (Ubuntu 22.04, Fedora Stable/Rawhide, and Arch Linux have official packages, other distributions can use the AppImage)
 - **CPU**: x86_64 (64 Bit)
 - **GPU**: OpenGL 3.0 or higher (preferable a dedicated GPU and not Intel HD Graphics)
 - **RAM**: 512MB, more may be required for more complicated analysis
@@ -129,7 +129,7 @@ To develop plugins for ImHex, use one of the following two templates projects to
 - [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
 
 ## Installing
-The following OSs have packages available in their respositories making it easy to install ImHex.
+The following OSs have packages available in their repositories making it easy to install ImHex.
 ### Fedora (36+)
 ```
 dnf install imhex
@@ -158,7 +158,7 @@ Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImH
 - MacOS • __x86_64__
   - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
 - Linux • __x86_64__
-  - [Ubuntu DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20DEB%20%28Ubuntu%2022.04%29.zip)
+  - [Ubuntu 22.04 DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Ubuntu%2022.04%20DEB.zip)
   - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
   - [Arch Package](https://nightly.link/WerWolv/ImHex/workflows/build/master/ArchLinux%20.pkg.tar.zst.zip)
   - [Fedora Rawhide RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Rawhide%20RPM.zip)

@@ -321,7 +321,7 @@ jobs:
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zgzip --build build/DebDir
-          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}.deb
+          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04.deb
 
       # AppImage cmake build
       - name: 🛠️ Reconfigure build for AppImage
@@ -361,7 +361,7 @@ jobs:
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v3
         with:
-          name: Linux DEB (Ubuntu 22.04)
+          name: Ubuntu 22.04 DEB
           path: '*.deb'
 
       - name: ⬆️ Upload AppImage
