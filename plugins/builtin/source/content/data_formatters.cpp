@@ -1,34 +1,40 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/providers/provider.hpp>
+#include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/fmt.hpp>
 
 namespace hex::plugin::builtin {
 
     static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end) {
-        constexpr auto NewLineIndent = "\n    ";
+        constexpr static auto NewLineIndent = "\n    ";
+        constexpr static auto LineLength = 16;
 
-        std::string result = start;
+        std::string result;
+        result.reserve(start.size() + hex::format(byteFormat, 0x00).size() * size +  + std::string(NewLineIndent).size() / LineLength + end.size());
 
-        std::vector<u8> buffer(0x1'0000, 0x00);
-        for (u64 i = 0; i < size; i += buffer.size()) {
-            size_t readSize = std::min<u64>(buffer.size(), size - i);
-            provider->read(offset, buffer.data(), readSize);
+        result += start;
 
-            for (u32 j = 0; j < readSize; j++) {
-                if (j % 0x10 == 0)
-                    result += NewLineIndent;
+        auto reader = prv::BufferedReader(provider);
+        reader.seek(offset);
+        reader.setEndAddress(offset + size);
 
-                result += hex::format(byteFormat, buffer[j]);
-            }
+        for (u8 byte : reader) {
+            if ((offset % LineLength) == 0x00)
+                result += NewLineIndent;
 
-            // Remove trailing comma
+            result += hex::format(byteFormat, byte);
+
+            offset++;
+        }
+
+        // Remove trailing comma
+        if (provider->getActualSize() > 0) {
             result.pop_back();
             result.pop_back();
         }
 
-        result += "\n";
-        result += end;
+        result += "\n" + end;
 
         return result;
     }
@@ -64,44 +70,46 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.ascii", [](prv::Provider *provider, u64 offset, size_t size) {
-            std::string result = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n\n";
+            constexpr static auto HeaderLine = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n";
+            std::string result;
+            result.reserve(std::string(HeaderLine).size() * size / 0x10);
 
-            std::vector<u8> buffer(0x1'0000, 0x00);
-            for (u64 byte = 0; byte < size; byte += buffer.size()) {
-                size_t readSize = std::min<u64>(buffer.size(), size - byte);
-                provider->read(offset, buffer.data(), readSize);
+            result += HeaderLine;
 
-                const auto end = (offset + readSize) - 1;
+            auto reader = prv::BufferedReader(provider);
+            reader.seek(offset);
+            reader.setEndAddress((offset + size) - 1);
 
-                for (u32 col = offset >> 4; col <= (end >> 4); col++) {
-                    result += hex::format("{0:08X}  ", col << 4);
-                    for (u64 i = 0; i < 16; i++) {
+            u64 address = offset & ~u64(0x0F);
+            std::string asciiRow;
+            for (u8 byte : reader) {
+                if ((address % 0x10) == 0) {
+                    result += hex::format(" {}", asciiRow);
+                    result += hex::format("\n{0:08X}  ", address);
 
-                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
+                    asciiRow.clear();
+
+                    if (address == (offset & ~u64(0x0F))) {
+                        for (u64 i = 0; i < (offset - address); i++) {
                             result += "   ";
-                        else
-                            result += hex::format("{0:02X} ", buffer[((col << 4) - offset) + i]);
-
-                        if ((i & 0xF) == 0x7)
-                            result += " ";
+                            asciiRow += " ";
+                        }
+                        address = offset;
                     }
+                }
 
+                result += hex::format("{0:02X} ", byte);
+                asciiRow += std::isprint(byte) ? char(byte) : '.';
+                if ((address % 0x10) == 0x07)
                     result += " ";
 
-                    for (u64 i = 0; i < 16; i++) {
-
-                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
-                            result += " ";
-                        else {
-                            u8 c             = buffer[((col << 4) - offset) + i];
-                            char displayChar = (c < 32 || c >= 128) ? '.' : c;
-                            result += hex::format("{0}", displayChar);
-                        }
-                    }
-
-                    result += "\n";
-                }
+                address++;
             }
+
+            for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
+                result += "   ";
+            result += hex::format(" {}", asciiRow);
+
             return result;
         });
 
@@ -115,48 +123,46 @@ namespace hex::plugin::builtin {
                 "        .textcolumn { color:#000000 }\n"
                 "    </style>\n\n"
                 "    <code>\n"
-                "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span><br>\n";
+                "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span>";
 
+            auto reader = prv::BufferedReader(provider);
+            reader.seek(offset);
+            reader.setEndAddress(offset + size);
 
-            std::vector<u8> buffer(0x1'0000, 0x00);
-            for (u64 byte = 0; byte < size; byte += buffer.size()) {
-                size_t readSize = std::min<u64>(buffer.size(), size - byte);
-                provider->read(offset, buffer.data(), readSize);
+            u64 address = offset & ~u64(0x0F);
+            std::string asciiRow;
+            for (u8 byte : reader) {
+                if ((address % 0x10) == 0) {
+                    result += hex::format("  {}", asciiRow);
+                    result +=  hex::format("<br>\n        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", address);
 
-                const auto end = (offset + readSize) - 1;
+                    asciiRow.clear();
 
-                for (u32 col = offset >> 4; col <= (end >> 4); col++) {
-                    result += hex::format("        <span class=\"offsetcolumn\">{0:08X}</span>&nbsp&nbsp<span class=\"hexcolumn\">", col << 4);
-                    for (u64 i = 0; i < 16; i++) {
-
-                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
-                            result += "&nbsp&nbsp ";
-                        else
-                            result += hex::format("{0:02X} ", buffer[((col << 4) - offset) + i]);
-
-                        if ((i & 0xF) == 0x7)
-                            result += "&nbsp";
-                    }
-
-                    result += "</span>&nbsp&nbsp<span class=\"textcolumn\">";
-
-                    for (u64 i = 0; i < 16; i++) {
-
-                        if ((col == (offset >> 4) && i < (offset & 0xF)) || (col == (end >> 4) && i > (end & 0xF)))
-                            result += "&nbsp";
-                        else {
-                            u8 c             = buffer[((col << 4) - offset) + i];
-                            char displayChar = (c < 32 || c >= 128) ? '.' : c;
-                            result += hex::format("{0}", displayChar);
+                    if (address == (offset & ~u64(0x0F))) {
+                        for (u64 i = 0; i < (offset - address); i++) {
+                            result += "&nbsp&nbsp&nbsp";
+                            asciiRow += "&nbsp";
                         }
+                        address = offset;
                     }
 
-                    result += "</span><br>\n";
+                    result += "</span>";
                 }
+
+                result += hex::format("{0:02X} ", byte);
+                asciiRow += std::isprint(byte) ? char(byte) : '.';
+                if ((address % 0x10) == 0x07)
+                    result += "&nbsp";
+
+                address++;
             }
 
+            for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
+                result += "&nbsp&nbsp&nbsp";
+            result += asciiRow;
+
             result +=
-                "    </code>\n"
+                "\n    </code>\n"
                 "</div>\n";
 
             return result;

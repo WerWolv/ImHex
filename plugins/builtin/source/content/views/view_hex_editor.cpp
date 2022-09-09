@@ -1175,17 +1175,22 @@ namespace hex::plugin::builtin {
     }
 
     static void copyBytes(const Region &selection) {
+        constexpr static auto Format = "{0:02X} ";
+
         auto provider = ImHexApi::Provider::get();
 
-        std::vector<u8> buffer(selection.size, 0x00);
-        provider->read(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), buffer.size());
+        auto reader = prv::BufferedReader(provider);
+        reader.seek(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress());
+        reader.setEndAddress(selection.getEndAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress());
 
-        std::string str;
-        for (const auto &byte : buffer)
-            str += hex::format("{0:02X} ", byte);
-        str.pop_back();
+        std::string result;
+        result.reserve(fmt::format(Format, 0x00).size() * selection.getSize());
 
-        ImGui::SetClipboardText(str.c_str());
+        for (const auto &byte : reader)
+            result += fmt::format(Format, byte);
+        result.pop_back();
+
+        ImGui::SetClipboardText(result.c_str());
     }
 
     static void pasteBytes(const Region &selection) {
