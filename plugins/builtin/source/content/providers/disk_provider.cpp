@@ -32,7 +32,7 @@
 namespace hex::plugin::builtin::prv {
 
     DiskProvider::DiskProvider() : Provider() {
-        this->reloadDrives();
+
     }
 
     bool DiskProvider::isAvailable() const {
@@ -317,6 +317,9 @@ namespace hex::plugin::builtin::prv {
 
     void DiskProvider::drawLoadInterface() {
         #if defined(OS_WINDOWS)
+
+            if (this->m_availableDrives.empty())
+                this->reloadDrives();
 
             if (ImGui::BeginListBox("hex.builtin.provider.disk.selected_disk"_lang)) {
 
