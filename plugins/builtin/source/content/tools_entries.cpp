@@ -974,7 +974,7 @@ namespace hex::plugin::builtin {
                                     return;
                                 }
 
-                                constexpr auto BufferSize = 0xFF'FFFF;
+                                constexpr static auto BufferSize = 0xFF'FFFF;
                                 for (u64 partOffset = 0; partOffset < splitSize; partOffset += BufferSize) {
                                     partFile.write(file.readBytes(std::min<u64>(BufferSize, splitSize - partOffset)));
                                     partFile.flush();
@@ -1103,7 +1103,7 @@ namespace hex::plugin::builtin {
                                     return;
                                 }
 
-                                constexpr auto BufferSize = 0xFF'FFFF;
+                                constexpr static auto BufferSize = 0xFF'FFFF;
                                 auto inputSize            = input.getSize();
                                 for (u64 inputOffset = 0; inputOffset < inputSize; inputOffset += BufferSize) {
                                     output.write(input.readBytes(std::min<u64>(BufferSize, inputSize - inputOffset)));

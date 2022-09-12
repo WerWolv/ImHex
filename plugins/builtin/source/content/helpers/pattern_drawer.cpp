@@ -29,8 +29,8 @@ namespace hex {
 
     namespace {
 
-        constexpr auto DisplayEndDefault = 50u;
-        constexpr auto DisplayEndStep = 50u;
+        constexpr auto DisplayEndDefault = 50U;
+        constexpr auto DisplayEndStep = 50U;
 
         using namespace ::std::literals::string_literals;
 

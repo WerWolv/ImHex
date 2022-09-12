@@ -1002,14 +1002,14 @@ namespace hex::plugin::builtin {
                             if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && this->m_selectionStart != this->m_selectionEnd)) {
                                 auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
-                                if (y == u64(clipper.DisplayStart + 2)) {
-                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 2) * this->m_bytesPerRow)) {
+                                if (y == u64(clipper.DisplayStart + 3)) {
+                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
-                                        ImGui::SetScrollHereY(fractionPerLine * 4);
+                                        ImGui::SetScrollHereY(fractionPerLine * 5);
 
                                     }
-                                } else if (y == u64(clipper.DisplayEnd - 2)) {
-                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow)) {
+                                } else if (y == u64(clipper.DisplayEnd - 3)) {
+                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * (this->m_visibleRowCount - 1));
                                     }

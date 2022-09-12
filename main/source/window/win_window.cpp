@@ -106,11 +106,11 @@ namespace hex {
                         return HTNOWHERE;
                     }
 
-                    constexpr auto RegionClient = 0b0000;
-                    constexpr auto RegionLeft   = 0b0001;
-                    constexpr auto RegionRight  = 0b0010;
-                    constexpr auto RegionTop    = 0b0100;
-                    constexpr auto RegionBottom = 0b1000;
+                    constexpr static auto RegionClient = 0b0000;
+                    constexpr static auto RegionLeft   = 0b0001;
+                    constexpr static auto RegionRight  = 0b0010;
+                    constexpr static auto RegionTop    = 0b0100;
+                    constexpr static auto RegionBottom = 0b1000;
 
                     const auto result =
                         RegionLeft * (cursor.x < (window.left + border.x)) |

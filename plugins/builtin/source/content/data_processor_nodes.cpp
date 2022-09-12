@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
         NodeBuffer() : Node("hex.builtin.nodes.constants.buffer.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) { }
 
         void drawNode() override {
-            constexpr int StepSize = 1, FastStepSize = 10;
+            constexpr static int StepSize = 1, FastStepSize = 10;
 
             ImGui::PushItemWidth(100);
             ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &this->m_size, &StepSize, &FastStepSize);

@@ -129,7 +129,7 @@ namespace hex {
             glfwSetWindowTitle(this->m_window, title.c_str());
         });
 
-        constexpr auto CrashBackupFileName = "crash_backup.hexproj";
+        constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
 
         EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int) {
             ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());

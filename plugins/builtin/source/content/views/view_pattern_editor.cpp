@@ -26,13 +26,13 @@ namespace hex::plugin::builtin {
         static bool initialized = false;
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
-            static constexpr std::array keywords = {
+            constexpr static std::array keywords = {
                 "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
 
-            static constexpr std::array builtInTypes = {
+            constexpr static std::array builtInTypes = {
                 "u8", "u16", "u24", "u32", "u48", "u64", "u96", "u128", "s8", "s16", "s24", "s32", "s48", "s64", "s96", "s128", "float", "double", "char", "char16", "bool", "padding", "str", "auto"
             };
             for (const auto name : builtInTypes) {
@@ -524,7 +524,7 @@ namespace hex::plugin::builtin {
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                    constexpr const char *Types[] = { "I", "F", "S", "B" };
+                    constexpr static const char *Types[] = { "I", "F", "S", "B" };
                     if (ImGui::BeginCombo("", Types[static_cast<int>(type)])) {
                         for (auto i = 0; i < IM_ARRAYSIZE(Types); i++) {
                             if (ImGui::Selectable(Types[i]))

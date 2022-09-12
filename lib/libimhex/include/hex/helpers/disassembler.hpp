@@ -31,7 +31,7 @@ namespace hex {
 
     class Disassembler {
     public:
-        static constexpr cs_arch toCapstoneArchitecture(Architecture architecture) {
+        constexpr static cs_arch toCapstoneArchitecture(Architecture architecture) {
             return static_cast<cs_arch>(architecture);
         }
 

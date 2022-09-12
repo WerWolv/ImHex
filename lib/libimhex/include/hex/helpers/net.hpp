@@ -35,7 +35,7 @@ namespace hex {
         Net();
         ~Net();
 
-        static constexpr u32 DefaultTimeout = 2'000;
+        constexpr static u32 DefaultTimeout = 2'000;
 
         std::future<Response<std::string>> getString(const std::string &url, u32 timeout = DefaultTimeout);
         std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = DefaultTimeout);

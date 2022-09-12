@@ -528,7 +528,7 @@ namespace hex::plugin::builtin {
         });
 
 
-        constexpr auto CrashBackupFileName = "crash_backup.hexproj";
+        constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             if (auto filePath = std::fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
                 s_safetyBackupPath = filePath;

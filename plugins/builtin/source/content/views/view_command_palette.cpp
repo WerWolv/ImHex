@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
     }
 
     std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(const std::string &input) {
-        constexpr auto MatchCommand = [](const std::string &currCommand, const std::string &commandToMatch) -> std::pair<MatchType, std::string_view> {
+        constexpr static auto MatchCommand = [](const std::string &currCommand, const std::string &commandToMatch) -> std::pair<MatchType, std::string_view> {
             if (currCommand.empty()) {
                 return { MatchType::InfoMatch, "" };
             } else if (currCommand.size() <= commandToMatch.size()) {

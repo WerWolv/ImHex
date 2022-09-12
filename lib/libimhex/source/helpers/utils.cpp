@@ -233,7 +233,7 @@ namespace hex {
     }
 
     std::string toEngineeringString(double value) {
-        constexpr std::array Suffixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
+        constexpr static std::array Suffixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
 
         int8_t suffixIndex = 6;
 
