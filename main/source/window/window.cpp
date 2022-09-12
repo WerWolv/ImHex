@@ -131,7 +131,7 @@ namespace hex {
 
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
 
-        EventManager::subscribe<EventAbnormalTermination>(this, [this, CrashBackupFileName](int) {
+        EventManager::subscribe<EventAbnormalTermination>(this, [this](int) {
             ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
 
             if (!ImHexApi::Provider::isDirty())
