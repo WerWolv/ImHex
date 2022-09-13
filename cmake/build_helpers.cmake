@@ -392,6 +392,12 @@ function(downloadImHexPatternsFiles dest)
 
         FetchContent_Populate(imhex_patterns)
 
+    else ()
+        # Maybe patterns are cloned to a subdirectory
+        set(imhex_patterns_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ImHex-Patterns")
+    endif ()
+
+    if (EXISTS ${imhex_patterns_SOURCE_DIR})
         set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic)
         foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
             install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION ${dest})
