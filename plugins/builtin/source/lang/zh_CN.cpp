@@ -427,6 +427,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.find.context.copy", "复制值" },
                     { "hex.builtin.view.find.context.copy_demangle", "复制值的还原名" },
                     { "hex.builtin.view.find.search.entries", "{} 个结果" },
+                    // { "hex.builtin.view.find.search.reset", "Reset" },
 
                 { "hex.builtin.command.calc.desc", "计算器" },
                 { "hex.builtin.command.cmd.desc", "指令" },

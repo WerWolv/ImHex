@@ -524,6 +524,16 @@ namespace hex::plugin::builtin {
 
                 ImGui::SameLine();
                 ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundOccurrences[provider].size());
+
+                ImGui::BeginDisabled(this->m_foundOccurrences[provider].empty());
+                {
+                    if (ImGui::Button("hex.builtin.view.find.search.reset"_lang)) {
+                        this->m_foundOccurrences[provider].clear();
+                        this->m_sortedOccurrences[provider].clear();
+                        this->m_occurrenceTree[provider].clear();
+                    }
+                }
+                ImGui::EndDisabled();
             }
             ImGui::EndDisabled();
 

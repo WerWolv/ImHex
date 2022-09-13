@@ -429,6 +429,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.find.context.copy", "値をコピー" },
                 //    { "hex.builtin.view.find.context.copy_demangle", "Copy Demangled Value" },
                     { "hex.builtin.view.find.search.entries", "一致件数: {}" },
+                // { "hex.builtin.view.find.search.reset", "Reset" },
 
                 { "hex.builtin.command.calc.desc", "電卓" },
                 { "hex.builtin.command.cmd.desc", "コマンド" },

@@ -425,6 +425,7 @@ namespace hex::plugin::builtin {
                 //    { "hex.builtin.view.find.context.copy", "Copy Value" },
                 //    { "hex.builtin.view.find.context.copy_demangle", "Copy Demangled Value" },
                 //    { "hex.builtin.view.find.search.entries", "{} entries found" },
+                //    { "hex.builtin.view.find.search.reset", "Reset" },
 
                 { "hex.builtin.command.calc.desc", "計算機" },
                 { "hex.builtin.command.cmd.desc", "命令" },

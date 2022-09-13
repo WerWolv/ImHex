@@ -426,6 +426,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.find.context.copy", "값 복사" },
                     { "hex.builtin.view.find.context.copy_demangle", "Copy Demangled Value" },
                     { "hex.builtin.view.find.search.entries", "{} 개 검색됨" },
+                    // { "hex.builtin.view.find.search.reset", "Reset" },
 
 
                 { "hex.builtin.command.calc.desc", "계산기" },

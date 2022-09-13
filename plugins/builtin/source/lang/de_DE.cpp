@@ -421,6 +421,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.find.context.copy", "Wert Kopieren" },
                     { "hex.builtin.view.find.context.copy_demangle", "Demangled Wert Kopieren" },
                     { "hex.builtin.view.find.search.entries", "{} Einträge gefunden" },
+                    { "hex.builtin.view.find.search.reset", "Zurücksetzen" },
 
                 { "hex.builtin.command.calc.desc", "Rechner" },
                 { "hex.builtin.command.cmd.desc", "Command" },
