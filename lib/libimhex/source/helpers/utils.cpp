@@ -339,7 +339,7 @@ namespace hex {
             auto c = [&] { return string[offset]; };
 
             if (c() == '\\') {
-                if ((offset + 2) >= string.length()) return {};
+                if ((offset + 2) > string.length()) return {};
 
                 offset++;
 
