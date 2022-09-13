@@ -234,6 +234,9 @@ namespace hex::plugin::builtin {
         reader.setEndAddress(searchRegion.getEndAddress());
 
         auto sequence = hex::decodeByteString(settings.sequence);
+        if (sequence.empty())
+            return { };
+
         auto occurrence = reader.begin();
         while (true) {
             occurrence = std::search(reader.begin(), reader.end(), std::boyer_moore_horspool_searcher(sequence.begin(), sequence.end()));
@@ -461,7 +464,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::InputText("hex.builtin.common.value"_lang, settings.sequence);
 
-                        this->m_settingsValid = !settings.sequence.empty();
+                        this->m_settingsValid = !settings.sequence.empty() && !hex::decodeByteString(settings.sequence).empty();
 
                         ImGui::EndTabItem();
                     }
