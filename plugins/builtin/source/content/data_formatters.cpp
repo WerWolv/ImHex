@@ -3,6 +3,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/crypto.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -19,13 +20,14 @@ namespace hex::plugin::builtin {
         reader.seek(offset);
         reader.setEndAddress(offset + size);
 
+        u64 index = 0x00;
         for (u8 byte : reader) {
-            if ((offset % LineLength) == 0x00)
+            if ((index % LineLength) == 0x00)
                 result += NewLineIndent;
 
             result += hex::format(byteFormat, byte);
 
-            offset++;
+            index++;
         }
 
         // Remove trailing comma
@@ -67,6 +69,35 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
             return formatLanguageArray(provider, offset, size, "const data = new Uint8Array([", "0x{0:02X}, ", "]);");
+        });
+
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.lua", [](prv::Provider *provider, u64 offset, size_t size) {
+            return formatLanguageArray(provider, offset, size, "data = {", "0x{0:02X}, ", "}");
+        });
+
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.go", [](prv::Provider *provider, u64 offset, size_t size) {
+            return formatLanguageArray(provider, offset, size, "data := [...]byte {", "0x{0:02X}, ", "}");
+        });
+
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.crystal", [](prv::Provider *provider, u64 offset, size_t size) {
+            return formatLanguageArray(provider, offset, size, "data = [", "0x{0:02X}, ", "] of UInt8");
+        });
+
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.swift", [](prv::Provider *provider, u64 offset, size_t size) {
+            return formatLanguageArray(provider, offset, size, "let data: [Uint8] = [", "0x{0:02X}, ", "]");
+        });
+
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.pascal", [](prv::Provider *provider, u64 offset, size_t size) {
+            return formatLanguageArray(provider, offset, size, hex::format("data: array[0..{0}] of Byte = (", size - 1), "${0:02X}, ", ")");
+        });
+
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.base64", [](prv::Provider *provider, u64 offset, size_t size) {
+            std::vector<u8> data(size, 0x00);
+            provider->read(offset, data.data(), size);
+
+            auto result = crypt::encode64(data);
+
+            return std::string(result.begin(), result.end());
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.ascii", [](prv::Provider *provider, u64 offset, size_t size) {
