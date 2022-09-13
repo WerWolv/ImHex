@@ -106,8 +106,10 @@ namespace hex::plugin::builtin {
                 address++;
             }
 
-            for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
-                result += "   ";
+            if ((address % 0x10) != 0x00)
+                for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
+                    result += "   ";
+
             result += hex::format(" {}", asciiRow);
 
             return result;
