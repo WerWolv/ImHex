@@ -271,8 +271,13 @@ namespace hex::plugin::builtin {
             std::string string(occurrence.region.getSize(), '\x00');
             provider->read(occurrence.region.getStartAddress(), string.data(), occurrence.region.getSize());
 
-            if (std::regex_match(string, regex))
-                result.push_back(occurrence);
+            if (settings.fullMatch) {
+                if (std::regex_match(string, regex))
+                    result.push_back(occurrence);
+            } else {
+                if (std::regex_search(string, regex))
+                    result.push_back(occurrence);
+            }
         }
 
         return result;
@@ -473,7 +478,7 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::Regex;
 
-                        ImGui::InputText("hex.builtin.view.find.regex"_lang, settings.pattern);
+                        ImGui::InputText("hex.builtin.view.find.regex.pattern"_lang, settings.pattern);
 
                         try {
                             std::regex regex(settings.pattern);
@@ -484,6 +489,8 @@ namespace hex::plugin::builtin {
 
                         if (settings.pattern.empty())
                             this->m_settingsValid = false;
+
+                        ImGui::Checkbox("hex.builtin.view.find.regex.full_match"_lang, &settings.fullMatch);
 
                         ImGui::EndTabItem();
                     }

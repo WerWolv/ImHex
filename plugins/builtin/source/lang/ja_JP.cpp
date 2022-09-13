@@ -422,6 +422,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.find.strings.line_feeds", "ラインフィード" },
                     { "hex.builtin.view.find.sequences", "通常検索" },
                     { "hex.builtin.view.find.regex", "正規表現" },
+                        // { "hex.builtin.view.find.regex.pattern", "Pattern" },
+                        // { "hex.builtin.view.find.regex.full_match", "Require full match" },
                     { "hex.builtin.view.find.binary_pattern", "16進数" },
                     { "hex.builtin.view.find.search", "検索を実行" },
                     { "hex.builtin.view.find.context.copy", "値をコピー" },

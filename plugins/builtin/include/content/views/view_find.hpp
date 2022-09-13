@@ -61,6 +61,7 @@ namespace hex::plugin::builtin {
 
             struct Regex {
                 std::string pattern;
+                bool fullMatch = true;
             } regex;
 
             struct BinaryPattern {

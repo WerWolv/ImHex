@@ -414,6 +414,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.find.strings.line_feeds", "Line Feeds" },
                     { "hex.builtin.view.find.sequences", "Sequenzen" },
                     { "hex.builtin.view.find.regex", "Regex" },
+                        { "hex.builtin.view.find.regex.pattern", "Pattern" },
+                        { "hex.builtin.view.find.regex.full_match", "Benötige volle übereinstimmung" },
                     { "hex.builtin.view.find.binary_pattern", "Binärpattern" },
                     { "hex.builtin.view.find.search", "Suchen" },
                     { "hex.builtin.view.find.context.copy", "Wert Kopieren" },

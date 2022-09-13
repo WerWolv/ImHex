@@ -419,6 +419,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.find.strings.line_feeds", "라인 피드" },
                     { "hex.builtin.view.find.sequences", "텍스트 시퀸스" },
                     { "hex.builtin.view.find.regex", "정규식" },
+                        // { "hex.builtin.view.find.regex.pattern", "Pattern" },
+                        // { "hex.builtin.view.find.regex.full_match", "Require full match" },
                     { "hex.builtin.view.find.binary_pattern", "바이너리 패턴" },
                     { "hex.builtin.view.find.search", "검색" },
                     { "hex.builtin.view.find.context.copy", "값 복사" },

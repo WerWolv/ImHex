@@ -420,6 +420,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.find.strings.line_feeds", "换行" },
                     { "hex.builtin.view.find.sequences", "序列" },
                     { "hex.builtin.view.find.regex", "正则表达式" },
+                        // { "hex.builtin.view.find.regex.pattern", "Pattern" },
+                        // { "hex.builtin.view.find.regex.full_match", "Require full match" },
                     { "hex.builtin.view.find.binary_pattern", "二进制模式" },
                     { "hex.builtin.view.find.search", "搜索" },
                     { "hex.builtin.view.find.context.copy", "复制值" },
