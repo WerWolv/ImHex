@@ -822,7 +822,9 @@ namespace hex::plugin::builtin {
 
         EventManager::post<EventHighlightingChanged>();
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &runtime, code](auto &) {
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &runtime, code](auto &task) {
+            task.setInterruptCallback([&runtime] { runtime->abort(); });
+
             std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : this->m_envVarEntries)
                 envVars.insert({ name, value });

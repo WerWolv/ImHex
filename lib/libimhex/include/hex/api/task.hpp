@@ -40,6 +40,8 @@ namespace hex {
 
         void interrupt();
 
+        void setInterruptCallback(std::function<void()> callback);
+
     private:
         void finish();
         void interruption();
@@ -51,6 +53,7 @@ namespace hex {
         std::string m_unlocalizedName;
         u64 m_currValue, m_maxValue;
         std::thread m_thread;
+        std::function<void()> m_interruptCallback;
 
         bool m_shouldInterrupt = false;
 

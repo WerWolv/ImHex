@@ -72,6 +72,13 @@ namespace hex {
         std::scoped_lock lock(this->m_mutex);
 
         this->m_shouldInterrupt = true;
+
+        if (this->m_interruptCallback)
+            this->m_interruptCallback();
+    }
+
+    void Task::setInterruptCallback(std::function<void()> callback) {
+        this->m_interruptCallback = std::move(callback);
     }
 
     bool Task::isFinished() const {
