@@ -48,7 +48,9 @@ namespace hex {
     }
 
     Task::~Task() {
-        this->interrupt();
+        if (!this->isFinished())
+            this->interrupt();
+
         this->m_thread.join();
     }
 
