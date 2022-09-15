@@ -32,7 +32,39 @@ namespace hex {
     static float g_titleBarHeight;
     static ImGuiMouseCursor g_mouseCursorIcon;
 
-    static LRESULT windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+        switch (uMsg) {
+            case WM_COPYDATA:
+            {
+                auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
+                if (message == nullptr) break;
+
+                auto data = reinterpret_cast<const char8_t *>(message->lpData);
+                if (data == nullptr) break;
+
+                std::fs::path path = data;
+                log::info("Opening file in existing instance: {}", path.string());
+                EventManager::post<RequestOpenFile>(path);
+                break;
+            }
+            case WM_SETTINGCHANGE:
+            {
+                if (lParam == 0) break;
+
+                if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
+                    EventManager::post<EventOSThemeChanged>();
+                }
+
+                break;
+            }
+            default:
+                break;
+        }
+
+        return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+    }
+
+    static LRESULT borderlessWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
             case WM_NCACTIVATE:
             case WM_NCPAINT:
@@ -146,35 +178,11 @@ namespace hex {
                     }
                     break;
                 }
-            case WM_SETTINGCHANGE:
-                {
-                    if (lParam == 0) break;
-
-                    if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
-                        EventManager::post<EventOSThemeChanged>();
-                    }
-
-                    break;
-                }
-            case WM_COPYDATA:
-                {
-                    auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
-                    if (message == nullptr) break;
-
-                    auto data = reinterpret_cast<const char8_t *>(message->lpData);
-                    if (data == nullptr) break;
-
-                    std::fs::path path = data;
-                    log::info("Opening file in existing instance: {}", path.string());
-                    EventManager::post<RequestOpenFile>(path);
-                    break;
-                }
-
             default:
                 break;
         }
 
-        return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+        return commonWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
 
@@ -255,7 +263,7 @@ namespace hex {
 
 
         if (borderlessWindowMode) {
-            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)windowProc);
+            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)borderlessWindowProc);
 
             MARGINS borderless = { 1, 1, 1, 1 };
             ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
@@ -265,6 +273,8 @@ namespace hex {
 
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
+        } else {
+            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
         }
 
         // Catch heap corruption
