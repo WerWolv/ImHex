@@ -420,6 +420,7 @@ namespace hex::plugin::builtin {
 
             if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
                 ImGui::OpenPopup(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str());
+                this->m_dangerousFunctionCalled = false;
             }
 
             if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
