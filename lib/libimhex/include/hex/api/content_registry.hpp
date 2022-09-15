@@ -136,7 +136,7 @@ namespace hex {
 
             }
 
-            std::unique_ptr<pl::PatternLanguage> createDefaultRuntime(prv::Provider *provider);
+            void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider);
 
             void addPragma(const std::string &name, const pl::api::PragmaHandler &handler);
 

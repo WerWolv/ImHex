@@ -241,29 +241,30 @@ namespace hex {
             return functionName;
         }
 
-        std::unique_ptr<pl::PatternLanguage> createDefaultRuntime(prv::Provider *provider) {
-            auto runtime = std::make_unique<pl::PatternLanguage>();
+        void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
+            runtime.reset();
 
             if (provider != nullptr) {
-                runtime->setDataSource([provider](u64 offset, u8 *buffer, size_t size) {
+                runtime.setDataSource([provider](u64 offset, u8 *buffer, size_t size) {
                     provider->read(offset, buffer, size);
                 }, provider->getBaseAddress(), provider->getActualSize());
             }
 
-            runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
+            runtime.setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
 
             for (const auto &func : getFunctions()) {
                 if (func.dangerous)
-                    runtime->addDangerousFunction(func.ns, func.name, func.parameterCount, func.callback);
+                    runtime.addDangerousFunction(func.ns, func.name, func.parameterCount, func.callback);
                 else
-                    runtime->addFunction(func.ns, func.name, func.parameterCount, func.callback);
+                    runtime.addFunction(func.ns, func.name, func.parameterCount, func.callback);
             }
 
             for (const auto &[name, callback] : getPragmas()) {
-                runtime->addPragma(name, callback);
+                runtime.addPragma(name, callback);
             }
 
-            return runtime;
+            runtime.addDefine("__IMHEX__");
+            runtime.addDefine("__IMHEX_VERSION__", IMHEX_VERSION);
         }
 
         void addPragma(const std::string &name, const pl::api::PragmaHandler &handler) {

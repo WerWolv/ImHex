@@ -80,7 +80,8 @@ namespace hex::plugin::builtin {
 
 
     ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern_editor.name") {
-        this->m_parserRuntime = ContentRegistry::PatternLanguage::createDefaultRuntime(nullptr);
+        this->m_parserRuntime = std::make_unique<pl::PatternLanguage>();
+        ContentRegistry::PatternLanguage::configureRuntime(*this->m_parserRuntime, nullptr);
 
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
@@ -110,7 +111,8 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
             auto &patternLanguageData = ProviderExtraData::get(provider).patternLanguage;
-            patternLanguageData.runtime = ContentRegistry::PatternLanguage::createDefaultRuntime(provider);
+            patternLanguageData.runtime = std::make_unique<pl::PatternLanguage>();
+            ContentRegistry::PatternLanguage::configureRuntime(*patternLanguageData.runtime, provider);
 
             if (!this->m_autoLoadPatterns)
                 return;
@@ -775,6 +777,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::parsePattern(const std::string &code) {
         this->m_runningParsers++;
 
+        ContentRegistry::PatternLanguage::configureRuntime(*this->m_parserRuntime, nullptr);
         auto ast = this->m_parserRuntime->parseString(code);
 
         this->m_patternVariables.clear();
@@ -815,10 +818,7 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
         auto &runtime = ProviderExtraData::get(provider).patternLanguage.runtime;
 
-        runtime->reset();
-        runtime->setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
-        runtime->setDataBaseAddress(provider->getBaseAddress());
-        runtime->setDataSize(provider->getActualSize());
+        ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
 
         EventManager::post<EventHighlightingChanged>();
 
