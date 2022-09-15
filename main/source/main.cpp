@@ -52,11 +52,9 @@ int main(int argc, char **argv, char **envp) {
 
             if (argc == 1)
                 ;    // No arguments provided
-            else if (argc == 2)
-                EventManager::post<RequestOpenFile>(argv[1]);
-            else {
-                hex::log::fatal("Usage: {} [<file_name>]", argv[0]);
-                return EXIT_FAILURE;
+            else if (argc >= 2) {
+                for (auto i = 1; i < argc; i++)
+                    EventManager::post<RequestOpenFile>(argv[i]);
             }
 
             window.loop();
