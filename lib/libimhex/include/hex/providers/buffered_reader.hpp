@@ -24,6 +24,9 @@ namespace hex::prv {
         }
 
         void setEndAddress(u64 address) {
+            if (address >= this->m_provider->getActualSize())
+                address = this->m_provider->getActualSize() - 1;
+
             this->m_endAddress = address;
         }
 
@@ -256,7 +259,7 @@ namespace hex::prv {
     private:
         void updateBuffer(u64 address, size_t size) {
             if (!this->m_bufferValid || address < this->m_bufferAddress || address + size > (this->m_bufferAddress + this->m_buffer.size())) {
-                const auto remainingBytes = (this->m_endAddress - address) - 1;
+                const auto remainingBytes = (this->m_endAddress - address) + 1;
                 if (remainingBytes < this->m_maxBufferSize)
                     this->m_buffer.resize(remainingBytes);
                 else

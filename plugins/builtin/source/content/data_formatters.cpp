@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
 
         auto reader = prv::BufferedReader(provider);
         reader.seek(offset);
-        reader.setEndAddress(offset + size);
+        reader.setEndAddress(offset + size - 1);
 
         u64 index = 0x00;
         for (u8 byte : reader) {
@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
 
             auto reader = prv::BufferedReader(provider);
             reader.seek(offset);
-            reader.setEndAddress(offset + size);
+            reader.setEndAddress((offset + size) - 1);
 
             u64 address = offset & ~u64(0x0F);
             std::string asciiRow;
