@@ -1576,7 +1576,8 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.remove"_lang, nullptr, false, providerValid && provider->isResizable())) {
-                this->openPopup<PopupRemove>(this->getSelection().getStartAddress(), 0x00);
+                auto selection = this->getSelection();
+                this->openPopup<PopupRemove>(selection.getStartAddress(), selection.getSize());
             }
         });
     }
