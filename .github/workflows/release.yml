@@ -133,7 +133,7 @@ jobs:
       - name: ⬇️ Download dependencies
         shell: pwsh
         run: |
-          iwr https://github.com/microsoft/winget-create/releases/download/v1.0.4.0/wingetcreate.exe -OutFile wingetcreate.exe
+          iwr https://github.com/microsoft/winget-create/releases/download/v1.1.2.0/wingetcreate.exe -OutFile wingetcreate.exe
       - name: ⬆️ Update winget manifest
         shell: pwsh
         env:
