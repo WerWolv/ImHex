@@ -15,7 +15,7 @@ These builds are not guaranteed to be stable and may contain bugs, however they 
 
 Build instructions for Windows, Linux and macOS can be found under `/dist/compiling`:
 - Windows: [Link](dist/compiling/windows.md)
-- macOS: [Link](dist/compiling/macos.md)
+- macOS: [Link](dist/compiling/macOS.md)
 - Linux: [Link](dist/compiling/linux.md)
 
 ## Package managers
