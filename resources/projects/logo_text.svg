@@ -75,6 +75,9 @@
          in2="comp1"
          id="feComposite30" />
     </filter>
+    <style>
+      @import url("https://fonts.googleapis.com/css?family=Product%20Sans:400,400i,700,700i");
+    </style>
   </defs>
   <g
      inkscape:label="Layer 1"
