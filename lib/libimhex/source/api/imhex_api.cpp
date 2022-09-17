@@ -247,7 +247,7 @@ namespace hex {
         }
 
         bool isValid() {
-            return !s_providers.empty() && s_currentProvider < i64(s_providers.size());
+            return !s_providers.empty() && s_currentProvider >= 0 && s_currentProvider < i64(s_providers.size());
         }
 
         void markDirty() {
