@@ -104,7 +104,11 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 ## Pattern Language
 
-The custom C-like Pattern Language developed and used by ImHex is easy to read, understand and learn. A guide with all features of the language can be found [on the docs page](http://imhex.werwolv.net/docs).
+The Pattern Language is the completely custom programming language developed for ImHex.
+It allows you to define structures and data types in a C-like syntax and then use them to parse and highlight a file's content.
+
+- Source Code: [Link](https://github.com/WerWolv/PatternLanguage/)
+- Documentation: [Link](https://imhex.werwolv.net/docs/)
 
 ## Database
 
@@ -122,47 +126,9 @@ To use ImHex, the following minimal system requirements need to be met:
 - **RAM**: 512MB, more may be required for more complicated analysis
 - **Storage**: 100MB
 
-## Plugin development
-
-To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
-- [C++ Plugin Template](https://github.com/WerWolv/ImHex-Cpp-Plugin-Template)
-- [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
-
 ## Installing
-The following OSs have packages available in their repositories making it easy to install ImHex.
-### Fedora (36+)
-```
-dnf install imhex
-```
 
-### RHEL 9 / AlmaLinux 9 (coming soon)
-
-### Arch Linux (AUR)
-```
-yay -S imhex-bin
-```
-
-## Third Party Repositories
-
-ImHex is available in various thid party repositores.
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/imhex.svg)](https://repology.org/project/imhex/versions)
-
-## Nightly builds
-
-Nightlies are available via GitHub Actions [here](https://github.com/WerWolv/ImHex/actions?query=workflow%3ABuild).
-
-- Windows • __x86_64__
-  - [Installer](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Installer.zip)
-  - [Portable](https://nightly.link/WerWolv/ImHex/workflows/build/master/Windows%20Portable.zip)
-- MacOS • __x86_64__
-  - [DMG](https://nightly.link/WerWolv/ImHex/workflows/build/master/macOS%20DMG.zip)
-- Linux • __x86_64__
-  - [Ubuntu 22.04 DEB](https://nightly.link/WerWolv/ImHex/workflows/build/master/Ubuntu%2022.04%20DEB.zip)
-  - [AppImage](https://nightly.link/WerWolv/ImHex/workflows/build/master/Linux%20AppImage.zip)
-  - [Arch Package](https://nightly.link/WerWolv/ImHex/workflows/build/master/ArchLinux%20.pkg.tar.zst.zip)
-  - [Fedora Rawhide RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Rawhide%20RPM.zip)
-  - [Fedora Stable RPM](https://nightly.link/WerWolv/ImHex/workflows/build/master/Fedora%20Latest%20RPM.zip)
+Information on how to install ImHex can be found in the [Install](/INSTALL.md) guide
 
 ## Compiling
 
@@ -172,6 +138,15 @@ All releases are being built using latest available GCC.
 
 Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.
 All dependencies that aren't bundled, can be installed using the dependency installer scripts found in the `/dist` folder.
+
+For more information, check out the [Compiling](/dist/compiling) guide.
+
+## Plugin development
+
+To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
+- [C++ Plugin Template](https://github.com/WerWolv/ImHex-Cpp-Plugin-Template)
+- [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
+
 
 ## Credits
 
