@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.python", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size, "data = bytes([", "0x{0:02X}, ", "]);");
+            return formatLanguageArray(provider, offset, size, "data = bytes([", "0x{0:02X}, ", "])");
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.js", [](prv::Provider *provider, u64 offset, size_t size) {
