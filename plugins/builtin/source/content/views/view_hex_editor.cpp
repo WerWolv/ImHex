@@ -721,10 +721,6 @@ namespace hex::plugin::builtin {
         const u16 columnCount      = this->m_bytesPerRow / bytesPerCell;
         const auto byteColumnCount = columnCount + getByteColumnSeparatorCount(columnCount);
 
-        const auto selection    = this->getSelection();
-        const auto selectionMin = selection.getStartAddress();
-        const auto selectionMax = selection.getEndAddress();
-
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
         if (ImGui::BeginTable("##hex", 2 + byteColumnCount + 2 + 2 , ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
             View::discardNavigationRequests();
@@ -762,6 +758,7 @@ namespace hex::plugin::builtin {
 
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
+                auto &providerData = ProviderExtraData::get(provider).editor;
 
                 std::pair<Region, bool> validRegion = { Region::Invalid(), false };
                 const auto isCurrRegionValid = [&validRegion, &provider](u64 address){
@@ -806,11 +803,15 @@ namespace hex::plugin::builtin {
                                     const auto backgroundColor = [&]{
                                         auto color = queryBackgroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
 
-                                        if ((byteAddress >= selectionMin && byteAddress <= selectionMax)) {
-                                            if (color.has_value())
-                                                color = (ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF;
-                                            else
-                                                color = this->m_selectionColor;
+                                        if (this->isSelectionValid()) {
+                                            auto selection = this->getSelection();
+
+                                            if (byteAddress >= selection.getStartAddress() && byteAddress <= selection.getEndAddress()) {
+                                                if (color.has_value())
+                                                    color = (ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF;
+                                                else
+                                                    color = this->m_selectionColor;
+                                            }
                                         }
 
                                         if (color.has_value())
@@ -849,9 +850,11 @@ namespace hex::plugin::builtin {
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 
-                                if (isColumnSeparatorColumn(x + 1, columnCount) && selectionMax != x + y * columnCount) {
+                                if (isColumnSeparatorColumn(x + 1, columnCount)) {
+                                    if (this->isSelectionValid() && this->getSelection().getEndAddress() != x + y * columnCount)
                                     cellSize.x += SeparatorColumWidth + 1;
                                 }
+
                                 if (y == u64(clipper.DisplayStart))
                                     cellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
 
@@ -997,19 +1000,19 @@ namespace hex::plugin::builtin {
                         }
 
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
-                        if (this->m_shouldScrollToSelection && (this->m_selectionEnd != InvalidSelection) && (this->m_selectionStart != InvalidSelection)) {
+                        if (this->m_shouldScrollToSelection && this->isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
-                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && this->m_selectionStart != this->m_selectionEnd)) {
+                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && providerData.selectionStart != providerData.selectionEnd)) {
                                 auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
                                 if (y == u64(clipper.DisplayStart + 3)) {
-                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
+                                    if (i128(*providerData.selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * 5);
 
                                     }
                                 } else if (y == u64(clipper.DisplayEnd - 3)) {
-                                    if (i128(this->m_selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 3) * this->m_bytesPerRow)) {
+                                    if (i128(*providerData.selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * (this->m_visibleRowCount - 1));
                                     }
@@ -1044,6 +1047,16 @@ namespace hex::plugin::builtin {
                     const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
                     ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
                 }
+
+                if (!this->m_syncScrolling) {
+                    if (this->m_shouldUpdateScrollPosition) {
+                        this->m_shouldUpdateScrollPosition = false;
+                        ImGui::SetScrollY(providerData.scrollPosition);
+                    } else {
+                        providerData.scrollPosition = ImGui::GetScrollY();
+                    }
+                }
+
 
             } else {
                 ImGui::TextFormattedCentered("hex.builtin.view.hex_editor.no_bytes"_lang);
@@ -1133,14 +1146,15 @@ namespace hex::plugin::builtin {
             drawTooltip(address, data, bytesPerCell);
 
             auto endAddress = address + bytesPerCell - 1;
+            auto &selectionStart = ProviderExtraData::getCurrent().editor.selectionStart;
 
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                this->setSelection(this->m_selectionStart, endAddress);
+                this->setSelection(*selectionStart, endAddress);
                 this->scrollToSelection();
             }
             else if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
                 if (ImGui::GetIO().KeyShift)
-                    this->setSelection(this->m_selectionStart, endAddress);
+                    this->setSelection(*selectionStart, endAddress);
                 else
                     this->setSelection(address, endAddress);
 
@@ -1252,52 +1266,66 @@ namespace hex::plugin::builtin {
 
         // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
-            this->m_selectionStart = InvalidSelection;
-            this->m_selectionEnd = InvalidSelection;
+            auto &data = ProviderExtraData::getCurrent().editor;
+
+            data.selectionStart.reset();
+            data.selectionEnd.reset();
             EventManager::post<EventRegionSelected>(this->getSelection());
         });
 
         // Move cursor around
         ShortcutManager::addShortcut(this, Keys::Up, [this] {
-            if (this->m_selectionEnd >= this->m_bytesPerRow) {
-                auto pos = this->m_selectionEnd - this->m_bytesPerRow;
+            auto selection = this->getSelection();
+
+            if (selection.getEndAddress() >= this->m_bytesPerRow) {
+                auto pos = selection.getEndAddress() - this->m_bytesPerRow;
                 this->setSelection(pos, pos);
                 this->scrollToSelection();
                 this->jumpIfOffScreen();
             }
         });
         ShortcutManager::addShortcut(this, Keys::Down, [this] {
-            auto pos = this->m_selectionEnd + this->m_bytesPerRow;
+            auto selection = this->getSelection();
+
+            auto pos = selection.getEndAddress() + this->m_bytesPerRow;
             this->setSelection(pos, pos);
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, Keys::Left, [this] {
-            if (this->m_selectionEnd > 0) {
-                auto pos = this->m_selectionEnd - 1;
+            auto selection = this->getSelection();
+
+            if (selection.getEndAddress() > 0) {
+                auto pos = selection.getEndAddress() - 1;
                 this->setSelection(pos, pos);
                 this->scrollToSelection();
                 this->jumpIfOffScreen();
             }
         });
         ShortcutManager::addShortcut(this, Keys::Right, [this] {
-            auto pos = this->m_selectionEnd + 1;
+            auto selection = this->getSelection();
+
+            auto pos = selection.getEndAddress() + 1;
             this->setSelection(pos, pos);
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
 
         ShortcutManager::addShortcut(this, Keys::PageUp, [this] {
+            auto selection = this->getSelection();
+
             u64 visibleByteCount = this->m_bytesPerRow * this->m_visibleRowCount;
-            if (this->m_selectionEnd >= visibleByteCount) {
-                auto pos = this->m_selectionEnd - visibleByteCount;
+            if (selection.getEndAddress() >= visibleByteCount) {
+                auto pos = selection.getEndAddress() - visibleByteCount;
                 this->setSelection(pos, pos);
                 this->scrollToSelection();
                 this->jumpIfOffScreen();
             }
         });
         ShortcutManager::addShortcut(this, Keys::PageDown, [this] {
-            auto pos = this->m_selectionEnd + (this->m_bytesPerRow * this->m_visibleRowCount);
+            auto selection = this->getSelection();
+
+            auto pos = selection.getEndAddress() + (this->m_bytesPerRow * this->m_visibleRowCount);
             this->setSelection(pos, pos);
             this->scrollToSelection();
             this->jumpIfOffScreen();
@@ -1305,42 +1333,50 @@ namespace hex::plugin::builtin {
 
         // Move selection around
         ShortcutManager::addShortcut(this, SHIFT + Keys::Up, [this] {
-            this->m_selectionStart = std::max<u64>(this->m_selectionStart, this->m_bytesPerRow);
+            auto selection = this->getSelection();
 
-            this->setSelection(this->m_selectionStart - this->m_bytesPerRow, this->m_selectionEnd);
+            this->setSelection(std::max<u64>(selection.getStartAddress(), this->m_bytesPerRow) - this->m_bytesPerRow, selection.getEndAddress());
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Down, [this] {
-            this->setSelection(this->m_selectionStart + this->m_bytesPerRow, this->m_selectionEnd);
+            auto selection = this->getSelection();
+
+            this->setSelection(selection.getStartAddress() + this->m_bytesPerRow, selection.getEndAddress());
             this->scrollToSelection();
             this->jumpIfOffScreen();
 
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Left, [this] {
-            this->m_selectionStart = std::max<u64>(this->m_selectionStart, 1);
+            auto selection = this->getSelection();
 
-            this->setSelection(this->m_selectionStart - 1, this->m_selectionEnd);
+            this->setSelection(std::max<u64>(selection.getStartAddress(), 1) - 1, selection.getEndAddress());
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Right, [this] {
-            this->setSelection(this->m_selectionStart + 1, this->m_selectionEnd);
+            auto selection = this->getSelection();
+
+            this->setSelection(selection.getStartAddress() + 1, selection.getEndAddress());
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, Keys::PageUp, [this] {
+            auto selection = this->getSelection();
             u64 visibleByteCount = this->m_bytesPerRow * this->m_visibleRowCount;
-            if (this->m_selectionEnd >= visibleByteCount) {
-                auto pos = this->m_selectionEnd - visibleByteCount;
-                this->setSelection(pos, this->m_selectionEnd);
+
+            if (selection.getEndAddress() >= visibleByteCount) {
+                auto pos = selection.getEndAddress() - visibleByteCount;
+                this->setSelection(pos, selection.getEndAddress());
                 this->scrollToSelection();
                 this->jumpIfOffScreen();
             }
         });
         ShortcutManager::addShortcut(this, Keys::PageDown, [this] {
-            auto pos = this->m_selectionEnd + (this->m_bytesPerRow * this->m_visibleRowCount);
-            this->setSelection(pos, this->m_selectionEnd);
+            auto selection = this->getSelection();
+            auto pos = selection.getEndAddress() + (this->m_bytesPerRow * this->m_visibleRowCount);
+
+            this->setSelection(pos, selection.getEndAddress());
             this->scrollToSelection();
             this->jumpIfOffScreen();
         });
@@ -1389,15 +1425,18 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
+            auto provider = ImHexApi::Provider::get();
+
             if (region == Region::Invalid()) {
-                this->m_selectionStart = InvalidSelection;
-                this->m_selectionEnd   = InvalidSelection;
+                auto &providerData = ProviderExtraData::get(provider).editor;
+
+                providerData.selectionStart.reset();
+                providerData.selectionEnd.reset();
+
                 return;
             }
 
-            auto provider = ImHexApi::Provider::get();
-            auto page     = provider->getPageOfAddress(region.getStartAddress());
-
+            auto page = provider->getPageOfAddress(region.getStartAddress());
             if (!page.has_value())
                 return;
 
@@ -1411,6 +1450,13 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
             if (this->isSelectionValid())
                 region = this->getSelection();
+        });
+
+        EventManager::subscribe<EventProviderChanged>(this, [this](auto, auto) {
+            this->m_shouldUpdateScrollPosition = true;
+
+            if (this->isSelectionValid())
+                EventManager::post<EventRegionSelected>(this->getSelection());
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
@@ -1457,6 +1503,13 @@ namespace hex::plugin::builtin {
                     this->m_currDataVisualizer = visualizers[selectedVisualizer];
                 else
                     this->m_currDataVisualizer = visualizers["hex.builtin.visualizer.hexadecimal.8bit"];
+            }
+
+            {
+                auto syncScrolling = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling");
+
+                if (syncScrolling.is_number())
+                    this->m_syncScrolling = static_cast<int>(syncScrolling);
             }
 
         });

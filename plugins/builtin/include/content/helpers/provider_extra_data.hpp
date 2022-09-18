@@ -30,6 +30,11 @@ namespace hex::plugin::builtin {
                 std::vector<hex::prv::Overlay *> dataOverlays;
                 std::optional<dp::Node::NodeError> currNodeError;
             } dataProcessor;
+
+            struct {
+                std::optional<u64> selectionStart, selectionEnd;
+                float scrollPosition = 0.0F;
+            } editor;
         };
 
         static Data& getCurrent() {

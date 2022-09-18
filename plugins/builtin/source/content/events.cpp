@@ -11,9 +11,9 @@
 #include <imgui.h>
 #include <nlohmann/json.hpp>
 
-#include "provider_extra_data.hpp"
+#include <content/helpers/provider_extra_data.hpp>
 
-#include "content/providers/file_provider.hpp"
+#include <content/providers/file_provider.hpp>
 
 namespace hex::plugin::builtin {
 

@@ -283,6 +283,17 @@ namespace hex::plugin::builtin {
             return result;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0, [](auto name, nlohmann::json &setting) {
+            static bool syncScrolling = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &syncScrolling)) {
+                setting = static_cast<int>(syncScrolling);
+                return true;
+            }
+
+            return false;
+        });
+
 
         /* Fonts */
 

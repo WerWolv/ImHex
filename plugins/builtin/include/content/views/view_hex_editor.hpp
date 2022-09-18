@@ -6,6 +6,8 @@
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
+#include <content/helpers/provider_extra_data.hpp>
+
 #include <algorithm>
 #include <limits>
 
@@ -18,8 +20,6 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        constexpr static auto InvalidSelection = std::numeric_limits<u64>::max();
-
         void registerShortcuts();
         void registerEvents();
         void registerMenuItems();
@@ -33,22 +33,16 @@ namespace hex::plugin::builtin {
         void setSelection(u128 start, u128 end) {
             if (!ImHexApi::Provider::isValid())
                 return;
-            if (start == InvalidSelection && end == InvalidSelection)
-                return;
-
-            if (start == InvalidSelection)
-                start = end;
-            if (end == InvalidSelection)
-                end = start;
 
             auto provider = ImHexApi::Provider::get();
+            auto &data = ProviderExtraData::get(provider).editor;
 
             const size_t maxAddress = provider->getActualSize() + provider->getBaseAddress() - 1;
 
-            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
+            this->m_selectionChanged = data.selectionStart != start || data.selectionEnd != end;
 
-            this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
-            this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
+            data.selectionStart = std::clamp<u128>(start, 0, maxAddress);
+            data.selectionEnd = std::clamp<u128>(end, 0, maxAddress);
 
             if (this->m_selectionChanged) {
                 EventManager::post<EventRegionSelected>(this->getSelection());
@@ -56,15 +50,22 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] Region getSelection() const {
-            const auto start = std::min(this->m_selectionStart, this->m_selectionEnd);
-            const auto end   = std::max(this->m_selectionStart, this->m_selectionEnd);
+            auto &data = ProviderExtraData::getCurrent().editor;
+
+            if (!isSelectionValid())
+                return Region::Invalid();
+
+            const auto start = std::min(*data.selectionStart, *data.selectionEnd);
+            const auto end   = std::max(*data.selectionStart, *data.selectionEnd);
             const size_t size = end - start + 1;
 
             return { start, size };
         }
 
         [[nodiscard]] bool isSelectionValid() const {
-            return this->m_selectionStart != InvalidSelection && this->m_selectionEnd != InvalidSelection;
+            auto &data = ProviderExtraData::getCurrent().editor;
+
+            return data.selectionStart.has_value() && data.selectionEnd.has_value();
         }
 
         void jumpToSelection() {
@@ -119,10 +120,9 @@ namespace hex::plugin::builtin {
         bool m_shouldJumpToSelection = false;
         bool m_shouldScrollToSelection = false;
         bool m_shouldJumpWhenOffScreen = false;
+        bool m_shouldUpdateScrollPosition = false;
 
         bool m_selectionChanged = false;
-        u64 m_selectionStart = InvalidSelection;
-        u64 m_selectionEnd = InvalidSelection;
 
         u16 m_visibleRowCount = 0;
 
@@ -136,6 +136,7 @@ namespace hex::plugin::builtin {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
+        bool m_syncScrolling = false;
 
         bool m_shouldOpenPopup = false;
         std::unique_ptr<Popup> m_currPopup;

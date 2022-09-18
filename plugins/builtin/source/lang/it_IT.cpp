@@ -749,6 +749,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "Taglia fuori gli zeri" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Caratteri esadecimali maiuscoli" },
                     //{ "hex.builtin.setting.hex_editor.visualizer", "Data visualizer" },
+                    //{ "hex.builtin.setting.hex_editor.sync_scrolling", "Synchronize editor position" },
                 //{ "hex.builtin.setting.folders", "Folders" },
                     //{ "hex.builtin.setting.folders.description", "Specify additional search paths for patterns, scripts, rules and more" },
                     // { "hex.builtin.setting.folders.add_folder", "Add new folder" },

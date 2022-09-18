@@ -14,7 +14,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/magic.hpp>
 
-#include <provider_extra_data.hpp>
+#include <content/helpers/provider_extra_data.hpp>
 
 #include <nlohmann/json.hpp>
 

@@ -744,6 +744,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "00을 회색으로 표시" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "16진수 값을 대문자로 표시" },
                     { "hex.builtin.setting.hex_editor.visualizer", "데이터 표시" },
+                    //{ "hex.builtin.setting.hex_editor.sync_scrolling", "Synchronize editor position" },
                 { "hex.builtin.setting.folders", "폴더" },
                     { "hex.builtin.setting.folders.description", "패턴, 스크립트, YARA 규칙 등을 찾아볼 추가적인 폴더 경로를 지정하세요" },
                     { "hex.builtin.setting.folders.add_folder", "새 폴더 추가" },

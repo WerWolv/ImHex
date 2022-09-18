@@ -10,7 +10,7 @@
 #include <imnodes.h>
 #include <nlohmann/json.hpp>
 
-#include "provider_extra_data.hpp"
+#include <content/helpers/provider_extra_data.hpp>
 
 namespace hex::plugin::builtin {
 

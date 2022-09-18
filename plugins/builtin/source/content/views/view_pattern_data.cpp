@@ -4,7 +4,7 @@
 
 #include <pl/patterns/pattern.hpp>
 
-#include <provider_extra_data.hpp>
+#include <content/helpers/provider_extra_data.hpp>
 
 namespace hex::plugin::builtin {
 

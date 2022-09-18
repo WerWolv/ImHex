@@ -9,7 +9,7 @@
 #include <nlohmann/json.hpp>
 #include <cstring>
 
-#include <provider_extra_data.hpp>
+#include <content/helpers/provider_extra_data.hpp>
 
 namespace hex::plugin::builtin {
 

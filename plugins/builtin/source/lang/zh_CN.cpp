@@ -745,6 +745,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "显示零字节为灰色" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "大写十六进制" },
                     { "hex.builtin.setting.hex_editor.visualizer", "数据处理器的数据可视化格式" },
+                    //{ "hex.builtin.setting.hex_editor.sync_scrolling", "Synchronize editor position" },
                 { "hex.builtin.setting.folders", "扩展搜索路径" },
                     { "hex.builtin.setting.folders.description", "为模式、脚本和规则等指定额外的搜索路径" },
                     { "hex.builtin.setting.folders.add_folder", "添加新的目录" },
