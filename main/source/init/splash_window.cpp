@@ -72,14 +72,12 @@ namespace hex::init {
 
     bool WindowSplash::loop() {
         auto splash                  = romfs::get("splash.png");
-        ImGui::Texture splashTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
+        ImGui::Texture splashTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
 
-        if (splashTexture == nullptr) {
+        if (!splashTexture.isValid()) {
             log::fatal("Could not load splash screen image!");
             exit(EXIT_FAILURE);
         }
-
-        ON_SCOPE_EXIT { ImGui::UnloadImage(splashTexture); };
 
         auto tasksSucceeded = processTasksAsync();
 
@@ -97,7 +95,7 @@ namespace hex::init {
 
                 auto drawList = ImGui::GetForegroundDrawList();
 
-                drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.size() * scale);
+                drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.getSize() * scale);
 
                 drawList->AddText(ImVec2(15, 120) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
 
@@ -107,8 +105,8 @@ namespace hex::init {
                     drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
                 #endif
 
-                drawList->AddRectFilled(ImVec2(0, splashTexture.size().y - 5) * scale, ImVec2(splashTexture.size().x * this->m_progress, splashTexture.size().y) * scale, 0xFFFFFFFF);
-                drawList->AddText(ImVec2(15, splashTexture.size().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
+                drawList->AddRectFilled(ImVec2(0, splashTexture.getSize().y - 5) * scale, ImVec2(splashTexture.getSize().x * this->m_progress, splashTexture.getSize().y) * scale, 0xFFFFFFFF);
+                drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
             }
 
             ImGui::Render();

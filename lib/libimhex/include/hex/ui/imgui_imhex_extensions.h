@@ -31,27 +31,40 @@ enum ImGuiCustomCol {
 
 namespace ImGui {
 
-    struct Texture {
-        ImTextureID textureId = nullptr;
-        int width = 0, height = 0;
+    class Texture {
+    public:
+        Texture() = default;
+        Texture(const ImU8 *buffer, int size);
+        Texture(const char *path);
+        Texture(const Texture&) = delete;
+        Texture(Texture&& other) noexcept;
 
-        [[nodiscard]] constexpr bool valid() const noexcept {
-            return this->textureId != nullptr;
+        ~Texture();
+
+        void operator=(const Texture&) = delete;
+        void operator=(Texture&& other) noexcept;
+
+        [[nodiscard]] constexpr bool isValid() const noexcept {
+            return this->m_textureId != nullptr;
         }
 
         [[nodiscard]] constexpr operator ImTextureID() {
-            return this->textureId;
+            return this->m_textureId;
         }
 
-        [[nodiscard]] auto size() const noexcept {
-            return ImVec2(this->width, this->height);
+        [[nodiscard]] auto getSize() const noexcept {
+            return ImVec2(this->m_width, this->m_height);
         }
 
-        [[nodiscard]] constexpr auto aspectRatio() const noexcept {
-            if (this->height == 0) return 1.0F;
+        [[nodiscard]] constexpr auto getAspectRatio() const noexcept {
+            if (this->m_height == 0) return 1.0F;
 
-            return float(this->width) / float(this->height);
+            return float(this->m_width) / float(this->m_height);
         }
+
+    private:
+        ImTextureID m_textureId = nullptr;
+        int m_width = 0, m_height = 0;
     };
 
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data);
@@ -81,10 +94,6 @@ namespace ImGui {
     inline bool HasSecondPassed() {
         return static_cast<ImU32>(ImGui::GetTime() * 100) % 100 <= static_cast<ImU32>(ImGui::GetIO().DeltaTime * 100);
     }
-
-    Texture LoadImageFromPath(const char *path);
-    Texture LoadImageFromMemory(const ImU8 *buffer, int size);
-    void UnloadImage(Texture &texture);
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name);
 

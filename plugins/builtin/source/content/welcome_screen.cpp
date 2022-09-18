@@ -182,7 +182,7 @@ namespace hex::plugin::builtin {
     static void drawWelcomeScreenContent() {
         const auto availableSpace = ImGui::GetContentRegionAvail();
 
-        ImGui::Image(s_bannerTexture, s_bannerTexture.size() / (2 * (1.0F / ImHexApi::System::getGlobalScale())));
+        ImGui::Image(s_bannerTexture, s_bannerTexture.getSize() / (2 * (1.0F / ImHexApi::System::getGlobalScale())));
 
         ImGui::Indent();
         if (ImGui::BeginTable("Welcome Left", 1, ImGuiTableFlags_NoBordersInBody, ImVec2(availableSpace.x / 2, 0))) {
@@ -432,14 +432,10 @@ namespace hex::plugin::builtin {
         });
 
         (void)EventManager::subscribe<RequestChangeTheme>([](u32 theme) {
-            auto changeTexture = [&](const std::string &path, const ImGui::Texture &texture) {
+            auto changeTexture = [&](const std::string &path) {
                 auto textureData = romfs::get(path);
-                auto oldTexture  = texture;
-                auto newTexture  = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(textureData.data()), textureData.size());
 
-                if (oldTexture.valid()) { ImGui::UnloadImage(oldTexture); }
-
-                return newTexture;
+                return ImGui::Texture(reinterpret_cast<const ImU8*>(textureData.data()), textureData.size());
             };
 
             switch (theme) {
@@ -449,8 +445,8 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsDark();
                         ImGui::StyleCustomColorsDark();
                         ImPlot::StyleColorsDark();
-                        s_bannerTexture = changeTexture("banner_dark.png", s_bannerTexture);
-                        s_backdropTexture = changeTexture("backdrop_dark.png", s_backdropTexture);
+                        s_bannerTexture = changeTexture("banner_dark.png");
+                        s_backdropTexture = changeTexture("backdrop_dark.png");
 
                         break;
                     }
@@ -459,8 +455,8 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsLight();
                         ImGui::StyleCustomColorsLight();
                         ImPlot::StyleColorsLight();
-                        s_bannerTexture = changeTexture("banner_light.png", s_bannerTexture);
-                        s_backdropTexture = changeTexture("backdrop_light.png", s_backdropTexture);
+                        s_bannerTexture = changeTexture("banner_light.png");
+                        s_backdropTexture = changeTexture("backdrop_light.png");
 
                         break;
                     }
@@ -469,8 +465,8 @@ namespace hex::plugin::builtin {
                         ImGui::StyleColorsClassic();
                         ImGui::StyleCustomColorsClassic();
                         ImPlot::StyleColorsClassic();
-                        s_bannerTexture = changeTexture("banner_dark.png", s_bannerTexture);
-                        s_backdropTexture = changeTexture("backdrop_dark.png", s_backdropTexture);
+                        s_bannerTexture = changeTexture("banner_dark.png");
+                        s_backdropTexture = changeTexture("backdrop_dark.png");
 
                         break;
                     }
@@ -481,7 +477,7 @@ namespace hex::plugin::builtin {
             ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive]    = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
             ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
 
-            if (!s_bannerTexture.valid()) {
+            if (!s_bannerTexture.isValid()) {
                 log::error("Failed to load banner texture!");
             }
         });

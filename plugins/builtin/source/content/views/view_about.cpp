@@ -25,10 +25,6 @@ namespace hex::plugin::builtin {
         });
     }
 
-    ViewAbout::~ViewAbout() {
-        ImGui::UnloadImage(this->m_logoTexture);
-    }
-
     static void link(const std::string &name, const std::string &author, const std::string &url) {
         if (ImGui::BulletHyperlink(name.c_str()))
             hex::openWebpage(url);
@@ -50,12 +46,12 @@ namespace hex::plugin::builtin {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            if (!this->m_logoTexture.valid()) {
+            if (!this->m_logoTexture.isValid()) {
                 auto logo           = romfs::get("logo.png");
-                this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(logo.data()), logo.size());
+                this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logo.data()), logo.size());
             }
 
-            ImGui::Image(this->m_logoTexture.textureId, scaled({ 64, 64 }));
+            ImGui::Image(this->m_logoTexture, scaled({ 64, 64 }));
             ImGui::TableNextColumn();
 
             ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);

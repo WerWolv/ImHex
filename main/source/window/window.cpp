@@ -153,8 +153,8 @@ namespace hex {
 		std::signal(SIGFPE, signalHandler);
         std::set_terminate([]{ signalHandler(SIGABRT); });
 
-        auto imhexLogo      = romfs::get("logo.png");
-        this->m_logoTexture = ImGui::LoadImageFromMemory(reinterpret_cast<const ImU8 *>(imhexLogo.data()), imhexLogo.size());
+        auto logoData      = romfs::get("logo.png");
+        this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
 
         ContentRegistry::Settings::store();
         EventManager::post<EventSettingsChanged>();

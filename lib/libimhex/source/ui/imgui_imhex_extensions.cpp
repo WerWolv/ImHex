@@ -17,6 +17,74 @@
 
 namespace ImGui {
 
+    Texture::Texture(const ImU8 *buffer, int size) {
+        unsigned char *imageData = stbi_load_from_memory(buffer, size, &this->m_width, &this->m_height, nullptr, 4);
+        if (imageData == nullptr)
+            return;
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        #if defined(GL_UNPACK_ROW_LENGTH)
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->m_width, this->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        stbi_image_free(imageData);
+
+        this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+    }
+
+    Texture::Texture(const char *path) {
+        unsigned char *imageData = stbi_load(path, &this->m_width, &this->m_height, nullptr, 4);
+        if (imageData == nullptr)
+            return;
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        #if defined(GL_UNPACK_ROW_LENGTH)
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        #endif
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->m_width, this->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        stbi_image_free(imageData);
+
+        this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+    }
+
+    Texture::Texture(Texture&& other) noexcept {
+        this->m_textureId = other.m_textureId;
+        this->m_width = other.m_width;
+        this->m_height = other.m_height;
+
+        other.m_textureId = nullptr;
+    }
+
+    void Texture::operator=(Texture&& other) noexcept {
+        this->m_textureId = other.m_textureId;
+        this->m_width = other.m_width;
+        this->m_height = other.m_height;
+
+        other.m_textureId = nullptr;
+    }
+
+    Texture::~Texture() {
+        if (this->m_textureId == nullptr)
+            return;
+
+        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(this->m_textureId));
+        glDeleteTextures(1, &glTextureId);
+    }
+
     int UpdateStringSizeCallback(ImGuiInputTextCallbackData *data) {
         if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
             auto &string = *static_cast<std::string *>(data->UserData);
@@ -296,66 +364,6 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
-    }
-
-    Texture LoadImageFromPath(const char *path) {
-        int imageWidth  = 0;
-        int imageHeight = 0;
-
-        unsigned char *imageData = stbi_load(path, &imageWidth, &imageHeight, nullptr, 4);
-        if (imageData == nullptr)
-            return { nullptr, -1, -1 };
-
-
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-#if defined(GL_UNPACK_ROW_LENGTH)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        stbi_image_free(imageData);
-
-        return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
-    }
-
-    Texture LoadImageFromMemory(const ImU8 *buffer, int size) {
-        int imageWidth  = 0;
-        int imageHeight = 0;
-
-
-        unsigned char *imageData = stbi_load_from_memory(buffer, size, &imageWidth, &imageHeight, nullptr, 4);
-        if (imageData == nullptr)
-            return { nullptr, -1, -1 };
-
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-#if defined(GL_UNPACK_ROW_LENGTH)
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-        stbi_image_free(imageData);
-
-        return { reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture)), imageWidth, imageHeight };
-    }
-
-    void UnloadImage(Texture &texture) {
-        if (texture.textureId == nullptr)
-            return;
-
-        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(texture.textureId));
-        glDeleteTextures(1, &glTextureId);
-
-        texture = { nullptr, 0, 0 };
     }
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name) {

@@ -960,10 +960,10 @@ namespace hex::plugin::builtin {
         NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.aspectRatio() * 200, 200)));
+            ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered()) {
                 ImGui::BeginTooltip();
-                ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.aspectRatio() * 600, 600)));
+                ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 600, 600)));
                 ImGui::EndTooltip();
             }
         }
@@ -971,10 +971,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto rawData = this->getBufferOnInput(0);
 
-            if (this->m_texture.valid())
-                ImGui::UnloadImage(this->m_texture);
-
-            this->m_texture = ImGui::LoadImageFromMemory(rawData.data(), rawData.size());
+            this->m_texture = ImGui::Texture(rawData.data(), rawData.size());
         }
 
     private:

@@ -14,7 +14,6 @@ namespace hex::plugin::builtin {
     class ViewAbout : public View {
     public:
         ViewAbout();
-        ~ViewAbout() override;
 
         void drawContent() override;
 
