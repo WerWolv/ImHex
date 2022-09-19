@@ -102,8 +102,9 @@ namespace hex::fs {
                 NFD::FreePath(outPath);
             }
         }else if(result==NFD_ERROR){
+            #if defined(OS_LINUX)
             View::showErrorPopup(
-                "There was an error while opening the file picker. Maybe you do not have a xdg-desktop-portal backend install on your system\n"
+                "There was an error while opening the file browser. Maybe you do not have a xdg-desktop-portal backend install on your system\n"
                 "On KDE, it is xdg-desktop-portal-kde\n"
                 "On Gnome it is xdg-desktop-portal-kde\n"
                 "On wlroots it is xdg-desktop-portal-wlr\n"
@@ -115,6 +116,9 @@ namespace hex::fs {
                 "\n"
                 "In the meantime you can still open a file by dragging it into the window !"
             );
+            #else
+            View::showErrorPopup("There was an error while opening the file browser");
+            #endif
         }
 
         NFD::Quit();
